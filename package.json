@@ -1,0 +1,27 @@
+{
+  "private": true,
+  "repository": "https://github.com/TryGhost/migrate",
+  "author": "Ghost Foundation",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "eslintIgnore": [
+    "**/node_modules/**"
+  ],
+  "scripts": {
+    "lint": "eslint . --ext .js --cache",
+    "posttest": "yarn lint",
+    "test": "NODE_ENV=testing mocha -- $(find test -name '*.test.js')",
+    "preship": "yarn test",
+    "ship": "STATUS=$(git status --porcelain); echo $STATUS; if [ -z \"$STATUS\" ]; then yarn version && git push --follow-tags; fi"
+  },
+  "devDependencies": {
+    "eslint": "4.19.1",
+    "eslint-plugin-ghost": "0.0.26",
+    "lerna": "^3.3.0",
+    "mocha": "5.2.0",
+    "should": "13.2.3",
+    "sinon": "6.2.0"
+  }
+}
