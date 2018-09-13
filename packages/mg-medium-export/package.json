@@ -1,0 +1,24 @@
+{
+  "name": "@tryghost/mg-medium-export",
+  "version": "0.0.0",
+  "description": "tbc",
+  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-medium-export",
+  "author": "Ghost Foundation",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint . --ext .js --cache",
+    "posttest": "yarn lint",
+    "test": "NODE_ENV=testing mocha -- $(find test -name '*.test.js')"
+  },
+  "devDependencies": {
+    "mocha": "5.2.0",
+    "should": "13.2.3",
+    "sinon": "6.3.1"
+  },
+  "dependencies": {
+    "adm-zip": "^0.4.11",
+    "cheerio": "^1.0.0-rc.2",
+    "fs-extra": "^7.0.0"
+  }
+}
