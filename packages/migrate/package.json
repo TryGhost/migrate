@@ -1,0 +1,29 @@
+{
+  "name": "@tryghost/migrate",
+  "version": "0.0.0",
+  "description": "tbc",
+  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/migrate",
+  "author": "Ghost Foundation",
+  "license": "MIT",
+  "bin": {
+    "migrate": "./bin/cli.js"
+  },
+  "scripts": {
+    "migrate": "./bin/cli.js",
+    "lint": "eslint . --ext .js --cache",
+    "posttest": "yarn lint",
+    "test": "NODE_ENV=testing mocha -- $(find test -name '*.test.js')"
+  },
+  "devDependencies": {
+    "mocha": "5.2.0",
+    "should": "13.2.3",
+    "sinon": "6.3.1"
+  },
+  "dependencies": {
+    "@tryghost/mg-medium-export": "^0.0.0",
+    "bluebird": "^3.5.2",
+    "ghost-ignition": "^2.9.4",
+    "lodash": "^4.17.11",
+    "yargs": "^12.0.2"
+  }
+}
