@@ -10,11 +10,15 @@
     "**/node_modules/**"
   ],
   "scripts": {
+    "dev": "echo \"Implement me!\"",
+    "presetup": "yarn",
+    "setup": "lerna bootstrap",
+    "test:parent": "NODE_ENV=testing mocha ./test/**/*.test.js",
+    "test": "yarn test:parent && lerna run test",
     "lint": "eslint . --ext .js --cache",
     "posttest": "yarn lint",
-    "test": "NODE_ENV=testing mocha -- $(find test -name '*.test.js')",
     "preship": "yarn test",
-    "ship": "STATUS=$(git status --porcelain); echo $STATUS; if [ -z \"$STATUS\" ]; then yarn version && git push --follow-tags; fi"
+    "ship": "STATUS=$(git status --porcelain); echo $STATUS; if [ -z \"$STATUS\" ]; then lerna publish; fi"
   },
   "devDependencies": {
     "eslint": "4.19.1",
