@@ -1,8 +1,17 @@
 {
-  "packages": [
-    "packages/*"
-  ],
-  "version": "independent",
-  "npmClient": "yarn",
-  "useWorkspaces": true
+    "version": "independent",
+    "npmClient": "yarn",
+    "packages": ["packages/*"],
+    "useWorkspaces": true,
+    "command": {
+        "publish": {
+            "allowBranch": "master",
+            "message": "Published new versions"
+        }
+    },
+    "local": {
+        "public": "true",
+        "repo": "https://github.com/TryGhost/migrate",
+        "scope": "@tryghost"
+    }
 }

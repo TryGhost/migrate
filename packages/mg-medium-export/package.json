@@ -7,18 +7,22 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
+    "dev": "echo \"Implement me!\"",
+    "test": "NODE_ENV=testing mocha ./test/**/*.test.js",
     "lint": "eslint . --ext .js --cache",
-    "posttest": "yarn lint",
-    "test": "NODE_ENV=testing mocha -- $(find test -name '*.test.js')"
+    "posttest": "yarn lint"
   },
   "devDependencies": {
     "mocha": "5.2.0",
     "should": "13.2.3",
-    "sinon": "6.3.1"
+    "sinon": "6.3.5"
   },
   "dependencies": {
     "adm-zip": "^0.4.11",
+    "bluebird": "^3.5.2",
     "cheerio": "^1.0.0-rc.2",
-    "fs-extra": "^7.0.0"
+    "fs-extra": "^7.0.0",
+    "ghost-ignition": "^2.9.6",
+    "lodash": "^4.17.11"
   }
 }

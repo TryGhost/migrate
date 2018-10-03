@@ -1,17 +1,42 @@
 # Migrate
 
-## Installation
-1. Make sure that `gstenv` is green. See [Dev Environment](https://github.com/TryGhost/Team/blob/master/Engineering/Dev%20Environment.md) for docs.
-2. `git clone` this repo & `cd` into it as usual
-3. Run `yarn` to install top-level dependencies.
+## Install
+
+
+## Usage
+
+
+## Develop
+
+This is a mono repository, managed with [lerna](https://lernajs.io/).
+
+1. `git clone` this repo & `cd` into it as usual
+2. `yarn setup` is mapped to `lerna bootstrap`
+   - installs all external dependencies
+   - links all internal dependencies
+
+To add a new package to the repo:
+   - install [slimer](https://github.com/TryGhost/slimer)
+   - run `slimer new <package name>`
+
 
 ## Run
-- Use: `yarn dev`
-- View: [http://localhost:9999](http://localhost:9999)
+
+- `yarn dev`
+
 
 ## Test
+
 - `yarn lint` run just eslint
-- `yarn test` run lint && tests
+- `yarn test` run lint and tests
+
+
+## Publish
+
+- `yarn ship` is an alias for `lerna publish`
+    - Publishes all packages which have changed
+    - Also updates any packages which depend on changed packages
+
 
 # Copyright & License
 

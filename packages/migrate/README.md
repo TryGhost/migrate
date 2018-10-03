@@ -1,17 +1,39 @@
 # Migrate
 
-## Installation
-1. Make sure that `gstenv` is green. See [Dev Environment](https://github.com/TryGhost/Team/blob/master/Engineering/Dev%20Environment.md) for docs.
-2. `git clone` this repo & `cd` into it as usual
-3. Run `yarn` to install top-level dependencies.
+## Install
+
+`npm install -g @tryghost/migrate --save`
+
+or
+
+`yarn global add @tryghost/migrate`
+
+
+## Usage
+
+`migrate medium ./path/to/medum-export.zip`
+
+## Develop
+
+This is a mono repository, managed with [lerna](https://lernajs.io/).
+
+Follow the instructions for the top-level repo.
+1. `git clone` this repo & `cd` into it as usual
+2. Run `yarn` to install top-level dependencies.
+
 
 ## Run
-- Use: `yarn dev`
-- View: [http://localhost:9999](http://localhost:9999)
+
+- `yarn dev`
+
 
 ## Test
+
 - `yarn lint` run just eslint
-- `yarn test` run lint && tests
+- `yarn test` run lint and tests
+
+
+
 
 # Copyright & License
 

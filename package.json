@@ -21,11 +21,11 @@
     "ship": "STATUS=$(git status --porcelain); echo $STATUS; if [ -z \"$STATUS\" ]; then lerna publish; fi"
   },
   "devDependencies": {
-    "eslint": "4.19.1",
-    "eslint-plugin-ghost": "0.0.26",
-    "lerna": "^3.3.0",
+    "eslint": "5.6.1",
+    "eslint-plugin-ghost": "0.0.27",
+    "lerna": "3.4.0",
     "mocha": "5.2.0",
     "should": "13.2.3",
-    "sinon": "6.2.0"
+    "sinon": "6.3.5"
   }
 }
