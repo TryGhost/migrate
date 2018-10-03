@@ -1,27 +1,20 @@
 #!/usr/bin/env node
 
-const medium = require('../lib/medium');
+const prettyCLI = require('@tryghost/pretty-cli');
 
-// Minimal little CLI Tool
-const print = (...args) => {
-    console.log(...args); // eslint-disable-line
-};
+prettyCLI.commandDirectory('../commands');
 
-require('yargs')
-    .command('medium [pathToZip]', 'migrate from medium', (yargs) => {
-        yargs
-            .positional('pathToZip', {
-                describe: 'path to a medium export zip'
-            });
-    }, (argv) => {
-        if (argv.verbose) {
-            print(`Migrating from export at ${argv.pathToZip}`);
-        }
+prettyCLI.style({
+    usageCommandPlaceholder: () => '<source>',
+});
 
-        medium.migrate(argv.pathToZip, argv.verbose);
-    })
-    .option('verbose', {
-        alias: 'v',
-        default: false
-    })
-    .argv;
+prettyCLI.groupOrder([
+    'Sources:',
+    'Commands:',
+    'Arguments:',
+    'Required Options:',
+    'Options:',
+    'Global Options:'
+]);
+
+prettyCLI.parseAndExit();
