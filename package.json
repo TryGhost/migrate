@@ -10,7 +10,8 @@
     "**/node_modules/**"
   ],
   "scripts": {
-    "dev": "echo \"Implement me!\"",
+    "dev": "migrate",
+    "migrate": "migrate",
     "presetup": "yarn",
     "setup": "lerna bootstrap",
     "test:parent": "NODE_ENV=testing mocha ./test/**/*.test.js",

@@ -8,7 +8,8 @@
     "migrate": "./bin/cli.js"
   },
   "scripts": {
-    "migrate": "./bin/cli.js",
+    "dev": "migrate",
+    "migrate": "migrate",
     "test": "NODE_ENV=testing mocha ./test/**/*.test.js",
     "lint": "eslint . --ext .js --cache",
     "posttest": "yarn lint"
