@@ -1,9 +1,15 @@
 # Migrate
 
+A collection of tools for migrating to Ghost
+
 ## Install
+
+TBD
 
 
 ## Usage
+
+TBD
 
 
 ## Develop
