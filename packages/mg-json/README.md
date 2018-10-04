@@ -1,4 +1,6 @@
-# Migrate Json
+# Migrate JSON
+
+Utilities for generating valid Ghost JSON
 
 ## Install
 
@@ -30,8 +32,6 @@ Follow the instructions for the top-level repo.
 
 - `yarn lint` run just eslint
 - `yarn test` run lint and tests
-
-
 
 
 # Copyright & License

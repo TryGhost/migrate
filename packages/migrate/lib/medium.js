@@ -1,4 +1,6 @@
 const mediumIngest = require('@tryghost/mg-medium-export');
+const mgJSON = require('@tryghost/mg-json');
+const fs = require('./fs');
 
 /**
  * Migrate from Medium
@@ -8,7 +10,7 @@ const mediumIngest = require('@tryghost/mg-medium-export');
  * @param {String} pathToZip
  * @param {Boolean} verbose
  */
-module.exports.migrate = (pathToZip, verbose) => {
+module.exports.migrate = (pathToZip) => {
     // 1. read the zip file
     let result = mediumIngest(pathToZip);
     // 2. pass the results through the web scraper to get any missing data
@@ -16,13 +18,12 @@ module.exports.migrate = (pathToZip, verbose) => {
     // 3. convert post HTML -> MobileDoc
 
     // 4. Format the data as a valid Ghost JSON file
+    result = mgJSON.toGhostJSON(result);
 
     // 5. Pass the JSON file through the image scraper
 
     // 6. Return a valid Ghost import zip
+    let filename = fs.writeFile(result);
 
-    // Temporary output whilst we're in development
-    if (verbose) {
-        console.log(require('util').inspect(result, false, null)); // eslint-disable-line
-    }
+    return filename;
 };

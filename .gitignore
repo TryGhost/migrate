@@ -68,3 +68,6 @@ typings/
 .DS_Store
 
 # Migrate Custom
+
+# Ignore any generated import files
+ghost-import*.*

@@ -34,5 +34,7 @@ exports.run = (argv) => {
         print(`Migrating from export at ${argv.pathToZip}`);
     }
 
-    medium.migrate(argv.pathToZip, argv.verbose);
+    let filename = medium.migrate(argv.pathToZip, argv.verbose);
+
+    print('Successfully written output to', filename);
 };
