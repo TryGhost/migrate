@@ -1,10 +1,5 @@
 const medium = require('../lib/medium');
-
-// @TODO shared prettyCLI UI
-// Minimal little CLI Tool
-const print = (...args) => {
-    console.log(...args); // eslint-disable-line
-};
+const ui = require('@tryghost/pretty-cli/ui');
 
 // Internal ID in case we need one.
 exports.id = 'medium';
@@ -31,10 +26,10 @@ exports.setup = (sywac) => {
 // What to do when this command is executed
 exports.run = (argv) => {
     if (argv.verbose) {
-        print(`Migrating from export at ${argv.pathToZip}`);
+        ui.log.info(`Migrating from export at ${argv.pathToZip}`);
     }
 
     let filename = medium.migrate(argv.pathToZip, argv.verbose);
 
-    print('Successfully written output to', filename);
+    ui.log.ok('Successfully written output to', filename);
 };
