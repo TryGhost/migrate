@@ -10,7 +10,5 @@ module.exports = (input) => {
 
     // Process relationships from nested form
 
-    //
-
     return output;
 };
