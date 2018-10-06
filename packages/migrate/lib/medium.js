@@ -11,19 +11,21 @@ const fs = require('./fs');
  * @param {Boolean} verbose
  */
 module.exports.migrate = (pathToZip) => {
-    // 1. read the zip file
+    // 1. Read the zip file
     let result = mediumIngest(pathToZip);
-    // 2. pass the results through the web scraper to get any missing data
 
-    // 3. convert post HTML -> MobileDoc
+    // 2. Pass the results through the web scraper to get any missing data
 
-    // 4. Format the data as a valid Ghost JSON file
+    // 3. Format the data as a valid Ghost JSON file
     result = mgJSON.toGhostJSON(result);
+
+    // 4. Convert post HTML -> MobileDoc
 
     // 5. Pass the JSON file through the image scraper
 
-    // 6. Return a valid Ghost import zip
+    // 6. Write a valid Ghost import zip
     let filename = fs.writeFile(result);
 
+    // 7. Return the path to the file
     return filename;
 };
