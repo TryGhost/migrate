@@ -17,6 +17,7 @@ const cheerio = require('cheerio');
 const mediumToGhost = {
     'email address': 'email',
     'created at': 'created_at',
+    image: 'profile_image',
     twitter: 'twitter'
 };
 
