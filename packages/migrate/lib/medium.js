@@ -1,5 +1,6 @@
 const mediumIngest = require('@tryghost/mg-medium-export');
 const mgJSON = require('@tryghost/mg-json');
+const converter = require('@tryghost/html-to-mobiledoc');
 const fs = require('./fs');
 
 /**
@@ -20,6 +21,9 @@ module.exports.migrate = (pathToZip) => {
     result = mgJSON.toGhostJSON(result);
 
     // 4. Convert post HTML -> MobileDoc
+    result.data.posts.forEach((post) => {
+        post.mobiledoc = JSON.stringify(converter.toMobiledoc(post.html));
+    });
 
     // 5. Pass the JSON file through the image scraper
 

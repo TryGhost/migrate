@@ -23,6 +23,7 @@
     "sinon": "6.3.5"
   },
   "dependencies": {
+    "@tryghost/html-to-mobiledoc": "0.1.2",
     "@tryghost/mg-json": "^0.0.0",
     "@tryghost/mg-medium-export": "^0.0.0",
     "@tryghost/pretty-cli": "1.1.0",
