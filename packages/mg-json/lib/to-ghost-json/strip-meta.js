@@ -1,14 +1,5 @@
 const _ = require('lodash');
-// @TODO extend this to all importable Ghost resources
-const standardResources = [
-    'posts', 'users', 'tags', 'posts_tags'
-];
-const singularResources = {
-    user: 'users',
-    post: 'posts',
-    tag: 'tags'
-};
-
+const schema = require('../utils/schema');
 /**
  * A resource might be a plain resource ready for import, or if it came from our migrate tooling,
  * probably an object with some metadata (like URL) and a `data` key with the resource fields
@@ -31,10 +22,10 @@ const removeMeta = (resource) => {
 module.exports = (input) => {
     return _.reduce(input, (data, value, key) => {
         // If this item is singular, convert to plural form
-        if (_.includes(_.keys(singularResources), key)) {
-            data[singularResources[key]] = [removeMeta(value)];
+        if (_.includes(_.keys(schema.RESOURCE_SINGULAR_TO_PLURAL), key)) {
+            data[schema.RESOURCE_SINGULAR_TO_PLURAL[key]] = [removeMeta(value)];
         // Else, map all values
-        } else if (_.includes(standardResources, key)) {
+        } else if (_.includes(schema.RESOURCES, key)) {
             data[key] = _.map(value, removeMeta);
         }
         return data;
