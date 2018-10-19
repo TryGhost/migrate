@@ -1,14 +1,17 @@
 const cheerio = require('cheerio');
+const processContent = require('./process-content');
 
 module.exports = (name, html) => {
-    let $ = cheerio.load(html);
+    let $ = cheerio.load(html, {
+        decodeEntities: false
+    });
     let post = {
         url: $('.p-canonical').attr('href'),
         data: {
             title: $('.p-name').text(),
             slug: name.match(/_(.*?)-[0-9a-f]+\.html/)[1],
             custom_excerpt: $('.p-summary').text().trim(),
-            html: $('.e-content').html().trim()
+            html: processContent($('.e-content'))
         }
     };
 

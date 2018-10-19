@@ -1,9 +1,9 @@
 const readZip = require('./lib/read-zip');
-const processHTML = require('./lib/process-html');
+const process = require('./lib/process');
 
 const mediumExport = module.exports = (pathToZip) => {
     let input = readZip(pathToZip);
-    let output = processHTML(input);
+    let output = process(input);
 
     return output;
 };
