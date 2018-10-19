@@ -71,3 +71,4 @@ typings/
 
 # Ignore any generated import files
 ghost-import*.*
+tmp/
