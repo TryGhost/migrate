@@ -10,8 +10,7 @@ module.exports = (name, html) => {
         data: {
             title: $('.p-name').text(),
             slug: name.match(/_(.*?)-[0-9a-f]+\.html/)[1],
-            custom_excerpt: $('.p-summary').text().trim(),
-            html: processContent($('.e-content'))
+            custom_excerpt: $('.p-summary').text().trim()
         }
     };
 
@@ -28,6 +27,8 @@ module.exports = (name, html) => {
             }
         };
     }
+
+    post.data.html = processContent($('.e-content'), post);
 
     return post;
 };
