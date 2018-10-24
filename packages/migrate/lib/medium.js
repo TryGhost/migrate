@@ -20,12 +20,12 @@ module.exports.migrate = (pathToZip) => {
     // 3. Format the data as a valid Ghost JSON file
     result = mgJSON.toGhostJSON(result);
 
-    // 4. Convert post HTML -> MobileDoc
+    // 4. Pass the JSON file through the image scraper
+
+    // 5. Convert post HTML -> MobileDoc
     result.data.posts.forEach((post) => {
         post.mobiledoc = JSON.stringify(converter.toMobiledoc(post.html));
     });
-
-    // 5. Pass the JSON file through the image scraper
 
     // 6. Write a valid Ghost import zip
     let filename = fs.writeFile(result);
