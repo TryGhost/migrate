@@ -1,6 +1,6 @@
 const mediumIngest = require('@tryghost/mg-medium-export');
 const mgJSON = require('@tryghost/mg-json');
-const converter = require('@tryghost/html-to-mobiledoc');
+const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
 const fs = require('./fs');
 
 /**
@@ -23,9 +23,7 @@ module.exports.migrate = (pathToZip) => {
     // 4. Pass the JSON file through the image scraper
 
     // 5. Convert post HTML -> MobileDoc
-    result.data.posts.forEach((post) => {
-        post.mobiledoc = JSON.stringify(converter.toMobiledoc(post.html));
-    });
+    result = mgHtmlMobiledoc.convert(result);
 
     // 6. Write a valid Ghost import zip
     let filename = fs.writeFile(result);
