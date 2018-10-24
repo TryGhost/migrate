@@ -24,13 +24,13 @@ exports.setup = (sywac) => {
 };
 
 // What to do when this command is executed
-exports.run = (argv) => {
+exports.run = async (argv) => {
     let timer = Date.now();
     if (argv.verbose) {
         ui.log.info(`Migrating from export at ${argv.pathToZip}`);
     }
 
-    let filename = medium.migrate(argv.pathToZip, argv.verbose);
+    let filename = await medium.migrate(argv.pathToZip, argv.verbose);
 
     ui.log.ok(`Successfully written output to ${filename} in ${Date.now() - timer}ms.`);
 };

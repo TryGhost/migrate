@@ -1,7 +1,28 @@
 const mediumIngest = require('@tryghost/mg-medium-export');
 const mgJSON = require('@tryghost/mg-json');
 const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
+const MgScraper = require('@tryghost/mg-webscraper');
 const fsUtils = require('@tryghost/mg-fs-utils');
+
+const scrapeConfig = {
+    posts: {
+        tags: {
+            listItem: 'ul.tags > li',
+            data: {
+                url: {
+                    selector: 'a',
+                    attr: 'href'
+                },
+                // @TODO ideally we'd spec this using a data key, so the structure reflects what we expect back
+                name: {
+                    selector: 'a'
+                }
+            }
+        }
+    }
+};
+
+const mediumScraper = new MgScraper(scrapeConfig);
 
 /**
  * Migrate from Medium
@@ -11,7 +32,7 @@ const fsUtils = require('@tryghost/mg-fs-utils');
  * @param {String} pathToZip
  * @param {Boolean} verbose
  */
-module.exports.migrate = (pathToZip) => {
+module.exports.migrate = async (pathToZip) => {
     // 0. Prep a file cache to keep our output
     let fileCache = new fsUtils.FileCache(pathToZip);
 
@@ -19,6 +40,7 @@ module.exports.migrate = (pathToZip) => {
     let result = mediumIngest(pathToZip);
 
     // 2. Pass the results through the web scraper to get any missing data
+    result = await mediumScraper.hydrate(result);
 
     // 3. Format the data as a valid Ghost JSON file
     result = mgJSON.toGhostJSON(result);
