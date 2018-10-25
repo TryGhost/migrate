@@ -21,6 +21,12 @@ exports.setup = (sywac) => {
         defaultValue: false,
         desc: 'Show verbose output'
     });
+    sywac.enumeration('-s --scrape', {
+        choices: ['all', 'web', 'img', 'none'],
+        defaultValue: 'all',
+        desc: 'Configure scraping tasks',
+
+    });
 };
 
 // What to do when this command is executed
@@ -30,7 +36,7 @@ exports.run = async (argv) => {
         ui.log.info(`Migrating from export at ${argv.pathToZip}`);
     }
 
-    let filename = await medium.migrate(argv.pathToZip, argv.verbose);
+    let filename = await medium.migrate(argv.pathToZip, argv);
 
     ui.log.ok(`Successfully written output to ${filename} in ${Date.now() - timer}ms.`);
 };
