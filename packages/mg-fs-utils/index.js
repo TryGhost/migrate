@@ -8,7 +8,7 @@ const path = require('path');
  * @param {Object} data - a valid Ghost JSON object
  * @param {Array} files - a list of image files to include
  */
-module.exports.writeFile = (data, files, options = {}) => {
+module.exports.writeJSONFile = (data, files, options = {}) => {
     let filename = options.filename || `ghost-import-${Date.now()}.json`;
     let filepath = path.resolve(process.cwd(), filename);
 
