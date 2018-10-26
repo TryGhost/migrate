@@ -12,6 +12,9 @@ const fsUtils = require('@tryghost/mg-fs-utils');
  * @param {Boolean} verbose
  */
 module.exports.migrate = (pathToZip) => {
+    // 0. Prep a file cache to keep our output
+    let fileCache = new fsUtils.FileCache(pathToZip);
+
     // 1. Read the zip file
     let result = mediumIngest(pathToZip);
 
@@ -26,8 +29,9 @@ module.exports.migrate = (pathToZip) => {
     result = mgHtmlMobiledoc.convert(result);
 
     // 6. Write a valid Ghost import zip
-    let filename = fsUtils.writeJSONFile(result);
+    // @TODO: write the zip, not just a JSON file
+    fileCache.writeJSONFile(result);
 
     // 7. Return the path to the file
-    return filename;
+    return fileCache.JSONFileName;
 };
