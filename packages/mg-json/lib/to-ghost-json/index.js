@@ -6,11 +6,11 @@ module.exports = (input) => {
     // Construct a basic Ghost JSON template
     let output = baseTemplate();
 
-    // Strip any meta data from the input
-    let data = stripMeta(input);
-
     // Process relationships from nested form
-    output.data = processPostRelations(data);
+    output.data = processPostRelations(input);
+
+    // Strip any meta data from the input / flatten structures
+    output.data = stripMeta(output.data);
 
     return output;
 };

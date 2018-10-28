@@ -1,53 +1,55 @@
 const _ = require('lodash');
-const schema = require('../utils/schema');
 
-module.exports = (data) => {
-    console.log('got user', data.users);
-    let users = data.users || [];
+module.exports = (json) => {
+    json.users = json.users || [];
+
     // @TODO: use bson objectid
     let authorId = 1;
 
+    const findPostAuthors = (post) => {
+        let authors = [];
+        if (_.has(post, 'authors')) {
+            authors = post.authors;
+            delete post.authors;
+        } else if (_.has(post, 'author')) {
+            authors.push(post.author);
+            delete post.author;
+        }
+
+        return authors;
+    };
+
     const findMatchingUser = (author) => {
-        return users.find(user => {
+        return json.users.find((user) => {
             if (user.url === author.url) {
                 return user;
             }
         });
     };
 
-    const findPostAuthors = (post) => {
-        // Find authors and remove all aliases
-        const authors = _.pick(post, schema.AUTHOR_ALIASES);
-        _.each(schema.AUTHOR_ALIASES, (alias) => {
-            delete post[alias];
-        });
+    const processPostAuthors = (post) => {
+        let authors = findPostAuthors(post);
         post.authors = [];
 
-        if (_.isArray(authors)) {
-            throw Error('Multiple Authors support is unimplemented');
-        } else if (_.isObject(authors)) {
-            let user = findMatchingUser(authors);
+        _.each(authors, (author) => {
+            let user = findMatchingUser(author);
             if (!user) {
-                user = authors;
-                user.id = authorId;
-                users.push(user);
+                user = author;
+                user.data.id = authorId;
+                json.users.push(user);
                 authorId += 1;
             }
-            post.authors.push(user.id);
-        } else if (_.isString(authors)) {
-            throw Error('Author ID support is unimplemented');
-        } else {
-            throw Error('Author structure not understood');
-        }
+            post.authors.push(user.data.id);
+        });
     };
 
-    const findPostRelations = (post) => {
-        findPostAuthors(post);
+    const processPostRelations = (post) => {
+        processPostAuthors(post.data);
         // @TODO: implement tag relation matching
-        // findPostTags(post);
+        // processsPostTags(post);
     };
 
-    data.posts.forEach(findPostRelations);
+    json.posts.forEach(processPostRelations);
 
-    return data;
+    return json;
 };
