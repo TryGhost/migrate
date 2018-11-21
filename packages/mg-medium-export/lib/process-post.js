@@ -1,6 +1,16 @@
 const cheerio = require('cheerio');
 const processContent = require('./process-content');
 
+const processAuthor = ($author) => {
+    return {
+        url: $author.attr('href'),
+        data: {
+            name: $author.text(),
+            slug: $author.attr('href').replace(/.*?@(.*?)$/, (m, p) => p.toLowerCase())
+        }
+    };
+};
+
 module.exports = (name, html) => {
     let $ = cheerio.load(html, {
         decodeEntities: false
@@ -20,15 +30,17 @@ module.exports = (name, html) => {
     } else {
         post.data.status = 'published';
         post.data.published_at = $('.dt-published').attr('datetime');
-        post.data.author = {
-            url: $('.p-author').attr('href'),
-            data: {
-                name: $('.p-author').text()
-            }
-        };
     }
 
+    // Process content
     post.data.html = processContent($('.e-content'), post);
+
+    // Process author
+    if ($('.p-author').length) {
+        post.data.author = processAuthor($('.p-author'));
+    }
+
+    // @TODO: process tags
 
     return post;
 };
