@@ -11,6 +11,21 @@ const processAuthor = ($author) => {
     };
 };
 
+const processTags = ($tags) => {
+    const tags = [];
+    $tags.each((i, el) => {
+        let $tag = cheerio(el);
+        tags.push({
+            url: $tag.attr('href'),
+            data: {
+                name: $tag.text(),
+                slug: $tag.attr('href').replace(/.*\/(.*?)$/, (m, p) => p.toLowerCase())
+            }
+        });
+    });
+    return tags;
+};
+
 module.exports = (name, html) => {
     let $ = cheerio.load(html, {
         decodeEntities: false
@@ -41,6 +56,9 @@ module.exports = (name, html) => {
     }
 
     // @TODO: process tags
+    if ($('.p-tags a').length) {
+        post.data.tags = processTags($('.p-tags a'));
+    }
 
     return post;
 };

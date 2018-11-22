@@ -9,7 +9,7 @@ describe('Process', function () {
         const fixture = testUtils.fixtures.readSync('basic-post.html');
         const post = processPost('2018-08-11_blog-post-title-efefef121212.html', fixture);
 
-        post.should.be.an.Object().with.properties(['url', 'data']);
+        post.should.be.a.MediumMetaObject();
 
         post.url.should.eql('https://medium.com/@JoeBloggs/testpost-efefef12121212');
 
@@ -21,18 +21,29 @@ describe('Process', function () {
         post.data.html.should.match(/^<section name="007"/);
         post.data.html.should.match(/<\/section>$/);
 
-        post.data.author.should.be.an.Object().with.properties(['url', 'data']);
+        post.data.author.should.be.a.MediumMetaObject();
 
         post.data.author.url.should.eql('https://medium.com/@JoeBloggs');
         post.data.author.data.name.should.eql('Joe Bloggs');
         post.data.author.data.slug.should.eql('joebloggs');
+
+        post.data.tags.should.be.an.Array().with.lengthOf(2);
+
+        post.data.tags[0].should.be.a.MediumMetaObject();
+        post.data.tags[0].url.should.eql('https://medium.com/tag/things');
+        post.data.tags[0].data.name.should.eql('Things');
+        post.data.tags[0].data.slug.should.eql('things');
+        post.data.tags[1].should.be.a.MediumMetaObject();
+        post.data.tags[1].url.should.eql('https://medium.com/tag/stuff');
+        post.data.tags[1].data.name.should.eql('Stuff');
+        post.data.tags[1].data.slug.should.eql('stuff');
     });
 
     it('Can process a draft medium post', function () {
         const fixture = testUtils.fixtures.readSync('draft-post.html');
         const post = processPost('draft_blog-post-title-ababab121212.html', fixture);
 
-        post.should.be.an.Object().with.properties(['url', 'data']);
+        post.should.be.a.MediumMetaObject();
 
         post.url.should.eql('https://medium.com/p/ababab12121212');
 
@@ -46,5 +57,6 @@ describe('Process', function () {
         // Drafts don't have these
         should.not.exist(post.data.published_at);
         should.not.exist(post.data.author);
+        should.not.exist(post.data.tags);
     });
 });
