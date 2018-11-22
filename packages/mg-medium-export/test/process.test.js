@@ -7,7 +7,8 @@ const processPost = require('../lib/process-post');
 describe('Process', function () {
     it('Can process a basic medium post', function () {
         const fixture = testUtils.fixtures.readSync('basic-post.html');
-        const post = processPost('2018-08-11_blog-post-title-efefef121212.html', fixture);
+        const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
+        const post = processPost(fakeName, fixture);
 
         post.should.be.a.MediumMetaObject();
 
@@ -41,7 +42,8 @@ describe('Process', function () {
 
     it('Can process a draft medium post', function () {
         const fixture = testUtils.fixtures.readSync('draft-post.html');
-        const post = processPost('draft_blog-post-title-ababab121212.html', fixture);
+        const fakeName = 'draft_blog-post-title-ababab121212.html';
+        const post = processPost(fakeName, fixture);
 
         post.should.be.a.MediumMetaObject();
 
@@ -58,5 +60,27 @@ describe('Process', function () {
         should.not.exist(post.data.published_at);
         should.not.exist(post.data.author);
         should.not.exist(post.data.tags);
+    });
+
+    it('Can do advanced content processing on medium posts', function () {
+        const fixture = testUtils.fixtures.readSync('advanced-post.html');
+        const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
+        const post = processPost(fakeName, fixture);
+
+        post.should.be.a.MediumMetaObject();
+
+        const html = post.data.html;
+        const firstDivRegex = /^<section name="007" class="section section--body section--first">[^\w<>]+<div class="(.*?)"/;
+
+        // should start with a section followed by a div
+        html.should.match(firstDivRegex);
+
+        // the first div should not be a section divider anymore (what's in the fixture)
+        html.match(firstDivRegex)[1].should.not.eql('section-divider');
+        // this is what we expect instead
+        html.match(firstDivRegex)[1].should.eql('section-content');
+
+        // should not contain a header with the post title
+        html.should.not.match(/<h3[^>]*>Blog Post Title/);
     });
 });
