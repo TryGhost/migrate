@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/migrate",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "repository": "https://github.com/TryGhost/migrate/tree/master/packages/migrate",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -23,10 +23,10 @@
     "sinon": "6.3.5"
   },
   "dependencies": {
-    "@tryghost/mg-fs-utils": "0.0.0",
-    "@tryghost/mg-html-mobiledoc": "0.0.0",
-    "@tryghost/mg-json": "^0.1.0",
-    "@tryghost/mg-medium-export": "^0.2.0",
+    "@tryghost/mg-fs-utils": "^0.1.0",
+    "@tryghost/mg-html-mobiledoc": "^0.1.0",
+    "@tryghost/mg-json": "^0.2.0",
+    "@tryghost/mg-medium-export": "^0.3.0",
     "@tryghost/pretty-cli": "1.1.0",
     "bluebird": "^3.5.2",
     "ghost-ignition": "^2.9.6",
