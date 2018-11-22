@@ -2,18 +2,20 @@ const _ = require('lodash');
 
 module.exports = (json) => {
     json.users = json.users || [];
+    json.posts_authors = [];
 
     // @TODO: use bson objectid
     let authorId = 1;
+    let postId = 1;
 
-    const findPostAuthors = (post) => {
+    const findPostAuthors = (postData) => {
         let authors = [];
-        if (_.has(post, 'authors')) {
-            authors = post.authors;
-            delete post.authors;
-        } else if (_.has(post, 'author')) {
-            authors.push(post.author);
-            delete post.author;
+        if (_.has(postData, 'authors')) {
+            authors = postData.authors;
+            delete postData.authors;
+        } else if (_.has(postData, 'author')) {
+            authors.push(postData.author);
+            delete postData.author;
         }
 
         return authors;
@@ -27,9 +29,8 @@ module.exports = (json) => {
         });
     };
 
-    const processPostAuthors = (post) => {
-        let authors = findPostAuthors(post);
-        post.authors = [];
+    const processPostAuthors = (postData) => {
+        let authors = findPostAuthors(postData);
 
         _.each(authors, (author) => {
             let user = findMatchingUser(author);
@@ -39,11 +40,20 @@ module.exports = (json) => {
                 json.users.push(user);
                 authorId += 1;
             }
-            post.authors.push(user.data.id);
+
+            json.posts_authors.push({
+                post_id: postData.id,
+                author_id: user.data.id
+            });
         });
     };
 
     const processPostRelations = (post) => {
+        if (!post.data.id) {
+            post.data.id = postId;
+            postId += 1;
+        }
+
         processPostAuthors(post.data);
         // @TODO: implement tag relation matching
         // processsPostTags(post);

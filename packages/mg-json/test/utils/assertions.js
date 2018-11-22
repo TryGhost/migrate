@@ -12,12 +12,6 @@ should.Assertion.add('GhostPost', function () {
 
     // Relationships...
 
-    // medium only ever has a single author, but we still convert to Ghost's expected format
-    this.obj.should.have.property('authors');
-    this.obj.authors.should.be.an.Array();
-    this.obj.authors.length.should.eql(1);
-    this.obj.authors[0].should.be.a.Number().and.be.above(0);
-
     // @TODO: tags
     // there can be mutliple tags, but also no tags
     // if (this.obj.tags) {
@@ -51,7 +45,7 @@ should.Assertion.add('GhostJSON', function () {
 
     // @TODO: tags
     //this.obj.data.should.have.properties(['posts', 'users', 'tags']);
-    this.obj.data.should.have.properties(['posts', 'users']);
+    this.obj.data.should.have.properties(['posts', 'users', 'posts_authors']);
 
     // posts
     this.obj.data.posts.should.be.an.Array();
@@ -64,4 +58,11 @@ should.Assertion.add('GhostJSON', function () {
     // @TODO: tags
     // this.obj.data.tags.should.be.an.Array();
     // this.obj.data.tags.forEach(tag => tag.should.be.a.GhostTag());
+
+    // Relations...
+
+    // medium only ever has a single author, but we still convert to Ghost's expected multiauthor format
+    this.obj.data.posts_authors.should.be.an.Array();
+    this.obj.data.posts_authors.length.should.eql(1);
+    this.obj.data.posts_authors[0].should.be.an.Object().with.properties(['post_id', 'author_id']);
 });

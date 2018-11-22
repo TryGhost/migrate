@@ -16,7 +16,8 @@ describe('toGhostJSON', function () {
         output.data.posts.should.be.an.Array().with.lengthOf(1);
         output.data.users.should.be.an.Array().with.lengthOf(1);
 
-        output.data.posts[0].authors.should.eql([output.data.users[0].id]);
+        output.data.posts_authors[0].post_id.should.eql(output.data.posts[0].id);
+        output.data.posts_authors[0].author_id.should.eql(output.data.users[0].id);
     });
 
     it.skip('Calculates relations with both post and users', function () {
