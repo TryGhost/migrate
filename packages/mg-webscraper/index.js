@@ -1,22 +1,45 @@
 const _ = require('lodash');
 const scrapeIt = require('scrape-it');
 
+const makeMetaObject = (item) => {
+    if (!item.url) {
+        return item;
+    }
+
+    // Always strip any query params (maybe need to only do this for medium in future?)
+    let newItem = { url: item.url.replace(/\?.*$/, '') };
+    delete item.url;
+    newItem.data = item;
+    return newItem;
+};
+
+const findMatchIn = (existing, match) => {
+    return _.find(existing, (item) => {
+        return item.url === match.url;
+    });
+};
+
 class Scraper {
     constructor(config) {
         this.config = config;
     }
 
-    mergeRelations (relations) {
-        return relations.map(item => {
-            if (!item.url) {
-                return item;
-            }
+    mergeRelations(existing, scraped) {
+        scraped.forEach(item => {
+            let newItem = makeMetaObject(item);
+            let matchedItem = findMatchIn(existing, newItem);
 
-            let newItem = { url: item.url };
-            delete item.url;
-            newItem.data = item;
-            return newItem;
+            // if we find a match, copy data properties across
+            if (matchedItem) {
+                _.each(newItem.data, (datum, key) => {
+                    matchedItem.data[key] = datum;
+                });
+            } else {
+                existing.push(newItem);
+            }
         });
+
+        return existing;
     }
 
     mergeResource (resource) {
@@ -24,11 +47,11 @@ class Scraper {
             if (response.statusCode > 299) {
                 return resource;
             }
-            _.each(data, (field, name) => {
-                if (_.isArray(field)) {
-                    resource[name] = this.mergeRelations(field);
+            _.each(data, (value, key) => {
+                if (_.isArray(value)) {
+                    resource[key] = this.mergeRelations(resource[key], value);
                 } else {
-                    resource[name] = field;
+                    resource[key] = value;
                 }
             });
 
