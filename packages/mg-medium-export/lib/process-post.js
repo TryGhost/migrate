@@ -1,5 +1,26 @@
-const cheerio = require('cheerio');
+const $ = require('cheerio');
 const processContent = require('./process-content');
+
+const processMeta = (name, $post) => {
+    const post = {
+        url: $post('.p-canonical').attr('href'),
+        data: {
+            title: $post('.p-name').text(),
+            slug: name.match(/_(.*?)-[0-9a-f]+\.html/)[1],
+            custom_excerpt: $post('.p-summary').text().trim()
+        }
+    };
+
+    if (/^draft/.test(name)) {
+        post.url = $post('footer p a').attr('href');
+        post.data.status = 'draft';
+    } else {
+        post.data.status = 'published';
+        post.data.published_at = $post('.dt-published').attr('datetime');
+    }
+
+    return post;
+};
 
 const processAuthor = ($author) => {
     return {
@@ -13,8 +34,8 @@ const processAuthor = ($author) => {
 
 const processTags = ($tags) => {
     const tags = [];
-    $tags.each((i, el) => {
-        let $tag = cheerio(el);
+    $tags.each((i, tag) => {
+        let $tag = $(tag);
         tags.push({
             url: $tag.attr('href'),
             data: {
@@ -27,37 +48,23 @@ const processTags = ($tags) => {
 };
 
 module.exports = (name, html) => {
-    let $ = cheerio.load(html, {
+    const $post = $.load(html, {
         decodeEntities: false
     });
-    let post = {
-        url: $('.p-canonical').attr('href'),
-        data: {
-            title: $('.p-name').text(),
-            slug: name.match(/_(.*?)-[0-9a-f]+\.html/)[1],
-            custom_excerpt: $('.p-summary').text().trim()
-        }
-    };
 
-    if (/^draft/.test(name)) {
-        post.url = $('footer p a').attr('href');
-        post.data.status = 'draft';
-    } else {
-        post.data.status = 'published';
-        post.data.published_at = $('.dt-published').attr('datetime');
-    }
+    const post = processMeta(name, $post);
 
     // Process content
-    post.data.html = processContent($('.e-content'), post);
+    post.data.html = processContent($post('.e-content'), post);
 
     // Process author
-    if ($('.p-author').length) {
-        post.data.author = processAuthor($('.p-author'));
+    if ($post('.p-author').length) {
+        post.data.author = processAuthor($post('.p-author'));
     }
 
-    // @TODO: process tags
-    if ($('.p-tags a').length) {
-        post.data.tags = processTags($('.p-tags a'));
+    // Process tags
+    if ($post('.p-tags a').length) {
+        post.data.tags = processTags($post('.p-tags a'));
     }
 
     return post;
