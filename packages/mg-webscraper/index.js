@@ -42,14 +42,31 @@ class Scraper {
         return existing;
     }
 
+    mergeObject(existing, scraped) {
+        let newItem = makeMetaObject(scraped);
+
+        if (!existing) {
+            return newItem;
+        }
+
+        _.each(newItem.data, (datum, key) => {
+            existing.data[key] = datum;
+        });
+
+        return existing;
+    }
+
     mergeResource (resource) {
         return ({ data, response }) => {
             if (response.statusCode > 299) {
                 return resource;
             }
+
             _.each(data, (value, key) => {
                 if (_.isArray(value)) {
                     resource[key] = this.mergeRelations(resource[key], value);
+                } else if (_.isObject(value)) {
+                    resource[key] = this.mergeObject(resource[key], value);
                 } else {
                     resource[key] = value;
                 }

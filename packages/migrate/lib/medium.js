@@ -18,6 +18,25 @@ const scrapeConfig = {
                     selector: 'a'
                 }
             }
+        },
+        author: {
+            selector: '.postMetaLockup--authorLockupForPost',
+            data: {
+                url: {
+                    selector: 'a',
+                    attr: 'href'
+                },
+                name: {
+                    selector: 'a'
+                },
+                bio: {
+                    selector: '.postMetaInline'
+                },
+                profile_image: {
+                    selector: '.avatar-image',
+                    attr: 'src'
+                }
+            }
         }
     }
 };
