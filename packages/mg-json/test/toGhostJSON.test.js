@@ -15,9 +15,17 @@ describe('toGhostJSON', function () {
         output.should.be.GhostJSON();
         output.data.posts.should.be.an.Array().with.lengthOf(1);
         output.data.users.should.be.an.Array().with.lengthOf(1);
+        output.data.tags.should.be.an.Array().with.lengthOf(2);
 
+        output.data.posts_authors.should.be.an.Array().with.lengthOf(1);
         output.data.posts_authors[0].post_id.should.eql(output.data.posts[0].id);
         output.data.posts_authors[0].author_id.should.eql(output.data.users[0].id);
+
+        output.data.posts_tags.should.be.an.Array().with.lengthOf(2);
+        output.data.posts_tags[0].post_id.should.eql(output.data.posts[0].id);
+        output.data.posts_tags[0].tag_id.should.eql(output.data.tags[0].id);
+        output.data.posts_tags[1].post_id.should.eql(output.data.posts[0].id);
+        output.data.posts_tags[1].tag_id.should.eql(output.data.tags[1].id);
     });
 
     it.skip('Calculates relations with both post and users', function () {

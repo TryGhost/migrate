@@ -9,6 +9,7 @@ module.exports.RESOURCES = [
 
 module.exports.RESOURCE_SINGULAR_TO_PLURAL = {
     user: 'users',
+    author: 'authors',
     post: 'posts',
     tag: 'tags'
 };

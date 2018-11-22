@@ -9,17 +9,6 @@ should.Assertion.add('GhostPost', function () {
     this.obj.should.be.an.Object();
     this.obj.should.not.have.properties(['url', 'data']);
     this.obj.should.have.properties(['slug', 'title', 'status']); // bare minimum properties to be useful
-
-    // Relationships...
-
-    // @TODO: tags
-    // there can be mutliple tags, but also no tags
-    // if (this.obj.tags) {
-    //     this.obj.tags.should.be.an.Array();
-    //     this.obj.tags.forEach(tag => {
-    //         tag.should.be.a.Number().and.be.above(0);
-    //     });
-    // }
 });
 
 should.Assertion.add('GhostUser', function () {
@@ -43,9 +32,8 @@ should.Assertion.add('GhostJSON', function () {
     this.obj.meta.should.be.an.Object();
     this.obj.meta.should.have.properties(['exported_on', 'version']);
 
-    // @TODO: tags
-    //this.obj.data.should.have.properties(['posts', 'users', 'tags']);
-    this.obj.data.should.have.properties(['posts', 'users', 'posts_authors']);
+    // Basic tabls
+    this.obj.data.should.have.properties(['posts', 'users', 'tags', 'posts_authors', 'posts_tags']);
 
     // posts
     this.obj.data.posts.should.be.an.Array();
@@ -55,14 +43,20 @@ should.Assertion.add('GhostJSON', function () {
     this.obj.data.users.should.be.an.Array();
     this.obj.data.users.forEach(user => user.should.be.a.GhostUser());
 
-    // @TODO: tags
-    // this.obj.data.tags.should.be.an.Array();
-    // this.obj.data.tags.forEach(tag => tag.should.be.a.GhostTag());
+    // tags
+    this.obj.data.tags.should.be.an.Array();
+    this.obj.data.tags.forEach(tag => tag.should.be.a.GhostTag());
 
     // Relations...
 
-    // medium only ever has a single author, but we still convert to Ghost's expected multiauthor format
+    // Ghost posts must have at least one author, but we still convert to Ghost's expected multiauthor format
     this.obj.data.posts_authors.should.be.an.Array();
-    this.obj.data.posts_authors.length.should.eql(1);
-    this.obj.data.posts_authors[0].should.be.an.Object().with.properties(['post_id', 'author_id']);
+    this.obj.data.posts_authors.length.should.be.aboveOrEqual(1);
+    this.obj.data.posts_authors.forEach(postAuthor => postAuthor.should.be.an.Object().with.properties(['post_id', 'author_id']));
+
+    // there can be mutliple tags, but also no tags
+    this.obj.data.posts_tags.should.be.an.Array();
+    if (this.obj.data.posts_tags.length > 0) {
+        this.obj.data.posts_tags.forEach(postTag => postTag.should.be.an.Object().with.properties(['post_id', 'tag_id']));
+    }
 });
