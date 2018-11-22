@@ -1,5 +1,5 @@
 const baseTemplate = require('./base-template');
-const stripMeta = require('./strip-meta');
+const stripMeta = require('./meta-to-ghost');
 const processPostRelations = require('./process-post-relations');
 
 module.exports = (input) => {

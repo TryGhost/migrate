@@ -32,7 +32,7 @@ should.Assertion.add('GhostUser', function () {
     this.params = {operator: 'to be a valid Ghost User'};
     this.obj.should.be.an.Object();
     this.obj.should.not.have.properties(['url', 'data']);
-    this.obj.should.have.properties(['slug', 'name']);
+    this.obj.should.have.properties(['slug', 'name', 'email']);
 });
 
 should.Assertion.add('GhostTag', function () {
