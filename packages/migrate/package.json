@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/migrate",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "repository": "https://github.com/TryGhost/migrate/tree/master/packages/migrate",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -27,7 +27,7 @@
     "@tryghost/mg-html-mobiledoc": "^0.1.0",
     "@tryghost/mg-json": "^0.2.0",
     "@tryghost/mg-medium-export": "^0.3.0",
-    "@tryghost/mg-webscraper": "0.0.0",
+    "@tryghost/mg-webscraper": "^0.1.0",
     "@tryghost/pretty-cli": "1.1.0",
     "bluebird": "^3.5.2",
     "ghost-ignition": "^2.9.6",
