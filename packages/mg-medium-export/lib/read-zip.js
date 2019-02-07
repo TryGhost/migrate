@@ -1,16 +1,11 @@
-const AdmZip = require('adm-zip');
+const fsUtils = require('@tryghost/mg-fs-utils');
 
 module.exports = (zipPath) => {
-    let zip = AdmZip(zipPath);
     let content = {
         posts: []
     };
 
-    zip.getEntries().forEach(function (zipEntry) {
-        if (/__MACOSX/.test(zipEntry.entryName)) {
-            return;
-        }
-
+    fsUtils.zip.read(zipPath, (zipEntry) => {
         if (/profile\/profile\.html/.test(zipEntry.entryName)) {
             content.profile = zipEntry.getData().toString('utf8');
         }

@@ -21,7 +21,7 @@
     "sinon": "6.3.5"
   },
   "dependencies": {
-    "adm-zip": "^0.4.11",
+    "@tryghost/mg-fs-utils": "^0.1.0",
     "bluebird": "^3.5.2",
     "cheerio": "^1.0.0-rc.2",
     "fs-extra": "^7.0.0",
