@@ -41,8 +41,6 @@ const scrapeConfig = {
     }
 };
 
-const mediumScraper = new MgScraper(scrapeConfig);
-
 /**
  * Migrate from Medium
  *
@@ -52,8 +50,9 @@ const mediumScraper = new MgScraper(scrapeConfig);
  * @param {Object} options
  */
 module.exports.migrate = async (pathToZip, options) => {
-    // 0. Prep a file cache to keep our output
+    // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
     let fileCache = new fsUtils.FileCache(pathToZip);
+    const mediumScraper = new MgScraper(scrapeConfig);
 
     // 1. Read the zip file
     let result = mediumIngest(pathToZip);
@@ -77,8 +76,8 @@ module.exports.migrate = async (pathToZip, options) => {
 
     // 6. Write a valid Ghost import zip
     // @TODO: write the zip, not just a JSON file
-    fileCache.writeJSONFile(result);
+    let filename = fileCache.writeJSONFile(result);
 
     // 7. Return the path to the file
-    return fileCache.JSONFileName;
+    return filename;
 };
