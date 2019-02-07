@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const fs = require('fs-extra');
 const path = require('path');
 const crypto = require('crypto');
@@ -41,11 +42,11 @@ class FileCache {
         return path.join(this.cacheDir, 'tmp');
     }
 
-     get jsonDir() {
+    get jsonDir() {
         return path.join(this.cacheDir, 'zip');
     }
 
-     get imageDir() {
+    get imageDir() {
         return path.join(this.cacheDir, 'zip', 'content', 'images');
     }
 
@@ -62,6 +63,29 @@ class FileCache {
         fs.outputJsonSync(filepath, data, {spaces: 2});
 
         return filepath;
+    }
+
+    writeImageFile(data, options) {
+        let filepath = path.join(this.imageDir, options.filename);
+
+        fs.outputFileSync(filepath, data);
+
+        return filepath;
+    }
+
+    /**
+    * Check if we've got this file already
+    *
+    * @param {String} filename
+    * @param {String} type - one of tmp, json, image
+    */
+    hasFile(filename, type) {
+        if (!_.includes(['tmp', 'json', 'image'], type)) {
+            return new Error('Unknown file type');
+        }
+        let dir = this[`${type}Dir`];
+
+        return fs.existsSync(path.join(dir, filename));
     }
 }
 

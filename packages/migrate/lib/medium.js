@@ -2,6 +2,7 @@ const mediumIngest = require('@tryghost/mg-medium-export');
 const mgJSON = require('@tryghost/mg-json');
 const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
 const MgScraper = require('@tryghost/mg-webscraper');
+const MgImageScraper = require('@tryghost/mg-imagescraper');
 const fsUtils = require('@tryghost/mg-fs-utils');
 
 const scrapeConfig = {
@@ -51,7 +52,8 @@ const scrapeConfig = {
  */
 module.exports.migrate = async (pathToZip, options) => {
     // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-    let fileCache = new fsUtils.FileCache(pathToZip);
+    const fileCache = new fsUtils.FileCache(pathToZip);
+    const imageScraper = new MgImageScraper(fileCache);
     const mediumScraper = new MgScraper(scrapeConfig);
 
     // 1. Read the zip file
@@ -67,8 +69,7 @@ module.exports.migrate = async (pathToZip, options) => {
 
     // 4. Pass the JSON file through the image scraper
     if (options.scrape === 'all' || options.scrape === 'img') {
-        // @TODO: image scraping
-        result = result;
+        result = await imageScraper.fetch(result);
     }
 
     // 5. Convert post HTML -> MobileDoc
