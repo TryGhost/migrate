@@ -76,8 +76,8 @@ module.exports.migrate = async (pathToZip, options) => {
     result = mgHtmlMobiledoc.convert(result);
 
     // 6. Write a valid Ghost import zip
-    // @TODO: write the zip, not just a JSON file
-    let filename = fileCache.writeJSONFile(result);
+    fileCache.writeJSONFile(result);
+    let filename = fsUtils.zip.write(process.cwd(), fileCache.zipDir);
 
     // 7. Return the path to the file
     return filename;

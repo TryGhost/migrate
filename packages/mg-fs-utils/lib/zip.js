@@ -1,4 +1,5 @@
 const AdmZip = require('adm-zip');
+const path = require('path');
 
 module.exports.read = (zipPath, callback) => {
     let zip = AdmZip(zipPath);
@@ -11,4 +12,13 @@ module.exports.read = (zipPath, callback) => {
 
         callback(zipEntry);
     });
+};
+
+module.exports.write = (zipPath, contentFolder) => {
+    const zip = new AdmZip();
+    const outputPath = path.join(zipPath, 'medium-to-ghost.zip');
+    zip.addLocalFolder(contentFolder);
+    zip.writeZip(outputPath);
+
+    return outputPath;
 };

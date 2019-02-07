@@ -42,13 +42,18 @@ class FileCache {
         return path.join(this.cacheDir, 'tmp');
     }
 
+    get zipDir() {
+        return path.join(this.cacheDir, 'zip')
+    }
+
     get jsonDir() {
-        return path.join(this.cacheDir, 'zip');
+        return this.zipDir;
     }
 
     get imageDir() {
-        return path.join(this.cacheDir, 'zip', 'content', 'images');
+        return path.join(this.zipDir, 'content', 'images');
     }
+
 
     /**
      * Create a JSON file with our processed data
