@@ -25,6 +25,8 @@ class Scraper {
     }
 
     mergeRelations(existing, scraped) {
+        existing = existing || [];
+
         scraped.forEach(item => {
             let newItem = makeMetaObject(item);
             let matchedItem = findMatchIn(existing, newItem);
