@@ -3,9 +3,6 @@ const cheerio = require('cheerio');
 const url = require('url');
 const got = require('got');
 
-// @TODO: get rid of this!
-const path = require('path');
-
 // @TODO: expand this list
 const htmlFields = ['html'];
 
@@ -19,21 +16,20 @@ class ImageScraper {
 
     async downloadImage(src) {
         let imageUrl = url.parse(src);
-        // @TODO: don't hardcode the image path here!
-        let finalPath = path.join('/', 'content', 'images', imageUrl.pathname);
+        let imageFile = this.fileCache.resolveImageFileName(imageUrl.pathname);
 
-
-        if (this.fileCache.hasFile(imageUrl.pathname, 'image')) {
-            return finalPath;
+        if (this.fileCache.hasFile(imageFile.storagePath, 'image')) {
+            return imageFile.outputPath;
         }
 
         try {
-            const response = await got(src, {encoding: null});
-            this.fileCache.writeImageFile(response.body, {filename: imageUrl.pathname});
-            return finalPath;
+            let response = await got(src, {encoding: null});
+            this.fileCache.writeImageFile(response.body, imageFile);
         } catch (error) {
-            console.error(error.response.body); /* eslint-disable-line no-console */
+            console.error('image error', src, error); /* eslint-disable-line no-console */
         }
+
+        return imageFile.outputPath;
     }
 
     async processHTML(html) {

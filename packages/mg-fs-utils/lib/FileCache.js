@@ -32,8 +32,8 @@ class FileCache {
     get cacheDir() {
         if (!this._cacheDir) {
             this._cacheDir = path.join(os.tmpdir(), basePath, this.cacheKey);
-            fs.mkdirpSync(path.join(this._cacheDir, 'tmp'));
-            fs.mkdirpSync(path.join(this._cacheDir, 'zip', 'content', 'images'));
+            fs.mkdirpSync(path.join(this.tmpDir));
+            fs.mkdirpSync(path.join(this.imageDir));
         }
         return this._cacheDir;
     }
@@ -50,10 +50,21 @@ class FileCache {
         return this.zipDir;
     }
 
-    get imageDir() {
-        return path.join(this.zipDir, 'content', 'images');
+    get imagePath() {
+        return path.join('content', 'images');
     }
 
+    get imageDir() {
+        return path.join(this.zipDir, this.imagePath);
+    }
+
+    resolveImageFileName(filename) {
+        return {
+            filename: filename,
+            storagePath: path.join(this.imageDir, filename),
+            outputPath: path.join('/', this.imagePath, filename)
+        };
+    }
 
     /**
      * Create a JSON file with our processed data
@@ -63,7 +74,7 @@ class FileCache {
      */
     writeJSONFile(data, options = {}) {
         let filename = options.filename || `ghost-import-${Date.now()}.json`;
-        let filepath = path.join(this.jsonDir, filename);
+        let filepath = path.join(this.zipDir, filename);
 
         fs.outputJsonSync(filepath, data, {spaces: 2});
 
@@ -71,11 +82,13 @@ class FileCache {
     }
 
     writeImageFile(data, options) {
-        let filepath = path.join(this.imageDir, options.filename);
+        if (!options.storagePath || !options.outputPath) {
+            options = this.resolveImageFileName(options.filename);
+        }
 
-        fs.outputFileSync(filepath, data);
+        fs.outputFileSync(options.storagePath, data);
 
-        return filepath;
+        return options.outputPath;
     }
 
     /**
