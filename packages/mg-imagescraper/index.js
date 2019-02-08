@@ -28,7 +28,7 @@ class ImageScraper {
         }
 
         try {
-            const response = await got(src);
+            const response = await got(src, {encoding: null});
             this.fileCache.writeImageFile(response.body, {filename: imageUrl.pathname});
             return finalPath;
         } catch (error) {
