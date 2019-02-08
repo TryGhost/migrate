@@ -7,7 +7,7 @@ const makeMetaObject = (item) => {
     }
 
     // Always strip any query params (maybe need to only do this for medium in future?)
-    let newItem = { url: item.url.replace(/\?.*$/, '') };
+    let newItem = {url: item.url.replace(/\?.*$/, '')};
     delete item.url;
     newItem.data = item;
     return newItem;
@@ -27,7 +27,7 @@ class Scraper {
     mergeRelations(existing, scraped) {
         existing = existing || [];
 
-        scraped.forEach(item => {
+        scraped.forEach((item) => {
             let newItem = makeMetaObject(item);
             let matchedItem = findMatchIn(existing, newItem);
 
@@ -58,8 +58,8 @@ class Scraper {
         return existing;
     }
 
-    mergeResource (resource) {
-        return ({ data, response }) => {
+    mergeResource(resource) {
+        return ({data, response}) => {
             if (response.statusCode > 299) {
                 return resource;
             }
@@ -75,7 +75,7 @@ class Scraper {
             });
 
             return resource;
-        }
+        };
     }
 
     async hydrate(data) {
@@ -86,13 +86,14 @@ class Scraper {
             return data;
         }
 
-        scrapeFns = data.posts.map(({ url, data }) => {
+        scrapeFns = data.posts.map(({url, data}) => {
             return scrapeIt(url, this.config.posts)
                 .then(this.mergeResource(data))
                 .catch((error) => {
+                    // @TODO: better error and warning handling
                     // Catch any errors, and output the URL and the error
-                    console.error('Webscraper unable to scrape', url);
-                    console.error(error.stack);
+                    console.error('Webscraper unable to scrape', url); /* eslint-disable-line no-console */
+                    console.error(error.stack); /* eslint-disable-line no-console */
                 });
         });
 
@@ -102,8 +103,8 @@ class Scraper {
                 return data;
             })
             .catch((error) => {
-                // @TODO: handle errors
-                console.error('Webscraper request error', error.stack);
+                // @TODO: better errors and warning handling
+                console.error('Webscraper request error', error.stack); /* eslint-disable-line no-console */
             });
     }
 }

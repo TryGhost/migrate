@@ -43,7 +43,7 @@ class FileCache {
     }
 
     get zipDir() {
-        return path.join(this.cacheDir, 'zip')
+        return path.join(this.cacheDir, 'zip');
     }
 
     get jsonDir() {

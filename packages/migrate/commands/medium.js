@@ -24,7 +24,7 @@ exports.setup = (sywac) => {
     sywac.enumeration('-s --scrape', {
         choices: ['all', 'web', 'img', 'none'],
         defaultValue: 'all',
-        desc: 'Configure scraping tasks',
+        desc: 'Configure scraping tasks'
 
     });
 };
