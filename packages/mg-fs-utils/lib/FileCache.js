@@ -58,7 +58,20 @@ class FileCache {
         return path.join(this.zipDir, this.imagePath);
     }
 
+    // @TODO: move this somewhere shared,
+    // it's currently duplicated from https://github.com/TryGhost/Ghost-Storage-Base/blob/master/BaseStorage.js#L62
+    sanitizeFileName(src) {
+        // below only matches ascii characters, @, and .
+        // unicode filenames like город.zip would therefore resolve to ----.zip
+        return src.replace(/[^\w@.]/gi, '-');
+    }
+
     resolveImageFileName(filename) {
+        let basename = path.basename(filename);
+
+        // replace the basename part with a sanitized version
+        filename = filename.replace(basename, this.sanitizeFileName(basename));
+
         return {
             filename: filename,
             storagePath: path.join(this.imageDir, filename),
