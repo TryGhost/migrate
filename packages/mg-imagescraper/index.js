@@ -24,7 +24,7 @@ class ImageScraper {
 
         try {
             let response = await got(src, {encoding: null});
-            this.fileCache.writeImageFile(response.body, imageFile);
+            await this.fileCache.writeImageFile(response.body, imageFile);
         } catch (error) {
             console.error('image error', src, error); /* eslint-disable-line no-console */
         }

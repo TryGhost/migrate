@@ -85,21 +85,27 @@ class FileCache {
      * @param {Object} data - a valid Ghost JSON object
      * @param {Object} options - config
      */
-    writeJSONFile(data, options = {}) {
+    async writeJSONFile(data, options = {}) {
         let filename = options.filename || `ghost-import-${Date.now()}.json`;
         let filepath = path.join(this.zipDir, filename);
 
-        fs.outputJsonSync(filepath, data, {spaces: 2});
+        await fs.outputJson(filepath, data, {spaces: 2});
 
         return filepath;
     }
 
-    writeImageFile(data, options) {
+    /**
+     * Create a binary image file with fetched data
+     *
+     * @param {String} data - a valid binary image
+     * @param {Object} options - a resolved file name
+     */
+    async writeImageFile(data, options) {
         if (!options.storagePath || !options.outputPath) {
             options = this.resolveImageFileName(options.filename);
         }
 
-        fs.outputFileSync(options.storagePath, data);
+        await fs.outputFile(options.storagePath, data);
 
         return options.outputPath;
     }
