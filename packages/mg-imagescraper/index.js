@@ -9,6 +9,20 @@ const htmlFields = ['html'];
 const isHTMLField = field => _.includes(htmlFields, field);
 const isImageField = field => /image/.test(field);
 
+const ScrapeError = ({src, code, statusCode}) => {
+    let error = new Error(`Unable to scrape URI ${src}`);
+
+    error.errorType = 'ScrapeError';
+    error.scraper = 'Image';
+    error.src = src;
+    error.code = code;
+    if (statusCode) {
+        error.statusCode = statusCode;
+    }
+
+    return error;
+};
+
 class ImageScraper {
     constructor(fileCache) {
         this.fileCache = fileCache;
@@ -25,11 +39,10 @@ class ImageScraper {
         try {
             let response = await got(src, {encoding: null});
             await this.fileCache.writeImageFile(response.body, imageFile);
+            return imageFile.outputPath;
         } catch (error) {
-            console.error('image error', src, error); /* eslint-disable-line no-console */
+            throw new ScrapeError({src, code: error.code, statusCode: error.statusCode});
         }
-
-        return imageFile.outputPath;
     }
 
     async processHTML(html) {
@@ -59,8 +72,9 @@ class ImageScraper {
         return value;
     }
 
-    async fetch(json) {
+    async fetch(ctx) {
         let promises = [];
+        let json = ctx.result;
 
         // For each resource type e.g. posts, users
         _.forEach(json.data, (resources) => {
@@ -69,7 +83,11 @@ class ImageScraper {
                 // For each field
                 _.forEach(resource, (value, field) => {
                     promises.push((async () => {
-                        resource[field] = await this.processField(field, value);
+                        try {
+                            resource[field] = await this.processField(field, value);
+                        } catch (error) {
+                            ctx.errors.push(error);
+                        }
                     })());
                 });
             });

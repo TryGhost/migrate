@@ -96,7 +96,7 @@ module.exports.getTaskRunner = (pathToZip, options) => {
             title: 'Fetch images via ImageSraper',
             task: async (ctx) => {
                 // 4. Pass the JSON file through the image scraper
-                ctx.result = await ctx.imageScraper.fetch(ctx.result);
+                ctx.result = await ctx.imageScraper.fetch(ctx);
             },
             skip: () => ['all', 'img'].indexOf(options.scrape) < 0
         },
