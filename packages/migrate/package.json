@@ -31,6 +31,7 @@
     "@tryghost/pretty-cli": "1.1.0",
     "bluebird": "^3.5.2",
     "ghost-ignition": "^2.9.6",
+    "listr": "^0.14.3",
     "lodash": "^4.17.11"
   }
 }

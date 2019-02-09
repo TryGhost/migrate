@@ -43,42 +43,68 @@ const scrapeConfig = {
 };
 
 /**
- * Migrate from Medium
+ * getTasks: Steps to Migrate from Medium
  *
  * Wiring of the steps to migrate from medium.
  *
  * @param {String} pathToZip
  * @param {Object} options
  */
-module.exports.migrate = async (pathToZip, options) => {
-    // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-    const fileCache = new fsUtils.FileCache(pathToZip);
-    const imageScraper = new MgImageScraper(fileCache);
-    const mediumScraper = new MgScraper(scrapeConfig);
-
-    // 1. Read the zip file
-    let result = mediumIngest(pathToZip);
-
-    // 2. Pass the results through the web scraper to get any missing data
-    if (options.scrape === 'all' || options.scrape === 'web') {
-        result = await mediumScraper.hydrate(result);
-    }
-
-    // 3. Format the data as a valid Ghost JSON file
-    result = mgJSON.toGhostJSON(result);
-
-    // 4. Pass the JSON file through the image scraper
-    if (options.scrape === 'all' || options.scrape === 'img') {
-        result = await imageScraper.fetch(result);
-    }
-
-    // 5. Convert post HTML -> MobileDoc
-    result = mgHtmlMobiledoc.convert(result);
-
-    // 6. Write a valid Ghost import zip
-    await fileCache.writeJSONFile(result);
-    let filename = fsUtils.zip.write(process.cwd(), fileCache.zipDir);
-
-    // 7. Return the path to the file
-    return filename;
+module.exports.getTasks = (pathToZip, options) => {
+    return [
+        {
+            title: 'Initialising',
+            task: (ctx) => {
+                // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
+                ctx.fileCache = new fsUtils.FileCache(pathToZip);
+                ctx.imageScraper = new MgImageScraper(ctx.fileCache);
+                ctx.mediumScraper = new MgScraper(scrapeConfig);
+            }
+        },
+        {
+            title: 'Read Medium export zip',
+            task: (ctx) => {
+                // 1. Read the zip file
+                ctx.result = mediumIngest(pathToZip);
+            }
+        },
+        {
+            title: 'Fetch missing data via WebScraper',
+            task: async (ctx) => {
+                // 2. Pass the results through the web scraper to get any missing data
+                ctx.result = await ctx.mediumScraper.hydrate(ctx.result);
+            },
+            skip: () => ['all', 'web'].indexOf(options.scrape) < 0
+        },
+        {
+            title: 'Format data as Ghost JSON',
+            task: (ctx) => {
+                // 3. Format the data as a valid Ghost JSON file
+                ctx.result = mgJSON.toGhostJSON(ctx.result);
+            }
+        },
+        {
+            title: 'Fetch images via ImageSraper',
+            task: async (ctx) => {
+                // 4. Pass the JSON file through the image scraper
+                ctx.result = await ctx.imageScraper.fetch(ctx.result);
+            },
+            skip: () => ['all', 'img'].indexOf(options.scrape) < 0
+        },
+        {
+            title: 'Convert HTML -> MobileDoc',
+            task: (ctx) => {
+                // 5. Convert post HTML -> MobileDoc
+                ctx.result = mgHtmlMobiledoc.convert(ctx.result);
+            }
+        },
+        {
+            title: 'Write Ghost import zip',
+            task: async (ctx) => {
+                // 6. Write a valid Ghost import zip
+                await ctx.fileCache.writeJSONFile(ctx.result);
+                ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir);
+            }
+        }
+    ];
 };
