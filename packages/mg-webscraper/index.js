@@ -19,6 +19,20 @@ const findMatchIn = (existing, match) => {
     });
 };
 
+const ScrapeError = ({url, code, statusCode}) => {
+    let error = new Error(`Unable to scrape URL ${url}`);
+
+    error.errorType = 'ScrapeError';
+    error.scraper = 'Web';
+    error.url = url;
+    error.code = code;
+    if (statusCode) {
+        error.statusCode = statusCode;
+    }
+
+    return error;
+};
+
 class Scraper {
     constructor(config) {
         this.config = config;
@@ -58,53 +72,58 @@ class Scraper {
         return existing;
     }
 
-    mergeResource(resource) {
-        return ({data, response}) => {
-            if (response.statusCode > 299) {
-                return resource;
+    mergeResource(resource, scrapedData) {
+        _.each(scrapedData, (value, key) => {
+            if (_.isArray(value)) {
+                resource[key] = this.mergeRelations(resource[key], value);
+            } else if (_.isObject(value)) {
+                resource[key] = this.mergeObject(resource[key], value);
+            } else {
+                resource[key] = value;
             }
+        });
 
-            _.each(data, (value, key) => {
-                if (_.isArray(value)) {
-                    resource[key] = this.mergeRelations(resource[key], value);
-                } else if (_.isObject(value)) {
-                    resource[key] = this.mergeObject(resource[key], value);
-                } else {
-                    resource[key] = value;
-                }
-            });
-
-            return resource;
-        };
+        return resource;
     }
 
     // Perform the scrape, and catch/report any errors
     async scrape(url, config) {
         try {
-            return await scrapeIt(url, config);
+            let {data, response} = await scrapeIt(url, config);
+            if (response.statusCode > 299) {
+                throw ScrapeError({url, code: 'HTTPERROR', statusCode: response.statusCode});
+            }
+
+            return data;
         } catch (error) {
-            // @TODO: better error and warning handling
-            // Catch any errors, and output the URL and the error
-            console.error('Webscraper unable to scrape', url, error); /* eslint-disable-line no-console */
-            return {data: {}, response: error};
+            if (error.errorType === 'ScrapeError') {
+                throw error;
+            }
+
+            throw ScrapeError({url, code: error.code});
         }
     }
 
-    async hydrate(data) {
+    async hydrate(ctx) {
         let promises = [];
+        let res = ctx.result;
 
         // We only handle posts ATM, escape if there's nothing to do
-        if (!this.config.posts || !data.posts || data.posts.length === 0) {
-            return data;
+        if (!this.config.posts || !res.posts || res.posts.length === 0) {
+            return res;
         }
 
-        promises = data.posts.map(async ({url, data}) => {
-            let result = await this.scrape(url, this.config.posts);
-            return this.mergeResource(data)(result);
+        promises = res.posts.map(async ({url, data}) => {
+            try {
+                let scrapedData = await this.scrape(url, this.config.posts);
+                this.mergeResource(data, scrapedData);
+            } catch (error) {
+                ctx.errors.push(error);
+            }
         });
 
         await Promise.all(promises);
-        return data;
+        return res;
     }
 }
 

@@ -42,7 +42,13 @@ exports.run = async (argv) => {
     // Configure a new Listr task manager, we can use different renderers for different configs
     let migrate = new Listr(tasks, {renderer: argv.verbose ? 'verbose' : 'default'});
     // Run the migration
-    let context = await migrate.run();
+    let context = await migrate.run({errors: []});
+
+    ui.log.info('done', require('util').inspect(context.result, false, 2));
+
+    if (context.errors.length) {
+        ui.log.error('Done with errors', context.errors);
+    }
     // Report success
     ui.log.ok(`Successfully written output to ${context.outputFile} in ${Date.now() - timer}ms.`);
 };

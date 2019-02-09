@@ -72,7 +72,7 @@ module.exports.getTasks = (pathToZip, options) => {
             title: 'Fetch missing data via WebScraper',
             task: async (ctx) => {
                 // 2. Pass the results through the web scraper to get any missing data
-                ctx.result = await ctx.mediumScraper.hydrate(ctx.result);
+                ctx.result = await ctx.mediumScraper.hydrate(ctx);
             },
             skip: () => ['all', 'web'].indexOf(options.scrape) < 0
         },
