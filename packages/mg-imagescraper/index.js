@@ -72,29 +72,34 @@ class ImageScraper {
         return value;
     }
 
-    async fetch(ctx) {
-        let promises = [];
+    fetch(ctx) {
+        let tasks = [];
         let json = ctx.result;
 
         // For each resource type e.g. posts, users
-        _.forEach(json.data, (resources) => {
+        _.forEach(json.data, (resources, type) => {
             // For each individual resource
             _.forEach(resources, (resource) => {
                 // For each field
                 _.forEach(resource, (value, field) => {
-                    promises.push((async () => {
-                        try {
-                            resource[field] = await this.processField(field, value);
-                        } catch (error) {
-                            ctx.errors.push(error);
-                        }
-                    })());
+                    if (isHTMLField(field)) {
+                        tasks.push({
+                            title: `${type}: ${resource.slug} ${field}`,
+                            task: async () => {
+                                try {
+                                    resource[field] = await this.processHTML(value);
+                                } catch (error) {
+                                    ctx.errors.push(error);
+                                    throw error;
+                                }
+                            }
+                        });
+                    }
                 });
             });
         });
 
-        await Promise.all(promises);
-        return json;
+        return tasks;
     }
 }
 
