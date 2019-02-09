@@ -78,34 +78,33 @@ class Scraper {
         };
     }
 
+    // Perform the scrape, and catch/report any errors
+    async scrape(url, config) {
+        try {
+            return await scrapeIt(url, config);
+        } catch (error) {
+            // @TODO: better error and warning handling
+            // Catch any errors, and output the URL and the error
+            console.error('Webscraper unable to scrape', url, error); /* eslint-disable-line no-console */
+            return {data: {}, response: error};
+        }
+    }
+
     async hydrate(data) {
-        let scrapeFns = [];
+        let promises = [];
 
         // We only handle posts ATM, escape if there's nothing to do
         if (!this.config.posts || !data.posts || data.posts.length === 0) {
             return data;
         }
 
-        scrapeFns = data.posts.map(({url, data}) => {
-            return scrapeIt(url, this.config.posts)
-                .then(this.mergeResource(data))
-                .catch((error) => {
-                    // @TODO: better error and warning handling
-                    // Catch any errors, and output the URL and the error
-                    console.error('Webscraper unable to scrape', url); /* eslint-disable-line no-console */
-                    console.error(error.stack); /* eslint-disable-line no-console */
-                });
+        promises = data.posts.map(async ({url, data}) => {
+            let result = await this.scrape(url, this.config.posts);
+            return this.mergeResource(data)(result);
         });
 
-        return Promise
-            .all(scrapeFns)
-            .then(() => {
-                return data;
-            })
-            .catch((error) => {
-                // @TODO: better errors and warning handling
-                console.error('Webscraper request error', error.stack); /* eslint-disable-line no-console */
-            });
+        await Promise.all(promises);
+        return data;
     }
 }
 
