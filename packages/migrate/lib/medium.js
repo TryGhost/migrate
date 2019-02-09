@@ -4,6 +4,7 @@ const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
 const MgScraper = require('@tryghost/mg-webscraper');
 const MgImageScraper = require('@tryghost/mg-imagescraper');
 const fsUtils = require('@tryghost/mg-fs-utils');
+const Listr = require('listr');
 
 const scrapeConfig = {
     posts: {
@@ -42,6 +43,13 @@ const scrapeConfig = {
     }
 };
 
+const makeTaskRunner = (tasks, options) => {
+    return new Listr(tasks, {
+        renderer: options.verbose ? 'verbose' : 'default',
+        exitOnError: false
+    });
+};
+
 /**
  * getTasks: Steps to Migrate from Medium
  *
@@ -50,8 +58,8 @@ const scrapeConfig = {
  * @param {String} pathToZip
  * @param {Object} options
  */
-module.exports.getTasks = (pathToZip, options) => {
-    return [
+module.exports.getTaskRunner = (pathToZip, options) => {
+    let tasks = [
         {
             title: 'Initialising',
             task: (ctx) => {
@@ -70,9 +78,10 @@ module.exports.getTasks = (pathToZip, options) => {
         },
         {
             title: 'Fetch missing data via WebScraper',
-            task: async (ctx) => {
+            task: (ctx) => {
                 // 2. Pass the results through the web scraper to get any missing data
-                ctx.result = await ctx.mediumScraper.hydrate(ctx);
+                let tasks = ctx.mediumScraper.hydrate(ctx);
+                return makeTaskRunner(tasks, options);
             },
             skip: () => ['all', 'web'].indexOf(options.scrape) < 0
         },
@@ -107,4 +116,7 @@ module.exports.getTasks = (pathToZip, options) => {
             }
         }
     ];
+
+    // Configure a new Listr task manager, we can use different renderers for different configs
+    return makeTaskRunner(tasks, options);
 };

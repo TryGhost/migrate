@@ -104,8 +104,8 @@ class Scraper {
         }
     }
 
-    async hydrate(ctx) {
-        let promises = [];
+    hydrate(ctx) {
+        let tasks = [];
         let res = ctx.result;
 
         // We only handle posts ATM, escape if there's nothing to do
@@ -113,17 +113,22 @@ class Scraper {
             return res;
         }
 
-        promises = res.posts.map(async ({url, data}) => {
-            try {
-                let scrapedData = await this.scrape(url, this.config.posts);
-                this.mergeResource(data, scrapedData);
-            } catch (error) {
-                ctx.errors.push(error);
-            }
+        tasks = res.posts.map(({url, data}) => {
+            return {
+                title: url,
+                task: async () => {
+                    try {
+                        let scrapedData = await this.scrape(url, this.config.posts);
+                        this.mergeResource(data, scrapedData);
+                    } catch (error) {
+                        ctx.errors.push(error);
+                        throw error;
+                    }
+                }
+            };
         });
 
-        await Promise.all(promises);
-        return res;
+        return tasks;
     }
 }
 

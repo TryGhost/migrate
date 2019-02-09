@@ -1,6 +1,5 @@
 const medium = require('../lib/medium');
 const ui = require('@tryghost/pretty-cli/ui');
-const Listr = require('listr');
 
 // Internal ID in case we need one.
 exports.id = 'medium';
@@ -33,22 +32,24 @@ exports.setup = (sywac) => {
 // What to do when this command is executed
 exports.run = async (argv) => {
     let timer = Date.now();
+    let context = {errors: []};
+
     if (argv.verbose) {
         ui.log.info(`Migrating from export at ${argv.pathToZip}`);
     }
 
-    // Fetch the tasks, configured correctly according to the options passed in
-    let tasks = medium.getTasks(argv.pathToZip, argv);
-    // Configure a new Listr task manager, we can use different renderers for different configs
-    let migrate = new Listr(tasks, {renderer: argv.verbose ? 'verbose' : 'default'});
-    // Run the migration
-    let context = await migrate.run({errors: []});
+    try {
+        // Fetch the tasks, configured correctly according to the options passed in
+        let migrate = medium.getTaskRunner(argv.pathToZip, argv);
 
-    ui.log.info('done', require('util').inspect(context.result, false, 2));
+        // Run the migration
+        await migrate.run(context);
 
-    if (context.errors.length) {
-        ui.log.error('Done with errors', context.errors);
+        ui.log.info('Done', require('util').inspect(context.result, false, 2));
+    } catch (error) {
+        ui.log.info('Done with errors', context.errors);
     }
+
     // Report success
     ui.log.ok(`Successfully written output to ${context.outputFile} in ${Date.now() - timer}ms.`);
 };
