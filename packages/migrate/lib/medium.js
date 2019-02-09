@@ -22,17 +22,17 @@ const scrapeConfig = {
             }
         },
         author: {
-            selector: '.postMetaLockup--authorLockupForPost',
+            selector: 'footer .js-cardUser',
             data: {
                 url: {
-                    selector: 'a',
+                    selector: 'h3 a',
                     attr: 'href'
                 },
                 name: {
-                    selector: 'a'
+                    selector: 'h3 a'
                 },
                 bio: {
-                    selector: '.postMetaInline'
+                    selector: 'p'
                 },
                 profile_image: {
                     selector: '.avatar-image',
