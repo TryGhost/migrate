@@ -82,7 +82,20 @@ class ImageScraper {
             _.forEach(resources, (resource) => {
                 // For each field
                 _.forEach(resource, (value, field) => {
-                    if (isHTMLField(field)) {
+                    // @TODO: rework this code!
+                    if (isImageField(field)) {
+                        tasks.push({
+                            title: `${type}: ${resource.slug} ${field}`,
+                            task: async () => {
+                                try {
+                                    resource[field] = await this.downloadImage(value);
+                                } catch (error) {
+                                    ctx.errors.push(error);
+                                    throw error;
+                                }
+                            }
+                        });
+                    } else if (isHTMLField(field)) {
                         tasks.push({
                             title: `${type}: ${resource.slug} ${field}`,
                             task: async () => {
