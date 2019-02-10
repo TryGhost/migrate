@@ -41,7 +41,7 @@ class ImageScraper {
             await this.fileCache.writeImageFile(response.body, imageFile);
             return imageFile.outputPath;
         } catch (error) {
-            throw new ScrapeError({src, code: error.code, statusCode: error.statusCode});
+            throw ScrapeError({src, code: error.code, statusCode: error.statusCode});
         }
     }
 
