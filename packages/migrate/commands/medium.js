@@ -45,7 +45,9 @@ exports.run = async (argv) => {
         // Run the migration
         await migrate.run(context);
 
-        ui.log.info('Done', require('util').inspect(context.result, false, 2));
+        if (argv.verbose) {
+            ui.log.info('Done', require('util').inspect(context.result.data, false, 2));
+        }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);
     }

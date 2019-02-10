@@ -104,6 +104,19 @@ class Scraper {
         }
     }
 
+    async lookup(fileCache, url, config) {
+        // @TODO: replace this with a proper solution: i.e. Ghost's slugify, or xxhash, or similar
+        var filename = url.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
+        if (fileCache.hasFile(filename, 'tmp')) {
+            return await fileCache.readTmpJSONFile(filename);
+        }
+
+        let scrapedData = await this.scrape(url, config);
+        await fileCache.writeTmpJSONFile(scrapedData, filename);
+        return scrapedData;
+    }
+
     hydrate(ctx) {
         let tasks = [];
         let res = ctx.result;
@@ -118,7 +131,7 @@ class Scraper {
                 title: url,
                 task: async () => {
                     try {
-                        let scrapedData = await this.scrape(url, this.config.posts);
+                        let scrapedData = await this.lookup(ctx.fileCache, url, this.config.posts);
                         this.mergeResource(data, scrapedData);
                     } catch (error) {
                         ctx.errors.push(error);

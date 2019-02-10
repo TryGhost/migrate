@@ -112,7 +112,7 @@ module.exports.getTaskRunner = (pathToZip, options) => {
             title: 'Write Ghost import zip',
             task: async (ctx) => {
                 // 6. Write a valid Ghost import zip
-                await ctx.fileCache.writeJSONFile(ctx.result);
+                await ctx.fileCache.writeGhostJSONFile(ctx.result);
                 ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir);
             }
         }

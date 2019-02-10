@@ -80,12 +80,37 @@ class FileCache {
     }
 
     /**
+     * Create a JSON file to store temporary data
+     *
+     * @param {Object} data - a valid Ghost JSON object
+     * @param {String} filename - name of file to write
+     */
+    async writeTmpJSONFile(data, filename) {
+        let filepath = path.join(this.tmpDir, filename);
+
+        await fs.outputJson(filepath, data, {spaces: 2});
+
+        return filepath;
+    }
+
+    /**
+     * Read a JSON file containing temporary data
+     *
+     * @param {String} filename - name of file to read
+     */
+    async readTmpJSONFile(filename) {
+        let filepath = path.join(this.tmpDir, filename);
+
+        return await fs.readJson(filepath);
+    }
+
+    /**
      * Create a JSON file with our processed data
      *
      * @param {Object} data - a valid Ghost JSON object
      * @param {Object} options - config
      */
-    async writeJSONFile(data, options = {}) {
+    async writeGhostJSONFile(data, options = {}) {
         let filename = options.filename || `ghost-import-${Date.now()}.json`;
         let filepath = path.join(this.zipDir, filename);
 
