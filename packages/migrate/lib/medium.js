@@ -63,6 +63,8 @@ module.exports.getTaskRunner = (pathToZip, options) => {
         {
             title: 'Initialising',
             task: (ctx) => {
+                ctx.options = options;
+
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
                 ctx.fileCache = new fsUtils.FileCache(pathToZip);
                 ctx.imageScraper = new MgImageScraper(ctx.fileCache);
@@ -89,7 +91,7 @@ module.exports.getTaskRunner = (pathToZip, options) => {
             title: 'Format data as Ghost JSON',
             task: (ctx) => {
                 // 3. Format the data as a valid Ghost JSON file
-                ctx.result = mgJSON.toGhostJSON(ctx.result);
+                ctx.result = mgJSON.toGhostJSON(ctx.result, ctx.options);
             }
         },
         {

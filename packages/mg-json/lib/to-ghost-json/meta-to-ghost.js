@@ -20,11 +20,11 @@ const removeMeta = (resource) => {
     return resource.data || resource;
 };
 
-const ensureValid = (resource, type) => {
+const ensureValid = (resource, type, options) => {
     let obj = removeMeta(resource);
 
     if (_.has(hydrate, type)) {
-        obj = hydrate[type](obj);
+        obj = hydrate[type](obj, options);
     }
 
     return obj;
@@ -55,7 +55,7 @@ const normalizeValue = (value) => {
  * We expect an object with keys that match Ghost resources
  * Iterate over each key and return only ones that we recognise
  */
-module.exports = (input) => {
+module.exports = (input, options) => {
     return _.reduce(input, (data, inputValue, inputKey) => {
         let key = normalizeKey(inputKey);
         let entries = normalizeValue(inputValue);
@@ -65,7 +65,7 @@ module.exports = (input) => {
             return data;
         }
 
-        data[key] = _.map(entries, entry => ensureValid(entry, key));
+        data[key] = _.map(entries, entry => ensureValid(entry, key, options));
 
         return data;
     }, {});

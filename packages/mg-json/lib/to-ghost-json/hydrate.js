@@ -15,9 +15,10 @@ const _ = require('lodash');
  */
 
 const fakeName = 'Dummy User';
-const fakeEmail = nameSlug => `${nameSlug}@dummyemail.com`;
+const fakeEmailDomain = `dummyemail.com`;
+const fakeEmail = (nameSlug, domain) => `${nameSlug}@${domain}`;
 
-const hydrateUser = (input) => {
+const hydrateUser = (input, options) => {
     // Handle the case where we have a slug but no name
     if (!input.name && input.slug) {
         input.name = _.startCase(input.slug);
@@ -28,7 +29,7 @@ const hydrateUser = (input) => {
 
     // Handle the case where there is no email by generating one based on slug or name
     if (!input.email) {
-        input.email = fakeEmail(input.slug || _.kebabCase(input.name));
+        input.email = fakeEmail(input.slug || _.kebabCase(input.name), options.email || fakeEmailDomain);
     }
 
     return input;

@@ -25,7 +25,10 @@ exports.setup = (sywac) => {
         choices: ['all', 'web', 'img', 'none'],
         defaultValue: 'all',
         desc: 'Configure scraping tasks'
-
+    });
+    sywac.string('-e --email', {
+        defaultValue: false,
+        desc: 'Provide an email domain for users e.g. mycompany.com'
     });
 };
 
