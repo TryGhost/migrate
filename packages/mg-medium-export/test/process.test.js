@@ -15,7 +15,7 @@ describe('Process', function () {
         post.url.should.eql('https://medium.com/@JoeBloggs/testpost-efefef12121212');
 
         post.data.title.should.eql('Blog Post Title');
-        post.data.slug.should.eql('blog-post-title');
+        post.data.slug.should.eql('testpost');
         post.data.custom_excerpt.should.eql('This is a subtitle of some sort');
         post.data.status.should.eql('published');
         post.data.published_at.should.eql('2018-08-11T11:23:34.123Z');

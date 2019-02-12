@@ -100,6 +100,12 @@
     chalk "^2.4.1"
     sywac "^1.2.1"
 
+"@tryghost/string@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.1.0.tgz#4d77c4d56315afb7d78183c8401e9803c896fc57"
+  dependencies:
+    unidecode "^0.1.8"
+
 "@types/node@*":
   version "10.9.4"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-10.9.4.tgz#0f4cb2dc7c1de6096055357f70179043c33e9897"
@@ -2448,6 +2454,10 @@ ul@^5.2.13:
   dependencies:
     deffy "^2.2.2"
     typpy "^2.3.4"
+
+unidecode@^0.1.8:
+  version "0.1.8"
+  resolved "https://registry.yarnpkg.com/unidecode/-/unidecode-0.1.8.tgz#efbb301538bc45246a9ac8c559d72f015305053e"
 
 universalify@^0.1.0:
   version "0.1.2"
