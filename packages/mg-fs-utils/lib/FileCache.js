@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const os = require('os');
 
 const basePath = 'mg';
+const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico'];
 
 class FileCache {
     constructor(pathName) {
@@ -68,9 +69,19 @@ class FileCache {
 
     resolveImageFileName(filename) {
         let basename = path.basename(filename);
+        let ext = path.extname(filename);
 
         // replace the basename part with a sanitized version
         filename = filename.replace(basename, this.sanitizeFileName(basename));
+
+        // @TODO: use content type on request to infer this, rather than assuming jpeg?
+        if (!_.includes(knownExtensions, ext)) {
+            if (!ext) {
+                filename += '.jpeg';
+            } else {
+                filename.replace(ext, '.jpeg');
+            }
+        }
 
         return {
             filename: filename,
