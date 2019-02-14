@@ -4,7 +4,7 @@ const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
 const MgScraper = require('@tryghost/mg-webscraper');
 const MgImageScraper = require('@tryghost/mg-imagescraper');
 const fsUtils = require('@tryghost/mg-fs-utils');
-const Listr = require('listr');
+const makeTaskRunner = require('../lib/task-runner');
 
 const scrapeConfig = {
     posts: {
@@ -41,13 +41,6 @@ const scrapeConfig = {
             }
         }
     }
-};
-
-const makeTaskRunner = (tasks, options) => {
-    return new Listr(tasks, {
-        renderer: options.verbose ? 'verbose' : 'default',
-        exitOnError: false
-    });
 };
 
 /**
