@@ -6,12 +6,30 @@ const convertPost = (post) => {
 };
 
 // Understands the data formats, so knows where to look for posts to convert
-module.exports.convert = (result) => {
-    if (result.posts) {
-        result.posts.forEach(convertPost);
-    } else if (result.data && result.data.posts) {
-        result.data.posts.forEach(convertPost);
+module.exports.convert = (ctx) => {
+    let res = ctx.result;
+    let posts = res.posts;
+
+    if (!posts && res.data && res.data.posts) {
+        posts = res.data.posts;
     }
 
-    return result;
+    let tasks = posts.map((post) => {
+        return {
+            title: `Converting ${post.title}`,
+            task: () => {
+                try {
+                    convertPost(post);
+                } catch (error) {
+                    let convertError = new Error(`Unable to convert post ${post.title}`);
+                    convertError.originalError = error;
+
+                    ctx.errors.push(convertError);
+                    throw convertError;
+                }
+            }
+        };
+    });
+
+    return tasks;
 };

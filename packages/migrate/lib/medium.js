@@ -107,7 +107,8 @@ module.exports.getTaskRunner = (pathToZip, options) => {
             title: 'Convert HTML -> MobileDoc',
             task: (ctx) => {
                 // 5. Convert post HTML -> MobileDoc
-                ctx.result = mgHtmlMobiledoc.convert(ctx.result);
+                let tasks = mgHtmlMobiledoc.convert(ctx);
+                return makeTaskRunner(tasks, options);
             }
         },
         {
