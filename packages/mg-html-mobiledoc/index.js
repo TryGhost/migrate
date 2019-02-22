@@ -3,6 +3,7 @@ const converter = require('@tryghost/html-to-mobiledoc');
 // Wrap our converter tool and convert to a string
 const convertPost = (post) => {
     post.mobiledoc = JSON.stringify(converter.toMobiledoc(post.html));
+    delete post.html;
 };
 
 // Understands the data formats, so knows where to look for posts to convert
