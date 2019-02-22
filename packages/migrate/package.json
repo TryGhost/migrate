@@ -23,15 +23,13 @@
     "sinon": "6.3.5"
   },
   "dependencies": {
-    "@tryghost/mg-fs-utils": "^0.2.0",
-    "@tryghost/mg-html-mobiledoc": "^0.2.0",
-    "@tryghost/mg-json": "^0.3.0",
-    "@tryghost/mg-medium-export": "^0.4.0",
-    "@tryghost/mg-webscraper": "^0.2.0",
+    "@tryghost/mg-fs-utils": "0.2.0",
+    "@tryghost/mg-html-mobiledoc": "0.2.0",
+    "@tryghost/mg-imagescraper": "0.1.0",
+    "@tryghost/mg-json": "0.3.0",
+    "@tryghost/mg-medium-export": "0.4.0",
+    "@tryghost/mg-webscraper": "0.2.0",
     "@tryghost/pretty-cli": "1.1.0",
-    "bluebird": "^3.5.2",
-    "ghost-ignition": "^2.9.6",
-    "listr": "^0.14.3",
-    "lodash": "^4.17.11"
+    "listr": "^0.14.3"
   }
 }
