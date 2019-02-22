@@ -5,11 +5,12 @@ const prettyCLI = require('@tryghost/pretty-cli');
 prettyCLI.commandDirectory('../commands');
 
 prettyCLI.style({
-    usageCommandPlaceholder: () => '<source>'
+    usageCommandPlaceholder: () => '<source or utility>'
 });
 
 prettyCLI.groupOrder([
     'Sources:',
+    'Utilities:',
     'Commands:',
     'Arguments:',
     'Required Options:',
