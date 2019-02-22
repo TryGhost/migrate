@@ -123,7 +123,8 @@ class FileCache {
      */
     async writeGhostJSONFile(data, options = {}) {
         let filename = options.filename || `ghost-import-${Date.now()}.json`;
-        let filepath = path.join(this.zipDir, filename);
+        let basepath = options.path ? path.dirname(options.path) : this.zipDir;
+        let filepath = path.join(basepath, filename);
 
         await fs.outputJson(filepath, data, {spaces: 2});
 
