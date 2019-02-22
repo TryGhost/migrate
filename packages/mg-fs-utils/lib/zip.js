@@ -16,7 +16,7 @@ module.exports.read = (zipPath, callback) => {
 
 module.exports.write = (zipPath, contentFolder) => {
     const zip = new AdmZip();
-    const outputPath = path.join(zipPath, 'medium-to-ghost.zip');
+    const outputPath = path.join(zipPath, `ghost-import-${Date.now()}.zip`);
     zip.addLocalFolder(contentFolder);
     zip.writeZip(outputPath);
 
