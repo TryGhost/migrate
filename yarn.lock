@@ -93,9 +93,9 @@
     mobiledoc-dom-renderer "0.6.5"
     mobiledoc-text-renderer "0.3.2"
 
-"@tryghost/pretty-cli@1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@tryghost/pretty-cli/-/pretty-cli-1.1.0.tgz#73d16c01a3d83ee49dddb768cbc9ff5a62ef45ba"
+"@tryghost/pretty-cli@1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@tryghost/pretty-cli/-/pretty-cli-1.1.2.tgz#8c946f8f77738d804aa09e20d0080b1311f4b797"
   dependencies:
     chalk "^2.4.1"
     sywac "^1.2.1"

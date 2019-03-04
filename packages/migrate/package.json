@@ -29,7 +29,7 @@
     "@tryghost/mg-json": "0.3.0",
     "@tryghost/mg-medium-export": "0.4.0",
     "@tryghost/mg-webscraper": "0.2.0",
-    "@tryghost/pretty-cli": "1.1.0",
+    "@tryghost/pretty-cli": "1.1.2",
     "listr": "0.14.3"
   }
 }
