@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "bluebird": "^3.5.2",
-    "ghost-ignition": "^2.9.6",
+    "ghost-ignition": "^3.0.0",
     "lodash": "^4.17.11"
   }
 }
