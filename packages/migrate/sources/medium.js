@@ -66,10 +66,11 @@ module.exports.getTaskRunner = (pathToZip, options) => {
         },
         {
             title: 'Read Medium export zip',
-            task: (ctx) => {
+            task: async (ctx) => {
                 // 1. Read the zip file
                 try {
                     ctx.result = mediumIngest(pathToZip);
+                    await ctx.fileCache.writeTmpJSONFile(ctx.result, 'medium-export-data.json');
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
