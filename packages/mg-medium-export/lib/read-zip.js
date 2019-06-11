@@ -5,17 +5,23 @@ module.exports = (zipPath) => {
         posts: []
     };
 
-    fsUtils.zip.read(zipPath, (zipEntry) => {
-        if (/profile\/profile\.html/.test(zipEntry.entryName)) {
-            content.profile = zipEntry.getData().toString('utf8');
-        }
+    // @TODO: ideally we want to support
+    // 1. a direct medium export with a posts/ & profile/ folder
+    // 2. a zip full of html files as posts
+    // 3. a zip with a nested dir that is also full of html files
+    // We should try to detect what we have, and output which type we're gonna try
+    // Then, if the html can't be parsed as a post, we should throw a warning and skip ahead
 
-        if (/posts\/.*\.html$/.test(zipEntry.entryName)) {
+    fsUtils.zip.read(zipPath, (zipEntry) => {
+        // @TODO rework this to provide more info
+        if (/^profile\/profile\.html/.test(zipEntry.entryName)) {
+            content.profile = zipEntry.getData().toString('utf8');
+        } else if (/^posts\/.*\.html$/.test(zipEntry.entryName)) {
             content.posts.push({
                 name: zipEntry.name,
                 html: zipEntry.getData().toString('utf8')
             });
-        } else if (/[^/].*\.html$/.test(zipEntry.entryName)) {
+        } else if (/^[^/]*?\.html$/.test(zipEntry.entryName)) {
             content.posts.push({
                 name: zipEntry.name,
                 html: zipEntry.getData().toString('utf8')
