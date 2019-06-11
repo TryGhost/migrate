@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const scrapeIt = require('scrape-it');
+const omitEmpty = require('omit-empty');
 
 const makeMetaObject = (item) => {
     if (!item.url) {
@@ -113,6 +114,7 @@ class Scraper {
         }
 
         let scrapedData = await this.scrape(url, config);
+        scrapedData = omitEmpty(scrapedData);
         await fileCache.writeTmpJSONFile(scrapedData, filename);
         return scrapedData;
     }
