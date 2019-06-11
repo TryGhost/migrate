@@ -89,7 +89,12 @@ module.exports.getTaskRunner = (pathToZip, options) => {
             title: 'Format data as Ghost JSON',
             task: (ctx) => {
                 // 3. Format the data as a valid Ghost JSON file
-                ctx.result = mgJSON.toGhostJSON(ctx.result, ctx.options);
+                try {
+                    ctx.result = mgJSON.toGhostJSON(ctx.result, ctx.options);
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
             }
         },
         {
@@ -113,8 +118,13 @@ module.exports.getTaskRunner = (pathToZip, options) => {
             title: 'Write Ghost import zip',
             task: async (ctx) => {
                 // 6. Write a valid Ghost import zip
-                await ctx.fileCache.writeGhostJSONFile(ctx.result);
-                ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir);
+                try {
+                    await ctx.fileCache.writeGhostJSONFile(ctx.result);
+                    ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir);
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
             }
         }
     ];
