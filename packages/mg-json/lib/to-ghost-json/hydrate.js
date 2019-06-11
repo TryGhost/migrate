@@ -37,3 +37,27 @@ const hydrateUser = (input, options) => {
 
 // Alias plural form only, as this should already have been normalised
 module.exports.users = hydrateUser;
+
+/**
+ * Post(s)
+ *
+ * To import a post we need at least:
+ * - a title
+ * - a valid status or no status
+ */
+
+const fakeTitle = '(Untitled)';
+
+const hydratePost = (input, options) => {
+    if (!input.title) {
+        input.title = options.title || fakeTitle;
+    }
+
+    if (!_.includes(['published', 'draft', 'scheduled'], input.status)) {
+        delete input.status;
+    }
+
+    return input;
+};
+
+module.exports.posts = hydratePost;
