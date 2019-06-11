@@ -56,7 +56,7 @@ const processTags = ($tags) => {
     return tags;
 };
 
-module.exports = (name, html) => {
+module.exports = (name, html, globalUser) => {
     const $post = $.load(html, {
         decodeEntities: false
     });
@@ -69,6 +69,9 @@ module.exports = (name, html) => {
     // Process author
     if ($post('.p-author').length) {
         post.data.author = processAuthor($post('.p-author'));
+        // @TODO check if this is the global user and use that?
+    } else if (globalUser) {
+        post.data.author = globalUser;
     }
 
     // Process tags
