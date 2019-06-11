@@ -8,6 +8,9 @@ const makeTaskRunner = require('../lib/task-runner');
 
 const scrapeConfig = {
     posts: {
+        status: {
+            selector: '.js-postMetaVisibility'
+        },
         tags: {
             listItem: 'ul.tags > li',
             data: {
