@@ -120,5 +120,5 @@ module.exports.getTaskRunner = (pathToZip, options) => {
     ];
 
     // Configure a new Listr task manager, we can use different renderers for different configs
-    return makeTaskRunner(tasks, options);
+    return makeTaskRunner(tasks, Object.assign({exitOnError: true}, options));
 };
