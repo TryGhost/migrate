@@ -82,14 +82,19 @@ module.exports = (json) => {
     };
 
     const processPostRelations = (post) => {
-        // Ensure we have a post ID
-        if (!post.data.id) {
-            post.data.id = postId;
-            postId += 1;
-        }
+        try {
+            // Ensure we have a post ID
+            if (!post.data.id) {
+                post.data.id = postId;
+                postId += 1;
+            }
 
-        processPostAuthors(post.data);
-        processPostTags(post.data);
+            processPostAuthors(post.data);
+            processPostTags(post.data);
+        } catch (error) {
+            error.reference = post.url;
+            throw error;
+        }
     };
 
     json.posts.forEach(processPostRelations);
