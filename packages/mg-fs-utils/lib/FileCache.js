@@ -154,12 +154,15 @@ class FileCache {
     * @param {String} type - one of tmp, json, image
     */
     hasFile(filename, type) {
-        if (!_.includes(['tmp', 'json', 'image'], type)) {
-            return new Error('Unknown file type');
-        }
-        let dir = this[`${type}Dir`];
+        let pathToCheck = filename;
 
-        return fs.existsSync(path.join(dir, filename));
+        if (type && !_.includes(['tmp', 'json', 'image'], type)) {
+            return new Error('Unknown file type');
+        } else if (type) {
+            pathToCheck = path.join(this[`${type}Dir`], filename);
+        }
+
+        return fs.existsSync(pathToCheck);
     }
 }
 

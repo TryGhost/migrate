@@ -32,7 +32,7 @@ class ImageScraper {
         let imageUrl = url.parse(src);
         let imageFile = this.fileCache.resolveImageFileName(imageUrl.pathname);
 
-        if (this.fileCache.hasFile(imageFile.storagePath, 'image')) {
+        if (this.fileCache.hasFile(imageFile.storagePath)) {
             return imageFile.outputPath;
         }
 
