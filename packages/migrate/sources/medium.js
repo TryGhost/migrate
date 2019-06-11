@@ -68,7 +68,12 @@ module.exports.getTaskRunner = (pathToZip, options) => {
             title: 'Read Medium export zip',
             task: (ctx) => {
                 // 1. Read the zip file
-                ctx.result = mediumIngest(pathToZip);
+                try {
+                    ctx.result = mediumIngest(pathToZip);
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
             }
         },
         {
