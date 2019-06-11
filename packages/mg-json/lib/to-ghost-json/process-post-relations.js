@@ -54,6 +54,11 @@ module.exports = (json) => {
                 authorId += 1;
             }
 
+            if (user && !user.data.id) {
+                user.data.id = authorId;
+                authorId += 1;
+            }
+
             json.posts_authors.push({
                 post_id: postData.id,
                 author_id: user.data.id
@@ -71,6 +76,11 @@ module.exports = (json) => {
                 tag = postTag;
                 tag.data.id = tagId;
                 json.tags.push(tag);
+                tagId += 1;
+            }
+
+            if (tag && !tag.data.id) {
+                tag.data.id = tagId;
                 tagId += 1;
             }
 
