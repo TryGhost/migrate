@@ -31,7 +31,11 @@ module.exports = (json) => {
             return;
         }
         return json[location].find((item) => {
-            if (item.url === match.url) {
+            // @TODO: this is a dirty hack, should be slug based!
+            // @TODO: need to scrape, or post-process scrape for user and tag slugs
+            if (item.data.name && item.data.name === match.data.name) {
+                return item;
+            } else if (item.url === match.url) {
                 return item;
             }
         });
