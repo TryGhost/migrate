@@ -11,7 +11,7 @@ module.exports = (json) => {
     json.posts_tags = [];
 
     // Dirty IDs
-    let authorId = 2;
+    let authorId = 2; // This is to prevent Owner ID clashes
     let tagId = 1;
     let postId = 1;
 
