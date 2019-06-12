@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const schema = require('../utils/schema');
 const hydrate = require('./hydrate');
+const ObjectId = require('bson-objectid');
 /**
  * A resource might be a plain resource ready for import, or if it came from our migrate tooling,
  * probably an object with some metadata (like URL) and a `data` key with the resource fields
@@ -20,8 +21,29 @@ const removeMeta = (resource) => {
     return resource.data || resource;
 };
 
+let slugs = {};
+
+const deduplicateSlugs = (obj, type) => {
+    if (!slugs[type]) {
+        slugs[type] = [];
+    }
+
+    if (_.includes(slugs[type], obj.slug)) {
+        // @TODO: log some sort of warning for things like this?
+        obj.slug = `${obj.slug}-${ObjectId.generate()}`;
+    }
+
+    slugs[type].push(obj.slug);
+
+    return obj;
+};
+
 const ensureValid = (resource, type, options) => {
     let obj = removeMeta(resource);
+
+    if (obj.slug) {
+        obj = deduplicateSlugs(obj, type);
+    }
 
     if (_.has(hydrate, type)) {
         obj = hydrate[type](obj, options);
