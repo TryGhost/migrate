@@ -27,7 +27,7 @@ module.exports = (html) => {
         url: $('.u-url').attr('href'),
         data: {
             name: $('.p-name').text(),
-            image: $('.u-photo').attr('src')
+            profile_image: $('.u-photo').attr('src')
         }
     };
 
