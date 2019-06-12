@@ -23,6 +23,7 @@ module.exports.convert = (ctx) => {
                     convertPost(post);
                 } catch (error) {
                     let convertError = new Error(`Unable to convert post ${post.title}`);
+                    convertError.reference = post.slug;
                     convertError.originalError = error;
 
                     ctx.errors.push(convertError);
