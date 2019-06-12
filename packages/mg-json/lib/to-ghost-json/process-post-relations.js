@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const schema = require('../utils/schema');
+const ObjectId = require('bson-objectid');
 
 module.exports = (json) => {
     // These should be present and empty, even if there is no data
@@ -9,11 +10,6 @@ module.exports = (json) => {
     // We create these fresh as all relation processing should be done in here
     json.posts_authors = [];
     json.posts_tags = [];
-
-    // Dirty IDs
-    let authorId = 2; // This is to prevent Owner ID clashes
-    let tagId = 1;
-    let postId = 1;
 
     const findPostRelations = (postData, relation) => {
         let relations = [];
@@ -49,14 +45,12 @@ module.exports = (json) => {
 
             if (!user) {
                 user = author;
-                user.data.id = authorId;
+                user.data.id = ObjectId.generate();
                 json.users.push(user);
-                authorId += 1;
             }
 
             if (user && !user.data.id) {
-                user.data.id = authorId;
-                authorId += 1;
+                user.data.id = ObjectId.generate();
             }
 
             json.posts_authors.push({
@@ -74,14 +68,12 @@ module.exports = (json) => {
 
             if (!tag) {
                 tag = postTag;
-                tag.data.id = tagId;
+                tag.data.id = ObjectId.generate();
                 json.tags.push(tag);
-                tagId += 1;
             }
 
             if (tag && !tag.data.id) {
-                tag.data.id = tagId;
-                tagId += 1;
+                tag.data.id = ObjectId.generate();
             }
 
             json.posts_tags.push({
@@ -95,8 +87,7 @@ module.exports = (json) => {
         try {
             // Ensure we have a post ID
             if (!post.data.id) {
-                post.data.id = postId;
-                postId += 1;
+                post.data.id = ObjectId.generate();
             }
 
             processPostAuthors(post.data);

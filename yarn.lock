@@ -333,6 +333,11 @@ browser-stdout@1.3.1:
   resolved "https://registry.yarnpkg.com/browser-stdout/-/browser-stdout-1.3.1.tgz#baa559ee14ced73452229bad7326467c61fabd60"
   integrity sha512-qhAVI1+Av2X7qelOfAIYwXONood6XlZE/fXaBSmW/T5SzLAmCgzi+eiWE7fUvbHaeNBQH13UftjpXxsfLkMpgw==
 
+bson-objectid@^1.2.5:
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/bson-objectid/-/bson-objectid-1.2.5.tgz#622c0c9d40c02aece5ac5b61a70248ec303047f0"
+  integrity sha512-tKLZNr1eyK/Dd48k/5FHXmpN69dUHMioQCvNv1kxy8qJINkoyQkjf7+u933EZ77bMXC3lmN1HmyFm2WS6mRYxg==
+
 bunyan-loggly@^1.3.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/bunyan-loggly/-/bunyan-loggly-1.4.1.tgz#b6c806fb34bfcde2ce0d98878cf3534620b969e7"
