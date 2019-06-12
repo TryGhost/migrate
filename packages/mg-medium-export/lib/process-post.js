@@ -23,6 +23,13 @@ const processMeta = (name, $post) => {
         post.data.published_at = $post('.dt-published').attr('datetime');
     }
 
+    $('img').map(async (i, el) => {
+        let $image = $(el);
+        let type = $image.attr('src') === undefined ? 'data-src' : 'src';
+        let newSrc = await this.downloadImage($image.attr(type));
+        $image.attr(type, newSrc);
+    }).get();
+
     // Ensure the slug is clean and valid according to Ghost
     post.data.slug = string.slugify(urlInfo[1]);
     // Store the medium ID in the comment ID legacy field - not sure if this is useful
@@ -56,6 +63,21 @@ const processTags = ($tags) => {
     return tags;
 };
 
+const processFeatureImage = (html, post) => {
+    const $html = $.load(html, {
+        decodeEntities: false
+    });
+
+    // For now this is a super naive first image in the post
+    // Eventually we want different modes, and in particular to add a tag if the feature image was the first thing in the post
+    let image = $html('img')[0];
+    let src = $(image).attr('src');
+
+    if (src) {
+        post.data.feature_image = src;
+    }
+};
+
 module.exports = (name, html, globalUser) => {
     const $post = $.load(html, {
         decodeEntities: false
@@ -65,6 +87,8 @@ module.exports = (name, html, globalUser) => {
 
     // Process content
     post.data.html = processContent($post('.e-content'), post);
+
+    processFeatureImage(post.data.html, post);
 
     // Process author
     if ($post('.p-author').length) {
