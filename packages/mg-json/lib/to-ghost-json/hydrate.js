@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const {slugify} = require('@tryghost/string');
 /**
  * Hydrate Ghost objects
  * Extend object with the minimum data needed for an import to succeed
@@ -12,6 +13,7 @@ const _ = require('lodash');
  * To import a user we need at least:
  * - a name
  * - an email address
+ * - a slug (because of https://github.com/TryGhost/Ghost/issues/10785)
  */
 
 const fakeName = 'Dummy User';
@@ -27,6 +29,10 @@ const hydrateUser = (input, options) => {
         input.name = fakeName;
     }
 
+    if (!input.slug) {
+        input.slug = slugify(input.name);
+    }
+
     // Handle the case where there is no email by generating one based on slug or name
     if (!input.email) {
         input.email = fakeEmail(input.slug || _.kebabCase(input.name), options.email || fakeEmailDomain);
@@ -37,6 +43,28 @@ const hydrateUser = (input, options) => {
 
 // Alias plural form only, as this should already have been normalised
 module.exports.users = hydrateUser;
+
+/**
+ * Tags(s)
+ *
+ * To import a tag we need at least:
+ * - a name
+ * - a slug (because of https://github.com/TryGhost/Ghost/issues/10785)
+ */
+
+const hydrateTag = (input) => {
+    if (!input.slug) {
+        input.slug = slugify(input.name);
+    }
+
+    if (input.name.startsWith('#') && !input.slug.startsWith('hash-')) {
+        input.slug = `hash-${input.slug}`;
+    }
+
+    return input;
+};
+
+module.exports.tags = hydrateTag;
 
 /**
  * Post(s)
