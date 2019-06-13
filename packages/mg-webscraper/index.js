@@ -35,7 +35,8 @@ const ScrapeError = ({url, code, statusCode}) => {
 };
 
 class Scraper {
-    constructor(config) {
+    constructor(fileCache, config) {
+        this.fileCache = fileCache;
         this.config = config;
     }
 
@@ -105,17 +106,17 @@ class Scraper {
         }
     }
 
-    async lookup(fileCache, url, config) {
+    async lookup(url, config) {
         // @TODO: replace this with a proper solution: i.e. Ghost's slugify, or xxhash, or similar
         var filename = url.replace(/[^a-z0-9]/gi, '_').toLowerCase();
 
-        if (fileCache.hasFile(filename, 'tmp')) {
-            return await fileCache.readTmpJSONFile(filename);
+        if (this.fileCache.hasFile(filename, 'tmp')) {
+            return await this.fileCache.readTmpJSONFile(filename);
         }
 
         let scrapedData = await this.scrape(url, config);
         scrapedData = omitEmpty(scrapedData);
-        await fileCache.writeTmpJSONFile(scrapedData, filename);
+        await this.fileCache.writeTmpJSONFile(scrapedData, filename);
         return scrapedData;
     }
 
@@ -133,7 +134,7 @@ class Scraper {
                 title: url,
                 task: async () => {
                     try {
-                        let scrapedData = await this.lookup(ctx.fileCache, url, this.config.posts);
+                        let scrapedData = await this.lookup(url, this.config.posts);
                         this.mergeResource(data, scrapedData);
                     } catch (error) {
                         ctx.errors.push(error);

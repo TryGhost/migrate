@@ -1,7 +1,7 @@
 const mediumIngest = require('@tryghost/mg-medium-export');
 const mgJSON = require('@tryghost/mg-json');
 const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
-const MgScraper = require('@tryghost/mg-webscraper');
+const MgWebScraper = require('@tryghost/mg-webscraper');
 const MgImageScraper = require('@tryghost/mg-imagescraper');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const makeTaskRunner = require('../lib/task-runner');
@@ -64,7 +64,7 @@ module.exports.getTaskRunner = (pathToZip, options) => {
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
                 ctx.fileCache = new fsUtils.FileCache(pathToZip);
                 ctx.imageScraper = new MgImageScraper(ctx.fileCache);
-                ctx.mediumScraper = new MgScraper(scrapeConfig);
+                ctx.mediumScraper = new MgWebScraper(ctx.fileCache, scrapeConfig);
             }
         },
         {
