@@ -81,12 +81,6 @@ const hydratePost = (input, options) => {
         input.title = options.title || fakeTitle;
     }
 
-    // @TODO: do this as post processing in the scraper
-    // @TODO: and also add a tag
-    if (input.status === 'Unlisted') {
-        input.status = 'draft';
-    }
-
     // @TODO: log some sort of warning for things like this?
     if (!_.includes(['published', 'draft', 'scheduled'], input.status)) {
         input.status = 'draft';
