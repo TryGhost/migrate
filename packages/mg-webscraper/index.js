@@ -35,9 +35,10 @@ const ScrapeError = ({url, code, statusCode}) => {
 };
 
 class Scraper {
-    constructor(fileCache, config) {
+    constructor(fileCache, config, postProcessor) {
         this.fileCache = fileCache;
         this.config = config;
+        this.postProcessor = postProcessor || _.identity;
     }
 
     mergeRelations(existing, scraped) {
@@ -116,6 +117,7 @@ class Scraper {
 
         let scrapedData = await this.scrape(url, config);
         scrapedData = omitEmpty(scrapedData);
+        scrapedData = this.postProcessor(scrapedData);
         await this.fileCache.writeTmpJSONFile(scrapedData, filename);
         return scrapedData;
     }

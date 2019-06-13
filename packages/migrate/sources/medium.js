@@ -46,6 +46,16 @@ const scrapeConfig = {
     }
 };
 
+const postProcessor = (scrapedData) => {
+    if (scrapedData.status === 'Unlisted') {
+        scrapedData.status = 'draft';
+        scrapedData.tags = scrapedData.tags || [];
+        scrapedData.tags.push({url: 'migrator-added-tag', name: '#Unlisted'});
+    }
+
+    return scrapedData;
+};
+
 /**
  * getTasks: Steps to Migrate from Medium
  *
@@ -64,7 +74,7 @@ module.exports.getTaskRunner = (pathToZip, options) => {
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
                 ctx.fileCache = new fsUtils.FileCache(pathToZip);
                 ctx.imageScraper = new MgImageScraper(ctx.fileCache);
-                ctx.mediumScraper = new MgWebScraper(ctx.fileCache, scrapeConfig);
+                ctx.mediumScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
             }
         },
         {
