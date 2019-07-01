@@ -773,7 +773,7 @@ elegant-spinner@^1.0.1:
   resolved "https://registry.yarnpkg.com/elegant-spinner/-/elegant-spinner-1.0.1.tgz#db043521c95d7e303fd8f345bedc3349cfb0729e"
   integrity sha1-2wQ1IcldfjA/2PNFvtwzSc+wcp4=
 
-ember-rfc176-data@^0.3.8:
+ember-rfc176-data@^0.3.9:
   version "0.3.9"
   resolved "https://registry.yarnpkg.com/ember-rfc176-data/-/ember-rfc176-data-0.3.9.tgz#44b6e051ead6c044ea87bd551f402e2cf89a7e3d"
   integrity sha512-EiTo5YQS0Duy0xp9gCP8ekzv9vxirNi7MnIB4zWs+thtWp/mEKgf5mkiiLU2+oo8C5DuavVHhoPQDmyxh8Io1Q==
@@ -847,20 +847,20 @@ escodegen@^1.11.0, escodegen@^1.6.1:
   optionalDependencies:
     source-map "~0.6.1"
 
-eslint-plugin-ember@^6.2.0:
-  version "6.3.0"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-ember/-/eslint-plugin-ember-6.3.0.tgz#92512711deb440dfac62a52a2c15b1f91ee0f23a"
-  integrity sha512-jXTPtrhEQg41A5u2rwsuh1m9R5e8qTCY04Pi6rXEZ/c3KUSRkYlIKA+GDLR1qy/JcgAR2X8Y8Xvec8imDK6b4A==
+eslint-plugin-ember@^6.7.0:
+  version "6.7.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-ember/-/eslint-plugin-ember-6.7.0.tgz#1c2eb60a3b5ef7d483bd6f3ecbeaff42667c98ba"
+  integrity sha512-NLrO9XY0cR0+oeMc6850A86nJJe5LkN9fs5obNfy4BE0CmDXa3PX9GQlAR/O0sXPsj9HIOnGBTp2qO5dKfgZmA==
   dependencies:
-    ember-rfc176-data "^0.3.8"
+    ember-rfc176-data "^0.3.9"
     snake-case "^2.1.0"
 
-eslint-plugin-ghost@0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-ghost/-/eslint-plugin-ghost-0.2.0.tgz#3f7a8bf28ca239b7f869633c925dbd3d5811bc43"
-  integrity sha512-yHZlNYClLqYx6vF3gg4O7/18MmKyPND58WGaLduMmGDtS5iifHK9jnVukQprOHyJdxrSSOZWll/6duasctxU2A==
+eslint-plugin-ghost@0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-ghost/-/eslint-plugin-ghost-0.3.0.tgz#94f4be899bcfd6dfaf581f64386a6c317c5be7de"
+  integrity sha512-VWewfQQE8kVu9QAWaBIRwx6P0zAuUR0KL6pXWVVUXWIVReIUZk77an5VCbVRtELC7Ea3jPFCEfnr5Olbs0ZAAw==
   dependencies:
-    eslint-plugin-ember "^6.2.0"
+    eslint-plugin-ember "^6.7.0"
     eslint-plugin-sort-imports-es6-autofix "0.4.0"
 
 eslint-plugin-sort-imports-es6-autofix@0.4.0:
