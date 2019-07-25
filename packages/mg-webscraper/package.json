@@ -24,7 +24,7 @@
     "sinon": "7.3.2"
   },
   "dependencies": {
-    "lodash": "^4.17.11",
+    "lodash": "4.17.15",
     "omit-empty": "^1.0.0",
     "scrape-it": "^5.1.0"
   }
