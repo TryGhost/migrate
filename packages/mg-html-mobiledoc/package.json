@@ -24,6 +24,6 @@
     "sinon": "7.3.2"
   },
   "dependencies": {
-    "@tryghost/html-to-mobiledoc": "0.4.1"
+    "@tryghost/html-to-mobiledoc": "0.5.0"
   }
 }
