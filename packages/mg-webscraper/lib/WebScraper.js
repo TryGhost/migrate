@@ -93,11 +93,12 @@ class WebScraper {
     async scrape(url, config) {
         try {
             let {data, response} = await scrapeIt(url, config);
-            if (response.statusCode > 299) {
-                throw ScrapeError({url, code: 'HTTPERROR', statusCode: response.statusCode});
+            let {responseUrl, statusCode} = response;
+            if (statusCode > 299) {
+                throw ScrapeError({url, code: 'HTTPERROR', statusCode});
             }
 
-            return data;
+            return {responseUrl, responseData: data};
         } catch (error) {
             if (error.errorType === 'ScrapeError') {
                 throw error;
@@ -115,11 +116,11 @@ class WebScraper {
             return await this.fileCache.readTmpJSONFile(filename);
         }
 
-        let scrapedData = await this.scrape(url, config);
-        scrapedData = omitEmpty(scrapedData);
-        scrapedData = this.postProcessor(scrapedData);
-        await this.fileCache.writeTmpJSONFile(scrapedData, filename);
-        return scrapedData;
+        let response = await this.scrape(url, config);
+        response.responseData = omitEmpty(response.responseData);
+        response.responseData = this.postProcessor(response.responseData);
+        await this.fileCache.writeTmpJSONFile(response, filename);
+        return response;
     }
 
     hydrate(ctx) {
@@ -131,13 +132,20 @@ class WebScraper {
             return res;
         }
 
-        tasks = res.posts.map(({url, data}) => {
+        tasks = res.posts.map((post) => {
+            let {url, data} = post;
             return {
                 title: url,
-                task: async () => {
+                task: async (ctx, task) => {
                     try {
-                        let scrapedData = await this.lookup(url, this.config.posts);
-                        this.mergeResource(data, scrapedData);
+                        let {responseUrl, responseData} = await this.lookup(url, this.config.posts);
+                        this.mergeResource(data, responseData);
+
+                        if (responseUrl !== url) {
+                            post.originalUrl = url;
+                            post.url = responseUrl;
+                            task.title = responseUrl;
+                        }
                     } catch (error) {
                         ctx.errors.push(error);
                         throw error;
