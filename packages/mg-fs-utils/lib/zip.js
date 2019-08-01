@@ -15,7 +15,12 @@ _private.openZipForWrite = () => {
  * - Flattens the structure if there's one top-level directory, so we only get the files inside
  */
 module.exports.read = (zipPath, callback) => {
-    let zip = _private.openZipForRead(zipPath);
+    let zip;
+    try {
+        zip = _private.openZipForRead(zipPath);
+    } catch (error) {
+        throw new Error(`Unable to read zip file ${zipPath}: ${error}`);
+    }
 
     // Entries is cleaned first
     let entries = zip.getEntries().filter((entry) => {
