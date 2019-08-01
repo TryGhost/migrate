@@ -48,14 +48,21 @@ class ImageScraper {
     async processHTML(html) {
         let $ = cheerio.load(html);
 
-        const promises = $('img').map(async (i, el) => {
+        let images = $('img').map(async (i, el) => {
             let $image = $(el);
             let type = $image.attr('src') === undefined ? 'data-src' : 'src';
             let newSrc = await this.downloadImage($image.attr(type));
             $image.attr(type, newSrc);
         }).get();
 
-        await Promise.all(promises);
+        let bgImages = $('[style*="background-image"]').map(async (i, el) => {
+            let $image = $(el);
+            let src = $image.css('background-image').match(/url\(([^)]*?)\)/)[1];
+            let newSrc = await this.downloadImage(src);
+            $image.css('background-image', `url(${newSrc})`);
+        }).get();
+
+        await Promise.all(images, bgImages);
         return $.html();
     }
 
