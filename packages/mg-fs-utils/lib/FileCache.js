@@ -15,7 +15,8 @@ class FileCache {
 
     get cacheKey() {
         if (!this._cacheKey) {
-            this._cacheKey = crypto.createHash('md5').update(this.pathName).digest('hex');
+            // Unique hash based on full zip path + the original filename
+            this._cacheKey = `${crypto.createHash('md5').update(this.pathName).digest('hex')}-${this.originalName}`;
         }
         return this._cacheKey;
     }
