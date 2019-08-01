@@ -122,7 +122,12 @@ class FileCache {
      * @param {Object} options - config
      */
     async writeGhostJSONFile(data, options = {}) {
-        let filename = options.filename || `ghost-import-${Date.now()}.json`;
+        // Create a temporary version first
+        let filename = options.tmpFilename || `ghost-import-${Date.now()}.json`;
+        await this.writeTmpJSONFile(data, filename);
+
+        // Then also write it as "the" JSON file in the zip folder
+        filename = options.filename || `ghost-import.json`;
         let basepath = options.path ? path.dirname(options.path) : this.zipDir;
         let filepath = path.join(basepath, filename);
 
