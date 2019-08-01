@@ -90,6 +90,13 @@ const processFeatureImage = (html, post) => {
     // We don't have a designated feature image, but there's an image above the content so use that image instead
     if (!featured && !preImageTags.includes('p')) {
         featured = foundImg;
+        // tag it with #auto-feature-image so we can tell the difference
+        // @TODO: maybe make it possible to have strict mode, where this isn't done?
+        post.data.tags.push({
+            data: {
+                name: '#auto-feature-image'
+            }
+        });
     }
 
     if (featured) {
@@ -107,9 +114,6 @@ module.exports = (name, html, globalUser) => {
     // Process content
     post.data.html = processContent($post('.e-content'), post);
 
-    // Grab the featured image
-    processFeatureImage(post.data.html, post);
-
     // Process author
     if ($post('.p-author').length) {
         post.data.author = processAuthor($post('.p-author'));
@@ -122,6 +126,10 @@ module.exports = (name, html, globalUser) => {
     if ($post('.p-tags a').length) {
         post.data.tags = processTags($post('.p-tags a'));
     }
+
+    // Grab the featured image
+    // Do this last so that we can add tags to indicate feature image style
+    processFeatureImage(post.data.html, post);
 
     return post;
 };
