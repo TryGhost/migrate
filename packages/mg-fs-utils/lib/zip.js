@@ -37,9 +37,9 @@ module.exports.read = (zipPath, callback) => {
     });
 };
 
-module.exports.write = (zipPath, contentFolder) => {
+module.exports.write = (zipPath, contentFolder, fileName) => {
     const zip = _private.openZipForWrite();
-    const outputPath = path.join(zipPath, `ghost-import-${Date.now()}.zip`);
+    const outputPath = path.join(zipPath, fileName || `ghost-import-${Date.now()}.zip`);
     zip.addLocalFolder(contentFolder);
     zip.writeZip(outputPath);
 

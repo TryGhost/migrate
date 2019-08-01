@@ -10,6 +10,7 @@ const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico
 class FileCache {
     constructor(pathName) {
         this.pathName = pathName;
+        this.originalName = path.basename(pathName, '.zip');
     }
 
     get cacheKey() {

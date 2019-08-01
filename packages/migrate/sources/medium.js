@@ -134,7 +134,9 @@ module.exports.getTaskRunner = (pathToZip, options) => {
                 // 6. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostJSONFile(ctx.result);
-                    ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir);
+
+                    let fileName = `ghost-import-${ctx.fileCache.originalName}-${Date.now()}.zip`;
+                    ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, fileName);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
