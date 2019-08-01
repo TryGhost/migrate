@@ -1,6 +1,7 @@
 const $ = require('cheerio');
 const string = require('@tryghost/string');
 const processContent = require('./process-content');
+const sectionTags = ['aside', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'img'];
 
 const processMeta = (name, $post) => {
     let urlInfo;
@@ -70,6 +71,26 @@ const processFeatureImage = (html, post) => {
 
     // Look for data-is-featured
     let featured = $html('[data-is-featured]')[0];
+
+    // Look for an image that appears before content
+    let allSections = $html(sectionTags.join(','));
+    let foundImg = false;
+    let preImageTags = [];
+
+    allSections.each((i, el) => {
+        if (!foundImg) {
+            preImageTags.push(el.tagName);
+        }
+
+        if (!foundImg && el.tagName === 'img') {
+            return foundImg = el;
+        }
+    });
+
+    // We don't have a designated feature image, but there's an image above the content so use that image instead
+    if (!featured && !preImageTags.includes('p')) {
+        featured = foundImg;
+    }
 
     if (featured) {
         post.data.feature_image = $(featured).attr('src');
