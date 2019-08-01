@@ -68,13 +68,11 @@ const processFeatureImage = (html, post) => {
         decodeEntities: false
     });
 
-    // For now this is a super naive first image in the post
-    // Eventually we want different modes, and in particular to add a tag if the feature image was the first thing in the post
-    let image = $html('img')[0];
-    let src = $(image).attr('src');
+    // Look for data-is-featured
+    let featured = $html('[data-is-featured]')[0];
 
-    if (src) {
-        post.data.feature_image = src;
+    if (featured) {
+        post.data.feature_image = $(featured).attr('src');
     }
 };
 
@@ -88,6 +86,7 @@ module.exports = (name, html, globalUser) => {
     // Process content
     post.data.html = processContent($post('.e-content'), post);
 
+    // Grab the featured image
     processFeatureImage(post.data.html, post);
 
     // Process author
