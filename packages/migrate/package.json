@@ -34,6 +34,7 @@
     "@tryghost/mg-html-mobiledoc": "^0.3.0",
     "@tryghost/mg-imagescraper": "^0.2.0",
     "@tryghost/mg-json": "^0.4.0",
+    "@tryghost/mg-linkfixer": "^0.0.0",
     "@tryghost/mg-medium-export": "^0.5.0",
     "@tryghost/mg-webscraper": "^0.3.0",
     "@tryghost/pretty-cli": "1.2.1",

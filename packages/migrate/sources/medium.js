@@ -3,6 +3,7 @@ const mgJSON = require('@tryghost/mg-json');
 const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
 const MgWebScraper = require('@tryghost/mg-webscraper');
 const MgImageScraper = require('@tryghost/mg-imagescraper');
+const MgLinkFixer = require('@tryghost/mg-linkfixer');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const makeTaskRunner = require('../lib/task-runner');
 
@@ -75,6 +76,7 @@ module.exports.getTaskRunner = (pathToZip, options) => {
                 ctx.fileCache = new fsUtils.FileCache(pathToZip);
                 ctx.imageScraper = new MgImageScraper(ctx.fileCache);
                 ctx.mediumScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
+                ctx.linkFixer = new MgLinkFixer();
             }
         },
         {
@@ -100,9 +102,21 @@ module.exports.getTaskRunner = (pathToZip, options) => {
             skip: () => ['all', 'web'].indexOf(options.scrape) < 0
         },
         {
+            title: 'Build Link Map',
+            task: async (ctx) => {
+                // 3. Create a map of all known links for use later
+                try {
+                    ctx.linkFixer.buildMap(ctx);
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
+            }
+        },
+        {
             title: 'Format data as Ghost JSON',
             task: (ctx) => {
-                // 3. Format the data as a valid Ghost JSON file
+                // 4. Format the data as a valid Ghost JSON file
                 try {
                     ctx.result = mgJSON.toGhostJSON(ctx.result, ctx.options);
                 } catch (error) {
@@ -114,16 +128,24 @@ module.exports.getTaskRunner = (pathToZip, options) => {
         {
             title: 'Fetch images via ImageSraper',
             task: async (ctx) => {
-                // 4. Pass the JSON file through the image scraper
+                // 5. Pass the JSON file through the image scraper
                 let tasks = ctx.imageScraper.fetch(ctx);
                 return makeTaskRunner(tasks, options);
             },
             skip: () => ['all', 'img'].indexOf(options.scrape) < 0
         },
         {
+            title: 'Update links in content via LinkFixer',
+            task: async (ctx, task) => {
+                // 6. Process the content looking for known links, and update them to new links
+                let tasks = ctx.linkFixer.fix(ctx, task);
+                return makeTaskRunner(tasks, options);
+            }
+        },
+        {
             title: 'Convert HTML -> MobileDoc',
             task: (ctx) => {
-                // 5. Convert post HTML -> MobileDoc
+                // 7. Convert post HTML -> MobileDoc
                 let tasks = mgHtmlMobiledoc.convert(ctx);
                 return makeTaskRunner(tasks, options);
             }
@@ -131,7 +153,7 @@ module.exports.getTaskRunner = (pathToZip, options) => {
         {
             title: 'Write Ghost import zip',
             task: async (ctx) => {
-                // 6. Write a valid Ghost import zip
+                // 8. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostJSONFile(ctx.result);
 
