@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/migrate",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "repository": "https://github.com/TryGhost/migrate/tree/master/packages/migrate",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -30,13 +30,13 @@
     "sinon": "7.3.2"
   },
   "dependencies": {
-    "@tryghost/mg-fs-utils": "^0.3.0",
+    "@tryghost/mg-fs-utils": "^0.4.0",
     "@tryghost/mg-html-mobiledoc": "^0.3.0",
-    "@tryghost/mg-imagescraper": "^0.2.0",
+    "@tryghost/mg-imagescraper": "^0.3.0",
     "@tryghost/mg-json": "^0.4.0",
-    "@tryghost/mg-linkfixer": "^0.0.0",
-    "@tryghost/mg-medium-export": "^0.5.0",
-    "@tryghost/mg-webscraper": "^0.3.0",
+    "@tryghost/mg-linkfixer": "^0.1.0",
+    "@tryghost/mg-medium-export": "^0.6.0",
+    "@tryghost/mg-webscraper": "^0.4.0",
     "@tryghost/pretty-cli": "1.2.1",
     "listr": "0.14.3"
   }
