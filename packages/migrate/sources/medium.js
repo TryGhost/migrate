@@ -10,36 +10,29 @@ const makeTaskRunner = require('../lib/task-runner');
 const scrapeConfig = {
     posts: {
         status: {
-            selector: '.js-postMetaVisibility'
-        },
-        tags: {
-            listItem: 'ul.tags > li',
-            data: {
-                url: {
-                    selector: 'a',
-                    attr: 'href'
-                },
-                // @TODO ideally we'd spec this using a data key, so the structure reflects what we expect back
-                name: {
-                    selector: 'a'
-                }
+            selector: 'meta[name="robots"]',
+            attr: 'content',
+            convert: (x) => {
+                return x.match(/noindex/) ? 'draft' : '';
             }
         },
         author: {
-            selector: 'footer .js-cardUser',
+            selector: '#root',
             data: {
                 url: {
-                    selector: 'h3 a',
-                    attr: 'href'
-                },
-                name: {
-                    selector: 'h3 a'
-                },
-                bio: {
-                    selector: 'p'
+                    selector: 'a[href*="/@"]',
+                    attr: 'href',
+                    eq: 1,
+                    convert: (x) => {
+                        if (x.match(/(\/@.*?)\?/)) {
+                            return `https://medium.com${x.match(/(\/@.*?)\?/)[1]}`;
+                        }
+                        return x;
+                    }
                 },
                 profile_image: {
-                    selector: '.avatar-image',
+                    selector: 'a[href*="/@"] img',
+                    eq: 1,
                     attr: 'src'
                 }
             }
