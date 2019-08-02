@@ -36,6 +36,34 @@ const scrapeConfig = {
                     attr: 'src'
                 }
             }
+        },
+        meta_description: {
+            selector: 'meta[name="description"]',
+            attr: 'content'
+        },
+        og_image: {
+            selector: 'meta[property="og:image"]',
+            attr: 'content'
+        },
+        og_title: {
+            selector: 'meta[property="og:title"]',
+            attr: 'content'
+        },
+        og_description: {
+            selector: 'meta[property="og:description"]',
+            attr: 'content'
+        },
+        twitter_image: {
+            selector: 'meta[name="twitter:image:src"]',
+            attr: 'content'
+        },
+        twitter_title: {
+            selector: 'meta[property="twitter:title"]',
+            attr: 'content'
+        },
+        twitter_description: {
+            selector: 'meta[property="twitter:description"]',
+            attr: 'content'
         }
     }
 };
