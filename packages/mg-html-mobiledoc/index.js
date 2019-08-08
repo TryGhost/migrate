@@ -15,6 +15,10 @@ module.exports.convert = (ctx) => {
         posts = res.data.posts;
     }
 
+    if (!posts && res.db && res.db[0] && res.db[0].data && res.db[0].data.posts) {
+        posts = res.db[0].data.posts;
+    }
+
     let tasks = posts.map((post) => {
         return {
             title: `Converting ${post.title}`,
