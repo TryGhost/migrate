@@ -1,4 +1,4 @@
-const ui = require('@tryghost/pretty-cli/ui');
+const ui = require('@tryghost/pretty-cli').ui;
 const json = require('../../lib/utilties/json');
 
 exports.id = 'json-html';
