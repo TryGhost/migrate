@@ -2,6 +2,9 @@ const converter = require('@tryghost/html-to-mobiledoc');
 
 // Wrap our converter tool and convert to a string
 const convertPost = (post) => {
+    if (!post.html) {
+        throw new Error('Post has no html field to convert');
+    }
     post.mobiledoc = JSON.stringify(converter.toMobiledoc(post.html));
     delete post.html;
 };
