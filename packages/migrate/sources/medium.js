@@ -164,11 +164,17 @@ module.exports.getTaskRunner = (pathToZip, options) => {
             }
         },
         {
+            // @TODO don't duplicate this with the utils json file
             title: 'Convert HTML -> MobileDoc',
             task: (ctx) => {
                 // 7. Convert post HTML -> MobileDoc
-                let tasks = mgHtmlMobiledoc.convert(ctx);
-                return makeTaskRunner(tasks, options);
+                try {
+                    let tasks = mgHtmlMobiledoc.convert(ctx);
+                    return makeTaskRunner(tasks, options);
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
             }
         },
         {

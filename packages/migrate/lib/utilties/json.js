@@ -5,10 +5,16 @@ const fsUtils = require('@tryghost/mg-fs-utils');
 const jsonTasks = {
     html: (options) => {
         return {
+            // @TODO don't duplicate this with medium
             title: 'Convert HTML -> MobileDoc',
             task: (ctx) => {
-                let tasks = mgHtmlMobiledoc.convert(ctx);
-                return makeTaskRunner(tasks, options);
+                try {
+                    let tasks = mgHtmlMobiledoc.convert(ctx);
+                    return makeTaskRunner(tasks, options);
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
             }
         };
     }
