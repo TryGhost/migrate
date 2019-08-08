@@ -34,7 +34,7 @@ exports.run = async (argv) => {
         await utility.run(context);
 
         if (argv.verbose) {
-            ui.log.info('Done', require('util').inspect(context.result.data, false, 2));
+            ui.log.info('Done', require('util').inspect(context.result, false, 3));
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);
