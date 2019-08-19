@@ -24,7 +24,7 @@
     "sinon": "7.4.1"
   },
   "dependencies": {
-    "@tryghost/string": "0.1.4",
+    "@tryghost/string": "0.1.5",
     "bluebird": "^3.5.2",
     "bson-objectid": "^1.2.5",
     "ghost-ignition": "^3.0.0",
