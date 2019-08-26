@@ -848,13 +848,21 @@ eslint-plugin-ember@^6.7.0:
     ember-rfc176-data "^0.3.9"
     snake-case "^2.1.0"
 
-eslint-plugin-ghost@0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-ghost/-/eslint-plugin-ghost-0.4.0.tgz#40076b79e0446f51daecfebd85bf400986aead7a"
-  integrity sha512-BoU/pc4okZAMiZz6M/bz5ru8dYuVJvlPbJ4bXwXbLIykzLVlIQskpEs/bokR8gUZUa5b/VW4HfY4WVWZ0it22A==
+eslint-plugin-ghost@0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-ghost/-/eslint-plugin-ghost-0.5.0.tgz#f5ee691409b8be4ad2951bc7711380f6df029ca3"
+  integrity sha512-fI3kjj81IqlrZ3TwBUg6KqJciKyAtpYBlOxVxg+YiGxXMVqIivpAHVwdh4LEmym2TdFSX5sNhFkW5hzEVqZesQ==
   dependencies:
     eslint-plugin-ember "^6.7.0"
+    eslint-plugin-mocha "^6.0.0"
     eslint-plugin-sort-imports-es6-autofix "0.4.0"
+
+eslint-plugin-mocha@^6.0.0:
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-mocha/-/eslint-plugin-mocha-6.1.0.tgz#4950ceea8e51b1f4265116c0d03d0cbae86d0a6f"
+  integrity sha512-EQj355rhaSGOLP6WH9P9xu+0Xuy+G5dZUuRTlLPNpICw5x0zrqK+uxQZvMVKWO9zOJA4PDVR1XHO0rm9wbOLuA==
+  dependencies:
+    ramda "^0.26.1"
 
 eslint-plugin-sort-imports-es6-autofix@0.4.0:
   version "0.4.0"
@@ -2338,6 +2346,11 @@ qs@~6.5.2:
   version "6.5.2"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.5.2.tgz#cb3ae806e8740444584ef154ce8ee98d403f3e36"
   integrity sha512-N5ZAX4/LxJmF+7wN74pUD6qAh9/wnvdQcjq9TZjevvXzSUo7bfmw91saqMjzGS2xq91/odN2dW/WOl7qQHNDGA==
+
+ramda@^0.26.1:
+  version "0.26.1"
+  resolved "https://registry.yarnpkg.com/ramda/-/ramda-0.26.1.tgz#8d41351eb8111c55353617fc3bbffad8e4d35d06"
+  integrity sha512-hLWjpy7EnsDBb0p+Z3B7rPi3GDeRG5ZtiI33kJhTt+ORCd38AbAIjB/9zRIUoeTbE/AVX5ZkU7m6bznsvrf8eQ==
 
 readable-stream@1.1:
   version "1.1.13"
