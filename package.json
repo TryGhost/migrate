@@ -23,8 +23,8 @@
   "devDependencies": {
     "eslint": "5.16.0",
     "eslint-plugin-ghost": "0.5.0",
-    "mocha": "6.2.0",
+    "mocha": "6.2.1",
     "should": "13.2.3",
-    "sinon": "7.4.2"
+    "sinon": "7.5.0"
   }
 }
