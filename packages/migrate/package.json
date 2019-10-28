@@ -37,7 +37,7 @@
     "@tryghost/mg-linkfixer": "^0.1.1",
     "@tryghost/mg-medium-export": "^0.6.1",
     "@tryghost/mg-webscraper": "^0.4.1",
-    "@tryghost/pretty-cli": "1.2.1",
+    "@tryghost/pretty-cli": "1.2.2",
     "@tryghost/string": "0.1.5",
     "listr": "0.14.3",
     "lodash.get": "4.4.2"
