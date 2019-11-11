@@ -28,6 +28,31 @@ describe('toGhostJSON', function () {
         output.data.posts_tags[1].tag_id.should.eql(output.data.tags[1].id);
     });
 
+    // @TODO: make it so that this test doesn't need a post slug or an author
+    // Hydrator should be able to cope with absolutely minimal data
+    it('correctly decodes titles', function () {
+        const input = {
+            posts: [{
+                url: 'https://mysite.com',
+                data: {
+                    slug: 'cool-shit',
+                    title: 'This shit&#8217;s cool',
+                    author: {
+                        url: 'https://mysite.com/me',
+                        data: {
+                            name: 'me'
+                        }
+                    }
+                }
+            }]
+        };
+        const output = toGhostJSON(input);
+
+        output.should.be.GhostJSON();
+        output.data.posts.should.be.an.Array().with.lengthOf(1);
+        output.data.posts[0].title.should.eql('This shit’s cool');
+    });
+
     it.skip('Calculates relations with both post and users', function () {
         const input = require(testUtils.fixturesFilename('single-post-author.json'));
 

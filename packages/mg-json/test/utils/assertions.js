@@ -32,7 +32,7 @@ should.Assertion.add('GhostJSON', function () {
     this.obj.meta.should.be.an.Object();
     this.obj.meta.should.have.properties(['exported_on', 'version']);
 
-    // Basic tabls
+    // Basic tables
     this.obj.data.should.have.properties(['posts', 'users', 'tags', 'posts_authors', 'posts_tags']);
 
     // posts
@@ -44,8 +44,10 @@ should.Assertion.add('GhostJSON', function () {
     this.obj.data.users.forEach(user => user.should.be.a.GhostUser());
 
     // tags
-    this.obj.data.tags.should.be.an.Array();
-    this.obj.data.tags.forEach(tag => tag.should.be.a.GhostTag());
+    if (this.obj.data.tags) {
+        this.obj.data.tags.should.be.an.Array();
+        this.obj.data.tags.forEach(tag => tag.should.be.a.GhostTag());
+    }
 
     // Relations...
 
