@@ -38,6 +38,12 @@ const hydrateUser = (input, options) => {
         input.email = fakeEmail(input.slug || _.kebabCase(input.name), options.email || fakeEmailDomain);
     }
 
+    // @TODO: log some sort of warning for things like this?
+    if (input.bio && input.bio.length > 200) {
+        // Naive truncate values that are too long
+        input.bio = input.bio.substring(0, 200);
+    }
+
     return input;
 };
 
