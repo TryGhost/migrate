@@ -35,10 +35,11 @@ const ScrapeError = ({url, code, statusCode}) => {
 };
 
 class WebScraper {
-    constructor(fileCache, config, postProcessor) {
+    constructor(fileCache, config, postProcessor, skipFn) {
         this.fileCache = fileCache;
         this.config = config;
         this.postProcessor = postProcessor || _.identity;
+        this.skipFn = skipFn;
     }
 
     mergeRelations(existing, scraped) {
@@ -97,7 +98,6 @@ class WebScraper {
             if (statusCode > 299) {
                 throw ScrapeError({url, code: 'HTTPERROR', statusCode});
             }
-
             return {responseUrl, responseData: data};
         } catch (error) {
             if (error.errorType === 'ScrapeError') {
@@ -136,6 +136,9 @@ class WebScraper {
             let {url, data} = post;
             return {
                 title: url,
+                skip: () => {
+                    return this.skipFn ? this.skipFn(post) : false;
+                },
                 task: async (ctx, task) => {
                     try {
                         let {responseUrl, responseData} = await this.lookup(url, this.config.posts);
