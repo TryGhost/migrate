@@ -3,8 +3,6 @@ const process = require('./lib/processor');
 
 module.exports.discover = fetch.discover;
 
-module.exports.fetchAll = async (url) => {
-    let results = await fetch.all(url);
+module.exports.fetch = fetch;
 
-    return process.all(results);
-};
+module.exports.process = process;

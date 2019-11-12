@@ -54,13 +54,13 @@ module.exports.processTerms = (wpTerms) => {
  * }
  */
 module.exports.processPost = (wpPost) => {
+    // @note: we don't copy excerpts because WP generated excerpts aren't better than Ghost ones but are often too long.
     const post = {
         url: wpPost.link,
         data: {
             slug: wpPost.slug,
             title: wpPost.title.rendered,
             comment_id: wpPost.id,
-            //custom_excerpt: wpPost.excerpt.rendered, @TODO: strip html
             html: wpPost.content.rendered,
             type: wpPost.type === 'post' ? 'post' : 'page',
             status: wpPost.status === 'publish' ? 'published' : 'draft',
@@ -92,11 +92,9 @@ module.exports.processPosts = (posts) => {
 
 module.exports.all = (input) => {
     const output = {
-        posts: [],
-        pages: []
+        posts: this.processPosts(input.posts),
+        pages: this.processPosts(input.pages)
     };
-
-    output.posts = this.processPosts(input.posts);
 
     return output;
 };

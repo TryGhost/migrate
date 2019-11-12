@@ -38,31 +38,31 @@ module.exports.getTaskRunner = (url, options) => {
             }
         },
         {
-            title: 'Try WP API',
+            title: 'Fetch Content from WP API',
             task: async (ctx) => {
                 // 1. Read all content from the API
                 try {
-                    ctx.result = await wpAPI.fetchAll(url);
-                    await ctx.fileCache.writeTmpJSONFile(ctx.result, 'wp-api-data.json');
+                    let tasks = await wpAPI.fetch.tasks(url, ctx);
+                    return makeTaskRunner(tasks, options);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
                 }
             }
         },
-        // {
-        //     title: 'Try WP API',
-        //     task: async (ctx) => {
-        //         // 2. Convert WP API JSON into a format that the migrat tools understand
-        //         try {
-        //             ctx.result = await wpAPI.fetchAll(url);
-        //             await ctx.fileCache.writeTmpJSONFile(ctx.result, 'wp-api-data.json');
-        //         } catch (error) {
-        //             ctx.errors.push(error);
-        //             throw error;
-        //         }
-        //     }
-        // },
+        {
+            title: 'Process WP API JSON',
+            task: async (ctx) => {
+                // 2. Convert WP API JSON into a format that the migrate tools understand
+                try {
+                    ctx.result = wpAPI.process.all(ctx.result);
+                    await ctx.fileCache.writeTmpJSONFile(ctx.result, 'wp-processed-data.json');
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
+            }
+        },
         {
             title: 'Build Link Map',
             task: async (ctx) => {
