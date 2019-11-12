@@ -1,20 +1,47 @@
 const wpAPI = require('@tryghost/mg-wp-api');
 const mgJSON = require('@tryghost/mg-json');
 const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
+const MgWebScraper = require('@tryghost/mg-webscraper');
 const MgImageScraper = require('@tryghost/mg-imagescraper');
 const MgLinkFixer = require('@tryghost/mg-linkfixer');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const makeTaskRunner = require('../lib/task-runner');
 
-// const postProcessor = (scrapedData) => {
-//     if (scrapedData.status === 'Unlisted') {
-//         scrapedData.status = 'draft';
-//         scrapedData.tags = scrapedData.tags || [];
-//         scrapedData.tags.push({url: 'migrator-added-tag', name: '#Unlisted'});
-//     }
-
-//     return scrapedData;
-// };
+const scrapeConfig = {
+    posts: {
+        meta_title: {
+            selector: 'title'
+        },
+        meta_description: {
+            selector: 'meta[name="description"]',
+            attr: 'content'
+        },
+        og_image: {
+            selector: 'meta[property="og:image"]',
+            attr: 'content'
+        },
+        og_title: {
+            selector: 'meta[property="og:title"]',
+            attr: 'content'
+        },
+        og_description: {
+            selector: 'meta[property="og:description"]',
+            attr: 'content'
+        },
+        twitter_image: {
+            selector: 'meta[name="twitter:image:src"]',
+            attr: 'content'
+        },
+        twitter_title: {
+            selector: 'meta[property="twitter:title"]',
+            attr: 'content'
+        },
+        twitter_description: {
+            selector: 'meta[property="twitter:description"]',
+            attr: 'content'
+        }
+    }
+};
 
 module.exports.initialise = (url, options) => {
     return {
@@ -24,6 +51,7 @@ module.exports.initialise = (url, options) => {
 
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
             ctx.fileCache = new fsUtils.FileCache(url, options.batch);
+            ctx.wpScraper = new MgWebScraper(ctx.fileCache, scrapeConfig);
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
             ctx.linkFixer = new MgLinkFixer();
 
@@ -96,9 +124,18 @@ module.exports.getFullTaskList = (url, options) => {
             }
         },
         {
+            title: 'Fetch missing metadata via WebScraper',
+            task: (ctx) => {
+                // 3. Pass the results through the web scraper to get any missing data
+                let tasks = ctx.wpScraper.hydrate(ctx);
+                return makeTaskRunner(tasks, options);
+            },
+            skip: () => ['all', 'web'].indexOf(options.scrape) < 0
+        },
+        {
             title: 'Build Link Map',
             task: async (ctx) => {
-                // 3. Create a map of all known links for use later
+                // 4. Create a map of all known links for use later
                 try {
                     ctx.linkFixer.buildMap(ctx);
                 } catch (error) {
@@ -110,7 +147,7 @@ module.exports.getFullTaskList = (url, options) => {
         {
             title: 'Format data as Ghost JSON',
             task: (ctx) => {
-                // 4. Format the data as a valid Ghost JSON file
+                // 5. Format the data as a valid Ghost JSON file
                 try {
                     ctx.result = mgJSON.toGhostJSON(ctx.result, ctx.options);
                 } catch (error) {
@@ -122,7 +159,7 @@ module.exports.getFullTaskList = (url, options) => {
         {
             title: 'Fetch images via ImageSraper',
             task: async (ctx) => {
-                // 5. Pass the JSON file through the image scraper
+                // 6. Pass the JSON file through the image scraper
                 let tasks = ctx.imageScraper.fetch(ctx);
                 return makeTaskRunner(tasks, options);
             },
@@ -131,7 +168,7 @@ module.exports.getFullTaskList = (url, options) => {
         {
             title: 'Update links in content via LinkFixer',
             task: async (ctx, task) => {
-                // 6. Process the content looking for known links, and update them to new links
+                // 7. Process the content looking for known links, and update them to new links
                 let tasks = ctx.linkFixer.fix(ctx, task);
                 return makeTaskRunner(tasks, options);
             }
@@ -140,7 +177,7 @@ module.exports.getFullTaskList = (url, options) => {
             // @TODO don't duplicate this with the utils json file
             title: 'Convert HTML -> MobileDoc',
             task: (ctx) => {
-                // 7. Convert post HTML -> MobileDoc
+                // 8. Convert post HTML -> MobileDoc
                 try {
                     let tasks = mgHtmlMobiledoc.convert(ctx);
                     return makeTaskRunner(tasks, options);
@@ -153,7 +190,7 @@ module.exports.getFullTaskList = (url, options) => {
         {
             title: 'Write Ghost import zip',
             task: async (ctx) => {
-                // 8. Write a valid Ghost import zip
+                // 9. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostJSONFile(ctx.result);
 
