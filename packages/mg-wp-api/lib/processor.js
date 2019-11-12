@@ -81,6 +81,10 @@ module.exports.processPost = (wpPost) => {
     if (wpPost._embedded['wp:term']) {
         const wpTerms = wpPost._embedded['wp:term'];
         post.data.tags = this.processTerms(wpTerms);
+
+        post.data.tags.push({
+            url: 'migrator-added-tag', data: {name: '#from-wordpress'}
+        });
     }
 
     return post;
