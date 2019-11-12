@@ -19,13 +19,19 @@ const makeTaskRunner = require('../lib/task-runner');
 module.exports.initialise = (url, options) => {
     return {
         title: 'Initialising',
-        task: (ctx) => {
+        task: (ctx, task) => {
             ctx.options = options;
 
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-            ctx.fileCache = new fsUtils.FileCache(url);
+            ctx.fileCache = new fsUtils.FileCache(url, options.batch);
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
             ctx.linkFixer = new MgLinkFixer();
+
+            task.title = `Initialising ${ctx.fileCache.cacheName}`;
+
+            if (options.batch > 0) {
+                task.title += ` batch ${ctx.fileCache.batchName}`;
+            }
         }
     };
 };
@@ -63,6 +69,12 @@ module.exports.getFullTaskList = (url, options) => {
                 // 1. Read all content from the API
                 try {
                     let tasks = await wpAPI.fetch.tasks(url, ctx);
+
+                    if (options.batch !== 0) {
+                        let batchIndex = options.batch - 1;
+                        tasks = [tasks[batchIndex]];
+                    }
+
                     return makeTaskRunner(tasks, options);
                 } catch (error) {
                     ctx.errors.push(error);
@@ -145,8 +157,7 @@ module.exports.getFullTaskList = (url, options) => {
                 try {
                     await ctx.fileCache.writeGhostJSONFile(ctx.result);
 
-                    let fileName = `ghost-import-${ctx.fileCache.originalName}-${Date.now()}.zip`;
-                    ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, fileName);
+                    ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;

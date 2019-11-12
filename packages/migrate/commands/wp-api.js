@@ -30,6 +30,10 @@ exports.setup = (sywac) => {
         defaultValue: false,
         desc: 'Show initalisation info only'
     });
+    sywac.number('-b, --batch', {
+        defaultValue: 0,
+        desc: 'Run a batch (defaults to not batching)'
+    });
 };
 
 // What to do when this command is executed
@@ -39,6 +43,10 @@ exports.run = async (argv) => {
 
     if (argv.verbose) {
         ui.log.info(`${argv.info ? 'Fetching info' : 'Migrating'} from site at ${argv.url}`);
+    }
+
+    if (argv.batch !== 0) {
+        ui.log.info(`Running batch ${argv.batch} (groups of 50 posts)`);
     }
 
     try {

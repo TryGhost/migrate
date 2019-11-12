@@ -8,15 +8,22 @@ const basePath = 'mg';
 const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico'];
 
 class FileCache {
-    constructor(pathName) {
-        this.pathName = pathName;
-        this.originalName = path.basename(pathName, '.zip');
+    constructor(cacheName, batchName) {
+        this.originalName = cacheName;
+
+        // Remove any extension, handles removing TLDs as well if the name is based on a URL
+        let ext = path.extname(cacheName);
+        this.cacheName = path.basename(cacheName, ext);
+
+        if (batchName) {
+            this.batchName = batchName;
+        }
     }
 
     get cacheKey() {
         if (!this._cacheKey) {
             // Unique hash based on full zip path + the original filename
-            this._cacheKey = `${crypto.createHash('md5').update(this.pathName).digest('hex')}-${this.originalName}`;
+            this._cacheKey = `${crypto.createHash('md5').update(this.originalName).digest('hex')}-${this.cacheName}`;
         }
         return this._cacheKey;
     }
@@ -59,6 +66,21 @@ class FileCache {
 
     get imageDir() {
         return path.join(this.zipDir, this.imagePath);
+    }
+
+    get defaultCacheFileName() {
+        if (this.batchName) {
+            return `gh-${this.cacheName}-batch-${this.batchName}-${Date.now()}`;
+        }
+        return `gh-${this.cacheName}-${Date.now()}`;
+    }
+
+    get defaultTmpJSONFileName() {
+        return `${this.defaultCacheFileName}.json`;
+    }
+
+    get defaultZipFileName() {
+        return `${this.defaultCacheFileName}.zip`;
     }
 
     // @TODO: move this somewhere shared,
@@ -125,7 +147,7 @@ class FileCache {
      */
     async writeGhostJSONFile(data, options = {}) {
         // Create a temporary version first
-        let filename = options.tmpFilename || `ghost-import-${Date.now()}.json`;
+        let filename = options.tmpFilename || this.defaultTmpJSONFileName;
         await this.writeTmpJSONFile(data, filename);
 
         // Then also write it as "the" JSON file in the zip folder
