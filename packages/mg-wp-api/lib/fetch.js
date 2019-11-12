@@ -1,12 +1,16 @@
 const wp = require('wpapi');
-const perPage = 20;
+const perPage = 50;
 
 module.exports.discover = async (url) => {
     const site = await wp.discover(url);
     const posts = await site.posts().perPage(perPage);
     const pages = await site.pages().perPage(perPage);
 
-    return {site, totals: {posts: posts._paging.totalPages, pages: pages._paging.totalPages}};
+    return {
+        site,
+        totals: {posts: posts._paging.total, pages: pages._paging.total},
+        batches: {posts: posts._paging.totalPages, pages: pages._paging.totalPages}
+    };
 };
 
 module.exports.all = async (url) => {
@@ -25,10 +29,10 @@ module.exports.all = async (url) => {
 };
 
 const buildTasks = (tasks, api, type) => {
-    for (let page = 1; page < api.totals[type]; page++) {
+    for (let page = 1; page <= api.batches[type]; page++) {
     // for (let page = 1; page < 2; page++) {
         tasks.push({
-            title: `Fetching ${type}, page ${page} of ${api.totals[type]}`,
+            title: `Fetching ${type}, page ${page} of ${api.batches[type]}`,
             task: async (ctx) => {
                 ctx.result[type] = ctx.result[type].concat(await api.site[type]().perPage(perPage).page(page).embed());
             }
@@ -46,7 +50,7 @@ module.exports.tasks = async (url, ctx) => {
     };
 
     buildTasks(tasks, api, 'posts');
-    // buildTasks(tasks, api, 'pages');
+    buildTasks(tasks, api, 'pages');
 
     return tasks;
 };

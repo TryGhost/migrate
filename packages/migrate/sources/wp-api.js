@@ -16,27 +16,47 @@ const makeTaskRunner = require('../lib/task-runner');
 //     return scrapedData;
 // };
 
+module.exports.initialise = (url, options) => {
+    return {
+        title: 'Initialising',
+        task: (ctx) => {
+            ctx.options = options;
+
+            // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
+            ctx.fileCache = new fsUtils.FileCache(url);
+            ctx.imageScraper = new MgImageScraper(ctx.fileCache);
+            ctx.linkFixer = new MgLinkFixer();
+        }
+    };
+};
+
+module.exports.getInfoTaskList = (url, options) => {
+    return [
+        this.initialise(url, options),
+        {
+            title: 'Fetch Content Info from WP API',
+            task: async (ctx) => {
+                try {
+                    ctx.info = await wpAPI.fetch.discover(url);
+                } catch (error) {
+                    ctx.errors.push(error);
+                }
+            }
+        }
+    ];
+};
+
 /**
- * getTasks: Steps to Migrate from Medium
+ * getFullTaskList: Full Steps to Migrate from WP
  *
- * Wiring of the steps to migrate from medium.
+ * Wiring of the steps to migrate from WP.
  *
  * @param {String} pathToZip
  * @param {Object} options
  */
-module.exports.getTaskRunner = (url, options) => {
-    let tasks = [
-        {
-            title: 'Initialising',
-            task: (ctx) => {
-                ctx.options = options;
-
-                // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-                ctx.fileCache = new fsUtils.FileCache(url);
-                ctx.imageScraper = new MgImageScraper(ctx.fileCache);
-                ctx.linkFixer = new MgLinkFixer();
-            }
-        },
+module.exports.getFullTaskList = (url, options) => {
+    return [
+        this.initialise(url, options),
         {
             title: 'Fetch Content from WP API',
             task: async (ctx) => {
@@ -134,6 +154,15 @@ module.exports.getTaskRunner = (url, options) => {
             }
         }
     ];
+};
+
+module.exports.getTaskRunner = (url, options) => {
+    let tasks = [];
+    if (options.info) {
+        tasks = this.getInfoTaskList(url, options);
+    } else {
+        tasks = this.getFullTaskList(url, options);
+    }
 
     // Configure a new Listr task manager, we can use different renderers for different configs
     return makeTaskRunner(tasks, Object.assign({exitOnError: true}, options));

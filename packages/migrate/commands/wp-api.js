@@ -26,6 +26,10 @@ exports.setup = (sywac) => {
         defaultValue: 'all',
         desc: 'Configure scraping tasks'
     });
+    sywac.boolean('-I, --info', {
+        defaultValue: false,
+        desc: 'Show initalisation info only'
+    });
 };
 
 // What to do when this command is executed
@@ -34,7 +38,7 @@ exports.run = async (argv) => {
     let context = {errors: []};
 
     if (argv.verbose) {
-        ui.log.info(`Migrating from site at ${argv.url}`);
+        ui.log.info(`${argv.info ? 'Fetching info' : 'Migrating'} from site at ${argv.url}`);
     }
 
     try {
@@ -43,6 +47,11 @@ exports.run = async (argv) => {
 
         // Run the migration
         await migrate.run(context);
+
+        if (argv.info && context.info) {
+            let batches = context.info.batches.posts + context.info.batches.pages;
+            ui.log.info(`Batch info: ${context.info.totals.posts} posts, ${context.info.totals.pages} pages, ${batches} batches.`);
+        }
 
         if (argv.verbose) {
             ui.log.info('Done', require('util').inspect(context.result.data, false, 2));
