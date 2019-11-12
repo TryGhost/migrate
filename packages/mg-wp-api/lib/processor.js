@@ -5,7 +5,7 @@ module.exports.processAuthor = (wpAuthor) => {
             slug: wpAuthor.slug,
             name: wpAuthor.name,
             bio: wpAuthor.description,
-            profile_image: wpAuthor.avatar_urls['96']
+            profile_image: wpAuthor.avatar_urls ? wpAuthor.avatar_urls['96'] : null
         }
     };
 };
