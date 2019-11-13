@@ -91,7 +91,6 @@ const processFeatureImage = (html, post) => {
     if (!featured && !preImageTags.includes('p')) {
         featured = foundImg;
         // tag it with #auto-feature-image so we can tell the difference
-        // @TODO: maybe make it possible to have strict mode, where this isn't done?
         post.data.tags.push({
             data: {
                 name: '#auto-feature-image'
@@ -125,6 +124,8 @@ module.exports = (name, html, globalUser) => {
     // Process tags
     if ($post('.p-tags a').length) {
         post.data.tags = processTags($post('.p-tags a'));
+    } else {
+        post.data.tags = [];
     }
 
     // Grab the featured image
