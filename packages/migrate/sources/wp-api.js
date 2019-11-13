@@ -188,12 +188,23 @@ module.exports.getFullTaskList = (url, options) => {
             }
         },
         {
-            title: 'Write Ghost import zip',
+            title: 'Write Ghost import JSON File',
             task: async (ctx) => {
                 // 9. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostJSONFile(ctx.result);
-
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
+            }
+        },
+        {
+            title: 'Write Ghost import zip',
+            skip: () => !options.zip,
+            task: async (ctx) => {
+                // 10. Write a valid Ghost import zip
+                try {
                     ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
                 } catch (error) {
                     ctx.errors.push(error);
@@ -206,6 +217,7 @@ module.exports.getFullTaskList = (url, options) => {
 
 module.exports.getTaskRunner = (url, options) => {
     let tasks = [];
+
     if (options.info) {
         tasks = this.getInfoTaskList(url, options);
     } else {

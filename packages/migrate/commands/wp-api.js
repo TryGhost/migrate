@@ -21,6 +21,10 @@ exports.setup = (sywac) => {
         defaultValue: false,
         desc: 'Show verbose output'
     });
+    sywac.boolean('--zip', {
+        defaultValue: true,
+        desc: 'Create a zip file (set to false to skip)'
+    });
     sywac.enumeration('-s --scrape', {
         choices: ['all', 'img', 'none'],
         defaultValue: 'all',
