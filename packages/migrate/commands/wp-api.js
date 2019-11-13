@@ -50,7 +50,7 @@ exports.run = async (argv) => {
     }
 
     if (argv.batch !== 0) {
-        ui.log.info(`Running batch ${argv.batch} (groups of 50 posts)`);
+        ui.log.info(`Running batch ${argv.batch} (groups of 100 posts)`);
     }
 
     try {

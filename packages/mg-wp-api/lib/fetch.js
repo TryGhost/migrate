@@ -1,5 +1,5 @@
 const wp = require('wpapi');
-const perPage = 50;
+const perPage = 100;
 
 module.exports.discover = async (url) => {
     const site = await wp.discover(url);
