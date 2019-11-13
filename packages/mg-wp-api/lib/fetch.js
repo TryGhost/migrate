@@ -34,7 +34,8 @@ const buildTasks = (fileCache, tasks, api, type) => {
             task: async (ctx) => {
                 let response = await cachedFetch(fileCache, api, type, perPage, page);
 
-                ctx.result[type] = ctx.result[type].concat(response);
+                // This is weird, but we don't yet deal with pages as a separate concept in imports
+                ctx.result.posts = ctx.result.posts.concat(response);
             }
         });
     }
@@ -45,8 +46,7 @@ module.exports.tasks = async (url, ctx) => {
     const tasks = [];
 
     ctx.result = {
-        posts: [],
-        pages: []
+        posts: []
     };
 
     buildTasks(ctx.fileCache, tasks, api, 'posts');

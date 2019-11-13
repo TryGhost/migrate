@@ -96,8 +96,7 @@ module.exports.processPosts = (posts) => {
 
 module.exports.all = (input) => {
     const output = {
-        posts: this.processPosts(input.posts),
-        pages: this.processPosts(input.pages)
+        posts: this.processPosts(input.posts)
     };
 
     return output;
