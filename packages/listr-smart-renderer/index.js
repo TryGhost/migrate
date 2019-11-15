@@ -7,9 +7,8 @@ const cliTruncate = require('cli-truncate');
 const stripAnsi = require('strip-ansi');
 const utils = require('./lib/utils');
 
-const renderHelper = (tasks, options, level) => {
+const fullRenderer = (tasks, options, level) => {
     level = level || 0;
-
     let output = [];
 
     for (const task of tasks) {
@@ -44,14 +43,53 @@ const renderHelper = (tasks, options, level) => {
     return output.join('\n');
 };
 
-const render = (tasks, options) => {
-    logUpdate(renderHelper(tasks, options));
+const summaryRenderer = (tasks, options) => {
+    let output = [];
+    let states = {complete: [], failed: [], skipped: [], disabled: []};
+
+    tasks.forEach((task, index) => {
+        if (task.hasFailed()) {
+            states.failed.push(task);
+            output.push(`Executing task ${index + 1} of ${tasks.length}: FAILED - ${task.output}`);
+        }
+        if (task.isPending()) {
+            output.push(`Executing task ${index + 1} of ${tasks.length}: ${task.title}`);
+        }
+
+        if (task.isCompleted()) {
+            states.complete.push(task);
+        }
+
+        if (task.isSkipped()) {
+            states.skipped.push(task);
+        }
+
+        if (!task.isEnabled()) {
+            states.disabled.push(task);
+        }
+    });
+
+    output.push(`Total: ${tasks.length}. Complete: ${states.complete.length}, Failed: ${states.failed.length}, Skipped: ${states.skipped.length}, Disabled: ${states.disabled.length}`);
+
+    return output.join('\n');
+};
+
+const renderHelper = (tasks, options, level = 0) => {
+    // Decide which renderer we want to use
+    const renderer = tasks.length > options.maxFullTasks ? summaryRenderer : fullRenderer;
+    return renderer(tasks, options, level);
+};
+
+const render = (tasks, options, level = 0) => {
+    logUpdate(renderHelper(tasks, options, level));
 };
 
 class SmartRenderer {
     constructor(tasks, options) {
         this._tasks = tasks;
+        this._mode = 'full';
         this._options = Object.assign({
+            maxFullTasks: 50,
             showSubtasks: true,
             collapse: true,
             clearOutput: false
