@@ -2,6 +2,7 @@ const makeTaskRunner = require('../task-runner');
 const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const {slugify} = require('@tryghost/string');
+const hydrate = require('@tryghost/mg-json/lib/to-ghost-json/hydrate');
 const get = require('lodash.get');
 
 function findResourceRoot(ctx) {
@@ -71,6 +72,32 @@ const jsonTasks = {
                                         resource.slug = slugify(resource.name);
                                     }
                                 }
+                            }
+                        };
+                    });
+
+                    return makeTaskRunner(tasks, options);
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
+            }
+        };
+    },
+    email: (options) => {
+        return {
+            title: 'Add fake email addresses, where they are missing',
+            task: (ctx) => {
+                try {
+                    // @TODO: clean this up!
+                    let root = findResourceRoot(ctx);
+                    let users = get(ctx, `${root}.users`);
+
+                    let tasks = users.map((user) => {
+                        return {
+                            title: user.name || user.slug,
+                            task: () => {
+                                user = hydrate.users(user, {});
                             }
                         };
                     });
