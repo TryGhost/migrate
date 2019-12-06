@@ -4,7 +4,7 @@ const chalk = require('chalk');
 const figures = require('figures');
 const cliTruncate = require('cli-truncate');
 const stripAnsi = require('strip-ansi');
-const {indentString, getSymbol, isDefined} = require('./lib/utils');
+const {indentString, getSymbol, isDefined, taskNumber} = require('./lib/utils');
 
 const fullRenderer = (tasks, options, level = 0) => {
     let output = [];
@@ -18,7 +18,7 @@ const fullRenderer = (tasks, options, level = 0) => {
         const skipped = task.isSkipped() ? ` ${chalk.dim('[skipped]')}` : '';
 
         // Main output
-        output.push(indentString(` ${getSymbol(task, options)} ${task.title}${skipped}`, level));
+        output.push(indentString(`${getSymbol(task, options)} ${task.title}${skipped}`, level));
 
         // Handle any task data that needs to be output
         if ((task.isPending() || task.isSkipped() || task.hasFailed()) && isDefined(task.output)) {
@@ -47,17 +47,25 @@ const fullRenderer = (tasks, options, level = 0) => {
     return output.join('\n');
 };
 
-const summaryRenderer = (tasks, options) => {
+const summaryRenderer = (tasks, options, level = 0) => {
     let output = [];
     let states = {complete: [], failed: [], skipped: [], disabled: []};
 
     tasks.forEach((task, index) => {
         if (task.hasFailed()) {
             states.failed.push(task);
-            output.push(`Executing task ${index + 1} of ${tasks.length}: FAILED - ${task.output}`);
+
+            if (!task.output && task.hasSubtasks()) {
+                task.output = `${chalk.red.dim(`Subtask failed ${figures.arrowDown}`)}`;
+            }
+            output.push(indentString(`${getSymbol(task, options)} ${taskNumber(index, tasks)}: ${task.title} - ${task.output}`, level));
         }
         if (task.isPending()) {
-            output.push(`Executing task ${index + 1} of ${tasks.length}: ${task.title}`);
+            output.push(indentString(`${getSymbol(task, options)} ${taskNumber(index, tasks)}: ${task.title}`, level));
+        }
+
+        if (task.hasSubtasks()) {
+            output = output.concat(renderHelper(task.subtasks, options, level + 1));
         }
 
         if (task.isCompleted()) {
@@ -73,7 +81,7 @@ const summaryRenderer = (tasks, options) => {
         }
     });
 
-    output.push(`Total: ${tasks.length}. Complete: ${states.complete.length}, Failed: ${states.failed.length}, Skipped: ${states.skipped.length}, Disabled: ${states.disabled.length}`);
+    output.push(indentString(`Total: ${tasks.length}. Complete: ${states.complete.length}, Failed: ${states.failed.length}, Skipped: ${states.skipped.length}, Disabled: ${states.disabled.length}`, level));
 
     return output.join('\n');
 };

@@ -34,3 +34,15 @@ exports.getSymbol = (task, options) => {
 };
 
 exports.indentString = (string, level) => indentString(string, level, '  ');
+
+/**
+ * Outputs the task number in the form 05/10, so that the output doesn't jump around
+ */
+exports.taskNumber = (index, tasks) => {
+    // Quick and dirty left pad
+    let padSize = String(tasks.length).length;
+    let padding = new Array(padSize).join(0);
+    let taskNum = `${padding}${index + 1}`.slice(-padSize);
+
+    return `${taskNum}/${tasks.length}`;
+};
