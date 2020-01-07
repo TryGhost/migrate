@@ -46,4 +46,4 @@ To add a new package to the repo:
 
 # Copyright & License
 
-Copyright (c) 2018-2019 Ghost Foundation - Released under the [MIT license](LICENSE).
+Copyright (c) 2013-2020 Ghost Foundation - Released under the [MIT license](LICENSE).
