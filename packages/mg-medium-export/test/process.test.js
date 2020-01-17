@@ -56,10 +56,13 @@ describe('Process', function () {
         post.data.html.should.match(/^<section name="007"/);
         post.data.html.should.match(/<\/section>$/);
 
+        // Tags are always at least an empty array
+        // @TODO: always add at least one tag
+        post.data.tags.should.be.an.Array().with.lengthOf(0);
+
         // Drafts don't have these
         should.not.exist(post.data.published_at);
         should.not.exist(post.data.author);
-        should.not.exist(post.data.tags);
     });
 
     it('Can do advanced content processing on medium posts', function () {
