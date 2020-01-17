@@ -128,6 +128,10 @@ module.exports = (name, html, globalUser) => {
         post.data.tags = [];
     }
 
+    post.data.tags.push({
+        url: 'migrator-added-tag', data: {name: '#from-medium'}
+    });
+
     // Grab the featured image
     // Do this last so that we can add tags to indicate feature image style
     processFeatureImage(post.data.html, post);

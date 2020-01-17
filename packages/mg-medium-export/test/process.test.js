@@ -28,7 +28,7 @@ describe('Process', function () {
         post.data.author.data.name.should.eql('Joe Bloggs');
         post.data.author.data.slug.should.eql('joebloggs');
 
-        post.data.tags.should.be.an.Array().with.lengthOf(2);
+        post.data.tags.should.be.an.Array().with.lengthOf(3);
 
         post.data.tags[0].should.be.a.MediumMetaObject();
         post.data.tags[0].url.should.eql('https://medium.com/tag/things');
@@ -38,6 +38,8 @@ describe('Process', function () {
         post.data.tags[1].url.should.eql('https://medium.com/tag/stuff');
         post.data.tags[1].data.name.should.eql('Stuff');
         post.data.tags[1].data.slug.should.eql('stuff');
+        // Migrator always marks posts with an internal tag
+        post.data.tags[2].data.name.should.eql('#from-medium');
     });
 
     it('Can process a draft medium post', function () {
@@ -56,9 +58,9 @@ describe('Process', function () {
         post.data.html.should.match(/^<section name="007"/);
         post.data.html.should.match(/<\/section>$/);
 
-        // Tags are always at least an empty array
-        // @TODO: always add at least one tag
-        post.data.tags.should.be.an.Array().with.lengthOf(0);
+        // Migrator always marks posts with an internal tag
+        post.data.tags.should.be.an.Array().with.lengthOf(1);
+        post.data.tags[0].data.name.should.eql('#from-medium');
 
         // Drafts don't have these
         should.not.exist(post.data.published_at);
@@ -85,5 +87,12 @@ describe('Process', function () {
 
         // should not contain a header with the post title
         html.should.not.match(/<h3[^>]*>Blog Post Title/);
+
+        // Migrator always marks posts with an internal tag
+        post.data.tags.should.be.an.Array().with.lengthOf(4);
+        post.data.tags[0].data.name.should.eql('Things');
+        post.data.tags[1].data.name.should.eql('Stuff');
+        post.data.tags[2].data.name.should.eql('#from-medium');
+        post.data.tags[3].data.name.should.eql('#auto-feature-image');
     });
 });
