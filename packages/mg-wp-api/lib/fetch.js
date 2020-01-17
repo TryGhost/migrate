@@ -1,8 +1,9 @@
-const wp = require('wpapi');
+const WPAPI = require('wpapi');
 const perPage = 100;
 
 module.exports.discover = async (url) => {
-    const site = await wp.discover(url);
+    let site = new WPAPI({endpoint: `${url}/wp-json`});
+
     const posts = await site.posts().perPage(perPage);
     const pages = await site.pages().perPage(perPage);
 
@@ -43,6 +44,7 @@ const buildTasks = (fileCache, tasks, api, type) => {
 
 module.exports.tasks = async (url, ctx) => {
     const api = await this.discover(url);
+
     const tasks = [];
 
     ctx.result = {
