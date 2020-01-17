@@ -9,7 +9,7 @@ const htmlFields = ['html'];
 const isHTMLField = field => _.includes(htmlFields, field);
 const isImageField = field => /image/.test(field);
 
-const ScrapeError = ({src, code, statusCode}) => {
+const ScrapeError = ({src, code, statusCode, originalError}) => {
     let error = new Error(`Unable to scrape URI ${src}`);
 
     error.errorType = 'ScrapeError';
@@ -19,6 +19,7 @@ const ScrapeError = ({src, code, statusCode}) => {
     if (statusCode) {
         error.statusCode = statusCode;
     }
+    error.originalError = originalError;
 
     return error;
 };
@@ -37,11 +38,11 @@ class ImageScraper {
         }
 
         try {
-            let response = await got(src, {encoding: null});
+            let response = await got(src, {responseType: 'buffer'});
             await this.fileCache.writeImageFile(response.body, imageFile);
             return imageFile.outputPath;
         } catch (error) {
-            throw ScrapeError({src, code: error.code, statusCode: error.statusCode});
+            throw ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error});
         }
     }
 
@@ -51,7 +52,8 @@ class ImageScraper {
         let images = $('img').map(async (i, el) => {
             let $image = $(el);
             let type = $image.attr('src') === undefined ? 'data-src' : 'src';
-            let newSrc = await this.downloadImage($image.attr(type));
+            let src = $image.attr(type);
+            let newSrc = await this.downloadImage(src);
             $image.attr(type, newSrc);
         }).get();
 
@@ -90,7 +92,7 @@ class ImageScraper {
                 // For each field
                 _.forEach(resource, (value, field) => {
                     // @TODO: rework this code!
-                    if (isImageField(field)) {
+                    if (isImageField(field) && value) {
                         tasks.push({
                             title: `${type}: ${resource.slug} ${field}`,
                             task: async () => {
@@ -102,7 +104,7 @@ class ImageScraper {
                                 }
                             }
                         });
-                    } else if (isHTMLField(field)) {
+                    } else if (isHTMLField(field) && value) {
                         tasks.push({
                             title: `${type}: ${resource.slug} ${field}`,
                             task: async () => {
