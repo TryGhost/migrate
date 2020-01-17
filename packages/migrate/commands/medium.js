@@ -10,7 +10,7 @@ exports.group = 'Sources:';
 exports.flags = 'medium <pathToZip>';
 
 // Description for the top level command
-exports.desc = 'Migrate from medium';
+exports.desc = 'Migrate from Medium using an export zip';
 
 // Descriptions for the individual params
 exports.paramsDesc = ['Path to a medium export zip'];

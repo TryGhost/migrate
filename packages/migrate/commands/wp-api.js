@@ -10,7 +10,7 @@ exports.group = 'Sources:';
 exports.flags = 'wp-api <url>';
 
 // Description for the top level command
-exports.desc = 'Migrate from medium';
+exports.desc = 'Migrate from WordPress using JSON API';
 
 // Descriptions for the individual params
 exports.paramsDesc = ['Path to a WordPress site'];
