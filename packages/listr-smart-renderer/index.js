@@ -2,41 +2,45 @@
 const logUpdate = require('log-update');
 const chalk = require('chalk');
 const figures = require('figures');
-const indentString = require('indent-string');
 const cliTruncate = require('cli-truncate');
 const stripAnsi = require('strip-ansi');
-const utils = require('./lib/utils');
+const {indentString, getSymbol, isDefined} = require('./lib/utils');
 
-const fullRenderer = (tasks, options, level) => {
-    level = level || 0;
+const fullRenderer = (tasks, options, level = 0) => {
     let output = [];
 
     for (const task of tasks) {
-        if (task.isEnabled()) {
-            const skipped = task.isSkipped() ? ` ${chalk.dim('[skipped]')}` : '';
+        if (!task.isEnabled()) {
+            continue;
+        }
 
-            output.push(indentString(` ${utils.getSymbol(task, options)} ${task.title}${skipped}`, level, '  '));
+        // Skipped logic
+        const skipped = task.isSkipped() ? ` ${chalk.dim('[skipped]')}` : '';
 
-            if ((task.isPending() || task.isSkipped() || task.hasFailed()) && utils.isDefined(task.output)) {
-                let data = task.output;
+        // Main output
+        output.push(indentString(` ${getSymbol(task, options)} ${task.title}${skipped}`, level));
 
-                if (typeof data === 'string') {
-                    data = stripAnsi(data.trim().split('\n').filter(Boolean).pop());
+        // Handle any task data that needs to be output
+        if ((task.isPending() || task.isSkipped() || task.hasFailed()) && isDefined(task.output)) {
+            let data = task.output;
 
-                    if (data === '') {
-                        data = undefined;
-                    }
-                }
+            if (typeof data === 'string') {
+                data = stripAnsi(data.trim().split('\n').filter(Boolean).pop());
 
-                if (utils.isDefined(data)) {
-                    const out = indentString(`${figures.arrowRight} ${data}`, level, '  ');
-                    output.push(`   ${chalk.gray(cliTruncate(out, process.stdout.columns - 3))}`);
+                if (data === '') {
+                    data = undefined;
                 }
             }
 
-            if ((task.isPending() || task.hasFailed() || options.collapse === false) && (task.hasFailed() || options.showSubtasks !== false) && task.subtasks.length > 0) {
-                output = output.concat(renderHelper(task.subtasks, options, level + 1));
+            if (isDefined(data)) {
+                const out = indentString(`${figures.arrowRight} ${data}`, level);
+                output.push(`   ${chalk.gray(cliTruncate(out, process.stdout.columns - 3))}`);
             }
+        }
+
+        // Deal with subtasks
+        if (task.hasSubtasks()) {
+            output = output.concat(renderHelper(task.subtasks, options, level + 1));
         }
     }
 
@@ -90,8 +94,6 @@ class SmartRenderer {
         this._mode = 'full';
         this._options = Object.assign({
             maxFullTasks: 50,
-            showSubtasks: true,
-            collapse: true,
             clearOutput: false
         }, options);
     }

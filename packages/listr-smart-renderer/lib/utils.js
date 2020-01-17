@@ -1,9 +1,9 @@
 'use strict';
 const chalk = require('chalk');
 const logSymbols = require('log-symbols');
+const indentString = require('indent-string');
 const figures = require('figures');
 const elegantSpinner = require('elegant-spinner');
-
 const pointer = chalk.yellow(figures.pointer);
 const skipped = chalk.yellow(figures.arrowDown);
 
@@ -32,3 +32,5 @@ exports.getSymbol = (task, options) => {
 
     return ' ';
 };
+
+exports.indentString = (string, level) => indentString(string, level, '  ');
