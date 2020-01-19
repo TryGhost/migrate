@@ -1,5 +1,13 @@
 # Listr Smart Renderer
 
+A renderer for [Listr](https://github.com/SamVerschueren/listr) that handles extremely long lists of tasks by collapsing into a summary view.
+
+Pass in `maxFullTasks` to tell the renderer when to collapse into summary view.
+The summary outputs one line for each task that is currently being executed, one line for each task that fails and a final summary line.
+
+Heavily based on [listr-update-renderer](https://github.com/SamVerschueren/listr-update-renderer), with all the same nice UI features.
+
+
 ## Install
 
 `npm install @tryghost/listr-smart-renderer --save`
@@ -10,6 +18,47 @@ or
 
 
 ## Usage
+
+```
+const SmartRenderer = require('@tryghost/listr-smart-renderer');
+const Listr = require('listr');
+
+const list = new Listr([
+    {
+        title: 'foo',
+        task: () => Promise.resolve('bar')
+    }
+], {
+    renderer: SmartRenderer,
+	maxFullTasks: 10
+});
+
+list.run();
+```
+
+## Options
+
+These options should be provided in the [Listr](https://github.com/SamVerschueren/listr) options object.
+
+### maxFullTasks
+
+Type: `number`<br>
+Default: `30`
+
+How many tasks to output in "full" mode before collapsing to summary mode.
+
+### clearOutput
+
+Type: `boolean`<br>
+Default: `false`
+
+Clear the output when all the tasks are executed successfully.
+
+
+## Related
+
+- [listr](https://github.com/SamVerschueren/listr) - Terminal task list
+- [listr-verbose-renderer](https://github.com/SamVerschueren/listr-verbose-renderer) - Listr verbose renderer
 
 
 ## Develop
@@ -31,9 +80,6 @@ Follow the instructions for the top-level repo.
 - `yarn lint` run just eslint
 - `yarn test` run lint and tests
 
-
-
-
 # Copyright & License
 
-Copyright (c) 2019 Ghost Foundation - Released under the [MIT license](LICENSE).
+Copyright (c) 2013-2020 Ghost Foundation, Sam Verschueren - Released under the [MIT license](LICENSE).

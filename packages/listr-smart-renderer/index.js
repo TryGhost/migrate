@@ -101,7 +101,7 @@ class SmartRenderer {
         this._tasks = tasks;
         this._mode = 'full';
         this._options = Object.assign({
-            maxFullTasks: 50,
+            maxFullTasks: 30,
             clearOutput: false
         }, options);
     }
