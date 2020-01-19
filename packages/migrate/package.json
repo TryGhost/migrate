@@ -30,6 +30,7 @@
     "sinon": "8.1.0"
   },
   "dependencies": {
+    "@tryghost/listr-smart-renderer": "^0.0.0",
     "@tryghost/mg-fs-utils": "^0.4.0",
     "@tryghost/mg-html-mobiledoc": "^0.4.0",
     "@tryghost/mg-imagescraper": "^0.3.1",

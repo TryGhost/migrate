@@ -1,5 +1,4 @@
 const ui = require('@tryghost/pretty-cli').ui;
-const smartRenderer = require('@tryghost/listr-smart-renderer');
 const makeTaskRunner = require('../lib/task-runner');
 
 // Internal ID in case we need one.
@@ -23,8 +22,8 @@ exports.hidden = true;
 
 // What to do when this command is executed
 exports.run = async (argv) => {
-    // Define our rendererOptions
-    const options = {renderer: smartRenderer, exitOnError: false, maxFullTasks: 10, concurrent: 2};
+    // Use default renderer options, but leave this here to make it easy to play around
+    const options = {};
     let context = {errors: []};
     let uniqueErrorId = 0;
 
@@ -76,7 +75,7 @@ exports.run = async (argv) => {
         {
             title: 'Step 2: fucktonne of subtasks',
             task: () => {
-                return makeTaskRunner(getSubTasks(25, true), options);
+                return makeTaskRunner(getSubTasks(35, true), options);
             }
         }, {
             title: 'Step 3: skipped',
@@ -107,7 +106,7 @@ exports.run = async (argv) => {
             runner = makeTaskRunner(topLevelTasks, options);
         } else {
             // Simple Runner
-            runner = makeTaskRunner(getSubTasks(15, true), options);
+            runner = makeTaskRunner(getSubTasks(35, true), options);
         }
 
         await runner.run(context);
