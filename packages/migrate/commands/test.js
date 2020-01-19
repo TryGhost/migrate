@@ -103,10 +103,10 @@ exports.run = async (argv) => {
 
         // Nested Runner
         if (argv.nested) {
-            runner = makeTaskRunner(topLevelTasks, options);
+            runner = makeTaskRunner(topLevelTasks, Object.assign({topLevel: true}, options));
         } else {
             // Simple Runner
-            runner = makeTaskRunner(getSubTasks(35, true), options);
+            runner = makeTaskRunner(getSubTasks(35, true), Object.assign({topLevel: true}, options));
         }
 
         await runner.run(context);

@@ -225,5 +225,5 @@ module.exports.getTaskRunner = (url, options) => {
     }
 
     // Configure a new Listr task manager, we can use different renderers for different configs
-    return makeTaskRunner(tasks, Object.assign({exitOnError: true, concurrent: false}, options));
+    return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
 };
