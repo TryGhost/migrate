@@ -59,9 +59,13 @@ class ImageScraper {
 
         let bgImages = $('[style*="background-image"]').map(async (i, el) => {
             let $image = $(el);
-            let src = $image.css('background-image').match(/url\(([^)]*?)\)/)[1];
-            let newSrc = await this.downloadImage(src);
-            $image.css('background-image', `url(${newSrc})`);
+            let match = $image.css('background-image').match(/url\(([^)]*?)\)/);
+            // @TODO: figure out error handling here, so we can at least get info about broken cases
+            if (match) {
+                let src = match[1];
+                let newSrc = await this.downloadImage(src);
+                $image.css('background-image', `url(${newSrc})`);
+            }
         }).get();
 
         await Promise.all(images, bgImages);
