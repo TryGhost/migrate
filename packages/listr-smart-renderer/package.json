@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "chalk": "^3.0.0",
-    "cli-truncate": "^0.2.1",
+    "cli-truncate": "^2.0.0",
     "elegant-spinner": "^2.0.0",
     "figures": "^1.7.0",
     "indent-string": "^4.0.0",
