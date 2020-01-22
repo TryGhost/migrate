@@ -14,7 +14,7 @@ const processMeta = (name, $post) => {
         }
     };
 
-    if (/^draft/.test(name)) {
+    if (/^(?:posts\/)?draft/.test(name)) {
         urlInfo = name.match(/_(.*?)-([0-9a-f]+)\.html/);
         post.url = $post('footer p a').attr('href');
         post.data.status = 'draft';
