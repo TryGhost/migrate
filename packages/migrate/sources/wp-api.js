@@ -71,7 +71,7 @@ module.exports.getInfoTaskList = (url, options) => {
             title: 'Fetch Content Info from WP API',
             task: async (ctx) => {
                 try {
-                    ctx.info = await wpAPI.fetch.discover(url);
+                    ctx.info = await wpAPI.fetch.discover(url, ctx);
                 } catch (error) {
                     ctx.errors.push(error);
                 }
