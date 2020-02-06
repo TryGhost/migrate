@@ -18,39 +18,39 @@ const entities = new Entities();
  * - a slug (because of https://github.com/TryGhost/Ghost/issues/10785)
  */
 
-const fakeName = 'Dummy User';
-const fakeEmailDomain = `dummyemail.com`;
-const fakeEmail = (nameSlug, domain) => `${nameSlug}@${domain}`;
+// const fakeName = 'Dummy User';
+// const fakeEmailDomain = `dummyemail.com`;
+// const fakeEmail = (nameSlug, domain) => `${nameSlug}@${domain}`;
 
-const hydrateUser = (input, options) => {
-    // Handle the case where we have a slug but no name
-    if (!input.name && input.slug) {
-        input.name = _.startCase(input.slug);
-    } else if (!input.name) {
-        // Else if there's no name or slug, we'll have to use a fake
-        input.name = fakeName;
-    }
+// const hydrateUser = (input, options) => {
+//     // Handle the case where we have a slug but no name
+//     if (!input.name && input.slug) {
+//         input.name = _.startCase(input.slug);
+//     } else if (!input.name) {
+//         // Else if there's no name or slug, we'll have to use a fake
+//         input.name = fakeName;
+//     }
 
-    if (!input.slug) {
-        input.slug = slugify(input.name);
-    }
+//     if (!input.slug) {
+//         input.slug = slugify(input.name);
+//     }
 
-    // Handle the case where there is no email by generating one based on slug or name
-    if (!input.email) {
-        input.email = fakeEmail(input.slug || _.kebabCase(input.name), options.email || fakeEmailDomain);
-    }
+//     // Handle the case where there is no email by generating one based on slug or name
+//     if (!input.email) {
+//         input.email = fakeEmail(input.slug || _.kebabCase(input.name), options.email || fakeEmailDomain);
+//     }
 
-    // @TODO: log some sort of warning for things like this?
-    if (input.bio && input.bio.length > 200) {
-        // Naive truncate values that are too long
-        input.bio = input.bio.substring(0, 200);
-    }
+//     // @TODO: log some sort of warning for things like this?
+//     if (input.bio && input.bio.length > 200) {
+//         // Naive truncate values that are too long
+//         input.bio = input.bio.substring(0, 200);
+//     }
 
-    return input;
-};
+//     return input;
+// };
 
-// Alias plural form only, as this should already have been normalised
-module.exports.users = hydrateUser;
+// // Alias plural form only, as this should already have been normalised
+// module.exports.users = hydrateUser;
 
 /**
  * Tags(s)

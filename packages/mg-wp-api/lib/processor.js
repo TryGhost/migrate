@@ -2,10 +2,12 @@ module.exports.processAuthor = (wpAuthor) => {
     return {
         url: wpAuthor.link,
         data: {
+            id: wpAuthor.id && wpAuthor.id,
             slug: wpAuthor.slug,
             name: wpAuthor.name,
             bio: wpAuthor.description,
-            profile_image: wpAuthor.avatar_urls ? wpAuthor.avatar_urls['96'] : null
+            profile_image: wpAuthor.avatar_urls && wpAuthor.avatar_urls['96'],
+            email: wpAuthor.email && wpAuthor.email
         }
     };
 };
@@ -53,7 +55,7 @@ module.exports.processTerms = (wpTerms) => {
  *   ]
  * }
  */
-module.exports.processPost = (wpPost) => {
+module.exports.processPost = (wpPost, users) => {
     // @note: we don't copy excerpts because WP generated excerpts aren't better than Ghost ones but are often too long.
     const post = {
         url: wpPost.link,
@@ -64,7 +66,11 @@ module.exports.processPost = (wpPost) => {
             html: wpPost.content.rendered,
             type: wpPost.type === 'post' ? 'post' : 'page',
             status: wpPost.status === 'publish' ? 'published' : 'draft',
-            published_at: wpPost.date_gmt
+            published_at: wpPost.date_gmt,
+            author: users.find((user) => {
+                // Try to use the user data returned from the API
+                return user.data.id === wpPost.author;
+            }) || null
         }
     };
 
@@ -73,7 +79,8 @@ module.exports.processPost = (wpPost) => {
         post.data.feature_image = wpImage.source_url;
     }
 
-    if (wpPost._embedded.author) {
+    if (wpPost._embedded.author && !post.data.author) {
+        // use the data passed along the post if we couldn't match the user from the API
         const wpAuthor = wpPost._embedded.author[0];
         post.data.author = this.processAuthor(wpAuthor);
     }
@@ -90,14 +97,20 @@ module.exports.processPost = (wpPost) => {
     return post;
 };
 
-module.exports.processPosts = (posts) => {
-    return posts.map(post => this.processPost(post));
+module.exports.processPosts = (posts, users) => {
+    return posts.map(post => this.processPost(post, users));
+};
+
+module.exports.processAuthors = (authors) => {
+    return authors.map(author => this.processAuthor(author));
 };
 
 module.exports.all = (input) => {
     const output = {
-        posts: this.processPosts(input.posts)
+        users: this.processAuthors(input.users)
     };
+
+    output.posts = this.processPosts(input.posts, output.users);
 
     return output;
 };

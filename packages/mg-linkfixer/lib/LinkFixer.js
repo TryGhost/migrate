@@ -23,9 +23,9 @@ class LinkFixer {
                     this.linkMap[url] = `/tag/${data.slug}/`;
                 });
             }
-            if (data.author) {
-                this.linkMap[data.author.url] = `/author/${data.author.data.slug}/`;
-            }
+            // if (data.author) {
+            //     this.linkMap[data.author.url] = `/author/${data.author.data.slug}/`;
+            // }
         });
     }
 
