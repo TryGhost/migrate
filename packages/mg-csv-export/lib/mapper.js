@@ -11,8 +11,22 @@ const mapConfig = (data) => {
             custom_excerpt: data.subtitle,
             type: 'post',
             html: data.body_html,
-            status: data.is_published ? 'published' : 'draft',
+            status: data.is_published.toLowerCase() === `true` ? 'published' : 'draft',
             visibility: data.audience === 'only_paid' ? 'paid' : data.audience === 'only_free' ? 'members' : 'public',
+            tags: [
+                {
+                    url: 'migrator-added-tag',
+                    data: {
+                        name: '#substack'
+                    }
+                },
+                {
+                    url: `https://thelistener.co/tag/newsletter`,
+                    data: {
+                        name: data.type
+                    }
+                }
+            ],
         }
     };
 }
