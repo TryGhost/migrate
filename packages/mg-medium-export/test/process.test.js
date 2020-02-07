@@ -39,7 +39,7 @@ describe('Process', function () {
         post.data.tags[1].data.name.should.eql('Stuff');
         post.data.tags[1].data.slug.should.eql('stuff');
         // Migrator always marks posts with an internal tag
-        post.data.tags[2].data.name.should.eql('#from-medium');
+        post.data.tags[2].data.name.should.eql('#medium');
     });
 
     it('Can process a draft medium post', function () {
@@ -60,7 +60,7 @@ describe('Process', function () {
 
         // Migrator always marks posts with an internal tag
         post.data.tags.should.be.an.Array().with.lengthOf(1);
-        post.data.tags[0].data.name.should.eql('#from-medium');
+        post.data.tags[0].data.name.should.eql('#medium');
 
         // Drafts don't have these
         should.not.exist(post.data.published_at);
@@ -92,7 +92,7 @@ describe('Process', function () {
         post.data.tags.should.be.an.Array().with.lengthOf(4);
         post.data.tags[0].data.name.should.eql('Things');
         post.data.tags[1].data.name.should.eql('Stuff');
-        post.data.tags[2].data.name.should.eql('#from-medium');
+        post.data.tags[2].data.name.should.eql('#medium');
         post.data.tags[3].data.name.should.eql('#auto-feature-image');
     });
 });
