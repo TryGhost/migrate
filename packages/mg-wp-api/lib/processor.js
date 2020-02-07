@@ -90,7 +90,7 @@ module.exports.processPost = (wpPost, users) => {
         post.data.tags = this.processTerms(wpTerms);
 
         post.data.tags.push({
-            url: 'migrator-added-tag', data: {name: '#from-wordpress'}
+            url: 'migrator-added-tag', data: {name: '#wordpress'}
         });
     }
 

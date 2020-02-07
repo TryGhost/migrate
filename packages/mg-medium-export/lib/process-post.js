@@ -129,7 +129,7 @@ module.exports = (name, html, globalUser) => {
     }
 
     post.data.tags.push({
-        url: 'migrator-added-tag', data: {name: '#from-medium'}
+        url: 'migrator-added-tag', data: {name: '#medium'}
     });
 
     // Grab the featured image
