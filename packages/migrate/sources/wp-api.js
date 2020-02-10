@@ -135,7 +135,6 @@ module.exports.getFullTaskList = (url, options) => {
         {
             title: 'Build Link Map',
             task: async (ctx) => {
-                console.log('TCL: module.exports.getFullTaskList -> ctx', ctx.results.posts);
                 // 4. Create a map of all known links for use later
                 try {
                     ctx.linkFixer.buildMap(ctx);

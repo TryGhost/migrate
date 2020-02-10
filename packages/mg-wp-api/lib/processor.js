@@ -67,10 +67,10 @@ module.exports.processPost = (wpPost, users) => {
             type: wpPost.type === 'post' ? 'post' : 'page',
             status: wpPost.status === 'publish' ? 'published' : 'draft',
             published_at: wpPost.date_gmt,
-            author: users.find((user) => {
+            author: users ? users.find((user) => {
                 // Try to use the user data returned from the API
                 return user.data.id === wpPost.author;
-            }) || null
+            }) : null
         }
     };
 

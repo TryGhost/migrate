@@ -25,9 +25,9 @@ module.exports.discover = async (url, apiUser) => {
 const cachedFetch = async (fileCache, api, type, perPage, page, isAuthRequest) => {
     let filename = `wp_api_${type}_${perPage}_${page}.json`;
 
-    // if (fileCache.hasFile(filename, 'tmp')) {
-    //     return await fileCache.readTmpJSONFile(filename);
-    // }
+    if (fileCache.hasFile(filename, 'tmp')) {
+        return await fileCache.readTmpJSONFile(filename);
+    }
 
     let response = isAuthRequest ? await api.site[type]().param('context', 'edit').perPage(perPage).page(page).embed() : await api.site[type]().perPage(perPage).page(page).embed();
 

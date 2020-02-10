@@ -30,6 +30,10 @@ class ImageScraper {
     }
 
     async downloadImage(src) {
+        // Do not try parsing a URL when there is none
+        if (!src) {
+            return;
+        }
         let imageUrl = url.parse(src);
         let imageFile = this.fileCache.resolveImageFileName(imageUrl.pathname);
 
