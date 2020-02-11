@@ -15,7 +15,6 @@ const entities = new Entities();
  * To import a user we need at least:
  * - a name
  * - an email address
- * - a slug (because of https://github.com/TryGhost/Ghost/issues/10785)
  */
 
 const fakeName = 'Dummy User';
@@ -31,6 +30,7 @@ const hydrateUser = (input, options) => {
         input.name = fakeName;
     }
 
+    // Generate a slug so we can use it for emails
     if (!input.slug) {
         input.slug = slugify(input.name);
     }
@@ -57,7 +57,6 @@ module.exports.users = hydrateUser;
  *
  * To import a tag we need at least:
  * - a name
- * - a slug (because of https://github.com/TryGhost/Ghost/issues/10785)
  */
 
 const hydrateTag = (input) => {
@@ -65,6 +64,7 @@ const hydrateTag = (input) => {
         input.slug = slugify(input.name);
     }
 
+    // Ensure all internal tags get the correct slug
     if (input.name.startsWith('#') && !input.slug.startsWith('hash-')) {
         input.slug = `hash-${input.slug}`;
     }
