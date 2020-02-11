@@ -137,5 +137,5 @@ module.exports.getTaskRunner = (type, pathToJSON, options) => {
         }
     });
 
-    return makeTaskRunner(tasks, options);
+    return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
 };
