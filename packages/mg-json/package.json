@@ -25,9 +25,7 @@
   },
   "dependencies": {
     "@tryghost/string": "0.1.5",
-    "bluebird": "^3.5.2",
     "bson-objectid": "^1.2.5",
-    "ghost-ignition": "^4.0.0",
     "html-entities": "^1.2.1",
     "lodash": "4.17.15"
   }

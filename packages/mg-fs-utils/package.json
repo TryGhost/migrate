@@ -19,6 +19,8 @@
     "access": "public"
   },
   "dependencies": {
-    "adm-zip": "^0.4.13"
+    "adm-zip": "^0.4.13",
+    "fs-extra": "^8.1.0",
+    "lodash": "^4.17.15"
   }
 }
