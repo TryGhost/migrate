@@ -1,9 +1,9 @@
 const ui = require('@tryghost/pretty-cli').ui;
 const json = require('../../lib/utilties/json');
 
-exports.id = 'json-html';
+exports.id = 'json-html-card';
 
-exports.flags = 'html <pathToJSON>';
+exports.flags = 'html-card <pathToJSON>';
 
 // Configure all the options
 exports.setup = (sywac) => {
@@ -13,7 +13,7 @@ exports.setup = (sywac) => {
     });
 };
 
-exports.desc = 'Convert all html fields to WYSIWYG mobiledoc (potentially lossy)';
+exports.desc = 'Convert all html fields to mobiledoc using html cards (non-lossy)';
 
 exports.paramsDesc = ['Path to a Ghost JSON file to convert'];
 
@@ -25,6 +25,8 @@ exports.run = async (argv) => {
     if (argv.verbose) {
         ui.log.info(`Running html conversion on ${argv.pathToJSON}`);
     }
+
+    argv.htmlCard = true;
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in

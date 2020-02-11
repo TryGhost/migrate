@@ -24,12 +24,17 @@ function findResourceRoot(ctx) {
 
 const jsonTasks = {
     html: (options) => {
+        let title = 'Convert HTML -> MobileDoc';
+
+        if (options.htmlCard) {
+            title += ' [HTML Card]';
+        }
         return {
             // @TODO don't duplicate this with medium
-            title: 'Convert HTML -> MobileDoc',
+            title: title,
             task: (ctx) => {
                 try {
-                    let tasks = mgHtmlMobiledoc.convert(ctx);
+                    let tasks = mgHtmlMobiledoc.convert(ctx, options.htmlCard);
                     return makeTaskRunner(tasks, options);
                 } catch (error) {
                     ctx.errors.push(error);
