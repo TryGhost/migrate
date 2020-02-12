@@ -1,4 +1,4 @@
-const { slugify } = require('@tryghost/string');
+const {slugify} = require('@tryghost/string');
 
 const mapConfig = (data) => {
     return {
@@ -26,10 +26,10 @@ const mapConfig = (data) => {
                         name: data.type
                     }
                 }
-            ],
+            ]
         }
     };
-}
+};
 
 // TODO: make this configurable
 module.exports = async (input) => {
@@ -41,7 +41,7 @@ module.exports = async (input) => {
         return new Error('Input file is empty');
     }
 
-    await input.forEach(data => {
+    await input.forEach((data) => {
         output.posts.push(mapConfig(data));
     });
 

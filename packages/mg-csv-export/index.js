@@ -7,4 +7,4 @@ module.exports = async (filePath) => {
     let mapped = await map(input);
 
     return mapped;
-}
+};
