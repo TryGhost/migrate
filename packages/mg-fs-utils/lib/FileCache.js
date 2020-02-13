@@ -168,11 +168,10 @@ class FileCache {
      */
     async writeErrorJSONFile(data, options = {}) {
         const filename = options.filename || `errors.json`;
-        console.log("TCL: writeErrorJSONFile -> filename", filename)
         let basepath = options.path ? path.dirname(options.path) : this.zipDir;
         let filepath = path.join(basepath, filename);
 
-        await fs.outputJson(filepath, data, { spaces: 2 });
+        await fs.outputJson(filepath, data, {spaces: 2});
 
         return filepath;
     }
