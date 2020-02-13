@@ -14,6 +14,27 @@ module.exports.linkTopicsAsTags = (topicIds, tags) => {
     return topicIds.map(id => tags[id]);
 };
 
+
+module.exports.handleFeatureImageInContent = (post, hsPost) => {
+    let bodyContent = hsPost.post_body;
+    let summaryContent = hsPost.post_summary;
+    let featureImage = hsPost.featured_image;
+
+    // A rare case where we can be so certain of the structure here, that it's OK to remove some HTML using regex
+    // Getting cheerio involved would be serious overkill!
+    if (bodyContent.startsWith(`<img src="${featureImage}"`)) {
+        bodyContent = bodyContent.replace(/^<img src=.*?>/, '');
+    }
+
+    if (summaryContent.startsWith(`<img src="${featureImage}"`)) {
+        summaryContent = summaryContent.replace(/^<img src=.*?>/, '');
+    }
+
+    post.data.html = bodyContent;
+    post.data.feature_image = featureImage;
+    post.data.custom_excerpt = summaryContent;
+};
+
 /**
  * Convert data to the intermediate format of
  * {
@@ -35,15 +56,16 @@ module.exports.processPost = (hsPost, tags) => {
             slug: hsPost.slug,
             title: hsPost.html_title,
             comment_id: hsPost.analytics_page_id,
-            html: hsPost.post_body,
             created_at: hsPost.created_time,
-            feature_image: hsPost.featured_image,
             meta_description: hsPost.meta_description,
             status: hsPost.state.toLowerCase(),
             published_at: hsPost.publish_date
 
         }
     };
+
+    // Hubspot has some complex interplay between HTML content and the featured image that we need to unpick
+    this.handleFeatureImageInContent(post, hsPost);
 
     post.data.author = this.processAuthor(hsPost.author, hsPost.blog_author);
 
