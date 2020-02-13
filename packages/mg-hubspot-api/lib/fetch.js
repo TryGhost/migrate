@@ -61,7 +61,8 @@ const cachedFetch = async (fileCache, hapikey, blogId, limit, offset) => {
         return await fileCache.readTmpJSONFile(filename);
     }
 
-    let response = await hs.blog.getPosts({content_group_id: blogId, limit, offset}).objects;
+    let response = await hs.blog.getPosts({content_group_id: blogId, limit, offset});
+    response = response.objects;
 
     await fileCache.writeTmpJSONFile(response, filename);
 
@@ -77,7 +78,7 @@ module.exports.tasks = async ({hapikey, limit}, ctx) => {
     };
 
     for (let page = 1; page <= info.batches.posts; page++) {
-        let offset = page * ctx.size;
+        let offset = (page - 1) * limit;
 
         tasks.push({
             title: `Fetching posts, page ${page} of ${info.batches.posts}`,
