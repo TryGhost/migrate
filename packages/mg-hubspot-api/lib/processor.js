@@ -40,7 +40,7 @@ module.exports.processPost = (hsPost, tags) => {
             feature_image: hsPost.featured_image,
             meta_description: hsPost.meta_description,
             status: hsPost.state.toLowerCase(),
-            published_at: hsPost.published_at
+            published_at: hsPost.publish_date
 
         }
     };
