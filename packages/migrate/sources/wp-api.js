@@ -193,6 +193,7 @@ module.exports.getFullTaskList = (url, options) => {
                 // 9. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostJSONFile(ctx.result);
+                    await ctx.fileCache.writeErrorJSONFile(ctx.errors);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;

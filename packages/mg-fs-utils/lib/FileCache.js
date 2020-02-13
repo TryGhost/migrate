@@ -161,6 +161,22 @@ class FileCache {
     }
 
     /**
+     * Create a JSON file with our errors
+     *
+     * @param {Object} data - a valid JSON object containing errors
+     * @param {Object} options - config
+     */
+    async writeErrorJSONFile(data, options = {}) {
+        const filename = options.filename || `errors.json`;
+        let basepath = options.path ? path.dirname(options.path) : this.zipDir;
+        let filepath = path.join(basepath, filename);
+
+        await fs.outputJson(filepath, data, {spaces: 2});
+
+        return filepath;
+    }
+
+    /**
      * Create a binary image file with fetched data
      *
      * @param {String} data - a valid binary image
