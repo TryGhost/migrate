@@ -6,6 +6,20 @@ const cliTruncate = require('cli-truncate');
 const stripAnsi = require('strip-ansi');
 const {indentString, getSymbol, isDefined, taskNumber} = require('./lib/utils');
 
+const dataRenderer = (data, prefix = '') => {
+    if (typeof data === 'string') {
+        data = stripAnsi(data.trim().split('\n').filter(Boolean).pop());
+
+        if (data === '') {
+            data = undefined;
+        }
+    }
+
+    if (isDefined(data)) {
+        return `   ${chalk.gray(cliTruncate(`${figures.arrowRight} ${prefix} ${data}`, process.stdout.columns - 3))}`;
+    }
+};
+
 const fullRenderer = (tasks, options, level = 0) => {
     let output = [];
 
@@ -21,20 +35,10 @@ const fullRenderer = (tasks, options, level = 0) => {
         output.push(indentString(`${getSymbol(task, options)} ${task.title}${skipped}`, level));
 
         // Handle any task data that needs to be output
-        if ((task.isPending() || task.isSkipped() || task.hasFailed()) && isDefined(task.output)) {
-            let data = task.output;
-
-            if (typeof data === 'string') {
-                data = stripAnsi(data.trim().split('\n').filter(Boolean).pop());
-
-                if (data === '') {
-                    data = undefined;
-                }
-            }
-
+        if (isDefined(task.output)) {
+            let data = dataRenderer(task.output);
             if (isDefined(data)) {
-                const out = indentString(`${figures.arrowRight} ${data}`, level);
-                output.push(`   ${chalk.gray(cliTruncate(out, process.stdout.columns - 3))}`);
+                output.push(data);
             }
         }
 
@@ -59,6 +63,14 @@ const summaryRenderer = (tasks, options, level = 0) => {
                 task.output = `${chalk.red.dim(`Subtask failed ${figures.arrowDown}`)}`;
             }
             output.push(indentString(`${getSymbol(task, options)} ${taskNumber(index, tasks)}: ${task.title} - ${task.output}`, level));
+        } else {
+            // Handle any task data that needs to be output
+            if (isDefined(task.output)) {
+                let data = dataRenderer(task.output, taskNumber(index, tasks));
+                if (isDefined(data)) {
+                    output.push(indentString(data, level));
+                }
+            }
         }
         if (task.isPending()) {
             output.push(indentString(`${getSymbol(task, options)} ${taskNumber(index, tasks)}: ${task.title}`, level));
