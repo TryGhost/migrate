@@ -1,3 +1,5 @@
+const htmlToText = require('html-to-text');
+
 module.exports.processAuthor = (email, hsAuthor) => {
     return {
         url: hsAuthor.slug,
@@ -14,6 +16,45 @@ module.exports.linkTopicsAsTags = (topicIds, tags) => {
     return topicIds.map(id => tags[id]);
 };
 
+module.exports.createCleanExcerpt = (summaryContent) => {
+    let excerpt = htmlToText.fromString(summaryContent, {
+        ignoreHref: true,
+        ignoreImage: true,
+        wordwrap: false
+    });
+
+    while (excerpt.length > 300) {
+        let parts;
+        let split;
+
+        if (excerpt.match(/\n\n/)) {
+            split = '\n\n';
+        } else if (excerpt.match(/\.\s/)) {
+            split = '. ';
+        } else if (excerpt.match(/\s/)) {
+            split = ' ';
+        } else {
+            excerpt = excerpt.substring(0, 297);
+            excerpt += '...';
+        }
+
+        if (split) {
+            parts = excerpt.split(split);
+
+            if (parts.length > 1) {
+                parts.pop();
+                excerpt = parts.join(split);
+                if (split === '. ') {
+                    excerpt += '.';
+                } else if (split === ' ') {
+                    excerpt += '...';
+                }
+            }
+        }
+    }
+
+    return excerpt;
+};
 
 module.exports.handleFeatureImageInContent = (post, hsPost) => {
     let bodyContent = hsPost.post_body;
@@ -32,7 +73,7 @@ module.exports.handleFeatureImageInContent = (post, hsPost) => {
 
     post.data.html = bodyContent;
     post.data.feature_image = featureImage;
-    post.data.custom_excerpt = summaryContent;
+    post.data.custom_excerpt = this.createCleanExcerpt(summaryContent);
 };
 
 /**
