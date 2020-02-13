@@ -33,10 +33,15 @@ const buildTasks = (fileCache, tasks, api, type) => {
         tasks.push({
             title: `Fetching ${type}, page ${page} of ${api.batches[type]}`,
             task: async (ctx) => {
-                let response = await cachedFetch(fileCache, api, type, perPage, page);
+                try {
+                    let response = await cachedFetch(fileCache, api, type, perPage, page);
 
-                // This is weird, but we don't yet deal with pages as a separate concept in imports
-                ctx.result.posts = ctx.result.posts.concat(response);
+                    // This is weird, but we don't yet deal with pages as a separate concept in imports
+                    ctx.result.posts = ctx.result.posts.concat(response);
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
             }
         });
     }

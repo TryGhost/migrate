@@ -82,10 +82,15 @@ module.exports.tasks = async ({hapikey, limit}, ctx) => {
         tasks.push({
             title: `Fetching posts, page ${page} of ${info.batches.posts}`,
             task: async (ctx) => {
-                let response = await cachedFetch(ctx.fileCache, hapikey, info.blog.id, limit, offset);
+                try {
+                    let response = await cachedFetch(ctx.fileCache, hapikey, info.blog.id, limit, offset);
 
-                // This is weird, but we don't yet deal with pages as a separate concept in imports
-                ctx.result.posts = ctx.result.posts.concat(response);
+                    // This is weird, but we don't yet deal with pages as a separate concept in imports
+                    ctx.result.posts = ctx.result.posts.concat(response);
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
             }
         });
     }
