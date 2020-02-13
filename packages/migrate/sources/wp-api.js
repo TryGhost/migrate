@@ -45,7 +45,7 @@ const scrapeConfig = {
 
 module.exports.initialise = (url, options) => {
     return {
-        title: 'Initialising',
+        title: 'Initialising Workspace',
         task: (ctx, task) => {
             ctx.options = options;
 
@@ -55,7 +55,7 @@ module.exports.initialise = (url, options) => {
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
             ctx.linkFixer = new MgLinkFixer();
 
-            task.title = `Initialising ${ctx.fileCache.cacheName}`;
+            task.output = `Workspace initialised at ${ctx.fileCache.cacheDir}`;
 
             if (options.batch > 0) {
                 task.title += ` batch ${ctx.fileCache.batchName}`;

@@ -72,10 +72,6 @@ exports.run = async (argv) => {
         ui.log.info('Done with errors', context.errors);
     }
 
-    if (argv.verbose) {
-        ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
-    }
-
     // Report success
     ui.log.ok(`Successfully written output to ${context.outputFile} in ${Date.now() - timer}ms.`);
 };
