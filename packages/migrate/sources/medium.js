@@ -183,6 +183,7 @@ module.exports.getTaskRunner = (pathToZip, options) => {
                 // 8. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostJSONFile(ctx.result);
+                    await ctx.fileCache.writeErrorJSONFile(ctx.errors);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
