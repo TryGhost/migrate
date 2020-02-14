@@ -41,11 +41,17 @@ const buildTasks = (fileCache, tasks, api, type, isAuthRequest) => {
         tasks.push({
             title: `Fetching ${type}, page ${page} of ${api.batches[type]}`,
             task: async (ctx) => {
-                let response = await cachedFetch(fileCache, api, type, perPage, page, isAuthRequest);
-                // This is weird, but we don't yet deal with pages as a separate concept in imports
-                type = type === 'pages' ? 'posts' : type;
+                try {
+                    let response = await cachedFetch(fileCache, api, type, perPage, page, isAuthRequest);
 
-                ctx.result[type] = ctx.result[type].concat(response);
+                    // This is weird, but we don't yet deal with pages as a separate concept in imports
+                    type = type === 'pages' ? 'posts' : type;
+
+                    ctx.result[type] = ctx.result[type].concat(response);
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
             }
         });
     }

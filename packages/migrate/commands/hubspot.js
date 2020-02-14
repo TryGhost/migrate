@@ -1,19 +1,19 @@
-const medium = require('../sources/medium');
+const hubspot = require('../sources/hubspot');
 const ui = require('@tryghost/pretty-cli').ui;
 
 // Internal ID in case we need one.
-exports.id = 'medium';
+exports.id = 'hubspot';
 
 exports.group = 'Sources:';
 
 // The command to run and any params
-exports.flags = 'medium <pathToZip>';
+exports.flags = 'hubspot [url] <hapikey>';
 
 // Description for the top level command
-exports.desc = 'Migrate from Medium using an export zip';
+exports.desc = 'Migrate from Hubspot using the API';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Path to a medium export zip'];
+exports.paramsDesc = ['URL of the blog you want to migrate', 'Hubspot API Key (hapikey)'];
 
 // Configure all the options
 exports.setup = (sywac) => {
@@ -21,7 +21,7 @@ exports.setup = (sywac) => {
         defaultValue: false,
         desc: 'Show verbose output'
     });
-    sywac.boolean('--zip', {
+    sywac.boolean('-z, --zip', {
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
     });
@@ -34,6 +34,19 @@ exports.setup = (sywac) => {
         defaultValue: false,
         desc: 'Provide an email domain for users e.g. mycompany.com'
     });
+    sywac.boolean('-I, --info', {
+        defaultValue: false,
+        desc: 'Show hubspot blog info only'
+    });
+    sywac.number('-b, --batch', {
+        defaultValue: 0,
+        desc: 'Batch number to run (defaults to running all)'
+    });
+
+    sywac.number('-l, --limit', {
+        defaultValue: 100,
+        desc: 'Number of items fetched in a batch i.e. batch size'
+    });
 };
 
 // What to do when this command is executed
@@ -42,15 +55,24 @@ exports.run = async (argv) => {
     let context = {errors: []};
 
     if (argv.verbose) {
-        ui.log.info(`Migrating from export at ${argv.pathToZip}`);
+        ui.log.info(`${argv.info ? 'Fetching info' : 'Migrating'} from hubspot site`);
+    }
+
+    if (argv.batch !== 0) {
+        ui.log.info(`Running batch ${argv.batch} (groups of ${argv.limit} posts)`);
     }
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = medium.getTaskRunner(argv.pathToZip, argv);
+        let migrate = hubspot.getTaskRunner(argv);
 
         // Run the migration
         await migrate.run(context);
+
+        if (argv.info && context.info) {
+            let batches = context.info.batches.posts;
+            ui.log.info(`Batch info: ${context.info.totals.posts} posts ${batches} batches.`);
+        }
 
         if (argv.verbose) {
             ui.log.info('Done', require('util').inspect(context.result.data, false, 2));

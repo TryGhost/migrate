@@ -39,7 +39,7 @@ exports.run = async (argv) => {
                     title: `Tasky McTaskFace ${i}`,
                     enabled: () => i !== 3,
                     skip: () => i === 1,
-                    task: () => {
+                    task: (ctx, task) => {
                         return new Promise((resolve, reject) => {
                             // no op
                             setTimeout(() => {
@@ -47,6 +47,11 @@ exports.run = async (argv) => {
                                     uniqueErrorId += 1;
                                     return reject(new Error(`I am error ${uniqueErrorId}`));
                                 }
+
+                                if (i === 7) {
+                                    task.output = 'Hello World!';
+                                }
+
                                 return resolve('z');
                             }, 500);
                         });
@@ -85,8 +90,9 @@ exports.run = async (argv) => {
             }
         },
         {
-            title: 'Step 4: finalise',
-            task: () => {
+            title: 'Step 4: finalise with output',
+            task: (ctx, task) => {
+                task.output = 'Hello World!';
                 return Promise.resolve('lala');
             }
         },
