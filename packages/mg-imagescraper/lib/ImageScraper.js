@@ -42,7 +42,9 @@ class ImageScraper {
         }
 
         try {
-            let response = await got(src, {responseType: 'buffer'});
+            // Got 9 requires encoding: null, Got 10 requires responseType: 'buffer'
+            // @TODO: fix this when we can upgrade Got to 10 again (e.g. support Node 10 only)
+            let response = await got(src, {encoding: null, responseType: 'buffer'});
             await this.fileCache.writeImageFile(response.body, imageFile);
             return imageFile.outputPath;
         } catch (error) {
