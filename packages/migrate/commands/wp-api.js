@@ -38,12 +38,36 @@ exports.setup = (sywac) => {
         defaultValue: 0,
         desc: 'Run a batch (defaults to not batching)'
     });
+    sywac.string('-a, --auth', {
+        defaultValue: null,
+        desc: 'Provide a user and password to authenticate the WordPress API (<user>:<password>)'
+    });
+    sywac.string('-u, --users', {
+        defaultValue: null,
+        desc: 'Provide a JSON file with users'
+    });
 };
 
 // What to do when this command is executed
 exports.run = async (argv) => {
     let timer = Date.now();
     let context = {errors: []};
+
+    if (argv.auth) {
+        let auth = argv.auth.split(':');
+
+        if (auth.length < 2 || auth.length >= 3) {
+            ui.log.info('Not running in authenticated mode. Please provide the credentials in this format: <user>:<password>');
+            context.apiUser = {};
+        } else {
+            ui.log.info('Using authentication for WordPress API');
+            context.apiUser = {username: auth[0], password: auth[1]};
+        }
+    }
+
+    if (argv.users) {
+        context.usersJSON = argv.users;
+    }
 
     if (argv.verbose) {
         ui.log.info(`${argv.info ? 'Fetching info' : 'Migrating'} from site at ${argv.url}`);

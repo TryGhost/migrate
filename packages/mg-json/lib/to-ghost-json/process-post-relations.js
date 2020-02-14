@@ -3,9 +3,8 @@ const schema = require('../utils/schema');
 const ObjectId = require('bson-objectid');
 
 module.exports = (json) => {
-    // These should be present and empty, even if there is no data
     json.users = json.users || [];
-    json.tags = json.tags || [];
+    json.tags = json.tags || []; // expected to be empty
 
     // We create these fresh as all relation processing should be done in here
     json.posts_authors = [];

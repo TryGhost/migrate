@@ -40,7 +40,8 @@
       "url": "https://medium.com/@JoeBloggs",
       "data": {
         "name": "Joe Bloggs",
-        "slug": "joebloggs"
+        "slug": "joebloggs",
+        "email": "joebloggs@blogging.com"
       }
     }
   ]
