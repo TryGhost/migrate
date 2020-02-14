@@ -108,8 +108,6 @@ module.exports.processAuthors = (authors) => {
     return authors.map(author => this.processAuthor(author));
 };
 
-
-
 module.exports.all = async ({result: input, usersJSON}) => {
     if (usersJSON) {
         const mergedUsers = [];
