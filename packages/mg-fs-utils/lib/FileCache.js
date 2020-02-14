@@ -168,7 +168,7 @@ class FileCache {
      */
     async writeErrorJSONFile(data, options = {}) {
         const filename = options.filename || `errors.json`;
-        let basepath = options.path ? path.dirname(options.path) : this.zipDir;
+        let basepath = options.path ? path.dirname(options.path) : this.tmpDir;
         let filepath = path.join(basepath, filename);
 
         await fs.outputJson(filepath, data, {spaces: 2});
