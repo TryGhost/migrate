@@ -42,6 +42,10 @@ exports.setup = (sywac) => {
         defaultValue: null,
         desc: 'Provide a user and password to authenticate the WordPress API (<user>:<password>)'
     });
+    sywac.string('-u, --users', {
+        defaultValue: null,
+        desc: 'Provide a JSON file with users'
+    });
 };
 
 // What to do when this command is executed
@@ -59,6 +63,10 @@ exports.run = async (argv) => {
             ui.log.info('Using authentication for WordPress API');
             context.apiUser = {username: auth[0], password: auth[1]};
         }
+    }
+
+    if (argv.users) {
+        context.usersJSON = argv.users;
     }
 
     if (argv.verbose) {

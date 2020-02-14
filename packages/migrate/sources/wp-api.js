@@ -115,7 +115,7 @@ module.exports.getFullTaskList = (url, options) => {
             task: async (ctx) => {
                 // 2. Convert WP API JSON into a format that the migrate tools understand
                 try {
-                    ctx.result = wpAPI.process.all(ctx.result);
+                    ctx.result = await wpAPI.process.all(ctx);
                     await ctx.fileCache.writeTmpJSONFile(ctx.result, 'wp-processed-data.json');
                 } catch (error) {
                     ctx.errors.push(error);

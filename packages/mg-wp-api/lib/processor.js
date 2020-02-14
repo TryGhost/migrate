@@ -1,3 +1,6 @@
+const fs = require('fs-extra');
+const _ = require('lodash');
+
 module.exports.processAuthor = (wpAuthor) => {
     return {
         url: wpAuthor.link,
@@ -105,7 +108,34 @@ module.exports.processAuthors = (authors) => {
     return authors.map(author => this.processAuthor(author));
 };
 
-module.exports.all = (input) => {
+
+
+module.exports.all = async ({result: input, usersJSON}) => {
+    if (usersJSON) {
+        const mergedUsers = [];
+        try {
+            let passedUsers = await fs.readJSON(usersJSON);
+            console.log(`Passed a users file with ${passedUsers.length} entries, processing now!`);
+            await passedUsers.map((passedUser) => {
+                const matchedUser = _.find(input.users, (fetchedUser) => {
+                    if (fetchedUser.id && passedUser.id && fetchedUser.id === passedUser.id) {
+                        return fetchedUser;
+                    } else if (fetchedUser.slug && passedUser.slug && fetchedUser.slug === passedUser.slug) {
+                        return fetchedUser;
+                    } else if (fetchedUser.name && passedUser.name && fetchedUser.name === passedUser.name) {
+                        return fetchedUser;
+                    } else {
+                        return false;
+                    }
+                });
+                mergedUsers.push(Object.assign({}, passedUser, matchedUser));
+            });
+        } catch (error) {
+            throw new Error('Unable to process passed uers file');
+        }
+        input.users = mergedUsers;
+    }
+
     const output = {
         users: this.processAuthors(input.users)
     };
