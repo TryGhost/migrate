@@ -80,6 +80,11 @@ module.exports.handleFeatureImageInContent = (post, hsPost) => {
 };
 
 module.exports.processContent = (html) => {
+    // Drafts can have empty post bodies
+    if (!html) {
+        return '';
+    }
+
     const $html = $.load(html, {
         decodeEntities: false
     });
