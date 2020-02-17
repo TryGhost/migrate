@@ -34,6 +34,10 @@ exports.setup = (sywac) => {
         defaultValue: false,
         desc: 'Provide an email domain for users e.g. mycompany.com'
     });
+    sywac.boolean('--fallBackHTMLCard', {
+        defaultValue: false,
+        desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
+    });
 };
 
 // What to do when this command is executed

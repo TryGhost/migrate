@@ -42,10 +42,13 @@ exports.setup = (sywac) => {
         defaultValue: 0,
         desc: 'Batch number to run (defaults to running all)'
     });
-
     sywac.number('-l, --limit', {
         defaultValue: 100,
         desc: 'Number of items fetched in a batch i.e. batch size'
+    });
+    sywac.boolean('--fallBackHTMLCard', {
+        defaultValue: false,
+        desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
 };
 

@@ -46,6 +46,10 @@ exports.setup = (sywac) => {
         defaultValue: null,
         desc: 'Provide a JSON file with users'
     });
+    sywac.boolean('--fallBackHTMLCard', {
+        defaultValue: false,
+        desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
+    });
 };
 
 // What to do when this command is executed

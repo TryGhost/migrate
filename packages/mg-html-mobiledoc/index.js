@@ -29,6 +29,7 @@ const convertPost = (post, htmlCard) => {
 
 // Understands the data formats, so knows where to look for posts to convert
 module.exports.convert = (ctx, htmlCard) => {
+    let {options} = ctx;
     let res = ctx.result;
     let posts = res.posts;
 
@@ -47,12 +48,25 @@ module.exports.convert = (ctx, htmlCard) => {
                 try {
                     convertPost(post, htmlCard);
                 } catch (error) {
-                    let convertError = new Error(`Unable to convert post ${post.title}`);
-                    convertError.reference = post.slug;
-                    convertError.originalError = error;
+                    if (options.fallBackHTMLCard) {
+                        try {
+                            convertPost(post, true);
+                        } catch (error) {
+                            let convertError = new Error(`Unable to convert post HTMLCard ${post.title}`);
+                            convertError.reference = post.slug;
+                            convertError.originalError = error;
 
-                    ctx.errors.push(convertError);
-                    throw convertError;
+                            ctx.errors.push(convertError);
+                            throw convertError;
+                        }
+                    } else {
+                        let convertError = new Error(`Unable to convert post to Mobiledoc ${post.title}`);
+                        convertError.reference = post.slug;
+                        convertError.originalError = error;
+
+                        ctx.errors.push(convertError);
+                        throw convertError;
+                    }
                 }
             }
         };
