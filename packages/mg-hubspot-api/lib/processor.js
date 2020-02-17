@@ -133,7 +133,10 @@ module.exports.processPost = (hsPost, tags) => {
     // Some HTML content needs to be modified so that our parser plugins can interpret it
     post.data.html = this.processContent(post.data.html);
 
-    post.data.author = this.processAuthor(hsPost.author, hsPost.blog_author);
+    // @TODO: improve author handling
+    if (hsPost.blog_author) {
+        post.data.author = this.processAuthor(hsPost.author, hsPost.blog_author);
+    }
 
     post.data.tags = this.linkTopicsAsTags(hsPost.topic_ids, tags);
 
