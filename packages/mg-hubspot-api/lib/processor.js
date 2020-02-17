@@ -1,4 +1,5 @@
 const htmlToText = require('html-to-text');
+const $ = require('cheerio');
 
 module.exports.processAuthor = (email, hsAuthor) => {
     return {
@@ -78,6 +79,25 @@ module.exports.handleFeatureImageInContent = (post, hsPost) => {
     post.data.custom_excerpt = this.createCleanExcerpt(summaryContent);
 };
 
+module.exports.processContent = (html) => {
+    const $html = $.load(html, {
+        decodeEntities: false
+    });
+
+    // Handle divs that contain hubspot scripts
+    $html('div.wrapper').each((i, div) => {
+        $(div).before('<!--kg-card-begin: html-->');
+        $(div).after('<!--kg-card-end: html-->');
+    });
+
+    // Handle instagram embeds
+
+    // Handle youtube embeds
+
+    html = $html.html();
+    return html;
+};
+
 /**
  * Convert data to the intermediate format of
  * {
@@ -109,6 +129,9 @@ module.exports.processPost = (hsPost, tags) => {
 
     // Hubspot has some complex interplay between HTML content and the featured image that we need to unpick
     this.handleFeatureImageInContent(post, hsPost);
+
+    // Some HTML content needs to be modified so that our parser plugins can interpret it
+    post.data.html = this.processContent(post.data.html);
 
     post.data.author = this.processAuthor(hsPost.author, hsPost.blog_author);
 
