@@ -136,6 +136,13 @@ module.exports.processContent = (html) => {
     $html('div.hs-responsive-embed-wrapper iframe').removeAttr('class');
     $html('div.hs-responsive-embed-wrapper iframe').removeAttr('style');
 
+    // Handle button links
+    $html('p a.button').each((i, el) => {
+        $(el).parent('p').before('<!--kg-card-begin: html-->');
+        $(el).parent('p').after('<!--kg-card-end: html-->');
+    });
+
+    // convert HTML back to a string
     html = $html.html();
 
     // Handle Wistia embeds
