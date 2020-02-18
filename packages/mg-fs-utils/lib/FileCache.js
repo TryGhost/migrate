@@ -83,6 +83,10 @@ class FileCache {
         return `${this.defaultCacheFileName}.zip`;
     }
 
+    get defaultErrorFileName() {
+        return `${this.defaultCacheFileName}.errors.json`;
+    }
+
     // @TODO: move this somewhere shared,
     // it's currently duplicated from https://github.com/TryGhost/Ghost-Storage-Base/blob/master/BaseStorage.js#L62
     sanitizeFileName(src) {
@@ -167,13 +171,9 @@ class FileCache {
      * @param {Object} options - config
      */
     async writeErrorJSONFile(data, options = {}) {
-        const filename = options.filename || `errors.json`;
-        let basepath = options.path ? path.dirname(options.path) : this.tmpDir;
-        let filepath = path.join(basepath, filename);
+        const filename = options.filename || this.defaultErrorFileName;
 
-        await fs.outputJson(filepath, data, {spaces: 2});
-
-        return filepath;
+        return await this.writeTmpJSONFile(data, filename);
     }
 
     /**
