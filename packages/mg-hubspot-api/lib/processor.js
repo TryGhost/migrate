@@ -98,8 +98,21 @@ module.exports.processContent = (html) => {
     // Handle instagram embeds
 
     // Handle youtube embeds
+    let figure = $('<figure></figure>');
+
+    $html('div.hs-responsive-embed-wrapper iframe').each((i, el) => {
+        let src = $(el).attr('src');
+        if (src.startsWith('//')) {
+            src = `https:${src}`;
+        }
+        src += '?feature=oembed';
+        $(el).wrap(figure);
+        $(el).attr('class', '');
+        $(el).attr('style', '');
+    });
 
     html = $html.html();
+
     return html;
 };
 
