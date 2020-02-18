@@ -109,6 +109,7 @@ class ImageScraper {
                                 try {
                                     resource[field] = await this.downloadImage(value);
                                 } catch (error) {
+                                    error.resource = resource;
                                     ctx.errors.push(error);
                                     throw error;
                                 }
