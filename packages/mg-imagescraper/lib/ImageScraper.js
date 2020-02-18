@@ -122,6 +122,7 @@ class ImageScraper {
                                 try {
                                     resource[field] = await this.processHTML(value);
                                 } catch (error) {
+                                    error.resource = resource;
                                     ctx.errors.push(error);
                                     throw error;
                                 }
