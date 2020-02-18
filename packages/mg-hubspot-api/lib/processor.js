@@ -76,7 +76,7 @@ module.exports.handleFeatureImageInContent = (post, hsPost) => {
 
     // A rare case where we can be so certain of the structure here, that it's OK to remove some HTML using regex
     // Getting cheerio involved would be serious overkill!
-    let imgRegex = new RegExp(`^(<p>)?<img[^>]*?src="${featureImage}[^>]*?>(<\/p>)?`);
+    let imgRegex = new RegExp(`^(<p>)?<img[^>]*?src="${featureImage}[^>]*?>(</p>)?`);
 
     if (imgRegex.test(bodyContent)) {
         bodyContent = bodyContent.replace(imgRegex, '');
