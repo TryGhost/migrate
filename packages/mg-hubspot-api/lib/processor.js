@@ -138,6 +138,16 @@ module.exports.processContent = (html) => {
 
     html = $html.html();
 
+    // Handle Wistia embeds
+    // This is done with a regex replace, because we have to parse the string
+    html = html.replace(/(<br>\n)?<p>{{ script_embed\('wistia', '([^']*)'.*?}}<\/p>(\n<br>)?/g, (m, b, p) => {
+        return `<!--kg-card-begin: html-->
+<script src="//fast.wistia.com/embed/medias/${p}.jsonp" async></script>
+<script src="//fast.wistia.com/assets/external/E-v1.js" async></script>
+<div class="wistia_embed wistia_async_${p}" style="height:349px;width:620px">&nbsp;</div>
+<!--kg-card-end: html-->`;
+    });
+
     return html;
 };
 
