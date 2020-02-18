@@ -1,14 +1,18 @@
 const htmlToText = require('html-to-text');
 const $ = require('cheerio');
 
-module.exports.processAuthor = (email, hsAuthor) => {
+module.exports.processAuthor = (hsAuthor) => {
     return {
         url: hsAuthor.slug,
         data: {
             slug: hsAuthor.slug,
             name: hsAuthor.full_name,
-            email,
-            bio: hsAuthor.bio
+            email: hsAuthor.email,
+            bio: hsAuthor.bio,
+            profile_image: hsAuthor.avatar || hsAuthor.gravatar_url,
+            facebook: hsAuthor.facebook,
+            twitter: hsAuthor.twitter,
+            website: hsAuthor.website
         }
     };
 };
@@ -193,9 +197,8 @@ module.exports.processPost = (hsPost, tags) => {
     // Some HTML content needs to be modified so that our parser plugins can interpret it
     post.data.html = this.processContent(post.data.html);
 
-    // @TODO: improve author handling
     if (hsPost.blog_author) {
-        post.data.author = this.processAuthor(hsPost.author, hsPost.blog_author);
+        post.data.author = this.processAuthor(hsPost.blog_author);
     }
 
     post.data.tags = this.linkTopicsAsTags(hsPost.topic_ids, tags);
