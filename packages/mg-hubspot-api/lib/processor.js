@@ -21,11 +21,17 @@ module.exports.linkTopicsAsTags = (topicIds, tags) => {
     return topicIds.map(id => tags[id]);
 };
 
-module.exports.createCleanExcerpt = (summaryContent) => {
+module.exports.createCleanExcerpt = (summaryContent = '') => {
+    // Don't know why this doesn't happen in htmlToText, it should
+    summaryContent = summaryContent.replace('&nbsp;', ' ');
+
+    // Convert to text only
     let excerpt = htmlToText.fromString(summaryContent, {
         ignoreHref: true,
         ignoreImage: true,
-        wordwrap: false
+        wordwrap: false,
+        uppercaseHeadings: false,
+        decodeOptions: {}
     });
 
     while (excerpt.length > 300) {
@@ -34,6 +40,8 @@ module.exports.createCleanExcerpt = (summaryContent) => {
 
         if (excerpt.match(/\n\n/)) {
             split = '\n\n';
+        } else if (excerpt.match(/\.\n/)) {
+            split = '.\n';
         } else if (excerpt.match(/\.\s/)) {
             split = '. ';
         } else if (excerpt.match(/\s/)) {
@@ -49,7 +57,7 @@ module.exports.createCleanExcerpt = (summaryContent) => {
             if (parts.length > 1) {
                 parts.pop();
                 excerpt = parts.join(split);
-                if (split === '. ') {
+                if (split === '. ' || split === '.\n') {
                     excerpt += '.';
                 } else if (split === ' ') {
                     excerpt += '...';
@@ -80,6 +88,7 @@ module.exports.handleFeatureImageInContent = (post, hsPost) => {
 
     post.data.html = bodyContent;
     post.data.feature_image = featureImage;
+
     post.data.custom_excerpt = this.createCleanExcerpt(summaryContent);
 };
 
