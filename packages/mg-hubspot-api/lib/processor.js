@@ -89,6 +89,8 @@ module.exports.processContent = (html) => {
         decodeEntities: false
     });
 
+    let figure = $('<figure></figure>');
+
     // Handle divs that contain hubspot scripts
     $html('div.wrapper').each((i, div) => {
         $(div).before('<!--kg-card-begin: html-->');
@@ -96,20 +98,43 @@ module.exports.processContent = (html) => {
     });
 
     // Handle instagram embeds
+    $html('script[src="//platform.instagram.com/en_US/embeds.js"]').remove();
+    $html('#fb-root').each((i, el) => {
+        if ($(el).prev().get(0).name === 'script') {
+            $(el).prev().remove();
+        }
+        if ($(el).next().get(0).name === 'script') {
+            $(el).next().remove();
+        }
+
+        $(el).remove();
+    });
+
+    $html('blockquote.instagram-media').each((i, el) => {
+        let src = $(el).find('a').attr('href');
+        let $iframe = $('<iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;"></iframe>');
+        let $script = $('<script async="" src="//www.instagram.com/embed.js"></script>');
+        let $figure = $('<figure class="instagram"></figure');
+
+        $iframe.attr('src', `${src}embed/captioned/`);
+        $figure.append($iframe);
+        $figure.append($script);
+
+        $(el).replaceWith($figure);
+    });
 
     // Handle youtube embeds
-    let figure = $('<figure></figure>');
-
     $html('div.hs-responsive-embed-wrapper iframe').each((i, el) => {
         let src = $(el).attr('src');
         if (src.startsWith('//')) {
             src = `https:${src}`;
         }
         src += '?feature=oembed';
-        $(el).wrap(figure);
-        $(el).attr('class', '');
-        $(el).attr('style', '');
     });
+
+    $html('div.hs-responsive-embed-wrapper iframe').wrap(figure);
+    $html('div.hs-responsive-embed-wrapper iframe').removeAttr('class');
+    $html('div.hs-responsive-embed-wrapper iframe').removeAttr('style');
 
     html = $html.html();
 
