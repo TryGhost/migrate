@@ -79,7 +79,7 @@ module.exports.getFullTaskList = (options) => {
             task: async (ctx) => {
                 // 2. Convert Hubspot API JSON into a format that the migrate tools understand
                 try {
-                    ctx.result = hsAPI.process.all(ctx.result, ctx.info);
+                    ctx.result = hsAPI.process.all(ctx);
                     await ctx.fileCache.writeTmpJSONFile(ctx.result, 'hubspot-processed-data.json');
                 } catch (error) {
                     ctx.errors.push(error);

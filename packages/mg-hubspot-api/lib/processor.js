@@ -83,7 +83,7 @@ module.exports.handleFeatureImageInContent = (post, hsPost) => {
     post.data.custom_excerpt = this.createCleanExcerpt(summaryContent);
 };
 
-module.exports.processContent = (html) => {
+module.exports.processContent = (html, url, errors) => {
     // Drafts can have empty post bodies
     if (!html) {
         return '';
@@ -146,6 +146,19 @@ module.exports.processContent = (html) => {
         $(el).parent('p').after('<!--kg-card-end: html-->');
     });
 
+    // Convert videos to HTML cards and report as errors
+    $html('video').each((i, el) => {
+        $(el).before('<!--kg-card-begin: html-->');
+        $(el).after('<!--kg-card-end: html-->');
+
+        let src = $(el).find('source').attr('src');
+
+        let error = new Error(`Unsupported video ${src} in post ${url}`);
+        error.src = src;
+        error.url = url;
+        errors.push(error);
+    });
+
     // convert HTML back to a string
     html = $html.html();
 
@@ -176,7 +189,7 @@ module.exports.processContent = (html) => {
  *   ]
  * }
  */
-module.exports.processPost = (hsPost, tags) => {
+module.exports.processPost = (hsPost, tags, errors) => {
     const post = {
         url: hsPost.url,
         data: {
@@ -195,7 +208,7 @@ module.exports.processPost = (hsPost, tags) => {
     this.handleFeatureImageInContent(post, hsPost);
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = this.processContent(post.data.html);
+    post.data.html = this.processContent(post.data.html, post.url, errors);
 
     if (hsPost.blog_author) {
         post.data.author = this.processAuthor(hsPost.blog_author);
@@ -227,15 +240,15 @@ module.exports.processTopics = (topics, url) => {
     return tags;
 };
 
-module.exports.processPosts = (posts, info) => {
+module.exports.processPosts = (posts, info, errors) => {
     let tags = this.processTopics(info.topics, info.blog.url);
 
-    return posts.map(post => this.processPost(post, tags));
+    return posts.map(post => this.processPost(post, tags, errors));
 };
 
-module.exports.all = (input, info) => {
+module.exports.all = ({result, info, errors}) => {
     const output = {
-        posts: this.processPosts(input.posts, info)
+        posts: this.processPosts(result.posts, info, errors)
     };
 
     return output;
