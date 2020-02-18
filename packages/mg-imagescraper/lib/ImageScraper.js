@@ -110,7 +110,10 @@ class ImageScraper {
                                 try {
                                     resource[field] = await this.downloadImage(value);
                                 } catch (error) {
-                                    error.resource = resource;
+                                    error.resource = {
+                                        title: resource.title,
+                                        slug: resource.slug
+                                    };
                                     ctx.errors.push(error);
                                     throw error;
                                 }
@@ -123,7 +126,10 @@ class ImageScraper {
                                 try {
                                     resource[field] = await this.processHTML(value);
                                 } catch (error) {
-                                    error.resource = resource;
+                                    error.resource = {
+                                        title: resource.title,
+                                        slug: resource.slug
+                                    };
                                     ctx.errors.push(error);
                                     throw error;
                                 }
