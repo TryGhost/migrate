@@ -1,6 +1,16 @@
 const htmlToText = require('html-to-text');
 const $ = require('cheerio');
 
+const VideoError = ({src, url}) => {
+    let error = new Error(`Unsupported video ${src} in post ${url}`);
+
+    error.errorType = 'VideoError';
+    error.src = src;
+    error.url = url;
+
+    return error;
+};
+
 module.exports.processAuthor = (hsAuthor) => {
     return {
         url: hsAuthor.slug,
@@ -162,10 +172,7 @@ module.exports.processContent = (html, url, errors) => {
 
         let src = $(el).find('source').attr('src');
 
-        let error = new Error(`Unsupported video ${src} in post ${url}`);
-        error.src = src;
-        error.url = url;
-        errors.push(error);
+        errors.push(VideoError({src, url}));
     });
 
     // convert HTML back to a string
