@@ -103,6 +103,11 @@ const hydratePost = (input, options) => {
         input.custom_excerpt = input.custom_excerpt.substring(0, 300);
     }
 
+    if (input.meta_description && input.meta_description.length > 500) {
+        // Naive truncate values that are too long
+        input.meta_description = input.meta_description.substring(0, 500);
+    }
+
     return input;
 };
 
