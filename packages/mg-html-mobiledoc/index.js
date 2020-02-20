@@ -1,5 +1,18 @@
 const converter = require('@tryghost/html-to-mobiledoc');
 
+const ConvertError = ({ src, message = `Unable to convert post to Mobiledoc`, reference, originalError }) => {
+    let error = new Error(`${message} - ${src}`);
+
+    error.errorType = 'ConvertError';
+    error.src = src;
+    if (reference) {
+        error.reference = reference;
+    }
+    error.originalError = originalError;
+
+    return error;
+};
+
 const convertToHTMLCard = (html) => {
     let structure = {
         version: '0.3.1',
@@ -52,17 +65,25 @@ module.exports.convert = (ctx, htmlCard) => {
                         try {
                             convertPost(post, true);
                         } catch (error) {
-                            let convertError = new Error(`Unable to convert post HTMLCard ${post.title}`);
-                            convertError.reference = post.slug;
-                            convertError.originalError = error;
+                            let convertError = ConvertError(
+                                {
+                                    message: `Unable to convert post HTMLCard "${post.title}"`,
+                                    src: post.slug,
+                                    reference: post.title,
+                                    originalError: error
+                                });
 
                             ctx.errors.push(convertError);
                             throw convertError;
                         }
                     } else {
-                        let convertError = new Error(`Unable to convert post to Mobiledoc ${post.title}`);
-                        convertError.reference = post.slug;
-                        convertError.originalError = error;
+                        let convertError = ConvertError(
+                            {
+                                message: `Unable to convert post to Mobiledoc "${post.title}"`,
+                                src: post.slug,
+                                reference: post.title,
+                                originalError: error
+                            });
 
                         ctx.errors.push(convertError);
                         throw convertError;
