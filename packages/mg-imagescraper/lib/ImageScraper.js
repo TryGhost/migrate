@@ -19,6 +19,10 @@ const ScrapeError = ({src, code, statusCode, originalError}) => {
     if (statusCode) {
         error.statusCode = statusCode;
     }
+    if (originalError.body) {
+        // We really don't need the buffer for our error file
+        delete originalError.body;
+    }
     error.originalError = originalError;
 
     return error;
