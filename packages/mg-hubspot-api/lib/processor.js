@@ -168,7 +168,7 @@ module.exports.processContent = (html, url, errors) => {
     $html('div.hs-responsive-embed-wrapper iframe').removeAttr('style');
 
     // Handle button links
-    $html('p a.button').each((i, el) => {
+    $html('p a.button, p a.roundupbutton').each((i, el) => {
         $(el).parent('p').before('<!--kg-card-begin: html-->');
         $(el).parent('p').after('<!--kg-card-end: html-->');
     });
