@@ -161,6 +161,8 @@ module.exports.processContent = (html, url, errors) => {
             src = `https:${src}`;
         }
         src += '?feature=oembed';
+
+        $(el).attr('src', src);
     });
 
     $html('div.hs-responsive-embed-wrapper iframe').wrap(figure);
@@ -174,6 +176,7 @@ module.exports.processContent = (html, url, errors) => {
     });
 
     // Convert videos to HTML cards and report as errors
+    // @TODO make this a parser plugin
     $html('video').each((i, el) => {
         $(el).before('<!--kg-card-begin: html-->');
         $(el).after('<!--kg-card-end: html-->');
