@@ -9,6 +9,15 @@ const makeTaskRunner = require('../lib/task-runner');
 
 const scrapeConfig = {
     posts: {
+        html: {
+            selector: 'div.article-header__image',
+            how: 'html',
+            convert: (x) => {
+                // we're fetching all inner html for custom used feature media,
+                // such as iFrames or videos.
+                return !x.match(/^(<img|<figure)/) && x;
+            }
+        },
         meta_title: {
             selector: 'title'
         },
@@ -43,6 +52,16 @@ const scrapeConfig = {
     }
 };
 
+const postProcessor = (scrapedData, data) => {
+    if (scrapedData.html) {
+        scrapedData.html = `<!--kg-card-begin: html-->${scrapedData.html}<!--kg-card-end: html-->${data.html}`;
+    } else {
+        delete scrapedData.html;
+    }
+
+    return scrapedData;
+};
+
 module.exports.initialise = (url, options) => {
     return {
         title: 'Initialising Workspace',
@@ -51,7 +70,7 @@ module.exports.initialise = (url, options) => {
 
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
             ctx.fileCache = new fsUtils.FileCache(url, options.batch);
-            ctx.wpScraper = new MgWebScraper(ctx.fileCache, scrapeConfig);
+            ctx.wpScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
             ctx.linkFixer = new MgLinkFixer();
 
