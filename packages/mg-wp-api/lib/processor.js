@@ -1,5 +1,7 @@
 const fs = require('fs-extra');
 const _ = require('lodash');
+const $ = require('cheerio');
+const url = require('url');
 
 module.exports.processAuthor = (wpAuthor) => {
     return {
@@ -42,6 +44,89 @@ module.exports.processTerms = (wpTerms) => {
     });
 
     return categories.concat(tags);
+};
+
+module.exports.processContent = (html) => {
+    // Drafts can have empty post bodies
+    if (!html) {
+        return '';
+    }
+
+    const $html = $.load(html, {
+        decodeEntities: false
+    });
+
+    // Handle twitter embeds
+    $html('p > script[src="https://platform.twitter.com/widgets.js"]').remove();
+
+    $html('blockquote.twitter-tweet').each((i, el) => {
+        let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
+        let $script = $('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
+
+        $(el).wrap($figure);
+        $figure.append($script);
+        $figure.before('<!--kg-card-begin: embed-->');
+        $figure.after('<!--kg-card-end: embed-->');
+    });
+
+    // Handle instagram embeds
+    $html('script[src="//platform.instagram.com/en_US/embeds.js"]').remove();
+    $html('#fb-root').each((i, el) => {
+        if ($(el).prev().get(0) && $(el).prev().get(0).name === 'script') {
+            $(el).prev().remove();
+        }
+        if ($(el).next().get(0) && $(el).next().get(0).name === 'script') {
+            $(el).next().remove();
+        }
+
+        $(el).remove();
+    });
+
+    $html('blockquote.instagram-media').each((i, el) => {
+        let src = $(el).find('a').attr('href');
+        let parsed = url.parse(src);
+
+        if (parsed.search) {
+            // remove possible query params
+            parsed.search = null;
+        }
+        src = url.format(parsed, {search: false});
+
+        let $iframe = $('<iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;"></iframe>');
+        let $script = $('<script async="" src="//www.instagram.com/embed.js"></script>');
+        let $figure = $('<figure class="instagram"></figure>');
+
+        $iframe.attr('src', `${src}embed/captioned/`);
+        $figure.append($iframe);
+        $figure.append($script);
+
+        $(el).replaceWith($figure);
+    });
+
+    $html('p > iframe').each((i, iframe) => {
+        $(iframe).before('<!--kg-card-begin: html-->');
+        $(iframe).after('<!--kg-card-end: html-->');
+    });
+
+    // Wrap blockquotes in an HTML card
+    $html('blockquote').each((i, blockquote) => {
+        if ($(blockquote).hasClass('twitter-tweet')) {
+            return false;
+        }
+        $(blockquote).before('<!--kg-card-begin: html-->');
+        $(blockquote).after('<!--kg-card-end: html-->');
+    });
+
+    // Wrap custom styled divs in HTML card
+    $html('div[style]').each((i, div) => {
+        $(div).before('<!--kg-card-begin: html-->');
+        $(div).after('<!--kg-card-end: html-->');
+    });
+
+    // convert HTML back to a string
+    html = $html.html();
+
+    return html;
 };
 
 /**
@@ -96,6 +181,9 @@ module.exports.processPost = (wpPost, users) => {
             url: 'migrator-added-tag', data: {name: '#wordpress'}
         });
     }
+
+    // Some HTML content needs to be modified so that our parser plugins can interpret it
+    post.data.html = this.processContent(post.data.html, post.url);
 
     return post;
 };
