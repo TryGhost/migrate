@@ -31,7 +31,7 @@
     "figures": "^3.0.0",
     "indent-string": "^4.0.0",
     "log-symbols": "^3.0.0",
-    "log-update": "^3.0.0",
+    "log-update": "^4.0.0",
     "strip-ansi": "^6.0.0"
   }
 }
