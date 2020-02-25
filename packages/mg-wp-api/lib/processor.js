@@ -69,6 +69,16 @@ module.exports.processContent = (html) => {
         $figure.after('<!--kg-card-end: embed-->');
     });
 
+    $html('blockquote.twitter-video').each((i, el) => {
+        let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
+        let $script = $('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
+
+        $(el).wrap($figure);
+        $figure.append($script);
+        $figure.before('<!--kg-card-begin: embed-->');
+        $figure.after('<!--kg-card-end: embed-->');
+    });
+
     // Handle instagram embeds
     $html('script[src="//platform.instagram.com/en_US/embeds.js"]').remove();
     $html('#fb-root').each((i, el) => {
@@ -110,7 +120,7 @@ module.exports.processContent = (html) => {
 
     // Wrap blockquotes in an HTML card
     $html('blockquote').each((i, blockquote) => {
-        if ($(blockquote).hasClass('twitter-tweet')) {
+        if ($(blockquote).hasClass('twitter-tweet') || $(blockquote).hasClass('twitter-video')) {
             return false;
         }
         $(blockquote).before('<!--kg-card-begin: html-->');
