@@ -26,7 +26,7 @@ exports.setup = (sywac) => {
         desc: 'Create a zip file (set to false to skip)'
     });
     sywac.enumeration('-s --scrape', {
-        choices: ['all', 'img', 'none'],
+        choices: ['all', 'img', 'web', 'none'],
         defaultValue: 'all',
         desc: 'Configure scraping tasks'
     });
