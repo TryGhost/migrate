@@ -133,6 +133,11 @@ module.exports.processContent = (html) => {
         $(div).after('<!--kg-card-end: html-->');
     });
 
+    $html('h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]').each((i, heading) => {
+        $(heading).before('<!--kg-card-begin: html-->');
+        $(heading).after('<!--kg-card-end: html-->');
+    });
+
     // convert HTML back to a string
     html = $html.html();
 
@@ -227,7 +232,7 @@ module.exports.all = async ({result: input, usersJSON}) => {
                 mergedUsers.push(Object.assign({}, passedUser, matchedUser));
             });
         } catch (error) {
-            throw new Error('Unable to process passed uers file');
+            throw new Error('Unable to process passed users file');
         }
         input.users = mergedUsers;
     }
