@@ -59,6 +59,10 @@ module.exports.processContent = (html) => {
     // Handle twitter embeds
     $html('p > script[src="https://platform.twitter.com/widgets.js"]').remove();
 
+    $html('#toc_container').each((i, toc) => {
+        $(toc).remove();
+    });
+
     $html('blockquote.twitter-tweet').each((i, el) => {
         let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
         let $script = $('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
@@ -116,15 +120,6 @@ module.exports.processContent = (html) => {
     $html('p > iframe').each((i, iframe) => {
         $(iframe).before('<!--kg-card-begin: html-->');
         $(iframe).after('<!--kg-card-end: html-->');
-    });
-
-    // Wrap blockquotes in an HTML card
-    $html('blockquote').each((i, blockquote) => {
-        if ($(blockquote).hasClass('twitter-tweet') || $(blockquote).hasClass('twitter-video')) {
-            return false;
-        }
-        $(blockquote).before('<!--kg-card-begin: html-->');
-        $(blockquote).after('<!--kg-card-end: html-->');
     });
 
     // Wrap custom styled divs in HTML card
@@ -198,7 +193,7 @@ module.exports.processPost = (wpPost, users) => {
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = this.processContent(post.data.html, post.url);
+    post.data.html = this.processContent(post.data.html);
 
     return post;
 };
