@@ -46,7 +46,7 @@ module.exports.processTerms = (wpTerms) => {
     return categories.concat(tags);
 };
 
-module.exports.processContent = (html, link) => {
+module.exports.processContent = (html) => {
     // Drafts can have empty post bodies
     if (!html) {
         return '';
@@ -140,8 +140,8 @@ module.exports.processContent = (html, link) => {
     // and a `data-gif` attribute to reference the actual gif. We need `src` to be the actual gif.
     $html('img[data-gif]').each((i, gif) => {
         let gifSrc = $(gif).attr('data-gif');
-        $(gif).attr('src', gifSrc)
-    })
+        $(gif).attr('src', gifSrc);
+    });
 
     // convert HTML back to a string
     html = $html.html();
@@ -163,7 +163,7 @@ module.exports.processContent = (html, link) => {
  *   ]
  * }
  */
-module.exports.processPost = (wpPost, users, link) => {
+module.exports.processPost = (wpPost, users) => {
     // @note: we don't copy excerpts because WP generated excerpts aren't better than Ghost ones but are often too long.
     const post = {
         url: wpPost.link,
@@ -203,7 +203,7 @@ module.exports.processPost = (wpPost, users, link) => {
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = this.processContent(post.data.html, post.url);
+    post.data.html = this.processContent(post.data.html);
 
     return post;
 };
