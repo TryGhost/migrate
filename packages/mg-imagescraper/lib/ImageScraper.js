@@ -29,8 +29,11 @@ const ScrapeError = ({src, code, statusCode, originalError}) => {
 };
 
 class ImageScraper {
-    constructor(fileCache) {
+    constructor(fileCache, defaultOptions) {
         this.fileCache = fileCache;
+        this.defaultImageOptions = Object.assign({
+            optimize: true
+        }, defaultOptions);
     }
 
     async downloadImage(src) {
@@ -40,6 +43,7 @@ class ImageScraper {
         }
         let imageUrl = url.parse(src);
         let imageFile = this.fileCache.resolveImageFileName(imageUrl.pathname);
+        let imageOptions = Object.assign(imageFile, this.defaultImageOptions);
 
         if (this.fileCache.hasFile(imageFile.storagePath)) {
             return imageFile.outputPath;
@@ -50,7 +54,7 @@ class ImageScraper {
             // @TODO: fix this when we can upgrade Got to 10 again (e.g. support Node 10 only)
             // Timeout after 20 seconds
             let response = await got(src, {encoding: null, responseType: 'buffer', timeout: 20000});
-            await this.fileCache.writeImageFile(response.body, imageFile);
+            await this.fileCache.writeImageFile(response.body, imageOptions);
             return imageFile.outputPath;
         } catch (error) {
             throw ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error});

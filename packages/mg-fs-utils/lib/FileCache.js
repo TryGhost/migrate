@@ -3,6 +3,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const crypto = require('crypto');
 const os = require('os');
+const optimizer = require('./image-optimizer');
 
 const basePath = 'mg';
 const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico'];
@@ -188,6 +189,13 @@ class FileCache {
         }
 
         await fs.outputFile(options.storagePath, data);
+
+        if (options.optimize) {
+            const optimizedStoragePath = optimizer.generateOptimizedImageName(options.storagePath);
+            const optimizedData = await optimizer.defaultOptimization(data);
+
+            await fs.outputFile(optimizedStoragePath, optimizedData);
+        }
 
         return options.outputPath;
     }
