@@ -136,6 +136,13 @@ module.exports.processContent = (html, link) => {
         $(heading).after('<!--kg-card-end: html-->');
     });
 
+    // (Some) WordPress renders gifs a different way. They use an `img` tag with a `src` for a still image,
+    // and a `data-gif` attribute to reference the actual gif. We need `src` to be the actual gif.
+    $html('img[data-gif]').each((i, gif) => {
+        let gifSrc = $(gif).attr('data-gif');
+        $(gif).attr('src', gifSrc)
+    })
+
     // convert HTML back to a string
     html = $html.html();
 
