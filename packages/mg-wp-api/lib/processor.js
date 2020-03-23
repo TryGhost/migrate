@@ -46,7 +46,7 @@ module.exports.processTerms = (wpTerms) => {
     return categories.concat(tags);
 };
 
-module.exports.processContent = (html) => {
+module.exports.processContent = (html, link) => {
     // Drafts can have empty post bodies
     if (!html) {
         return '';
@@ -117,9 +117,12 @@ module.exports.processContent = (html) => {
         $(el).replaceWith($figure);
     });
 
-    $html('p > iframe').each((i, iframe) => {
-        $(iframe).before('<!--kg-card-begin: html-->');
-        $(iframe).after('<!--kg-card-end: html-->');
+    $html('iframe').each((i, iframe) => {
+        if ($(iframe).parents('figure').length < 1) {
+            // ensure we wrap all iframe in an html card, that haven't been wrapped in an embed card (figure) yet
+            $(iframe).before('<!--kg-card-begin: html-->');
+            $(iframe).after('<!--kg-card-end: html-->');
+        }
     });
 
     // Wrap custom styled divs in HTML card
@@ -153,7 +156,7 @@ module.exports.processContent = (html) => {
  *   ]
  * }
  */
-module.exports.processPost = (wpPost, users) => {
+module.exports.processPost = (wpPost, users, link) => {
     // @note: we don't copy excerpts because WP generated excerpts aren't better than Ghost ones but are often too long.
     const post = {
         url: wpPost.link,
@@ -193,7 +196,7 @@ module.exports.processPost = (wpPost, users) => {
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = this.processContent(post.data.html);
+    post.data.html = this.processContent(post.data.html, post.url);
 
     return post;
 };
