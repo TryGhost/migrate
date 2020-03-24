@@ -153,8 +153,6 @@ module.exports.processContent = (html) => {
 
         $pre.append($code.text(code));
 
-        $(div).before('<!--kg-card-begin: markdown-->');
-        $(div).after('<!--kg-card-end: markdown-->');
         $(div).replaceWith($pre);
     });
 
