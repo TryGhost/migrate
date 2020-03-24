@@ -136,6 +136,28 @@ module.exports.processContent = (html) => {
         $(heading).after('<!--kg-card-end: html-->');
     });
 
+    // Handle Crayon plugin
+    $html('div.crayon-syntax').each((i, div) => {
+        let lines = [];
+        $(div).find('.crayon-line').each((i, line) => {
+            let chars = [];
+            $(line).find('span').each((i, span) => {
+                chars.push($(span).text());
+            });
+            lines.push(chars.join(''));
+        });
+        let code = lines.join('\n');
+
+        let $pre = $('<pre></pre>');
+        let $code = $('<code></code>');
+
+        $pre.append($code.text(code));
+
+        $(div).before('<!--kg-card-begin: markdown-->');
+        $(div).after('<!--kg-card-end: markdown-->');
+        $(div).replaceWith($pre);
+    });
+
     // (Some) WordPress renders gifs a different way. They use an `img` tag with a `src` for a still image,
     // and a `data-gif` attribute to reference the actual gif. We need `src` to be the actual gif.
     $html('img[data-gif]').each((i, gif) => {
