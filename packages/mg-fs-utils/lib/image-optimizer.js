@@ -15,7 +15,7 @@ const unsafeResizeImage = (originalBuffer, {width, height} = {}) => {
         });
 };
 
-module.exports.generateOptimizedImageName = (originalPath) => {
+module.exports.generateOriginalImageName = (originalPath) => {
     const parsedFileName = path.parse(originalPath);
     return path.join(parsedFileName.dir, `${parsedFileName.name}_o${parsedFileName.ext}`);
 };

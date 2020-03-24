@@ -188,13 +188,15 @@ class FileCache {
             options = this.resolveImageFileName(options.filename);
         }
 
-        await fs.outputFile(options.storagePath, data);
-
         if (options.optimize) {
-            const optimizedStoragePath = optimizer.generateOptimizedImageName(options.storagePath);
+            const optimizedStoragePath = options.storagePath;
+            const originalStoragePath = optimizer.generateOriginalImageName(options.storagePath);
             const optimizedData = await optimizer.defaultOptimization(data);
 
             await fs.outputFile(optimizedStoragePath, optimizedData);
+            await fs.outputFile(originalStoragePath, data);
+        } else {
+            await fs.outputFile(options.storagePath, data);
         }
 
         return options.outputPath;
