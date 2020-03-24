@@ -50,10 +50,8 @@ class ImageScraper {
         }
 
         try {
-            // Got 9 requires encoding: null, Got 10 requires responseType: 'buffer'
-            // @TODO: fix this when we can upgrade Got to 10 again (e.g. support Node 10 only)
             // Timeout after 20 seconds
-            let response = await got(src, {encoding: null, responseType: 'buffer', timeout: 20000});
+            let response = await got(src, {responseType: 'buffer', timeout: 20000});
             await this.fileCache.writeImageFile(response.body, imageOptions);
             return imageFile.outputPath;
         } catch (error) {
