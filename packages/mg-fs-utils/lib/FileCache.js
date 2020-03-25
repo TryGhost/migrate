@@ -3,15 +3,10 @@ const fs = require('fs-extra');
 const path = require('path');
 const crypto = require('crypto');
 const os = require('os');
-const optimizer = require('./image-optimizer');
+const imageTransform = require('@tryghost/image-transform');
 
 const basePath = 'mg';
 const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico'];
-// NOTE: .gif optimization is currently not supported by sharp but will be soon
-//       as there has been support added in underlying libvips library https://github.com/lovell/sharp/issues/1372
-//       As for .svg files, sharp only supports conversion to png, and this does not
-//       play well with animated svg files
-const canTransformFileExtension = ext => !['.gif', '.svg', '.svgz'].includes(ext);
 
 class FileCache {
     constructor(cacheName, batchName) {
@@ -195,10 +190,10 @@ class FileCache {
 
         // CASE: image manipulator is uncapable of transforming file (e.g. .gif)
         let fileExt = path.parse(options.filename).ext;
-        if (options.optimize && canTransformFileExtension(fileExt)) {
+        if (options.optimize && imageTransform.canTransformFileExtension(fileExt)) {
             const optimizedStoragePath = options.storagePath;
-            const originalStoragePath = optimizer.generateOriginalImageName(options.storagePath);
-            const optimizedData = await optimizer.defaultOptimization(data);
+            const originalStoragePath = imageTransform.generateOriginalImageName(options.storagePath);
+            const optimizedData = await imageTransform.resizeFromBuffer(data, {width: 2000});
 
             await fs.outputFile(optimizedStoragePath, optimizedData);
             await fs.outputFile(originalStoragePath, data);
