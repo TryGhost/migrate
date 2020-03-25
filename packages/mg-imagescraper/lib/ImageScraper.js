@@ -36,6 +36,11 @@ class ImageScraper {
         }, defaultOptions);
     }
 
+    async fetchImage(src) {
+        // Timeout after 20 seconds
+        return await got(src, {responseType: 'buffer', timeout: 20000});
+    }
+
     async downloadImage(src) {
         // Do not try parsing a URL when there is none
         if (!src) {
@@ -51,7 +56,7 @@ class ImageScraper {
 
         try {
             // Timeout after 20 seconds
-            let response = await got(src, {responseType: 'buffer', timeout: 20000});
+            let response = await this.fetchImage(src);
             await this.fileCache.writeImageFile(response.body, imageOptions);
             return imageFile.outputPath;
         } catch (error) {
