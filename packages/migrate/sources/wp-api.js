@@ -42,11 +42,11 @@ const scrapeConfig = {
             attr: 'content'
         },
         twitter_title: {
-            selector: 'meta[property="twitter:title"]',
+            selector: 'meta[name="twitter:title"]',
             attr: 'content'
         },
         twitter_description: {
-            selector: 'meta[property="twitter:description"]',
+            selector: 'meta[name="twitter:description"]',
             attr: 'content'
         }
     }
