@@ -126,7 +126,7 @@ module.exports.processContent = (html) => {
     });
 
     // Wrap custom styled divs in HTML card
-    $html('div[style]').each((i, div) => {
+    $html('div[style], p[style]').each((i, div) => {
         $(div).before('<!--kg-card-begin: html-->');
         $(div).after('<!--kg-card-end: html-->');
     });
