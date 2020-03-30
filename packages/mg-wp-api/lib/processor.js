@@ -3,6 +3,16 @@ const _ = require('lodash');
 const $ = require('cheerio');
 const url = require('url');
 
+const VideoError = ({ src, postUrl }) => {
+    let error = new Error(`Unsupported video ${src} in post ${postUrl}`);
+
+    error.errorType = 'VideoError';
+    error.src = src;
+    error.url = postUrl;
+
+    return error;
+};
+
 module.exports.processAuthor = (wpAuthor) => {
     return {
         url: wpAuthor.link,
@@ -46,7 +56,7 @@ module.exports.processTerms = (wpTerms) => {
     return categories.concat(tags);
 };
 
-module.exports.processContent = (html) => {
+module.exports.processContent = (html, postUrl, errors) => {
     // Drafts can have empty post bodies
     if (!html) {
         return '';
@@ -136,6 +146,17 @@ module.exports.processContent = (html) => {
         $(heading).after('<!--kg-card-end: html-->');
     });
 
+    // Convert videos to HTML cards and report as errors
+    // @TODO make this a parser plugin
+    $html('video').each((i, el) => {
+        $(el).before('<!--kg-card-begin: html-->');
+        $(el).after('<!--kg-card-end: html-->');
+
+        let src = $(el).attr('src') || $(el).find('source').attr('src');
+
+        errors.push(VideoError({ src, postUrl }));
+    });
+
     // Handle Crayon plugin
     $html('div.crayon-syntax').each((i, div) => {
         let lines = [];
@@ -183,7 +204,7 @@ module.exports.processContent = (html) => {
  *   ]
  * }
  */
-module.exports.processPost = (wpPost, users) => {
+module.exports.processPost = (wpPost, users, errors) => {
     // @note: we don't copy excerpts because WP generated excerpts aren't better than Ghost ones but are often too long.
     const post = {
         url: wpPost.link,
@@ -223,20 +244,20 @@ module.exports.processPost = (wpPost, users) => {
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = this.processContent(post.data.html);
+    post.data.html = this.processContent(post.data.html, post.url, errors);
 
     return post;
 };
 
-module.exports.processPosts = (posts, users) => {
-    return posts.map(post => this.processPost(post, users));
+module.exports.processPosts = (posts, users, errors) => {
+    return posts.map(post => this.processPost(post, users, errors));
 };
 
 module.exports.processAuthors = (authors) => {
     return authors.map(author => this.processAuthor(author));
 };
 
-module.exports.all = async ({result: input, usersJSON}) => {
+module.exports.all = async ({result: input, usersJSON, errors}) => {
     if (usersJSON) {
         const mergedUsers = [];
         try {
@@ -266,7 +287,7 @@ module.exports.all = async ({result: input, usersJSON}) => {
         users: this.processAuthors(input.users)
     };
 
-    output.posts = this.processPosts(input.posts, output.users);
+    output.posts = this.processPosts(input.posts, output.users, errors);
 
     return output;
 };
