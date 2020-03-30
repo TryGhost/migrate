@@ -135,6 +135,14 @@ module.exports.processContent = (html, postUrl, errors) => {
         }
     });
 
+    $html('table').each((i, table) => {
+        if ($(table).parents('table').length < 1) {
+            // don't wrap a nested table again
+            $(table).before('<!--kg-card-begin: html-->');
+            $(table).after('<!--kg-card-end: html-->');
+        }
+    });
+
     // Wrap custom styled divs in HTML card
     $html('div[style], p[style]').each((i, div) => {
         $(div).before('<!--kg-card-begin: html-->');
