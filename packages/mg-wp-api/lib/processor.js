@@ -3,7 +3,7 @@ const _ = require('lodash');
 const $ = require('cheerio');
 const url = require('url');
 
-const VideoError = ({ src, postUrl }) => {
+const VideoError = ({src, postUrl}) => {
     let error = new Error(`Unsupported video ${src} in post ${postUrl}`);
 
     error.errorType = 'VideoError';
@@ -154,7 +154,7 @@ module.exports.processContent = (html, postUrl, errors) => {
 
         let src = $(el).attr('src') || $(el).find('source').attr('src');
 
-        errors.push(VideoError({ src, postUrl }));
+        errors.push(VideoError({src, postUrl}));
     });
 
     // Handle Crayon plugin
