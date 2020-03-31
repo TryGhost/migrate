@@ -183,6 +183,16 @@ module.exports.processContent = (html, postUrl, errors) => {
         errors.push(VideoError({src, postUrl}));
     });
 
+    // (Some) WordPress renders gifs a different way. They use an `img` tag with a `src` for a still image,
+    // and a `data-gif` attribute to reference the actual gif. We need `src` to be the actual gif.
+    $html('img[data-gif]').each((i, gif) => {
+        let gifSrc = $(gif).attr('data-gif');
+        $(gif).attr('src', gifSrc);
+    });
+
+    /* Buffer specific parser
+    ****************************************************/
+
     // Handle Crayon plugin
     $html('div.crayon-syntax').each((i, div) => {
         let lines = [];
@@ -203,11 +213,18 @@ module.exports.processContent = (html, postUrl, errors) => {
         $(div).replaceWith($pre);
     });
 
-    // (Some) WordPress renders gifs a different way. They use an `img` tag with a `src` for a still image,
-    // and a `data-gif` attribute to reference the actual gif. We need `src` to be the actual gif.
-    $html('img[data-gif]').each((i, gif) => {
-        let gifSrc = $(gif).attr('data-gif');
-        $(gif).attr('src', gifSrc);
+    // Alert boxes
+    $html('p.alert-box').each((i, p) => {
+        $(p).attr('class', 'bf-alert-box');
+        $(p).before('<!--kg-card-begin: html-->');
+        $(p).after('<!--kg-card-end: html-->');
+    });
+
+    // Text drop cap
+    $html('div.text-drop-cap').each((i, div) => {
+        $(div).attr('class', 'bf-text-drop-cap');
+        $(div).before('<!--kg-card-begin: html-->');
+        $(div).after('<!--kg-card-end: html-->');
     });
 
     // convert HTML back to a string
