@@ -144,12 +144,6 @@ module.exports.processContent = (html, postUrl, errors) => {
         }
     });
 
-    // Wrap custom styled tags in HTML card
-    $html('div[style], p[style]').each((i, div) => {
-        $(div).before('<!--kg-card-begin: html-->');
-        $(div).after('<!--kg-card-end: html-->');
-    });
-
     // TODO: this should be a parser plugin
     // Wrap nested lists in HTML card
     $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {
@@ -163,6 +157,19 @@ module.exports.processContent = (html, postUrl, errors) => {
     $html('h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]').each((i, heading) => {
         $(heading).before('<!--kg-card-begin: html-->');
         $(heading).after('<!--kg-card-end: html-->');
+    });
+
+    // Wrap inline styled tags in HTML card
+    $html('div[style], p[style], a[style], span[style]').each((i, styled) => {
+        $(styled).before('<!--kg-card-begin: html-->');
+        $(styled).after('<!--kg-card-end: html-->');
+    });
+
+    // Some header elements contain span children to use custom inline styling. Wrap 'em in HTML cards.
+    $html('h1 > span[style], h2 > span[style], h3 > span[style], h4 > span[style], h5 > span[style], h6 > span[style]').each((i, styledSpan) => {
+        let $heading = $(styledSpan).parent('h1, h2, h3, h4, h5, h6');
+        $heading.before('<!--kg-card-begin: html-->');
+        $heading.after('<!--kg-card-end: html-->');
     });
 
     // Convert videos to HTML cards and report as errors
