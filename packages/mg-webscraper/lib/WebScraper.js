@@ -20,7 +20,7 @@ const findMatchIn = (existing, match) => {
     });
 };
 
-const ScrapeError = ({url, code, statusCode}) => {
+const ScrapeError = ({url, code, statusCode, originalError}) => {
     let error = new Error(`Unable to scrape URL ${url}`);
 
     error.errorType = 'ScrapeError';
@@ -29,6 +29,10 @@ const ScrapeError = ({url, code, statusCode}) => {
     error.code = code;
     if (statusCode) {
         error.statusCode = statusCode;
+    }
+
+    if (originalError) {
+        error.originalError = originalError;
     }
 
     return error;
@@ -104,7 +108,7 @@ class WebScraper {
                 throw error;
             }
 
-            throw ScrapeError({url, code: error.code});
+            throw ScrapeError({url, code: error.code, originalError: error});
         }
     }
 
