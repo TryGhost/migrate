@@ -17,7 +17,7 @@ module.exports.discover = async (url, apiUser) => {
 
     return {
         site,
-        totals: {posts: posts._paging.total, pages: posts._paging.total, users: users._paging.total},
+        totals: {posts: posts._paging.total, pages: pages._paging.total, users: users._paging.total},
         batches: {
             posts: posts._paging && posts._paging.totalPages ? posts._paging.totalPages : 1,
             pages: pages._paging && pages._paging.totalPages ? pages._paging.totalPages : 1,
