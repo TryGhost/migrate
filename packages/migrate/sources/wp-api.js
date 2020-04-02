@@ -13,6 +13,9 @@ const scrapeConfig = {
             selector: 'div.article-header__image',
             how: 'html',
             convert: (x) => {
+                if (!x) {
+                    return;
+                }
                 // we're fetching all inner html for custom used feature media,
                 // such as iFrames or videos.
                 return !x.match(/^(<img|<figure)/) && x;
