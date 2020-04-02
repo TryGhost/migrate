@@ -152,6 +152,12 @@ module.exports.processContent = (html, postUrl, errors) => {
         $parent.after('<!--kg-card-end: html-->');
     });
 
+    // Wrap lists with offsets in HTML card so the offset doesn't get lost on conversion
+    $html('ol[start]').each((i, ol) => {
+        $(ol).before('<!--kg-card-begin: html-->');
+        $(ol).after('<!--kg-card-end: html-->');
+    });
+
     // When a heading has a custom id, we destroy links by auto-generating a new id when converting to mobiledoc.
     // Wrapping it in an HTML card prevent the id from being lost
     $html('h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]').each((i, heading) => {
