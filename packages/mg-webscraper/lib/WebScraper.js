@@ -99,7 +99,7 @@ class WebScraper {
         try {
             let {data, response} = await scrapeIt(url, config);
             let {responseUrl, statusCode} = response;
-            if (statusCode > 299) {
+            if (statusCode > 399) {
                 throw ScrapeError({url, code: 'HTTPERROR', statusCode});
             }
             return {responseUrl, responseData: data};
