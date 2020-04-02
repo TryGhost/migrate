@@ -112,22 +112,22 @@ class WebScraper {
         }
     }
 
-    async lookup(url, config, filename) {
+    async scrapeUrl(url, config, filename) {
         if (this.fileCache.hasFile(filename, 'tmp')) {
             return await this.fileCache.readTmpJSONFile(filename);
         }
 
         let response = await this.scrape(url, config);
+        await this.fileCache.writeTmpJSONFile(response, filename);
+
         response.responseData = omitEmpty(response.responseData);
+
         return response;
     }
 
-    processPostProcessor(data, responseData) {
-        return this.postProcessor(responseData, data);
-    }
-
-    async writeTmpFile(response, filename) {
-        await this.fileCache.writeTmpJSONFile(response, filename);
+    processScrapedData(scrapedData, data) {
+        scrapedData = this.postProcessor(scrapedData, data);
+        this.mergeResource(data, scrapedData);
     }
 
     hydrate(ctx) {
@@ -151,11 +151,8 @@ class WebScraper {
                 },
                 task: async (ctx, task) => {
                     try {
-                        let response = await this.lookup(url, this.config.posts, filename);
-                        let {responseUrl, responseData} = response;
-                        responseData = this.processPostProcessor(data, responseData);
-                        this.writeTmpFile(response, filename);
-                        this.mergeResource(data, responseData);
+                        let {responseUrl, responseData} = await this.scrapeUrl(url, this.config.posts, filename);
+                        this.processScrapedData(responseData, data);
 
                         if (responseUrl !== url) {
                             post.originalUrl = url;
