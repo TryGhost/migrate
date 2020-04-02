@@ -37,7 +37,7 @@ module.exports.processTerm = (wpTerm) => {
     };
 };
 
-module.exports.processTerms = (wpTerms) => {
+module.exports.processTerms = (wpTerms, fetchTags) => {
     let categories = [];
     let tags = [];
 
@@ -47,7 +47,7 @@ module.exports.processTerms = (wpTerms) => {
                 categories.push(this.processTerm(term));
             }
 
-            if (term.taxonomy === 'post_tag') {
+            if (fetchTags && term.taxonomy === 'post_tag') {
                 tags.push(this.processTerm(term));
             }
         });
@@ -253,7 +253,7 @@ module.exports.processContent = (html, postUrl, errors) => {
  *   ]
  * }
  */
-module.exports.processPost = (wpPost, users, errors) => {
+module.exports.processPost = (wpPost, users, fetchTags, errors) => {
     // @note: we don't copy excerpts because WP generated excerpts aren't better than Ghost ones but are often too long.
     const post = {
         url: wpPost.link,
@@ -285,7 +285,7 @@ module.exports.processPost = (wpPost, users, errors) => {
 
     if (wpPost._embedded['wp:term']) {
         const wpTerms = wpPost._embedded['wp:term'];
-        post.data.tags = this.processTerms(wpTerms);
+        post.data.tags = this.processTerms(wpTerms, fetchTags);
 
         post.data.tags.push({
             url: 'migrator-added-tag', data: {name: '#wordpress'}
@@ -298,15 +298,17 @@ module.exports.processPost = (wpPost, users, errors) => {
     return post;
 };
 
-module.exports.processPosts = (posts, users, errors) => {
-    return posts.map(post => this.processPost(post, users, errors));
+module.exports.processPosts = (posts, users, fetchTags, errors) => {
+    return posts.map(post => this.processPost(post, users, fetchTags, errors));
 };
 
 module.exports.processAuthors = (authors) => {
     return authors.map(author => this.processAuthor(author));
 };
 
-module.exports.all = async ({result: input, usersJSON, errors}) => {
+module.exports.all = async ({result: input, usersJSON, errors, options}) => {
+    let {tags: fetchTags} = options;
+
     if (usersJSON) {
         const mergedUsers = [];
         try {
@@ -336,7 +338,7 @@ module.exports.all = async ({result: input, usersJSON, errors}) => {
         users: this.processAuthors(input.users)
     };
 
-    output.posts = this.processPosts(input.posts, output.users, errors);
+    output.posts = this.processPosts(input.posts, output.users, fetchTags, errors);
 
     return output;
 };

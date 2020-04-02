@@ -50,6 +50,10 @@ exports.setup = (sywac) => {
         defaultValue: false,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
+    sywac.boolean('--tags', {
+        defaultValue: true,
+        desc: 'Set to false if you don\'t want to import WordPress tags, only categories'
+    });
 };
 
 // What to do when this command is executed
