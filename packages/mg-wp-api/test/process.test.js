@@ -6,8 +6,9 @@ const processor = require('../lib/processor');
 describe('Process', function () {
     it('Can convert a single post', function () {
         const fixture = testUtils.fixtures.readSync('single-post.json');
-
-        const post = processor.processPost(fixture);
+        const users = [];
+        const fetchTags = true;
+        const post = processor.processPost(fixture, users, fetchTags);
 
         post.should.be.an.Object().with.properties('url', 'data');
 
