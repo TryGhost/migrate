@@ -50,9 +50,9 @@ describe('Download Image', function () {
 
         let imageScraper = new ImageScraper(mockFileCache);
 
+        // Fake fetching the image, we don't need to test that part
         imageScraper.fetchImage = sinon.stub().resolves({body: 'imagedata'});
 
-        // Fake fetching the image, we don't need to test that part
         let resultPath = await imageScraper.downloadImage(mockUrl);
 
         mockFileCache.resolveImageFileName.calledOnce.should.be.true();
