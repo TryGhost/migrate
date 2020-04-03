@@ -17,11 +17,15 @@ module.exports.discover = async (url, apiUser) => {
 
     return {
         site,
-        totals: {posts: posts._paging.total, pages: pages._paging.total, users: users._paging.total},
+        totals: {
+            posts: posts._paging && posts._paging.total ? posts._paging.total : 0,
+            pages: pages._paging && pages._paging.total ? pages._paging.total : 0,
+            users: users._paging && users._paging.total ? users._paging.total : 0
+        },
         batches: {
-            posts: posts._paging && posts._paging.totalPages ? posts._paging.totalPages : 1,
-            pages: pages._paging && pages._paging.totalPages ? pages._paging.totalPages : 1,
-            users: users._paging && users._paging.totalPages ? users._paging.totalPages : 1
+            posts: posts._paging && posts._paging.totalPages ? posts._paging.totalPages : 0,
+            pages: pages._paging && pages._paging.totalPages ? pages._paging.totalPages : 0,
+            users: users._paging && users._paging.totalPages ? users._paging.totalPages : 0
         }
     };
 };
