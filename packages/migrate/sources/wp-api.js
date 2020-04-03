@@ -41,7 +41,7 @@ const scrapeConfig = {
             attr: 'content'
         },
         twitter_image: {
-            selector: 'meta[name="twitter:image:src"]',
+            selector: 'meta[name="twitter:image"], meta[name="twitter:image:src"]',
             attr: 'content'
         },
         twitter_title: {
