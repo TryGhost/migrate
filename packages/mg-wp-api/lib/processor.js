@@ -14,8 +14,8 @@ const VideoError = ({src, postUrl}) => {
 };
 
 module.exports.processAuthor = (wpAuthor) => {
-    let profile_image = wpAuthor.avatar_urls && wpAuthor.avatar_urls['96'];
-    profile_image = profile_image ? profile_image.replace(/s\=96/, 's=3000') : undefined;
+    let profileImage = wpAuthor.avatar_urls && wpAuthor.avatar_urls['96'];
+    profileImage = profileImage ? profileImage.replace(/s=96/, 's=3000') : undefined;
 
     return {
         url: wpAuthor.link,
@@ -24,7 +24,7 @@ module.exports.processAuthor = (wpAuthor) => {
             slug: wpAuthor.slug,
             name: wpAuthor.name,
             bio: wpAuthor.description,
-            profile_image: profile_image,
+            profile_image: profileImage,
             email: wpAuthor.email && wpAuthor.email
         }
     };
