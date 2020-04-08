@@ -199,6 +199,14 @@ module.exports.processContent = (html, postUrl, errors) => {
         $(gif).attr('src', gifSrc);
     });
 
+    // Remove `srcsets` from `img` wrapped in HTML card
+    $html('img[srcset]').each((i, img) => {
+        $(img).removeAttr('srcset');
+        $(img).removeAttr('sizes');
+        $(img).removeAttr('width');
+        $(img).removeAttr('height');
+    });
+
     /* Buffer specific parser
     ****************************************************/
 
