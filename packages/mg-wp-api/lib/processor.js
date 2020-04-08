@@ -170,6 +170,20 @@ module.exports.processContent = (html, postUrl, errors) => {
 
     // Wrap inline styled tags in HTML card
     $html('div[style], p[style], a[style], span[style]').each((i, styled) => {
+        let imgChildren = $(styled).children('img:not([data-gif])');
+        if ($(imgChildren).length > 0) {
+            // We don't convert images into image cards when they're wrapped in an HTML card
+            // To prevent visual issues, we need to delete `srcset` (we don't scrape those images anyway),
+            // `sizes`, and dimensions (for `srcset` images).
+            $(imgChildren).each((i, img) => {
+                if ($(img).attr('srcset')) {
+                    $(img).removeAttr('width');
+                    $(img).removeAttr('height');
+                }
+                $(img).removeAttr('srcset');
+                $(img).removeAttr('sizes');
+            });
+        }
         $(styled).before('<!--kg-card-begin: html-->');
         $(styled).after('<!--kg-card-end: html-->');
     });
@@ -197,14 +211,6 @@ module.exports.processContent = (html, postUrl, errors) => {
     $html('img[data-gif]').each((i, gif) => {
         let gifSrc = $(gif).attr('data-gif');
         $(gif).attr('src', gifSrc);
-    });
-
-    // Remove `srcsets` from `img` wrapped in HTML card
-    $html('img[srcset]').each((i, img) => {
-        $(img).removeAttr('srcset');
-        $(img).removeAttr('sizes');
-        $(img).removeAttr('width');
-        $(img).removeAttr('height');
     });
 
     /* Buffer specific parser
