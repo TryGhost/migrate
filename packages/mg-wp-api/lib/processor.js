@@ -130,6 +130,28 @@ module.exports.processContent = (html, postUrl, errors) => {
         $(el).replaceWith($figure);
     });
 
+    // TODO: this should be a parser plugin
+    // Handle blockquotes with multiple p tags as children and
+    // 1. remove the p tags
+    // 2. separate them with line breaks
+    // This way, mobiledoc treats multiple p tag children correctly as one blockquote
+    // instead of creating a blockquote for each one.
+    $html('blockquote > p + p').each((i, el) => {
+        let $blockquote = $(el).parents('blockquote');
+
+        if ($blockquote.children('p').length > 0) {
+            let newBlockquoteContent = '';
+            $blockquote.children('p').each((i, p) => {
+                if (i < $blockquote.children('p').length - 1) {
+                    newBlockquoteContent += `${$(p).html()}</br></br>`;
+                } else {
+                    newBlockquoteContent += $(p).html();
+                }
+            });
+            $blockquote.html(newBlockquoteContent);
+        }
+    });
+
     $html('iframe').each((i, iframe) => {
         if ($(iframe).parents('figure').length < 1) {
             // ensure we wrap all iframe in an html card, that haven't been wrapped in an embed card (figure) yet
