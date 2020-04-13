@@ -38,6 +38,10 @@ exports.setup = (sywac) => {
         defaultValue: 0,
         desc: 'Run a batch (defaults to not batching)'
     });
+    sywac.number('-l, --limit', {
+        defaultValue: 100,
+        desc: 'Number of items fetched in a batch i.e. batch size'
+    });
     sywac.string('-a, --auth', {
         defaultValue: null,
         desc: 'Provide a user and password to authenticate the WordPress API (<user>:<password>)'
@@ -82,7 +86,7 @@ exports.run = async (argv) => {
     }
 
     if (argv.batch !== 0) {
-        ui.log.info(`Running batch ${argv.batch} (groups of 100 posts)`);
+        ui.log.info(`Running batch ${argv.batch} (groups of ${argv.limit} posts)`);
     }
 
     try {

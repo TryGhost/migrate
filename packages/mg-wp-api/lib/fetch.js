@@ -1,7 +1,6 @@
 const WPAPI = require('wpapi');
-const perPage = 100;
 
-module.exports.discover = async (url, apiUser) => {
+module.exports.discover = async (url, {apiUser, limit}) => {
     const requestOptions = {endpoint: `${url}/wp-json`};
 
     if (apiUser && apiUser.username && apiUser.password) {
@@ -11,9 +10,9 @@ module.exports.discover = async (url, apiUser) => {
 
     let site = new WPAPI(requestOptions);
 
-    const posts = await site.posts().perPage(perPage);
-    const pages = await site.pages().perPage(perPage);
-    const users = await site.users().perPage(perPage);
+    const posts = await site.posts().perPage(limit);
+    const pages = await site.pages().perPage(limit);
+    const users = await site.users().perPage(limit);
 
     return {
         site,
@@ -30,27 +29,27 @@ module.exports.discover = async (url, apiUser) => {
     };
 };
 
-const cachedFetch = async (fileCache, api, type, perPage, page, isAuthRequest) => {
-    let filename = `wp_api_${type}_${perPage}_${page}.json`;
+const cachedFetch = async (fileCache, api, type, limit, page, isAuthRequest) => {
+    let filename = `wp_api_${type}_${limit}_${page}.json`;
 
     if (fileCache.hasFile(filename, 'tmp')) {
         return await fileCache.readTmpJSONFile(filename);
     }
 
-    let response = isAuthRequest ? await api.site[type]().param('context', 'edit').perPage(perPage).page(page).embed() : await api.site[type]().perPage(perPage).page(page).embed();
+    let response = isAuthRequest ? await api.site[type]().param('context', 'edit').perPage(limit).page(page).embed() : await api.site[type]().perPage(limit).page(page).embed();
 
     await fileCache.writeTmpJSONFile(response, filename);
 
     return response;
 };
 
-const buildTasks = (fileCache, tasks, api, type, isAuthRequest) => {
+const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest) => {
     for (let page = 1; page <= api.batches[type]; page++) {
         tasks.push({
             title: `Fetching ${type}, page ${page} of ${api.batches[type]}`,
             task: async (ctx) => {
                 try {
-                    let response = await cachedFetch(fileCache, api, type, perPage, page, isAuthRequest);
+                    let response = await cachedFetch(fileCache, api, type, limit, page, isAuthRequest);
 
                     // This is weird, but we don't yet deal with pages as a separate concept in imports
                     type = type === 'pages' ? 'posts' : type;
@@ -67,13 +66,14 @@ const buildTasks = (fileCache, tasks, api, type, isAuthRequest) => {
 
 module.exports.tasks = async (url, ctx) => {
     const {apiUser} = ctx || {};
+    const {limit} = ctx.options;
     let isAuthRequest = false;
 
     if (apiUser && apiUser.username && apiUser.password) {
         isAuthRequest = true;
     }
 
-    const api = await this.discover(url, apiUser);
+    const api = await this.discover(url, {apiUser, limit});
 
     const tasks = [];
 
@@ -82,9 +82,9 @@ module.exports.tasks = async (url, ctx) => {
         users: []
     };
 
-    buildTasks(ctx.fileCache, tasks, api, 'posts', isAuthRequest);
-    buildTasks(ctx.fileCache, tasks, api, 'pages', isAuthRequest);
-    buildTasks(ctx.fileCache, tasks, api, 'users', isAuthRequest);
+    buildTasks(ctx.fileCache, tasks, api, 'posts', limit, isAuthRequest);
+    buildTasks(ctx.fileCache, tasks, api, 'pages', limit, isAuthRequest);
+    buildTasks(ctx.fileCache, tasks, api, 'users', limit, isAuthRequest);
 
     return tasks;
 };
