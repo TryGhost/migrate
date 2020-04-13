@@ -1,12 +1,13 @@
 const htmlToText = require('html-to-text');
 const $ = require('cheerio');
+const url = require('url');
 
-const VideoError = ({src, url}) => {
-    let error = new Error(`Unsupported video ${src} in post ${url}`);
+const VideoError = ({src, postUrl}) => {
+    let error = new Error(`Unsupported video ${src} in post ${postUrl}`);
 
     error.errorType = 'VideoError';
     error.src = src;
-    error.url = url;
+    error.url = postUrl;
 
     return error;
 };
@@ -102,7 +103,7 @@ module.exports.handleFeatureImageInContent = (post, hsPost) => {
     post.data.custom_excerpt = this.createCleanExcerpt(summaryContent);
 };
 
-module.exports.processContent = (html, url, errors) => {
+module.exports.processContent = (html, postUrl, errors) => {
     // Drafts can have empty post bodies
     if (!html) {
         return '';
@@ -114,90 +115,81 @@ module.exports.processContent = (html, url, errors) => {
 
     let figure = $('<figure></figure>');
 
-    // Handle divs that contain hubspot scripts
-    $html('div.wrapper').each((i, div) => {
-        $(div).before('<!--kg-card-begin: html-->');
-        $(div).after('<!--kg-card-end: html-->');
-    });
+    try {
+        // Handle divs that contain hubspot scripts
+        $html('div.wrapper').each((i, div) => {
+            $(div).before('<!--kg-card-begin: html-->');
+            $(div).after('<!--kg-card-end: html-->');
+        });
 
-    // Handle instagram embeds
-    $html('script[src="//platform.instagram.com/en_US/embeds.js"]').remove();
-    $html('#fb-root').each((i, el) => {
-        if ($(el).prev().get(0).name === 'script') {
-            $(el).prev().remove();
-        }
-        if ($(el).next().get(0).name === 'script') {
-            $(el).next().remove();
-        }
+        // Handle instagram embeds
+        $html('script[src="//platform.instagram.com/en_US/embeds.js"]').remove();
+        $html('#fb-root').each((i, el) => {
+            if ($(el).prev().get(0).name === 'script') {
+                $(el).prev().remove();
+            }
+            if ($(el).next().get(0).name === 'script') {
+                $(el).next().remove();
+            }
 
-        $(el).remove();
-    });
+            $(el).remove();
+        });
 
-    $html('blockquote.instagram-media').each((i, el) => {
-        let src = $(el).find('a').attr('href');
-        let parsed = url.parse(src);
+        $html('blockquote.instagram-media').each((i, el) => {
+            let src = $(el).find('a').attr('href');
+            let parsed = url.parse(src);
 
-        if (parsed.search) {
-            // remove possible query params
-            parsed.search = null;
-        }
-        src = url.format(parsed, {search: false});
+            if (parsed.search) {
+                // remove possible query params
+                parsed.search = null;
+            }
+            src = url.format(parsed, {search: false});
 
-        let $iframe = $('<iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;"></iframe>');
-        let $script = $('<script async="" src="//www.instagram.com/embed.js"></script>');
-        let $figure = $('<figure class="instagram"></figure>');
+            let $iframe = $('<iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;"></iframe>');
+            let $script = $('<script async="" src="//www.instagram.com/embed.js"></script>');
+            let $figure = $('<figure class="instagram"></figure>');
 
-        $iframe.attr('src', `${src}embed/captioned/`);
-        $figure.append($iframe);
-        $figure.append($script);
+            $iframe.attr('src', `${src}embed/captioned/`);
+            $figure.append($iframe);
+            $figure.append($script);
 
-        $(el).replaceWith($figure);
-    });
+            $(el).replaceWith($figure);
+        });
 
-    // Handle youtube embeds
-    $html('div.hs-responsive-embed-wrapper iframe').each((i, el) => {
-        let src = $(el).attr('src');
-        if (src.startsWith('//')) {
-            src = `https:${src}`;
-        }
-        src += '?feature=oembed';
+        // Handle button links
+        $html('p a.button, p a.roundupbutton').each((i, el) => {
+            $(el).parent('p').before('<!--kg-card-begin: html-->');
+            $(el).parent('p').after('<!--kg-card-end: html-->');
+        });
 
-        $(el).attr('src', src);
-    });
+        // Convert videos to HTML cards and report as errors
+        // @TODO make this a parser plugin
+        $html('video').each((i, el) => {
+            $(el).before('<!--kg-card-begin: html-->');
+            $(el).after('<!--kg-card-end: html-->');
 
-    $html('div.hs-responsive-embed-wrapper iframe').wrap(figure);
-    $html('div.hs-responsive-embed-wrapper iframe').removeAttr('class');
-    $html('div.hs-responsive-embed-wrapper iframe').removeAttr('style');
+            let src = $(el).find('source').attr('src');
 
-    // Handle button links
-    $html('p a.button, p a.roundupbutton').each((i, el) => {
-        $(el).parent('p').before('<!--kg-card-begin: html-->');
-        $(el).parent('p').after('<!--kg-card-end: html-->');
-    });
+            errors.push(VideoError({src, postUrl}));
+        });
 
-    // Convert videos to HTML cards and report as errors
-    // @TODO make this a parser plugin
-    $html('video').each((i, el) => {
-        $(el).before('<!--kg-card-begin: html-->');
-        $(el).after('<!--kg-card-end: html-->');
+        // convert HTML back to a string
+        html = $html.html();
 
-        let src = $(el).find('source').attr('src');
-
-        errors.push(VideoError({src, url}));
-    });
-
-    // convert HTML back to a string
-    html = $html.html();
-
-    // Handle Wistia embeds
-    // This is done with a regex replace, because we have to parse the string
-    html = html.replace(/(<br>\n)?<p>{{ script_embed\('wistia', '([^']*)'.*?}}<\/p>(\n<br>)?/g, (m, b, p) => {
-        return `<!--kg-card-begin: html-->
+        // Handle Wistia embeds
+        // This is done with a regex replace, because we have to parse the string
+        html = html.replace(/(<br>\n)?<p>{{ script_embed\('wistia', '([^']*)'.*?}}<\/p>(\n<br>)?/g, (m, b, p) => {
+            return `<!--kg-card-begin: html-->
 <script src="//fast.wistia.com/embed/medias/${p}.jsonp" async></script>
 <script src="//fast.wistia.com/assets/external/E-v1.js" async></script>
 <div class="wistia_embed wistia_async_${p}" style="height:349px;width:620px">&nbsp;</div>
 <!--kg-card-end: html-->`;
-    });
+        });
+    } catch (err) {
+        console.log(postUrl);
+        err.source = postUrl;
+        throw err;
+    }
 
     return html;
 };

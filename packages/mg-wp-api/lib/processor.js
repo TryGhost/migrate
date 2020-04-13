@@ -152,14 +152,6 @@ module.exports.processContent = (html, postUrl, errors) => {
         }
     });
 
-    $html('iframe').each((i, iframe) => {
-        if ($(iframe).parents('figure').length < 1) {
-            // ensure we wrap all iframe in an html card, that haven't been wrapped in an embed card (figure) yet
-            $(iframe).before('<!--kg-card-begin: html-->');
-            $(iframe).after('<!--kg-card-end: html-->');
-        }
-    });
-
     // TODO: this should be a parser plugin
     $html('table').each((i, table) => {
         if ($(table).parents('table').length < 1) {
