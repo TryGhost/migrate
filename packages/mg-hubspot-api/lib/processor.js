@@ -113,8 +113,6 @@ module.exports.processContent = (html, postUrl, errors) => {
         decodeEntities: false
     });
 
-    let figure = $('<figure></figure>');
-
     try {
         // Handle divs that contain hubspot scripts
         $html('div.wrapper').each((i, div) => {
