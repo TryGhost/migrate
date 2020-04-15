@@ -51,7 +51,7 @@ exports.run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = csv.getTaskRunner(argv.pathToFile, argv);
+        let migrate = substack.getTaskRunner(argv.pathToFile, argv);
 
         // Run the migration
         await migrate.run(context);

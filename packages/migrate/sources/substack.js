@@ -72,9 +72,11 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             title: 'Initialising',
             task: (ctx) => {
                 ctx.options = options;
+                console.log("module.exports.getTaskRunner -> options", options)
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
                 ctx.fileCache = new fsUtils.FileCache(pathToFile);
+                console.log("module.exports.getTaskRunner -> ctx.fileCache", ctx.fileCache)
                 ctx.imageScraper = new MgImageScraper(ctx.fileCache);
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig);
                 ctx.linkFixer = new MgLinkFixer();
