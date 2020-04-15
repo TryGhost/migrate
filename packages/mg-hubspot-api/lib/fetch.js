@@ -49,7 +49,7 @@ module.exports.discover = async ({hapikey, url, limit}) => {
         blog,
         topics: topics.objects || [],
         totals: {posts: posts.total},
-        batches: {posts: Math.floor(posts.total / limit)}
+        batches: {posts: Math.ceil(posts.total / limit)}
     };
 };
 
