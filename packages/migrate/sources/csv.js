@@ -5,7 +5,7 @@ const MgImageScraper = require('@tryghost/mg-imagescraper');
 const MgLinkFixer = require('@tryghost/mg-linkfixer');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const makeTaskRunner = require('../lib/task-runner');
-const csvIngest = require('@tryghost/mg-csv-export');
+const csvIngest = require('@tryghost/mg-substack-csv');
 
 const scrapeConfig = {
     posts: {

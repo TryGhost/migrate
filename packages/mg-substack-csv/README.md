@@ -2,11 +2,11 @@
 
 ## Install
 
-`npm install @tryghost/mg-csv-export --save`
+`npm install @tryghost/mg-substack-csv --save`
 
 or
 
-`yarn add @tryghost/mg-csv-export`
+`yarn add @tryghost/mg-substack-csv`
 
 
 ## Usage

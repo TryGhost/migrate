@@ -1,7 +1,7 @@
 {
-  "name": "@tryghost/mg-csv-export",
+  "name": "@tryghost/mg-substack-csv",
   "version": "0.0.0",
-  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-csv-export",
+  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-substack-csv",
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",
