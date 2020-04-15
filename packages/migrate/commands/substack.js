@@ -1,16 +1,16 @@
-const csv = require('../sources/csv');
+const substack = require('../sources/substack');
 const ui = require('@tryghost/pretty-cli').ui;
 
 // Internal ID in case we need one.
-exports.id = 'csv';
+exports.id = 'substack';
 
 exports.group = 'Sources:';
 
 // The command to run and any params
-exports.flags = 'csv <pathToFile>';
+exports.flags = 'substack <pathToFile>';
 
 // Description for the top level command
-exports.desc = 'Migrate from a CSV file passing a mapping config';
+exports.desc = 'Migrate from a Substack CSV file passing a mapping config';
 
 // Descriptions for the individual params
 exports.paramsDesc = ['Path to a csv file'];
@@ -34,6 +34,10 @@ exports.setup = (sywac) => {
         defaultValue: false,
         desc: 'Provide an email domain for users e.g. mycompany.com'
     });
+    sywac.string('-u --url', {
+        defaultValue: 'https://ghost.io',
+        desc: 'Provide a URL to the hosted source site, so we can scrape data'
+    })
 };
 
 // What to do when this command is executed

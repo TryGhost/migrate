@@ -2,7 +2,6 @@ const {slugify} = require('@tryghost/string');
 
 const mapConfig = (data) => {
     return {
-        // TODO: this will probably be the fallback
         url: `https://thelistener.co/${slugify(data.title)}`,
         data: {
             slug: slugify(data.title),
@@ -31,7 +30,6 @@ const mapConfig = (data) => {
     };
 };
 
-// TODO: make this configurable
 module.exports = async (input) => {
     const output = {
         posts: []

@@ -1,4 +1,4 @@
-# Migrate Csv Export
+# Migrate Substack CSV Export
 
 ## Install
 
