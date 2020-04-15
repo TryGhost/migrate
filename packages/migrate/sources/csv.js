@@ -9,10 +9,16 @@ const csvIngest = require('@tryghost/mg-substack-csv');
 
 const scrapeConfig = {
     posts: {
+        meta_title: {
+            selector: 'title'
+        },
         meta_description: {
             selector: 'meta[name="description"]',
             attr: 'content',
             convert: (x) => {
+                if (!x) {
+                    return;
+                }
                 return x.slice(0, 499);
             }
         },
@@ -28,19 +34,22 @@ const scrapeConfig = {
             selector: 'meta[property="og:description"]',
             attr: 'content',
             convert: (x) => {
+                if (!x) {
+                    return;
+                }
                 return x.slice(0, 499);
             }
         },
         twitter_image: {
-            selector: 'meta[name="twitter:image:src"]',
+            selector: 'meta[name="twitter:image"], meta[name="twitter:image:src"]',
             attr: 'content'
         },
         twitter_title: {
-            selector: 'meta[property="twitter:title"]',
+            selector: 'meta[name="twitter:title"]',
             attr: 'content'
         },
         twitter_description: {
-            selector: 'meta[property="twitter:description"]',
+            selector: 'meta[name="twitter:description"]',
             attr: 'content',
             convert: (x) => {
                 return x.slice(0, 499);
