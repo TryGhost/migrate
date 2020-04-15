@@ -1,10 +1,9 @@
 const parse = require('./lib/parse-csv');
 const map = require('./lib/mapper');
 
-// TODO: add mapping config and other options
-module.exports = async (filePath) => {
-    let input = await parse(filePath);
-    let mapped = await map(input);
+module.exports = async (options) => {
+    let input = await parse(options.pathToFile);
+    let mapped = await map(input, options.url);
 
     return mapped;
 };

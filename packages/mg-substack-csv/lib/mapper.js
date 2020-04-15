@@ -1,8 +1,8 @@
 const {slugify} = require('@tryghost/string');
 
-const mapConfig = (data) => {
+const mapConfig = (data, url) => {
     return {
-        url: `https://thelistener.co/${slugify(data.title)}`,
+        url: `${url}/${slugify(data.title)}`,
         data: {
             slug: slugify(data.title),
             published_at: data.post_date,
@@ -20,7 +20,7 @@ const mapConfig = (data) => {
                     }
                 },
                 {
-                    url: `https://thelistener.co/tag/newsletter`,
+                    url: `${url}/tag/newsletter`,
                     data: {
                         name: data.type
                     }
@@ -30,7 +30,7 @@ const mapConfig = (data) => {
     };
 };
 
-module.exports = async (input) => {
+module.exports = async (input, url) => {
     const output = {
         posts: []
     };
@@ -40,7 +40,7 @@ module.exports = async (input) => {
     }
 
     await input.forEach((data) => {
-        output.posts.push(mapConfig(data));
+        output.posts.push(mapConfig(data, url));
     });
 
     return output;

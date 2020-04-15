@@ -36,7 +36,7 @@ exports.setup = (sywac) => {
     });
     sywac.string('-u --url', {
         defaultValue: 'https://ghost.io',
-        desc: 'Provide a URL to the hosted source site, so we can scrape data'
+        desc: 'Provide a URL (without trailing slash) to the hosted source site, so we can scrape data'
     })
 };
 

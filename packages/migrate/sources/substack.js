@@ -72,11 +72,9 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             title: 'Initialising',
             task: (ctx) => {
                 ctx.options = options;
-                console.log("module.exports.getTaskRunner -> options", options)
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
                 ctx.fileCache = new fsUtils.FileCache(pathToFile);
-                console.log("module.exports.getTaskRunner -> ctx.fileCache", ctx.fileCache)
                 ctx.imageScraper = new MgImageScraper(ctx.fileCache);
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig);
                 ctx.linkFixer = new MgLinkFixer();
@@ -87,7 +85,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             task: async (ctx) => {
                 // 1. Read the csv file
                 try {
-                    ctx.result = await csvIngest(pathToFile);
+                    ctx.result = await csvIngest(ctx.options);
                     await ctx.fileCache.writeTmpJSONFile(ctx.result, 'csv-export-data.json');
                 } catch (error) {
                     ctx.errors.push(error);
