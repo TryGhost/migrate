@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-html-mobiledoc",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-html-mobiledoc",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -19,11 +19,11 @@
     "access": "public"
   },
   "devDependencies": {
-    "mocha": "7.0.1",
+    "mocha": "7.1.1",
     "should": "13.2.3",
-    "sinon": "8.1.1"
+    "sinon": "9.0.2"
   },
   "dependencies": {
-    "@tryghost/html-to-mobiledoc": "0.6.3"
+    "@tryghost/html-to-mobiledoc": "0.7.0"
   }
 }

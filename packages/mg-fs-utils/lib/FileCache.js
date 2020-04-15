@@ -3,6 +3,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const crypto = require('crypto');
 const os = require('os');
+const imageTransform = require('@tryghost/image-transform');
 
 const basePath = 'mg';
 const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico'];
@@ -83,6 +84,10 @@ class FileCache {
         return `${this.defaultCacheFileName}.zip`;
     }
 
+    get defaultErrorFileName() {
+        return `${this.defaultCacheFileName}.errors.json`;
+    }
+
     // @TODO: move this somewhere shared,
     // it's currently duplicated from https://github.com/TryGhost/Ghost-Storage-Base/blob/master/BaseStorage.js#L62
     sanitizeFileName(src) {
@@ -161,6 +166,18 @@ class FileCache {
     }
 
     /**
+     * Create a JSON file with our errors
+     *
+     * @param {Object} data - a valid JSON object containing errors
+     * @param {Object} options - config
+     */
+    async writeErrorJSONFile(data, options = {}) {
+        const filename = options.filename || this.defaultErrorFileName;
+
+        return await this.writeTmpJSONFile(data, filename);
+    }
+
+    /**
      * Create a binary image file with fetched data
      *
      * @param {String} data - a valid binary image
@@ -171,7 +188,18 @@ class FileCache {
             options = this.resolveImageFileName(options.filename);
         }
 
-        await fs.outputFile(options.storagePath, data);
+        // CASE: image manipulator is uncapable of transforming file (e.g. .gif)
+        let fileExt = path.parse(options.filename).ext;
+        if (options.optimize && imageTransform.canTransformFileExtension(fileExt)) {
+            const optimizedStoragePath = options.storagePath;
+            const originalStoragePath = imageTransform.generateOriginalImageName(options.storagePath);
+            const optimizedData = await imageTransform.resizeFromBuffer(data, {width: 2000});
+
+            await fs.outputFile(optimizedStoragePath, optimizedData);
+            await fs.outputFile(originalStoragePath, data);
+        } else {
+            await fs.outputFile(options.storagePath, data);
+        }
 
         return options.outputPath;
     }

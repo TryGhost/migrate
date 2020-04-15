@@ -34,6 +34,10 @@ exports.setup = (sywac) => {
         defaultValue: false,
         desc: 'Provide an email domain for users e.g. mycompany.com'
     });
+    sywac.boolean('--fallBackHTMLCard', {
+        defaultValue: false,
+        desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
+    });
 };
 
 // What to do when this command is executed
@@ -57,10 +61,6 @@ exports.run = async (argv) => {
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);
-    }
-
-    if (argv.verbose) {
-        ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
     }
 
     // Report success

@@ -1,79 +1,30 @@
-const wpAPI = require('@tryghost/mg-wp-api');
+const hsAPI = require('@tryghost/mg-hubspot-api');
 const mgJSON = require('@tryghost/mg-json');
 const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
-const MgWebScraper = require('@tryghost/mg-webscraper');
 const MgImageScraper = require('@tryghost/mg-imagescraper');
 const MgLinkFixer = require('@tryghost/mg-linkfixer');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const makeTaskRunner = require('../lib/task-runner');
 
-const scrapeConfig = {
-    posts: {
-        html: {
-            selector: 'div.article-header__image',
-            how: 'html',
-            convert: (x) => {
-                if (!x) {
-                    return;
-                }
-                // we're fetching all inner html for custom used feature media,
-                // such as iFrames or videos.
-                return !x.match(/^(<img|<figure)/) && x;
-            }
-        },
-        meta_title: {
-            selector: 'title'
-        },
-        meta_description: {
-            selector: 'meta[name="description"]',
-            attr: 'content'
-        },
-        og_image: {
-            selector: 'meta[property="og:image"]',
-            attr: 'content'
-        },
-        og_title: {
-            selector: 'meta[property="og:title"]',
-            attr: 'content'
-        },
-        og_description: {
-            selector: 'meta[property="og:description"]',
-            attr: 'content'
-        },
-        twitter_image: {
-            selector: 'meta[name="twitter:image"], meta[name="twitter:image:src"]',
-            attr: 'content'
-        },
-        twitter_title: {
-            selector: 'meta[name="twitter:title"]',
-            attr: 'content'
-        },
-        twitter_description: {
-            selector: 'meta[name="twitter:description"]',
-            attr: 'content'
+module.exports.initAPI = (options) => {
+    return {
+        title: 'Initialising API',
+        task: async (ctx, task) => {
+            ctx.info = await hsAPI.discover(options);
+            task.title += ` for ${ctx.info.blog.url}`;
+            options.url = ctx.info.blog.url;
         }
-    }
+    };
 };
 
-const postProcessor = (scrapedData, data) => {
-    if (scrapedData.html) {
-        scrapedData.html = `<!--kg-card-begin: html-->${scrapedData.html}<!--kg-card-end: html-->${data.html}`;
-    } else {
-        delete scrapedData.html;
-    }
-
-    return scrapedData;
-};
-
-module.exports.initialise = (url, options) => {
+module.exports.initialise = (options) => {
     return {
         title: 'Initialising Workspace',
         task: (ctx, task) => {
             ctx.options = options;
 
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-            ctx.fileCache = new fsUtils.FileCache(url, options.batch);
-            ctx.wpScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
+            ctx.fileCache = new fsUtils.FileCache(options.url, options.batch);
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
             ctx.linkFixer = new MgLinkFixer();
 
@@ -86,39 +37,30 @@ module.exports.initialise = (url, options) => {
     };
 };
 
-module.exports.getInfoTaskList = (url, options) => {
+module.exports.getInfoTaskList = (options) => {
     return [
-        this.initialise(url, options),
-        {
-            title: 'Fetch Content Info from WP API',
-            task: async (ctx) => {
-                try {
-                    ctx.info = await wpAPI.fetch.discover(url, ctx);
-                } catch (error) {
-                    ctx.errors.push(error);
-                }
-            }
-        }
+        this.initAPI(options)
     ];
 };
 
 /**
- * getFullTaskList: Full Steps to Migrate from WP
+ * getFullTaskList: Steps to Migrate from Hubspot
  *
- * Wiring of the steps to migrate from WP.
+ * Wiring of the steps to migrate from hubspot.
  *
- * @param {String} pathToZip
+ * @param {String} url
  * @param {Object} options
  */
-module.exports.getFullTaskList = (url, options) => {
+module.exports.getFullTaskList = (options) => {
     return [
-        this.initialise(url, options),
+        this.initAPI(options),
+        this.initialise(options),
         {
-            title: 'Fetch Content from WP API',
+            title: 'Fetch Content from Hubspot API',
             task: async (ctx) => {
                 // 1. Read all content from the API
                 try {
-                    let tasks = await wpAPI.fetch.tasks(url, ctx);
+                    let tasks = await hsAPI.fetch.tasks(options, ctx);
 
                     if (options.batch !== 0) {
                         let batchIndex = options.batch - 1;
@@ -133,12 +75,12 @@ module.exports.getFullTaskList = (url, options) => {
             }
         },
         {
-            title: 'Process WP API JSON',
+            title: 'Process Hubspot API JSON',
             task: async (ctx) => {
-                // 2. Convert WP API JSON into a format that the migrate tools understand
+                // 2. Convert Hubspot API JSON into a format that the migrate tools understand
                 try {
-                    ctx.result = await wpAPI.process.all(ctx);
-                    await ctx.fileCache.writeTmpJSONFile(ctx.result, 'wp-processed-data.json');
+                    ctx.result = hsAPI.process.all(ctx);
+                    await ctx.fileCache.writeTmpJSONFile(ctx.result, 'hubspot-processed-data.json');
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
@@ -146,18 +88,9 @@ module.exports.getFullTaskList = (url, options) => {
             }
         },
         {
-            title: 'Fetch missing metadata via WebScraper',
-            task: (ctx) => {
-                // 3. Pass the results through the web scraper to get any missing data
-                let tasks = ctx.wpScraper.hydrate(ctx);
-                return makeTaskRunner(tasks, options);
-            },
-            skip: () => ['all', 'web'].indexOf(options.scrape) < 0
-        },
-        {
             title: 'Build Link Map',
             task: async (ctx) => {
-                // 4. Create a map of all known links for use later
+                // 3. Create a map of all known links for use later
                 try {
                     ctx.linkFixer.buildMap(ctx);
                 } catch (error) {
@@ -169,7 +102,7 @@ module.exports.getFullTaskList = (url, options) => {
         {
             title: 'Format data as Ghost JSON',
             task: (ctx) => {
-                // 5. Format the data as a valid Ghost JSON file
+                // 4. Format the data as a valid Ghost JSON file
                 try {
                     ctx.result = mgJSON.toGhostJSON(ctx.result, ctx.options);
                 } catch (error) {
@@ -181,7 +114,7 @@ module.exports.getFullTaskList = (url, options) => {
         {
             title: 'Fetch images via ImageSraper',
             task: async (ctx) => {
-                // 6. Pass the JSON file through the image scraper
+                // 5. Pass the JSON file through the image scraper
                 let tasks = ctx.imageScraper.fetch(ctx);
                 return makeTaskRunner(tasks, options);
             },
@@ -190,7 +123,7 @@ module.exports.getFullTaskList = (url, options) => {
         {
             title: 'Update links in content via LinkFixer',
             task: async (ctx, task) => {
-                // 7. Process the content looking for known links, and update them to new links
+                // 6. Process the content looking for known links, and update them to new links
                 let tasks = ctx.linkFixer.fix(ctx, task);
                 return makeTaskRunner(tasks, options);
             }
@@ -199,7 +132,7 @@ module.exports.getFullTaskList = (url, options) => {
             // @TODO don't duplicate this with the utils json file
             title: 'Convert HTML -> MobileDoc',
             task: (ctx) => {
-                // 8. Convert post HTML -> MobileDoc
+                // 7. Convert post HTML -> MobileDoc
                 try {
                     let tasks = mgHtmlMobiledoc.convert(ctx);
                     return makeTaskRunner(tasks, options);
@@ -212,7 +145,7 @@ module.exports.getFullTaskList = (url, options) => {
         {
             title: 'Write Ghost import JSON File',
             task: async (ctx) => {
-                // 9. Write a valid Ghost import zip
+                // 8. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostJSONFile(ctx.result);
                     await ctx.fileCache.writeErrorJSONFile(ctx.errors);
@@ -226,7 +159,7 @@ module.exports.getFullTaskList = (url, options) => {
             title: 'Write Ghost import zip',
             skip: () => !options.zip,
             task: async (ctx) => {
-                // 10. Write a valid Ghost import zip
+                // 9. Write a valid Ghost import zip
                 try {
                     ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
                 } catch (error) {
@@ -238,13 +171,13 @@ module.exports.getFullTaskList = (url, options) => {
     ];
 };
 
-module.exports.getTaskRunner = (url, options) => {
+module.exports.getTaskRunner = (options) => {
     let tasks = [];
 
     if (options.info) {
-        tasks = this.getInfoTaskList(url, options);
+        tasks = this.getInfoTaskList(options);
     } else {
-        tasks = this.getFullTaskList(url, options);
+        tasks = this.getFullTaskList(options);
     }
 
     // Configure a new Listr task manager, we can use different renderers for different configs

@@ -89,8 +89,8 @@ const postProcessor = (scrapedData) => {
 module.exports.getTaskRunner = (pathToZip, options) => {
     let tasks = [
         {
-            title: 'Initialising',
-            task: (ctx) => {
+            title: 'Initialising Workspace',
+            task: (ctx, task) => {
                 ctx.options = options;
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
@@ -98,6 +98,8 @@ module.exports.getTaskRunner = (pathToZip, options) => {
                 ctx.imageScraper = new MgImageScraper(ctx.fileCache);
                 ctx.mediumScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
                 ctx.linkFixer = new MgLinkFixer();
+
+                task.output = `Workspace initialised at ${ctx.fileCache.cacheDir}`;
             }
         },
         {
@@ -183,6 +185,7 @@ module.exports.getTaskRunner = (pathToZip, options) => {
                 // 8. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostJSONFile(ctx.result);
+                    await ctx.fileCache.writeErrorJSONFile(ctx.errors);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;

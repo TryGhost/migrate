@@ -1,19 +1,19 @@
-const wpAPISource = require('../sources/wp-api');
+const hubspot = require('../sources/hubspot');
 const ui = require('@tryghost/pretty-cli').ui;
 
 // Internal ID in case we need one.
-exports.id = 'wp-api';
+exports.id = 'hubspot';
 
 exports.group = 'Sources:';
 
 // The command to run and any params
-exports.flags = 'wp-api <url>';
+exports.flags = 'hubspot [url] <hapikey>';
 
 // Description for the top level command
-exports.desc = 'Migrate from WordPress using JSON API';
+exports.desc = 'Migrate from Hubspot using the API';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Path to a WordPress site'];
+exports.paramsDesc = ['URL of the blog you want to migrate', 'Hubspot API Key (hapikey)'];
 
 // Configure all the options
 exports.setup = (sywac) => {
@@ -21,42 +21,34 @@ exports.setup = (sywac) => {
         defaultValue: false,
         desc: 'Show verbose output'
     });
-    sywac.boolean('--zip', {
+    sywac.boolean('-z, --zip', {
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
     });
     sywac.enumeration('-s --scrape', {
-        choices: ['all', 'img', 'web', 'none'],
+        choices: ['all', 'web', 'img', 'none'],
         defaultValue: 'all',
         desc: 'Configure scraping tasks'
     });
+    sywac.string('-e --email', {
+        defaultValue: false,
+        desc: 'Provide an email domain for users e.g. mycompany.com'
+    });
     sywac.boolean('-I, --info', {
         defaultValue: false,
-        desc: 'Show initalisation info only'
+        desc: 'Show hubspot blog info only'
     });
     sywac.number('-b, --batch', {
         defaultValue: 0,
-        desc: 'Run a batch (defaults to not batching)'
+        desc: 'Batch number to run (defaults to running all)'
     });
     sywac.number('-l, --limit', {
         defaultValue: 100,
         desc: 'Number of items fetched in a batch i.e. batch size'
     });
-    sywac.string('-a, --auth', {
-        defaultValue: null,
-        desc: 'Provide a user and password to authenticate the WordPress API (<user>:<password>)'
-    });
-    sywac.string('-u, --users', {
-        defaultValue: null,
-        desc: 'Provide a JSON file with users'
-    });
     sywac.boolean('--fallBackHTMLCard', {
         defaultValue: false,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
-    });
-    sywac.boolean('--tags', {
-        defaultValue: true,
-        desc: 'Set to false if you don\'t want to import WordPress tags, only categories'
     });
 };
 
@@ -65,24 +57,8 @@ exports.run = async (argv) => {
     let timer = Date.now();
     let context = {errors: []};
 
-    if (argv.auth) {
-        let auth = argv.auth.split(':');
-
-        if (auth.length < 2 || auth.length >= 3) {
-            ui.log.info('Not running in authenticated mode. Please provide the credentials in this format: <user>:<password>');
-            context.apiUser = {};
-        } else {
-            ui.log.info('Using authentication for WordPress API');
-            context.apiUser = {username: auth[0], password: auth[1]};
-        }
-    }
-
-    if (argv.users) {
-        context.usersJSON = argv.users;
-    }
-
     if (argv.verbose) {
-        ui.log.info(`${argv.info ? 'Fetching info' : 'Migrating'} from site at ${argv.url}`);
+        ui.log.info(`${argv.info ? 'Fetching info' : 'Migrating'} from hubspot site`);
     }
 
     if (argv.batch !== 0) {
@@ -91,14 +67,14 @@ exports.run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = wpAPISource.getTaskRunner(argv.url, argv);
+        let migrate = hubspot.getTaskRunner(argv);
 
         // Run the migration
         await migrate.run(context);
 
         if (argv.info && context.info) {
-            let batches = context.info.batches.posts + context.info.batches.pages;
-            ui.log.info(`Batch info: ${context.info.totals.posts} posts, ${context.info.totals.pages} pages, ${batches} batches.`);
+            let batches = context.info.batches.posts;
+            ui.log.info(`Batch info: ${context.info.totals.posts} posts ${batches} batches.`);
         }
 
         if (argv.verbose) {

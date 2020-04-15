@@ -19,27 +19,45 @@ const ScrapeError = ({src, code, statusCode, originalError}) => {
     if (statusCode) {
         error.statusCode = statusCode;
     }
+    if (originalError.body) {
+        // We really don't need the buffer for our error file
+        delete originalError.body;
+    }
     error.originalError = originalError;
 
     return error;
 };
 
 class ImageScraper {
-    constructor(fileCache) {
+    constructor(fileCache, defaultOptions) {
         this.fileCache = fileCache;
+        this.defaultImageOptions = Object.assign({
+            optimize: true
+        }, defaultOptions);
+    }
+
+    async fetchImage(src) {
+        // Timeout after 20 seconds
+        return await got(src, {responseType: 'buffer', timeout: 20000});
     }
 
     async downloadImage(src) {
+        // Do not try parsing a URL when there is none
+        if (!src) {
+            return;
+        }
         let imageUrl = url.parse(src);
         let imageFile = this.fileCache.resolveImageFileName(imageUrl.pathname);
+        let imageOptions = Object.assign(imageFile, this.defaultImageOptions);
 
         if (this.fileCache.hasFile(imageFile.storagePath)) {
             return imageFile.outputPath;
         }
 
         try {
-            let response = await got(src, {responseType: 'buffer'});
-            await this.fileCache.writeImageFile(response.body, imageFile);
+            // Timeout after 20 seconds
+            let response = await this.fetchImage(src);
+            await this.fileCache.writeImageFile(response.body, imageOptions);
             return imageFile.outputPath;
         } catch (error) {
             throw ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error});
@@ -103,6 +121,10 @@ class ImageScraper {
                                 try {
                                     resource[field] = await this.downloadImage(value);
                                 } catch (error) {
+                                    error.resource = {
+                                        title: resource.title,
+                                        slug: resource.slug
+                                    };
                                     ctx.errors.push(error);
                                     throw error;
                                 }
@@ -115,6 +137,10 @@ class ImageScraper {
                                 try {
                                     resource[field] = await this.processHTML(value);
                                 } catch (error) {
+                                    error.resource = {
+                                        title: resource.title,
+                                        slug: resource.slug
+                                    };
                                     ctx.errors.push(error);
                                     throw error;
                                 }

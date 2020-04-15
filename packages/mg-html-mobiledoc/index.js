@@ -1,5 +1,19 @@
 const converter = require('@tryghost/html-to-mobiledoc');
 
+const ConvertError = ({src, message = `Unable to convert post to Mobiledoc`, reference, originalError}) => {
+    let error = new Error(`${message} - ${src}`);
+
+    error.errorType = 'ConvertError';
+    error.code = originalError.message;
+    error.src = src;
+    if (reference) {
+        error.reference = reference;
+    }
+    error.originalError = originalError;
+
+    return error;
+};
+
 const convertToHTMLCard = (html) => {
     let structure = {
         version: '0.3.1',
@@ -29,6 +43,7 @@ const convertPost = (post, htmlCard) => {
 
 // Understands the data formats, so knows where to look for posts to convert
 module.exports.convert = (ctx, htmlCard) => {
+    let {options} = ctx;
     let res = ctx.result;
     let posts = res.posts;
 
@@ -47,12 +62,33 @@ module.exports.convert = (ctx, htmlCard) => {
                 try {
                     convertPost(post, htmlCard);
                 } catch (error) {
-                    let convertError = new Error(`Unable to convert post ${post.title}`);
-                    convertError.reference = post.slug;
-                    convertError.originalError = error;
+                    if (options.fallBackHTMLCard) {
+                        try {
+                            convertPost(post, true);
+                        } catch (error) {
+                            let convertError = ConvertError(
+                                {
+                                    message: `Unable to convert post HTMLCard "${post.title}"`,
+                                    src: post.slug,
+                                    reference: post.title,
+                                    originalError: error
+                                });
 
-                    ctx.errors.push(convertError);
-                    throw convertError;
+                            ctx.errors.push(convertError);
+                            throw convertError;
+                        }
+                    } else {
+                        let convertError = ConvertError(
+                            {
+                                message: `Unable to convert post to Mobiledoc "${post.title}"`,
+                                src: post.slug,
+                                reference: post.title,
+                                originalError: error
+                            });
+
+                        ctx.errors.push(convertError);
+                        throw convertError;
+                    }
                 }
             }
         };

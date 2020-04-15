@@ -3,9 +3,8 @@ const schema = require('../utils/schema');
 const ObjectId = require('bson-objectid');
 
 module.exports = (json) => {
-    // These should be present and empty, even if there is no data
     json.users = json.users || [];
-    json.tags = json.tags || [];
+    json.tags = json.tags || []; // expected to be empty
 
     // We create these fresh as all relation processing should be done in here
     json.posts_authors = [];
@@ -31,11 +30,14 @@ module.exports = (json) => {
             return;
         }
         return json[location].find((item) => {
-            // @TODO: this is a dirty hack, should be slug based!
             // @TODO: need to scrape, or post-process scrape for user and tag slugs
-            if (item.data.name && item.data.name === match.data.name) {
+            if (item.data.id && item.data.id === match.data.id) {
                 return item;
-            } else if (item.url === match.url) {
+            } else if (item.data.slug && item.data.slug === match.data.slug) {
+                return item;
+            } else if (item.data.name && item.data.name === match.data.name) {
+                return item;
+            } else if (!_.isNil(item.url || match.url) && item.url === match.url) {
                 return item;
             }
         });

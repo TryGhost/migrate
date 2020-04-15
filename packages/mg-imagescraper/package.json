@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-imagescraper",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-imagescraper",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -19,13 +19,13 @@
     "access": "public"
   },
   "devDependencies": {
-    "mocha": "7.0.1",
+    "mocha": "7.1.1",
     "should": "13.2.3",
-    "sinon": "8.1.1"
+    "sinon": "9.0.2"
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
-    "got": "^10.0.0",
+    "got": "10.7.0",
     "lodash": "4.17.15"
   }
 }

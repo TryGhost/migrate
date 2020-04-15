@@ -5,7 +5,7 @@ const testUtils = require('./utils');
 const toGhostJSON = require('../lib/to-ghost-json');
 
 // Temp utility
-const inspect = (title, obj) => console.log(title, require('util').inspect(obj, false, null)); // eslint-disable-line no-console
+// const inspect = (title, obj) => console.log(title, require('util').inspect(obj, false, null)); // eslint-disable-line no-console
 
 describe('toGhostJSON', function () {
     it('Calculates relations when it only has a post', function () {
@@ -53,26 +53,26 @@ describe('toGhostJSON', function () {
         output.data.posts[0].title.should.eql('This shit’s cool');
     });
 
-    it.skip('Calculates relations with both post and users', function () {
+    it('Calculates relations with both post and users', function () {
         const input = require(testUtils.fixturesFilename('single-post-author.json'));
 
-        inspect('input', input);
+        // inspect('input', input);
 
         const output = toGhostJSON(input);
 
-        inspect('output', output);
+        // inspect('output', output);
 
         output.should.be.GhostJSON();
     });
 
-    it.skip('Calculates relations across multiple posts', function () {
+    it('Calculates relations across multiple posts', function () {
         const input = require(testUtils.fixturesFilename('multi-post-only.json'));
 
-        inspect('input', input);
+        // inspect('input', input);
 
         const output = toGhostJSON(input);
 
-        inspect('output', output);
+        // inspect('output', output);
         output.should.be.GhostJSON();
     });
 });

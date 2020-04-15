@@ -20,7 +20,7 @@ const findMatchIn = (existing, match) => {
     });
 };
 
-const ScrapeError = ({url, code, statusCode}) => {
+const ScrapeError = ({url, code, statusCode, originalError}) => {
     let error = new Error(`Unable to scrape URL ${url}`);
 
     error.errorType = 'ScrapeError';
@@ -29,6 +29,10 @@ const ScrapeError = ({url, code, statusCode}) => {
     error.code = code;
     if (statusCode) {
         error.statusCode = statusCode;
+    }
+
+    if (originalError) {
+        error.originalError = originalError;
     }
 
     return error;
@@ -95,7 +99,7 @@ class WebScraper {
         try {
             let {data, response} = await scrapeIt(url, config);
             let {responseUrl, statusCode} = response;
-            if (statusCode > 299) {
+            if (statusCode > 399) {
                 throw ScrapeError({url, code: 'HTTPERROR', statusCode});
             }
             return {responseUrl, responseData: data};
@@ -104,23 +108,26 @@ class WebScraper {
                 throw error;
             }
 
-            throw ScrapeError({url, code: error.code});
+            throw ScrapeError({url, code: error.code, originalError: error});
         }
     }
 
-    async lookup(url, config) {
-        // @TODO: replace this with a proper solution: i.e. Ghost's slugify, or xxhash, or similar
-        var filename = url.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-
+    async scrapeUrl(url, config, filename) {
         if (this.fileCache.hasFile(filename, 'tmp')) {
             return await this.fileCache.readTmpJSONFile(filename);
         }
 
         let response = await this.scrape(url, config);
-        response.responseData = omitEmpty(response.responseData);
-        response.responseData = this.postProcessor(response.responseData);
         await this.fileCache.writeTmpJSONFile(response, filename);
+
+        response.responseData = omitEmpty(response.responseData);
+
         return response;
+    }
+
+    processScrapedData(scrapedData, data) {
+        scrapedData = this.postProcessor(scrapedData, data);
+        this.mergeResource(data, scrapedData);
     }
 
     hydrate(ctx) {
@@ -134,6 +141,9 @@ class WebScraper {
 
         tasks = res.posts.map((post) => {
             let {url, data} = post;
+            // @TODO: replace this with a proper solution: i.e. Ghost's slugify, or xxhash, or similar
+            let filename = url.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
             return {
                 title: url,
                 skip: () => {
@@ -141,8 +151,8 @@ class WebScraper {
                 },
                 task: async (ctx, task) => {
                     try {
-                        let {responseUrl, responseData} = await this.lookup(url, this.config.posts);
-                        this.mergeResource(data, responseData);
+                        let {responseUrl, responseData} = await this.scrapeUrl(url, this.config.posts, filename);
+                        this.processScrapedData(responseData, data);
 
                         if (responseUrl !== url) {
                             post.originalUrl = url;

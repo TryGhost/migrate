@@ -1,58 +1,90 @@
 const WPAPI = require('wpapi');
-const perPage = 100;
 
-module.exports.discover = async (url) => {
-    let site = new WPAPI({endpoint: `${url}/wp-json`});
+module.exports.discover = async (url, {apiUser, limit}) => {
+    const requestOptions = {endpoint: `${url}/wp-json`};
 
-    const posts = await site.posts().perPage(perPage);
-    const pages = await site.pages().perPage(perPage);
+    if (apiUser && apiUser.username && apiUser.password) {
+        requestOptions.username = apiUser.username;
+        requestOptions.password = apiUser.password;
+    }
+
+    let site = new WPAPI(requestOptions);
+
+    const posts = await site.posts().perPage(limit);
+    const pages = await site.pages().perPage(limit);
+    const users = await site.users().perPage(limit);
 
     return {
         site,
-        totals: {posts: posts._paging.total, pages: pages._paging.total},
-        batches: {posts: posts._paging.totalPages, pages: pages._paging.totalPages}
+        totals: {
+            posts: posts._paging && posts._paging.total ? posts._paging.total : 0,
+            pages: pages._paging && pages._paging.total ? pages._paging.total : 0,
+            users: users._paging && users._paging.total ? users._paging.total : 0
+        },
+        batches: {
+            posts: posts._paging && posts._paging.totalPages ? posts._paging.totalPages : 0,
+            pages: pages._paging && pages._paging.totalPages ? pages._paging.totalPages : 0,
+            users: users._paging && users._paging.totalPages ? users._paging.totalPages : 0
+        }
     };
 };
 
-const cachedFetch = async (fileCache, api, type, perPage, page) => {
-    let filename = `wp_api_${type}_${perPage}_${page}.json`;
+const cachedFetch = async (fileCache, api, type, limit, page, isAuthRequest) => {
+    let filename = `wp_api_${type}_${limit}_${page}.json`;
 
     if (fileCache.hasFile(filename, 'tmp')) {
         return await fileCache.readTmpJSONFile(filename);
     }
 
-    let response = await api.site[type]().perPage(perPage).page(page).embed();
+    let response = isAuthRequest ? await api.site[type]().param('context', 'edit').perPage(limit).page(page).embed() : await api.site[type]().perPage(limit).page(page).embed();
 
     await fileCache.writeTmpJSONFile(response, filename);
 
     return response;
 };
 
-const buildTasks = (fileCache, tasks, api, type) => {
+const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest) => {
     for (let page = 1; page <= api.batches[type]; page++) {
         tasks.push({
             title: `Fetching ${type}, page ${page} of ${api.batches[type]}`,
             task: async (ctx) => {
-                let response = await cachedFetch(fileCache, api, type, perPage, page);
+                try {
+                    let response = await cachedFetch(fileCache, api, type, limit, page, isAuthRequest);
 
-                // This is weird, but we don't yet deal with pages as a separate concept in imports
-                ctx.result.posts = ctx.result.posts.concat(response);
+                    // This is weird, but we don't yet deal with pages as a separate concept in imports
+                    type = type === 'pages' ? 'posts' : type;
+
+                    ctx.result[type] = ctx.result[type].concat(response);
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
             }
         });
     }
 };
 
 module.exports.tasks = async (url, ctx) => {
-    const api = await this.discover(url);
+    const {apiUser} = ctx || {};
+    const {limit} = ctx.options;
+    let isAuthRequest = false;
+
+    if (apiUser && apiUser.username && apiUser.password) {
+        isAuthRequest = true;
+    }
+
+    const api = await this.discover(url, {apiUser, limit});
 
     const tasks = [];
 
     ctx.result = {
-        posts: []
+        posts: [],
+        users: []
     };
 
-    buildTasks(ctx.fileCache, tasks, api, 'posts');
-    buildTasks(ctx.fileCache, tasks, api, 'pages');
+    buildTasks(ctx.fileCache, tasks, api, 'posts', limit, isAuthRequest);
+    buildTasks(ctx.fileCache, tasks, api, 'pages', limit, isAuthRequest);
+    buildTasks(ctx.fileCache, tasks, api, 'users', limit, isAuthRequest);
 
     return tasks;
 };
