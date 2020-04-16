@@ -58,6 +58,10 @@ exports.setup = (sywac) => {
         defaultValue: true,
         desc: 'Set to false if you don\'t want to import WordPress tags, only categories'
     });
+    sywac.string('--addTag', {
+        defaultValue: null,
+        desc: 'Provide a tag slug which should be added to every post in this migration'
+    });
 };
 
 // What to do when this command is executed

@@ -284,7 +284,9 @@ module.exports.processContent = (html, postUrl, errors) => {
  *   ]
  * }
  */
-module.exports.processPost = (wpPost, users, fetchTags, errors) => {
+module.exports.processPost = (wpPost, users, options, errors) => {
+    let {tags: fetchTags, addTag} = options;
+
     // @note: we don't copy excerpts because WP generated excerpts aren't better than Ghost ones but are often too long.
     const post = {
         url: wpPost.link,
@@ -321,6 +323,12 @@ module.exports.processPost = (wpPost, users, fetchTags, errors) => {
         post.data.tags.push({
             url: 'migrator-added-tag', data: {name: '#wordpress'}
         });
+
+        if (addTag) {
+            post.data.tags.push({
+                url: 'migrator-added-tag-2', data: {slug: addTag, name: addTag}
+            });
+        }
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
@@ -329,8 +337,8 @@ module.exports.processPost = (wpPost, users, fetchTags, errors) => {
     return post;
 };
 
-module.exports.processPosts = (posts, users, fetchTags, errors) => {
-    return posts.map(post => this.processPost(post, users, fetchTags, errors));
+module.exports.processPosts = (posts, users, options, errors) => {
+    return posts.map(post => this.processPost(post, users, options, errors));
 };
 
 module.exports.processAuthors = (authors) => {
@@ -338,8 +346,6 @@ module.exports.processAuthors = (authors) => {
 };
 
 module.exports.all = async ({result: input, usersJSON, errors, options}) => {
-    let {tags: fetchTags} = options;
-
     if (usersJSON) {
         const mergedUsers = [];
         try {
@@ -369,7 +375,7 @@ module.exports.all = async ({result: input, usersJSON, errors, options}) => {
         users: this.processAuthors(input.users)
     };
 
-    output.posts = this.processPosts(input.posts, output.users, fetchTags, errors);
+    output.posts = this.processPosts(input.posts, output.users, options, errors);
 
     return output;
 };

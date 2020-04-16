@@ -7,8 +7,8 @@ describe('Process', function () {
     it('Can convert a single post', function () {
         const fixture = testUtils.fixtures.readSync('single-post.json');
         const users = [];
-        const fetchTags = true;
-        const post = processor.processPost(fixture, users, fetchTags);
+        const options = {tags: true, addTag: null};
+        const post = processor.processPost(fixture, users, options);
 
         post.should.be.an.Object().with.properties('url', 'data');
 
