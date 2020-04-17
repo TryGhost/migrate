@@ -4,11 +4,11 @@ Allows converting CSV export from Substack to CSV compatible with Ghost.
 
 ## Install
 
-`npm install @tryghost/substack-ghost-csv-converter --save`
+`npm install @tryghost/mg-substack-members-csv --save`
 
 or
 
-`yarn add @tryghost/substack-ghost-csv-converter`
+`yarn add @tryghost/mg-substack-members-csv`
 
 
 ## Usage

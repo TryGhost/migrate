@@ -1,7 +1,7 @@
 {
-  "name": "@tryghost/substack-ghost-csv-converter",
+  "name": "@tryghost/mg-substack-members-csv",
   "version": "0.1.0",
-  "repository": "https://github.com/TryGhost/Members/tree/master/packages/substack-ghost-csv-converter",
+  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-substack-members-csv",
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",
