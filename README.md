@@ -4,12 +4,25 @@ A collection of tools for migrating to Ghost
 
 ## Install
 
-TBD
+Migrate is a set of command line tools, install them globally:
 
+`npm install --global @tryghost/migrate`
 
 ## Usage
 
-TBD
+Run `migrate --help` to see a list of available commands.
+
+Basic usage is `migrate [source] source-info`:
+
+E.g.
+
+`migrate medium path/to/export.zip`
+
+`migrate wp-api https://mywpsite.com`
+
+Each source somes with optional flags to customise the migration:
+
+`migrate [source] --help` will give more detail
 
 
 ## Develop
