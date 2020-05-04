@@ -31,7 +31,7 @@
     "@tryghost/pretty-cli": "1.2.5",
     "bluebird": "3.7.2",
     "csv-parser": "2.3.2",
-    "ghost-ignition": "4.1.0",
+    "ghost-ignition": "4.2.1",
     "lodash": "4.17.15"
   }
 }
