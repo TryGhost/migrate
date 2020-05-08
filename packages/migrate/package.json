@@ -39,7 +39,7 @@
     "@tryghost/mg-medium-export": "^0.8.1",
     "@tryghost/mg-webscraper": "^0.6.0",
     "@tryghost/mg-wp-api": "^0.3.1",
-    "@tryghost/pretty-cli": "1.2.5",
+    "@tryghost/pretty-cli": "1.2.6",
     "@tryghost/string": "0.1.9",
     "listr": "0.14.3",
     "lodash.get": "4.4.2"
