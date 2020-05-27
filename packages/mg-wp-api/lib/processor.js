@@ -321,7 +321,7 @@ module.exports.processPost = (wpPost, users, options, errors) => {
         post.data.tags = this.processTerms(wpTerms, fetchTags);
 
         post.data.tags.push({
-            url: 'migrator-added-tag', data: {name: '#wordpress'}
+            url: 'migrator-added-tag', data: {name: '#wp'}
         });
 
         if (addTag) {
