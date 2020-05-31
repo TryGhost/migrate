@@ -51,6 +51,15 @@ const scrapeConfig = {
         twitter_description: {
             selector: 'meta[name="twitter:description"]',
             attr: 'content'
+        },
+        codeinjection_head: {
+            selector: 'body > style',
+            convert: (x) => {
+                if (!x) {
+                    return;
+                }
+                return `<style>${x}</style>`;
+            }
         }
     }
 };
@@ -61,6 +70,7 @@ const postProcessor = (scrapedData, data) => {
     } else {
         delete scrapedData.html;
     }
+
 
     return scrapedData;
 };
