@@ -64,13 +64,16 @@ const scrapeConfig = {
     }
 };
 
-const postProcessor = (scrapedData, data) => {
+const postProcessor = (scrapedData, data, options) => {
     if (scrapedData.html) {
         scrapedData.html = `<!--kg-card-begin: html-->${scrapedData.html}<!--kg-card-end: html-->${data.html}`;
     } else {
         delete scrapedData.html;
     }
 
+    if (options.featureImage === 'og:image' && scrapedData.og_image) {
+        data.feature_image = scrapedData.og_image;
+    }
 
     return scrapedData;
 };

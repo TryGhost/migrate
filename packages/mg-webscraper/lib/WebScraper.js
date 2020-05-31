@@ -125,8 +125,8 @@ class WebScraper {
         return response;
     }
 
-    processScrapedData(scrapedData, data) {
-        scrapedData = this.postProcessor(scrapedData, data);
+    processScrapedData(scrapedData, data, options) {
+        scrapedData = this.postProcessor(scrapedData, data, options);
         this.mergeResource(data, scrapedData);
     }
 
@@ -152,7 +152,7 @@ class WebScraper {
                 task: async (ctx, task) => {
                     try {
                         let {responseUrl, responseData} = await this.scrapeUrl(url, this.config.posts, filename);
-                        this.processScrapedData(responseData, data);
+                        this.processScrapedData(responseData, data, ctx.options);
 
                         if (responseUrl !== url) {
                             post.originalUrl = url;

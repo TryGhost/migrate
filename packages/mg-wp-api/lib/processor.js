@@ -305,7 +305,7 @@ module.exports.processPost = (wpPost, users, options, errors) => {
         }
     };
 
-    if (wpPost._embedded['wp:featuredmedia']) {
+    if (options.featureImage === 'featuredmedia' && wpPost._embedded['wp:featuredmedia']) {
         const wpImage = wpPost._embedded['wp:featuredmedia'][0];
         post.data.feature_image = wpImage.source_url;
     }

@@ -62,6 +62,11 @@ exports.setup = (sywac) => {
         defaultValue: null,
         desc: 'Provide a tag slug which should be added to every post in this migration'
     });
+    sywac.string('--featureImage', {
+        defaultValue: 'featuredmedia',
+        choices: ['featuredmedia', 'og:image', 'none'],
+        desc: 'Change which value is used as the feature image'
+    });
 };
 
 // What to do when this command is executed
