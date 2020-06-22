@@ -185,21 +185,38 @@ module.exports.processContent = (html, postUrl, errors) => {
     // Wrap inline styled tags in HTML card
     $html('div[style], p[style], a[style], span[style]').each((i, styled) => {
         let imgChildren = $(styled).children('img:not([data-gif])');
-        if ($(imgChildren).length > 0) {
-            // We don't convert images into image cards when they're wrapped in an HTML card
+
+        // If this is a simple element with a single image using src, we aren't going to do anything special
+        if ($(imgChildren).length === 1 && $(imgChildren.get(0)).attr('src')) {
+            styled.tagName = 'figure';
+            let img = $(imgChildren.get(0));
+
+            if (img.hasClass('size-full')) {
+                img.addClass('kg-width-wide');
+            }
+
+            let caption = $(styled).find('.wp-caption-text').get(0);
+
+            if (caption) {
+                caption.tagName = 'figcaption';
+            }
+        } else {
             // To prevent visual issues, we need to delete `srcset` (we don't scrape those images anyway),
             // `sizes`, and dimensions (for `srcset` images).
-            $(imgChildren).each((i, img) => {
-                if ($(img).attr('srcset')) {
-                    $(img).removeAttr('width');
-                    $(img).removeAttr('height');
-                }
-                $(img).removeAttr('srcset');
-                $(img).removeAttr('sizes');
-            });
+            if ($(imgChildren).length > 0) {
+                $(imgChildren).each((i, img) => {
+                    if ($(img).attr('srcset')) {
+                        $(img).removeAttr('width');
+                        $(img).removeAttr('height');
+                        $(img).removeAttr('srcset');
+                        $(img).removeAttr('sizes');
+                    }
+                });
+            }
+
+            $(styled).before('<!--kg-card-begin: html-->');
+            $(styled).after('<!--kg-card-end: html-->');
         }
-        $(styled).before('<!--kg-card-begin: html-->');
-        $(styled).after('<!--kg-card-end: html-->');
     });
 
     // Some header elements contain span children to use custom inline styling. Wrap 'em in HTML cards.
