@@ -324,7 +324,7 @@ module.exports.processPost = (wpPost, users, options, errors) => {
 
     if (options.featureImage === 'featuredmedia' && wpPost._embedded['wp:featuredmedia']) {
         const wpImage = wpPost._embedded['wp:featuredmedia'][0];
-        post.data.feature_image = wpImage.source_url;
+        post.data.feature_image = wpImage.source_url.replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
     }
 
     if (wpPost._embedded.author && !post.data.author) {

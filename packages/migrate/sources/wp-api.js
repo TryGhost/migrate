@@ -71,6 +71,14 @@ const postProcessor = (scrapedData, data, options) => {
         delete scrapedData.html;
     }
 
+    if (scrapedData.og_image) {
+        scrapedData.og_image = scrapedData.og_image.replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
+    }
+
+    if (scrapedData.twitter_image) {
+        scrapedData.twitter_image = scrapedData.twitter_image.replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
+    }
+
     if (options.featureImage === 'og:image' && scrapedData.og_image) {
         data.feature_image = scrapedData.og_image;
     }
