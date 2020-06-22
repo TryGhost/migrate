@@ -15,7 +15,7 @@
     "rendered": "My Awesome Post"
   },
   "content": {
-    "rendered": "\n<h2><strong>This is my strong headline thing.<\/strong><\/h2>\n\n\n\n<p><em>Note: this article contains awesomeness<\/em><\/p>\n\n\n\n<p>This is a paragraph of text. This is a very short dummy post.<\/p>\n\n\n\n<div style=\"height:43px\" aria-hidden=\"true\" class=\"wp-block-spacer\"><\/div>\n",
+    "rendered": "\n<h2><strong>This is my strong headline thing.<\/strong><\/h2>\n\n\n\n<p><em>Note: this article contains awesomeness<\/em><\/p>\n\n\n\n<p>This is a paragraph of text. This is a very short dummy post.<\/p>\n\n\n\n<div style=\"height:43px\" aria-hidden=\"true\" class=\"wp-block-spacer\"><\/div>\n\n<div id=\"attachment_15945\" style=\"width: 1148px\" class=\"wp-caption aligncenter\"><img src=\"https://mysite.com/wp-content/uploads/2020/06/image.png\" /><span class=\"wp-caption-text\">My awesome image</span><\/div>\n<div style=\"width: 1148px\"><img src=\"https://mysite.com/wp-content/uploads/2020/06/image.png\" srcset=\"https://mysite.com/wp-content/uploads/2020/06/image.png\" sizes=\"https://mysite.com/wp-content/uploads/2020/06/image.png\" width=\"600\" height=\"400\"/><img src=\"https://mysite.com/wp-content/uploads/2020/06/another_image.png\" srcset=\"https://mysite.com/wp-content/uploads/2020/06/another_image.png\" sizes=\"https://mysite.com/wp-content/uploads/2020/06/another_image.png\" width=\"600\" height=\"400\"/><span class=\"wp-caption-text\">srcset images</span><\/div>",
     "protected": false
   },
   "excerpt": {
