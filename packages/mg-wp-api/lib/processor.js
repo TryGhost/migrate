@@ -200,18 +200,19 @@ module.exports.processContent = (html, postUrl, errors) => {
             if (caption) {
                 caption.tagName = 'figcaption';
             }
-        } else if ($(imgChildren).length > 0) {
-            // We don't convert images into image cards when they're wrapped in an HTML card
+        } else {
             // To prevent visual issues, we need to delete `srcset` (we don't scrape those images anyway),
             // `sizes`, and dimensions (for `srcset` images).
-            $(imgChildren).each((i, img) => {
-                if ($(img).attr('srcset')) {
-                    $(img).removeAttr('width');
-                    $(img).removeAttr('height');
-                    $(img).removeAttr('srcset');
-                    $(img).removeAttr('sizes');
-                }
-            });
+            if ($(imgChildren).length > 0) {
+                $(imgChildren).each((i, img) => {
+                    if ($(img).attr('srcset')) {
+                        $(img).removeAttr('width');
+                        $(img).removeAttr('height');
+                        $(img).removeAttr('srcset');
+                        $(img).removeAttr('sizes');
+                    }
+                });
+            }
 
             $(styled).before('<!--kg-card-begin: html-->');
             $(styled).after('<!--kg-card-end: html-->');
