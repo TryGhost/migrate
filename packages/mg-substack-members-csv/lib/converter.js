@@ -52,7 +52,7 @@ const normalizeCSVFileToJSON = async (options) => {
                     });
 
                     results = _.map(rows, function evaluateRow(row) {
-                        var result = {};
+                        result = {};
                         _.each(columnMap, function returnMatches(value, key) {
                             const mapping = columnsToMap.find(column => (column.to === key));
 

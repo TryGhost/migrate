@@ -26,7 +26,7 @@ module.exports.discover = async ({hapikey, url, limit}) => {
     blogs = processBlogResult(blogs);
 
     if (url) {
-        blog = blogs.find(blog => blog.url === url);
+        blog = blogs.find(singleBlog => singleBlog.url === url);
     }
 
     if (!blog && blogs.length === 1) {
@@ -34,7 +34,7 @@ module.exports.discover = async ({hapikey, url, limit}) => {
     }
 
     if (!blog && blogs.length === 2) {
-        blog = blogs.find(blog => blog.name !== 'Default HubSpot Blog');
+        blog = blogs.find(singleBlog => singleBlog.name !== 'Default HubSpot Blog');
     }
 
     if (!blog) {
@@ -82,7 +82,7 @@ module.exports.tasks = async ({hapikey, limit}, ctx) => {
 
         tasks.push({
             title: `Fetching posts, page ${page} of ${info.batches.posts}`,
-            task: async (ctx) => {
+            task: async (ctx) => { // eslint-disable-line no-shadow
                 try {
                     let response = await cachedFetch(ctx.fileCache, hapikey, info.blog.id, limit, offset);
 

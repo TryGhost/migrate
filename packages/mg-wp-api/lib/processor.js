@@ -141,8 +141,8 @@ module.exports.processContent = (html, postUrl, errors) => {
 
         if ($blockquote.children('p').length > 0) {
             let newBlockquoteContent = '';
-            $blockquote.children('p').each((i, p) => {
-                if (i < $blockquote.children('p').length - 1) {
+            $blockquote.children('p').each((j, p) => {
+                if (j < $blockquote.children('p').length - 1) {
                     newBlockquoteContent += `${$(p).html()}</br></br>`;
                 } else {
                     newBlockquoteContent += $(p).html();
@@ -204,7 +204,7 @@ module.exports.processContent = (html, postUrl, errors) => {
             // To prevent visual issues, we need to delete `srcset` (we don't scrape those images anyway),
             // `sizes`, and dimensions (for `srcset` images).
             if ($(imgChildren).length > 0) {
-                $(imgChildren).each((i, img) => {
+                $(imgChildren).each((k, img) => {
                     if ($(img).attr('srcset')) {
                         $(img).removeAttr('width');
                         $(img).removeAttr('height');
@@ -250,9 +250,9 @@ module.exports.processContent = (html, postUrl, errors) => {
     // Handle Crayon plugin
     $html('div.crayon-syntax').each((i, div) => {
         let lines = [];
-        $(div).find('.crayon-line').each((i, line) => {
+        $(div).find('.crayon-line').each((l, line) => {
             let chars = [];
-            $(line).find('span').each((i, span) => {
+            $(line).find('span').each((m, span) => {
                 chars.push($(span).text());
             });
             lines.push(chars.join(''));
@@ -367,7 +367,7 @@ module.exports.all = async ({result: input, usersJSON, errors, options}) => {
         const mergedUsers = [];
         try {
             let passedUsers = await fs.readJSON(usersJSON);
-            console.log(`Passed a users file with ${passedUsers.length} entries, processing now!`);
+            console.log(`Passed a users file with ${passedUsers.length} entries, processing now!`); // eslint-disable-line no-console
             await passedUsers.map((passedUser) => {
                 const matchedUser = _.find(input.users, (fetchedUser) => {
                     if (fetchedUser.id && passedUser.id && fetchedUser.id === passedUser.id) {

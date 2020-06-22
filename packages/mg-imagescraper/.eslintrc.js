@@ -1,9 +1,9 @@
 module.exports = {
     plugins: ['ghost'],
     extends: [
-        'plugin:ghost/node',
+        'plugin:ghost/node'
     ],
     parserOptions: {
         ecmaVersion: 2017
-    },
+    }
 };

@@ -149,7 +149,7 @@ class WebScraper {
                 skip: () => {
                     return this.skipFn ? this.skipFn(post) : false;
                 },
-                task: async (ctx, task) => {
+                task: async (ctx, task) => { // eslint-disable-line no-shadow
                     try {
                         let {responseUrl, responseData} = await this.scrapeUrl(url, this.config.posts, filename);
                         this.processScrapedData(responseData, data, ctx.options);

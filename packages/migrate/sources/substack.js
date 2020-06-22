@@ -97,7 +97,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             title: 'Fetch missing data via WebScraper',
             task: (ctx) => {
                 // 2. Pass the results through the web scraper to get any missing data
-                let tasks = ctx.webScraper.hydrate(ctx);
+                let tasks = ctx.webScraper.hydrate(ctx); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
             },
             skip: () => ['all', 'web'].indexOf(options.scrape) < 0
@@ -130,7 +130,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             title: 'Fetch images via ImageSraper',
             task: async (ctx) => {
                 // 5. Pass the JSON file through the image scraper
-                let tasks = ctx.imageScraper.fetch(ctx);
+                let tasks = ctx.imageScraper.fetch(ctx); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
             },
             skip: () => ['all', 'img'].indexOf(options.scrape) < 0
@@ -139,7 +139,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             title: 'Update links in content via LinkFixer',
             task: async (ctx, task) => {
                 // 6. Process the content looking for known links, and update them to new links
-                let tasks = ctx.linkFixer.fix(ctx, task);
+                let tasks = ctx.linkFixer.fix(ctx, task); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
             }
         },
@@ -149,7 +149,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             task: (ctx) => {
                 // 7. Convert post HTML -> MobileDoc
                 try {
-                    let tasks = mgHtmlMobiledoc.convert(ctx);
+                    let tasks = mgHtmlMobiledoc.convert(ctx); // eslint-disable-line no-shadow
                     return makeTaskRunner(tasks, options);
                 } catch (error) {
                     ctx.errors.push(error);

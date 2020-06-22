@@ -65,13 +65,13 @@ module.exports.convert = (ctx, htmlCard) => {
                     if (options.fallBackHTMLCard) {
                         try {
                             convertPost(post, true);
-                        } catch (error) {
+                        } catch (err) {
                             let convertError = ConvertError(
                                 {
                                     message: `Unable to convert post HTMLCard "${post.title}"`,
                                     src: post.slug,
                                     reference: post.title,
-                                    originalError: error
+                                    originalError: err
                                 });
 
                             ctx.errors.push(convertError);

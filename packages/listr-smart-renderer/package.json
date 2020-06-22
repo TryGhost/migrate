@@ -25,12 +25,12 @@
     "access": "public"
   },
   "dependencies": {
-    "chalk": "^4.0.0",
+    "chalk": "4.1.0",
     "cli-truncate": "^2.0.0",
     "elegant-spinner": "^2.0.0",
     "figures": "3.2.0",
     "indent-string": "^4.0.0",
-    "log-symbols": "^3.0.0",
+    "log-symbols": "4.0.0",
     "log-update": "^4.0.0",
     "strip-ansi": "^6.0.0"
   }

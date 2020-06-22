@@ -19,8 +19,8 @@ class LinkFixer {
         ctx.result.posts.forEach(({url, data}) => {
             this.linkMap[url] = `/${data.slug}/`;
             if (data.tags) {
-                data.tags.forEach(({url, data}) => {
-                    this.linkMap[url] = `/tag/${data.slug}/`;
+                data.tags.forEach(({url: tagUrl, data: tagData}) => {
+                    this.linkMap[tagUrl] = `/tag/${tagData.slug}/`;
                 });
             }
             if (data.author) {

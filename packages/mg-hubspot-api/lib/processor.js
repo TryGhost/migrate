@@ -184,7 +184,7 @@ module.exports.processContent = (html, postUrl, errors) => {
 <!--kg-card-end: html-->`;
         });
     } catch (err) {
-        console.log(postUrl);
+        console.log(postUrl); // eslint-disable-line no-console
         err.source = postUrl;
         throw err;
     }
@@ -236,12 +236,12 @@ module.exports.processPost = (hsPost, tags, errors) => {
     return post;
 };
 
-module.exports.processTopics = (topics, url) => {
+module.exports.processTopics = (topics, blogUrl) => {
     let tags = {};
 
     topics.forEach((topic) => {
         let tag = {
-            url: `${url}/topics/${topic.slug}`,
+            url: `${blogUrl}/topics/${topic.slug}`,
             data: {
                 name: topic.name,
                 slug: topic.slug,
