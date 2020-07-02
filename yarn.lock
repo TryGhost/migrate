@@ -203,10 +203,10 @@
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "16.2.2"
 
-"@tryghost/image-transform@0.2.4":
-  version "0.2.4"
-  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-0.2.4.tgz#bc0e791c909beff03f85ce61f7f8c7ece1213c9e"
-  integrity sha512-4FXm8VnRsv9SbXFqRKhrc4U56h1Bx58UTRxAMsp0FA2Sq68AU9YmTtjFS5t6h+mA0eQ/I6O5BiS1qPMdoWg/BA==
+"@tryghost/image-transform@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.0.0.tgz#0389adae9eae0feb879d884658150eec9b067038"
+  integrity sha512-4bIS8BcokyvjmOk2QGIzOToP+nhNRV98RtcMwajnL1O53Ko1R5fIw93U+6OyOgzDHpYy+NZDK37hkEamNkq5sQ==
   dependencies:
     "@tryghost/errors" "^0.2.0"
     bluebird "3.7.2"
