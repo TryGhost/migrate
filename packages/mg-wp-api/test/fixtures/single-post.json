@@ -10,7 +10,7 @@
   "slug": "my-awesome-post",
   "status": "publish",
   "type": "post",
-  "link": "https:\/\/mysite.com\/boop\/my-awesome-post",
+  "link": "https:\/\/mysite.com\/bloob\/my-awesome-post-with-a-canonical",
   "title": {
     "rendered": "My Awesome Post"
   },

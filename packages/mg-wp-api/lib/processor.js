@@ -190,14 +190,15 @@ module.exports.processContent = (html, postUrl, errors) => {
         if ($(imgChildren).length === 1 && $(imgChildren.get(0)).attr('src')) {
             styled.tagName = 'figure';
             let img = $(imgChildren.get(0));
-
-            if (img.hasClass('size-full')) {
-                img.addClass('kg-width-wide');
-            }
-
             let caption = $(styled).find('.wp-caption-text').get(0);
 
+            // This is a full width image
+            if (img.hasClass('full')) {
+                $(styled).addClass('kg-width-wide');
+            }
+
             if (caption) {
+                $(styled).addClass('kg-card-hascaption');
                 caption.tagName = 'figcaption';
             }
         } else {
@@ -214,8 +215,11 @@ module.exports.processContent = (html, postUrl, errors) => {
                 });
             }
 
-            $(styled).before('<!--kg-card-begin: html-->');
-            $(styled).after('<!--kg-card-end: html-->');
+            // Ignore the styles, when only the font-weight is set to 400
+            if ($(styled).attr('style') !== 'font-weight: 400;') {
+                $(styled).before('<!--kg-card-begin: html-->');
+                $(styled).after('<!--kg-card-end: html-->');
+            }
         }
     });
 
@@ -242,6 +246,30 @@ module.exports.processContent = (html, postUrl, errors) => {
     $html('img[data-gif]').each((i, gif) => {
         let gifSrc = $(gif).attr('data-gif');
         $(gif).attr('src', gifSrc);
+    });
+
+    // Detect full size images
+    $html('img.full.size-full').each((i, img) => {
+        let $figure = $('<figure class="kg-card kg-image-card kg-width-wide"></figure>');
+
+        $(img).addClass('kg-image');
+
+        if ($(img).attr('srcset')) {
+            $(img).removeAttr('width');
+            $(img).removeAttr('height');
+            $(img).removeAttr('srcset');
+            $(img).removeAttr('sizes');
+        }
+
+        $(img).wrap($figure);
+    });
+
+    /* TVS specific parser
+    ****************************************************/
+
+    $html('div.blog-highlight-section,div.blog-bio-info').each((i, el) => {
+        $(el).before('<!--kg-card-begin: html-->');
+        $(el).after('<!--kg-card-end: html-->');
     });
 
     /* Buffer specific parser
@@ -302,13 +330,15 @@ module.exports.processContent = (html, postUrl, errors) => {
  * }
  */
 module.exports.processPost = (wpPost, users, options, errors) => {
+    let urlRegexp = new RegExp(`^${options.url}`);
     let {tags: fetchTags, addTag} = options;
+    let slug = wpPost.link === `${options.url}${wpPost.slug}` ? wpPost.slug : wpPost.link.replace(urlRegexp, '');
 
     // @note: we don't copy excerpts because WP generated excerpts aren't better than Ghost ones but are often too long.
     const post = {
         url: wpPost.link,
         data: {
-            slug: wpPost.slug,
+            slug: slug,
             title: wpPost.title.rendered,
             comment_id: wpPost.id,
             html: wpPost.content.rendered,
