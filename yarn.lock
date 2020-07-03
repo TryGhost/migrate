@@ -203,10 +203,10 @@
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "16.2.2"
 
-"@tryghost/image-transform@0.2.4":
-  version "0.2.4"
-  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-0.2.4.tgz#bc0e791c909beff03f85ce61f7f8c7ece1213c9e"
-  integrity sha512-4FXm8VnRsv9SbXFqRKhrc4U56h1Bx58UTRxAMsp0FA2Sq68AU9YmTtjFS5t6h+mA0eQ/I6O5BiS1qPMdoWg/BA==
+"@tryghost/image-transform@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.0.0.tgz#0389adae9eae0feb879d884658150eec9b067038"
+  integrity sha512-4bIS8BcokyvjmOk2QGIzOToP+nhNRV98RtcMwajnL1O53Ko1R5fIw93U+6OyOgzDHpYy+NZDK37hkEamNkq5sQ==
   dependencies:
     "@tryghost/errors" "^0.2.0"
     bluebird "3.7.2"
@@ -355,10 +355,10 @@ acorn@^7.2.0:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.3.1.tgz#85010754db53c3fbaf3b9ea3e083aa5c5d147ffd"
   integrity sha512-tLc0wSnatxAQHVHUapaHdz72pi9KUyHjq5KyHjGg9Y8Ifdc79pTh2XvI6I1/chZbnM7QtNKzh66ooDogPZSleA==
 
-adm-zip@^0.4.13:
-  version "0.4.14"
-  resolved "https://registry.yarnpkg.com/adm-zip/-/adm-zip-0.4.14.tgz#2cf312bcc9f8875df835b0f6040bd89be0a727a9"
-  integrity sha512-/9aQCnQHF+0IiCl0qhXoK7qs//SwYE7zX8lsr/DNk1BRAHYxeLZPL4pguwK29gUEqasYQjqPtEpDRSWEkdHn9g==
+adm-zip@0.4.16:
+  version "0.4.16"
+  resolved "https://registry.yarnpkg.com/adm-zip/-/adm-zip-0.4.16.tgz#cf4c508fdffab02c269cbc7f471a875f05570365"
+  integrity sha512-TFi4HBKSGfIKsK5YCkKaaFG2m4PEDyViZmEwof3MTIgzimHLto6muaHVpbrljdIvIrFZzEq/p4nafOeLcYegrg==
 
 ajv@^6.10.0, ajv@^6.10.2:
   version "6.11.0"
