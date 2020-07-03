@@ -175,13 +175,6 @@ module.exports.processContent = (html, postUrl, errors) => {
         $(ol).after('<!--kg-card-end: html-->');
     });
 
-    // When a heading has a custom id, we destroy links by auto-generating a new id when converting to mobiledoc.
-    // Wrapping it in an HTML card prevent the id from being lost
-    $html('h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]').each((i, heading) => {
-        $(heading).before('<!--kg-card-begin: html-->');
-        $(heading).after('<!--kg-card-end: html-->');
-    });
-
     // Wrap inline styled tags in HTML card
     $html('div[style], p[style], a[style], span[style]').each((i, styled) => {
         let imgChildren = $(styled).children('img:not([data-gif])');
