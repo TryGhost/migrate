@@ -67,6 +67,10 @@ exports.setup = (sywac) => {
         choices: ['featuredmedia', 'og:image', 'none'],
         desc: 'Change which value is used as the feature image'
     });
+    sywac.string('--excerptSelector', {
+        defaultValue: null,
+        desc: 'Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`'
+    });
 };
 
 // What to do when this command is executed

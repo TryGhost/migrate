@@ -59,7 +59,30 @@ module.exports.processTerms = (wpTerms, fetchTags) => {
     return categories.concat(tags);
 };
 
-module.exports.processContent = (html, postUrl, errors) => {
+// Sometimes, the custom excerpt can be part of the post content. If the flag with an selector for the
+// custom excerpt class is passed, we use this one to populate the custom excerpt and remove it from the post content
+module.exports.processExcerpt = (html, wpExcerpt, excerptSelector) => {
+    if (!html) {
+        return '';
+    }
+
+    const $html = $.load(html, {
+        decodeEntities: false
+    });
+
+    if ($html(excerptSelector).length > 0) {
+        let customExcerpt = [];
+        $html(excerptSelector).each((i, excerpt) => {
+            // Strip off all HTML from the excerpt. We only need the text
+            customExcerpt.push($(excerpt).text());
+        });
+        return customExcerpt.join(' ');
+    } else {
+        return null;
+    }
+};
+
+module.exports.processContent = (html, postUrl, excerptSelector, errors) => {
     // Drafts can have empty post bodies
     if (!html) {
         return '';
@@ -75,6 +98,12 @@ module.exports.processContent = (html, postUrl, errors) => {
     $html('#toc_container').each((i, toc) => {
         $(toc).remove();
     });
+
+    if (excerptSelector) {
+        $html(excerptSelector).each((i, excerpt) => {
+            $(excerpt).remove();
+        });
+    }
 
     $html('blockquote.twitter-tweet').each((i, el) => {
         let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
@@ -324,7 +353,7 @@ module.exports.processContent = (html, postUrl, errors) => {
  */
 module.exports.processPost = (wpPost, users, options, errors) => {
     let urlRegexp = new RegExp(`^${options.url}`);
-    let {tags: fetchTags, addTag} = options;
+    let {tags: fetchTags, addTag, excerptSelector} = options;
     let slug = wpPost.link === `${options.url}${wpPost.slug}` ? wpPost.slug : wpPost.link.replace(urlRegexp, '');
 
     // @note: we don't copy excerpts because WP generated excerpts aren't better than Ghost ones but are often too long.
@@ -371,8 +400,12 @@ module.exports.processPost = (wpPost, users, options, errors) => {
         }
     }
 
+    if (excerptSelector) {
+        post.data.custom_excerpt = this.processExcerpt(post.data.html, wpPost.excerpt.rendered, excerptSelector);
+    }
+
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = this.processContent(post.data.html, post.url, errors);
+    post.data.html = this.processContent(post.data.html, post.url, excerptSelector, errors);
 
     return post;
 };
@@ -385,7 +418,7 @@ module.exports.processAuthors = (authors) => {
     return authors.map(author => this.processAuthor(author));
 };
 
-module.exports.all = async ({result: input, usersJSON, errors, options}) => {
+module.exports.all = async ({result: input, usersJSON, options, errors}) => {
     if (usersJSON) {
         const mergedUsers = [];
         try {
