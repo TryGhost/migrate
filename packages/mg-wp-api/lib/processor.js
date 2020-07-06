@@ -289,9 +289,22 @@ module.exports.processContent = (html, postUrl, excerptSelector, errors) => {
     /* TVS specific parser
     ****************************************************/
 
+    // Custom sections w/ round avatar images
     $html('div.blog-highlight-section,div.blog-bio-info').each((i, el) => {
         $(el).before('<!--kg-card-begin: html-->');
         $(el).after('<!--kg-card-end: html-->');
+    });
+
+    // Some blockquotes have the quoted person underneath, wrapped in `del` tag
+    // The only tags our parser allows is strong, em, or br, so we wrap those
+    // in a strong tag and prepend a line break if there is non already to achieve
+    // the same result as before
+    $html('blockquote del').each((i, del) => {
+        if ($(del).prev('br').length <= 0) {
+            $(del).prepend('<br>');
+        }
+        $(del).html($(del).text());
+        del.tagName = 'strong';
     });
 
     /* Buffer specific parser
