@@ -24,6 +24,7 @@
     "sinon": "9.0.2"
   },
   "dependencies": {
+    "cheerio": "0.22.0",
     "wpapi": "^1.2.1"
   }
 }

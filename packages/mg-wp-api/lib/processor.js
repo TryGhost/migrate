@@ -61,7 +61,7 @@ module.exports.processTerms = (wpTerms, fetchTags) => {
 
 // Sometimes, the custom excerpt can be part of the post content. If the flag with an selector for the
 // custom excerpt class is passed, we use this one to populate the custom excerpt and remove it from the post content
-module.exports.processExcerpt = (html, wpExcerpt, excerptSelector) => {
+module.exports.processExcerpt = (html, excerptSelector) => {
     if (!html) {
         return '';
     }
@@ -70,13 +70,10 @@ module.exports.processExcerpt = (html, wpExcerpt, excerptSelector) => {
         decodeEntities: false
     });
 
+    // TODO: this should be possible by using a pseudo selector as a passed `excerptSelector`, e. g. `h2.excerpt:first-of-type`,
+    // which is officially supported by the underlying css-select library, but not working.
     if ($html(excerptSelector).length > 0) {
-        let customExcerpt = [];
-        $html(excerptSelector).each((i, excerpt) => {
-            // Strip off all HTML from the excerpt. We only need the text
-            customExcerpt.push($(excerpt).text());
-        });
-        return customExcerpt.join(' ');
+        return $html(excerptSelector).first().text();
     } else {
         return null;
     }
@@ -100,7 +97,7 @@ module.exports.processContent = (html, postUrl, excerptSelector, errors) => {
     });
 
     if (excerptSelector) {
-        $html(excerptSelector).each((i, excerpt) => {
+        $html(excerptSelector).first().each((i, excerpt) => {
             $(excerpt).remove();
         });
     }
@@ -295,6 +292,15 @@ module.exports.processContent = (html, postUrl, excerptSelector, errors) => {
         $(el).after('<!--kg-card-end: html-->');
     });
 
+    // The first h2.excerpt is converted into our post custom excerpt. The other ones
+    // need to be wrapped in an HTML card, so the styles are migrated over
+    if (excerptSelector) {
+        $html(excerptSelector).each((i, excerpt) => {
+            $(excerpt).before('<!--kg-card-begin: html-->');
+            $(excerpt).after('<!--kg-card-end: html-->');
+        });
+    }
+
     // Some blockquotes have the quoted person underneath, wrapped in `del` tag
     // The only tags our parser allows is strong, em, or br, so we wrap those
     // in a strong tag and prepend a line break if there is non already to achieve
@@ -414,7 +420,7 @@ module.exports.processPost = (wpPost, users, options, errors) => {
     }
 
     if (excerptSelector) {
-        post.data.custom_excerpt = this.processExcerpt(post.data.html, wpPost.excerpt.rendered, excerptSelector);
+        post.data.custom_excerpt = this.processExcerpt(post.data.html, excerptSelector);
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
