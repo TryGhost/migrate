@@ -13,7 +13,7 @@ const scrapeConfig = {
             selector: 'meta[name="robots"]',
             attr: 'content',
             convert: (x) => {
-                return x.match(/noindex/) ? 'draft' : '';
+                return x.match(/noindex/) ? 'draft' : 'published';
             }
         },
         author: {
