@@ -1,5 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
+const $ = require('cheerio');
 
 const getFiles = async (path) => {
     let filenames = await fs.readdir(path);
@@ -22,8 +23,28 @@ const readFiles = async (files, postsDir) => {
     return postContent;
 };
 
+const processContent = (html) => {
+    if (!html) {
+        return '';
+    }
+
+    const $html = $.load(html, {
+        decodeEntities: false
+    });
+
+    $html('a > style').each((i, style) => {
+        $(style).remove();
+    });
+
+    // convert HTML back to a string
+    html = $html.html();
+
+    return html;
+};
+
 const processPost = (post) => {
-    // TODO: Do stuff here
+    post.data.html = processContent(post.data.html);
+
     return post;
 };
 
