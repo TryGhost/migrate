@@ -10,7 +10,7 @@ exports.group = 'Sources:';
 exports.flags = 'substack <pathToFile>';
 
 // Description for the top level command
-exports.desc = 'Migrate from a Substack CSV file passing a mapping config';
+exports.desc = 'Migrate from a Substack CSV';
 
 // Descriptions for the individual params
 exports.paramsDesc = ['Path to a csv file'];
@@ -32,11 +32,15 @@ exports.setup = (sywac) => {
     });
     sywac.string('-e --email', {
         defaultValue: false,
-        desc: 'Provide an email domain for users e.g. mycompany.com'
+        desc: 'Provide an email for users e.g. john@mycompany.com to create a general user w/ slug `john` and provided email'
     });
     sywac.string('-u --url', {
         defaultValue: 'https://ghost.io',
         desc: 'Provide a URL (without trailing slash) to the hosted source site, so we can scrape data'
+    });
+    sywac.string('-p --readPosts', {
+        defaultValue: null,
+        desc: 'Provide a path to a posts folder that contains HTML files (file name = post id) to read the post content'
     });
 };
 
@@ -47,6 +51,10 @@ exports.run = async (argv) => {
 
     if (argv.verbose) {
         ui.log.info(`Migrating from export at ${argv.pathToFile}`);
+    }
+
+    if (argv.readPosts) {
+        context.postsDir = argv.readPosts;
     }
 
     try {
