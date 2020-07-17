@@ -58,6 +58,10 @@ const scrapeConfig = {
     }
 };
 
+const skipScrape = (post) => {
+    return post.data.status === 'draft';
+};
+
 /**
  * getTasks: Steps to Migrate from Medium
  *
@@ -76,7 +80,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
                 ctx.fileCache = new fsUtils.FileCache(pathToFile);
                 ctx.imageScraper = new MgImageScraper(ctx.fileCache);
-                ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig);
+                ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, null, skipScrape);
                 ctx.linkFixer = new MgLinkFixer();
             }
         },
@@ -85,7 +89,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             task: async (ctx) => {
                 // 1. Read the csv file
                 try {
-                    ctx.result = await csvIngest(ctx.options);
+                    ctx.result = await csvIngest(ctx);
                     await ctx.fileCache.writeTmpJSONFile(ctx.result, 'csv-export-data.json');
                 } catch (error) {
                     ctx.errors.push(error);

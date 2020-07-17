@@ -1,15 +1,16 @@
-const {slugify} = require('@tryghost/string');
+const mapConfig = (data, {url, readPosts, email}) => {
+    const slug = data.post_id.replace(/^(?:\d{1,10}\.)(\S*)/gm, '$1');
 
-const mapConfig = (data, url) => {
-    return {
-        url: `${url}/${slugify(data.title)}`,
+    const mappedData = {
+        url: `${url}/${slug}`,
+        substackId: data.post_id,
         data: {
-            slug: slugify(data.title),
+            slug: slug,
             published_at: data.post_date,
             title: data.title,
             custom_excerpt: data.subtitle,
             type: 'post',
-            html: data.body_html,
+            html: !readPosts && data.body_html ? data.body_html : null,
             status: data.is_published.toLowerCase() === `true` ? 'published' : 'draft',
             visibility: data.audience === 'only_paid' ? 'paid' : data.audience === 'only_free' ? 'members' : 'public',
             tags: [
@@ -28,9 +29,23 @@ const mapConfig = (data, url) => {
             ]
         }
     };
+
+    if (email) {
+        const authorSlug = email.replace(/(^\w*)(?:@[\w_-]*\.\w*)/, '$1');
+
+        mappedData.data.author = {
+            url: `${url}/author/${authorSlug}`,
+            data: {
+                email: email,
+                slug: authorSlug
+            }
+        };
+    }
+
+    return mappedData;
 };
 
-module.exports = async (input, url) => {
+module.exports = async (input, options) => {
     const output = {
         posts: []
     };
@@ -40,7 +55,7 @@ module.exports = async (input, url) => {
     }
 
     await input.forEach((data) => {
-        output.posts.push(mapConfig(data, url));
+        output.posts.push(mapConfig(data, options));
     });
 
     return output;
