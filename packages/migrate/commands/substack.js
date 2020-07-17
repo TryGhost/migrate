@@ -31,7 +31,7 @@ exports.setup = (sywac) => {
         desc: 'Configure scraping tasks'
     });
     sywac.string('-e --email', {
-        defaultValue: false,
+        defaultValue: null,
         desc: 'Provide an email for users e.g. john@mycompany.com to create a general user w/ slug `john` and provided email'
     });
     sywac.string('-u --url', {
@@ -41,6 +41,10 @@ exports.setup = (sywac) => {
     sywac.string('-p --readPosts', {
         defaultValue: null,
         desc: 'Provide a path to a posts folder that contains HTML files (file name = post id) to read the post content'
+    });
+    sywac.boolean('--drafts', {
+        defaultValue: true,
+        desc: 'Import draft posts'
     });
 };
 

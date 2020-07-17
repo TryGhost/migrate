@@ -54,6 +54,10 @@ module.exports = async (input, options) => {
         return new Error('Input file is empty');
     }
 
+    if (!options.drafts) {
+        input = input.filter(data => data.is_published.toLowerCase() === `true`);
+    }
+
     await input.forEach((data) => {
         output.posts.push(mapConfig(data, options));
     });
