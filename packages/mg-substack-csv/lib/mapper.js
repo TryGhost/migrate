@@ -7,7 +7,7 @@ const mapConfig = (data, {url, readPosts, email}) => {
         data: {
             slug: slug,
             published_at: data.post_date,
-            title: data.title,
+            title: data.title || slug,
             custom_excerpt: data.subtitle,
             type: 'post',
             html: !readPosts && data.body_html ? data.body_html : null,
