@@ -242,6 +242,37 @@ module.exports.processContent = (html, postUrl, excerptSelector, errors) => {
         }
     });
 
+    // Linked images
+    // It's not possible to convert the image to a full kg-image incl. wrapping it in a `figure` tag,
+    // as the mobiledoc parser won't leave the figure within the anchor tag, even when it's wrapped in
+    // an HTML card. Add relevant classes (kg-card, kg-width-wide) to the wrapping anchor tag instead.
+    // TODO: this should be possible within the Mobiledoc parser
+    $html('a > img').each((l, linkedImg) => {
+        let anchor = $(linkedImg).parent('a').get(0);
+
+        if ($(anchor).attr('href').indexOf($(linkedImg).attr('src') < 0)) {
+            $(linkedImg).addClass('kg-image');
+            $(anchor).addClass('kg-card kg-image-card');
+
+            if ($(linkedImg).attr('srcset')) {
+                $(linkedImg).removeAttr('width');
+                $(linkedImg).removeAttr('height');
+                $(linkedImg).removeAttr('srcset');
+                $(linkedImg).removeAttr('sizes');
+            }
+
+            // This is a full width image
+            if ($(linkedImg).hasClass('full')) {
+                $(anchor).addClass('kg-width-wide');
+            }
+
+            // add display block, so the margin bottom from `kg-card` takes effect on the anchor tag
+            $(anchor).css({display: 'block'});
+            $(anchor).before('<!--kg-card-begin: html-->');
+            $(anchor).after('<!--kg-card-end: html-->');
+        }
+    });
+
     // Some header elements contain span children to use custom inline styling. Wrap 'em in HTML cards.
     $html('h1 > span[style], h2 > span[style], h3 > span[style], h4 > span[style], h5 > span[style], h6 > span[style]').each((i, styledSpan) => {
         let $heading = $(styledSpan).parent('h1, h2, h3, h4, h5, h6');
@@ -268,19 +299,23 @@ module.exports.processContent = (html, postUrl, excerptSelector, errors) => {
     });
 
     // Detect full size images
+    // TODO: add more classes that are used within WordPress to determine full-width images
     $html('img.full.size-full').each((i, img) => {
-        let $figure = $('<figure class="kg-card kg-image-card kg-width-wide"></figure>');
+        // Ignore images, that are already wrapped in a figure tag or are linked
+        if ($(img).parent('figure').length <= 0 && $(img).parent('a').length <= 0) {
+            let $figure = $('<figure class="kg-card kg-image-card kg-width-wide"></figure>');
 
-        $(img).addClass('kg-image');
+            $(img).addClass('kg-image');
 
-        if ($(img).attr('srcset')) {
-            $(img).removeAttr('width');
-            $(img).removeAttr('height');
-            $(img).removeAttr('srcset');
-            $(img).removeAttr('sizes');
+            if ($(img).attr('srcset')) {
+                $(img).removeAttr('width');
+                $(img).removeAttr('height');
+                $(img).removeAttr('srcset');
+                $(img).removeAttr('sizes');
+            }
+
+            $(img).wrap($figure);
         }
-
-        $(img).wrap($figure);
     });
 
     /* TVS specific parser
