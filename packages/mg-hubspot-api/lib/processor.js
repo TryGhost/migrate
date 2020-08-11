@@ -233,6 +233,10 @@ module.exports.processPost = (hsPost, tags, errors) => {
 
     post.data.tags = this.linkTopicsAsTags(hsPost.topic_ids, tags);
 
+    post.data.tags.push({
+        url: 'migrator-added-tag', data: {name: '#hubspot'}
+    });
+
     return post;
 };
 
