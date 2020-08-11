@@ -406,9 +406,13 @@ module.exports.processContent = (html, postUrl, excerptSelector, errors) => {
  * }
  */
 module.exports.processPost = (wpPost, users, options, errors) => {
-    let urlRegexp = new RegExp(`^${options.url}`);
     let {tags: fetchTags, addTag, excerptSelector} = options;
-    let slug = wpPost.link === `${options.url}${wpPost.slug}` ? wpPost.slug : wpPost.link.replace(urlRegexp, '');
+    let urlRegexp = new RegExp(`^${options.url}(\\d{4}/\\d{2}/\\d{2}/)?`);
+    let slugRegexp = new RegExp(`${wpPost.slug}$`);
+    // CASE: post is using a canonical URL and the slug doesn't represent the URL being used
+    // When the post slug is different from the post link (ignoring dated permalinks), we fall back
+    // to use the post link.
+    let slug = slugRegexp.test(wpPost.link) ? wpPost.slug : wpPost.link.replace(urlRegexp, '');
 
     // @note: we don't copy excerpts because WP generated excerpts aren't better than Ghost ones but are often too long.
     const post = {

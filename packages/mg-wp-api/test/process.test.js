@@ -12,7 +12,7 @@ describe('Process', function () {
 
         post.should.be.an.Object().with.properties('url', 'data');
 
-        post.url.should.eql('https://mysite.com/bloob/my-awesome-post-with-a-canonical');
+        post.url.should.eql('https://mysite.com/bloob/2020/09/05/my-awesome-post-with-a-canonical');
         post.data.should.be.an.Object();
 
         const data = post.data;
