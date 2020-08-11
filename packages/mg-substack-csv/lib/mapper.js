@@ -31,7 +31,7 @@ const mapConfig = (data, {url, readPosts, email}) => {
     };
 
     if (email) {
-        const authorSlug = email.replace(/(^\w*)(?:@[\w_-]*\.\w*)/, '$1');
+        const authorSlug = email.replace(/(^[\w_-]*)(@[\w_-]*\.\w*(?:\.\w{0,2})?)/, '$1');
 
         mappedData.data.author = {
             url: `${url}/author/${authorSlug}`,
