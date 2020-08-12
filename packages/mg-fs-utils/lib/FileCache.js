@@ -91,17 +91,28 @@ class FileCache {
     // @TODO: move this somewhere shared,
     // it's currently duplicated from https://github.com/TryGhost/Ghost-Storage-Base/blob/master/BaseStorage.js#L62
     sanitizeFileName(src) {
+        let basename;
+
+        // remove unsupported characters from the dir name first
+        src = src.replace(src, this.sanitizeDirName(src));
+
+        basename = path.basename(src);
         // below only matches ascii characters, @, and .
         // unicode filenames like город.zip would therefore resolve to ----.zip
-        return src.replace(/[^\w@.]/gi, '-');
+        return src.replace(basename, basename.replace(/[^\w@.]/gi, '-'));
+    }
+
+    sanitizeDirName(src) {
+        // Slighly different regex from sanitizing the filename, as we still want to
+        // support characters like `/`, `_`, and `-`
+        return src.replace(/[^\w@./-_]/gi, '-');
     }
 
     resolveImageFileName(filename) {
-        let basename = path.basename(filename);
         let ext = path.extname(filename);
 
         // replace the basename part with a sanitized version
-        filename = filename.replace(basename, this.sanitizeFileName(basename));
+        filename = filename.replace(filename, this.sanitizeFileName(filename));
 
         // @TODO: use content type on request to infer this, rather than assuming jpeg?
         if (!_.includes(knownExtensions, ext)) {
