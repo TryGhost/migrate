@@ -19,7 +19,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@tryghost/image-transform": "1.0.2",
+    "@tryghost/image-transform": "1.0.3",
     "adm-zip": "0.4.16",
     "fs-extra": "9.0.1",
     "lodash": "^4.17.15",

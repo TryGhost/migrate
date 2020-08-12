@@ -27,7 +27,7 @@
   "devDependencies": {
     "mocha": "8.1.1",
     "should": "13.2.3",
-    "sinon": "9.0.2"
+    "sinon": "9.0.3"
   },
   "dependencies": {
     "@tryghost/listr-smart-renderer": "^0.2.1",
@@ -39,7 +39,7 @@
     "@tryghost/mg-medium-export": "^0.8.4",
     "@tryghost/mg-webscraper": "^0.6.3",
     "@tryghost/mg-wp-api": "^0.4.1",
-    "@tryghost/pretty-cli": "1.2.8",
+    "@tryghost/pretty-cli": "1.2.9",
     "@tryghost/string": "0.1.10",
     "listr": "0.14.3",
     "lodash.get": "4.4.2"

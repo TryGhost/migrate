@@ -222,10 +222,19 @@
     "@sinonjs/commons" "^1"
     "@sinonjs/samsam" "^5.0.2"
 
-"@sinonjs/samsam@^5.0.2", "@sinonjs/samsam@^5.0.3":
+"@sinonjs/samsam@^5.0.2":
   version "5.0.3"
   resolved "https://registry.yarnpkg.com/@sinonjs/samsam/-/samsam-5.0.3.tgz#86f21bdb3d52480faf0892a480c9906aa5a52938"
   integrity sha512-QucHkc2uMJ0pFGjJUDP3F9dq5dx8QIaqISl9QgwLOh6P9yv877uONPGXh/OH/0zmM3tW1JjuJltAZV2l7zU+uQ==
+  dependencies:
+    "@sinonjs/commons" "^1.6.0"
+    lodash.get "^4.4.2"
+    type-detect "^4.0.8"
+
+"@sinonjs/samsam@^5.1.0":
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/@sinonjs/samsam/-/samsam-5.1.0.tgz#3afe719232b541bb6cf3411a4c399a188de21ec0"
+  integrity sha512-42nyaQOVunX5Pm6GRJobmzbS7iLI+fhERITnETXzzwDZh+TtDr/Au3yAvXVjFmZ4wEUaE4Y3NFZfKv0bV0cbtg==
   dependencies:
     "@sinonjs/commons" "^1.6.0"
     lodash.get "^4.4.2"
@@ -243,29 +252,29 @@
   dependencies:
     defer-to-connect "^2.0.0"
 
-"@tryghost/errors@^0.2.2":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-0.2.2.tgz#ff70a5f895c84b84c47d71b9a16cba55c52f89ff"
-  integrity sha512-83er1JBMq5YKiXM3wvrP999eyhdVr2fQNCmYqmGc5gKxzpC7iMlD1FBkJe2E3UceOA9+IqucTrqf38uHrpEouw==
+"@tryghost/errors@^0.2.3":
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-0.2.3.tgz#f3431d00d67c5d6c1b145e8adcdf68ff2464e1fa"
+  integrity sha512-VX/eLFoX/xAJREu9ftZtXBNz3LsFvj0eRFVHDFdn8mu/oBZsEDLlWMqJX2U1fI0M5p9J9mO5hUa1Vrw7oxwHbA==
   dependencies:
     ghost-ignition "4.2.2"
     lodash "4.17.19"
 
-"@tryghost/html-to-mobiledoc@0.7.1":
-  version "0.7.1"
-  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-0.7.1.tgz#96dfb5e7d817ca5f67fba35d82beb1ea66a2cf8c"
-  integrity sha512-5ecakGIUNB707zYH8L9vXZF2SOTP7pM2qvKFggPxqOdaocFLki2mAn0S9qSbSY1C6kTLwMuUQIB6UJCo9skX/g==
+"@tryghost/html-to-mobiledoc@0.7.2":
+  version "0.7.2"
+  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-0.7.2.tgz#73c6ae0af170c482d6e6a6103e78519dd85665ed"
+  integrity sha512-8V5yRC16gxfqBYdsrlQYzgEkzN0ZGhjin8Htkd2izPG/RYwhr/RUjjnam+i6sYIf+ZgJpBDDDghGIgiG85NqcA==
   dependencies:
     "@tryghost/kg-parser-plugins" "1.0.6"
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
-    jsdom "16.3.0"
+    jsdom "16.4.0"
 
-"@tryghost/image-transform@1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.0.2.tgz#a6705b6eb61d8a2500061021da8d68e0587e16e6"
-  integrity sha512-7R6OuLv4okagOnD0mwOA0QQrUNDFH+RSGKd8vYDgWe6P5gGRBIDR8byR7wiUhZq89ujWGWHUMY/PcRbvMKNO+A==
+"@tryghost/image-transform@1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.0.3.tgz#41454d8040f9d62b3d55d3aadab75fd47bd7a77d"
+  integrity sha512-6MzFh7I0ZIVKO3YsyOqcds8O+acM7xA/mjrFC+XB60GNO1OpKZ8mAxR7YjT15Pa/DKHWQLa5PJzJLtHYIbCjJQ==
   dependencies:
-    "@tryghost/errors" "^0.2.2"
+    "@tryghost/errors" "^0.2.3"
     bluebird "3.7.2"
     fs-extra "9.0.1"
   optionalDependencies:
@@ -291,10 +300,10 @@
     mobiledoc-dom-renderer "0.7.0"
     mobiledoc-text-renderer "0.4.0"
 
-"@tryghost/pretty-cli@1.2.8":
-  version "1.2.8"
-  resolved "https://registry.yarnpkg.com/@tryghost/pretty-cli/-/pretty-cli-1.2.8.tgz#f1a193e06a8ff18c24f9ce1109c5699340597c26"
-  integrity sha512-yRIofDRAq84qATSsMneBcc3KI8j312ydCVwys4ZeDoRgfuNjPc0jzcgde40q+5DXTvit2qA75M1qoMnICLw9Hg==
+"@tryghost/pretty-cli@1.2.9":
+  version "1.2.9"
+  resolved "https://registry.yarnpkg.com/@tryghost/pretty-cli/-/pretty-cli-1.2.9.tgz#1eb1fa48ab5cadcc5dba75454ff28cb59586c117"
+  integrity sha512-MmN9SPVLFOUBBSzowHZuODMurQ7hLatDpWMojmVQzH4DSW07yQcD+yogpld15c9A2CZhcNfuT/XzKzRWpk/rAQ==
   dependencies:
     chalk "4.1.0"
     sywac "1.3.0"
@@ -2365,10 +2374,10 @@ jsbn@~0.1.0:
   resolved "https://registry.yarnpkg.com/jsbn/-/jsbn-0.1.1.tgz#a5e654c2e5a2deb5f201d96cefbca80c0ef2f513"
   integrity sha1-peZUwuWi3rXyAdls77yoDA7y9RM=
 
-jsdom@16.3.0:
-  version "16.3.0"
-  resolved "https://registry.yarnpkg.com/jsdom/-/jsdom-16.3.0.tgz#75690b7dac36c67be49c336dcd7219bbbed0810c"
-  integrity sha512-zggeX5UuEknpdZzv15+MS1dPYG0J/TftiiNunOeNxSl3qr8Z6cIlQpN0IdJa44z9aFxZRIVqRncvEhQ7X5DtZg==
+jsdom@16.4.0:
+  version "16.4.0"
+  resolved "https://registry.yarnpkg.com/jsdom/-/jsdom-16.4.0.tgz#36005bde2d136f73eee1a830c6d45e55408edddb"
+  integrity sha512-lYMm3wYdgPhrl7pDcRmvzPhhrGVBeVhPIqeHjzeiHN3DFmD1RBpbExbi8vU7BJdH8VAZYovR8DMt0PNNDM7k8w==
   dependencies:
     abab "^2.0.3"
     acorn "^7.1.1"
@@ -2906,7 +2915,7 @@ nice-try@^1.0.4:
   resolved "https://registry.yarnpkg.com/nice-try/-/nice-try-1.0.5.tgz#a3378a7696ce7d223e88fc9b764bd7ef1089e366"
   integrity sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==
 
-nise@^4.0.1:
+nise@^4.0.4:
   version "4.0.4"
   resolved "https://registry.yarnpkg.com/nise/-/nise-4.0.4.tgz#d73dea3e5731e6561992b8f570be9e363c4512dd"
   integrity sha512-bTTRUNlemx6deJa+ZyoCUTRvH3liK5+N6VQZ4NIw90AgDXY6iPnsqplNFf6STcj+ePk0H/xqxnP75Lr0J0Fq3A==
@@ -3707,17 +3716,17 @@ simple-swizzle@^0.2.2:
   dependencies:
     is-arrayish "^0.3.1"
 
-sinon@9.0.2:
-  version "9.0.2"
-  resolved "https://registry.yarnpkg.com/sinon/-/sinon-9.0.2.tgz#b9017e24633f4b1c98dfb6e784a5f0509f5fd85d"
-  integrity sha512-0uF8Q/QHkizNUmbK3LRFqx5cpTttEVXudywY9Uwzy8bTfZUhljZ7ARzSxnRHWYWtVTeh4Cw+tTb3iU21FQVO9A==
+sinon@9.0.3:
+  version "9.0.3"
+  resolved "https://registry.yarnpkg.com/sinon/-/sinon-9.0.3.tgz#bffc3ec28c936332cd2a41833547b9eed201ecff"
+  integrity sha512-IKo9MIM111+smz9JGwLmw5U1075n1YXeAq8YeSFlndCLhAL5KGn6bLgu7b/4AYHTV/LcEMcRm2wU2YiL55/6Pg==
   dependencies:
     "@sinonjs/commons" "^1.7.2"
     "@sinonjs/fake-timers" "^6.0.1"
     "@sinonjs/formatio" "^5.0.1"
-    "@sinonjs/samsam" "^5.0.3"
+    "@sinonjs/samsam" "^5.1.0"
     diff "^4.0.2"
-    nise "^4.0.1"
+    nise "^4.0.4"
     supports-color "^7.1.0"
 
 slice-ansi@0.0.4:
