@@ -1,4 +1,4 @@
-const parse = require('./lib/parse-csv');
+const parse = require('@tryghost/mg-fs-utils/lib/parse-csv');
 const map = require('./lib/mapper');
 const process = require('./lib/process');
 
