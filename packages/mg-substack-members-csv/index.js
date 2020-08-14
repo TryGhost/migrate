@@ -1,37 +1,15 @@
-const {converter} = require('./lib');
+const parse = require('@tryghost/mg-fs-utils/lib/parse-csv');
+// const normalizeCSV = require('./lib/normalize-csv');
 
-const convertCSV = async (originFilePath, destinationFilePath) => {
-    await converter.normalizeMembersCSV({
-        path: originFilePath,
-        destination: destinationFilePath,
-        columnsToMap: [{
-            from: 'email_disabled',
-            to: 'subscribed_to_emails',
-            negate: true
-        }, {
-            from: 'stripe_connected_customer_id',
-            to: 'stripe_customer_id'
-        }],
-        columnsToExtract: [{
-            name: 'email',
-            lookup: /^email/i
-        }, {
-            name: 'name',
-            lookup: /name/i
-        }, {
-            name: 'note',
-            lookup: /note/i
-        }, {
-            name: 'subscribed_to_emails',
-            lookup: /subscribed_to_emails/i
-        }, {
-            name: 'stripe_customer_id',
-            lookup: /stripe_customer_id/i
-        }, {
-            name: 'complimentary_plan',
-            lookup: /complimentary_plan/i
-        }]
-    });
+module.exports = async (ctx) => {
+    const signups = await parse(ctx.options.pathToAllSignups);
+    // let subscribers = [];
+
+    // if (ctx.hasSubscribers) {
+    //     subscribers = await parse(ctx.options.subs);
+    // }
+
+    // const normalized = await normalizeCSV(signups, subscribers, ctx.options);
+
+    return signups;
 };
-
-module.exports = convertCSV;
