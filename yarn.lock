@@ -300,7 +300,7 @@
     mobiledoc-dom-renderer "0.7.0"
     mobiledoc-text-renderer "0.4.0"
 
-"@tryghost/pretty-cli@1.2.9", "@tryghost/pretty-cli@^1.2.9":
+"@tryghost/pretty-cli@^1.2.9":
   version "1.2.9"
   resolved "https://registry.yarnpkg.com/@tryghost/pretty-cli/-/pretty-cli-1.2.9.tgz#1eb1fa48ab5cadcc5dba75454ff28cb59586c117"
   integrity sha512-MmN9SPVLFOUBBSzowHZuODMurQ7hLatDpWMojmVQzH4DSW07yQcD+yogpld15c9A2CZhcNfuT/XzKzRWpk/rAQ==
