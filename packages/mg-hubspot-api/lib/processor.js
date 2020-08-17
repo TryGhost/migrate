@@ -250,9 +250,10 @@ module.exports.processPost = (hsPost, tags, errors) => {
         url: hsPost.url,
         data: {
             slug: hsPost.slug,
-            title: hsPost.html_title,
+            title: hsPost.name || hsPost.html_title,
             comment_id: hsPost.analytics_page_id,
             created_at: hsPost.created_time,
+            meta_title: hsPost.page_title || hsPost.title,
             meta_description: hsPost.meta_description,
             status: hsPost.state.toLowerCase(),
             published_at: hsPost.publish_date
