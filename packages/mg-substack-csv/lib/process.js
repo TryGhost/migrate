@@ -1,6 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 const $ = require('cheerio');
+const url = require('url');
 
 const getFiles = async (path) => {
     let filenames = await fs.readdir(path);
@@ -32,8 +33,70 @@ const processContent = (html) => {
         decodeEntities: false
     });
 
+    $html('div.tweet').each((i, el) => {
+        let src = $(el).children('a').attr('href');
+        let parsed = url.parse(src);
+
+        if (parsed.search) {
+            // remove possible query params
+            parsed.search = null;
+        }
+        src = url.format(parsed, {search: false});
+
+        let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
+        let $blockquote = $('<blockquote class="twitter-tweet"></blockquote>');
+        let $anchor = $(`<a href="${src}"></a>`);
+        let $script = $('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
+
+        $blockquote.append($anchor);
+
+        $figure.append($blockquote);
+        $figure.append($script);
+
+        $(el).replaceWith($figure);
+    });
+
     $html('a > style').each((i, style) => {
         $(style).remove();
+    });
+
+    // TODO: this should be a parser plugin
+    // Handle blockquotes with multiple p tags as children and
+    // 1. remove the p tags
+    // 2. separate them with line breaks
+    // This way, mobiledoc treats multiple p tag children correctly as one blockquote
+    // instead of creating a blockquote for each one.
+    $html('blockquote > p + p').each((i, el) => {
+        let $blockquote = $(el).parents('blockquote');
+
+        if ($blockquote.children('p').length > 0) {
+            let newBlockquoteContent = '';
+            $blockquote.children('p').each((j, p) => {
+                if (j < $blockquote.children('p').length - 1) {
+                    newBlockquoteContent += `${$(p).html()}</br></br>`;
+                } else {
+                    newBlockquoteContent += $(p).html();
+                }
+            });
+            $blockquote.html(newBlockquoteContent);
+        }
+    });
+
+    // TODO: this should be a parser plugin
+    $html('table').each((i, table) => {
+        if ($(table).parents('table').length < 1) {
+            // don't wrap a nested table again
+            $(table).before('<!--kg-card-begin: html-->');
+            $(table).after('<!--kg-card-end: html-->');
+        }
+    });
+
+    // TODO: this should be a parser plugin
+    // Wrap nested lists in HTML card
+    $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {
+        let $parent = $(nestedList).parentsUntil('ul, ol').parent();
+        $parent.before('<!--kg-card-begin: html-->');
+        $parent.after('<!--kg-card-end: html-->');
     });
 
     // convert HTML back to a string
