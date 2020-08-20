@@ -31,6 +31,9 @@ Provide an email for users e.g. john@mycompany.com to create a general user w/ s
 `--drafts true`
 You can decide to not import drafts, when the post was e. g. only used to generate a newsletter but never published as a post. In this case the newsletter would be classed as `draft` and you can decide to not import them by setting this flag to false
 
+`--fallBackHTMLCard false`
+Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
+
 <hr>
 
 A more realistic command for a Substack migration looks like this:
