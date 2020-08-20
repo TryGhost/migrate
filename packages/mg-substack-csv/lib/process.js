@@ -24,7 +24,7 @@ const readFiles = async (files, postsDir) => {
     return postContent;
 };
 
-const processContent = (html) => {
+const processContent = (html, siteUrl) => {
     if (!html) {
         return '';
     }
@@ -58,6 +58,35 @@ const processContent = (html) => {
 
     $html('a > style').each((i, style) => {
         $(style).remove();
+    });
+
+    // Replace Substack share and subscribe buttons with normal links
+    // External links stay the same, but internal links should be turned into relative ones
+    $html('p.button-wrapper').each((i, button) => {
+        let shareLinks = $(button).children('a.button');
+        if (shareLinks.length === 1 && siteUrl) {
+            let siteRegex = new RegExp(`^(?:${siteUrl}(?:\\/?)(?:p\\/)?)([a-zA-Z-_\\d]*)(?:\\/?)`, 'gi');
+            let shareLink = $(shareLinks).get(0);
+            let src = $(shareLink).attr('href');
+            let parsed = url.parse(src);
+
+            if (parsed.search && parsed.search.indexOf('action=share') >= 0) {
+                // If it's a share button, there's no use for it and completely remove the button
+                $(button).remove();
+                return;
+            } else if (parsed.search) {
+                // remove possible query params
+                parsed.search = null;
+            }
+            src = url.format(parsed, {search: false});
+
+            if (src.match(siteRegex)) {
+                src = src.replace(siteRegex, '/$1/');
+            }
+
+            $(shareLink).attr('href', src);
+            $(button).replaceWith($(shareLink));
+        }
     });
 
     // TODO: this should be a parser plugin
@@ -105,13 +134,15 @@ const processContent = (html) => {
     return html;
 };
 
-const processPost = (post) => {
-    post.data.html = processContent(post.data.html);
+const processPost = (post, siteUrl) => {
+    post.data.html = processContent(post.data.html, siteUrl);
 
     return post;
 };
 
-module.exports = async (input, {postsDir}) => {
+module.exports = async (input, ctx) => {
+    let {postsDir, options} = ctx;
+    let {url: siteUrl} = options;
     const output = {};
 
     if (postsDir) {
@@ -129,7 +160,7 @@ module.exports = async (input, {postsDir}) => {
     }
 
     if (input.posts && input.posts.length > 0) {
-        output.posts = input.posts.map(post => processPost(post));
+        output.posts = input.posts.map(post => processPost(post, siteUrl));
     }
 
     return output;
