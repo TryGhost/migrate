@@ -33,18 +33,18 @@ module.exports.getTaskRunner = (pathToFile, options) => {
                     throw error;
                 }
             }
-        },
-        {
-            title: 'Write Ghost members import CSV batch files',
-            task: async (ctx) => {
-                // 8. Write a valid Ghost import zip
-                try {
-                    await ctx.fileCache.writeGhostMembersFiles(ctx);
-                } catch (error) {
-                    ctx.errors.push(error);
-                    throw error;
-                }
-            }
+        // },
+        // {
+        //     title: 'Write Ghost members import CSV batch files',
+        //     task: async (ctx) => {
+        //         // 8. Write a valid Ghost import zip
+        //         try {
+        //             await ctx.fileCache.writeGhostMembersFiles(ctx);
+        //         } catch (error) {
+        //             ctx.errors.push(error);
+        //             throw error;
+        //         }
+        //     }
         }
     ];
 
