@@ -16,14 +16,14 @@ module.exports.discover = async ({apitoken}) => {
     return {
         posts: posts,
         totals: {posts: posts.length},
-        user: {
+        users: {
             url: user.profile_url
         }
     };
 };
 
 const cachedFetch = async (fileCache, apitoken) => {
-    let filename = `revue_api.json`;
+    let filename = `revue_api_${apitoken}.json`;
 
     if (fileCache.hasFile(filename, 'tmp')) {
         console.log('Reading from fileCache');
@@ -31,7 +31,6 @@ const cachedFetch = async (fileCache, apitoken) => {
     }
     console.log('fetching from API');
     let response = await this.discover(apitoken);
-    console.log('cachedFetch -> response', response);
 
     await fileCache.writeTmpJSONFile(response, filename);
 

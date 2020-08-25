@@ -55,6 +55,12 @@ const scrapeConfig = {
                 return x.slice(0, 499);
             }
         }
+    },
+    users: {
+        name: {
+            selector: 'meta[name="author"]',
+            attr: 'content'
+        }
     }
 };
 
