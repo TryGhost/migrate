@@ -41,18 +41,30 @@ const scrapeConfig = {
             }
         },
         twitter_image: {
-            selector: 'meta[name="twitter:image"], meta[name="twitter:image:src"]',
+            selector: 'meta[name="twitter:image"], meta[name="twitter:image:src"], meta[property="twitter:image"], meta[property="twitter:image:src"]',
             attr: 'content'
         },
         twitter_title: {
-            selector: 'meta[name="twitter:title"]',
+            selector: 'meta[name="twitter:title"], meta[property="twitter:title"]',
             attr: 'content'
         },
         twitter_description: {
-            selector: 'meta[name="twitter:description"]',
+            selector: 'meta[name="twitter:description"], meta[property="twitter:description"]',
             attr: 'content',
             convert: (x) => {
                 return x.slice(0, 499);
+            }
+        },
+        tags: {
+            selector: 'meta[name="keywords"]',
+            attr: 'content',
+            convert: (x) => {
+                if (!x) {
+                    return;
+                }
+                let tags = x.split(',');
+
+                return tags.map(tag => tag.trim());
             }
         }
     },
@@ -64,6 +76,27 @@ const scrapeConfig = {
     }
 };
 
+const postProcessor = (scrapedData, data, {addPrimaryTag}) => {
+    let primaryTag = addPrimaryTag.toLowerCase();
+
+    if (scrapedData.tags) {
+        if (addPrimaryTag && scrapedData.tags.includes(primaryTag)) {
+            scrapedData.tags = scrapedData.tags.filter(tag => tag !== primaryTag);
+        }
+
+        scrapedData.tags = scrapedData.tags.map((tag) => {
+            return {
+                url: `/tag/${tag}/`, data: {name: tag}
+            };
+        });
+        data.tags = data.tags.concat(scrapedData.tags);
+
+        delete scrapedData.tags;
+    }
+
+    return scrapedData;
+};
+
 module.exports.initialise = (options) => {
     return {
         title: 'Initialising Workspace',
@@ -71,8 +104,8 @@ module.exports.initialise = (options) => {
             ctx.options = options;
 
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-            ctx.fileCache = new fsUtils.FileCache(options.url);
-            ctx.wpScraper = new MgWebScraper(ctx.fileCache, scrapeConfig);
+            ctx.fileCache = new fsUtils.FileCache(ctx.options.pubName);
+            ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
             ctx.linkFixer = new MgLinkFixer();
 
@@ -127,6 +160,15 @@ module.exports.getFullTaskList = (options) => {
                     throw error;
                 }
             }
+        },
+        {
+            title: 'Fetch missing metadata via WebScraper',
+            task: (ctx) => {
+                // 3. Pass the results through the web scraper to get any missing data
+                let tasks = ctx.webScraper.hydrate(ctx);
+                return makeTaskRunner(tasks, options);
+            },
+            skip: () => ['all', 'web'].indexOf(options.scrape) < 0
         },
         {
             title: 'Build Link Map',
