@@ -38,6 +38,7 @@
     "@tryghost/mg-json": "^0.6.4",
     "@tryghost/mg-linkfixer": "^0.1.8",
     "@tryghost/mg-medium-export": "^0.8.6",
+    "@tryghost/mg-revue-api": "^0.1.0",
     "@tryghost/mg-substack-csv": "^0.1.8",
     "@tryghost/mg-substack-members-csv": "^0.1.7",
     "@tryghost/mg-webscraper": "^0.6.5",
