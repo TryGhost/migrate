@@ -15,7 +15,7 @@ Substack provides an overview `csv` file as well as a folder containing differen
 
 To run an absolute basic Substack migration, the required command is this:
 
-`yarn migrate substack <path to post.csv file>`
+`migrate substack <path to post.csv file>`
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
@@ -38,7 +38,7 @@ Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
 
 A more realistic command for a Substack migration looks like this:
 
-`yarn migrate substack <path to post.csv file> --url <URL to substack instance> --readPosts <path to directory containing html files> --email <main author email> --drafts false`
+`migrate substack <path to post.csv file> --url <URL to substack instance> --readPosts <path to directory containing html files> --email <main author email> --drafts false`
 
 ## Develop
 
