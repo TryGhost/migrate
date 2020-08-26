@@ -15,9 +15,9 @@ Revue has and API that we can use to fetch content for migration. The token can 
 
 To run a basic migration from Revue all you need is to run a command like this:
 
-`migrate revue <URL> <API token>`
+`migrate revue <pubName> <API token>`
 
-The URL reflects the publisher URL of Revue, e. g. https://www.getrevue.co/profile/<publication>
+The `pubName` value is the publication or user name. It's the last part of the profile URL, e. g. https://www.getrevue.co/profile/**<pubName>**
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 

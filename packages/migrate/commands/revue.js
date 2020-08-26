@@ -7,13 +7,13 @@ exports.id = 'revue';
 exports.group = 'Sources:';
 
 // The command to run and any params
-exports.flags = 'revue [url] <apitoken>';
+exports.flags = 'revue [pubName] <apitoken>';
 
 // Description for the top level command
 exports.desc = 'Migrate from Revue using the API';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Revue profile URL, not custom domain (e. g. https://www.getrevue.co/profile/<name>)', 'Revue API Token'];
+exports.paramsDesc = ['Revue profile name (e. g. https://www.getrevue.co/profile/<pubName>)', 'Revue API Token'];
 
 // Configure all the options
 exports.setup = (sywac) => {
@@ -56,8 +56,6 @@ exports.run = async (argv) => {
     if (argv.verbose) {
         ui.log.info(`${argv.info ? 'Fetching info' : 'Migrating'} from Revue site`);
     }
-
-    argv.pubName = argv.url.replace(/^(?:http(?:s?):\/\/(?:www\.?)getrevue\.co\/profile\/)(\S*)$/, '$1');
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
