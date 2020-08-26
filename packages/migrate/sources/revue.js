@@ -64,15 +64,6 @@ const scrapeConfig = {
     }
 };
 
-module.exports.initAPI = (options) => {
-    return {
-        title: 'Initialising API',
-        task: async (ctx) => {
-            ctx.result = await revueAPI.discover(options);
-        }
-    };
-};
-
 module.exports.initialise = (options) => {
     return {
         title: 'Initialising Workspace',
@@ -80,7 +71,7 @@ module.exports.initialise = (options) => {
             ctx.options = options;
 
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-            ctx.fileCache = new fsUtils.FileCache(options.apitoken);
+            ctx.fileCache = new fsUtils.FileCache(options.url);
             ctx.wpScraper = new MgWebScraper(ctx.fileCache, scrapeConfig);
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
             ctx.linkFixer = new MgLinkFixer();
@@ -91,9 +82,12 @@ module.exports.initialise = (options) => {
 };
 
 module.exports.getInfoTaskList = (options) => {
-    return [
-        this.initAPI(options)
-    ];
+    return [{
+        title: 'Fetching from API',
+        task: async (ctx) => {
+            ctx.info = await revueAPI.fetch.discover(options);
+        }
+    }];
 };
 
 /**
@@ -106,7 +100,6 @@ module.exports.getInfoTaskList = (options) => {
  */
 module.exports.getFullTaskList = (options) => {
     return [
-        this.initAPI(options),
         this.initialise(options),
         {
             title: 'Fetch Content from Revue API',
@@ -125,7 +118,6 @@ module.exports.getFullTaskList = (options) => {
         {
             title: 'Process Revue API JSON',
             task: async (ctx) => {
-                console.log('module.exports.getFullTaskList -> ctx', ctx);
                 // 2. Convert Revue API JSON into a format that the migrate tools understand
                 try {
                     ctx.result = revueAPI.process.all(ctx);

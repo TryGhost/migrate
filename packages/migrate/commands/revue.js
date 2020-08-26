@@ -7,13 +7,13 @@ exports.id = 'revue';
 exports.group = 'Sources:';
 
 // The command to run and any params
-exports.flags = 'revue <apitoken>';
+exports.flags = 'revue [url] <apitoken>';
 
 // Description for the top level command
 exports.desc = 'Migrate from Revue using the API';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Revue API Token'];
+exports.paramsDesc = ['URL of the Revue home page', 'Revue API Token'];
 
 // Configure all the options
 exports.setup = (sywac) => {
@@ -61,17 +61,18 @@ exports.run = async (argv) => {
         await migrate.run(context);
 
         if (argv.info && context.info) {
-            let batches = context.info.batches.posts;
-            ui.log.info(`Batch info: ${context.info.totals.posts} posts ${batches} batches.`);
+            ui.log.info(`Fetched ${context.info.totals.posts} posts.`);
         }
 
-        if (argv.verbose) {
+        if (argv.verbose && context.result) {
             ui.log.info('Done', require('util').inspect(context.result.data, false, 2));
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);
     }
 
-    // Report success
-    ui.log.ok(`Successfully written output to ${context.outputFile} in ${Date.now() - timer}ms.`);
+    if (!argv.info) {
+        // Report success
+        ui.log.ok(`Successfully written output to ${context.outputFile} in ${Date.now() - timer}ms.`);
+    }
 };

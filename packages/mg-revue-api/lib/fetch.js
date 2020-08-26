@@ -22,30 +22,27 @@ module.exports.discover = async ({apitoken}) => {
     };
 };
 
-const cachedFetch = async (fileCache, apitoken) => {
-    let filename = `revue_api_${apitoken}.json`;
+const cachedFetch = async (fileCache, options) => {
+    let filename = `revue_api_${options.url}.json`;
 
     if (fileCache.hasFile(filename, 'tmp')) {
-        console.log('Reading from fileCache');
         return await fileCache.readTmpJSONFile(filename);
     }
-    console.log('fetching from API');
-    let response = await this.discover(apitoken);
+
+    let response = await this.discover(options);
 
     await fileCache.writeTmpJSONFile(response, filename);
 
     return response;
 };
 
-module.exports.tasks = async ({apitoken}, ctx) => {
-    console.log('module.exports.tasks -> ctx', ctx);
+module.exports.tasks = async (options) => {
     const tasks = [{
         title: `Fetching posts from Revue`,
         task: async (ctx) => { // eslint-disable-line no-shadow
             try {
-                ctx.result = await cachedFetch(ctx.fileCache, apitoken);
+                ctx.result = await cachedFetch(ctx.fileCache, options);
             } catch (error) {
-                console.log('module.exports.tasks -> error', error);
                 ctx.errors.push(error);
                 throw error;
             }
