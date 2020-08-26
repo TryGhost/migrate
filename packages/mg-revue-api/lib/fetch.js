@@ -16,9 +16,7 @@ module.exports.discover = async ({apitoken}) => {
     return {
         posts: posts,
         totals: {posts: posts.length},
-        users: {
-            url: user.profile_url
-        }
+        users: {url: user.profile_url}
     };
 };
 
