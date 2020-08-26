@@ -17,7 +17,7 @@ To run a basic migration from Revue all you need is to run a command like this:
 
 `migrate revue <URL> <API token>`
 
-The URL reflects the publisher URL of Revue, e. g. https://www.getrevue.co/profile/ghost_
+The URL reflects the publisher URL of Revue, e. g. https://www.getrevue.co/profile/<publication>
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 

@@ -13,7 +13,7 @@ exports.flags = 'revue [url] <apitoken>';
 exports.desc = 'Migrate from Revue using the API';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Revue profile URL', 'Revue API Token'];
+exports.paramsDesc = ['Revue profile URL, not custom domain (e. g. https://www.getrevue.co/profile/<name>)', 'Revue API Token'];
 
 // Configure all the options
 exports.setup = (sywac) => {
