@@ -21,7 +21,7 @@ module.exports.discover = async ({apitoken}) => {
 };
 
 const cachedFetch = async (fileCache, options) => {
-    let filename = `revue_api_${options.url}.json`;
+    let filename = `revue_api_${options.pubName}.json`;
 
     if (fileCache.hasFile(filename, 'tmp')) {
         return await fileCache.readTmpJSONFile(filename);

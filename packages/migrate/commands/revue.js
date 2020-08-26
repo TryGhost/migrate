@@ -13,7 +13,7 @@ exports.flags = 'revue [url] <apitoken>';
 exports.desc = 'Migrate from Revue using the API';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['URL of the Revue home page', 'Revue API Token'];
+exports.paramsDesc = ['Revue profile URL', 'Revue API Token'];
 
 // Configure all the options
 exports.setup = (sywac) => {
@@ -30,9 +30,13 @@ exports.setup = (sywac) => {
         defaultValue: 'all',
         desc: 'Configure scraping tasks'
     });
+    sywac.string('--addPrimaryTag', {
+        defaultValue: null,
+        desc: 'Provide a tag slug which should be added to every post as primary tag.'
+    });
     sywac.string('-e --email', {
-        defaultValue: false,
-        desc: 'Provide an email domain for users e.g. mycompany.com'
+        defaultValue: null,
+        desc: 'Provide an email for users e.g. john@mycompany.com to create a general user w/ slug `john` and provided email'
     });
     sywac.boolean('-I, --info', {
         defaultValue: false,
@@ -52,6 +56,8 @@ exports.run = async (argv) => {
     if (argv.verbose) {
         ui.log.info(`${argv.info ? 'Fetching info' : 'Migrating'} from Revue site`);
     }
+
+    argv.pubName = argv.url.replace(/^(?:http(?:s?):\/\/(?:www\.?)getrevue\.co\/profile\/)(\S*)$/, '$1');
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
