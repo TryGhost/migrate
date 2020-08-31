@@ -24,9 +24,6 @@ It's possible to pass more options, in order to achieve a better migration file 
 `--addPrimaryTag <tag>`
 Provide a tag slug or name which should be added to every post as primary tag.
 
-`--readPosts <path to directory containing html files>`
-Some Substack exports include a directory with `html` files for each post.
-
 `--email <email of main author>`
 Provide an email or the author of the publication.
 
