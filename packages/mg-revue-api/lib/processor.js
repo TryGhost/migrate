@@ -53,6 +53,24 @@ module.exports.processContent = (html, postUrl) => {
 
         // convert HTML back to a string
         html = $html.html();
+
+        // Handle Revue embeds
+        // This is done with a regex replace, because we have to parse the string
+
+        // Twitter embeds `[twitter <URL>]`
+        html = html.replace(/\[tweet (https?:\/\/twitter\.com\/\S*\/\S*\/\d*)\]/g, (m, src) => {
+            return `<figure class="kg-card kg-embed-card">
+<blockquote class="twitter-tweet"><a href="${src}"></a></blockquote>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+</figure>`;
+        });
+
+        // YouTube embeds `[embed <URL>]`
+        html = html.replace(/\[embed https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9]*)\]/g, (m, id) => {
+            return `<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card">
+<iframe src="https://www.youtube.com/embed/${id}?feature=oembed" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="" frameborder="0"></iframe>
+</figure><!--kg-card-end: embed-->`;
+        });
     } catch (err) {
         console.log(postUrl); // eslint-disable-line no-console
         err.source = postUrl;
