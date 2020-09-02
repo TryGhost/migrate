@@ -1,5 +1,29 @@
 const $ = require('cheerio');
 const {slugify} = require('@tryghost/string');
+const url = require('url');
+const querystring = require('querystring');
+
+const UTM_PARAMS = ['utm_campaign', 'utm_medium', 'utm_source'];
+
+// TODO: move this to a shared util
+const cleanUrl = (src) => {
+    const parsed = url.parse(src);
+
+    // default: remove any UTM search params from the URL
+    if (parsed.search) {
+        const parsedQuery = querystring.parse(parsed.search.replace(/^\?/i, ''), '&amp;');
+
+        Object.keys(parsedQuery).forEach((param) => {
+            if (UTM_PARAMS.includes(param) || !parsedQuery[param]) {
+                delete parsedQuery[param];
+            }
+        });
+
+        parsed.search = parsedQuery ? querystring.stringify(parsedQuery) : null;
+    }
+
+    return url.format(parsed);
+};
 
 module.exports.processContent = (html, postUrl) => {
     // Drafts can have empty post bodies
@@ -12,6 +36,40 @@ module.exports.processContent = (html, postUrl) => {
     });
 
     try {
+        // Revue has bookmark cards in different formats that are not detectable to use by CSS classes
+        // We can't guarantee for reliable meta information from the source and furthermore, Revue allows
+        // custom text in their "bookmark card".
+        // We're transforming those sections into an image with caption and a linked header with text
+        $html('p > img[width]').each((i, img) => {
+            const $figure = $('<figure class="kg-card kg-image-card"></figure>');
+            // grab the wrapping parent, which contains the other links and the text
+            const $imgParent = $(img).parents('p');
+
+            // Only the first link is relevant, as the second link is used as caption of the bookmark card
+            let imgLink = $imgParent.find('strong > a').get(0);
+
+            // We grabbed this one before, now we can remove it
+            $imgParent.find('strong').remove();
+
+            // Remove any search queries (mostly UTM tracking)
+            $(imgLink).attr('href', cleanUrl($(imgLink).attr('href')));
+            $(img).attr('src', cleanUrl($(img).attr('src')));
+
+            $(img).removeAttr('width');
+            $(img).removeAttr('height');
+            $(img).removeAttr('style');
+
+            $figure.append($(img));
+
+            if ($(img).attr('alt').length > 0) {
+                $figure.addClass('kg-card-hascaption');
+                $figure.append(`<figcaption>${$(img).attr('alt')}</figcaption>`);
+            }
+
+            $imgParent.prepend($(imgLink));
+            $imgParent.before($figure);
+        });
+
         // TODO: this should be a parser plugin
         // Handle blockquotes with multiple p tags as children and
         // 1. remove the p tags
