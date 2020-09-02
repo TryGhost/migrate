@@ -53,6 +53,10 @@ exports.run = async (argv) => {
     let timer = Date.now();
     let context = {errors: []};
 
+    if (argv.pubName.indexOf('http') >= 0) {
+        return ui.log.error('Please provide Revue profile name without URL (e. g. https://www.getrevue.co/profile/<pubName>)');
+    }
+
     if (argv.verbose) {
         ui.log.info(`${argv.info ? 'Fetching info' : 'Migrating'} from Revue site`);
     }
