@@ -153,10 +153,12 @@ module.exports.processContent = (html, postUrl) => {
  * }
  */
 module.exports.processPost = (data, {addPrimaryTag, email, pubName}) => {
+    const slugRegexp = new RegExp(`https:\\/\\/www\\.getrevue\\.co\\/profile\\/${pubName}\\/issues\\/(\\S*)`);
+
     const post = {
         url: data.url,
         data: {
-            slug: slugify(data.title),
+            slug: data.url.replace(slugRegexp, '$1') || slugify(data.title),
             title: data.title,
             meta_title: data.page_title || data.title,
             status: 'published',
