@@ -32,11 +32,11 @@ exports.setup = (sywac) => {
     });
     sywac.string('--addPrimaryTag', {
         defaultValue: null,
-        desc: 'Provide a tag slug which should be added to every post as primary tag.'
+        desc: 'Provide a tag name which should be added to every post as primary tag'
     });
     sywac.string('-e --email', {
         defaultValue: null,
-        desc: 'Provide an email for users e.g. john@mycompany.com to create a general user w/ slug `john` and provided email'
+        desc: 'Provide an email for users e.g. john@mycompany.com to create a general author for the posts'
     });
     sywac.boolean('-I, --info', {
         defaultValue: false,
