@@ -128,15 +128,22 @@ module.exports.processContent = (html, postUrl) => {
         // This is done with a regex replace, because we have to parse the string
 
         // Twitter embeds `[twitter <URL>]`
-        html = html.replace(/\[tweet (https?:\/\/twitter\.com\/\S*\/\S*\/\d*)\]/g, (m, src) => {
+        html = html.replace(/\[tweet (https?:\/\/twitter\.com\/\S*\/\S*\/\d*)\]/gi, (m, src) => {
             return `<figure class="kg-card kg-embed-card">
 <blockquote class="twitter-tweet"><a href="${src}"></a></blockquote>
 <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 </figure>`;
         });
 
-        // YouTube embeds `[embed <URL>]`
-        html = html.replace(/\[embed https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9]*)\]/g, (m, id) => {
+        // YouTube embeds `[embed <https://wwww.youtube.com/watch?v=id>]`
+        html = html.replace(/\[embed https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]*)\]/gi, (m, id) => {
+            return `<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card">
+<iframe src="https://www.youtube.com/embed/${id}?feature=oembed" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="" frameborder="0"></iframe>
+</figure><!--kg-card-end: embed-->`;
+        });
+
+        // YouTube embeds `[embed <https://youtu.be/id>]`
+        html = html.replace(/\[embed https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]*)\]/gi, (m, id) => {
             return `<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card">
 <iframe src="https://www.youtube.com/embed/${id}?feature=oembed" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="" frameborder="0"></iframe>
 </figure><!--kg-card-end: embed-->`;
