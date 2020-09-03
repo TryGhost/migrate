@@ -66,17 +66,33 @@ const scrapeConfig = {
 
                 return tags.map(tag => tag.trim());
             }
+        },
+        images: {
+            selector: 'img[width="140"], img.link-image',
+            how: 'html',
+            convert: (html, $node) => {
+                const scrapeImages = [];
+
+                if ($node && $node.length >= 1) {
+                    $node.each((i, img) => {
+                        if (img.attribs.width === '140' && img.attribs.height === '140') {
+                            // We only want to grab those thumbnail images and format the src, so we can compare
+                            // it with the images we processed already
+                            scrapeImages.push(img.attribs.src.replace(/(https?:\/\/(?:s3\.)?amazonaws\.com\/revue\/items\/images\/\d{3}\/\d{3}\/\d{3}\/)(?:thumb|mail|web)(\/\S*)(?:\?\S*)/gi, '$1web$2'));
+                        }
+                    });
+                }
+                return scrapeImages;
+            }
         }
-    },
-    users: {
-        name: {
-            selector: 'meta[name="author"]',
-            attr: 'content'
-        }
+
     }
 };
 
 const postProcessor = (scrapedData, data, {addPrimaryTag}) => {
+    // TODO: is there a better way to do this?
+    const $ = require('cheerio');
+
     let primaryTag = addPrimaryTag.toLowerCase();
 
     if (scrapedData.tags) {
@@ -92,6 +108,38 @@ const postProcessor = (scrapedData, data, {addPrimaryTag}) => {
         data.tags = data.tags.concat(scrapedData.tags);
 
         delete scrapedData.tags;
+    }
+
+    // To detect which Revue "bookmark card" or image card layout is used, we
+    // need to use scraped data as the only reliable way of telling.
+    // We already created kg-images in large resolution for each one, but now
+    // have to detect and remove the ones, which are only displayed as thumbnails
+    // because we only want to migrate the large images (width="600") from Revue
+    if (scrapedData.images && scrapedData.images.length > 0) {
+        const $html = $.load(data.html, {
+            decodeEntities: false
+        });
+
+        // find all kg figure tags with the added class from the processor
+        $html('.revue-image').each((i, revueImg) => {
+            let imgChildren = $(revueImg).children('img');
+
+            if ($(imgChildren).length > 0) {
+                let src = $(imgChildren.get(0)).attr('src');
+
+                // if the image is a scaped thumbnail, remove the whole
+                // figure node
+                if (scrapedData.images.includes(src)) {
+                    $(revueImg).remove();
+                } else {
+                    $(revueImg).removeClass('revue-image');
+                }
+            }
+        });
+
+        data.html = $html.html();
+
+        delete scrapedData.images;
     }
 
     return scrapedData;
