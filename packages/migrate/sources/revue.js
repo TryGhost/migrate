@@ -82,7 +82,7 @@ const scrapeConfig = {
                         }
                     });
                 }
-                return scrapeImages;
+                return scrapeImages.length ? scrapeImages : null;
             }
         }
 
@@ -138,9 +138,9 @@ const postProcessor = (scrapedData, data, {addPrimaryTag}) => {
         });
 
         data.html = $html.html();
-
-        delete scrapedData.images;
     }
+
+    delete scrapedData.images;
 
     return scrapedData;
 };
