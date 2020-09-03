@@ -55,18 +55,18 @@ const scrapeConfig = {
                 return x.slice(0, 499);
             }
         },
-        tags: {
-            selector: 'meta[name="keywords"]',
-            attr: 'content',
-            convert: (x) => {
-                if (!x) {
-                    return;
-                }
-                let tags = x.split(',');
+        // tags: {
+        //     selector: 'meta[name="keywords"]',
+        //     attr: 'content',
+        //     convert: (x) => {
+        //         if (!x) {
+        //             return;
+        //         }
+        //         let tags = x.split(',');
 
-                return tags.map(tag => tag.trim());
-            }
-        },
+        //         return tags.map(tag => tag.trim());
+        //     }
+        // },
         images: {
             selector: 'img[width="140"], img.link-image',
             how: 'html',
@@ -93,22 +93,22 @@ const postProcessor = (scrapedData, data, {addPrimaryTag}) => {
     // TODO: is there a better way to do this?
     const $ = require('cheerio');
 
-    let primaryTag = addPrimaryTag.toLowerCase();
+    // let primaryTag = addPrimaryTag.toLowerCase();
 
-    if (scrapedData.tags) {
-        if (addPrimaryTag && scrapedData.tags.includes(primaryTag)) {
-            scrapedData.tags = scrapedData.tags.filter(tag => tag !== primaryTag);
-        }
+    // if (scrapedData.tags) {
+    //     if (addPrimaryTag && scrapedData.tags.includes(primaryTag)) {
+    //         scrapedData.tags = scrapedData.tags.filter(tag => tag !== primaryTag);
+    //     }
 
-        scrapedData.tags = scrapedData.tags.map((tag) => {
-            return {
-                url: `/tag/${tag}/`, data: {name: tag}
-            };
-        });
-        data.tags = data.tags.concat(scrapedData.tags);
+    //     scrapedData.tags = scrapedData.tags.map((tag) => {
+    //         return {
+    //             url: `/tag/${tag}/`, data: {name: tag}
+    //         };
+    //     });
+    //     data.tags = data.tags.concat(scrapedData.tags);
 
-        delete scrapedData.tags;
-    }
+    //     delete scrapedData.tags;
+    // }
 
     // To detect which Revue "bookmark card" or image card layout is used, we
     // need to use scraped data as the only reliable way of telling.
