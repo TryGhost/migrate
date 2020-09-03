@@ -39,21 +39,21 @@ module.exports.processContent = (html, postUrl) => {
         // Revue has bookmark cards in different formats that are not detectable to use by CSS classes
         // We can't guarantee for reliable meta information from the source and furthermore, Revue allows
         // custom text in their "bookmark card".
-        // We're transforming those sections into an image with caption and a linked header with text
+        // We're fetching the images in their largest solution, but remove thumbnails later, which we
+        // can detect with our WebScraper.
+        // The processing code for this lives the migrate package in the
+        // revue source (scrapeConfig & postProcessor)
         $html('p > img[width]').each((i, img) => {
-            const $figure = $('<figure class="kg-card kg-image-card"></figure>');
+            // we add a `revue-image` class here to identify the node and compare the image src with
+            // the web scraped results. If the images is rendered as a thumbnail, we'll remove the node
+            const $figure = $(`<figure class="kg-card kg-image-card revue-image"></figure>`);
             // grab the wrapping parent, which contains the other links and the text
-            const $imgParent = $(img).parents('p');
+            const $imgParent = $(img).parent();
 
-            // Only the first link is relevant, as the second link is used as caption of the bookmark card
-            let imgLink = $imgParent.find('strong > a').get(0);
+            // trick to grab the larger `web` version of the image
+            let imgLarge = cleanUrl($(img).attr('src')).replace(/(https?:\/\/(?:s3\.)?amazonaws\.com\/revue\/items\/images\/\d{3}\/\d{3}\/\d{3}\/)(?:thumb)(\/\S*)/, '$1web$2');
 
-            // We grabbed this one before, now we can remove it
-            $imgParent.find('strong').remove();
-
-            // Remove any search queries (mostly UTM tracking)
-            $(imgLink).attr('href', cleanUrl($(imgLink).attr('href')));
-            $(img).attr('src', cleanUrl($(img).attr('src')));
+            $(img).attr('src', imgLarge);
 
             $(img).removeAttr('width');
             $(img).removeAttr('height');
@@ -61,13 +61,25 @@ module.exports.processContent = (html, postUrl) => {
 
             $figure.append($(img));
 
-            if ($(img).attr('alt').length > 0) {
-                $figure.addClass('kg-card-hascaption');
-                $figure.append(`<figcaption>${$(img).attr('alt')}</figcaption>`);
-            }
-
-            $imgParent.prepend($(imgLink));
             $imgParent.before($figure);
+        });
+
+        // Link headings. Should be h3 tags in Ghost and have normalized links (removed UTM properties)
+        $html('p > strong[style]').each((i, strong) => {
+            strong.tagName = 'h3';
+            $(strong).removeAttr('style');
+            let linkChildren = $(strong).children('a');
+
+            if ($(linkChildren).length === 2 && $(strong).text().indexOf('&mdash;') >= 0) {
+                let relevantLink = $(linkChildren).get(0);
+                $(relevantLink).attr('href', cleanUrl($(relevantLink).attr('href')));
+                $(strong).html('');
+                $(strong).append($(relevantLink));
+            } else if ($(linkChildren).length > 0) {
+                $(linkChildren).each((i, anchor) => {
+                    $(anchor).attr('href', cleanUrl($(anchor).attr('href')));
+                });
+            }
         });
 
         // TODO: this should be a parser plugin
