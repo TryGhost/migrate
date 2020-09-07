@@ -89,7 +89,7 @@ const scrapeConfig = {
     }
 };
 
-const postProcessor = (scrapedData, data, {addPrimaryTag}) => {
+const postProcessor = (scrapedData, data) => {
     // TODO: is there a better way to do this?
     const $ = require('cheerio');
 
