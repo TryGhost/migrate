@@ -58,6 +58,10 @@ const scrapeConfig = {
     }
 };
 
+const skipScrape = (post) => {
+    return post.data.status === 'draft';
+};
+
 /**
  * getTasks: Steps to Migrate from Medium
  *
@@ -76,7 +80,7 @@ module.exports.getTaskRunner = (options) => {
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
                 ctx.fileCache = new fsUtils.FileCache(ctx.options.pathToFile);
                 ctx.imageScraper = new MgImageScraper(ctx.fileCache);
-                ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig);
+                ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, null, skipScrape);
                 ctx.linkFixer = new MgLinkFixer();
 
                 task.output = `Workspace initialised at ${ctx.fileCache.cacheDir}`;

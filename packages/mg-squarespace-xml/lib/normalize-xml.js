@@ -51,15 +51,21 @@ const processTags = ($sqCategories, fetchTags) => {
     return categories.concat(tags);
 };
 
-const processPost = (sqPost, users, {addTag, tags: fetchTags}) => {
+const processPost = (sqPost, users, siteUrl, {addTag, tags: fetchTags}) => {
     const postType = $(sqPost).children('wp\\:post_type').text();
 
     if (postType !== 'attachment') {
         const featureImage = processFeatureImage(sqPost);
         const authorSlug = slugify($(sqPost).children('dc\\:creator').text());
+        let postSlug = $(sqPost).children('link').text();
+
+        if (!postSlug || postSlug.indexOf('null') >= 0) {
+            // drafts can have a post slug/link of `/null`
+            postSlug = 'untitled';
+        }
 
         const post = {
-            url: $(sqPost).children('link').text(),
+            url: `${siteUrl}${$(sqPost).children('link').text()}`,
             data: {
                 slug: $(sqPost).children('wp\\:post_name').text().replace(/(\.html)$/i, ''),
                 title: $(sqPost).children('title').text(),
@@ -112,6 +118,7 @@ const processPost = (sqPost, users, {addTag, tags: fetchTags}) => {
 };
 
 module.exports = async (input, {options}) => {
+    const {drafts} = options;
     const output = {
         posts: [],
         users: []
@@ -133,12 +140,17 @@ module.exports = async (input, {options}) => {
     });
 
     $file('item').each((i, sqPost) => {
-        const processedPost = processPost(sqPost, output.users, options, sourceUrl);
+        const processedPost = processPost(sqPost, output.users, sourceUrl, options);
 
         if (processedPost) {
             output.posts.push(processedPost);
         }
     });
+
+    if (!drafts) {
+        // remove draft posts
+        output.posts = output.posts.filter(post => post.data.status !== 'draft');
+    }
 
     return output;
 };
