@@ -30,10 +30,6 @@ exports.setup = (sywac) => {
         defaultValue: 'all',
         desc: 'Configure scraping tasks'
     });
-    sywac.string('-u --url', {
-        defaultValue: 'https://ghost.io',
-        desc: 'Provide a URL (without trailing slash) to the hosted source site, so we can scrape data'
-    });
     sywac.boolean('--drafts', {
         defaultValue: true,
         desc: 'Import draft posts'
@@ -63,7 +59,7 @@ exports.run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = squarespace.getTaskRunner(argv.pathToFile, argv);
+        let migrate = squarespace.getTaskRunner(argv);
 
         // Run the migration
         await migrate.run(context);

@@ -66,18 +66,20 @@ const scrapeConfig = {
  * @param {String} pathToFile
  * @param {Object} options
  */
-module.exports.getTaskRunner = (pathToFile, options) => {
+module.exports.getTaskRunner = (options) => {
     let tasks = [
         {
             title: 'Initialising',
-            task: (ctx) => {
+            task: (ctx, task) => {
                 ctx.options = options;
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-                ctx.fileCache = new fsUtils.FileCache(pathToFile);
+                ctx.fileCache = new fsUtils.FileCache(ctx.options.pathToFile);
                 ctx.imageScraper = new MgImageScraper(ctx.fileCache);
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig);
                 ctx.linkFixer = new MgLinkFixer();
+
+                task.output = `Workspace initialised at ${ctx.fileCache.cacheDir}`;
             }
         },
         {
