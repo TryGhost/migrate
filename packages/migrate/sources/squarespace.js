@@ -72,7 +72,6 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             title: 'Initialising',
             task: (ctx) => {
                 ctx.options = options;
-                console.log('module.exports.getTaskRunner -> options', options);
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
                 ctx.fileCache = new fsUtils.FileCache(pathToFile);
