@@ -97,7 +97,13 @@ class WebScraper {
     // Perform the scrape, and catch/report any errors
     async scrape(url, config) {
         try {
-            let {data, response} = await scrapeIt(url, config);
+            const reqOpts = {
+                url: url,
+                headers: {
+                    'user-agent': 'Crawler/1.0'
+                }
+            };
+            let {data, response} = await scrapeIt(reqOpts,config);
             let {responseUrl, statusCode} = response;
             if (statusCode > 399) {
                 throw ScrapeError({url, code: 'HTTPERROR', statusCode});
