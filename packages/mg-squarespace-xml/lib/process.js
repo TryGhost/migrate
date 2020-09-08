@@ -1,69 +1,13 @@
 const $ = require('cheerio');
-const url = require('url');
 
-const processContent = (html, siteUrl) => {
+const processContent = (html) => {
     if (!html) {
         return '';
     }
 
     const $html = $.load(html, {
-        decodeEntities: false
-    });
-
-    $html('div.tweet').each((i, el) => {
-        let src = $(el).children('a').attr('href');
-        let parsed = url.parse(src);
-
-        if (parsed.search) {
-            // remove possible query params
-            parsed.search = null;
-        }
-        src = url.format(parsed, {search: false});
-
-        let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
-        let $blockquote = $('<blockquote class="twitter-tweet"></blockquote>');
-        let $anchor = $(`<a href="${src}"></a>`);
-        let $script = $('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
-
-        $blockquote.append($anchor);
-
-        $figure.append($blockquote);
-        $figure.append($script);
-
-        $(el).replaceWith($figure);
-    });
-
-    $html('a > style').each((i, style) => {
-        $(style).remove();
-    });
-
-    // Replace Substack share and subscribe buttons with normal links
-    // External links stay the same, but internal links should be turned into relative ones
-    $html('p.button-wrapper').each((i, button) => {
-        let shareLinks = $(button).children('a.button');
-        if (shareLinks.length === 1 && siteUrl) {
-            let siteRegex = new RegExp(`^(?:${siteUrl}(?:\\/?)(?:p\\/)?)([a-zA-Z-_\\d]*)(?:\\/?)`, 'gi');
-            let shareLink = $(shareLinks).get(0);
-            let src = $(shareLink).attr('href');
-            let parsed = url.parse(src);
-
-            if (parsed.search && parsed.search.indexOf('action=share') >= 0) {
-                // If it's a share button, there's no use for it and completely remove the button
-                $(button).remove();
-                return;
-            } else if (parsed.search) {
-                // remove possible query params
-                parsed.search = null;
-            }
-            src = url.format(parsed, {search: false});
-
-            if (src.match(siteRegex)) {
-                src = src.replace(siteRegex, '/$1/');
-            }
-
-            $(shareLink).attr('href', src);
-            $(button).replaceWith($(shareLink));
-        }
+        decodeEntities: false,
+        normalizeWhitespace: true
     });
 
     // TODO: this should be a parser plugin
@@ -124,7 +68,7 @@ module.exports = async (input, ctx) => {
 
     if (input.posts && input.posts.length > 0) {
         output.posts = input.posts.map(post => processPost(post, siteUrl));
-        output.users = input;
+        output.users = input.users;
     }
 
     return output;

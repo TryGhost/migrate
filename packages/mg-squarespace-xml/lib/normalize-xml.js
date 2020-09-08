@@ -69,9 +69,10 @@ const processPost = (sqPost, users, siteUrl, {addTag, tags: fetchTags}) => {
             data: {
                 slug: $(sqPost).children('wp\\:post_name').text().replace(/(\.html)$/i, ''),
                 title: $(sqPost).children('title').text(),
-                html: $.html($(sqPost).children('content\\:encoded')),
+                html: $(sqPost).children('content\\:encoded').text(),
                 status: $(sqPost).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
-                published_at: $(sqPost).children('wp\\:post_date_gmt').text(),
+                created_at: $(sqPost).children('wp\\:post_date_gmt').text(),
+                published_at: $(sqPost).children('wp\\:post_date_gmt').text() || $(sqPost).children('pubDate').text(),
                 feature_image: featureImage,
                 tags: [],
                 type: postType,
@@ -105,7 +106,7 @@ const processPost = (sqPost, users, siteUrl, {addTag, tags: fetchTags}) => {
                 post.data.author = {
                     url: 'migrator-added-author',
                     data: {
-                        slug: 'dummy-author@dummyemail.com'
+                        slug: 'dummy-user'
                     }
                 };
             }
@@ -130,7 +131,8 @@ module.exports = async (input, {options}) => {
 
     const $file = $.load(input, {
         decodeEntities: false,
-        xmlMode: true
+        xmlMode: true,
+        lowerCaseTags: true
     });
 
     const sourceUrl = $file('channel > link').text();
