@@ -10,6 +10,20 @@ const processContent = (html) => {
         normalizeWhitespace: true
     });
 
+    // squarespace images without src
+    $html('img[data-src]').each((i, img) => {
+        const src = $(img).attr('data-src');
+        if ($(img).hasClass('thumb-image')) {
+            // images with the `thumb-image` class might be a duplicate
+            // to prevent migrating two images, we have to remove the false node
+            if ($($(img).prev('noscript').children('img').get(0)).attr('src') === src) {
+                $(img).remove();
+            }
+        } else {
+            $(img).attr('src', $(img).attr('data-src'));
+        }
+    });
+
     // TODO: this should be a parser plugin
     // Handle blockquotes with multiple p tags as children and
     // 1. remove the p tags
