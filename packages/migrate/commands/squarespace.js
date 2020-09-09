@@ -34,6 +34,10 @@ exports.setup = (sywac) => {
         defaultValue: true,
         desc: 'Import draft posts'
     });
+    sywac.boolean('--pages', {
+        defaultValue: false,
+        desc: 'Import Squarespace pages'
+    });
     sywac.boolean('--tags', {
         defaultValue: true,
         desc: 'Set to false if you don\'t want to import WordPress tags, only categories'

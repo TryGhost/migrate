@@ -119,7 +119,7 @@ const processPost = (sqPost, users, siteUrl, {addTag, tags: fetchTags}) => {
 };
 
 module.exports = async (input, {options}) => {
-    const {drafts} = options;
+    const {drafts, pages} = options;
     const output = {
         posts: [],
         users: []
@@ -152,6 +152,11 @@ module.exports = async (input, {options}) => {
     if (!drafts) {
         // remove draft posts
         output.posts = output.posts.filter(post => post.data.status !== 'draft');
+    }
+
+    if (!pages) {
+        // remove pages
+        output.posts = output.posts.filter(post => post.data.type !== 'page');
     }
 
     return output;
