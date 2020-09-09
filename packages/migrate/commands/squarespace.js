@@ -44,7 +44,7 @@ exports.setup = (sywac) => {
     });
     sywac.string('--addTag', {
         defaultValue: null,
-        desc: 'Provide a tag slug which should be added to every post in this migration'
+        desc: 'Provide a tag name which should be added to every post in this migration'
     });
     sywac.boolean('--fallBackHTMLCard', {
         defaultValue: false,
