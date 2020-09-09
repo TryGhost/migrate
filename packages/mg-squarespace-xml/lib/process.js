@@ -1,5 +1,6 @@
 const $ = require('cheerio');
 const {slugify} = require('@tryghost/string');
+const {parse, isDate} = require('date-fns');
 
 module.exports.processUser = ($sqUser) => {
     const authorSlug = slugify($($sqUser).children('wp\\:author_login').text());
@@ -22,6 +23,10 @@ module.exports.processContent = (html) => {
     const $html = $.load(html, {
         decodeEntities: false,
         normalizeWhitespace: true
+    });
+
+    $html('.newsletter-form-wrapper').each((i, form) => {
+        $(form).remove();
     });
 
     // squarespace images without src
@@ -142,12 +147,11 @@ module.exports.processPost = ($sqPost, users, {addTag, tags: fetchTags, siteUrl}
                 slug: $($sqPost).children('wp\\:post_name').text().replace(/(\.html)/i, ''),
                 title: $($sqPost).children('title').text(),
                 status: $($sqPost).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
-                // TODO: properly format the date, as `pubDate` is not accepted by our importer
-                published_at: $($sqPost).children('wp\\:post_date_gmt').text() || $($sqPost).children('pubDate').text(),
+                published_at: parse($($sqPost).children('pubDate').text(), 'EEE, d MMM yyyy HH:mm:ss xx', new Date()),
                 feature_image: featureImage,
-                tags: [],
                 type: postType,
-                author: users ? users.find(user => user.data.slug === authorSlug) : null
+                author: users ? users.find(user => user.data.slug === authorSlug) : null,
+                tags: []
             }
         };
 
