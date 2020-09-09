@@ -1,6 +1,6 @@
 const $ = require('cheerio');
 const {slugify} = require('@tryghost/string');
-const {parse, isDate} = require('date-fns');
+const {parse} = require('date-fns');
 
 module.exports.processUser = ($sqUser) => {
     const authorSlug = slugify($($sqUser).children('wp\\:author_login').text());
