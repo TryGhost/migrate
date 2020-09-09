@@ -1,5 +1,56 @@
 const $ = require('cheerio');
+const htmlToText = require('html-to-text');
 const {slugify} = require('@tryghost/string');
+
+// TODO: we should probably make a new package for shared utils to process content
+// as the same code snippet lives in the hubspot package
+module.exports.createCleanExcerpt = (summaryContent = '') => {
+    // Don't know why this doesn't happen in htmlToText, it should
+    summaryContent = summaryContent.replace('&nbsp;', ' ');
+
+    // Convert to text only
+    let excerpt = htmlToText.fromString(summaryContent, {
+        ignoreHref: true,
+        ignoreImage: true,
+        wordwrap: false,
+        uppercaseHeadings: false,
+        decodeOptions: {}
+    });
+
+    while (excerpt.length > 300) {
+        let parts;
+        let split;
+
+        if (excerpt.match(/\n\n/)) {
+            split = '\n\n';
+        } else if (excerpt.match(/\.\n/)) {
+            split = '.\n';
+        } else if (excerpt.match(/\.\s/)) {
+            split = '. ';
+        } else if (excerpt.match(/\s/)) {
+            split = ' ';
+        } else {
+            excerpt = excerpt.substring(0, 297);
+            excerpt += '...';
+        }
+
+        if (split) {
+            parts = excerpt.split(split);
+
+            if (parts.length > 1) {
+                parts.pop();
+                excerpt = parts.join(split);
+                if (split === '. ' || split === '.\n') {
+                    excerpt += '.';
+                } else if (split === ' ') {
+                    excerpt += '...';
+                }
+            }
+        }
+    }
+
+    return excerpt;
+};
 
 module.exports.processUser = ($sqUser) => {
     const authorSlug = slugify($($sqUser).children('wp\\:author_login').text());
@@ -144,8 +195,6 @@ module.exports.processPost = ($sqPost, users, {addTag, tags: fetchTags, siteUrl}
                 status: $($sqPost).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
                 // TODO: properly format the date, as `pubDate` is not accepted by our importer
                 published_at: $($sqPost).children('wp\\:post_date_gmt').text() || $($sqPost).children('pubDate').text(),
-                // TODO: clean the custom excerpt to not include any HTML
-                custom_excerpt: $($sqPost).children('excerpt\\:encoded').text(),
                 feature_image: featureImage,
                 tags: [],
                 type: postType,
@@ -154,6 +203,8 @@ module.exports.processPost = ($sqPost, users, {addTag, tags: fetchTags, siteUrl}
         };
 
         post.data.html = this.processContent($($sqPost).children('content\\:encoded').text());
+
+        post.data.custom_excerpt = this.createCleanExcerpt($($sqPost).children('excerpt\\:encoded').text());
 
         if ($($sqPost).children('category').length >= 1) {
             post.data.tags = this.processTags($($sqPost).children('category'), fetchTags);
