@@ -32,8 +32,6 @@ module.exports.linkTopicsAsTags = (topicIds, tags) => {
     return topicIds.map(id => tags[id]);
 };
 
-// TODO: we should probably make a new package for shared utils to process content
-// as the same code snippet lives in the squarespace package
 module.exports.createCleanExcerpt = (summaryContent = '') => {
     // Don't know why this doesn't happen in htmlToText, it should
     summaryContent = summaryContent.replace('&nbsp;', ' ');
