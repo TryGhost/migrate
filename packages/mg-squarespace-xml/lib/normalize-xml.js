@@ -106,7 +106,7 @@ const processPost = (sqPost, users, siteUrl, {addTag, tags: fetchTags}) => {
                 post.data.author = {
                     url: 'migrator-added-author',
                     data: {
-                        slug: 'dummy-user'
+                        slug: 'migrator-added-author'
                     }
                 };
             }
