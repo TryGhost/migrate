@@ -37,7 +37,7 @@ const processTags = ($sqCategories, fetchTags) => {
                     name: $(taxonomy).text()
                 }
             });
-        } else if ($(taxonomy).attr('domain') === 'post_tag') {
+        } else if ($(taxonomy).attr('domain') === 'category') {
             categories.push({
                 url: `/tag/${$(taxonomy).attr('nicename')}`,
                 data: {
@@ -51,7 +51,7 @@ const processTags = ($sqCategories, fetchTags) => {
     return categories.concat(tags);
 };
 
-const processPost = (sqPost, users, siteUrl, {addTag, tags: fetchTags}) => {
+const processPost = (sqPost, users, {addTag, tags: fetchTags, siteUrl}) => {
     const postType = $(sqPost).children('wp\\:post_type').text();
 
     if (postType !== 'attachment') {
@@ -67,12 +67,14 @@ const processPost = (sqPost, users, siteUrl, {addTag, tags: fetchTags}) => {
         const post = {
             url: `${siteUrl}${$(sqPost).children('link').text()}`,
             data: {
-                slug: $(sqPost).children('wp\\:post_name').text().replace(/(\.html)$/i, ''),
+                slug: $(sqPost).children('wp\\:post_name').text().replace(/(\.html)/i, ''),
                 title: $(sqPost).children('title').text(),
                 html: $(sqPost).children('content\\:encoded').text(),
                 status: $(sqPost).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
                 created_at: $(sqPost).children('wp\\:post_date_gmt').text(),
                 published_at: $(sqPost).children('wp\\:post_date_gmt').text() || $(sqPost).children('pubDate').text(),
+                // TODO: clean the custom excerpt to not include any HTML
+                custom_excerpt: $(sqPost).children('excerpt\\:encoded').text(),
                 feature_image: featureImage,
                 tags: [],
                 type: postType,
@@ -118,7 +120,18 @@ const processPost = (sqPost, users, siteUrl, {addTag, tags: fetchTags}) => {
     return;
 };
 
-module.exports = async (input, {options}) => {
+module.exports.processPosts = ($xml, users, options) => {
+    const postsOutput = [];
+
+    $xml('item').each((i, sqPost) => {
+        postsOutput.push(processPost(sqPost, users, options));
+    });
+
+    // don't return empty post objects
+    return postsOutput.filter(post => post);
+};
+
+module.exports.all = async (input, {options}) => {
     const {drafts, pages} = options;
     const output = {
         posts: [],
@@ -129,25 +142,20 @@ module.exports = async (input, {options}) => {
         return new Error('Input file is empty');
     }
 
-    const $file = $.load(input, {
+    const $xml = $.load(input, {
         decodeEntities: false,
         xmlMode: true,
         lowerCaseTags: true
     });
 
-    const sourceUrl = $file('channel > link').text();
+    // grab the URL of the site we're importing
+    options.siteUrl = $xml('channel > link').text();
 
-    $file('wp\\:author').each((i, sqUser) => {
+    $xml('wp\\:author').each((i, sqUser) => {
         output.users.push(processUser(sqUser));
     });
 
-    $file('item').each((i, sqPost) => {
-        const processedPost = processPost(sqPost, output.users, sourceUrl, options);
-
-        if (processedPost) {
-            output.posts.push(processedPost);
-        }
-    });
+    output.posts = this.processPosts($xml, output.users, options);
 
     if (!drafts) {
         // remove draft posts
