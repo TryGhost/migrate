@@ -2,9 +2,13 @@ const _ = require('lodash');
 const cheerio = require('cheerio');
 const url = require('url');
 const got = require('got');
+const path = require('path');
 
 // @TODO: expand this list
 const htmlFields = ['html'];
+
+// @TODO: should probably be a shared list
+const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico'];
 
 const isHTMLField = field => _.includes(htmlFields, field);
 const isImageField = field => /image/.test(field);
@@ -36,6 +40,10 @@ class ImageScraper {
         }, defaultOptions);
     }
 
+    changeExtension(string, ext) {
+        return path.join(path.dirname(string), path.basename(string, path.extname(string)) + ext);
+    }
+
     async fetchImage(src) {
         // Timeout after 20 seconds
         return await got(src, {responseType: 'buffer', timeout: 20000});
@@ -57,6 +65,24 @@ class ImageScraper {
         try {
             // Timeout after 20 seconds
             let response = await this.fetchImage(src);
+
+            // Get the file extension from `src`
+            // Will return then last `.` with anything after if, eg `.`, `.png`
+            let extension = path.extname(src);
+
+            // If we have an extension of 2 or less characters
+            if (extension.length <= 2) {
+                // Get the content type from response headers and convert to extension
+                let contentTypeParts = response.headers['content-type'].split('/');
+                let newExt = '.' + contentTypeParts[1];
+
+                if (knownExtensions.includes(newExt)) {
+                    imageOptions.filename = this.changeExtension(imageOptions.filename, newExt);
+                    imageOptions.storagePath = this.changeExtension(imageOptions.storagePath, newExt);
+                    imageOptions.outputPath = this.changeExtension(imageOptions.outputPath, newExt);
+                }
+            }
+
             await this.fileCache.writeImageFile(response.body, imageOptions);
             return imageFile.outputPath;
         } catch (error) {
