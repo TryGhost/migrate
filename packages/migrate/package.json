@@ -39,6 +39,7 @@
     "@tryghost/mg-linkfixer": "^0.1.9",
     "@tryghost/mg-medium-export": "^0.9.0",
     "@tryghost/mg-revue-api": "^0.2.1",
+    "@tryghost/mg-squarespace-xml": "^0.1.0",
     "@tryghost/mg-substack-csv": "^0.1.9",
     "@tryghost/mg-substack-members-csv": "^0.1.8",
     "@tryghost/mg-webscraper": "^0.6.7",
