@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/migrate",
-  "version": "0.12.7",
+  "version": "0.13.4",
   "repository": "https://github.com/TryGhost/migrate/tree/master/packages/migrate",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -25,25 +25,28 @@
     "access": "public"
   },
   "devDependencies": {
-    "mocha": "8.1.1",
+    "mocha": "8.1.3",
     "should": "13.2.3",
     "sinon": "9.0.3"
   },
   "dependencies": {
     "@tryghost/listr-smart-renderer": "^0.2.1",
-    "@tryghost/mg-fs-utils": "^0.6.4",
-    "@tryghost/mg-html-mobiledoc": "^0.7.4",
-    "@tryghost/mg-hubspot-api": "^0.2.2",
-    "@tryghost/mg-imagescraper": "^0.4.5",
-    "@tryghost/mg-json": "^0.6.4",
-    "@tryghost/mg-linkfixer": "^0.1.8",
-    "@tryghost/mg-medium-export": "^0.8.6",
-    "@tryghost/mg-substack-csv": "^0.1.5",
-    "@tryghost/mg-substack-members-csv": "^0.1.7",
-    "@tryghost/mg-webscraper": "^0.6.5",
-    "@tryghost/mg-wp-api": "^0.4.2",
+    "@tryghost/mg-fs-utils": "^0.6.5",
+    "@tryghost/mg-html-mobiledoc": "^0.7.5",
+    "@tryghost/mg-hubspot-api": "^0.2.3",
+    "@tryghost/mg-imagescraper": "^0.4.8",
+    "@tryghost/mg-json": "^0.6.5",
+    "@tryghost/mg-linkfixer": "^0.1.9",
+    "@tryghost/mg-medium-export": "^0.9.0",
+    "@tryghost/mg-revue-api": "^0.2.2",
+    "@tryghost/mg-squarespace-xml": "^0.1.0",
+    "@tryghost/mg-substack-csv": "^0.1.9",
+    "@tryghost/mg-substack-members-csv": "^0.1.8",
+    "@tryghost/mg-webscraper": "^0.6.7",
+    "@tryghost/mg-wp-api": "^0.4.3",
     "@tryghost/pretty-cli": "1.2.9",
     "@tryghost/string": "0.1.11",
+    "cheerio": "0.22.0",
     "listr": "0.14.3",
     "lodash.get": "4.4.2"
   }

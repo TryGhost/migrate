@@ -1,4 +1,3 @@
-const mediumIngest = require('@tryghost/mg-medium-export');
 const mgJSON = require('@tryghost/mg-json');
 const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
 const MgWebScraper = require('@tryghost/mg-webscraper');
@@ -6,40 +5,22 @@ const MgImageScraper = require('@tryghost/mg-imagescraper');
 const MgLinkFixer = require('@tryghost/mg-linkfixer');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const makeTaskRunner = require('../lib/task-runner');
+const xmlIngest = require('@tryghost/mg-squarespace-xml');
 
 const scrapeConfig = {
     posts: {
-        status: {
-            selector: 'meta[name="robots"]',
-            attr: 'content',
-            convert: (x) => {
-                return x.match(/noindex/) ? 'draft' : 'published';
-            }
-        },
-        author: {
-            selector: '#root',
-            data: {
-                url: {
-                    selector: 'a[href*="/@"]',
-                    attr: 'href',
-                    eq: 1,
-                    convert: (x) => {
-                        if (x.match(/(\/@.*?)\?/)) {
-                            return `https://medium.com${x.match(/(\/@.*?)\?/)[1]}`;
-                        }
-                        return x;
-                    }
-                },
-                profile_image: {
-                    selector: 'a[href*="/@"] img',
-                    eq: 1,
-                    attr: 'src'
-                }
-            }
+        meta_title: {
+            selector: 'title'
         },
         meta_description: {
             selector: 'meta[name="description"]',
-            attr: 'content'
+            attr: 'content',
+            convert: (x) => {
+                if (!x) {
+                    return;
+                }
+                return x.slice(0, 499);
+            }
         },
         og_image: {
             selector: 'meta[property="og:image"]',
@@ -51,31 +32,34 @@ const scrapeConfig = {
         },
         og_description: {
             selector: 'meta[property="og:description"]',
-            attr: 'content'
+            attr: 'content',
+            convert: (x) => {
+                if (!x) {
+                    return;
+                }
+                return x.slice(0, 499);
+            }
         },
         twitter_image: {
-            selector: 'meta[name="twitter:image:src"]',
+            selector: 'meta[name="twitter:image"], meta[name="twitter:image:src"]',
             attr: 'content'
         },
         twitter_title: {
-            selector: 'meta[property="twitter:title"]',
+            selector: 'meta[name="twitter:title"]',
             attr: 'content'
         },
         twitter_description: {
-            selector: 'meta[property="twitter:description"]',
-            attr: 'content'
+            selector: 'meta[name="twitter:description"]',
+            attr: 'content',
+            convert: (x) => {
+                return x.slice(0, 499);
+            }
         }
     }
 };
 
-const postProcessor = (scrapedData) => {
-    if (scrapedData.status === 'Unlisted') {
-        scrapedData.status = 'draft';
-        scrapedData.tags = scrapedData.tags || [];
-        scrapedData.tags.push({url: 'migrator-added-tag', name: '#Unlisted'});
-    }
-
-    return scrapedData;
+const skipScrape = (post) => {
+    return post.data.status === 'draft';
 };
 
 /**
@@ -83,32 +67,32 @@ const postProcessor = (scrapedData) => {
  *
  * Wiring of the steps to migrate from medium.
  *
- * @param {String} pathToZip
+ * @param {String} pathToFile
  * @param {Object} options
  */
-module.exports.getTaskRunner = (pathToZip, options) => {
+module.exports.getTaskRunner = (options) => {
     let tasks = [
         {
-            title: 'Initialising Workspace',
+            title: 'Initialising',
             task: (ctx, task) => {
                 ctx.options = options;
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-                ctx.fileCache = new fsUtils.FileCache(pathToZip);
+                ctx.fileCache = new fsUtils.FileCache(ctx.options.pathToFile);
                 ctx.imageScraper = new MgImageScraper(ctx.fileCache);
-                ctx.mediumScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
+                ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, null, skipScrape);
                 ctx.linkFixer = new MgLinkFixer();
 
                 task.output = `Workspace initialised at ${ctx.fileCache.cacheDir}`;
             }
         },
         {
-            title: 'Read Medium export zip',
+            title: 'Read xml file',
             task: async (ctx) => {
-                // 1. Read the zip file
+                // 1. Read the xml file
                 try {
-                    ctx.result = mediumIngest(pathToZip, options);
-                    await ctx.fileCache.writeTmpJSONFile(ctx.result, 'medium-export-data.json');
+                    ctx.result = await xmlIngest(ctx);
+                    await ctx.fileCache.writeTmpJSONFile(ctx.result, 'xml-export-data.json');
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
@@ -119,7 +103,7 @@ module.exports.getTaskRunner = (pathToZip, options) => {
             title: 'Fetch missing data via WebScraper',
             task: (ctx) => {
                 // 2. Pass the results through the web scraper to get any missing data
-                let tasks = ctx.mediumScraper.hydrate(ctx); // eslint-disable-line no-shadow
+                let tasks = ctx.webScraper.hydrate(ctx); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
             },
             skip: () => ['all', 'web'].indexOf(options.scrape) < 0
@@ -185,7 +169,6 @@ module.exports.getTaskRunner = (pathToZip, options) => {
                 // 8. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostJSONFile(ctx.result);
-                    await ctx.fileCache.writeErrorJSONFile(ctx.errors);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;

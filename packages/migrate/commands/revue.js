@@ -1,19 +1,19 @@
-const substack = require('../sources/substack');
+const revue = require('../sources/revue');
 const ui = require('@tryghost/pretty-cli').ui;
 
 // Internal ID in case we need one.
-exports.id = 'substack';
+exports.id = 'revue';
 
 exports.group = 'Sources:';
 
 // The command to run and any params
-exports.flags = 'substack <pathToFile>';
+exports.flags = 'revue [pubName] <apitoken>';
 
 // Description for the top level command
-exports.desc = 'Migrate from a Substack CSV';
+exports.desc = 'Migrate from Revue using the API';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Path to a csv file'];
+exports.paramsDesc = ['Revue profile name (e. g. https://www.getrevue.co/profile/<pubName>)', 'Revue API Token'];
 
 // Configure all the options
 exports.setup = (sywac) => {
@@ -21,7 +21,7 @@ exports.setup = (sywac) => {
         defaultValue: false,
         desc: 'Show verbose output'
     });
-    sywac.boolean('--zip', {
+    sywac.boolean('-z, --zip', {
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
     });
@@ -30,21 +30,17 @@ exports.setup = (sywac) => {
         defaultValue: 'all',
         desc: 'Configure scraping tasks'
     });
+    sywac.string('--addPrimaryTag', {
+        defaultValue: null,
+        desc: 'Provide a tag name which should be added to every post as primary tag'
+    });
     sywac.string('-e --email', {
         defaultValue: null,
-        desc: 'Provide an email for users e.g. john@mycompany.com to create a general user w/ slug `john` and provided email'
+        desc: 'Provide an email for users e.g. john@mycompany.com to create a general author for the posts'
     });
-    sywac.string('-u --url', {
-        defaultValue: 'https://ghost.io',
-        desc: 'Provide a URL (without trailing slash) to the hosted source site, so we can scrape data'
-    });
-    sywac.string('-p --readPosts', {
-        defaultValue: null,
-        desc: 'Provide a path to a posts folder that contains HTML files (file name = post id) to read the post content'
-    });
-    sywac.boolean('--drafts', {
-        defaultValue: true,
-        desc: 'Import draft posts'
+    sywac.boolean('-I, --info', {
+        defaultValue: false,
+        desc: 'Show Revue API info only'
     });
     sywac.boolean('--fallBackHTMLCard', {
         defaultValue: false,
@@ -57,32 +53,34 @@ exports.run = async (argv) => {
     let timer = Date.now();
     let context = {errors: []};
 
-    if (argv.verbose) {
-        ui.log.info(`Migrating from export at ${argv.pathToFile}`);
+    if (argv.pubName.indexOf('http') >= 0) {
+        return ui.log.error('Please provide Revue profile name without URL (e. g. https://www.getrevue.co/profile/<pubName>)');
     }
 
-    if (argv.readPosts) {
-        context.postsDir = argv.readPosts;
+    if (argv.verbose) {
+        ui.log.info(`${argv.info ? 'Fetching info' : 'Migrating'} from Revue site`);
     }
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = substack.getTaskRunner(argv.pathToFile, argv);
+        let migrate = revue.getTaskRunner(argv);
 
         // Run the migration
         await migrate.run(context);
 
-        if (argv.verbose) {
+        if (argv.info && context.info) {
+            ui.log.info(`Fetched ${context.info.totals.posts} posts.`);
+        }
+
+        if (argv.verbose && context.result) {
             ui.log.info('Done', require('util').inspect(context.result.data, false, 2));
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);
     }
 
-    if (argv.verbose) {
-        ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
+    if (!argv.info) {
+        // Report success
+        ui.log.ok(`Successfully written output to ${context.outputFile} in ${Date.now() - timer}ms.`);
     }
-
-    // Report success
-    ui.log.ok(`Successfully written output to ${context.outputFile} in ${Date.now() - timer}ms.`);
 };

@@ -1,7 +1,7 @@
 {
-  "name": "@tryghost/mg-imagescraper",
-  "version": "0.4.8",
-  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-imagescraper",
+  "name": "@tryghost/mg-squarespace-xml",
+  "version": "0.1.0",
+  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-squarespace-xml",
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",
@@ -24,8 +24,7 @@
     "sinon": "9.0.3"
   },
   "dependencies": {
-    "cheerio": "^1.0.0-rc.2",
-    "got": "11.7.0",
-    "lodash": "4.17.20"
+    "cheerio": "0.22.0",
+    "date-fns": "2.16.1"
   }
 }
