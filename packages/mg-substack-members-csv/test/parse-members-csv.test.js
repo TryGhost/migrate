@@ -26,9 +26,9 @@ describe('Parses Substack members files', function () {
         const ctx = {
             options: {
                 pathToFile: path.resolve('./test/fixtures/fixtures_signup_emails.csv'),
-                subs: path.resolve('./test/fixtures/fixtures_subscriber_emails.csv')
-            },
-            hasSubscribers: true
+                subs: path.resolve('./test/fixtures/fixtures_subscriber_emails.csv'),
+                hasSubscribers: true
+            }
         };
 
         const result = await parseMembers(ctx);

@@ -1,11 +1,15 @@
 const parse = require('@tryghost/mg-fs-utils/lib/parse-csv');
 
 module.exports = async (ctx) => {
-    let parsed = await parse(ctx.options.pathToFile);
+    const {options} = ctx;
     let subscribers = [];
 
-    if (ctx.hasSubscribers) {
-        subscribers = await parse(ctx.options.subs);
+    // grab the main file "signups"
+    let parsed = await parse(options.pathToFile);
+
+    if (options.hasSubscribers) {
+        // grap the "subscribers" file if option is passed
+        subscribers = await parse(options.subs);
     }
 
     parsed = parsed.map((signup) => {
