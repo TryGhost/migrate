@@ -6,12 +6,14 @@ const parsedMembers = require('./fixtures/parsed');
 require('./utils');
 
 const DEFAULT_OPTIONS = {
-    comp: {thresholdYearOrDate: 10, beforeThreshold: 'free'},
-    gift: {thresholdYearOrDate: 10, beforeThreshold: 'free'},
-    compLabel: 'substack-comp',
-    giftLabel: 'substack-gift',
-    freeLabel: 'substack-free',
-    paidLabel: 'substack-paid'
+    options: {
+        comp: {thresholdYearOrDate: 10, beforeThreshold: 'free'},
+        gift: {thresholdYearOrDate: 10, beforeThreshold: 'free'},
+        compLabel: 'substack-comp',
+        giftLabel: 'substack-gift',
+        freeLabel: 'substack-free',
+        paidLabel: 'substack-paid'
+    }
 };
 
 describe('Normalizes and processes Substack members', function () {
@@ -61,10 +63,29 @@ describe('Normalizes and processes Substack members', function () {
         m1.subscribed_to_emails.should.be.false();
         m2.subscribed_to_emails.should.be.true();
     });
-    // it('with date threshold for comp and gift');
-    // it('converts comp and gift members to free when chosen as before threshold option');
-    // it('skips members when `none` chosen as before threshold option');
-    it('removes delete requests', async function () {
+
+    it('with date or year threshold for comp and gift', async function () {
+        const input = parsedMembers.subscribed;
+        const options = {
+            options: {
+                comp: {thresholdYearOrDate: new Date('2020-12-31T00:00:00.000Z'), beforeThreshold: 'free'},
+                gift: {thresholdYearOrDate: 1, beforeThreshold: 'none'},
+                compLabel: 'substack-comp',
+                giftLabel: 'substack-gift',
+                freeLabel: 'substack-free',
+                paidLabel: 'substack-paid'
+            }
+        };
+
+        const result = await processMembers(input, options);
+        result.should.be.an.object;
+        result.free.should.have.length(5);
+        result.paid.should.have.length(9);
+        result.comp.should.have.length(3);
+        result.skip.should.have.length(4);
+    });
+
+    it('skips delete requests', async function () {
         const input = [
             {
                 email: '@deletion-request.substack.com',
@@ -86,7 +107,7 @@ describe('Normalizes and processes Substack members', function () {
         result.skip.should.have.length(1);
     });
 
-    it('detects and logs possible group memberships', async function () {
+    it('detects and logs possible group memberships and imports as `free`', async function () {
         const input = [
             {
                 email: 'harry_potter@gmail.com',
