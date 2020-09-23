@@ -1,30 +1,37 @@
 const {
+    isDate,
     parseISO,
     formatISO,
     addYears,
     isAfter
 } = require('date-fns');
 
-const processCompGift = (member, {tresholdYears, beforeTreshold}) => {
-    const tresholdDate = addYears(new Date(), tresholdYears);
+const processCompGift = (member, {thresholdYearOrDate, beforeTreshold}) => {
+    const sType = member.type;
+    const tresholdDate = isDate(thresholdYearOrDate) ? thresholdYearOrDate : addYears(new Date(), thresholdYearOrDate);
+
     if (isAfter(member.expiry, tresholdDate)) {
         member.type = 'comp',
         member.complimentary_plan = true;
         member.stripe_customer_id = null;
         member.note = `Substack expiry date: ${formatISO(member.expiry)}`;
-        member.reason = `comp member after treshold - importing as complimentary: ${member.email}`;
+        member.reason = `${sType} member after treshold - importing as complimentary: ${member.email}`;
     } else if (beforeTreshold === 'none') {
         member.type = 'skip';
-        member.reason = `comp member below treshold - skipping: ${member.email}`;
+        member.reason = `${sType} member below treshold - skipping: ${member.email}`;
     } else {
         member.type = beforeTreshold;
-        member.reason = `comp member below treshold - importing as '${beforeTreshold}': ${member.email}`;
+        member.reason = `${sType} member below treshold - importing as '${beforeTreshold}': ${member.email}`;
     }
     return member;
 };
 
 const processOptions = (member, options) => {
     const {comp, gift} = options;
+
+    if (member.type === 'skip') {
+        return member;
+    }
 
     if (member.type === 'comp') {
         member = processCompGift(member, comp);
@@ -61,14 +68,17 @@ const processMember = (sMember, options) => {
 
     if (member.email.match(/@deletion-request.substack.com$/ig)) {
         member.type = 'skip';
-        member.reason = `skipping deletion request: ${member.email}`;
+        member.reason = `deletion request - skipping: ${member.email}`;
     }
 
     return processOptions(member, options);
 };
 
-module.exports = async (input, options) => {
-    const processed = input.map(member => processMember(member, options));
+module.exports = async (input, ctx) => {
+    const {options} = ctx;
+    ctx.logs = [];
+
+    const processed = await input.map(member => processMember(member, options));
 
     // format the returned array into an object, using the assigned member.type
     // as a key:
@@ -82,6 +92,14 @@ module.exports = async (input, options) => {
         let key = obj.type;
         if (!acc[key]) {
             acc[key] = [];
+        }
+        if (obj.reason) {
+            // write all changes done into our logs
+            ctx.logs.push({
+                info: obj.reason,
+                member: obj.email,
+                expiry: obj.expiry
+            });
         }
         acc[key].push(obj);
         return acc;

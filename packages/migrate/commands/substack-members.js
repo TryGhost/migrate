@@ -1,5 +1,6 @@
 const ui = require('@tryghost/pretty-cli').ui;
 const substackMembers = require('../sources/substack-members');
+const {parse, addYears} = require('date-fns');
 
 // Internal ID in case we need one.
 exports.id = 'substack-members';
@@ -31,13 +32,13 @@ exports.setup = (sywac) => {
     });
     sywac.string('--comp', {
         defaultValue: '10:free',
-        choices: ['YY:none', 'YY:free'],
-        desc: 'Provide two values in the format "YY:none|free". YY is the treshold in years after which Substack `comp` members should receive a complimentary plan depending on the expiry date. "none|free" the option how to import members before this treshold, e. g. 5:free'
+        choices: ['YY:none', 'YY:free', 'YYYYMMDD:none', 'YYYYMMDD:free'],
+        desc: 'Provide two values in the format "YY|YYYYMMDD:none|free". YY is the treshold in years or YYYYMMDD as the exact date after which Substack `comp` members should receive a complimentary plan depending on the expiry date. "none|free" the option how to import members before this treshold, e. g. 5:free'
     });
     sywac.string('--gift', {
         defaultValue: '10:free',
-        choices: ['YY:none', 'YY:free'],
-        desc: 'Provide two values in the format "YY:none|free". YY is the treshold in years after which Substack `gift` members should receive a complimentary plan depending on the expiry date. "none|free" the option how to import members before this treshold, e. g. 5:free'
+        choices: ['YY:none', 'YY:free', 'YYYYMMDD:none', 'YYYYMMDD:free'],
+        desc: 'Provide two values in the format "YY|YYYYMMDD:none|free". YY is the treshold in years or YYYYMMDD as the exact date after which Substack `gift` members should receive a complimentary plan depending on the expiry date. "none|free" the option how to import members before this treshold, e. g. 5:free'
     });
     sywac.string('--compLabel', {
         defaultValue: 'substack-comp',
@@ -58,16 +59,21 @@ exports.setup = (sywac) => {
 };
 
 const parseCompGift = (val) => {
-    let [years, before] = val.split(':');
+    let [yearsOrDate, before] = val.split(':');
 
     try {
-        years = parseInt(years);
+        if (yearsOrDate.length >= 4) {
+            // try parsing the date into a valid UTC date
+            yearsOrDate = parse(`${yearsOrDate}Z`, 'yyyyMMdX', addYears(new Date(), 10));
+        } else {
+            yearsOrDate = parseInt(yearsOrDate);
+        }
     } catch (error) {
-        ui.log.info('Failed to parse years for treshold, falling back to 10. Ensure the correct format');
-        years = 10;
+        ui.log.info('Failed to parse passed in date/years for treshold, falling back to 10. Ensure the correct format');
+        yearsOrDate = 10;
     }
     return {
-        tresholdYears: years,
+        thresholdYearOrDate: yearsOrDate,
         beforeTreshold: before
     };
 };
@@ -78,7 +84,7 @@ exports.run = async (argv) => {
     let context = {errors: []};
 
     if (argv.subs) {
-        context.hasSubscribers = true;
+        argv.hasSubscribers = true;
     }
 
     if (argv.verbose) {

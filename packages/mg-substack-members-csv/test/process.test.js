@@ -6,8 +6,8 @@ const parsedMembers = require('./fixtures/parsed');
 require('./utils');
 
 const DEFAULT_OPTIONS = {
-    comp: {tresholdYears: 10, beforeTreshold: 'free'},
-    gift: {tresholdYears: 10, beforeTreshold: 'free'},
+    comp: {thresholdYearOrDate: 10, beforeTreshold: 'free'},
+    gift: {thresholdYearOrDate: 10, beforeTreshold: 'free'},
     compLabel: 'substack-comp',
     giftLabel: 'substack-gift',
     freeLabel: 'substack-free',
