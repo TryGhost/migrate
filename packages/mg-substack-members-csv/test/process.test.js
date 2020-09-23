@@ -6,8 +6,8 @@ const parsedMembers = require('./fixtures/parsed');
 require('./utils');
 
 const DEFAULT_OPTIONS = {
-    comp: {thresholdYearOrDate: 10, beforeTreshold: 'free'},
-    gift: {thresholdYearOrDate: 10, beforeTreshold: 'free'},
+    comp: {thresholdYearOrDate: 10, beforeThreshold: 'free'},
+    gift: {thresholdYearOrDate: 10, beforeThreshold: 'free'},
     compLabel: 'substack-comp',
     giftLabel: 'substack-gift',
     freeLabel: 'substack-free',
@@ -61,9 +61,9 @@ describe('Normalizes and processes Substack members', function () {
         m1.subscribed_to_emails.should.be.false();
         m2.subscribed_to_emails.should.be.true();
     });
-    // it('with date treshold for comp and gift');
-    // it('converts comp and gift members to free when chosen as before treshold option');
-    // it('skips members when `none` chosen as before treshold option');
+    // it('with date threshold for comp and gift');
+    // it('converts comp and gift members to free when chosen as before threshold option');
+    // it('skips members when `none` chosen as before threshold option');
     it('removes delete requests', async function () {
         const input = [
             {

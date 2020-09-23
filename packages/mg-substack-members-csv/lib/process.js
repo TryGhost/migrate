@@ -6,22 +6,22 @@ const {
     isAfter
 } = require('date-fns');
 
-const processCompGift = (member, {thresholdYearOrDate, beforeTreshold}) => {
+const processCompGift = (member, {thresholdYearOrDate, beforeThreshold}) => {
     const sType = member.type;
-    const tresholdDate = isDate(thresholdYearOrDate) ? thresholdYearOrDate : addYears(new Date(), thresholdYearOrDate);
+    const thresholdDate = isDate(thresholdYearOrDate) ? thresholdYearOrDate : addYears(new Date(), thresholdYearOrDate);
 
-    if (isAfter(member.expiry, tresholdDate)) {
+    if (isAfter(member.expiry, thresholdDate)) {
         member.type = 'comp',
         member.complimentary_plan = true;
         member.stripe_customer_id = null;
         member.note = `Substack expiry date: ${formatISO(member.expiry)}`;
-        member.reason = `${sType} member after treshold - importing as complimentary: ${member.email}`;
-    } else if (beforeTreshold === 'none') {
+        member.reason = `${sType} member after threshold - importing as complimentary: ${member.email}`;
+    } else if (beforeThreshold === 'none') {
         member.type = 'skip';
-        member.reason = `${sType} member below treshold - skipping: ${member.email}`;
+        member.reason = `${sType} member below threshold - skipping: ${member.email}`;
     } else {
-        member.type = beforeTreshold;
-        member.reason = `${sType} member below treshold - importing as '${beforeTreshold}': ${member.email}`;
+        member.type = beforeThreshold;
+        member.reason = `${sType} member below threshold - importing as '${beforeThreshold}': ${member.email}`;
     }
     return member;
 };

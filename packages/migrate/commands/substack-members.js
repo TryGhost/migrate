@@ -33,12 +33,12 @@ exports.setup = (sywac) => {
     sywac.string('--comp', {
         defaultValue: '10:free',
         choices: ['YY:none', 'YY:free', 'YYYYMMDD:none', 'YYYYMMDD:free'],
-        desc: 'Provide two values in the format "YY|YYYYMMDD:none|free". YY is the treshold in years or YYYYMMDD as the exact date after which Substack `comp` members should receive a complimentary plan depending on the expiry date. "none|free" the option how to import members before this treshold, e. g. 5:free'
+        desc: 'Provide two values in the format "YY|YYYYMMDD:none|free". YY is the threshold in years or YYYYMMDD as the exact date after which Substack `comp` members should receive a complimentary plan depending on the expiry date. "none|free" the option how to import members before this threshold, e. g. 5:free'
     });
     sywac.string('--gift', {
         defaultValue: '10:free',
         choices: ['YY:none', 'YY:free', 'YYYYMMDD:none', 'YYYYMMDD:free'],
-        desc: 'Provide two values in the format "YY|YYYYMMDD:none|free". YY is the treshold in years or YYYYMMDD as the exact date after which Substack `gift` members should receive a complimentary plan depending on the expiry date. "none|free" the option how to import members before this treshold, e. g. 5:free'
+        desc: 'Provide two values in the format "YY|YYYYMMDD:none|free". YY is the threshold in years or YYYYMMDD as the exact date after which Substack `gift` members should receive a complimentary plan depending on the expiry date. "none|free" the option how to import members before this threshold, e. g. 5:free'
     });
     sywac.string('--compLabel', {
         defaultValue: 'substack-comp',
@@ -69,12 +69,12 @@ const parseCompGift = (val) => {
             yearsOrDate = parseInt(yearsOrDate);
         }
     } catch (error) {
-        ui.log.info('Failed to parse passed in date/years for treshold, falling back to 10. Ensure the correct format');
+        ui.log.info('Failed to parse passed in date/years for threshold, falling back to 10. Ensure the correct format');
         yearsOrDate = 10;
     }
     return {
         thresholdYearOrDate: yearsOrDate,
-        beforeTreshold: before
+        beforeThreshold: before
     };
 };
 

@@ -34,6 +34,8 @@ module.exports.getTaskRunner = (pathToFile, options) => {
                 }
             }
         // },
+        // TODO: Write log files and skipped members
+        // TODO: write data in batches
         // {
         //     title: 'Write Ghost members import CSV batch files',
         //     task: async (ctx) => {
