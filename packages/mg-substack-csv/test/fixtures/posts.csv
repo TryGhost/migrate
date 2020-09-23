@@ -1,0 +1,4 @@
+post_id,post_date,is_published,email_sent_at,type,audience,title,subtitle,podcast_url
+172839.plain-text,2019-07-26T20:48:19.814Z,TRUE,2019-07-26T20:48:19.814Z,newsletter,everyone,Plain Text,Lorem ipsum dolor sit amet.,
+615243.embedded-tweet,2019-07-29T21:21:58.484Z,FALSE,2019-07-29T21:21:58.503Z,newsletter,everyone,Embedded Tweet,"Dolor sit amet, consectetur adipiscing elit.",
+364758.more-plain-text,2019-07-31T17:07:09.230Z,FALSE,,podcast,everyone,More Plain Text,Eiusmod tempor incididunt ut labore.,https://dummyurl.com/podcast-123.mp3
