@@ -202,7 +202,7 @@ module.exports.getFullTaskList = (options) => {
                 // 2. Convert Revue API JSON into a format that the migrate tools understand
                 try {
                     ctx.result = revueAPI.process.all(ctx);
-                    await ctx.fileCache.writeTmpJSONFile(ctx.result, 'revue-processed-data.json');
+                    await ctx.fileCache.writeTmpFile(ctx.result, 'revue-processed-data.json');
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
@@ -278,7 +278,7 @@ module.exports.getFullTaskList = (options) => {
             task: async (ctx) => {
                 // 8. Write a valid Ghost import zip
                 try {
-                    await ctx.fileCache.writeGhostJSONFile(ctx.result);
+                    await ctx.fileCache.writeGhostImportFile(ctx.result);
                     await ctx.fileCache.writeErrorJSONFile(ctx.errors);
                 } catch (error) {
                     ctx.errors.push(error);

@@ -38,7 +38,7 @@ const cachedFetch = async (fileCache, api, type, limit, page, isAuthRequest) => 
 
     let response = isAuthRequest ? await api.site[type]().param('context', 'edit').perPage(limit).page(page).embed() : await api.site[type]().perPage(limit).page(page).embed();
 
-    await fileCache.writeTmpJSONFile(response, filename);
+    await fileCache.writeTmpFile(response, filename);
 
     return response;
 };

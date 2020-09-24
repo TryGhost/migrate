@@ -124,7 +124,7 @@ class WebScraper {
         }
 
         let response = await this.scrape(url, config);
-        await this.fileCache.writeTmpJSONFile(response, filename);
+        await this.fileCache.writeTmpFile(response, filename);
 
         response.responseData = omitEmpty(response.responseData);
 

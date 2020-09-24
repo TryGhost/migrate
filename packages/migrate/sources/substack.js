@@ -90,7 +90,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
                 // 1. Read the csv file
                 try {
                     ctx.result = await csvIngest(ctx);
-                    await ctx.fileCache.writeTmpJSONFile(ctx.result, 'csv-export-data.json');
+                    await ctx.fileCache.writeTmpFile(ctx.result, 'csv-export-data.json');
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
@@ -166,7 +166,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             task: async (ctx) => {
                 // 8. Write a valid Ghost import zip
                 try {
-                    await ctx.fileCache.writeGhostJSONFile(ctx.result);
+                    await ctx.fileCache.writeGhostImportFile(ctx.result);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
