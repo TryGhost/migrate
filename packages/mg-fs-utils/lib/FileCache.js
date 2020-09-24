@@ -21,6 +21,10 @@ class FileCache {
         }
     }
 
+    get cacheBaseDir() {
+        return path.join(os.tmpdir(), basePath);
+    }
+
     get cacheKey() {
         if (!this._cacheKey) {
             // Unique hash based on full zip path + the original filename
@@ -231,6 +235,45 @@ class FileCache {
         }
 
         return fs.existsSync(pathToCheck);
+    }
+
+    /**
+     * Empties the local cache directory
+     */
+    async emptyCacheDir() {
+        const directory = this.cacheBaseDir + '/';
+
+        fs.existsSync(directory, (err) => {
+            if (err) {
+                throw err;
+            }
+            return true;
+        });
+
+        let itemsToDelete = [];
+        const dirContents = fs.readdirSync(directory).map((fileName) => {
+            return path.join(directory, fileName);
+        });
+
+        dirContents.forEach((item) => {
+            if (fs.lstatSync(item).isDirectory()) {
+                itemsToDelete.push(item);
+            }
+        });
+
+        itemsToDelete.forEach((item) => {
+            fs.rmdir(item, {recursive: true}, (err) => {
+                if (err) {
+                    throw err;
+                }
+                return true;
+            });
+        });
+
+        return {
+            directory: directory,
+            files: itemsToDelete
+        };
     }
 }
 
