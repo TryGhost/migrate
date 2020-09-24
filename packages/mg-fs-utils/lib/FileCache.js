@@ -49,6 +49,8 @@ class FileCache {
             // don't create the content directory when migrating members
             if (this.options && this.options.contentDir) {
                 fs.mkdirpSync(path.join(this.imageDir));
+            } else {
+                fs.mkdirpSync(path.join(this.zipDir));
             }
         }
         return this._cacheDir;
