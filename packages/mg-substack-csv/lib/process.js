@@ -3,14 +3,14 @@ const path = require('path');
 const $ = require('cheerio');
 const url = require('url');
 
-const getFiles = async (path) => {
-    let filenames = await fs.readdir(path);
+const getFiles = async (filePath) => {
+    let filenames = await fs.readdir(filePath);
 
     return filenames.filter(filename => filename.match(/\.html/));
 };
 
-const readContent = async (path) => {
-    return fs.readFile(path, 'utf-8');
+const readContent = async (filePath) => {
+    return fs.readFile(filePath, 'utf-8');
 };
 
 const readFiles = async (files, postsDir) => {
