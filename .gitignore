@@ -72,5 +72,6 @@ typings/
 
 # Ignore any generated import files
 ghost-import*.*
+ghost-members*.*
 gh-*
 tmp/

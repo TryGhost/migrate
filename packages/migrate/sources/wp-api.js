@@ -93,7 +93,7 @@ module.exports.initialise = (url, options) => {
             ctx.options = options;
 
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-            ctx.fileCache = new fsUtils.FileCache(url, options.batch);
+            ctx.fileCache = new fsUtils.FileCache(url, {batchName: options.batch});
             ctx.wpScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
             ctx.linkFixer = new MgLinkFixer();
@@ -159,7 +159,7 @@ module.exports.getFullTaskList = (url, options) => {
                 // 2. Convert WP API JSON into a format that the migrate tools understand
                 try {
                     ctx.result = await wpAPI.process.all(ctx);
-                    await ctx.fileCache.writeTmpJSONFile(ctx.result, 'wp-processed-data.json');
+                    await ctx.fileCache.writeTmpFile(ctx.result, 'wp-processed-data.json');
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
@@ -235,7 +235,7 @@ module.exports.getFullTaskList = (url, options) => {
             task: async (ctx) => {
                 // 9. Write a valid Ghost import zip
                 try {
-                    await ctx.fileCache.writeGhostJSONFile(ctx.result);
+                    await ctx.fileCache.writeGhostImportFile(ctx.result);
                     await ctx.fileCache.writeErrorJSONFile(ctx.errors);
                 } catch (error) {
                     ctx.errors.push(error);

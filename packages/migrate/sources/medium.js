@@ -108,7 +108,7 @@ module.exports.getTaskRunner = (pathToZip, options) => {
                 // 1. Read the zip file
                 try {
                     ctx.result = mediumIngest(pathToZip, options);
-                    await ctx.fileCache.writeTmpJSONFile(ctx.result, 'medium-export-data.json');
+                    await ctx.fileCache.writeTmpFile(ctx.result, 'medium-export-data.json');
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
@@ -184,7 +184,7 @@ module.exports.getTaskRunner = (pathToZip, options) => {
             task: async (ctx) => {
                 // 8. Write a valid Ghost import zip
                 try {
-                    await ctx.fileCache.writeGhostJSONFile(ctx.result);
+                    await ctx.fileCache.writeGhostImportFile(ctx.result);
                     await ctx.fileCache.writeErrorJSONFile(ctx.errors);
                 } catch (error) {
                     ctx.errors.push(error);

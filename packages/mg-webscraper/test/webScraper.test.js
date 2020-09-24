@@ -31,12 +31,12 @@ describe('ScrapeURL', function () {
     beforeEach(function () {
         mockFileCache = {
             hasFile: sinon.stub(),
-            writeTmpJSONFile: sinon.stub(),
+            writeTmpFile: sinon.stub(),
             readTmpJSONFile: sinon.stub()
         };
 
         mockFileCache.readTmpJSONFile.resolves(mockResponse);
-        mockFileCache.writeTmpJSONFile.resolves();
+        mockFileCache.writeTmpFile.resolves();
     });
 
     afterEach(function () {
@@ -67,7 +67,7 @@ describe('ScrapeURL', function () {
         let response = await webScraper.scrapeUrl(mockUrl, mockConfig.posts, mockFilename);
 
         mockFileCache.hasFile.calledOnce.should.be.true();
-        mockFileCache.writeTmpJSONFile.calledOnce.should.be.true();
+        mockFileCache.writeTmpFile.calledOnce.should.be.true();
 
         response.should.eql(mockResponse);
     });

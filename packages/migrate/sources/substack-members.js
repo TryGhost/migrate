@@ -2,6 +2,17 @@ const makeTaskRunner = require('../lib/task-runner');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const csvIngest = require('@tryghost/mg-substack-members-csv');
 
+const MAX_COMP_BATCH_SIZE = 500;
+const MEMBERS_IMPORT_FIELDS = [
+    'email',
+    'subscribed_to_emails',
+    'complimentary_plan',
+    'stripe_customer_id',
+    'created_at',
+    'labels',
+    'note'
+];
+
 /**
  * getTasks: Steps to Migrate subscribers from Substack
  *
@@ -14,11 +25,13 @@ module.exports.getTaskRunner = (pathToFile, options) => {
     let tasks = [
         {
             title: 'Initialising',
-            task: (ctx) => {
+            task: (ctx, task) => {
                 ctx.options = options;
 
                 // 0. Prep a file cache for the work we are about to do.
-                ctx.fileCache = new fsUtils.FileCache(pathToFile);
+                ctx.fileCache = new fsUtils.FileCache(pathToFile, {contentDir: false});
+
+                task.output = `Workspace initialised at ${ctx.fileCache.cacheDir}`;
             }
         },
         {
@@ -27,7 +40,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
                 // 1. Read the csv file
                 try {
                     ctx.result = await csvIngest(ctx);
-                    await ctx.fileCache.writeTmpJSONFile(ctx.result, 'csv-members-data.csv');
+                    await ctx.fileCache.writeTmpFile(ctx.result, 'csv-members-data.json', true);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
@@ -35,11 +48,55 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             }
         },
         {
-            title: 'Write Ghost members import CSV batch files',
+            title: 'Create batches and write CSV files',
             task: async (ctx) => {
-                // 8. Write a valid Ghost import zip
                 try {
-                    await ctx.fileCache.writeGhostMembersFiles(ctx);
+                    // TODO: we can/should probably move this to the package
+                    const types = Object.keys(ctx.result);
+                    const files = [];
+
+                    types.forEach(async (type) => {
+                        const batchSize = (type === 'comp' && ctx.options.limit > MAX_COMP_BATCH_SIZE) ? MAX_COMP_BATCH_SIZE : ctx.options.limit;
+                        const batchesTotal = Math.ceil(ctx.result[type].length / batchSize);
+                        let currentBatch = 1;
+
+                        if (type === 'skip') {
+                            await ctx.fileCache.writeErrorJSONFile(ctx.result.skip, {filename: `gh-members-skipped-${Date.now()}.logs.json`});
+                        } else {
+                            while (currentBatch <= batchesTotal) {
+                                const toParse = ctx.result[type].splice(0, batchSize);
+                                files.push({
+                                    data: toParse,
+                                    fileName: `gh-members-${type}-batch-${currentBatch}.csv`,
+                                    tmpFilename: `gh-members-${type}-batch-${currentBatch}-${Date.now()}.csv`
+                                });
+                                currentBatch = currentBatch + 1;
+                            }
+                        }
+                    });
+
+                    await Promise.all(files.map(async ({data, fileName, tmpFilename}) => {
+                        data = await fsUtils.csv.jsonToCSV(data, MEMBERS_IMPORT_FIELDS);
+
+                        // write the members import file for each batch
+                        await ctx.fileCache.writeGhostImportFile(data, {isJSON: false, filename: fileName, tmpFilename: tmpFilename});
+                    }));
+
+                    if (ctx.logs) {
+                        await ctx.fileCache.writeErrorJSONFile(ctx.logs, {filename: `gh-members-updated-${Date.now()}.logs.json`});
+                    }
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
+            }
+        },
+        {
+            title: 'Write zip file',
+            skip: () => !options.zip,
+            task: async (ctx) => {
+                try {
+                    ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, `gh-members-${ctx.fileCache.cacheName}-${Date.now()}.zip`);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;

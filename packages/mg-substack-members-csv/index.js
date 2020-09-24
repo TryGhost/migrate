@@ -1,15 +1,9 @@
-const parse = require('@tryghost/mg-fs-utils/lib/parse-csv');
-// const normalizeCSV = require('./lib/normalize-csv');
+const parse = require('./lib/parse-members-csv');
+const process = require('./lib/process');
 
 module.exports = async (ctx) => {
-    const signups = await parse(ctx.options.pathToAllSignups);
-    // let subscribers = [];
+    const parsed = await parse(ctx);
+    const normalized = await process(parsed, ctx);
 
-    // if (ctx.hasSubscribers) {
-    //     subscribers = await parse(ctx.options.subs);
-    // }
-
-    // const normalized = await normalizeCSV(signups, subscribers, ctx.options);
-
-    return signups;
+    return normalized;
 };

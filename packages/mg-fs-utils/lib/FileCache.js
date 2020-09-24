@@ -9,15 +9,16 @@ const basePath = 'mg';
 const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico'];
 
 class FileCache {
-    constructor(cacheName, batchName) {
+    constructor(cacheName, options = {}) {
         this.originalName = cacheName;
+        this.options = Object.assign({contentDir: true}, options);
 
         // Remove any extension, handles removing TLDs as well if the name is based on a URL
         let ext = path.extname(cacheName);
         this.cacheName = path.basename(cacheName, ext);
 
-        if (batchName) {
-            this.batchName = batchName;
+        if (options.batchName) {
+            this.batchName = options.batchName;
         }
     }
 
@@ -44,7 +45,13 @@ class FileCache {
         if (!this._cacheDir) {
             this._cacheDir = path.join(os.tmpdir(), basePath, this.cacheKey);
             fs.mkdirpSync(path.join(this.tmpDir));
-            fs.mkdirpSync(path.join(this.imageDir));
+
+            // don't create the content directory when migrating members
+            if (this.options && this.options.contentDir) {
+                fs.mkdirpSync(path.join(this.imageDir));
+            } else {
+                fs.mkdirpSync(path.join(this.zipDir));
+            }
         }
         return this._cacheDir;
     }
@@ -78,6 +85,10 @@ class FileCache {
 
     get defaultTmpJSONFileName() {
         return `${this.defaultCacheFileName}.json`;
+    }
+
+    get defaultTmpCSVFileName() {
+        return `${this.defaultCacheFileName}.csv`;
     }
 
     get defaultZipFileName() {
@@ -131,15 +142,20 @@ class FileCache {
     }
 
     /**
-     * Create a JSON file to store temporary data
+     * Create a file to store temporary data
      *
-     * @param {Object} data - a valid Ghost JSON object
+     * @param {Object} data - a valid Ghost JSON object or data to store
      * @param {String} filename - name of file to write
+     * @param {Boolean} isJSON - defaults to write a JSON file
      */
-    async writeTmpJSONFile(data, filename) {
+    async writeTmpFile(data, filename, isJSON = true) {
         let filepath = path.join(this.tmpDir, filename);
 
-        await fs.outputJson(filepath, data, {spaces: 2});
+        if (isJSON) {
+            await fs.outputJson(filepath, data, {spaces: 2});
+        } else {
+            await fs.writeFile(filepath, data);
+        }
 
         return filepath;
     }
@@ -156,22 +172,31 @@ class FileCache {
     }
 
     /**
-     * Create a JSON file with our processed data
+     * Create a CSV or JSON file with our processed data
      *
-     * @param {Object} data - a valid Ghost JSON object
+     * @param {Object} data - a valid Ghost JSON object or CSV Members data
      * @param {Object} options - config
      */
-    async writeGhostJSONFile(data, options = {}) {
+    async writeGhostImportFile(data, options = {}) {
+        options = Object.assign({isJSON: true}, options);
+        const {isJSON} = options;
+
         // Create a temporary version first
-        let filename = options.tmpFilename || this.defaultTmpJSONFileName;
-        await this.writeTmpJSONFile(data, filename);
+        let filename = options.tmpFilename
+            || (isJSON ? this.defaultTmpJSONFileName : this.defaultTmpCSVFileName);
+
+        await this.writeTmpFile(data, filename, isJSON);
 
         // Then also write it as "the" JSON file in the zip folder
         filename = options.filename || `ghost-import.json`;
         let basepath = options.path ? path.dirname(options.path) : this.zipDir;
         let filepath = path.join(basepath, filename);
 
-        await fs.outputJson(filepath, data, {spaces: 2});
+        if (isJSON) {
+            await fs.outputJson(filepath, data, {spaces: 2});
+        } else {
+            await fs.writeFile(filepath, data);
+        }
 
         return filepath;
     }
@@ -185,7 +210,7 @@ class FileCache {
     async writeErrorJSONFile(data, options = {}) {
         const filename = options.filename || this.defaultErrorFileName;
 
-        return await this.writeTmpJSONFile(data, filename);
+        return await this.writeTmpFile(data, filename);
     }
 
     /**

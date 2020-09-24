@@ -29,7 +29,7 @@ const cachedFetch = async (fileCache, options) => {
 
     let response = await this.discover(options);
 
-    await fileCache.writeTmpJSONFile(response, filename);
+    await fileCache.writeTmpFile(response, filename);
 
     return response;
 };

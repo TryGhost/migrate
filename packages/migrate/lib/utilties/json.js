@@ -138,7 +138,7 @@ module.exports.getTaskRunner = (type, pathToJSON, options) => {
     tasks.push({
         title: 'Write Ghost JSON File',
         task: async (ctx) => {
-            ctx.outputFile = await ctx.fileCache.writeGhostJSONFile(ctx.result, {path: pathToJSON});
+            ctx.outputFile = await ctx.fileCache.writeGhostImportFile(ctx.result, {path: pathToJSON});
         }
     });
 

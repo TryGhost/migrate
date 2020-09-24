@@ -64,7 +64,7 @@ const cachedFetch = async (fileCache, hapikey, blogId, limit, offset) => {
     let response = await hs.blog.getPosts({content_group_id: blogId, limit, offset});
     response = response.objects;
 
-    await fileCache.writeTmpJSONFile(response, filename);
+    await fileCache.writeTmpFile(response, filename);
 
     return response;
 };
