@@ -130,8 +130,8 @@ describe('Normalizes and processes Substack members', function () {
 
         const [m1, m2] = result.free;
 
-        m1.reason.should.be.match(/possible group membership: harry_potter@gmail.com/);
-        m2.reason.should.be.match(/possible group membership: dumbledore@gmail.com/);
+        m1.info.should.be.match(/possible group membership: harry_potter@gmail.com/);
+        m2.info.should.be.match(/possible group membership: dumbledore@gmail.com/);
     });
 });
 

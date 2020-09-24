@@ -1,7 +1,6 @@
 const {
     isDate,
     parseISO,
-    formatISO,
     addYears,
     isAfter
 } = require('date-fns');
@@ -14,14 +13,18 @@ const processCompGift = (member, {thresholdYearOrDate, beforeThreshold}) => {
         member.type = 'comp',
         member.complimentary_plan = true;
         member.stripe_customer_id = null;
-        member.note = `Substack expiry date: ${formatISO(member.expiry, {format: 'basic'})}`;
-        member.reason = `${sType} member after threshold - importing as complimentary: ${member.email}`;
+        member.note = `Substack expiry date: ${member.expiry.toISOString()}`;
+        member.info = `${sType} member after threshold - importing as complimentary: ${member.email}`;
     } else if (beforeThreshold === 'none') {
         member.type = 'skip';
-        member.reason = `${sType} member below threshold - skipping: ${member.email}`;
+        member.info = `${sType} member below threshold - skipping: ${member.email}`;
     } else {
         member.type = beforeThreshold;
-        member.reason = `${sType} member below threshold - importing as '${beforeThreshold}': ${member.email}`;
+        if (member.stripe_customer_id) {
+            member.note = `Previous Stripe Customer ID: ${member.stripe_customer_id}`;
+            member.stripe_customer_id = null;
+        }
+        member.info = `${sType} member below threshold - importing as '${beforeThreshold}': ${member.email}`;
     }
     return member;
 };
@@ -60,15 +63,21 @@ const processMember = (sMember, options) => {
         type: sMember.type
     };
 
+    if (member.type === 'free' && member.stripe_customer_id) {
+        member.note = `Previous Stripe Customer ID: ${member.stripe_customer_id}`;
+        member.stripe_customer_id = null;
+        member.info = member.note;
+    }
+
     // possible group members with type `paid`, but no Stripe ID
     if (member.type === 'paid' && !member.stripe_customer_id) {
         member.type = 'free';
-        member.reason = `possible group membership: ${member.email}`;
+        member.info = `possible group membership: ${member.email}`;
     }
 
     if (member.email.match(/@deletion-request.substack.com$/ig)) {
         member.type = 'skip';
-        member.reason = `deletion request - skipping: ${member.email}`;
+        member.info = `deletion request - skipping: ${member.email}`;
     }
 
     return processOptions(member, options);
@@ -93,10 +102,10 @@ module.exports = async (input, ctx) => {
         if (!acc[key]) {
             acc[key] = [];
         }
-        if (obj.reason) {
+        if (obj.info) {
             // write all changes done into our logs
             ctx.logs.push({
-                info: obj.reason,
+                info: obj.info,
                 member: obj.email,
                 expiry: obj.expiry
             });
