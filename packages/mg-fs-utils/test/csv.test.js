@@ -1,4 +1,5 @@
 const path = require('path');
+const {parseISO} = require('date-fns');
 
 // Switch these lines once there are useful utils
 // const testUtils = require('./utils');
@@ -49,7 +50,7 @@ describe('Format JSON to CSV', function () {
                 subscribed_to_emails: true,
                 complimentary_plan: false,
                 stripe_customer_id: null,
-                created_at: '2018-12-25T20:43:22.178Z',
+                created_at: parseISO('2018-12-25T20:43:22.178Z'),
                 expiry: null,
                 type: 'free',
                 labels: 'substack-free'
@@ -59,21 +60,21 @@ describe('Format JSON to CSV', function () {
                 subscribed_to_emails: true,
                 complimentary_plan: false,
                 stripe_customer_id: null,
-                created_at: '2019-08-18T13:36:31.230Z',
+                created_at: parseISO('2019-08-18T13:36:31.230Z'),
                 expiry: null,
                 type: 'free',
                 labels: 'substack-free'
             }
         ];
-        const fields = ['email', 'subscribed_to_emails', 'complimentary_plan', 'stripe_customer_id', 'created_at', 'labels'];
+        const fields = ['email', 'subscribed_to_emails', 'complimentary_plan', 'stripe_customer_id', 'created_at', 'labels', 'note'];
 
         const result = await csv.jsonToCSV(jsonInput, fields);
 
         result.should.be.a.String;
-        result.should.match(/email,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,labels\r\npatrickstarfish@gmail.com,true,false,,2018-12-25T20:43:22.178Z,substack-free\r\nelpaper@gmail.com,true,false,,2019-08-18T13:36:31.230Z,substack-free\r\n/);
+        result.should.match(/email,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,labels,note\r\npatrickstarfish@gmail.com,true,false,,2018-12-25T20:43:22.178Z,substack-free,\r\nelpaper@gmail.com,true,false,,2019-08-18T13:36:31.230Z,substack-free,\r\n/);
 
         const resultArray = result.split(',');
-        resultArray.should.have.length(16);
+        resultArray.should.have.length(19);
     });
 
     it('can read column headers from data when fields not passed', async function () {

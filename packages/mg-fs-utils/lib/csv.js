@@ -1,5 +1,6 @@
 const parse = require('csv-parse');
 const fs = require('fs-extra');
+const {isDate} = require('date-fns');
 
 /**
  * Parse a CSV file and make available as JSON
@@ -40,7 +41,20 @@ module.exports.jsonToCSV = (data, fields = Object.keys(data[0])) => {
 
         for (i = 0; i < fields.length; i = i + 1) {
             field = fields[i];
-            csv += entry[field] !== null ? entry[field] : '';
+
+            let fieldToAdd;
+
+            if (entry[field] !== null) {
+                if (isDate(entry[field])) {
+                    fieldToAdd = entry[field].toISOString();
+                } else {
+                    fieldToAdd = entry[field];
+                }
+            } else {
+                fieldToAdd = '';
+            }
+
+            csv += fieldToAdd !== undefined ? fieldToAdd : '';
             if (i !== fields.length - 1) {
                 csv += ',';
             }
