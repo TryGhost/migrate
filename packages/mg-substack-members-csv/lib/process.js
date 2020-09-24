@@ -56,7 +56,7 @@ const processMember = (sMember, options) => {
         complimentary_plan: false,
         stripe_customer_id: sMember.stripe_customer_id ? sMember.stripe_customer_id : null,
         created_at: parseISO(sMember.created_at) || parseISO(new Date()),
-        expiry: parseISO(sMember.expiry) || null,
+        expiry: sMember.expiry ? parseISO(sMember.expiry) : null,
         type: sMember.type
     };
 
