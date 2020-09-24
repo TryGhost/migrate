@@ -114,6 +114,20 @@ exports.run = async (argv) => {
 
     if (argv.verbose) {
         ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
+
+        if (context.logs) {
+            ui.log.info(`Adjusted members due to passed in options:`);
+
+            context.logs.forEach((log) => {
+                ui.log.info(log.info);
+            });
+        }
+    }
+
+    if (context.result.skip) {
+        context.result.skip.forEach((skipped) => {
+            ui.log.warn(`Skipped import: ${skipped.reason}`);
+        });
     }
 
     // Report success
