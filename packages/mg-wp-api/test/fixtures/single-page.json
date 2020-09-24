@@ -1,0 +1,227 @@
+{
+  "id": 2,
+  "date": "2020-09-17T11:49:03",
+  "date_gmt": "2020-09-17T11:49:03",
+  "guid": {
+    "rendered": "http:\/\/mysite.com\/?page_id=2"
+  },
+  "modified": "2020-09-18T11:15:32",
+  "modified_gmt": "2020-09-18T11:15:32",
+  "slug": "sample-page",
+  "status": "publish",
+  "type": "page",
+  "link": "https:\/\/mysite.com\/sample-page",
+  "title": {
+    "rendered": "Sample Page"
+  },
+  "content": {
+    "rendered": "\n<p>This is an example page. It&#8217;s different from a blog post because it will stay in one place and will show up in your site navigation (in most themes). Most people start with an About page that introduces them to potential site visitors.<\/p>\n",
+    "protected": false
+  },
+  "excerpt": {
+    "rendered": "<p>This is an example page. It&#8217;s different from a blog post because it will stay in one place and will show up in your site navigation (in most themes). Most people start with an About page that introduces them to potential site visitors.<\/p>\n",
+    "protected": false
+  },
+  "author": 29,
+  "featured_media": 23,
+  "parent": 0,
+  "menu_order": 0,
+  "comment_status": "closed",
+  "ping_status": "closed",
+  "template": "",
+  "meta": [],
+  "_links": {
+    "self": [
+      {
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/pages\/2"
+      }
+    ],
+    "collection": [
+      {
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/pages"
+      }
+    ],
+    "about": [
+      {
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/types\/page"
+      }
+    ],
+    "author": [
+      {
+        "embeddable": true,
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/users\/2"
+      }
+    ],
+    "replies": [
+      {
+        "embeddable": true,
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/comments?post=2"
+      }
+    ],
+    "version-history": [
+      {
+        "count": 2,
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/pages\/2\/revisions"
+      }
+    ],
+    "predecessor-version": [
+      {
+        "id": 24,
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/pages\/2\/revisions\/24"
+      }
+    ],
+    "wp:featuredmedia": [
+      {
+        "embeddable": true,
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/media\/23"
+      }
+    ],
+    "wp:attachment": [
+      {
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/media?parent=2"
+      }
+    ],
+    "curies": [
+      {
+        "name": "wp",
+        "href": "https:\/\/api.w.org\/{rel}",
+        "templated": true
+      }
+    ]
+  },
+  "_embedded": {
+    "author": [
+      {
+        "id": 29,
+        "name": "Dummy User",
+        "url": "https:\/\/dummysite.com",
+        "description": "Lorem ipsum small bio.",
+        "link": "https:\/\/mysite.com\/author\/dummy",
+        "slug": "dummy",
+        "avatar_urls": {
+          "24": "https:\/\/secure.gravatar.com\/avatar\/3911103eeb906a2975aa28c1127eea76?s=24&d=mm&r=g",
+          "48": "https:\/\/secure.gravatar.com\/avatar\/3911103eeb906a2975aa28c1127eea76?s=48&d=mm&r=g",
+          "96": "https:\/\/secure.gravatar.com\/avatar\/3911103eeb906a2975aa28c1127eea76?s=96&d=mm&r=g"
+        },
+        "_links": {
+          "self": [
+            {
+              "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/users\/2"
+            }
+          ],
+          "collection": [
+            {
+              "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/users"
+            }
+          ]
+        }
+      }
+    ],
+    "wp:featuredmedia": [
+      {
+        "id": 23,
+        "date": "2020-09-18T11:15:17",
+        "slug": "joshua-ryder-n7od-dua0hq-unsplash",
+        "type": "attachment",
+        "link": "https:\/\/mysite.com\/sample-page\/joshua-ryder-n7od-dua0hq-unsplash",
+        "title": {
+          "rendered": "sample-image"
+        },
+        "author": 1,
+        "caption": {
+          "rendered": ""
+        },
+        "alt_text": "",
+        "media_type": "image",
+        "mime_type": "image\/jpeg",
+        "media_details": {
+          "width": 2048,
+          "height": 2560,
+          "file": "2020\/09\/sample-image-scaled.jpg",
+          "sizes": {
+            "medium": {
+              "file": "sample-image-240x300.jpg",
+              "width": 240,
+              "height": 300,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2020\/09\/sample-image-240x300.jpg"
+            },
+            "large": {
+              "file": "sample-image-819x1024.jpg",
+              "width": 819,
+              "height": 1024,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2020\/09\/sample-image-819x1024.jpg"
+            },
+            "thumbnail": {
+              "file": "sample-image-150x150.jpg",
+              "width": 150,
+              "height": 150,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2020\/09\/sample-image-150x150.jpg"
+            },
+            "medium_large": {
+              "file": "sample-image-768x960.jpg",
+              "width": 768,
+              "height": 960,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2020\/09\/sample-image-768x960.jpg"
+            },
+            "full": {
+              "file": "sample-image-scaled.jpg",
+              "width": 2048,
+              "height": 2560,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2020\/09\/sample-image-scaled.jpg"
+            }
+          },
+          "image_meta": {
+            "aperture": "0",
+            "credit": "",
+            "camera": "",
+            "caption": "",
+            "created_timestamp": "0",
+            "copyright": "",
+            "focal_length": "0",
+            "iso": "0",
+            "shutter_speed": "0",
+            "title": "",
+            "orientation": "0",
+            "keywords": []
+          },
+          "original_image": "sample-image.jpg"
+        },
+        "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2020\/09\/sample-image-scaled.jpg",
+        "_links": {
+          "self": [
+            {
+              "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/media\/23"
+            }
+          ],
+          "collection": [
+            {
+              "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/media"
+            }
+          ],
+          "about": [
+            {
+              "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/types\/attachment"
+            }
+          ],
+          "author": [
+            {
+              "embeddable": true,
+              "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/users\/1"
+            }
+          ],
+          "replies": [
+            {
+              "embeddable": true,
+              "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/comments?post=23"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
