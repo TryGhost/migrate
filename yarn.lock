@@ -267,12 +267,12 @@
     ghost-ignition "4.2.2"
     lodash "4.17.20"
 
-"@tryghost/html-to-mobiledoc@0.7.3":
-  version "0.7.3"
-  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-0.7.3.tgz#47830f21908db2fb77c7171fd0a6aa205277df01"
-  integrity sha512-LrUEHfbo+xS0YEq8iQfOYsrz2NQUk1sBoMm4Q/ne/Q30Ti19DokddeZnON4/ITiZPwUy7F7pbiEYC/DN4EFFJg==
+"@tryghost/html-to-mobiledoc@0.7.4":
+  version "0.7.4"
+  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-0.7.4.tgz#06bb081a98690ded48a9b63e1cc397ad33dd03ae"
+  integrity sha512-UhIxISQbJ3g6qpgL55ZF0VDAgk5nmtzs3+R+jQJZW3aGJY3crDBmynApo4LujQafevdhvja0luUfZ6JiQ9f2mw==
   dependencies:
-    "@tryghost/kg-parser-plugins" "1.0.6"
+    "@tryghost/kg-parser-plugins" "1.0.8"
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "16.4.0"
 
@@ -287,17 +287,17 @@
   optionalDependencies:
     sharp "0.26.1"
 
-"@tryghost/kg-clean-basic-html@^1.0.6":
+"@tryghost/kg-clean-basic-html@^1.0.8":
   version "1.0.8"
   resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-1.0.8.tgz#b00f0a04cc61859ee78d79d58ac6971114554cd7"
   integrity sha512-10ioIrQyMkUE66xFcKUBt6/ejzr5LvmcFIHOwHsOZzxtjWMooNR06EVBjrPM98Pvc05+GAnK+4Lv4BaFgLfy5A==
 
-"@tryghost/kg-parser-plugins@1.0.6":
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-1.0.6.tgz#8655a61255d7860ed02a43f6c48ff6e17be91d06"
-  integrity sha512-18x2ORsXj6A74EqpoT4C6C/JIAeuleN/LfBCQkEhwgMOBqerV5OeRXFwFreVNVoeYZ/LSZ7kgoP2RHzwSI80WQ==
+"@tryghost/kg-parser-plugins@1.0.8":
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-1.0.8.tgz#ffd1ed0b1ca1806ab643b3686ee214b02588661c"
+  integrity sha512-6FGmGqh8RRgfm6KhGu8hyEQ2lfhQ5yIOfvJydGBkaesSVQDiBqqRQGCybhZdvIIeNHGBkNMZgHcCqa4Q4+4EUQ==
   dependencies:
-    "@tryghost/kg-clean-basic-html" "^1.0.6"
+    "@tryghost/kg-clean-basic-html" "^1.0.8"
 
 "@tryghost/mobiledoc-kit@^0.12.4-ghost.1":
   version "0.12.4-ghost.1"
