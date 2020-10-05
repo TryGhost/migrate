@@ -1,10 +1,10 @@
 # Migrate
 
-A collection of tools for migrating to Ghost
+A collection of CLI tools for migrating to Ghost.
 
 ## Install
 
-Migrate is a set of command line tools, install them globally:
+Migrate is a set of command line tools. Install them globally to run a migration from anywhere:
 
 `npm install --global @tryghost/migrate`
 
@@ -12,50 +12,53 @@ Migrate is a set of command line tools, install them globally:
 
 Run `migrate --help` to see a list of available commands.
 
-Basic usage is `migrate [source] source-info`:
+Basic usage follows this pattern: `migrate [source] [flags]`
 
-E.g.
+- `migrate medium path/to/export.zip`
+- `migrate wp-api https://mywpsite.com`
 
-`migrate medium path/to/export.zip`
+Each tool comes with its own optional flags to customise the migration.
+You can run `migrate [source] --help` to see these, or view the readme for each tool:
 
-`migrate wp-api https://mywpsite.com`
+- [HubSpot](https://github.com/TryGhost/migrate/tree/master/packages/mg-hubspot-api)
+- [Medium](https://github.com/TryGhost/migrate/tree/master/packages/mg-medium-export)
+- [Revue](https://github.com/TryGhost/migrate/tree/master/packages/mg-revue-api)
+- [Squarespace](https://github.com/TryGhost/migrate/tree/master/packages/mg-squarespace-xml)
+- [Substack](https://github.com/TryGhost/migrate/tree/master/packages/mg-substack-csv)
+- [Substack members](https://github.com/TryGhost/migrate/tree/master/packages/mg-substack-members-csv)
+- [WordPress](https://github.com/TryGhost/migrate/tree/master/packages/mg-wp-api)
 
-Each source somes with optional flags to customise the migration:
+## Developer Setup (for contributing)
 
-`migrate [source] --help` will give more detail
+This is a mono repository, managed with [lerna](https://lerna.js.org/).
 
-
-## Develop
-
-This is a mono repository, managed with [lerna](https://lernajs.io/).
-
-1. `git clone` this repo & `cd` into it as usual
-2. `yarn setup` is mapped to `lerna bootstrap`
-   - installs all external dependencies
-   - links all internal dependencies
+1. Fork this repo
+2. `git clone https://github.com/<your-username>/migrate path/to/your/workspace`
+3. `cd path/to/your/workspace`
+4. `yarn setup` (mapped to `lerna bootstrap`)
+   - installs all external dependencies and links all internal dependencies
 
 To add a new package to the repo:
-   - install [slimer](https://github.com/TryGhost/slimer)
-   - run `slimer new <package name>`
 
+1. Install [slimer](https://github.com/TryGhost/slimer)
+2. Run `slimer new <package name>`
 
-## Run
+### Run
 
-- `yarn dev`
+```sh
+yarn dev
+```
 
+### Test
 
-## Test
+- `yarn lint` to run eslint only
+- `yarn test` to run lint and tests
 
-- `yarn lint` run just eslint
-- `yarn test` run lint and tests
-
-
-## Publish
+### Publish
 
 - `yarn ship` is an alias for `lerna publish`
     - Publishes all packages which have changed
     - Also updates any packages which depend on changed packages
-
 
 # Copyright & License
 

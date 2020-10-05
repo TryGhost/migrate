@@ -7,7 +7,6 @@ The summary outputs one line for each task that is currently being executed, one
 
 Heavily based on [listr-update-renderer](https://github.com/SamVerschueren/listr-update-renderer), with all the same nice UI features.
 
-
 ## Install
 
 `npm install @tryghost/listr-smart-renderer --save`
@@ -19,7 +18,7 @@ or
 
 ## Usage
 
-```
+```js
 const SmartRenderer = require('@tryghost/listr-smart-renderer');
 const Listr = require('listr');
 
@@ -63,9 +62,9 @@ Clear the output when all the tasks are executed successfully.
 
 ## Develop
 
-This is a mono repository, managed with [lerna](https://lernajs.io/).
+This is a mono repository, managed with [lerna](https://lerna.js.org/).
 
-Follow the instructions for the top-level repo.
+Follow the instructions for the [top-level repo](https://github.com/TryGhost/migrate).
 1. `git clone` this repo & `cd` into it as usual
 2. Run `yarn` to install top-level dependencies.
 
@@ -82,4 +81,4 @@ Follow the instructions for the top-level repo.
 
 # Copyright & License
 
-Copyright (c) 2013-2020 Ghost Foundation, Sam Verschueren - Released under the [MIT license](LICENSE).
+Copyright (c) 2013-2020 Ghost Foundation, Sam Verschueren - Released under the [MIT license](https://github.com/TryGhost/migrate/blob/master/packages/listr-smart-renderer/LICENSE).
