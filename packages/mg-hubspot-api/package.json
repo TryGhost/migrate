@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "cheerio": "0.22.0",
+    "date-fns": "2.16.1",
     "html-to-text": "^5.1.1",
     "hubspot-api": "2.15.3"
   }

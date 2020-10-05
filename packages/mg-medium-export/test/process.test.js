@@ -18,7 +18,11 @@ describe('Process', function () {
         post.data.slug.should.eql('testpost');
         post.data.custom_excerpt.should.eql('This is a subtitle of some sort');
         post.data.status.should.eql('published');
+
+        post.data.created_at.should.eql('2018-08-11T11:23:34.123Z');
         post.data.published_at.should.eql('2018-08-11T11:23:34.123Z');
+        post.data.updated_at.should.eql('2018-08-11T11:23:34.123Z');
+
         post.data.html.should.match(/^<section name="007"/);
         post.data.html.should.match(/<\/section>$/);
 

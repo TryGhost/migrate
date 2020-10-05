@@ -1,12 +1,19 @@
+const {formatISO} = require('date-fns');
+
 const mapConfig = (data, {url, readPosts, email}) => {
     const slug = data.post_id.replace(/^(?:\d{1,10}\.)(\S*)/gm, '$1');
+
+    // Get an ISO 8601 date - https://date-fns.org/docs/formatISO
+    const dateNow = formatISO(new Date());
 
     const mappedData = {
         url: `${url}/${slug}`,
         substackId: data.post_id,
         data: {
             slug: slug,
-            published_at: data.post_date,
+            published_at: data.post_date || dateNow,
+            updated_at: data.post_date || dateNow,
+            created_at: data.post_date || dateNow,
             title: data.title || slug,
             custom_excerpt: data.subtitle,
             type: 'post',

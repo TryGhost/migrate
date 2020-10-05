@@ -1,6 +1,7 @@
 const htmlToText = require('html-to-text');
 const $ = require('cheerio');
 const url = require('url');
+const {getTime} = require('date-fns');
 
 const VideoError = ({src, postUrl}) => {
     let error = new Error(`Unsupported video ${src} in post ${postUrl}`);
@@ -246,17 +247,21 @@ module.exports.processContent = (html, postUrl, errors) => {
  * }
  */
 module.exports.processPost = (hsPost, tags, errors) => {
+    // Get the current timestamp - https://date-fns.org/docs/getTime
+    const timestampNow = getTime(new Date());
+
     const post = {
         url: hsPost.url,
         data: {
             slug: hsPost.slug,
             title: hsPost.name || hsPost.html_title,
             comment_id: hsPost.analytics_page_id,
-            created_at: hsPost.created_time,
+            created_at: hsPost.created_time || timestampNow,
+            published_at: hsPost.publish_date || timestampNow,
+            updated_at: hsPost.updated || timestampNow,
             meta_title: hsPost.page_title || hsPost.title,
             meta_description: hsPost.meta_description,
-            status: hsPost.state.toLowerCase(),
-            published_at: hsPost.publish_date
+            status: hsPost.state.toLowerCase()
 
         }
     };

@@ -425,7 +425,9 @@ module.exports.processPost = (wpPost, users, options, errors) => {
             html: wpPost.content.rendered,
             type: wpPost.type === 'post' ? 'post' : 'page',
             status: wpPost.status === 'publish' ? 'published' : 'draft',
+            created_at: wpPost.date_gmt,
             published_at: wpPost.date_gmt,
+            updated_at: wpPost.modified_gmt,
             author: users ? users.find((user) => {
                 // Try to use the user data returned from the API
                 return user.data.id === wpPost.author;

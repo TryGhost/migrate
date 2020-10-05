@@ -17,6 +17,9 @@ describe('Process', function () {
         post.data.should.be.an.Object();
         const data = post.data;
 
+        data.created_at.should.eql('2019-11-07T15:36:54');
+        data.published_at.should.eql('2019-11-07T15:36:54');
+        data.updated_at.should.eql('2019-11-07T15:37:03');
         data.slug.should.eql('my-awesome-post-with-a-canonical');
         data.title.should.eql('My Awesome Post');
 
@@ -88,7 +91,10 @@ describe('Process', function () {
         const data = page.data;
         data.type.should.eql('page');
 
+        data.created_at.should.eql('2020-09-17T11:49:03');
         data.published_at.should.eql('2020-09-17T11:49:03');
+        data.updated_at.should.eql('2020-09-18T11:15:32');
+
         data.slug.should.eql('sample-page');
         data.title.should.eql('Sample Page');
 

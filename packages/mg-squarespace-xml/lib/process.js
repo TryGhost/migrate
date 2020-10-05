@@ -141,13 +141,18 @@ module.exports.processPost = ($sqPost, users, {addTag, tags: fetchTags, siteUrl}
             postSlug = 'untitled';
         }
 
+        // WP XML only provides a published date, we let's use that all dates Ghost expects
+        const postDate = parse($($sqPost).children('pubDate').text(), 'EEE, d MMM yyyy HH:mm:ss xx', new Date());
+
         const post = {
             url: `${siteUrl}${$($sqPost).children('link').text()}`,
             data: {
                 slug: $($sqPost).children('wp\\:post_name').text().replace(/(\.html)/i, ''),
                 title: $($sqPost).children('title').text(),
                 status: $($sqPost).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
-                published_at: parse($($sqPost).children('pubDate').text(), 'EEE, d MMM yyyy HH:mm:ss xx', new Date()),
+                published_at: postDate,
+                created_at: postDate,
+                updated_at: postDate,
                 feature_image: featureImage,
                 type: postType,
                 author: users ? users.find(user => user.data.slug === authorSlug) : null,
