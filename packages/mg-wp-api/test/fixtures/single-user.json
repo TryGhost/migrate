@@ -1,0 +1,26 @@
+{
+  "id": 29,
+  "name": "Dummy User",
+  "url": "https:\/\/dummysite.com",
+  "description": "Lorem ipsum small bio.\r\n\r\nAnd emoji 🤓 on the second line.",
+  "link": "https:\/\/mysite.com\/author\/dummy",
+  "slug": "dummy",
+  "avatar_urls": {
+    "24": "https:\/\/secure.gravatar.com\/avatar\/205e460b479e2e5b48aec07710c08d50?s=24&d=mm&r=g",
+    "48": "https:\/\/secure.gravatar.com\/avatar\/205e460b479e2e5b48aec07710c08d50?s=48&d=mm&r=g",
+    "96": "https:\/\/secure.gravatar.com\/avatar\/205e460b479e2e5b48aec07710c08d50?s=96&d=mm&r=g"
+  },
+  "meta": [],
+  "_links": {
+    "self": [
+      {
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/users\/29"
+      }
+    ],
+    "collection": [
+      {
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/users"
+      }
+    ]
+  }
+}

@@ -25,7 +25,8 @@ module.exports.processAuthor = (wpAuthor) => {
             name: wpAuthor.name,
             bio: wpAuthor.description,
             profile_image: profileImage,
-            email: wpAuthor.email && wpAuthor.email
+            email: wpAuthor.email && wpAuthor.email,
+            website: wpAuthor.url && wpAuthor.url
         }
     };
 };
