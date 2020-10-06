@@ -181,6 +181,8 @@ module.exports.processPost = (data, {addPrimaryTag, email, pubName}) => {
             title: data.title,
             meta_title: data.page_title || data.title,
             status: 'published',
+            created_at: data.sent_at,
+            updated_at: data.sent_at,
             published_at: data.sent_at,
             tags: []
         }

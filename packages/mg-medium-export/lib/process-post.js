@@ -1,10 +1,14 @@
 const $ = require('cheerio');
+const {formatISO} = require('date-fns');
 const string = require('@tryghost/string');
 const processContent = require('./process-content');
 const sectionTags = ['aside', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'img'];
 
 const processMeta = (name, $post) => {
     let urlInfo;
+
+    // Get an ISO 8601 date - https://date-fns.org/docs/formatISO
+    const dateNow = formatISO(new Date());
 
     const post = {
         url: $post('.p-canonical').attr('href'),
@@ -18,10 +22,14 @@ const processMeta = (name, $post) => {
         urlInfo = name.match(/_(.*?)-([0-9a-f]+)\.html/);
         post.url = $post('footer p a').attr('href');
         post.data.status = 'draft';
+        post.data.created_at = dateNow;
+        post.data.updated_at = dateNow;
     } else {
         urlInfo = post.url.match(/([^/]*?)-([0-9a-f]+)$/);
         post.data.status = 'published';
-        post.data.published_at = $post('.dt-published').attr('datetime');
+        post.data.created_at = $post('.dt-published').attr('datetime') || dateNow;
+        post.data.published_at = $post('.dt-published').attr('datetime') || dateNow;
+        post.data.updated_at = $post('.dt-published').attr('datetime') || dateNow;
     }
 
     $('img').map(async (i, el) => {

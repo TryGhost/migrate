@@ -1,6 +1,7 @@
 const htmlToText = require('html-to-text');
 const $ = require('cheerio');
 const url = require('url');
+const {formatISO, parse} = require('date-fns');
 
 const VideoError = ({src, postUrl}) => {
     let error = new Error(`Unsupported video ${src} in post ${postUrl}`);
@@ -246,17 +247,21 @@ module.exports.processContent = (html, postUrl, errors) => {
  * }
  */
 module.exports.processPost = (hsPost, tags, errors) => {
+    // Get an ISO 8601 date - https://date-fns.org/docs/formatISO
+    const dateNow = formatISO(new Date());
+
     const post = {
         url: hsPost.url,
         data: {
             slug: hsPost.slug,
             title: hsPost.name || hsPost.html_title,
             comment_id: hsPost.analytics_page_id,
-            created_at: hsPost.created_time,
+            created_at: formatISO(parse(hsPost.created_time)) || dateNow,
+            published_at: formatISO(parse(hsPost.publish_date)) || dateNow,
+            updated_at: formatISO(parse(hsPost.updated)) || dateNow,
             meta_title: hsPost.page_title || hsPost.title,
             meta_description: hsPost.meta_description,
-            status: hsPost.state.toLowerCase(),
-            published_at: hsPost.publish_date
+            status: hsPost.state.toLowerCase()
 
         }
     };
