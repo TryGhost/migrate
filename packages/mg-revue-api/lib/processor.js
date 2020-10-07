@@ -76,7 +76,7 @@ module.exports.processContent = (html, postUrl) => {
                 $(strong).html('');
                 $(strong).append($(relevantLink));
             } else if ($(linkChildren).length > 0) {
-                $(linkChildren).each((i, anchor) => {
+                $(linkChildren).each((ii, anchor) => {
                     $(anchor).attr('href', cleanUrl($(anchor).attr('href')));
                 });
             }
