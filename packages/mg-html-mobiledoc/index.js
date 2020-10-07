@@ -1,45 +1,5 @@
-const converter = require('@tryghost/html-to-mobiledoc');
-
-const ConvertError = ({src, message = `Unable to convert post to Mobiledoc`, reference, originalError}) => {
-    let error = new Error(`${message} - ${src}`);
-
-    error.errorType = 'ConvertError';
-    error.code = originalError.message;
-    error.src = src;
-    if (reference) {
-        error.reference = reference;
-    }
-    error.originalError = originalError;
-
-    return error;
-};
-
-const convertToHTMLCard = (html) => {
-    let structure = {
-        version: '0.3.1',
-        markups: [],
-        atoms: [],
-        cards: [['html', {cardName: 'html', html: html}]],
-        sections: [[10, 0]]
-    };
-
-    return structure;
-};
-
-// Wrap our converter tool and convert to a string
-const convertPost = (post, htmlCard) => {
-    if (!post.html) {
-        throw new Error('Post has no html field to convert');
-    }
-
-    if (htmlCard) {
-        post.mobiledoc = JSON.stringify(convertToHTMLCard(post.html));
-    } else {
-        post.mobiledoc = JSON.stringify(converter.toMobiledoc(post.html));
-    }
-
-    delete post.html;
-};
+const ConvertError = require('../lib/ConvertError');
+const convertPost = require('../lib/convertPost');
 
 // Understands the data formats, so knows where to look for posts to convert
 module.exports.convert = (ctx, htmlCard) => {
