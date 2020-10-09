@@ -1,5 +1,5 @@
-const ConvertError = require('../lib/ConvertError');
-const convertPost = require('../lib/convertPost');
+const ConvertError = require('./lib/ConvertError');
+const convertPost = require('./lib/convertPost');
 
 // Understands the data formats, so knows where to look for posts to convert
 module.exports.convert = (ctx, htmlCard) => {
