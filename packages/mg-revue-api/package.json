@@ -26,6 +26,6 @@
   "dependencies": {
     "@tryghost/string": "^0.1.11",
     "cheerio": "0.22.0",
-    "got": "11.7.0"
+    "got": "11.8.0"
   }
 }
