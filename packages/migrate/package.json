@@ -27,7 +27,7 @@
   "devDependencies": {
     "mocha": "8.2.0",
     "should": "13.2.3",
-    "sinon": "9.2.0"
+    "sinon": "9.2.1"
   },
   "dependencies": {
     "@tryghost/listr-smart-renderer": "^0.2.1",
