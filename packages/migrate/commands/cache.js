@@ -1,4 +1,4 @@
-const fsUtils = require('../../mg-fs-utils');
+const fsUtils = require('@tryghost/mg-fs-utils');
 const ui = require('@tryghost/pretty-cli').ui;
 
 // Internal ID in case we need one.
