@@ -105,15 +105,6 @@ module.exports.processContent = (html, postUrl) => {
         });
 
         // TODO: this should be a parser plugin
-        $html('table').each((i, table) => {
-            if ($(table).parents('table').length < 1) {
-                // don't wrap a nested table again
-                $(table).before('<!--kg-card-begin: html-->');
-                $(table).after('<!--kg-card-end: html-->');
-            }
-        });
-
-        // TODO: this should be a parser plugin
         // Wrap nested lists in HTML card
         $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {
             let $parent = $(nestedList).parentsUntil('ul, ol').parent();
