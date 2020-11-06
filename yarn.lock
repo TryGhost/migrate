@@ -260,12 +260,12 @@
   dependencies:
     defer-to-connect "^2.0.0"
 
-"@tryghost/errors@^0.2.4":
-  version "0.2.4"
-  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-0.2.4.tgz#873107f0915667852f86e616a8698eddf7b1f59e"
-  integrity sha512-U0S/oeRCvYDe2Uuzx+D7dKQDW91D24wGm0cP90wf3EOzJH82imYFYgRXT4FZ6ypnraSSC74IFPT/+2Kyp9CnFQ==
+"@tryghost/errors@^0.2.5":
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-0.2.5.tgz#4ae49130ec60350dca5a66001605a0e9188d87e3"
+  integrity sha512-97ZfqMlFkSQZHHbIq4uGvUc/1otFutgw1pvfPAFXZhEbHqfz6rf2cRToTHtaGLhebKgnzrBIzeVmGwAL63Qxzw==
   dependencies:
-    ghost-ignition "4.2.2"
+    ghost-ignition "4.2.4"
     lodash "4.17.20"
 
 "@tryghost/html-to-mobiledoc@0.7.6":
@@ -277,16 +277,16 @@
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "16.4.0"
 
-"@tryghost/image-transform@1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.0.4.tgz#7f74887083b1ed58df5d413b5b5ee15bd41fbd9e"
-  integrity sha512-0FeQPaVdpD3HykFfV81mJxRRc7vazAZ3cA5ozOHJNVJ7q3TJjRqrDeVqgVbNL9S/m0ir+UdkJcvKTSs99TxcVQ==
+"@tryghost/image-transform@1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.0.5.tgz#4225697c3ac3b2a447f171ac342703ade6d79a21"
+  integrity sha512-BUiGipN9ODrHNb13LnLoE/eHASsXJfWVOFsTIRYVSFS5zW3ibkc2eChkl380YwNCqmS3ocyvK5maqtxCaBwg9Q==
   dependencies:
-    "@tryghost/errors" "^0.2.4"
+    "@tryghost/errors" "^0.2.5"
     bluebird "3.7.2"
     fs-extra "9.0.1"
   optionalDependencies:
-    sharp "0.26.1"
+    sharp "0.26.2"
 
 "@tryghost/kg-clean-basic-html@^1.0.9":
   version "1.0.9"
@@ -1096,13 +1096,6 @@ date-fns@^1.27.2:
   resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-1.30.1.tgz#2e71bf0b119153dbb4cc4e88d9ea5acfb50dc05c"
   integrity sha512-hBSVCvSmWC+QypYObzwGOd9wqdDpOt+0wl0KbU+R+uuZBS1jN8VsD1ss3irQDknRj5NvxiTF6oj/nDRnN/UQNw==
 
-debug@4.1.1:
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/debug/-/debug-4.1.1.tgz#3b72260255109c6b589cee050f1d516139664791"
-  integrity sha512-pYAIzeRo8J6KPEaJ0VWOh5Pzkbw/RetuzehGM7QRRX5he4fPHx2rdKMB256ehJCkX+XRQm16eZLqLNS8RSZXZw==
-  dependencies:
-    ms "^2.1.1"
-
 debug@4.2.0, debug@^4.0.1, debug@^4.1.0, debug@^4.1.1:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/debug/-/debug-4.2.0.tgz#7f150f93920e94c58f5574c2fd01a3110effe7f1"
@@ -1827,25 +1820,6 @@ getpass@^0.1.1:
   integrity sha1-Xv+OPmhNVprkyysSgmBOi6YhSfo=
   dependencies:
     assert-plus "^1.0.0"
-
-ghost-ignition@4.2.2:
-  version "4.2.2"
-  resolved "https://registry.yarnpkg.com/ghost-ignition/-/ghost-ignition-4.2.2.tgz#7201d4756be6ebe6743495cf6c365ff8ee416b73"
-  integrity sha512-/ZqS1AOGjocR7h45PVObgT69cmDakvLPAnEu203mxtGwjnaSvuIdFA82cdoRh2Ehg/JQEi20FaSqgJSIzdMkGA==
-  dependencies:
-    bunyan "1.8.14"
-    bunyan-loggly "1.4.2"
-    caller "1.0.1"
-    debug "4.1.1"
-    find-root "1.1.0"
-    fs-extra "9.0.1"
-    gelf-stream "1.1.1"
-    json-stringify-safe "5.0.1"
-    lodash "4.17.19"
-    moment "2.27.0"
-    nconf "0.10.0"
-    prettyjson "1.2.1"
-    uuid "8.3.0"
 
 ghost-ignition@4.2.4:
   version "4.2.4"
@@ -2585,11 +2559,6 @@ lodash.sortby@^4.7.0:
   version "4.7.0"
   resolved "https://registry.yarnpkg.com/lodash.sortby/-/lodash.sortby-4.7.0.tgz#edd14c824e2cc9c1e0b0a1b42bb5210516a42438"
   integrity sha1-7dFMgk4sycHgsKG0K7UhBRakJDg=
-
-lodash@4.17.19:
-  version "4.17.19"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.19.tgz#e48ddedbe30b3321783c5b4301fbd353bc1e4a4b"
-  integrity sha512-JNvd8XER9GQX0v2qJgsaN/mzFCNA5BRe/j8JN9d+tWyGLSodKQHKFicdwNYzWwI3wjRnaKPsGj1XkBjx/F96DQ==
 
 lodash@4.17.20, lodash@^4.1.0, lodash@^4.15.0, lodash@^4.17.11, lodash@^4.17.14, lodash@^4.17.19:
   version "4.17.20"
@@ -3487,21 +3456,6 @@ set-blocking@^2.0.0, set-blocking@~2.0.0:
   resolved "https://registry.yarnpkg.com/set-blocking/-/set-blocking-2.0.0.tgz#045f9782d011ae9a6803ddd382b24392b3d890f7"
   integrity sha1-BF+XgtARrppoA93TgrJDkrPYkPc=
 
-sharp@0.26.1:
-  version "0.26.1"
-  resolved "https://registry.yarnpkg.com/sharp/-/sharp-0.26.1.tgz#084e3447ba17f1baf3e3f2e08305ed7aec236ce9"
-  integrity sha512-9MhwS4ys8pnwBH7MtnBdLzUv+cb24QC4xbzzQL6A+1MQ4Se2V6oPHEX8TIGIZUPRKi6S1kJPVNzt/Xqqp6/H3Q==
-  dependencies:
-    color "^3.1.2"
-    detect-libc "^1.0.3"
-    node-addon-api "^3.0.2"
-    npmlog "^4.1.2"
-    prebuild-install "^5.3.5"
-    semver "^7.3.2"
-    simple-get "^4.0.0"
-    tar-fs "^2.1.0"
-    tunnel-agent "^0.6.0"
-
 sharp@0.26.2:
   version "0.26.2"
   resolved "https://registry.yarnpkg.com/sharp/-/sharp-0.26.2.tgz#3d5777d246ae32890afe82a783c1cbb98456a88c"
@@ -4048,11 +4002,6 @@ util-deprecate@^1.0.1, util-deprecate@~1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
   integrity sha1-RQ1Nyfpw3nMnYvvS1KKJgUGaDM8=
-
-uuid@8.3.0:
-  version "8.3.0"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.0.tgz#ab738085ca22dc9a8c92725e459b1d507df5d6ea"
-  integrity sha512-fX6Z5o4m6XsXBdli9g7DtWgAx+osMsRRZFKma1mIUsLCz6vRvv+pz5VNbyu9UEDzpMWulZfvpgb/cmDXVulYFQ==
 
 uuid@8.3.1:
   version "8.3.1"
