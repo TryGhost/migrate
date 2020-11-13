@@ -1,4 +1,4 @@
-const htmlToText = require('html-to-text');
+const {htmlToText} = require('html-to-text');
 const $ = require('cheerio');
 const url = require('url');
 const {formatISO, parse} = require('date-fns');
@@ -38,11 +38,19 @@ module.exports.createCleanExcerpt = (summaryContent = '') => {
     summaryContent = summaryContent.replace('&nbsp;', ' ');
 
     // Convert to text only
-    let excerpt = htmlToText.fromString(summaryContent, {
-        ignoreHref: true,
-        ignoreImage: true,
+    let excerpt = htmlToText(summaryContent, {
+        tags: {
+            img: {format: 'skip'},
+            a: {options: {ignoreHref: true}},
+            p: {format: 'inline', options: {uppercase: false}},
+            h1: {format: 'inline', options: {uppercase: false}},
+            h2: {format: 'inline', options: {uppercase: false}},
+            h3: {format: 'inline', options: {uppercase: false}},
+            h4: {format: 'inline', options: {uppercase: false}},
+            h5: {format: 'inline', options: {uppercase: false}},
+            h6: {format: 'inline', options: {uppercase: false}}
+        },
         wordwrap: false,
-        uppercaseHeadings: false,
         decodeOptions: {}
     });
 
