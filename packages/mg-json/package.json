@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-json",
-  "version": "0.6.8",
+  "version": "0.6.9",
   "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-json",
   "author": "Ghost Foundation",
   "license": "MIT",
