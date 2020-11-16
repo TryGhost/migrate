@@ -126,6 +126,9 @@ class FileCache {
     resolveImageFileName(filename) {
         let ext = path.extname(filename);
 
+        // remove the base imagePath if it already exists in the path, so we don't get nested imagePath directories
+        filename = filename.replace(`/${this.imagePath}`, '');
+
         // replace the basename part with a sanitized version
         filename = filename.replace(filename, this.sanitizeFileName(filename));
 

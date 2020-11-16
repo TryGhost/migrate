@@ -7,10 +7,13 @@ const path = require('path');
 // @TODO: expand this list
 const htmlFields = ['html'];
 
+const mobiledocFields = ['mobiledoc'];
+
 // @TODO: should probably be a shared list
 const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico'];
 
 const isHTMLField = field => _.includes(htmlFields, field);
+const isMobiledocField = field => _.includes(mobiledocFields, field);
 const isImageField = field => /image/.test(field);
 
 const ScrapeError = ({src, code, statusCode, originalError}) => {
@@ -129,6 +132,28 @@ class ImageScraper {
         return value;
     }
 
+    async processMobiledoc(value) {
+        let json = JSON.parse(value);
+
+        // TODO: Loop over `json` as a whole and find all `src` keys instead of iterating over specific card types
+        let images = json.cards.forEach(async (card, ci) => {
+            if (card[0] === 'gallery') {
+                card[1].images.forEach(async (item, ii) => {
+                    let newSrc = await this.downloadImage(item.src);
+                    item.src = newSrc;
+                    json.cards[ci][1].images[ii].src = newSrc;
+                });
+            } else if (card[0] === 'image') {
+                let newSrc = await this.downloadImage(card[1].src);
+                json.cards[ci][1].src = newSrc;
+            }
+        });
+
+        await Promise.all([images]);
+
+        return JSON.stringify(json);
+    }
+
     fetch(ctx) {
         let tasks = [];
         let json = ctx.result;
@@ -162,6 +187,22 @@ class ImageScraper {
                             task: async () => {
                                 try {
                                     resource[field] = await this.processHTML(value);
+                                } catch (error) {
+                                    error.resource = {
+                                        title: resource.title,
+                                        slug: resource.slug
+                                    };
+                                    ctx.errors.push(error);
+                                    throw error;
+                                }
+                            }
+                        });
+                    } else if (isMobiledocField(field) && value) {
+                        tasks.push({
+                            title: `${type}: ${resource.slug} ${field}`,
+                            task: async () => {
+                                try {
+                                    resource[field] = await this.processMobiledoc(value);
                                 } catch (error) {
                                     error.resource = {
                                         title: resource.title,

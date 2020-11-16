@@ -509,7 +509,7 @@ module.exports.all = async ({result: input, usersJSON, options, errors}) => {
         users: this.processAuthors(input.users)
     };
 
-    output.posts = this.processPosts(input.posts, output.users, options, errors);
+    output.posts = this.processPosts(input.posts, null, options, errors);
 
     return output;
 };
