@@ -30,6 +30,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`-s` `--scrape`**
     - string - default: `img`
     - Configure scraping tasks (choices: `img`, `none`)
+- **`-I` `--info`**
+    - bool - default: `false`
+    - Show initalisation info only
 - **`-b` `--batch`**
     - number - default: `0`
     - Batch number to run (defaults to running all)
