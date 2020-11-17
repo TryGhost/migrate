@@ -40,7 +40,7 @@ module.exports.processAuthor = (ghAuthor) => {
     };
 
     if (ghAuthor.profile_image) {
-        let profileImage = ghAuthor.profile_image.replace(/s=96/, 's=3000');
+        let profileImage = ghAuthor.profile_image.replace(/s=([0-9]{1,4})/, 's=3000');
         profileImage = profileImage.replace(/\/\/www.gravatar.com/, 'https://www.gravatar.com');
         authorData.data.profile_image = profileImage;
     }
