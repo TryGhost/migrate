@@ -1,6 +1,6 @@
 # Migrate Ghost API
 
-Export content from an existing Ghost instillation using the [Admin API](https://ghost.org/docs/api/v2/admin/), and generate a `zip` file you can import in another Ghost instillation.
+Export content from an existing Ghost installation using the [Admin API](https://ghost.org/docs/api/v2/admin/), and generate a `zip` file you can import in another Ghost installation.
 
 ## Install
 

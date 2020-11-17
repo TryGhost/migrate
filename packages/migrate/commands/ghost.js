@@ -13,7 +13,7 @@ exports.flags = 'ghost <url> <apikey>';
 exports.desc = 'Migrate from Ghost using the Admin API';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Path to a medium export zip'];
+exports.paramsDesc = ['Ghost API URL ', 'Ghost API key'];
 
 // Configure all the options
 exports.setup = (sywac) => {
@@ -29,6 +29,10 @@ exports.setup = (sywac) => {
         choices: ['img', 'none'],
         defaultValue: 'img',
         desc: 'Configure scraping tasks'
+    });
+    sywac.boolean('-I, --info', {
+        defaultValue: false,
+        desc: 'Show initalisation info only'
     });
     sywac.number('-b, --batch', {
         defaultValue: 0,

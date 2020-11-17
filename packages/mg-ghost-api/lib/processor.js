@@ -1,4 +1,4 @@
-module.exports.processTerms = (ghTags) => {
+module.exports.processTags = (ghTags) => {
     let tags = [];
 
     ghTags.forEach((tag) => {
@@ -21,7 +21,7 @@ module.exports.processPost = (ghPost) => {
     post.data.authors = this.processAuthors(ghPost.authors);
 
     if (ghPost.tags && ghPost.tags.length > 0) {
-        post.data.tags = this.processTerms(ghPost.tags);
+        post.data.tags = this.processTags(ghPost.tags);
     } else {
         delete post.data.tags;
     }
@@ -34,15 +34,16 @@ module.exports.processPosts = (posts) => {
 };
 
 module.exports.processAuthor = (ghAuthor) => {
-    let profileImage = ghAuthor.profile_image.replace(/s=96/, 's=3000');
-    profileImage = profileImage.replace(/\/\/www.gravatar.com/, 'https://www.gravatar.com');
-
     let authorData = {
         url: ghAuthor.url,
         data: ghAuthor
     };
 
-    authorData.data.profile_image = profileImage;
+    if (ghAuthor.profile_image) {
+        let profileImage = ghAuthor.profile_image.replace(/s=96/, 's=3000');
+        profileImage = profileImage.replace(/\/\/www.gravatar.com/, 'https://www.gravatar.com');
+        authorData.data.profile_image = profileImage;
+    }
 
     return authorData;
 };
