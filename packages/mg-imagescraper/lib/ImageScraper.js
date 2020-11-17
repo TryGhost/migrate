@@ -135,19 +135,23 @@ class ImageScraper {
     async processMobiledoc(value) {
         let json = JSON.parse(value);
 
-        // TODO: Loop over `json` as a whole and find all `src` keys instead of iterating over specific card types
-        let images = json.cards.forEach(async (card, ci) => {
-            if (card[0] === 'gallery') {
-                card[1].images.forEach(async (item, ii) => {
-                    let newSrc = await this.downloadImage(item.src);
-                    item.src = newSrc;
-                    json.cards[ci][1].images[ii].src = newSrc;
-                });
-            } else if (card[0] === 'image') {
-                let newSrc = await this.downloadImage(card[1].src);
-                json.cards[ci][1].src = newSrc;
+        const imageKeys = ['src'];
+
+        const processMobiledocImages = async (object) => {
+            for (var objectKey in object) {
+                var objectValue = object[objectKey];
+                if (typeof objectValue === 'object') {
+                    await processMobiledocImages(objectValue);
+                } else {
+                    if (imageKeys.includes(objectKey)) {
+                        let newSrc = await this.downloadImage(objectValue);
+                        object.src = newSrc;
+                    }
+                }
             }
-        });
+        };
+
+        let images = await processMobiledocImages(json);
 
         await Promise.all([images]);
 
