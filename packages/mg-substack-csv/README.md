@@ -95,4 +95,4 @@ yarn dev substack path/to/posts.csv
 
 # Copyright & License
 
-Copyright (c) 2013-2020 Ghost Foundation - Released under the [MIT license](https://github.com/TryGhost/migrate/blob/master/packages/mg-substack-csv/LICENSE).
+Copyright (c) 2013-2020 Ghost Foundation - Released under the [MIT license](LICENSE).
