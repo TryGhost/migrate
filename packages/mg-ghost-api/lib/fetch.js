@@ -56,8 +56,14 @@ const cachedFetch = async (fileCache, api, type, options, page) => {
 
     if (type === 'posts') {
         response = await api.site.posts.browse(postParams);
+        response.forEach((item) => {
+            item.type = 'post';
+        });
     } else if (type === 'pages') {
         response = await api.site.pages.browse(pageParams);
+        response.forEach((item) => {
+            item.type = 'page';
+        });
     } else {
         response = await api.site.users.browse(userParams);
     }
