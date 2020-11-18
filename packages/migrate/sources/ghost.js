@@ -1,10 +1,8 @@
-const ghostAPI = require('../../mg-ghost-api');
+const ghostAPI = require('@tryghost/mg-ghost-api');
 const mgJSON = require('@tryghost/mg-json');
-// const MgImageScraper = require('@tryghost/mg-imagescraper');
-const MgImageScraper = require('../../mg-imagescraper/lib/ImageScraper.js');
+const MgImageScraper = require('@tryghost/mg-imagescraper');
 const MgLinkFixer = require('@tryghost/mg-linkfixer');
-// const fsUtils = require('@tryghost/mg-fs-utils');
-const fsUtils = require('../../mg-fs-utils');
+const fsUtils = require('@tryghost/mg-fs-utils');
 const makeTaskRunner = require('../lib/task-runner');
 
 module.exports.initialise = (options) => {
