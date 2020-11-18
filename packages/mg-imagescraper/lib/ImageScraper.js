@@ -7,10 +7,13 @@ const path = require('path');
 // @TODO: expand this list
 const htmlFields = ['html'];
 
+const mobiledocFields = ['mobiledoc'];
+
 // @TODO: should probably be a shared list
 const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico'];
 
 const isHTMLField = field => _.includes(htmlFields, field);
+const isMobiledocField = field => _.includes(mobiledocFields, field);
 const isImageField = field => /image/.test(field);
 
 const ScrapeError = ({src, code, statusCode, originalError}) => {
@@ -129,6 +132,32 @@ class ImageScraper {
         return value;
     }
 
+    async processMobiledoc(value) {
+        let json = JSON.parse(value);
+
+        const imageKeys = ['src'];
+
+        const processMobiledocImages = async (object) => {
+            for (var objectKey in object) {
+                var objectValue = object[objectKey];
+                if (typeof objectValue === 'object') {
+                    await processMobiledocImages(objectValue);
+                } else {
+                    if (imageKeys.includes(objectKey)) {
+                        let newSrc = await this.downloadImage(objectValue);
+                        object.src = newSrc;
+                    }
+                }
+            }
+        };
+
+        let images = await processMobiledocImages(json);
+
+        await Promise.all([images]);
+
+        return JSON.stringify(json);
+    }
+
     fetch(ctx) {
         let tasks = [];
         let json = ctx.result;
@@ -162,6 +191,22 @@ class ImageScraper {
                             task: async () => {
                                 try {
                                     resource[field] = await this.processHTML(value);
+                                } catch (error) {
+                                    error.resource = {
+                                        title: resource.title,
+                                        slug: resource.slug
+                                    };
+                                    ctx.errors.push(error);
+                                    throw error;
+                                }
+                            }
+                        });
+                    } else if (isMobiledocField(field) && value) {
+                        tasks.push({
+                            title: `${type}: ${resource.slug} ${field}`,
+                            task: async () => {
+                                try {
+                                    resource[field] = await this.processMobiledoc(value);
                                 } catch (error) {
                                     error.resource = {
                                         title: resource.title,
