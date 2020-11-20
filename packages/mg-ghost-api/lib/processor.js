@@ -16,7 +16,7 @@ module.exports.processTags = (ghTags) => {
             name: '#ghost',
             slug: 'hash-ghost',
             description: 'Posts migrated from an existing Ghost installation',
-            visibility: "internal"
+            visibility: 'internal'
         }
     });
 
