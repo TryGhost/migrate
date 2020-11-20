@@ -2,11 +2,22 @@ module.exports.processTags = (ghTags) => {
     let tags = [];
 
     ghTags.forEach((tag) => {
+        // If the tag is internal (which typically comes from another Ghost site), it's URL value is a 404 page
+        // The tools merge tags with the same slug, so this means multiple tags with the same URL don't get merged
+        // TODO: Find out where tags with the same URL are being 'merged'
+        if (tag.visibility === 'internal') {
+            tag.url = `#${tag.slug}`;
+        }
         tags.push({url: tag.url, data: tag});
     });
 
     tags.push({
-        url: 'migrator-added-tag', data: {name: '#ghost'}
+        url: 'migrator-added-tag', data: {
+            name: '#ghost',
+            slug: 'hash-ghost',
+            description: 'Posts migrated from an existing Ghost installation',
+            visibility: "internal"
+        }
     });
 
     return tags;
