@@ -19,7 +19,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@tryghost/image-transform": "1.0.5",
+    "@tryghost/image-transform": "1.0.6",
     "adm-zip": "0.4.16",
     "csv-parse": "4.14.1",
     "date-fns": "2.16.1",
