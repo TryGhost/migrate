@@ -1097,10 +1097,10 @@ csv-parse@4.14.2:
   resolved "https://registry.yarnpkg.com/csv-parse/-/csv-parse-4.14.2.tgz#c1329cff95a99b8773a92c4e62f8bff114b34726"
   integrity sha512-YE2xlTKtM035/94llhgsp9qFQxGi47EkQJ1pZ+mLT/98GpIsbjkMGAb7Rmu9hNxVfYFOLf10hP+rPVqnoccLgw==
 
-csv-parser@2.3.4:
-  version "2.3.4"
-  resolved "https://registry.yarnpkg.com/csv-parser/-/csv-parser-2.3.4.tgz#f8172e77d416bf89a422dc0bc6f56b4839962ecb"
-  integrity sha512-UlzYZEiHR5OQTh0C97HeZfSBOCshKIe0NpG5vYlgAcXheDKvZoIHvZNMgg1IGvtvbSKVRB6/UIA4xxjzKi2TFA==
+csv-parser@3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/csv-parser/-/csv-parser-3.0.0.tgz#b88a6256d79e090a97a1b56451f9327b01d710e7"
+  integrity sha512-s6OYSXAK3IdKqYO33y09jhypG/bSDHPuyCme/IdEHfWpLf/jKcpitVFyOC6UemgGk8v7Q5u2XE0vvwmanxhGlQ==
   dependencies:
     minimist "^1.2.0"
 
