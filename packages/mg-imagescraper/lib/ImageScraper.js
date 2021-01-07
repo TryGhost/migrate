@@ -136,6 +136,7 @@ class ImageScraper {
         let json = JSON.parse(value);
 
         const imageKeys = ['src'];
+        const markdownImageRegex = /(?:!\[(.*?)\]\((.*?)\))/gm;
 
         const processMobiledocImages = async (object) => {
             for (var objectKey in object) {
@@ -146,6 +147,13 @@ class ImageScraper {
                     if (imageKeys.includes(objectKey)) {
                         let newSrc = await this.downloadImage(objectValue);
                         object.src = newSrc;
+                    } else if (object.markdown) {
+                        object.markdown = await this.processHTML(object.markdown);
+                        let matches = [...object.markdown.matchAll(markdownImageRegex)];
+                        matches.forEach(async (match) => {
+                            let newSrc = await this.downloadImage(match[2]);
+                            object.markdown = object.markdown.replace(match[2], newSrc);
+                        });
                     }
                 }
             }
