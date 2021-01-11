@@ -46,7 +46,7 @@
     "@tryghost/mg-webscraper": "^0.6.12",
     "@tryghost/mg-wp-api": "^0.4.10",
     "@tryghost/pretty-cli": "1.2.12",
-    "@tryghost/string": "0.1.14",
+    "@tryghost/string": "0.1.15",
     "cheerio": "0.22.0",
     "listr": "0.14.3",
     "lodash.get": "4.4.2"
