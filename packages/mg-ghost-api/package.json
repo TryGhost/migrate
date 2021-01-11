@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-ghost-api",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-ghost-api",
   "author": "Ghost Foundation",
   "license": "MIT",
