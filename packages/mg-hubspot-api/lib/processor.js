@@ -181,28 +181,6 @@ module.exports.processContent = (html, postUrl, errors) => {
         });
 
         // TODO: this should be a parser plugin
-        // Handle blockquotes with multiple p tags as children and
-        // 1. remove the p tags
-        // 2. separate them with line breaks
-        // This way, mobiledoc treats multiple p tag children correctly as one blockquote
-        // instead of creating a blockquote for each one.
-        $html('blockquote > p + p').each((i, el) => {
-            let $blockquote = $(el).parents('blockquote');
-
-            if ($blockquote.children('p').length > 0) {
-                let newBlockquoteContent = '';
-                $blockquote.children('p').each((j, p) => {
-                    if (j < $blockquote.children('p').length - 1) {
-                        newBlockquoteContent += `${$(p).html()}</br></br>`;
-                    } else {
-                        newBlockquoteContent += $(p).html();
-                    }
-                });
-                $blockquote.html(newBlockquoteContent);
-            }
-        });
-
-        // TODO: this should be a parser plugin
         // Wrap nested lists in HTML card
         $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {
             let $parent = $(nestedList).parentsUntil('ul, ol').parent();
