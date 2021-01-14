@@ -260,10 +260,10 @@
     form-data "^3.0.0"
     jsonwebtoken "^8.4.0"
 
-"@tryghost/errors@^0.2.6":
-  version "0.2.6"
-  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-0.2.6.tgz#4554c97a1666e4db323d8c664a4df5a714f77452"
-  integrity sha512-hhCAijjK24jeuHbeT0KILSX+6nDOldgxvFfnIGJMdjThuWQGkwHhGaD9hkUXe7F8QgAvTL0J8FVG/f6fs5TwrA==
+"@tryghost/errors@^0.2.7":
+  version "0.2.7"
+  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-0.2.7.tgz#9c518d3656f5335c95912a5cbb5751a90964d96e"
+  integrity sha512-oonHLYJvwQoxKLjO57EWAQe4cIvqo6YtLOBt9Gz3oQFrDdxlLrqxVkt9X4v+IvOkcpW6Nw1lw9T4A0KLRcg4eA==
   dependencies:
     ghost-ignition "4.2.4"
     lodash "4.17.20"
@@ -277,12 +277,12 @@
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "16.4.0"
 
-"@tryghost/image-transform@1.0.6":
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.0.6.tgz#1e1458535aad8e7d63b7b70e443a538552863582"
-  integrity sha512-7NGBvoMCrXFUzAQy37AgAG/zhWUtoiD/ktCip8VRtfzEo6VgT/qZ+BeALGFm+gn9qLIEIRCSfXOpJ3QQtTP5BQ==
+"@tryghost/image-transform@1.0.7":
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.0.7.tgz#5ca0869df61f421501c66bda7a1a8d21c4794d79"
+  integrity sha512-KkV713AaqIHL5Jq45Odyg9DhoUKNf9oX3zP8+kZ3gQaotz7mId3DOCt57+RtGGLRVevlQCt5lRPBPVIz1/MrJw==
   dependencies:
-    "@tryghost/errors" "^0.2.6"
+    "@tryghost/errors" "^0.2.7"
     bluebird "3.7.2"
     fs-extra "9.0.1"
   optionalDependencies:
