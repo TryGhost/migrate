@@ -28,7 +28,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const processed = await process(mapped, ctx);
 
         processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(3);
+        processed.posts.length.should.equal(4);
 
         const post = processed.posts[0];
         post.should.be.an.Object();
@@ -123,5 +123,31 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
 
         post.data.status.should.eql('draft');
         post.data.tags[1].data.name.should.eql('podcast');
+    });
+
+    it('Can use the first found image as the post image', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://dummysite.substack.com',
+                email: 'dummyuser@email.com',
+                forceImages: true
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        // The third post is a newsletter with image half way through the content
+        const post = processed.posts[3];
+
+        post.data.status.should.eql('published');
+        post.data.feature_image.should.eql('https://dummysite.substack.com/image.jpg');
     });
 });

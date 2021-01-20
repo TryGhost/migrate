@@ -46,6 +46,10 @@ exports.setup = (sywac) => {
         defaultValue: true,
         desc: 'Import draft posts'
     });
+    sywac.boolean('--forceImages', {
+        defaultValue: false,
+        desc: 'Use the first image in a post as the feature image'
+    });
     sywac.boolean('--fallBackHTMLCard', {
         defaultValue: false,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'

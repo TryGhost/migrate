@@ -103,15 +103,31 @@ const processContent = (html, siteUrl) => {
     return html;
 };
 
-const processPost = (post, siteUrl) => {
+const processFeatureImage = (html, post) => {
+    const $html = $.load(html, {
+        decodeEntities: false
+    });
+
+    let featured = $html('img').eq(0) || false;
+
+    if (featured) {
+        post.data.feature_image = $(featured).attr('src');
+    }
+};
+
+const processPost = (post, siteUrl, forceImages) => {
     post.data.html = processContent(post.data.html, siteUrl);
+
+    if (forceImages) {
+        processFeatureImage(post.data.html, post);
+    }
 
     return post;
 };
 
 module.exports = async (input, ctx) => {
     let {postsDir, options} = ctx;
-    let {url: siteUrl} = options;
+    let {url: siteUrl, forceImages: forceImages} = options;
     const output = {};
 
     if (postsDir) {
@@ -129,7 +145,7 @@ module.exports = async (input, ctx) => {
     }
 
     if (input.posts && input.posts.length > 0) {
-        output.posts = input.posts.map(post => processPost(post, siteUrl));
+        output.posts = input.posts.map(post => processPost(post, siteUrl, forceImages));
     }
 
     return output;
