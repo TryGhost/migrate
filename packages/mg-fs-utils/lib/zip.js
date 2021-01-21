@@ -1,4 +1,5 @@
 const AdmZip = require('adm-zip');
+const {compress} = require('@tryghost/zip');
 const path = require('path');
 const _private = {};
 
@@ -6,13 +7,10 @@ _private.openZipForRead = (zipPath) => {
     return AdmZip(zipPath);
 };
 
-_private.openZipForWrite = () => {
-    return new AdmZip();
-};
-
 /**
  * Read a Zip File
  * - Flattens the structure if there's one top-level directory, so we only get the files inside
+ * @TODO: Refactor to use @tryghost/zip to extract zip files and drop adm-zip dependency
  */
 module.exports.read = (zipPath, callback) => {
     let zip;
@@ -43,12 +41,9 @@ module.exports.read = (zipPath, callback) => {
 };
 
 module.exports.write = (zipPath, contentFolder, fileName) => {
-    const zip = _private.openZipForWrite();
     const outputPath = path.join(zipPath, fileName || `ghost-import-${Date.now()}.zip`);
-    zip.addLocalFolder(contentFolder);
-    zip.writeZip(outputPath);
 
-    return outputPath;
+    return compress(contentFolder, outputPath);
 };
 
 module.exports._private = _private;
