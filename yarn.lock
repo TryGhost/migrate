@@ -2254,10 +2254,10 @@ html-encoding-sniffer@^2.0.1:
   dependencies:
     whatwg-encoding "^1.0.5"
 
-html-entities@2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/html-entities/-/html-entities-2.0.2.tgz#3e0cda2387515b2dc6a947163fd51f6b48d80186"
-  integrity sha512-4IHIARvqG6F1gACykQUXc24KuAM8vbmKHq738CIVsPNBIp/xqmYFbIEEeA51SdjF+mxk/I52reZMNVK8Kzq9Ig==
+html-entities@2.0.4:
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/html-entities/-/html-entities-2.0.4.tgz#40fadfbf0a5059fe887a522e82e5858146148bd3"
+  integrity sha512-0KXw8Jx9PuopSrUKiANKS4I8ovQvpIjcO14tvb5eco3qAgXIrf85roz48v0m+UPkoffmG/dgnWjCr9kU1vDlBA==
 
 html-to-text@6.0.0:
   version "6.0.0"
