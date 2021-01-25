@@ -13,15 +13,11 @@ npm install --global @tryghost/migrate
 
 To use this package in your own project:
 
-```sh
-npm install @tryghost/mg-substack-members-csv --save
-```
+`npm install @tryghost/mg-substack-members --save`
 
 or
 
-```sh
-yarn add @tryghost/mg-substack-members-csv
-```
+`yarn add @tryghost/mg-substack-members-csv`
 
 
 ## Usage
@@ -73,25 +69,25 @@ It's possible to pass more options, in order to achieve a better migration file 
 A more complex migration command that accounts for Stripe data could look like this:
 
 ```sh
-migrate substack-members emails.csv --subs members.csv --giftLabel Gifted --freeLabel Free --paidLabel Supporter --compLabel Try\ It\ Out
+migrate substack-members emails.csv --subs members.csv --giftLabel Gifted --freeLabel Free --paidLabel Supporter --compLabel 'Try It Out'
 ```
 
 
 ## Develop
 
-This is a mono repository, managed with [lerna](https://lerna.js.org/).
+This is a mono repository, managed with [lerna](https://lerna.js.org).
 
-Follow the instructions for the [top-level repo](https://github.com/TryGhost/migrate).
+Follow the instructions for the top-level repo.
 1. `git clone` this repo & `cd` into it as usual
 2. Run `yarn` to install top-level dependencies.
 
 
 ### Run
 
-To run a local development copy, `cd` into this directory, and replace `migrate` with `yarn dev`, like so:
+To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
 
 ```sh
-yarn dev substack-members path/to/posts.csv
+yarn dev substack-members path/to/emails.csv
 ```
 
 

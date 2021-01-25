@@ -1,6 +1,6 @@
 # Migrate Substack Posts CSV Export
 
-Converts the Posts CSV (plus optional posts directory) and creates a zip file if your content and images, ready to import into Ghost.
+Converts the Substack Posts CSV (plus optional posts directory) and generates a `zip` file you can import into a Ghost installation.
 
 
 ## Install
@@ -13,25 +13,19 @@ npm install --global @tryghost/migrate
 
 To use this package in your own project:
 
-```sh
-npm install @tryghost/mg-substack-csv --save
-```
+`npm install @tryghost/mg-substack-csv --save`
 
 or
 
-```sh
-yarn add @tryghost/mg-substack-csv
-```
+`yarn add @tryghost/mg-substack-csv`
 
 
 ## Usage
 
-Substack provides an overview `csv` file as well as a folder containing different files for each post.
-
 To run an absolute basic Substack migration, the required command is this:
 
 ```sh
-migrate substack <path to post.csv file>
+migrate substack <path to csv file>
 ```
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
@@ -47,7 +41,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - string - default: `all` 
     - Choices: `all`, `web`, `img`, `none`            
 - **`-e` `--email`** 
-    - Provide an email domain for users e.g. `mycompany.com`
+    - Provide an email domain for users e.g. `example.com`
     - bool/string - default: `false`            
 - **`-u` `--url`** 
     - Provide a URL (without trailing slash) to the hosted source site, so we can scrape data
@@ -71,19 +65,19 @@ migrate substack <path to post.csv file> --url <URL to substack instance> --read
 
 ## Develop
 
-This is a mono repository, managed with [lerna](https://lerna.js.org/).
+This is a mono repository, managed with [lerna](https://lerna.js.org).
 
-Follow the instructions for the [top-level repo](https://github.com/TryGhost/migrate).
+Follow the instructions for the top-level repo.
 1. `git clone` this repo & `cd` into it as usual
 2. Run `yarn` to install top-level dependencies.
 
 
 ### Run
 
-To run a local development copy, `cd` into this directory, and replace `migrate` with `yarn dev`, like so:
+To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
 
 ```sh
-yarn dev substack path/to/posts.csv
+yarn dev substack <path to csv file>
 ```
 
 

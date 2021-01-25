@@ -1,12 +1,25 @@
 # Migrate
 
-A collection of tools for migrating to Ghost
+A collection of tools for migrating to Ghost.
+
+Each tool has its own detailed documentation:
+
+- [Ghost](https://github.com/TryGhost/migrate/tree/master/packages/mg-ghost-api)
+- [HubSpot](https://github.com/TryGhost/migrate/tree/master/packages/mg-hubspot-api)
+- [Medium](https://github.com/TryGhost/migrate/tree/master/packages/mg-medium-export)
+- [Revue](https://github.com/TryGhost/migrate/tree/master/packages/mg-revue-api)
+- [Squarespace](https://github.com/TryGhost/migrate/tree/master/packages/mg-squarespace-xml)
+- [Substack](https://github.com/TryGhost/migrate/tree/master/packages/mg-substack-csv)
+- [Substack members](https://github.com/TryGhost/migrate/tree/master/packages/mg-substack-members-csv)
+- [WordPress](https://github.com/TryGhost/migrate/tree/master/packages/mg-wp-api)
+
 
 ## Install
 
 Migrate is a set of command line tools, install them globally:
 
 `npm install --global @tryghost/migrate`
+
 
 ## Usage
 
@@ -20,7 +33,7 @@ E.g.
 
 `migrate wp-api https://mywpsite.com`
 
-Each source somes with optional flags to customise the migration:
+Each source comes with optional flags to customise the migration:
 
 `migrate [source] --help` will give more detail
 
@@ -41,7 +54,11 @@ To add a new package to the repo:
 
 ## Run
 
-- `yarn dev`
+To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
+
+```sh
+yarn dev [source]
+```
 
 
 ## Test

@@ -1,8 +1,17 @@
 # Migrate Ghost API
 
-Export content from an existing Ghost installation using the [Admin API](https://ghost.org/docs/api/v2/admin/), and generate a `zip` file you can import in another Ghost installation.
+Export content from an existing Ghost installation using the [Admin API](https://ghost.org/docs/api/v2/admin/), and generate a `zip` file you can import into a Ghost installation.
+
 
 ## Install
+
+To install the CLI, which is required for the Usage commands below:
+
+```sh
+npm install --global @tryghost/migrate
+```
+
+To use this package in your own project:
 
 `npm install @tryghost/mg-ghost-api --save`
 
@@ -60,12 +69,12 @@ migrate ghost <apiurl> <apikey> --batch 5 --limit 10 --postFilter 'tag:[news, pr
 
 This will get the first 50 posts with the tag `news` or `press`, in 5 batches of 10 posts, exclude pages, and show all available output in the console.
 
-See the [Filter documentation](https://ghost.org/docs/api/v2/content/#filtering) for more info.
+See the [Filter documentation](https://ghost.org/docs/content-api/#filtering) for more info.
 
 
 ## Develop
 
-This is a mono repository, managed with [lerna](https://lernajs.io/).
+This is a mono repository, managed with [lerna](https://lerna.js.org).
 
 Follow the instructions for the top-level repo.
 1. `git clone` this repo & `cd` into it as usual
@@ -74,7 +83,11 @@ Follow the instructions for the top-level repo.
 
 ## Run
 
-- `yarn dev`
+To run a local development copy, `cd` into this directory, and replace `migrate` with `yarn dev`, like so:
+
+```sh
+yarn dev ghost <apiurl> <apikey>
+```
 
 
 ## Test

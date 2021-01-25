@@ -1,6 +1,19 @@
 # Migrate Revue Api
 
+Export content from Revue using their API, and generate a `zip` file you can import into a Ghost installation.
+
+The token can be found on the [integrations page](https://www.getrevue.co/app/integrations) when logged in.
+
+
 ## Install
+
+To install the CLI, which is required for the Usage commands below:
+
+```sh
+npm install --global @tryghost/migrate
+```
+
+To use this package in your own project:
 
 `npm install @tryghost/mg-revue-api --save`
 
@@ -11,35 +24,51 @@ or
 
 ## Usage
 
-Revue has and API that we can use to fetch content for migration. The token can be found on the [integrations page](https://www.getrevue.co/app/integrations) when logged in.
 
-To run a basic migration from Revue all you need is to run a command like this:
+To run a Ghost API migration, the required command is:
 
-`migrate revue <pubName> <API token>`
+```sh
+migrate revue <pubName> <API token>
+```
 
-The `pubName` value is the publication or user name. It's the last part of the profile URL, e. g. https://www.getrevue.co/profile/**<pubName>**
+* The `pubName` value is the publication or user name. It's the last part of the profile URL, e. g. https://www.getrevue.co/profile/**`<pubName>`**
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
-`--addPrimaryTag <tag>`
-Provide a tag slug or name which should be added to every post as primary tag.
+- **`-V` `--verbose`**
+    - bool - default: `false`
+    - Show verbose output
+- **`--zip`**
+    - bool - default: `true`
+    - Create a zip file
+- **`-s` `--scrape`**
+    - string - default: `img`
+    - Configure scraping tasks (choices: `img`, `none`)
+- **`--addPrimaryTag`**
+    - string - default: `null`
+    - Provide a tag name which should be added to every post as primary tag
+- **`-e` `--email`**
+    - string - default: `null`
+    - Provide an email for users e.g. test@example.com to create a general author for the posts
+- **`-I` `--info`**
+    - bool - default: `false`
+    - Show initalisation info only
+- **`--fallBackHTMLCard`**
+    - bool - default: `false`
+    - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
 
-`--email <email of main author>`
-Provide an email or the author of the publication.
+A more complex migration command could look like this:
 
-`--fallBackHTMLCard false`
-Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
+```sh
+migrate revue <pubName> <API token> --email test@example.com --addPrimaryTag News
+```
 
-<hr>
-
-A more realistic command for a Substack migration looks like this:
-
-`migrate revue <URL> <API token> --email <test@example.com>`
+This will get all posts, apply the tag 'News', and all posts will be by author test@example.com
 
 
 ## Develop
 
-This is a mono repository, managed with [lerna](https://lernajs.io/).
+This is a mono repository, managed with [lerna](https://lerna.js.org).
 
 Follow the instructions for the top-level repo.
 1. `git clone` this repo & `cd` into it as usual
@@ -48,15 +77,17 @@ Follow the instructions for the top-level repo.
 
 ## Run
 
-- `yarn dev`
+To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
+
+```sh
+yarn dev revue <pubName> <API token>
+```
 
 
 ## Test
 
 - `yarn lint` run just eslint
 - `yarn test` run lint and tests
-
-
 
 
 # Copyright & License
