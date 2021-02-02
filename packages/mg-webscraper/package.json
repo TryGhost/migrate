@@ -26,6 +26,6 @@
   "dependencies": {
     "lodash": "4.17.20",
     "omit-empty": "^1.0.0",
-    "scrape-it": "5.2.4"
+    "scrape-it": "5.3.1"
   }
 }
