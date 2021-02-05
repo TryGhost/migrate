@@ -27,7 +27,11 @@ exports.setup = (sywac) => {
     });
     sywac.string('-e --email', {
         defaultValue: false,
-        desc: 'Provide an email domain for users e.g. mycompany.com'
+        desc: 'Provide an email address for posts to attributed to e.g. john@example.com'
+    });
+    sywac.string('-n --name', {
+        defaultValue: false,
+        desc: 'Provide a name for posts to attributed to e.g. John'
     });
     sywac.boolean('--fallBackHTMLCard', {
         defaultValue: false,

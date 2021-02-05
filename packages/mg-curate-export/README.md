@@ -38,7 +38,10 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Create a zip file
 - **`-e` `--email`**
     - string - default: `false`
-    - Provide an email domain for users e.g. example.com
+    - Provide an email address for posts to attributed to e.g. john@example.com
+- **`-n` `--name`**
+    - string - default: `false`
+    - Provide a name for posts to attributed to e.g. John
 - **`--fallBackHTMLCard`**
     - bool - default: `false`
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails

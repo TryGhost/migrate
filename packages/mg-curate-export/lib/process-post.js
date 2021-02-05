@@ -20,6 +20,7 @@ module.exports = (name, json, globalUser, ctx) => {
     post.data.html = processContent(name, json, post, ctx);
 
     // Set author data here
+    post.data.author = globalUser;
 
     return post;
 };
