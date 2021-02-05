@@ -26,7 +26,7 @@
   "dependencies": {
     "bluebird": "^3.7.2",
     "csv-parse": "4.15.1",
-    "date-fns": "2.16.1",
+    "date-fns": "2.17.0",
     "ghost-ignition": "4.4.3",
     "lodash": "4.17.20"
   }

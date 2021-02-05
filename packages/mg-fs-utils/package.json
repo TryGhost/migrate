@@ -23,7 +23,7 @@
     "@tryghost/zip": "1.1.8",
     "adm-zip": "0.5.1",
     "csv-parse": "4.15.1",
-    "date-fns": "2.16.1",
+    "date-fns": "2.17.0",
     "fs-extra": "9.1.0",
     "lodash": "4.17.20",
     "sharp": "0.27.0"
