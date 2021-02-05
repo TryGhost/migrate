@@ -1,19 +1,19 @@
-const curate = require('../sources/curate');
+const curated = require('../sources/curated');
 const ui = require('@tryghost/pretty-cli').ui;
 
 // Internal ID in case we need one.
-exports.id = 'curate';
+exports.id = 'curated';
 
 exports.group = 'Sources:';
 
 // The command to run and any params
-exports.flags = 'curate <pathToZip>';
+exports.flags = 'curated <pathToZip>';
 
 // Description for the top level command
-exports.desc = 'Migrate from Medium using an export zip';
+exports.desc = 'Migrate from Curated using an export zip';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Path to a curate export zip'];
+exports.paramsDesc = ['Path to a curated export zip'];
 
 // Configure all the options
 exports.setup = (sywac) => {
@@ -50,7 +50,7 @@ exports.run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = curate.getTaskRunner(argv.pathToZip, argv);
+        let migrate = curated.getTaskRunner(argv.pathToZip, argv);
 
         // Run the migration
         await migrate.run(context);

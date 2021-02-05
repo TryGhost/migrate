@@ -1,8 +1,8 @@
 {
-  "name": "@tryghost/mg-curate-export",
+  "name": "@tryghost/mg-curated-export",
   "version": "0.1.0",
   "description": "tbc",
-  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-curate-export",
+  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-curated-export",
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",

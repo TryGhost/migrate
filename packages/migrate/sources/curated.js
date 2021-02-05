@@ -1,5 +1,5 @@
-// const curateIngest = require('@tryghost/mg-curate-export');
-const curateIngest = require('../../mg-curate-export');
+// const curatedIngest = require('@tryghost/mg-curated-export');
+const curatedIngest = require('../../mg-curated-export');
 const mgJSON = require('@tryghost/mg-json');
 const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
 const fsUtils = require('@tryghost/mg-fs-utils');
@@ -8,7 +8,7 @@ const makeTaskRunner = require('../lib/task-runner');
 /**
  * getTasks: Steps to Migrate from Curate
  *
- * Wiring of the steps to migrate from curate.
+ * Wiring of the steps to migrate from curated.
  *
  * @param {String} pathToZip
  * @param {Object} options
@@ -31,8 +31,8 @@ module.exports.getTaskRunner = (pathToZip, options) => {
             task: async (ctx) => {
                 // 1. Read the zip file and process posts
                 try {
-                    ctx.result = curateIngest(pathToZip, ctx);
-                    await ctx.fileCache.writeTmpFile(ctx.result, 'curate-export-data.json');
+                    ctx.result = curatedIngest(pathToZip, ctx);
+                    await ctx.fileCache.writeTmpFile(ctx.result, 'curated-export-data.json');
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;

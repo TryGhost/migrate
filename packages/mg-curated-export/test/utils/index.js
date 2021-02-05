@@ -9,5 +9,3 @@ require('./overrides');
 
 // Require assertions - adds custom should assertions
 require('./assertions');
-
-module.exports.fixtures = require('./fixtures');

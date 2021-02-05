@@ -1,6 +1,6 @@
-# Migrate Curate Export
+# Migrate Curated Export
 
-Migrate content from Curate using the supplied zip file, and generate a `zip` file you can import into a Ghost installation.
+Migrate content from Curated using the supplied zip file, and generate a `zip` file you can import into a Ghost installation.
 
 
 ## Install
@@ -22,7 +22,7 @@ or
 
 ## Usage
 
-To run a Curate migration, the required command is:
+To run a Curated migration, the required command is:
 
 ```sh
 migrate curate <path to zip file>
