@@ -15,8 +15,24 @@ module.exports = (input, ctx) => {
         }
     };
 
+    let tags = [];
+
+    if (ctx.options.tag) {
+        tags.push({
+            data: {
+                name: ctx.options.tag
+            }
+        });
+    }
+
+    tags.push({
+        data: {
+            name: '#curated'
+        }
+    });
+
     if (input.posts && input.posts.length > 0) {
-        output.posts = input.posts.map(post => processPost(post.name, post.json, globalUser, ctx));
+        output.posts = input.posts.map(post => processPost(post.name, post.json, globalUser, tags, ctx));
     }
 
     return output;

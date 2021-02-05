@@ -1,6 +1,6 @@
 const processContent = require('./process-content');
 
-module.exports = (name, json, globalUser, ctx) => {
+module.exports = (name, json, globalUser, tags, ctx) => {
     const post = {
         data: {}
     };
@@ -21,6 +21,9 @@ module.exports = (name, json, globalUser, ctx) => {
 
     // Set author data here
     post.data.author = globalUser;
+
+    // Set the tags
+    post.data.tags = tags;
 
     return post;
 };

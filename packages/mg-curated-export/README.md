@@ -42,6 +42,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`-n` `--name`**
     - string - default: `false`
     - Provide a name for posts to attributed to e.g. John
+- **`-t` `--tag`**
+    - string - default: `false`
+    - Provide a tag to be applied to every post
 - **`--fallBackHTMLCard`**
     - bool - default: `false`
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
