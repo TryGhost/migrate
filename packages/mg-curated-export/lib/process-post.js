@@ -1,6 +1,6 @@
 const processContent = require('./process-content');
 
-module.exports = (name, json, globalUser, tags, ctx) => {
+module.exports = (json, globalUser, tags, ctx) => {
     const post = {
         data: {}
     };
@@ -17,7 +17,7 @@ module.exports = (name, json, globalUser, tags, ctx) => {
     post.data.updated_at = json.updated_at;
 
     // Process content
-    post.data.html = processContent(name, json, post, ctx);
+    post.data.html = processContent(json, ctx);
 
     // Set author data here
     post.data.author = globalUser;

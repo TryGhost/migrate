@@ -1,7 +1,7 @@
 const cheerio = require('cheerio');
 const path = require('path');
 
-const processTextItem = (item, name, ctx, content) => {
+const processTextItem = (item, ctx, content) => {
     let itemHtmlChunks = [];
 
     if (item.image_original_filename) {
@@ -23,7 +23,7 @@ const processTextItem = (item, name, ctx, content) => {
     return itemHtmlChunks.join('');
 };
 
-const processLinkItem = (item, name, ctx, content) => {
+const processLinkItem = (item, ctx, content) => {
     let itemHtmlChunks = [];
 
     if (item.image_original_filename) {
@@ -43,7 +43,7 @@ const processLinkItem = (item, name, ctx, content) => {
     return itemHtmlChunks.join('');
 };
 
-module.exports = (name, content, post, ctx) => {
+module.exports = (content, ctx) => {
     let htmlChunks = [];
 
     content.categories.forEach((element) => {
@@ -55,9 +55,9 @@ module.exports = (name, content, post, ctx) => {
             }
 
             if (item.type === 'Text') {
-                htmlChunks.push(processTextItem(item, name, ctx, content));
+                htmlChunks.push(processTextItem(item, ctx, content));
             } else if (item.type === 'Link') {
-                htmlChunks.push(processLinkItem(item, name, ctx, content));
+                htmlChunks.push(processLinkItem(item, ctx, content));
             }
         });
     });
