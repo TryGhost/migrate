@@ -10,14 +10,14 @@ const processOptions = (member, options) => {
 
 const processMember = (sMember, options) => {
     // Parse the date from the supplied format `2021-01-28 17:26:04 +0000`
-    const theDate = parse(sMember['Subscribed at'], 'yyyy-MM-dd HH:mm:ss xx', new Date());
+    const createdAtDate = parse(sMember['Subscribed at'], 'yyyy-MM-dd HH:mm:ss xx', new Date());
 
     let member = {
         email: sMember['Email Address'],
         subscribed_to_emails: true,
         complimentary_plan: false,
         stripe_customer_id: null,
-        created_at: theDate || parseISO(new Date()),
+        created_at: createdAtDate || parseISO(new Date()),
         expiry: null,
         type: 'free'
     };

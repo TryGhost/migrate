@@ -3,7 +3,6 @@ const fsUtils = require('@tryghost/mg-fs-utils');
 // const csvIngest = require('@tryghost/mg-curated-members-csv');
 const csvIngest = require('../../mg-curated-members-csv');
 
-const MAX_COMP_BATCH_SIZE = 500;
 const MEMBERS_IMPORT_FIELDS = [
     'email',
     'subscribed_to_emails',
@@ -57,7 +56,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
                     const files = [];
 
                     types.forEach(async (type) => {
-                        const batchSize = (type === 'comp' && ctx.options.limit > MAX_COMP_BATCH_SIZE) ? MAX_COMP_BATCH_SIZE : ctx.options.limit;
+                        const batchSize = ctx.options.limit;
                         const batchesTotal = Math.ceil(ctx.result[type].length / batchSize);
                         let currentBatch = 1;
 
