@@ -1,0 +1,33 @@
+{
+  "name": "@tryghost/mg-curated-members-csv",
+  "version": "0.2.6",
+  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-curated-members-csv",
+  "author": "Ghost Foundation",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "dev": "echo \"Implement me!\"",
+    "test": "NODE_ENV=testing mocha './test/**/*.test.js'",
+    "lint": "eslint . --ext .js --cache",
+    "posttest": "yarn lint"
+  },
+  "files": [
+    "index.js",
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "mocha": "8.2.1",
+    "should": "13.2.3",
+    "sinon": "9.2.4"
+  },
+  "dependencies": {
+    "bluebird": "3.7.2",
+    "csv-parser": "3.0.0",
+    "date-fns": "2.16.1",
+    "ghost-ignition": "4.4.3",
+    "lodash": "4.17.20"
+  }
+}

@@ -13,7 +13,7 @@ npm install --global @tryghost/migrate
 
 To use this package in your own project:
 
-`npm install @tryghost/mg-substack-members --save`
+`npm install @tryghost/mg-substack-members-csv --save`
 
 or
 
