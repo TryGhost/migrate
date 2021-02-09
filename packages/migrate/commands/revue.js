@@ -81,6 +81,7 @@ exports.run = async (argv) => {
 
     if (!argv.info) {
         // Report success
-        ui.log.ok(`Successfully written output to ${context.outputFile} in ${Date.now() - timer}ms.`);
+        let outputFile = await context.outputFile;
+        ui.log.ok(`Successfully written output to ${outputFile.path} in ${Date.now() - timer}ms.`);
     }
 };
