@@ -278,7 +278,7 @@
   dependencies:
     "@elastic/elasticsearch" "^7.10.0"
 
-"@tryghost/errors@^0.2.7":
+"@tryghost/errors@^0.2.8":
   version "0.2.8"
   resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-0.2.8.tgz#887531bd41dc6f6fdfc8a6dda8ef08acccddf08b"
   integrity sha512-PF6vFZnRhMKxZ9FeNtYOHTn3wKMF2u+rgC4Iw33O2tHPCPtRzQTGUU8kO02sY5pjx19OjBOlYyye5n9fRHwJPA==
@@ -295,14 +295,14 @@
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "16.4.0"
 
-"@tryghost/image-transform@1.0.7":
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.0.7.tgz#5ca0869df61f421501c66bda7a1a8d21c4794d79"
-  integrity sha512-KkV713AaqIHL5Jq45Odyg9DhoUKNf9oX3zP8+kZ3gQaotz7mId3DOCt57+RtGGLRVevlQCt5lRPBPVIz1/MrJw==
+"@tryghost/image-transform@1.0.8":
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.0.8.tgz#9be38f755fc0cac8ca75b73320a80f817a1183aa"
+  integrity sha512-kIAJTWYrEsikeBjYpjk5pU1vNcUvDFkHmMeOqTpsxPtMofKLkLt8R8tozqjUgqm0lX5zB8dCcliKfZFEfbWERg==
   dependencies:
-    "@tryghost/errors" "^0.2.7"
+    "@tryghost/errors" "^0.2.8"
     bluebird "3.7.2"
-    fs-extra "9.0.1"
+    fs-extra "9.1.0"
   optionalDependencies:
     sharp "0.26.2"
 
