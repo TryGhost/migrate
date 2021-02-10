@@ -45,7 +45,7 @@
     "@tryghost/mg-substack-members-csv": "^0.2.7",
     "@tryghost/mg-webscraper": "^0.6.14",
     "@tryghost/mg-wp-api": "^0.4.12",
-    "@tryghost/pretty-cli": "1.2.13",
+    "@tryghost/pretty-cli": "1.2.14",
     "@tryghost/string": "0.1.17",
     "cheerio": "0.22.0",
     "listr": "0.14.3",
