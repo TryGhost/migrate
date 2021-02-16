@@ -1,5 +1,4 @@
-// const curatedIngest = require('@tryghost/mg-curated-export');
-const curatedIngest = require('../../mg-curated-export');
+const curatedIngest = require('@tryghost/mg-curated-export');
 const mgJSON = require('@tryghost/mg-json');
 const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
 const fsUtils = require('@tryghost/mg-fs-utils');

@@ -1,7 +1,6 @@
 const makeTaskRunner = require('../lib/task-runner');
 const fsUtils = require('@tryghost/mg-fs-utils');
-// const csvIngest = require('@tryghost/mg-curated-members-csv');
-const csvIngest = require('../../mg-curated-members-csv');
+const csvIngest = require('@tryghost/mg-curated-members-csv');
 
 const MEMBERS_IMPORT_FIELDS = [
     'email',
