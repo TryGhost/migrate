@@ -5,6 +5,7 @@ A collection of tools for migrating to Ghost.
 Each tool has its own detailed documentation:
 
 - [Ghost](https://github.com/TryGhost/migrate/tree/master/packages/mg-ghost-api)
+- [Curated](https://github.com/TryGhost/migrate/tree/master/packages/mg-curated-export)
 - [HubSpot](https://github.com/TryGhost/migrate/tree/master/packages/mg-hubspot-api)
 - [Medium](https://github.com/TryGhost/migrate/tree/master/packages/mg-medium-export)
 - [Revue](https://github.com/TryGhost/migrate/tree/master/packages/mg-revue-api)

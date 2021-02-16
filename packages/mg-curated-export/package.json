@@ -1,0 +1,32 @@
+{
+  "name": "@tryghost/mg-curated-export",
+  "version": "0.1.0",
+  "description": "tbc",
+  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-curated-export",
+  "author": "Ghost Foundation",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "dev": "echo \"Implement me!\"",
+    "test": "NODE_ENV=testing mocha ./test/**/*.test.js",
+    "lint": "eslint . --ext .js --cache",
+    "posttest": "yarn lint"
+  },
+  "files": [
+    "index.js",
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "mocha": "8.2.1",
+    "should": "13.2.3",
+    "sinon": "9.2.4"
+  },
+  "dependencies": {
+    "@tryghost/mg-fs-utils": "^0.7.5",
+    "@tryghost/string": "0.1.16",
+    "cheerio": "0.22.0"
+  }
+}
