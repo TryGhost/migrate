@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-substack-csv",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-substack-csv",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -19,14 +19,14 @@
     "access": "public"
   },
   "devDependencies": {
-    "mocha": "8.2.1",
+    "mocha": "8.3.0",
     "should": "13.2.3",
     "sinon": "9.2.4"
   },
   "dependencies": {
     "bluebird": "^3.7.2",
     "csv-parse": "4.15.1",
-    "date-fns": "2.16.1",
+    "date-fns": "2.17.0",
     "ghost-ignition": "4.4.3",
     "lodash": "4.17.20"
   }

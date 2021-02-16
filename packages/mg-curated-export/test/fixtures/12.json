@@ -1,0 +1,75 @@
+{
+  "number": 12,
+  "title": "Issue 12",
+  "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+  "url": "https://example.com/issues/12",
+  "publication_status": "published",
+  "published_at": "2021-02-02T21:08:42+00:00",
+  "updated_at": "2021-02-02T21:08:43+00:00",
+  "categories": [
+    {
+      "code": "news",
+      "name": "News",
+      "items": [
+        {
+          "type": "Text",
+          "title": "Issue 12",
+          "description": "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam tempor justo in magna congue, id efficitur eros scelerisque. Integer sagittis pharetra orci, vitae vulputate ante semper vel.</p>",
+          "description_markdown": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam tempor justo in magna congue, id efficitur eros scelerisque. Integer sagittis pharetra orci, vitae vulputate ante semper vel.",
+          "footer": "<p>Author Name, Article Site</p>"
+        },
+        {
+          "identifier": "O9WCqSV",
+          "type": "Link",
+          "title": "This is a search engine",
+          "url_domain": "google.com",
+          "url": "https://google.com",
+          "description": "<p>Curabitur faucibus, libero a pulvinar dignissim, justo est tincidunt arcu, eget rhoncus dolor felis eget enim. Morbi est nisi, porttitor eu magna ut, faucibus varius felis. Nam interdum suscipit dictum.</p>",
+          "description_markdown": "Curabitur faucibus, libero a pulvinar dignissim, justo est tincidunt arcu, eget rhoncus dolor felis eget enim. Morbi est nisi, porttitor eu magna ut, faucibus varius felis. Nam interdum suscipit dictum."
+        }
+      ]
+    },
+    {
+      "code": "learn",
+      "name": "Learn",
+      "items": [
+        {
+          "identifier": "xNHFaQX",
+          "type": "Link",
+          "title": "Aliquam nec malesuada purus - Author",
+          "url_domain": "example.com",
+          "url": "https://example.com/article-title/",
+          "description": "<p>Quisque condimentum ultrices massa, vitae malesuada felis hendrerit ut.</p>",
+          "description_markdown": "Quisque condimentum ultrices massa, vitae malesuada felis hendrerit ut."
+        },
+        {
+          "identifier": "Uf4AxN9",
+          "type": "Link",
+          "title": "Proin euismod vitae mi ac porta",
+          "url_domain": "https://www.w3.org",
+          "url": "https://www.w3.org/",
+          "description": "<p>Vivamus et molestie nisl. Nam dapibus odio sed mollis sollicitudin. Etiam malesuada urna quis porttitor aliquet.</p>",
+          "description_markdown": "Vivamus et molestie nisl. Nam dapibus odio sed mollis sollicitudin. Etiam malesuada urna quis porttitor aliquet."
+        }
+      ]
+    },
+    {
+      "code": "sponsor",
+      "name": "Our Sponsor",
+      "items": [
+        {
+          "identifier": "TK7bLUV",
+          "type": "Link",
+          "title": "Special offer!",
+          "url_domain": "example.com",
+          "url": "https://courses.example.com",
+          "description": "<p>Nullam blandit sodales scelerisque.</p>",
+          "description_markdown": "Nullam blandit sodales scelerisque.",
+          "image_original_filename": "a174e606-7a19-4c86-9f18-1c528a54643a.png",
+          "image_extra_large_filename": "original_ratio_extra_large_a174e606-7a19-4c86-9f18-1c528a54643a.png",
+          "image_medium_filename": "original_ratio_medium_a174e606-7a19-4c86-9f18-1c528a54643a.png"
+        }
+      ]
+    }
+  ]
+}

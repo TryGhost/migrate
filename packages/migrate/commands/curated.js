@@ -1,19 +1,19 @@
-const squarespace = require('../sources/squarespace');
+const curated = require('../sources/curated');
 const ui = require('@tryghost/pretty-cli').ui;
 
 // Internal ID in case we need one.
-exports.id = 'squarespace';
+exports.id = 'curated';
 
 exports.group = 'Sources:';
 
 // The command to run and any params
-exports.flags = 'squarespace <pathToFile>';
+exports.flags = 'curated <pathToZip>';
 
 // Description for the top level command
-exports.desc = 'Migrate from a Squarespace XML';
+exports.desc = 'Migrate from Curated using an export zip';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Path to a xml file'];
+exports.paramsDesc = ['Path to a curated export zip'];
 
 // Configure all the options
 exports.setup = (sywac) => {
@@ -25,26 +25,17 @@ exports.setup = (sywac) => {
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
     });
-    sywac.enumeration('-s --scrape', {
-        choices: ['all', 'web', 'img', 'none'],
-        defaultValue: 'all',
-        desc: 'Configure scraping tasks'
-    });
-    sywac.boolean('--drafts', {
-        defaultValue: true,
-        desc: 'Import draft posts'
-    });
-    sywac.boolean('--pages', {
+    sywac.string('-e --email', {
         defaultValue: false,
-        desc: 'Import Squarespace pages'
+        desc: 'Provide an email address for posts to attributed to e.g. john@example.com'
     });
-    sywac.boolean('--tags', {
-        defaultValue: true,
-        desc: 'Set to false if you don\'t want to import WordPress tags, only categories'
+    sywac.string('-n --name', {
+        defaultValue: false,
+        desc: 'Provide a name for posts to attributed to e.g. John'
     });
-    sywac.string('--addTag', {
-        defaultValue: null,
-        desc: 'Provide a tag name which should be added to every post in this migration'
+    sywac.string('-t --tag', {
+        defaultValue: false,
+        desc: 'Provide a tag to be applied to every post'
     });
     sywac.boolean('--fallBackHTMLCard', {
         defaultValue: false,
@@ -58,12 +49,12 @@ exports.run = async (argv) => {
     let context = {errors: []};
 
     if (argv.verbose) {
-        ui.log.info(`Migrating from export at ${argv.pathToFile}`);
+        ui.log.info(`Migrating from export at ${argv.pathToZip}`);
     }
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = squarespace.getTaskRunner(argv);
+        let migrate = curated.getTaskRunner(argv.pathToZip, argv);
 
         // Run the migration
         await migrate.run(context);
@@ -75,11 +66,6 @@ exports.run = async (argv) => {
         ui.log.info('Done with errors', context.errors);
     }
 
-    if (argv.verbose) {
-        ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
-    }
-
     // Report success
-    let outputFile = await context.outputFile;
-    ui.log.ok(`Successfully written output to ${outputFile.path} in ${Date.now() - timer}ms.`);
+    ui.log.ok(`Successfully written output to ${context.outputFile} in ${Date.now() - timer}ms.`);
 };

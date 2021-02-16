@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-squarespace-xml",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-squarespace-xml",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -19,12 +19,12 @@
     "access": "public"
   },
   "devDependencies": {
-    "mocha": "8.2.1",
+    "mocha": "8.3.0",
     "should": "13.2.3",
     "sinon": "9.2.4"
   },
   "dependencies": {
     "cheerio": "0.22.0",
-    "date-fns": "2.16.1"
+    "date-fns": "2.17.0"
   }
 }
