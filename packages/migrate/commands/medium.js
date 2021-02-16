@@ -64,6 +64,8 @@ exports.run = async (argv) => {
     }
 
     // Report success
-    let outputFile = await context.outputFile;
-    ui.log.ok(`Successfully written output to ${outputFile.path} in ${Date.now() - timer}ms.`);
+    if (argv.zip) {
+        let outputFile = await context.outputFile;
+        ui.log.ok(`Successfully written output to ${outputFile.path} in ${Date.now() - timer}ms.`);
+    }
 };
