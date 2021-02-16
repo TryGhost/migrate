@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-webscraper",
-  "version": "0.6.14",
+  "version": "0.6.15",
   "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-webscraper",
   "author": "Ghost Foundation",
   "license": "MIT",

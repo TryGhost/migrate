@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-curated-export",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "tbc",
   "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-curated-export",
   "author": "Ghost Foundation",
@@ -25,7 +25,7 @@
     "sinon": "9.2.4"
   },
   "dependencies": {
-    "@tryghost/mg-fs-utils": "^0.7.5",
+    "@tryghost/mg-fs-utils": "^0.7.7",
     "@tryghost/string": "0.1.16",
     "cheerio": "0.22.0"
   }
