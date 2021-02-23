@@ -278,13 +278,6 @@
     form-data "^3.0.0"
     jsonwebtoken "^8.4.0"
 
-"@tryghost/elasticsearch-bunyan@^0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@tryghost/elasticsearch-bunyan/-/elasticsearch-bunyan-0.1.0.tgz#cb66b2eba0c5e5970645b4548e2a41b1ce7a33cc"
-  integrity sha512-Qg/6JfMU5l5+dWJDuXLTrq4CIzucIeZ2H3bH5cOY6Yp+rLqBAADhRzAdlwL6s2Ab/X7/156Ljl58Ik+dpsgWRQ==
-  dependencies:
-    "@elastic/elasticsearch" "^7.10.0"
-
 "@tryghost/elasticsearch-bunyan@^0.1.1":
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/@tryghost/elasticsearch-bunyan/-/elasticsearch-bunyan-0.1.1.tgz#5a36d81dd020825dd563b1357ae6c249580c46f5"
@@ -292,12 +285,12 @@
   dependencies:
     "@elastic/elasticsearch" "^7.10.0"
 
-"@tryghost/errors@^0.2.8":
-  version "0.2.8"
-  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-0.2.8.tgz#887531bd41dc6f6fdfc8a6dda8ef08acccddf08b"
-  integrity sha512-PF6vFZnRhMKxZ9FeNtYOHTn3wKMF2u+rgC4Iw33O2tHPCPtRzQTGUU8kO02sY5pjx19OjBOlYyye5n9fRHwJPA==
+"@tryghost/errors@^0.2.9":
+  version "0.2.9"
+  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-0.2.9.tgz#b27fb31633735975ce62e53e88bc2412dc6fd876"
+  integrity sha512-ULWfgTYqSO2uU9Sb75+MQpuYsy3sCF5QTXy5RqpzJdACWKW2Mtg3fPGS6fVEHuxbUhOxEhq1eu9gsWFWLljTEA==
   dependencies:
-    ghost-ignition "4.4.3"
+    ghost-ignition "4.4.4"
     lodash "4.17.20"
 
 "@tryghost/html-to-mobiledoc@0.7.10":
@@ -309,12 +302,12 @@
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "16.4.0"
 
-"@tryghost/image-transform@1.0.8":
-  version "1.0.8"
-  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.0.8.tgz#9be38f755fc0cac8ca75b73320a80f817a1183aa"
-  integrity sha512-kIAJTWYrEsikeBjYpjk5pU1vNcUvDFkHmMeOqTpsxPtMofKLkLt8R8tozqjUgqm0lX5zB8dCcliKfZFEfbWERg==
+"@tryghost/image-transform@1.0.9":
+  version "1.0.9"
+  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.0.9.tgz#93306fc2d755c81eda41d384b9f6520bdb3662c4"
+  integrity sha512-TEdeUgQdfayldqidu/CrsySMymZgaIFTXpm6AchPVYG6mkbvN77HOuJqU1WHFISfMts2VTOHnDAyn7h9UVTiVA==
   dependencies:
-    "@tryghost/errors" "^0.2.8"
+    "@tryghost/errors" "^0.2.9"
     bluebird "3.7.2"
     fs-extra "9.1.0"
   optionalDependencies:
@@ -2074,26 +2067,6 @@ getpass@^0.1.1:
   integrity sha1-Xv+OPmhNVprkyysSgmBOi6YhSfo=
   dependencies:
     assert-plus "^1.0.0"
-
-ghost-ignition@4.4.3:
-  version "4.4.3"
-  resolved "https://registry.yarnpkg.com/ghost-ignition/-/ghost-ignition-4.4.3.tgz#c837ab11e1f3a1cfd22cc24df6b506a9afc1bc25"
-  integrity sha512-eViE/ae+AGV/YmVbTq2W5TBWVu724EUJ0pjtSwa4q6o1+fXxMIqoELJaxMX+Gc9PBK0nI3J+E0JI8GdrEiqndg==
-  dependencies:
-    "@tryghost/elasticsearch-bunyan" "^0.1.0"
-    bunyan "1.8.15"
-    bunyan-loggly "1.4.2"
-    caller "1.0.1"
-    debug "4.3.1"
-    find-root "1.1.0"
-    fs-extra "9.1.0"
-    gelf-stream "1.1.1"
-    json-stringify-safe "5.0.1"
-    lodash "4.17.20"
-    moment "2.27.0"
-    nconf "0.10.0"
-    prettyjson "1.2.1"
-    uuid "8.3.2"
 
 ghost-ignition@4.4.4:
   version "4.4.4"
