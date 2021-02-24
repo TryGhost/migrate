@@ -26,6 +26,6 @@
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
     "got": "11.8.1",
-    "lodash": "4.17.20"
+    "lodash": "4.17.21"
   }
 }
