@@ -277,7 +277,14 @@
     form-data "^3.0.0"
     jsonwebtoken "^8.4.0"
 
-"@tryghost/elasticsearch-bunyan@^0.1.1":
+"@tryghost/bunyan-rotating-filestream@0.0.7":
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/@tryghost/bunyan-rotating-filestream/-/bunyan-rotating-filestream-0.0.7.tgz#3957de91e4e9b58999f0bbe19242080543dcfc4a"
+  integrity sha512-dswM+dxG8J7WpVoSjzAdoWXqqB5Dg0C2T7Zh6eoUvl5hkA8yWWJi/fS4jNXlHF700lWQ0g8/t+leJ7SGSWd+aw==
+  dependencies:
+    long-timeout "^0.1.1"
+
+"@tryghost/elasticsearch-bunyan@0.1.1", "@tryghost/elasticsearch-bunyan@^0.1.1":
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/@tryghost/elasticsearch-bunyan/-/elasticsearch-bunyan-0.1.1.tgz#5a36d81dd020825dd563b1357ae6c249580c46f5"
   integrity sha512-ILhumzdwJNoRG44S0FkgzZQlkCYioTKWEiY+FFFQpTFWwZ3Jd5a6us5k8tEsd+Wf2rZOvul/ehV45j2c2l1BMw==
@@ -2080,6 +2087,27 @@ ghost-ignition@4.4.4:
     prettyjson "1.2.1"
     uuid "8.3.2"
 
+ghost-ignition@4.5.4:
+  version "4.5.4"
+  resolved "https://registry.yarnpkg.com/ghost-ignition/-/ghost-ignition-4.5.4.tgz#09e90721b6df04af048f89f696a7af92e0ab4dfe"
+  integrity sha512-Ab9r4zFNqqWmcYoF3sFAY7IJCi5LUTz1KrwfpOEL4BVZEBF2HfzZ8Px2JVxDpmSRMmyHKmN1h/xjXfj+IT2hxA==
+  dependencies:
+    "@tryghost/bunyan-rotating-filestream" "0.0.7"
+    "@tryghost/elasticsearch-bunyan" "0.1.1"
+    bunyan "1.8.15"
+    bunyan-loggly "1.4.2"
+    caller "1.0.1"
+    debug "4.3.1"
+    find-root "1.1.0"
+    fs-extra "9.1.0"
+    gelf-stream "1.1.1"
+    json-stringify-safe "5.0.1"
+    lodash "4.17.21"
+    moment "2.27.0"
+    nconf "0.10.0"
+    prettyjson "1.2.1"
+    uuid "8.3.2"
+
 github-from-package@0.0.0:
   version "0.0.0"
   resolved "https://registry.yarnpkg.com/github-from-package/-/github-from-package-0.0.0.tgz#97fb5d96bfde8973313f20e8288ef9a167fa64ce"
@@ -2932,6 +2960,11 @@ log-update@^4.0.0:
     cli-cursor "^3.1.0"
     slice-ansi "^4.0.0"
     wrap-ansi "^6.2.0"
+
+long-timeout@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/long-timeout/-/long-timeout-0.1.1.tgz#9721d788b47e0bcb5a24c2e2bee1a0da55dab514"
+  integrity sha1-lyHXiLR+C8taJMLivuGg2lXatRQ=
 
 lower-case@^2.0.2:
   version "2.0.2"
