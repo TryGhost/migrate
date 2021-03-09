@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const schema = require('../utils/schema');
-const ObjectId = require('bson-objectid');
+const ObjectID = require('bson-objectid');
 
 module.exports = (json) => {
     json.users = json.users || [];
@@ -51,12 +51,12 @@ module.exports = (json) => {
 
             if (!user) {
                 user = author;
-                user.data.id = ObjectId.generate();
+                user.data.id = new ObjectID();
                 json.users.push(user);
             }
 
             if (user && !user.data.id) {
-                user.data.id = ObjectId.generate();
+                user.data.id = new ObjectID();
             }
 
             json.posts_authors.push({
@@ -74,12 +74,12 @@ module.exports = (json) => {
 
             if (!tag) {
                 tag = postTag;
-                tag.data.id = ObjectId.generate();
+                tag.data.id = new ObjectID();
                 json.tags.push(tag);
             }
 
             if (tag && !tag.data.id) {
-                tag.data.id = ObjectId.generate();
+                tag.data.id = new ObjectID();
             }
 
             json.posts_tags.push({
@@ -93,7 +93,7 @@ module.exports = (json) => {
         try {
             // Ensure we have a post ID
             if (!post.data.id) {
-                post.data.id = ObjectId.generate();
+                post.data.id = new ObjectID();
             }
 
             processPostAuthors(post.data);

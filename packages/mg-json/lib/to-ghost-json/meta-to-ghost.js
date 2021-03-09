@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const schema = require('../utils/schema');
 const hydrate = require('./hydrate');
-const ObjectId = require('bson-objectid');
+const ObjectID = require('bson-objectid');
 /**
  * A resource might be a plain resource ready for import, or if it came from our migrate tooling,
  * probably an object with some metadata (like URL) and a `data` key with the resource fields
@@ -30,7 +30,8 @@ const deduplicateSlugs = (obj, type) => {
 
     if (_.includes(slugs[type], obj.slug)) {
         // @TODO: log some sort of warning for things like this?
-        obj.slug = `${obj.slug}-${ObjectId.generate()}`;
+        const objectID = new ObjectID();
+        obj.slug = `${obj.slug}-${objectID}`;
     }
 
     slugs[type].push(obj.slug);
