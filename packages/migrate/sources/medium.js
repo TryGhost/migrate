@@ -5,6 +5,7 @@ const MgWebScraper = require('@tryghost/mg-webscraper');
 const MgImageScraper = require('@tryghost/mg-imagescraper');
 const MgLinkFixer = require('@tryghost/mg-linkfixer');
 const fsUtils = require('@tryghost/mg-fs-utils');
+const {slugify} = require('@tryghost/string');
 const makeTaskRunner = require('../lib/task-runner');
 
 const scrapeConfig = {
@@ -64,6 +65,24 @@ const scrapeConfig = {
         twitter_description: {
             selector: 'meta[property="twitter:description"]',
             attr: 'content'
+        },
+        tags: {
+            selector: 'script[type="application/ld+json"]',
+            convert: (x) => {
+                let ldJSON = JSON.parse(x);
+                let keywords = ldJSON.keywords;
+                let theTags = [];
+                keywords.forEach((item) => {
+                    let parts = item.split(':');
+                    if (parts[0] === 'Tag') {
+                        theTags.push({
+                            url: slugify(parts[1]),
+                            name: parts[1]
+                        });
+                    }
+                });
+                return theTags;
+            }
         }
     }
 };
