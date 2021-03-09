@@ -1,0 +1,45 @@
+{
+  "posts": [
+    {
+      "url": "https://medium.com/@JoeBloggs/testpost-efefef12121212",
+      "data": {
+        "title": "Blog Post Title",
+        "slug": "blog-post-title",
+        "custom_excerpt": "This is a subtitle of some sort",
+        "status": "published",
+        "published_at": "2018-08-11T11:23:34.123Z",
+        "html": "<section name=\"007\" class=\"section section--body section--last\">...</section>",
+        "author": {
+          "url": "https://medium.com/@JoeBloggs",
+          "data": {
+            "name": "Joe Bloggs",
+            "slug": "joebloggs"
+          }
+        },
+        "tags": [
+          {
+            "url": "migrator-added-tag",
+            "data": {
+              "name": "#internal",
+              "slug": "hash-internal"
+            }
+          },
+          {
+            "url": "https://medium.com/tag/things",
+            "data": {
+              "name": "Things",
+              "slug": "things"
+            }
+          },
+          {
+            "url": "https://medium.com/tag/stuff",
+            "data": {
+              "name": "Stuff",
+              "slug": "stuff"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

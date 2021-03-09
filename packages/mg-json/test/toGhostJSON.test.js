@@ -75,4 +75,14 @@ describe('toGhostJSON', function () {
         // inspect('output', output);
         output.should.be.GhostJSON();
     });
+
+    it('Ensures internal tags are listed last', function () {
+        const input = require(testUtils.fixturesFilename('single-post-with-bad-tag-order.json'));
+        const output = toGhostJSON(input);
+
+        output.data.tags.should.be.an.Array().with.lengthOf(3);
+        output.data.tags[0].name.should.eql('Things');
+        output.data.tags[1].name.should.eql('Stuff');
+        output.data.tags[2].name.should.eql('#internal');
+    });
 });
