@@ -7,7 +7,7 @@ describe('Process', function () {
     it('Can convert a single post', function () {
         const fixture = testUtils.fixtures.readSync('single-post.json');
         const users = [];
-        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com/bloob/'};
+        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com/bloob'};
         const post = processor.processPost(fixture, users, options);
 
         post.should.be.an.Object().with.properties('url', 'data');

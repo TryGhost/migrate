@@ -13,7 +13,7 @@ exports.flags = 'wp-api <url>';
 exports.desc = 'Migrate from WordPress using JSON API';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Path to a WordPress site'];
+exports.paramsDesc = ['Path to a WordPress site, without trailing slash'];
 
 // Configure all the options
 exports.setup = (sywac) => {
