@@ -406,7 +406,11 @@ module.exports.processPost = (wpPost, users, options, errors) => {
 
     if (options.featureImage === 'featuredmedia' && wpPost._embedded['wp:featuredmedia']) {
         const wpImage = wpPost._embedded['wp:featuredmedia'][0];
-        post.data.feature_image = wpImage.source_url.replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
+        try {
+            post.data.feature_image = wpImage.source_url.replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
+        } catch (error) {
+            console.log(error, wpPost); // eslint-disable-line no-console
+        }
     }
 
     if (wpPost._embedded.author && !post.data.author) {
