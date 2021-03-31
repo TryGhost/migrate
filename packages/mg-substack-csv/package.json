@@ -27,7 +27,7 @@
     "bluebird": "^3.7.2",
     "csv-parse": "4.15.3",
     "date-fns": "2.19.0",
-    "ghost-ignition": "4.5.4",
+    "ghost-ignition": "4.6.1",
     "lodash": "4.17.21"
   }
 }
