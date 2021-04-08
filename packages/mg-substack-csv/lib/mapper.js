@@ -1,4 +1,5 @@
 const {formatISO} = require('date-fns');
+const _ = require('lodash');
 
 const mapConfig = (data, {url, readPosts, email}) => {
     const slug = data.post_id.replace(/^(?:\d{1,10}\.)(\S*)/gm, '$1');
@@ -30,7 +31,7 @@ const mapConfig = (data, {url, readPosts, email}) => {
                 {
                     url: `${url}/tag/newsletter`,
                     data: {
-                        name: data.type
+                        name: _.startCase(data.type)
                     }
                 }
             ]

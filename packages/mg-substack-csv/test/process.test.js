@@ -57,7 +57,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
 
         const tag2 = data.tags[1];
         tag2.url.should.eql('https://dummysite.substack.com/tag/newsletter');
-        tag2.data.name.should.eql('newsletter');
+        tag2.data.name.should.eql('Newsletter');
 
         const author = data.author;
         author.url.should.eql('https://dummysite.substack.com/author/dummyuser');
@@ -122,7 +122,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const post = processed.posts[2];
 
         post.data.status.should.eql('draft');
-        post.data.tags[1].data.name.should.eql('podcast');
+        post.data.tags[1].data.name.should.eql('Podcast');
     });
 
     it('Can use the first found image as the post image', async function () {
