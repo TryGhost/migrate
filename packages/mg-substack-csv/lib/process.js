@@ -120,24 +120,8 @@ const processContent = (html, siteUrl, options) => {
     return html;
 };
 
-const processFeatureImage = (html, post) => {
-    const $html = $.load(html, {
-        decodeEntities: false
-    });
-
-    let featured = $html('img').eq(0) || false;
-
-    if (featured) {
-        post.data.feature_image = $(featured).attr('src');
-    }
-};
-
 const processPost = (post, siteUrl, options) => {
     post.data.html = processContent(post.data.html, siteUrl, options);
-
-    if (options.forceImages) {
-        processFeatureImage(post.data.html, post);
-    }
 
     return post;
 };

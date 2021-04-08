@@ -54,7 +54,10 @@ It's possible to pass more options, in order to achieve a better migration file 
     - bool - default: `true`       
 - **`--subscribeLink`** 
     - Provide a path that existing `/subscribe` anchors will link to e.g. `/join-us` or `#/portal/signup` (# characters need to be escaped with a `\`)
-    - string - default: `null`    
+    - string - default: `null`
+- **`--useOgImage`** 
+    - Use `og:image` value as the feature image
+    - bool - default: `false`  
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
     - bool - default: `false`           

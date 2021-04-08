@@ -46,9 +46,9 @@ exports.setup = (sywac) => {
         defaultValue: true,
         desc: 'Import draft posts'
     });
-    sywac.boolean('--forceImages', {
+    sywac.boolean('--useOgImage', {
         defaultValue: false,
-        desc: 'Use the first image in a post as the feature image'
+        desc: 'Use "og:image" value as the feature image'
     });
     sywac.string('--subscribeLink', {
         defaultValue: null,

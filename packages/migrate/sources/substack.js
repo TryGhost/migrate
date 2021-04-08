@@ -77,6 +77,13 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             task: (ctx) => {
                 ctx.options = options;
 
+                if (options.useOgImage) {
+                    scrapeConfig.posts.feature_image = {
+                        selector: 'meta[property="og:image"]',
+                        attr: 'content'
+                    };
+                }
+
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
                 ctx.fileCache = new fsUtils.FileCache(pathToFile);
                 ctx.imageScraper = new MgImageScraper(ctx.fileCache);
