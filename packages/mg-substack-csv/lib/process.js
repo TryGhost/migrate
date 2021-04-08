@@ -24,7 +24,7 @@ const readFiles = async (files, postsDir) => {
     return postContent;
 };
 
-const processContent = (html, siteUrl) => {
+const processContent = (html, siteUrl, options) => {
     if (!html) {
         return '';
     }
@@ -100,6 +100,20 @@ const processContent = (html, siteUrl) => {
         $parent.after('<!--kg-card-end: html-->');
     });
 
+    // Replace any subscribe link on the same domain with a specific link
+    if (options.subscribeLink) {
+        $html('a').each((i, anchor) => {
+            let href = $(anchor).attr('href');
+            let linkRegex = new RegExp(`^(${siteUrl})?(/subscribe)(.*)`, 'gi');
+
+            let matches = href.replace(linkRegex, '$2');
+
+            if (matches === '/subscribe') {
+                $(anchor).attr('href', options.subscribeLink);
+            }
+        });
+    }
+
     // convert HTML back to a string
     html = $html.html();
 
@@ -118,10 +132,10 @@ const processFeatureImage = (html, post) => {
     }
 };
 
-const processPost = (post, siteUrl, forceImages) => {
-    post.data.html = processContent(post.data.html, siteUrl);
+const processPost = (post, siteUrl, options) => {
+    post.data.html = processContent(post.data.html, siteUrl, options);
 
-    if (forceImages) {
+    if (options.forceImages) {
         processFeatureImage(post.data.html, post);
     }
 
@@ -130,7 +144,7 @@ const processPost = (post, siteUrl, forceImages) => {
 
 module.exports = async (input, ctx) => {
     let {postsDir, options} = ctx;
-    let {url: siteUrl, forceImages: forceImages} = options;
+    let {url: siteUrl} = options;
     const output = {};
 
     if (postsDir) {
@@ -148,7 +162,7 @@ module.exports = async (input, ctx) => {
     }
 
     if (input.posts && input.posts.length > 0) {
-        output.posts = input.posts.map(post => processPost(post, siteUrl, forceImages));
+        output.posts = input.posts.map(post => processPost(post, siteUrl, options));
     }
 
     return output;

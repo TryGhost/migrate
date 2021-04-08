@@ -51,7 +51,10 @@ It's possible to pass more options, in order to achieve a better migration file 
     - string - default: `null`            
 - **`--drafts`** 
     - Import draft posts
-    - bool - default: `true`            
+    - bool - default: `true`       
+- **`--subscribeLink`** 
+    - Provide a path that existing `/subscribe` anchors will link to e.g. `/join-us` or `#/portal/signup` (# characters need to be escaped with a `\`)
+    - string - default: `null`    
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
     - bool - default: `false`           

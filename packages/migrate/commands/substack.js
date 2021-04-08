@@ -50,6 +50,10 @@ exports.setup = (sywac) => {
         defaultValue: false,
         desc: 'Use the first image in a post as the feature image'
     });
+    sywac.string('--subscribeLink', {
+        defaultValue: null,
+        desc: 'Provide a path that existing "subscribe" anchors will link to e.g. "/join-us" or "#/portal/signup" (# characters need to be escaped with a \\)'
+    });
     sywac.boolean('--fallBackHTMLCard', {
         defaultValue: false,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'

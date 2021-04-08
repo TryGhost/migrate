@@ -150,4 +150,29 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         post.data.status.should.eql('published');
         post.data.feature_image.should.eql('https://dummysite.substack.com/image.jpg');
     });
+
+    it('Can transform subscribe links with custom defined URL', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://dummysite.substack.com',
+                email: 'dummyuser@email.com',
+                subscribeLink: '#/portal/signup'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        // The first post contains 2 subscribe links
+        const post = processed.posts[0];
+        const data = post.data;
+        data.html.should.eql('<h2>Lorem Ipsum</h2>\n<p>\n    <a href="#/portal/signup"><span>Sign up now</span></a>\n</p>\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</p>\n<p>Dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>\n<div><hr></div>\n<p>\n    <a href="#/portal/signup"><span>Sign up now</span></a>\n</p>\n');
+    });
 });
