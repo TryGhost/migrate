@@ -85,7 +85,10 @@ const processContent = (html, siteUrl) => {
             }
 
             $(shareLink).attr('href', src);
-            $(button).replaceWith($(shareLink));
+            $(shareLink).removeAttr('class');
+            $(button).removeAttr('data-attrs');
+            $(button).removeAttr('class');
+            $(button).removeClass('button-wrapper');
         }
     });
 

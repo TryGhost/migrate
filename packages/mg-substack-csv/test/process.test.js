@@ -43,7 +43,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         data.updated_at.should.eql('2019-07-26T20:48:19.814Z');
         data.created_at.should.eql('2019-07-26T20:48:19.814Z');
         data.title.should.eql('Plain Text');
-        data.html.should.eql('<h2>Lorem Ipsum</h2>\n<a class="button primary" href="/subscribe/"><span>Sign up now</span></a>\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</p>\n<p>Dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>\n<div><hr></div>\n<a class="button primary" href="/subscribe/"><span>Sign up now</span></a>\n');
+        data.html.should.eql('<h2>Lorem Ipsum</h2>\n<p>\n    <a href="/subscribe/"><span>Sign up now</span></a>\n</p>\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</p>\n<p>Dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>\n<div><hr></div>\n<p>\n    <a href="/subscribe/"><span>Sign up now</span></a>\n</p>\n');
         data.custom_excerpt.should.eql('Lorem ipsum dolor sit amet.');
         data.type.should.eql('post');
         data.status.should.eql('published');
