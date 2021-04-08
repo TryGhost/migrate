@@ -44,7 +44,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Provide an email domain for users e.g. `example.com`
     - bool/string - default: `false`            
 - **`-u` `--url`** 
-    - Provide a URL (without trailing slash) to the hosted source site, so we can scrape data
+    - Provide a URL (without trailing slash) to the hosted source site, so we can scrape data e.g. `https://example.substack.com`
     - string - default:`https://ghost.io` 
 - **`-p` `--readPosts`** 
     - Provide a path to a posts folder that contains HTML files (file name = post id) to read the post content

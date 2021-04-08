@@ -7,7 +7,7 @@ const mapConfig = (data, {url, readPosts, email}) => {
     const dateNow = formatISO(new Date());
 
     const mappedData = {
-        url: `${url}/${slug}`,
+        url: `${url}/p/${slug}`,
         substackId: data.post_id,
         data: {
             slug: slug,

@@ -33,7 +33,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const post = processed.posts[0];
         post.should.be.an.Object();
 
-        post.url.should.eql('https://dummysite.substack.com/plain-text');
+        post.url.should.eql('https://dummysite.substack.com/p/plain-text');
 
         const data = post.data;
         data.should.be.an.Object();
