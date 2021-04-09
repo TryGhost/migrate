@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@tryghost/image-transform": "1.0.10",
-    "@tryghost/zip": "1.1.10",
+    "@tryghost/zip": "1.1.11",
     "adm-zip": "0.5.5",
     "csv-parse": "4.15.3",
     "date-fns": "2.19.0",
