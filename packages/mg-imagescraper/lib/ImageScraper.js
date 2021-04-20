@@ -57,6 +57,12 @@ class ImageScraper {
         if (!src) {
             return;
         }
+
+        // Ensure image URLs have a protocol (`url` fails if not supplied)
+        if (!/^(?:f|ht)tps?\:\/\//.test(src)) {
+            src = "https://" + src;
+        }
+
         let imageUrl = url.parse(src);
         let imageFile = this.fileCache.resolveImageFileName(imageUrl.pathname);
         let imageOptions = Object.assign(imageFile, this.defaultImageOptions);
