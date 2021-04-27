@@ -1,7 +1,7 @@
 const {formatISO} = require('date-fns');
 const _ = require('lodash');
 
-const mapConfig = (data, {url, readPosts, email}) => {
+const mapConfig = (data, {url, readPosts, email, useMetaAuthor}) => {
     const slug = data.post_id.replace(/^(?:\d{1,10}\.)(\S*)/gm, '$1');
 
     // Get an ISO 8601 date - https://date-fns.org/docs/formatISO
@@ -38,7 +38,7 @@ const mapConfig = (data, {url, readPosts, email}) => {
         }
     };
 
-    if (email) {
+    if (email && !useMetaAuthor) {
         const authorSlug = email.replace(/(^[\w_-]*)(@[\w_-]*\.\w*(?:\.\w{0,2})?)/, '$1');
 
         mappedData.data.author = {

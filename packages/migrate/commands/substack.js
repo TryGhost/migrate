@@ -46,9 +46,13 @@ exports.setup = (sywac) => {
         defaultValue: true,
         desc: 'Import draft posts'
     });
-    sywac.boolean('--useOgImage', {
+    sywac.boolean('--useMetaImage', {
         defaultValue: false,
         desc: 'Use "og:image" value as the feature image'
+    });
+    sywac.boolean('--useMetaAuthor', {
+        defaultValue: false,
+        desc: 'Use the author field from ld+json (useful for posts with multiple authors)'
     });
     sywac.string('--subscribeLink', {
         defaultValue: null,

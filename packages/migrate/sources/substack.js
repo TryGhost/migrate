@@ -6,6 +6,7 @@ const MgLinkFixer = require('@tryghost/mg-linkfixer');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const makeTaskRunner = require('../lib/task-runner');
 const csvIngest = require('@tryghost/mg-substack-csv');
+const {slugify} = require('@tryghost/string');
 
 const scrapeConfig = {
     posts: {
@@ -54,6 +55,28 @@ const scrapeConfig = {
             convert: (x) => {
                 return x.slice(0, 499);
             }
+        },
+        authors: {
+            selector: 'script[type="application/ld+json"]',
+            convert: (x) => {
+                let ldJSON = JSON.parse(x);
+                let author = ldJSON.author.name;
+                let theAuthors = [];
+
+                // Split string by ['and', '&', ','], trim white space from the resulting array items, and remove empty items
+                let authorSplit = author.split(/(?:,|and|&)+/).map(function (item) {
+                    return item.trim();
+                }).filter(i => i);
+
+                authorSplit.forEach((item) => {
+                    theAuthors.push({
+                        url: slugify(item),
+                        name: item
+                    });
+                });
+
+                return theAuthors;
+            }
         }
     }
 };
@@ -77,11 +100,17 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             task: (ctx) => {
                 ctx.options = options;
 
-                if (options.useOgImage) {
+                // If enabled, set the `og:image` as the feature image
+                if (options.useMetaImage) {
                     scrapeConfig.posts.feature_image = {
                         selector: 'meta[property="og:image"]',
                         attr: 'content'
                     };
+                }
+
+                // Delete the authors meta field if the option is not enabled (this data is fetched regardless of options passed)
+                if (!options.useMetaAuthor) {
+                    delete scrapeConfig.posts.authors;
                 }
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.

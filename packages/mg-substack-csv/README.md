@@ -41,7 +41,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - string - default: `all` 
     - Choices: `all`, `web`, `img`, `none`            
 - **`-e` `--email`** 
-    - Provide an email domain for users e.g. `example.com`
+    - Provide an email domain for users e.g. `person@example.com`
     - bool/string - default: `false`            
 - **`-u` `--url`** 
     - Provide a URL (without trailing slash) to the hosted source site, so we can scrape data e.g. `https://example.substack.com`
@@ -53,10 +53,13 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Import draft posts
     - bool - default: `true`       
 - **`--subscribeLink`** 
-    - Provide a path that existing `/subscribe` anchors will link to e.g. `/join-us` or `#/portal/signup` (# characters need to be escaped with a `\`)
+    - Provide a path that existing `/subscribe` anchors will link to e.g. `/join-us` or `#/portal/signup` (`#` characters need to be escaped with a `\`)
     - string - default: `null`
-- **`--useOgImage`** 
+- **`--useMetaImage`** 
     - Use `og:image` value as the feature image
+    - bool - default: `false`  
+- **`--useMetaAuthor`** 
+    - Use the author field from `ld+json` (useful for posts with multiple authors)
     - bool - default: `false`  
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
@@ -65,7 +68,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 A more realistic command for a Substack migration looks like this:
 
 ```sh
-migrate substack <path to post.csv file> --url <URL to substack instance> --readPosts <path to directory containing html files> --email <main author email> --drafts false
+migrate substack <path to post.csv file> --url <URL to substack instance> --readPosts <path to directory containing html files> --email <main author email> --subscribeLink \#/portal/signup --useMetaImage --useMetaAuthor --drafts false
 ```
 
 
