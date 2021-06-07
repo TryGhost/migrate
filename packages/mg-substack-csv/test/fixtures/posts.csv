@@ -3,3 +3,5 @@ post_id,post_date,is_published,email_sent_at,type,audience,title,subtitle,podcas
 615243.embedded-tweet,2019-07-29T21:21:58.484Z,FALSE,2019-07-29T21:21:58.503Z,newsletter,everyone,Embedded Tweet,"Dolor sit amet, consectetur adipiscing elit.",
 364758.more-plain-text,2019-07-31T17:07:09.230Z,FALSE,,podcast,everyone,More Plain Text,Eiusmod tempor incididunt ut labore.,https://dummyurl.com/podcast-123.mp3
 789123.text-with-image,2021-01-20T13:15:12.230Z,TRUE,2021-01-20T13:17:12.230Z,newsletter,everyone,Text With Image,Eiusmod tempor incididunt ut labore.,
+345678.list-with-image,2021-01-21T15:12:22.230Z,TRUE,2021-01-20T13:17:12.230Z,newsletter,everyone,List With Image,Eiusmod tempor incididunt ut labore.,
+243546.linked-image,2021-01-22T11:05:54.230Z,TRUE,2021-01-20T13:17:12.230Z,newsletter,everyone,Linked Imagw,Eiusmod tempor incididunt ut labore.,

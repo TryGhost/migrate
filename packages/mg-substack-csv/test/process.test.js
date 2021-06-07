@@ -28,7 +28,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const processed = await process(mapped, ctx);
 
         processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(4);
+        processed.posts.length.should.equal(6);
 
         const post = processed.posts[0];
         post.should.be.an.Object();
@@ -148,5 +148,54 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const post = processed.posts[0];
         const data = post.data;
         data.html.should.eql('<h2>Lorem Ipsum</h2>\n<p>\n    <a href="#/portal/signup"><span>Sign up now</span></a>\n</p>\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</p>\n<p>Dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>\n<div><hr></div>\n<p>\n    <a href="#/portal/signup"><span>Sign up now</span></a>\n</p>\n');
+    });
+
+    it('Can convert a list with an imagr into a HTML card', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://dummysite.substack.com',
+                email: 'dummyuser@email.com',
+                subscribeLink: '#/portal/signup'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        // The 5th post contains an image in a list item
+        const post = processed.posts[4];
+        const data = post.data;
+        data.html.should.eql('<h2>Lorem Ipsum</h2>\n<!--kg-card-begin: html--><ul>\n    <li>Proin nunc purus, sollicitudin vitae dui id, condimentum efficitur mauris</li>\n    <li>In eleifend tortor nulla, vel aliquet ex pretium ac</li>\n    <li><img src="https://example.com/photo.jpg" alt="A nice photo"></li>\n    <li>Vivamus <a href="https://example.com">congue</a> nisl in gravida blandit</li>\n</ul><!--kg-card-end: html-->\n');
+    });
+
+    it('Can convert an image wrapped with a link', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://dummysite.substack.com',
+                email: 'dummyuser@email.com'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        // The 6th post contains 2 a linked image
+        const post = processed.posts[5];
+        const data = post.data;
+        data.html.should.eql('<h2>Lorem Ipsum</h2>\n<figure class="kg-card kg-image-card kg-card-hascaption">\n        <a target="_blank" href="https://example.com">\n            <img src="https://example.com/photo_1200x800.jpeg" alt="A nice photo" class="kg-image">\n            \n        </a>\n        <figcaption class="image-caption">This is a <a href="https://example.com/page">really</a> nice photo</figcaption>\n    </figure>\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>\n');
     });
 });

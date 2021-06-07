@@ -56,8 +56,35 @@ const processContent = (html, siteUrl, options) => {
         $(el).replaceWith($figure);
     });
 
+    $html('.captioned-image-container').each((i, div) => {
+        const hasCaption = $(div).find('figcaption').length;
+
+        $(div).find('a').removeAttr('class');
+
+        $(div).find('img').removeAttr('data-attrs');
+        $(div).find('img').removeAttr('srcset');
+        $(div).find('img').removeAttr('width');
+        $(div).find('img').removeAttr('height');
+        $(div).find('img').addClass('kg-image');
+
+        $(div).find('figure').addClass('kg-card kg-image-card');
+
+        if (hasCaption) {
+            $(div).find('figure').addClass('kg-card-hascaption');
+        }
+
+        $(div).replaceWith($(div).find('figure'));
+    });
+
     $html('a > style').each((i, style) => {
         $(style).remove();
+    });
+
+    $html('ul, ol').each((i, list) => {
+        if ($(list).find('img').length) {
+            $(list).before('<!--kg-card-begin: html-->');
+            $(list).after('<!--kg-card-end: html-->');
+        }
     });
 
     // Replace Substack share and subscribe buttons with normal links
