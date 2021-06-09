@@ -41,7 +41,10 @@
       "data": {
         "name": "Joe Bloggs",
         "slug": "joebloggs",
-        "email": "joebloggs@blogging.com"
+        "email": "joebloggs@blogging.com",
+        "roles": [
+          "Contributor"
+        ]
       }
     }
   ]

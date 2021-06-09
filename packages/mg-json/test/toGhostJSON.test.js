@@ -14,8 +14,10 @@ describe('toGhostJSON', function () {
 
         output.should.be.GhostJSON();
         output.data.posts.should.be.an.Array().with.lengthOf(1);
-        output.data.users.should.be.an.Array().with.lengthOf(1);
         output.data.tags.should.be.an.Array().with.lengthOf(2);
+
+        output.data.users.should.be.an.Array().with.lengthOf(1);
+        output.data.users[0].roles[0].should.eql('Administrator');
 
         output.data.posts_authors.should.be.an.Array().with.lengthOf(1);
         output.data.posts_authors[0].post_id.should.eql(output.data.posts[0].id);
@@ -40,7 +42,10 @@ describe('toGhostJSON', function () {
                     author: {
                         url: 'https://mysite.com/me',
                         data: {
-                            name: 'me'
+                            name: 'me',
+                            roles: [
+                                'Author'
+                            ]
                         }
                     }
                 }

@@ -52,7 +52,10 @@ const processAuthor = ($author) => {
         url: $author.attr('href'),
         data: {
             name: $author.text(),
-            slug: $author.attr('href').replace(/.*?@(.*?)$/, (m, p) => p.toLowerCase())
+            slug: $author.attr('href').replace(/.*?@(.*?)$/, (m, p) => p.toLowerCase()),
+            roles: [
+                'Contributor'
+            ]
         }
     };
 };

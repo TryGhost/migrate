@@ -13,7 +13,10 @@
           "url": "https://medium.com/@JoeBloggs",
           "data": {
             "name": "Joe Bloggs",
-            "slug": "joebloggs"
+            "slug": "joebloggs",
+            "roles": [
+              "Administrator"
+            ]
           }
         },
         "tags": [

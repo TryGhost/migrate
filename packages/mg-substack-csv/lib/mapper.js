@@ -45,7 +45,10 @@ const mapConfig = (data, {url, readPosts, email, useMetaAuthor}) => {
             url: `${url}/author/${authorSlug}`,
             data: {
                 email: email,
-                slug: authorSlug
+                slug: authorSlug,
+                roles: [
+                    'Contributor'
+                ]
             }
         };
     }

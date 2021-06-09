@@ -31,6 +31,8 @@ describe('Process', function () {
         post.data.author.url.should.eql('https://medium.com/@JoeBloggs');
         post.data.author.data.name.should.eql('Joe Bloggs');
         post.data.author.data.slug.should.eql('joebloggs');
+        post.data.author.data.slug.should.eql('joebloggs');
+        post.data.author.data.roles[0].should.eql('Contributor');
 
         post.data.tags.should.be.an.Array().with.lengthOf(3);
 

@@ -45,6 +45,10 @@ const hydrateUser = (input, options) => {
         input.bio = input.bio.substring(0, 200);
     }
 
+    if (!input.roles) {
+        input.roles = ['Contributor'];
+    }
+
     return input;
 };
 

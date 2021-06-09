@@ -13,7 +13,10 @@
           "url": "https://medium.com/@JoeBloggs",
           "data": {
             "name": "Joe Bloggs",
-            "slug": "joebloggs"
+            "slug": "joebloggs",
+            "roles": [
+              "Administrator"
+            ]
           }
         },
         "tags": [
@@ -47,7 +50,10 @@
           "url": "https://medium.com/@JoeBloggs",
           "data": {
             "name": "Joe Bloggs",
-            "slug": "joebloggs"
+            "slug": "joebloggs",
+            "roles": [
+              "Administrator"
+            ]
           }
         },
         "tags": [
@@ -74,7 +80,10 @@
           "url": "https://medium.com/@JaneDoe",
           "data": {
             "name": "Jane doe",
-            "slug": "janedoe"
+            "slug": "janedoe",
+            "roles": [
+              "Editor"
+            ]
           }
         },
         "tags": [
