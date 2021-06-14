@@ -67,6 +67,11 @@ exports.setup = (sywac) => {
         choices: ['featuredmedia', 'og:image', 'none'],
         desc: 'Change which value is used as the feature image'
     });
+    sywac.enumeration('--datedPermalinks', {
+        choices: ['none', '/yyyy/mm/dd/'],
+        defaultValue: 'none',
+        desc: 'Set the dated permalink structure (e.g. /yyyy/mm/dd/)'
+    });
     sywac.string('--excerptSelector', {
         defaultValue: null,
         desc: 'Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`'
