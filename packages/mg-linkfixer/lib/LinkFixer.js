@@ -15,9 +15,18 @@ class LinkFixer {
         if (!ctx.result.posts) {
             return;
         }
-        // @TODO: support for custom permalinks and taxonomies
+
+        // @TODO: support for custom taxonomies
         ctx.result.posts.forEach(({url, data}) => {
-            this.linkMap[url] = `/${data.slug}/`;
+            const RegexYYYYMMDD = new RegExp(`^${ctx.options.url}/([0-9]{4}/[0-9]{2}/[0-9]{2})/([a-zA-Z0-9-_]*)(/)?`);
+            const isDatedPermalink = url.match(RegexYYYYMMDD);
+
+            if (ctx.options.datedPermalinks === '/yyyy/mm/dd/' && isDatedPermalink) {
+                this.linkMap[url] = `/${url.replace(RegexYYYYMMDD, '$1/$2')}/`;
+            } else {
+                this.linkMap[url] = `/${data.slug}/`;
+            }
+
             if (data.tags) {
                 data.tags.forEach(({url: tagUrl, data: tagData}) => {
                     this.linkMap[tagUrl] = `/tag/${tagData.slug}/`;
