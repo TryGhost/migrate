@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-medium-export",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "tbc",
   "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-medium-export",
   "author": "Ghost Foundation",
@@ -25,7 +25,7 @@
     "sinon": "11.1.1"
   },
   "dependencies": {
-    "@tryghost/mg-fs-utils": "^0.7.9",
+    "@tryghost/mg-fs-utils": "^0.7.10",
     "@tryghost/string": "^0.1.17",
     "cheerio": "0.22.0",
     "date-fns": "2.22.1"
