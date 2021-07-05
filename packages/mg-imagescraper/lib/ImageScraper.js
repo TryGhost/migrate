@@ -10,7 +10,7 @@ const htmlFields = ['html'];
 const mobiledocFields = ['mobiledoc'];
 
 // @TODO: should probably be a shared list
-const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico'];
+const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico', '.webp'];
 
 const isHTMLField = field => _.includes(htmlFields, field);
 const isMobiledocField = field => _.includes(mobiledocFields, field);
@@ -139,8 +139,8 @@ class ImageScraper {
         const markdownImageRegex = /(?:!\[(.*?)\]\((.*?)\))/gm;
 
         const processMobiledocImages = async (object) => {
-            for (var objectKey in object) {
-                var objectValue = object[objectKey];
+            for (let objectKey in object) {
+                let objectValue = object[objectKey];
                 if (typeof objectValue === 'object') {
                     await processMobiledocImages(objectValue);
                 } else {

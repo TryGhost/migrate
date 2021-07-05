@@ -6,7 +6,7 @@ const os = require('os');
 const imageTransform = require('@tryghost/image-transform');
 
 const basePath = 'mg';
-const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico'];
+const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico', 'webp'];
 
 class FileCache {
     constructor(cacheName, options = {}) {
