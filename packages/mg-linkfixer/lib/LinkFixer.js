@@ -19,10 +19,15 @@ class LinkFixer {
         // @TODO: support for custom taxonomies
         ctx.result.posts.forEach(({url, data}) => {
             const RegexYYYYMMDD = new RegExp(`^${ctx.options.url}/([0-9]{4}/[0-9]{2}/[0-9]{2})/([a-zA-Z0-9-_]*)(/)?`);
-            const isDatedPermalink = url.match(RegexYYYYMMDD);
+            const isYYYYMMDDDatedPermalink = url.match(RegexYYYYMMDD);
 
-            if (ctx.options.datedPermalinks === '/yyyy/mm/dd/' && isDatedPermalink) {
+            const RegexYYYYMM = new RegExp(`^${ctx.options.url}/([0-9]{4}/[0-9]{2})/([a-zA-Z0-9-_]*)(/)?`);
+            const isYYYYMMDatedPermalink = url.match(RegexYYYYMM);
+
+            if (ctx.options.datedPermalinks === '/yyyy/mm/dd/' && isYYYYMMDDDatedPermalink) {
                 this.linkMap[url] = `/${url.replace(RegexYYYYMMDD, '$1/$2')}/`;
+            } else if (ctx.options.datedPermalinks === '/yyyy/mm/' && isYYYYMMDatedPermalink) {
+                this.linkMap[url] = `/${url.replace(RegexYYYYMM, '$1/$2')}/`;
             } else {
                 this.linkMap[url] = `/${data.slug}/`;
             }

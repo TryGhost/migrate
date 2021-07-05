@@ -68,7 +68,7 @@ exports.setup = (sywac) => {
         desc: 'Change which value is used as the feature image'
     });
     sywac.enumeration('--datedPermalinks', {
-        choices: ['none', '/yyyy/mm/dd/'],
+        choices: ['none', '/yyyy/mm/', '/yyyy/mm/dd/'],
         defaultValue: 'none',
         desc: 'Set the dated permalink structure (e.g. /yyyy/mm/dd/)'
     });

@@ -7,7 +7,15 @@ const mgJSON = require('@tryghost/mg-json');
 const makeTaskRunner = require('../../migrate/lib/task-runner.js');
 
 const getPosts = async (options = {}) => {
-    let ctx = testUtils.fixtures.readSync('ctx.json');
+    let ctx = null;
+
+    if (options.datedPermalinks === '/yyyy/mm/dd/') {
+        ctx = testUtils.fixtures.readSync('ctx-yyyy-mm-dd.json');
+    } else if (options.datedPermalinks === '/yyyy/mm/') {
+        ctx = testUtils.fixtures.readSync('ctx-yyyy-mm.json');
+    } else {
+        ctx = testUtils.fixtures.readSync('ctx.json');
+    }
 
     ctx.options = {...ctx.options, ...options};
 
@@ -33,7 +41,7 @@ describe('LinkFixer', function () {
         posts[3].html.should.containEql('<a href="/lorem-ipsum/">Consectetur</a>');
     });
 
-    it('Fixes dated links to posts', async function () {
+    it('Fixes yyyy-mm-dd dated links to posts', async function () {
         const posts = await getPosts({
             datedPermalinks: '/yyyy/mm/dd/'
         });
@@ -42,6 +50,17 @@ describe('LinkFixer', function () {
 
         posts[3].html.should.not.containEql('<a href="https://example.com/2020/06/27/lorem-ipsum/">Consectetur</a>');
         posts[3].html.should.containEql('<a href="/2020/06/27/lorem-ipsum/">Consectetur</a>');
+    });
+
+    it('Fixes yyyy-mm dated links to posts', async function () {
+        const posts = await getPosts({
+            datedPermalinks: '/yyyy/mm/'
+        });
+
+        posts.should.be.an.Array().with.lengthOf(5);
+
+        posts[3].html.should.not.containEql('<a href="https://example.com/2020/06/lorem-ipsum/">Consectetur</a>');
+        posts[3].html.should.containEql('<a href="/2020/06/lorem-ipsum/">Consectetur</a>');
     });
 
     it('Fixes links to pages', async function () {

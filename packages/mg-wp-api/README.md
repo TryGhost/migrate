@@ -71,7 +71,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--datedPermalinks`** 
     - Set the dated permalink structure
     - string - default: `none` 
-    - Choices: `none`, `'/yyyy/mm/dd/'`  
+    - Choices: `none`, `'/yyyy/mm/'`, `'/yyyy/mm/dd/'`  
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
     - bool - default: `false`
