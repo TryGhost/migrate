@@ -111,6 +111,8 @@ const processFeatureImage = (html, post) => {
 
     if (featured) {
         post.data.feature_image = $(featured).attr('src');
+        post.data.feature_image_alt = $(featured).attr('alt') || null;
+        post.data.feature_image_caption = $(featured).parents('figure').find('figcaption').html() || null;
     }
 };
 

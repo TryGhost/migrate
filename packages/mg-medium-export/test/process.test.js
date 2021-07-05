@@ -94,6 +94,11 @@ describe('Process', function () {
         // should not contain a header with the post title
         html.should.not.match(/<h3[^>]*>Blog Post Title/);
 
+        // should have feature image with caption & alt text
+        post.data.feature_image.should.eql('https://cdn-images-1.medium.com/max/2000/abc123.jpeg');
+        post.data.feature_image_alt.should.eql('This is image alt text');
+        post.data.feature_image_caption.should.eql('This is an image caption');
+
         // Migrator always marks posts with an internal tag
         post.data.tags.should.be.an.Array().with.lengthOf(4);
         post.data.tags[0].data.name.should.eql('Things');
