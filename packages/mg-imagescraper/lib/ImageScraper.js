@@ -3,6 +3,7 @@ const cheerio = require('cheerio');
 const url = require('url');
 const got = require('got');
 const path = require('path');
+const errors = require('@tryghost/errors');
 
 // @TODO: expand this list
 const htmlFields = ['html'];
@@ -17,7 +18,7 @@ const isMobiledocField = field => _.includes(mobiledocFields, field);
 const isImageField = field => /image/.test(field);
 
 const ScrapeError = ({src, code, statusCode, originalError}) => {
-    let error = new Error(`Unable to scrape URI ${src}`);
+    let error = new errors.GhostError({message: `Unable to scrape URI ${src}`});
 
     error.errorType = 'ScrapeError';
     error.scraper = 'Image';

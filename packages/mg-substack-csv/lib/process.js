@@ -2,6 +2,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const $ = require('cheerio');
 const url = require('url');
+const errors = require('@tryghost/errors');
 
 const getFiles = async (filePath) => {
     let filenames = await fs.readdir(filePath);
@@ -168,7 +169,7 @@ module.exports = async (input, ctx) => {
                 delete post.substackId;
             });
         } catch (error) {
-            return new Error('Couldn\'t read post files');
+            return new errors.GhostError({message: 'Couldn\'t read post files'});
         }
     }
 

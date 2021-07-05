@@ -2,9 +2,10 @@ const fs = require('fs-extra');
 const _ = require('lodash');
 const $ = require('cheerio');
 const url = require('url');
+const errors = require('@tryghost/errors');
 
 const VideoError = ({src, postUrl}) => {
-    let error = new Error(`Unsupported video ${src} in post ${postUrl}`);
+    let error = new errors.GhostError({message: `Unsupported video ${src} in post ${postUrl}`});
 
     error.errorType = 'VideoError';
     error.src = src;
@@ -473,7 +474,7 @@ module.exports.all = async ({result: input, usersJSON, options, errors}) => {
                 mergedUsers.push(Object.assign({}, passedUser, matchedUser));
             });
         } catch (error) {
-            throw new Error('Unable to process passed users file');
+            throw new errors.GhostError({message: 'Unable to process passed users file'});
         }
         input.users = mergedUsers;
     }

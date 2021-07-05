@@ -61,7 +61,7 @@ describe('Convert', function () {
             convertPost(post, htmlCard);
         } catch (error) {
             error.should.be.an.Object();
-            error.name.should.eql('Error');
+            error.name.should.eql('InternalServerError');
             error.message.should.eql('Post has no html field to convert');
         }
     });

@@ -2,6 +2,7 @@ const AdmZip = require('adm-zip');
 const {compress} = require('@tryghost/zip');
 const path = require('path');
 const _private = {};
+const errors = require('@tryghost/errors');
 
 _private.openZipForRead = (zipPath) => {
     return AdmZip(zipPath);
@@ -17,7 +18,7 @@ module.exports.read = (zipPath, callback) => {
     try {
         zip = _private.openZipForRead(zipPath);
     } catch (error) {
-        throw new Error(`Unable to read zip file ${zipPath}: ${error}`);
+        throw new errors.GhostError({message: `Unable to read zip file ${zipPath}: ${error}`});
     }
 
     // Entries is cleaned first

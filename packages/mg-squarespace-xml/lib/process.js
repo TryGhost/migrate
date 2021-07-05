@@ -1,6 +1,7 @@
 const $ = require('cheerio');
 const {slugify} = require('@tryghost/string');
 const {parse} = require('date-fns');
+const errors = require('@tryghost/errors');
 
 module.exports.processUser = ($sqUser) => {
     const authorSlug = slugify($($sqUser).children('wp\\:author_login').text());
@@ -196,7 +197,7 @@ module.exports.all = async (input, {options}) => {
     };
 
     if (input.length < 1) {
-        return new Error('Input file is empty');
+        return new errors.GhostError({message: 'Input file is empty'});
     }
 
     const $xml = $.load(input, {

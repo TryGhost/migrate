@@ -1,9 +1,10 @@
 const converter = require('@tryghost/html-to-mobiledoc');
 const {convertToHTMLCard} = require('./convertToHTMLCard');
+const errors = require('@tryghost/errors');
 
 module.exports.convertPost = (post, htmlCard) => {
     if (!post.html) {
-        throw new Error('Post has no html field to convert');
+        throw new errors.GhostError({message: 'Post has no html field to convert'});
     }
 
     if (htmlCard) {

@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const scrapeIt = require('scrape-it');
 const omitEmpty = require('omit-empty');
+const errors = require('@tryghost/errors');
 
 const makeMetaObject = (item) => {
     if (!item.url) {
@@ -21,7 +22,7 @@ const findMatchIn = (existing, match) => {
 };
 
 const ScrapeError = ({url, code, statusCode, originalError}) => {
-    let error = new Error(`Unable to scrape URL ${url}`);
+    let error = new errors.GhostError({message: `Unable to scrape URL ${url}`});
 
     error.errorType = 'ScrapeError';
     error.scraper = 'Web';

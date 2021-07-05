@@ -4,6 +4,7 @@ const path = require('path');
 const crypto = require('crypto');
 const os = require('os');
 const imageTransform = require('@tryghost/image-transform');
+const errors = require('@tryghost/errors');
 
 const basePath = 'mg';
 const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico', 'webp'];
@@ -257,7 +258,7 @@ class FileCache {
         let pathToCheck = filename;
 
         if (type && !_.includes(['tmp', 'json', 'image'], type)) {
-            return new Error('Unknown file type');
+            throw new errors.GhostError({message: 'Unknown file type'});
         } else if (type) {
             pathToCheck = path.join(this[`${type}Dir`], filename);
         }

@@ -24,6 +24,7 @@
     "sinon": "11.1.1"
   },
   "dependencies": {
+    "@tryghost/errors": "^0.2.13",
     "bluebird": "^3.7.2",
     "csv-parse": "4.16.0",
     "date-fns": "2.22.1",

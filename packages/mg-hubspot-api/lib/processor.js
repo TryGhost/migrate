@@ -2,9 +2,10 @@ const {htmlToText} = require('html-to-text');
 const $ = require('cheerio');
 const url = require('url');
 const {formatISO, parse} = require('date-fns');
+const errors = require('@tryghost/errors');
 
 const VideoError = ({src, postUrl}) => {
-    let error = new Error(`Unsupported video ${src} in post ${postUrl}`);
+    let error = new errors.GhostError({message: `Unsupported video ${src} in post ${postUrl}`});
 
     error.errorType = 'VideoError';
     error.src = src;

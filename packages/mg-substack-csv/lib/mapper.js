@@ -1,5 +1,6 @@
 const {formatISO} = require('date-fns');
 const _ = require('lodash');
+const errors = require('@tryghost/errors');
 
 const mapConfig = (data, {url, readPosts, email, useMetaAuthor}) => {
     const slug = data.post_id.replace(/^(?:\d{1,10}\.)(\S*)/gm, '$1');
@@ -62,7 +63,7 @@ module.exports = async (input, options) => {
     };
 
     if (input.length < 1) {
-        return new Error('Input file is empty');
+        return new errors.GhostError({message: 'Input file is empty'});
     }
 
     if (!options.drafts) {

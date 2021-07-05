@@ -1,5 +1,6 @@
 const ui = require('@tryghost/pretty-cli').ui;
 const makeTaskRunner = require('../lib/task-runner');
+const errors = require('@tryghost/errors');
 
 // Internal ID in case we need one.
 exports.id = 'test';
@@ -45,7 +46,7 @@ exports.run = async (argv) => {
                             setTimeout(() => {
                                 if (i === 5) {
                                     uniqueErrorId += 1;
-                                    return reject(new Error(`I am error ${uniqueErrorId}`));
+                                    return reject(new errors.GhostError({message: `I am error ${uniqueErrorId}``I am error ${uniqueErrorId}`}));
                                 }
 
                                 if (i === 7) {

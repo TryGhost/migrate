@@ -1,4 +1,5 @@
 const hsAPI = require('hubspot-api');
+const errors = require('@tryghost/errors');
 
 const processBlogResult = (blogs) => {
     let results = [];
@@ -38,7 +39,7 @@ module.exports.discover = async ({hapikey, url, limit}) => {
     }
 
     if (!blog) {
-        throw new Error('Unable to determine which blog to import');
+        throw new errors.GhostError({message: 'Unable to determine which blog to import'});
     }
 
     // We fetch all topics right away (assuming no one has anymore than 1000 which is the max)
