@@ -69,18 +69,23 @@ const scrapeConfig = {
         tags: {
             selector: 'script[type="application/ld+json"]',
             convert: (x) => {
-                let ldJSON = JSON.parse(x);
-                let keywords = ldJSON.keywords;
                 let theTags = [];
-                keywords.forEach((item) => {
-                    let parts = item.split(':');
-                    if (parts[0] === 'Tag') {
-                        theTags.push({
-                            url: slugify(parts[1]),
-                            name: parts[1]
-                        });
-                    }
-                });
+                let ldJSON = JSON.parse(x);
+
+                if (typeof ldJSON.keywords !== 'undefined') {
+                    let keywords = ldJSON.keywords;
+
+                    keywords.forEach((item) => {
+                        let parts = item.split(':');
+                        if (parts[0] === 'Tag') {
+                            theTags.push({
+                                url: slugify(parts[1]),
+                                name: parts[1]
+                            });
+                        }
+                    });
+                }
+
                 return theTags;
             }
         }
