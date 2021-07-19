@@ -1,8 +1,8 @@
 // Switch these lines once there are useful utils
-// const testUtils = require('./utils');
-require('./utils');
+const testUtils = require('./utils');
 
 const ImageScraper = require('../');
+const makeTaskRunner = require('../../migrate/lib/task-runner.js');
 
 const mockUrl = 'https://mysite.com/images/test.jpg';
 const mockFile = 'test.jpg';
@@ -60,5 +60,26 @@ describe('Download Image', function () {
         mockFileCache.writeImageFile.calledOnce.should.be.true();
 
         resultPath.should.eql(mockOutputPath);
+    });
+
+    it('Will find and replace images in posts', async function () {
+        let ctx = testUtils.fixtures.readSync('ctx.json');
+
+        mockFileCache.hasFile.returns(true);
+        let imageScraper = new ImageScraper(mockFileCache);
+
+        let tasks = imageScraper.fetch(ctx);
+        const doTasks = makeTaskRunner(tasks, {renderer: 'silent'});
+        await doTasks.run();
+
+        const post = ctx.result.data.posts[0];
+
+        post.feature_image.should.eql(mockOutputPath);
+        post.html.should.containEql('<img src="/content/images/test.jpg">');
+        post.html.should.not.containEql('<img src="https://mysite.com/images/test.jpg" />');
+
+        // Check the `feature_image_alt` and `feature_image_caption` are un-touched
+        post.feature_image_alt.should.eql('Feature image alt text');
+        post.feature_image_caption.should.eql('Feature image caption text');
     });
 });

@@ -1,0 +1,165 @@
+{
+  "errors": [],
+  "options": {
+    "scrape": "none",
+    "zip": false,
+    "verbose": true,
+    "_": [],
+    "h": false,
+    "help": false,
+    "v": false,
+    "version": false,
+    "url": "https://mysite.com",
+    "V": true,
+    "s": "none",
+    "I": false,
+    "info": false,
+    "b": 0,
+    "batch": 0,
+    "l": 100,
+    "limit": 100,
+    "a": null,
+    "auth": null,
+    "u": null,
+    "users": null,
+    "fallBackHTMLCard": false,
+    "tags": true,
+    "addTag": null,
+    "featureImage": "featuredmedia",
+    "excerptSelector": null,
+    "renderer": "verbose",
+    "exitOnError": false,
+    "concurrent": 3
+  },
+  "result": {
+    "meta": {
+      "exported_on": 1626704855956,
+      "version": "2.0.0"
+    },
+    "data": {
+      "users": [
+        {
+          "id": 2,
+          "slug": "anotherauthor",
+          "name": "Another Author",
+          "bio": "",
+          "profile_image": "",
+          "website": "",
+          "email": "anotherauthor@mysite.com",
+          "roles": [
+            "Contributor"
+          ]
+        },
+        {
+          "id": 1,
+          "slug": "theauthor",
+          "name": "The Author",
+          "bio": "",
+          "profile_image": "",
+          "website": "https://mysite.com",
+          "email": "theauthor@mysite.com",
+          "roles": [
+            "Contributor"
+          ]
+        }
+      ],
+      "posts": [
+        {
+          "slug": "lorem-ipsum",
+          "title": "Lorem Ipsum",
+          "comment_id": 134,
+          "html": "\n<p>Et aut et tempore occaecati suscipit molestiae. nesciunt non consequatur beatae Illo veritatis quibusdam dolore aut. Sit quidem dolorum consequatur <a href=\"https://dummyurl.com/eos-quia-quos-voluptas-aliquam-et-et-omnis.html\">Sunt tempore nisi similique</a> porro aut ducimus. autem quod non <a href=\"https://mysite.com/sample-page/\">aspernatur</a>. Mollitia <a href=\"https://mysite.com/tag/delivery/\">soluta</a> eum optio aliquid quis. Nihil quam labore et esse. Maiores tempora dolorem doloribus <a href=\"https://dummyurl.com/adipisci-ad-soluta-doloribus-est-harum-pariatur\">modi eos. Est</a> eius architecto dolorem <a href=\"https://mysite.com/category/cakes/fruit/\">Quasi</a> et et veritatis voluptate magnam laudantium. Reprehenderit aspernatur voluptas quisquam. Nobis quis repellendus ut tenetur minima dolores Quia et voluptatibus animi Quis modi et dolorem repellat fuga delectus. Et est <a href=\"https://dummyurl.org/\">dolor quam sit id.</a> eum non non architecto delectus quisquam et Quis qui aut magnam beatae. Qui officia adipisci hic doloribus. <img src=\"https://mysite.com/images/test.jpg\" /> Dicta qui sit id odio qui. Et reiciendis architecto error animi. Enim <a href=\"https://www.dummyurl.com/\">esse in accusantium. Molestiae quis dignissimos</a> consequatur. Repudiandae deleniti dolor. mollitia beatae itaque. Fugiat omnis vero provident optio error. Repudiandae sapiente qui quia aspernatur. quibusdam corporis aut ut Error repellendus dolor sunt odit.</p>\n",
+          "type": "post",
+          "status": "published",
+          "created_at": "2020-06-27T12:07:24",
+          "published_at": "2020-06-27T12:07:24",
+          "updated_at": "2021-06-10T10:44:35",
+          "feature_image": "https://mysite.com/images/test.jpg",
+          "feature_image_alt": "Feature image alt text",
+          "feature_image_caption": "Feature image caption text",
+          "id": "60f58bd7b8f1e6116819ad36"
+        },
+        {
+          "slug": "sample-page",
+          "title": "Sample Page",
+          "comment_id": 2,
+          "html": "\n<p>This is an example page. It&#8217;s different from a blog post because it will stay in one place and will show up in your site navigation (in most themes). Most people start with an About page that introduces them to potential site visitors. It might say something like this:</p>\n\n\n\n<blockquote class=\"wp-block-quote\"><p>Hi there! I&#8217;m a bike messenger by day, aspiring actor by night, and this is my website. I live in Los Angeles, have a great dog named Jack, and I like pi&#241;a coladas. (And gettin&#8217; caught in the rain.)</p></blockquote>\n\n\n\n<p>&#8230;or something like this:</p>\n\n\n\n<blockquote class=\"wp-block-quote\"><p>The XYZ Doohickey Company was founded in 1971, and has been providing quality doohickeys to the public ever since. Located in Gotham City, XYZ employs over 2,000 people and does all kinds of awesome things for the Gotham community.</p></blockquote>\n\n\n\n<p>As a new WordPress user, you should go to <a href=\"https://mysite.com/wp-admin/\">your dashboard</a> to delete this page and create new pages for your content. Have fun!</p>\n",
+          "type": "page",
+          "status": "published",
+          "created_at": "2021-03-10T09:48:32",
+          "published_at": "2021-03-10T09:48:32",
+          "updated_at": "2021-03-10T09:48:32",
+          "id": "60f58bd7b8f1e6116819ad44"
+        }
+      ],
+      "tags": [
+        {
+          "slug": "meals",
+          "name": "Meals",
+          "id": "60f58bd7b8f1e6116819ad37"
+        },
+        {
+          "slug": "fruit",
+          "name": "Fruit",
+          "id": "60f58bd7b8f1e6116819ad38"
+        },
+        {
+          "slug": "cakes",
+          "name": "Cakes",
+          "id": "60f58bd7b8f1e6116819ad39"
+        },
+        {
+          "slug": "pasta",
+          "name": "Pasta",
+          "id": "60f58bd7b8f1e6116819ad3a"
+        },
+        {
+          "slug": "pizza",
+          "name": "Pizza",
+          "id": "60f58bd7b8f1e6116819ad3b"
+        },
+        {
+          "name": "#wp",
+          "id": "60f58bd7b8f1e6116819ad3c",
+          "slug": "hash-wp"
+        }
+      ],
+      "posts_authors": [
+        {
+          "post_id": "60f58bd7b8f1e6116819ad36",
+          "author_id": 1
+        },
+        {
+          "post_id": "60f58bd7b8f1e6116819ad44",
+          "author_id": 1
+        }
+      ],
+      "posts_tags": [
+        {
+          "post_id": "60f58bd7b8f1e6116819ad36",
+          "tag_id": "60f58bd7b8f1e6116819ad37"
+        },
+        {
+          "post_id": "60f58bd7b8f1e6116819ad36",
+          "tag_id": "60f58bd7b8f1e6116819ad38"
+        },
+        {
+          "post_id": "60f58bd7b8f1e6116819ad36",
+          "tag_id": "60f58bd7b8f1e6116819ad39"
+        },
+        {
+          "post_id": "60f58bd7b8f1e6116819ad36",
+          "tag_id": "60f58bd7b8f1e6116819ad3a"
+        },
+        {
+          "post_id": "60f58bd7b8f1e6116819ad36",
+          "tag_id": "60f58bd7b8f1e6116819ad3b"
+        },
+        {
+          "post_id": "60f58bd7b8f1e6116819ad36",
+          "tag_id": "60f58bd7b8f1e6116819ad3c"
+        }
+      ]
+    }
+  }
+}

@@ -15,7 +15,7 @@ const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico
 
 const isHTMLField = field => _.includes(htmlFields, field);
 const isMobiledocField = field => _.includes(mobiledocFields, field);
-const isImageField = field => /image/.test(field);
+const isImageField = field => /image$/.test(field);
 
 const ScrapeError = ({src, code, statusCode, originalError}) => {
     let error = new errors.GhostError({message: `Unable to scrape URI ${src}`});
@@ -177,56 +177,27 @@ class ImageScraper {
             _.forEach(resources, (resource) => {
                 // For each field
                 _.forEach(resource, (value, field) => {
-                    // @TODO: rework this code!
-                    if (isImageField(field) && value) {
-                        tasks.push({
-                            title: `${type}: ${resource.slug} ${field}`,
-                            task: async () => {
-                                try {
+                    tasks.push({
+                        title: `${type}: ${resource.slug} ${field}`,
+                        task: async () => {
+                            try {
+                                if (isImageField(field) && value) {
                                     resource[field] = await this.downloadImage(value);
-                                } catch (error) {
-                                    error.resource = {
-                                        title: resource.title,
-                                        slug: resource.slug
-                                    };
-                                    ctx.errors.push(error);
-                                    throw error;
-                                }
-                            }
-                        });
-                    } else if (isHTMLField(field) && value) {
-                        tasks.push({
-                            title: `${type}: ${resource.slug} ${field}`,
-                            task: async () => {
-                                try {
+                                } else if (isHTMLField(field) && value) {
                                     resource[field] = await this.processHTML(value);
-                                } catch (error) {
-                                    error.resource = {
-                                        title: resource.title,
-                                        slug: resource.slug
-                                    };
-                                    ctx.errors.push(error);
-                                    throw error;
-                                }
-                            }
-                        });
-                    } else if (isMobiledocField(field) && value) {
-                        tasks.push({
-                            title: `${type}: ${resource.slug} ${field}`,
-                            task: async () => {
-                                try {
+                                } else if (isMobiledocField(field) && value) {
                                     resource[field] = await this.processMobiledoc(value);
-                                } catch (error) {
-                                    error.resource = {
-                                        title: resource.title,
-                                        slug: resource.slug
-                                    };
-                                    ctx.errors.push(error);
-                                    throw error;
                                 }
+                            } catch (error) {
+                                error.resource = {
+                                    title: resource.title,
+                                    slug: resource.slug
+                                };
+                                ctx.errors.push(error);
+                                throw error;
                             }
-                        });
-                    }
+                        }
+                    });
                 });
             });
         });
