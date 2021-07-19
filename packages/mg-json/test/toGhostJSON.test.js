@@ -32,7 +32,7 @@ describe('toGhostJSON', function () {
 
     // @TODO: make it so that this test doesn't need a post slug or an author
     // Hydrator should be able to cope with absolutely minimal data
-    it('correctly decodes titles', function () {
+    it('Correctly decodes titles', function () {
         const input = {
             posts: [{
                 url: 'https://mysite.com',
@@ -89,5 +89,14 @@ describe('toGhostJSON', function () {
         output.data.tags[0].name.should.eql('Things');
         output.data.tags[1].name.should.eql('Stuff');
         output.data.tags[2].name.should.eql('#internal');
+    });
+
+    it('Trims strings that are too long', function () {
+        const input = require(testUtils.fixturesFilename('single-post-only.json'));
+        const output = toGhostJSON(input);
+
+        output.data.posts[0].custom_excerpt.length.should.be.belowOrEqual(300);
+        output.data.posts[0].meta_description.length.should.be.belowOrEqual(500);
+        output.data.posts[0].feature_image_alt.length.should.be.belowOrEqual(125);
     });
 });
