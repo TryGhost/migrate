@@ -26,6 +26,8 @@ describe('Process', function () {
         data.html.should.eql('\n<h2><strong>This is my strong headline thing.<\/strong><\/h2>\n\n\n\n<p><em>Note: this article contains awesomeness<\/em><\/p>\n\n\n\n<p>This is a paragraph of text. This is a very short dummy post.<\/p>\n\n\n\n<!--kg-card-begin: html--><div style=\"height:43px\" aria-hidden=\"true\" class=\"wp-block-spacer\"><\/div><!--kg-card-end: html-->\n\n<figure id=\"attachment_15945\" style=\"width: 1148px\" class=\"wp-caption aligncenter kg-card-hascaption\"><img src=\"https://mysite.com/wp-content/uploads/2020/06/image.png\"><figcaption class=\"wp-caption-text\">My awesome image<\/figcaption><\/figure>\n<!--kg-card-begin: html--><div style=\"width: 1148px\"><img src=\"https://mysite.com/wp-content/uploads/2020/06/image.png\"><img src=\"https://mysite.com/wp-content/uploads/2020/06/another_image.png\"><span class=\"wp-caption-text\">srcset images<\/span><\/div><!--kg-card-end: html--><blockquote><p>Lorem ipsum<\/p><p>Dolor simet<\/p><\/blockquote>'); /* eslint-disable-line no-useless-escape */
 
         data.feature_image.should.eql('https://mysite.com/wp-content/uploads/2019/11/BOOP.jpg');
+        data.feature_image_alt.should.eql('Boopity');
+        data.feature_image_caption.should.eql('This is Boopity');
 
         data.tags.should.be.an.Array().with.lengthOf(6);
         data.tags[5].data.name.should.eql('#wp');

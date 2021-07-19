@@ -14,6 +14,11 @@ const VideoError = ({src, postUrl}) => {
     return error;
 };
 
+const stripHtml = (html) => {
+    // Remove HTML tags, new line characters, and trim white-space
+    return html.replace(/<[^>]+>/g, '').replace(/\r?\n|\r/g, ' ').trim();
+};
+
 module.exports.processAuthor = (wpAuthor) => {
     let profileImage = wpAuthor.avatar_urls && wpAuthor.avatar_urls['96'];
     profileImage = profileImage ? profileImage.replace(/s=96/, 's=3000') : undefined;
@@ -409,6 +414,8 @@ module.exports.processPost = (wpPost, users, options, errors) => {
         const wpImage = wpPost._embedded['wp:featuredmedia'][0];
         try {
             post.data.feature_image = wpImage.source_url.replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
+            post.data.feature_image_alt = wpImage.alt_text || null;
+            post.data.feature_image_caption = stripHtml(wpImage.caption.rendered) || null;
         } catch (error) {
             console.log(error, wpPost); // eslint-disable-line no-console
         }
