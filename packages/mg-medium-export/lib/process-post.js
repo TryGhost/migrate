@@ -113,7 +113,11 @@ const processFeatureImage = (html, post) => {
         post.data.feature_image = $(featured).attr('src');
         post.data.feature_image_alt = $(featured).attr('alt') || null;
         post.data.feature_image_caption = $(featured).parents('figure').find('figcaption').html() || null;
+
+        $(featured).parents('figure').remove();
     }
+
+    return $html.html().trim();
 };
 
 module.exports = (name, html, globalUser) => {
@@ -147,7 +151,7 @@ module.exports = (name, html, globalUser) => {
 
     // Grab the featured image
     // Do this last so that we can add tags to indicate feature image style
-    processFeatureImage(post.data.html, post);
+    post.data.html = processFeatureImage(post.data.html, post);
 
     return post;
 };
