@@ -10,13 +10,6 @@ const makeTaskRunner = require('../lib/task-runner');
 
 const scrapeConfig = {
     posts: {
-        status: {
-            selector: 'meta[name="robots"]',
-            attr: 'content',
-            convert: (x) => {
-                return x.match(/noindex/) ? 'draft' : 'published';
-            }
-        },
         author: {
             selector: '#root',
             data: {
