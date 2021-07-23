@@ -9,7 +9,7 @@
   "modified_gmt": "2019-11-07T15:37:03",
   "slug": "my-cpt-post",
   "status": "publish",
-  "type": "post",
+  "type": "mycpt",
   "link": "https://mysite.com/mycpt/my-cpt-post",
   "title": {
     "rendered": "My CPT Post"

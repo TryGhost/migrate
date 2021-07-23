@@ -370,6 +370,12 @@ module.exports.processPost = (wpPost, users, options, errors) => {
         }
     }
 
+    if (!['post', 'page'].includes(wpPost.type)) {
+        post.data.tags.push({
+            url: 'migrator-added-tag-cpt', data: {slug: `hash-${wpPost.type}`, name: `#${wpPost.type}`}
+        });
+    }
+
     if (excerptSelector) {
         post.data.custom_excerpt = this.processExcerpt(post.data.html, excerptSelector);
     }

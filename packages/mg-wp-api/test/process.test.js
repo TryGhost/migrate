@@ -118,5 +118,9 @@ describe('Process', function () {
         data.title.should.eql('My CPT Post');
 
         data.html.should.eql('<p>This is a very short dummy post.</p>');
+
+        data.tags.should.be.an.Array().with.lengthOf(7);
+        data.tags[6].data.slug.should.eql('hash-mycpt');
+        data.tags[6].data.name.should.eql('#mycpt');
     });
 });
