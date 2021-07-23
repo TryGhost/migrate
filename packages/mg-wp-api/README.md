@@ -72,6 +72,9 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Set the dated permalink structure
     - string - default: `none` 
     - Choices: `none`, `'/yyyy/mm/'`, `'/yyyy/mm/dd/'`  
+- **`--cpt`** 
+    - A comma-separated list of custom post type slugs e.g. `resources,newsletters`
+    - string - default: `null`
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
     - bool - default: `false`

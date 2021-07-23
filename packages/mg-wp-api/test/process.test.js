@@ -104,4 +104,19 @@ describe('Process', function () {
 
         data.feature_image.should.eql('https://mysite.com/wp-content/uploads/2020/09/sample-image-scaled.jpg');
     });
+
+    it('Can convert a custom post type', function () {
+        const fixture = testUtils.fixtures.readSync('single-cpt-post.json');
+        const users = [];
+        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: 'mycpt'};
+        const post = processor.processPost(fixture, users, options);
+
+        const data = post.data;
+
+        data.type.should.eql('post');
+        data.slug.should.eql('my-cpt-post');
+        data.title.should.eql('My CPT Post');
+
+        data.html.should.eql('<p>This is a very short dummy post.</p>');
+    });
 });

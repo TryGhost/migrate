@@ -1,6 +1,6 @@
 const WPAPI = require('wpapi');
 
-module.exports.discover = async (url, {apiUser, limit}) => {
+module.exports.discover = async (url, {apiUser, limit, cpt}) => {
     const requestOptions = {endpoint: `${url}/wp-json`};
 
     if (apiUser && apiUser.username && apiUser.password) {
@@ -10,23 +10,40 @@ module.exports.discover = async (url, {apiUser, limit}) => {
 
     let site = new WPAPI(requestOptions);
 
-    const posts = await site.posts().perPage(limit);
-    const pages = await site.pages().perPage(limit);
-    const users = await site.users().perPage(limit);
-
-    return {
-        site,
-        totals: {
-            posts: posts._paging && posts._paging.total ? posts._paging.total : 0,
-            pages: pages._paging && pages._paging.total ? pages._paging.total : 0,
-            users: users._paging && users._paging.total ? users._paging.total : 0
-        },
-        batches: {
-            posts: posts._paging && posts._paging.totalPages ? posts._paging.totalPages : 0,
-            pages: pages._paging && pages._paging.totalPages ? pages._paging.totalPages : 0,
-            users: users._paging && users._paging.totalPages ? users._paging.totalPages : 0
-        }
+    let values = {
+        site: null,
+        totals: {},
+        batches: {}
     };
+
+    if (cpt) {
+        const CPTs = cpt.split(',');
+
+        await Promise.all(CPTs.map(async (cptSlug) => {
+            site[cptSlug] = site.registerRoute('wp/v2', `/${cptSlug}/(?P<id>)`);
+
+            let cptInfo = await site[cptSlug]().perPage(limit);
+
+            values.totals[cptSlug] = cptInfo._paging && cptInfo._paging.total ? cptInfo._paging.total : 0;
+            values.batches[cptSlug] = cptInfo._paging && cptInfo._paging.totalPages ? cptInfo._paging.totalPages : 0;
+        }));
+    }
+
+    values.site = site;
+
+    const posts = await site.posts().perPage(limit);
+    values.totals.posts = posts._paging && posts._paging.total ? posts._paging.total : 0;
+    values.batches.posts = posts._paging && posts._paging.totalPages ? posts._paging.totalPages : 0;
+
+    const pages = await site.pages().perPage(limit);
+    values.totals.pages = pages._paging && pages._paging.total ? pages._paging.total : 0;
+    values.batches.pages = pages._paging && pages._paging.totalPages ? pages._paging.totalPages : 0;
+
+    const users = await site.users().perPage(limit);
+    values.totals.users = users._paging && users._paging.total ? users._paging.total : 0;
+    values.batches.users = users._paging && users._paging.totalPages ? users._paging.totalPages : 0;
+
+    return values;
 };
 
 const cachedFetch = async (fileCache, api, type, limit, page, isAuthRequest) => {
@@ -51,8 +68,8 @@ const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest) => {
                 try {
                     let response = await cachedFetch(fileCache, api, type, limit, page, isAuthRequest);
 
-                    // This is weird, but we don't yet deal with pages as a separate concept in imports
-                    type = type === 'pages' ? 'posts' : type;
+                    // Treat all types as posts, except users
+                    type = (type !== 'users') ? 'posts' : type;
 
                     ctx.result[type] = ctx.result[type].concat(response);
                 } catch (error) {
@@ -67,13 +84,14 @@ const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest) => {
 module.exports.tasks = async (url, ctx) => {
     const {apiUser} = ctx || {};
     const {limit} = ctx.options;
+    const {cpt} = ctx.options;
     let isAuthRequest = false;
 
     if (apiUser && apiUser.username && apiUser.password) {
         isAuthRequest = true;
     }
 
-    const api = await this.discover(url, {apiUser, limit});
+    const api = await this.discover(url, {apiUser, limit, cpt});
 
     const tasks = [];
 
@@ -85,6 +103,14 @@ module.exports.tasks = async (url, ctx) => {
     buildTasks(ctx.fileCache, tasks, api, 'posts', limit, isAuthRequest);
     buildTasks(ctx.fileCache, tasks, api, 'pages', limit, isAuthRequest);
     buildTasks(ctx.fileCache, tasks, api, 'users', limit, isAuthRequest);
+
+    if (cpt) {
+        const CPTs = cpt.split(',');
+
+        CPTs.forEach((cptSlug) => {
+            buildTasks(ctx.fileCache, tasks, api, `${cptSlug}`, limit, isAuthRequest);
+        });
+    }
 
     return tasks;
 };
