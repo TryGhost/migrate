@@ -326,7 +326,7 @@ module.exports.processPost = (wpPost, users, options, errors) => {
             title: wpPost.title.rendered,
             comment_id: wpPost.id,
             html: wpPost.content.rendered,
-            type: wpPost.type === 'post' ? 'post' : 'page',
+            type: wpPost.type === 'page' ? 'page' : 'post',
             status: wpPost.status === 'publish' ? 'published' : 'draft',
             created_at: wpPost.date_gmt,
             published_at: wpPost.date_gmt,
