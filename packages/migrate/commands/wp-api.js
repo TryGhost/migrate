@@ -72,6 +72,10 @@ exports.setup = (sywac) => {
         defaultValue: 'none',
         desc: 'Set the dated permalink structure (e.g. /yyyy/mm/dd/)'
     });
+    sywac.string('--cpt', {
+        defaultValue: null,
+        desc: 'The slug(s) of custom post type(s), e.g. `resources,newsletters`'
+    });
     sywac.string('--excerptSelector', {
         defaultValue: null,
         desc: 'Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`'
