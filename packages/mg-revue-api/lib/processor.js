@@ -93,6 +93,13 @@ module.exports.processContent = (html, postUrl) => {
         // convert HTML back to a string
         html = $html.html();
 
+        // Some images are wrapped in [caption][/caption] tags. We only need to replace
+        // these square bracket tags with <figure> tags, as the image tag inside is fine as-is
+        // `[caption align=\"alignnone\" width=\"980\"]<img>My caption[/caption]`
+        html = html.replace(/\[caption[a-zA-Z0-9= "\\]{1,}](<img.*?>)(.*)\[\/caption]/gi, (all, m1, m2) => {
+            return `<figure class="kg-card kg-image-card ${(m2) ? 'kg-card-hascaption' : ''}">${m1}${(m2) ? `<figcaption>${m2}</figcaption>` : ''}</figure>`;
+        });
+
         // Handle Revue embeds
         // This is done with a regex replace, because we have to parse the string
 
