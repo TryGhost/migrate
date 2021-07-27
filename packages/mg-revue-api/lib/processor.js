@@ -141,7 +141,7 @@ module.exports.processContent = (html, postUrl) => {
  * }
  */
 module.exports.processPost = (data, {addPrimaryTag, email, pubName}) => {
-    const slugRegexp = new RegExp(`https:\\/\\/www\\.getrevue\\.co\\/profile\\/${pubName}\\/issues\\/(\\S*)`);
+    const slugRegexp = new RegExp(`https:\\/\\/www\\.getrevue\\.co\\/profile\\/${pubName}\\/issues\\/(\\S*)-${data.id}`);
 
     const post = {
         url: data.url,

@@ -26,7 +26,7 @@ describe('Process', function () {
 
         const data = post.data;
 
-        data.slug.should.eql('weekly-newsletter-of-samplenews-issue-1-123456');
+        data.slug.should.eql('weekly-newsletter-of-samplenews-issue-1');
         data.title.should.eql('Weekly newsletter of Sample News - Issue #1');
         data.meta_title.should.eql('Weekly newsletter of Sample News - Issue #1');
         data.status.should.eql('published');
