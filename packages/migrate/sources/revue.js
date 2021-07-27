@@ -22,6 +22,10 @@ const scrapeConfig = {
                 return x.slice(0, 499);
             }
         },
+        feature_image: {
+            selector: 'meta[property="og:image"][content*="items"]',
+            attr: 'content'
+        },
         og_image: {
             selector: 'meta[property="og:image"]',
             attr: 'content'
