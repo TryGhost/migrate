@@ -457,6 +457,13 @@
     "@types/node" "*"
     "@types/responselike" "*"
 
+"@types/cheerio@^0.22.29":
+  version "0.22.30"
+  resolved "https://registry.yarnpkg.com/@types/cheerio/-/cheerio-0.22.30.tgz#6c1ded70d20d890337f0f5144be2c5e9ce0936e6"
+  integrity sha512-t7ZVArWZlq3dFa9Yt33qFBQIK4CQd1Q3UJp0V+UhP6vgLWLM6Qug7vZuRSGXg45zXeB1Fm5X2vmBkEX58LV2Tw==
+  dependencies:
+    "@types/node" "*"
+
 "@types/http-cache-semantics@*":
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/@types/http-cache-semantics/-/http-cache-semantics-4.0.1.tgz#0ea7b61496902b95890dc4c3a116b60cb8dae812"
@@ -715,7 +722,7 @@ assert-plus@1.0.0, assert-plus@^1.0.0:
   resolved "https://registry.yarnpkg.com/assert-plus/-/assert-plus-1.0.0.tgz#f12e0f3c5d77b0b1cdd9146942e4e96c1e4dd525"
   integrity sha1-8S4PPF13sLHN2RRpQuTpbB5N1SU=
 
-assured@^1.0.12, assured@^1.0.14:
+assured@^1.0.12, assured@^1.0.15:
   version "1.0.15"
   resolved "https://registry.yarnpkg.com/assured/-/assured-1.0.15.tgz#f87479e8eaed7bddf2a0589571e390c989e8fe17"
   integrity sha512-EVb4T+6m5VdlTJ6gbv4WjBM1rHfzXP2BspsQ6VLswcnIQSabjJy7A9YEuG4/KmfF+9OEuT5xhqVJ+V1tClD5ww==
@@ -993,7 +1000,7 @@ chardet@^0.7.0:
   resolved "https://registry.yarnpkg.com/chardet/-/chardet-0.7.0.tgz#90094849f0937f2eedc2425d0d28a9e5f0cbad9e"
   integrity sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==
 
-cheerio-req@^1.2.3:
+cheerio-req@^1.2.4:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/cheerio-req/-/cheerio-req-1.2.4.tgz#bf54e853bc99a1c64343c3bd4330ef264db36704"
   integrity sha512-onO6miv7HDvjvnqNrdNqokTE8XBjOkzNw6c02P9NC+M/dTgB+szOreVE/iXGwCkJ4bibbCDWffR72cWBAvAZ8g==
@@ -4235,15 +4242,16 @@ scrape-it-core@^1.0.0:
     obj-def "^1.0.9"
     typpy "^2.3.13"
 
-scrape-it@5.3.1:
-  version "5.3.1"
-  resolved "https://registry.yarnpkg.com/scrape-it/-/scrape-it-5.3.1.tgz#ecac8ec5e65d29eac7cab7c25433aac3aa5308a3"
-  integrity sha512-V2YgsNKQKmkgOeDUnx5iHpvg7hh71DR4bOkhRqgDpdvfFetUp0Wrw7mPW2H3Ayqbjmb5N5PpSmA+J7bSEiJDcw==
+scrape-it@5.3.2:
+  version "5.3.2"
+  resolved "https://registry.yarnpkg.com/scrape-it/-/scrape-it-5.3.2.tgz#512637922176bc3107ec82629cdea5d777941856"
+  integrity sha512-reuuGkhu3IY7UulrKdbMYD3fxf1TP/POps1s68T81zkVyX3n4Ht4M2U7dEvCL8VVHxHaInN7oijuyCLP6syckQ==
   dependencies:
-    assured "^1.0.14"
-    cheerio-req "^1.2.3"
+    "@types/cheerio" "^0.22.29"
+    assured "^1.0.15"
+    cheerio-req "^1.2.4"
     scrape-it-core "^1.0.0"
-    typpy "^2.3.11"
+    typpy "^2.3.13"
 
 secure-json-parse@^2.4.0:
   version "2.4.0"
@@ -4841,7 +4849,7 @@ type-fest@^0.8.1:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.8.1.tgz#09e249ebde851d3b1e48d27c105444667f17b83d"
   integrity sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==
 
-typpy@^2.0.0, typpy@^2.2.0, typpy@^2.3.1, typpy@^2.3.11, typpy@^2.3.13, typpy@^2.3.4:
+typpy@^2.0.0, typpy@^2.2.0, typpy@^2.3.1, typpy@^2.3.13, typpy@^2.3.4:
   version "2.3.13"
   resolved "https://registry.yarnpkg.com/typpy/-/typpy-2.3.13.tgz#7e16a3aa83d7eecdfbd5ee615b9ffd785887ee7e"
   integrity sha512-vOxIcQz9sxHi+rT09SJ5aDgVgrPppQjwnnayTrMye1ODaU8gIZTDM19t9TxmEElbMihx2Nq/0/b/MtyKfayRqA==
