@@ -3,7 +3,7 @@ const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const {slugify} = require('@tryghost/string');
 const hydrate = require('@tryghost/mg-json/lib/to-ghost-json/hydrate');
-const get = require('lodash.get');
+const _ = require('lodash');
 
 function findResourceRoot(ctx) {
     let root = 'result';
@@ -52,9 +52,9 @@ const jsonTasks = {
                     // @TODO: clean this up!
                     let root = findResourceRoot(ctx);
 
-                    let posts = get(ctx, `${root}.posts`);
-                    let tags = get(ctx, `${root}.tags`);
-                    let users = get(ctx, `${root}.users`);
+                    let posts = _.get(ctx, `${root}.posts`);
+                    let tags = _.get(ctx, `${root}.tags`);
+                    let users = _.get(ctx, `${root}.users`);
 
                     let resources = posts;
 
@@ -96,7 +96,7 @@ const jsonTasks = {
                 try {
                     // @TODO: clean this up!
                     let root = findResourceRoot(ctx);
-                    let users = get(ctx, `${root}.users`);
+                    let users = _.get(ctx, `${root}.users`);
 
                     let tasks = users.map((user) => {
                         return {
