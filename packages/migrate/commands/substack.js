@@ -58,6 +58,14 @@ exports.setup = (sywac) => {
         defaultValue: null,
         desc: 'Provide a path that existing "subscribe" anchors will link to e.g. "/join-us" or "#/portal/signup" (# characters need to be escaped with a \\)'
     });
+    sywac.string('--postsBefore', {
+        defaultValue: null,
+        desc: 'Only migrate posts before and including a given date e.g. \'March 20 2018\''
+    });
+    sywac.string('--postsAfter', {
+        defaultValue: null,
+        desc: 'Only migrate posts after and including a given date e.g. \'August 16 2021\''
+    });
     sywac.boolean('--fallBackHTMLCard', {
         defaultValue: false,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'

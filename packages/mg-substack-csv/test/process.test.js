@@ -198,4 +198,74 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const data = post.data;
         data.html.should.eql('<h2>Lorem Ipsum</h2>\n<figure class="kg-card kg-image-card kg-card-hascaption">\n        <a target="_blank" href="https://example.com">\n            <img src="https://example.com/photo_1200x800.jpeg" alt="A nice photo" class="kg-image">\n            \n        </a>\n        <figcaption class="image-caption">This is a <a href="https://example.com/page">really</a> nice photo</figcaption>\n    </figure>\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>\n');
     });
+
+    it('Can migrate posts before a given date', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://dummysite.substack.com',
+                email: 'dummyuser@email.com',
+                postsBefore: 'January 20, 2021'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        processed.posts.should.be.an.Object();
+        processed.posts.length.should.equal(4);
+    });
+
+    it('Can migrate posts between 2 given dates', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://dummysite.substack.com',
+                email: 'dummyuser@email.com',
+                postsAfter: 'July 29, 2019',
+                postsBefore: 'January 20, 2021'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        processed.posts.should.be.an.Object();
+        processed.posts.length.should.equal(3);
+    });
+
+    it('Can migrate posts after a given date', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://dummysite.substack.com',
+                email: 'dummyuser@email.com',
+                postsAfter: 'January 10, 2021'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        processed.posts.should.be.an.Object();
+        processed.posts.length.should.equal(3);
+    });
 });

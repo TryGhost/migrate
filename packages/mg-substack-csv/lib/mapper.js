@@ -1,4 +1,4 @@
-const {formatISO} = require('date-fns');
+const {formatISO, parseISO, isBefore, isAfter, add} = require('date-fns');
 const _ = require('lodash');
 const errors = require('@tryghost/errors');
 
@@ -70,9 +70,40 @@ module.exports = async (input, options) => {
         input = input.filter(data => data.is_published.toLowerCase() === `true`);
     }
 
-    await input.forEach((data) => {
-        output.posts.push(mapConfig(data, options));
-    });
+    if (options.postsBefore && options.postsAfter) {
+        const startDate = parseISO(formatISO(new Date(options.postsAfter)));
+        const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
+            days: 1
+        });
+
+        await input.forEach((data) => {
+            if (isAfter(parseISO(data.post_date), startDate) && isBefore(parseISO(data.post_date), endDate)) {
+                output.posts.push(mapConfig(data, options));
+            }
+        });
+    } else if (options.postsAfter) {
+        const startDate = parseISO(formatISO(new Date(options.postsAfter)));
+
+        await input.forEach((data) => {
+            if (isAfter(parseISO(data.post_date), startDate)) {
+                output.posts.push(mapConfig(data, options));
+            }
+        });
+    } else if (options.postsBefore) {
+        const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
+            days: 1
+        });
+
+        await input.forEach((data) => {
+            if (isBefore(parseISO(data.post_date), endDate)) {
+                output.posts.push(mapConfig(data, options));
+            }
+        });
+    } else {
+        await input.forEach((data) => {
+            output.posts.push(mapConfig(data, options));
+        });
+    }
 
     return output;
 };

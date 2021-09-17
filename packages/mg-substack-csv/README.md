@@ -61,9 +61,17 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--useMetaAuthor`** 
     - Use the author field from `ld+json` (useful for posts with multiple authors)
     - bool - default: `false`  
+- **`--postsBefore`** 
+    - Only migrate posts before and including a given date e.g. 'March 20 2018'
+    - string - default: `null`
+- **`--postsAfter`** 
+    - Only migrate posts after and including a given date e.g. 'August 16 2021'
+    - string - default: `null`
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
-    - bool - default: `false`           
+    - bool - default: `false`      
+
+**Note**: You can combine `--postsBefore` and `--postsAfter` to migrate posts between 2 dates.
 
 A more realistic command for a Substack migration looks like this:
 
