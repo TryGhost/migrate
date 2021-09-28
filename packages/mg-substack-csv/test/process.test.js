@@ -268,4 +268,44 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         processed.posts.should.be.an.Object();
         processed.posts.length.should.equal(3);
     });
+
+    it('Can wrap lists with images in HTML comments', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://dummysite.substack.com',
+                email: 'dummyuser@email.com'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        // The 4th post contains an image in an unordered list
+        const post = processed.posts[3];
+        const data = post.data;
+        data.html.should.eql('<h2>Text with Image</h2>\n' +
+        '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam aliquam magna ligula, pretium ornare est luctus eget.</p>\n' +
+        '<figure class="kg-card kg-image-card">\n' +
+        '        <a target="_blank" href="https://dummysite.substack.com/image.jpg">\n' +
+        '            <img src="https://dummysite.substack.com/image.jpg" alt class="kg-image">\n' +
+        '        </a>\n' +
+        '    </figure>\n' +
+        '<p>Phasellus scelerisque metus id elit elementum venenatis. Quisque consectetur laoreet felis, sit amet rutrum mi blandit eu.</p>\n' +
+        '<!--kg-card-begin: html--><ul>\n' +
+        '    <li>\n' +
+        '        <img src="https://dummysite.substack.com/image.jpg" alt>\n' +
+        '    </li>\n' +
+        '</ul><!--kg-card-end: html-->\n' +
+        '<ul>\n' +
+        '    <li>Lorem</li>\n' +
+        '    <li>Ipsum</li>\n' +
+        '</ul>\n');
+    });
 });

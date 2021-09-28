@@ -82,7 +82,7 @@ const processContent = (html, siteUrl, options) => {
     });
 
     $html('ul, ol').each((i, list) => {
-        if ($(list).find('img').length) {
+        if ($(list).find('img, div, figure, blockquote').length) {
             $(list).before('<!--kg-card-begin: html-->');
             $(list).after('<!--kg-card-end: html-->');
         }
