@@ -33,7 +33,7 @@ should.Assertion.add('GhostJSON', function () {
     this.obj.meta.should.have.properties(['exported_on', 'version']);
 
     // Basic tables
-    this.obj.data.should.have.properties(['posts', 'users', 'tags', 'posts_authors', 'posts_tags']);
+    this.obj.data.should.have.properties(['posts', 'posts_authors', 'posts_meta', 'posts_tags', 'tags', 'users']);
 
     // posts
     this.obj.data.posts.should.be.an.Array();
@@ -50,6 +50,11 @@ should.Assertion.add('GhostJSON', function () {
     }
 
     // Relations...
+
+    // Posts must have a valid relation in the posts_meta object
+    this.obj.data.posts_meta.should.be.an.Array();
+    this.obj.data.posts_meta.length.should.be.aboveOrEqual(1);
+    this.obj.data.posts_meta.forEach(postMeta => postMeta.should.be.an.Object().with.properties(['post_id']));
 
     // Ghost posts must have at least one author, but we still convert to Ghost's expected multiauthor format
     this.obj.data.posts_authors.should.be.an.Array();

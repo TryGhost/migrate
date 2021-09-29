@@ -9,6 +9,7 @@ module.exports = (json) => {
     // We create these fresh as all relation processing should be done in here
     json.posts_authors = [];
     json.posts_tags = [];
+    json.posts_meta = [];
 
     const findPostRelations = (postData, relation) => {
         let relations = [];
@@ -89,6 +90,19 @@ module.exports = (json) => {
         });
     };
 
+    const processPostMeta = (postData) => {
+        // TODO: Build out this list of meta data
+        let postMeta = {
+            post_id: null
+        };
+
+        postMeta.post_id = postData.id;
+
+        json.posts_meta.push(postMeta);
+
+        return postData;
+    };
+
     const processPostRelations = (post) => {
         try {
             // Ensure we have a post ID
@@ -98,6 +112,7 @@ module.exports = (json) => {
 
             processPostAuthors(post.data);
             processPostTags(post.data);
+            post.data = processPostMeta(post.data);
         } catch (error) {
             error.reference = post.url;
             throw error;

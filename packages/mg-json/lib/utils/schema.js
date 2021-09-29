@@ -4,7 +4,7 @@
 
 // @TODO extend this to all importable Ghost resources
 module.exports.RESOURCES = [
-    'posts', 'users', 'tags', 'posts_tags', 'posts_authors'
+    'posts', 'posts_authors', 'posts_meta', 'posts_tags', 'tags', 'users'
 ];
 
 module.exports.RESOURCE_SINGULAR_TO_PLURAL = {
