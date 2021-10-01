@@ -69,9 +69,9 @@ const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest) => {
                     let response = await cachedFetch(fileCache, api, type, limit, page, isAuthRequest);
 
                     // Treat all types as posts, except users
-                    type = (type !== 'users') ? 'posts' : type;
+                    let resultType = (type !== 'users') ? 'posts' : type;
 
-                    ctx.result[type] = ctx.result[type].concat(response);
+                    ctx.result[resultType] = ctx.result[resultType].concat(response);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
