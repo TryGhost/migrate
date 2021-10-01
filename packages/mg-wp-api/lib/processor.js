@@ -86,7 +86,7 @@ module.exports.processExcerpt = (html, excerptSelector) => {
     }
 };
 
-module.exports.processContent = (html, postUrl, excerptSelector, errors) => {
+module.exports.processContent = (html, postUrl, excerptSelector, errors) => { // eslint-disable-line no-shadow
     // Drafts can have empty post bodies
     if (!html) {
         return '';
@@ -314,7 +314,7 @@ module.exports.processContent = (html, postUrl, excerptSelector, errors) => {
  *   ]
  * }
  */
-module.exports.processPost = (wpPost, users, options, errors) => {
+module.exports.processPost = (wpPost, users, options, errors) => { // eslint-disable-line no-shadow
     let {tags: fetchTags, addTag, excerptSelector} = options;
     let slug = wpPost.slug;
 
@@ -393,7 +393,7 @@ module.exports.processPost = (wpPost, users, options, errors) => {
     return post;
 };
 
-module.exports.processPosts = (posts, users, options, errors) => {
+module.exports.processPosts = (posts, users, options, errors) => { // eslint-disable-line no-shadow
     return posts.map(post => this.processPost(post, users, options, errors));
 };
 
@@ -401,7 +401,7 @@ module.exports.processAuthors = (authors) => {
     return authors.map(author => this.processAuthor(author));
 };
 
-module.exports.all = async ({result: input, usersJSON, options, errors}) => {
+module.exports.all = async ({result: input, usersJSON, options, errors}) => { // eslint-disable-line no-shadow
     if (usersJSON) {
         const mergedUsers = [];
         try {

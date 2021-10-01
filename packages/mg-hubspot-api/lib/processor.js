@@ -113,7 +113,7 @@ module.exports.handleFeatureImageInContent = (post, hsPost) => {
     post.data.custom_excerpt = this.createCleanExcerpt(summaryContent);
 };
 
-module.exports.processContent = (html, postUrl, errors) => {
+module.exports.processContent = (html, postUrl, errors) => { // eslint-disable-line no-shadow
     // Drafts can have empty post bodies
     if (!html) {
         return '';
@@ -224,7 +224,7 @@ module.exports.processContent = (html, postUrl, errors) => {
  *   ]
  * }
  */
-module.exports.processPost = (hsPost, tags, errors) => {
+module.exports.processPost = (hsPost, tags, errors) => { // eslint-disable-line no-shadow
     // Get an ISO 8601 date - https://date-fns.org/docs/formatISO
     const dateNow = formatISO(new Date());
 
@@ -284,13 +284,13 @@ module.exports.processTopics = (topics, blogUrl) => {
     return tags;
 };
 
-module.exports.processPosts = (posts, info, errors) => {
+module.exports.processPosts = (posts, info, errors) => { // eslint-disable-line no-shadow
     let tags = this.processTopics(info.topics, info.blog.url);
 
     return posts.map(post => this.processPost(post, tags, errors));
 };
 
-module.exports.all = ({result, info, errors}) => {
+module.exports.all = ({result, info, errors}) => { // eslint-disable-line no-shadow
     const output = {
         posts: this.processPosts(result.posts, info, errors)
     };
