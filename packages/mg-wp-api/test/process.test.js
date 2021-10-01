@@ -123,4 +123,17 @@ describe('Process', function () {
         data.tags[6].data.slug.should.eql('hash-mycpt');
         data.tags[6].data.name.should.eql('#mycpt');
     });
+
+    it('Can add a #wp-post tag when also converting a custom post type', function () {
+        const fixture = testUtils.fixtures.readSync('single-post.json');
+        const users = [];
+        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: 'mycpt'};
+        const post = processor.processPost(fixture, users, options);
+
+        const data = post.data;
+
+        data.tags.should.be.an.Array().with.lengthOf(7);
+        data.tags[6].data.slug.should.eql('hash-wp-post');
+        data.tags[6].data.name.should.eql('#wp-post');
+    });
 });

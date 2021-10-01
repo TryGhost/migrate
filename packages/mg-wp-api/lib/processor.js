@@ -334,7 +334,8 @@ module.exports.processPost = (wpPost, users, options, errors) => {
             author: users ? users.find((user) => {
                 // Try to use the user data returned from the API
                 return user.data.id === wpPost.author;
-            }) : null
+            }) : null,
+            tags: []
         }
     };
 
@@ -360,7 +361,7 @@ module.exports.processPost = (wpPost, users, options, errors) => {
         post.data.tags = this.processTerms(wpTerms, fetchTags);
 
         post.data.tags.push({
-            url: 'migrator-added-tag', data: {name: '#wp'}
+            url: 'migrator-added-tag', data: {slug: 'hash-wp', name: '#wp'}
         });
 
         if (addTag) {
@@ -370,10 +371,16 @@ module.exports.processPost = (wpPost, users, options, errors) => {
         }
     }
 
-    if (!['post', 'page'].includes(wpPost.type)) {
-        post.data.tags.push({
-            url: 'migrator-added-tag-cpt', data: {slug: `hash-${wpPost.type}`, name: `#${wpPost.type}`}
-        });
+    if (options.cpt) {
+        if (!['post', 'page'].includes(wpPost.type)) {
+            post.data.tags.push({
+                url: 'migrator-added-tag-cpt', data: {slug: `hash-${wpPost.type}`, name: `#${wpPost.type}`}
+            });
+        } else if (wpPost.type === 'post') {
+            post.data.tags.push({
+                url: 'migrator-added-tag-post', data: {slug: `hash-wp-post`, name: `#wp-post`}
+            });
+        }
     }
 
     if (excerptSelector) {
