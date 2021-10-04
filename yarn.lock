@@ -438,10 +438,10 @@
   dependencies:
     unidecode "^0.1.8"
 
-"@tryghost/zip@1.1.15":
-  version "1.1.15"
-  resolved "https://registry.yarnpkg.com/@tryghost/zip/-/zip-1.1.15.tgz#8f908b69f8835b9bf2e96222e0448796ef17de3f"
-  integrity sha512-gHszBx8PryyEWdWg6UA0fKT1CWbKqIgAHNo+bN5sJs32MRGFfpQC2KMsMRlB1Xhr/64eHnGUE1b5cDMFx5eU/g==
+"@tryghost/zip@1.1.17":
+  version "1.1.17"
+  resolved "https://registry.yarnpkg.com/@tryghost/zip/-/zip-1.1.17.tgz#8665655fbbde0f421180d012ca7769bd133a7482"
+  integrity sha512-ZyjJsQaVSBUqsJ3iBU9hV6G1P7kTSfi83u+g26ZcSjfx4y3FvpYiDbCc2WTKj5xDS0p3NbQ7ZVOi6E73oXVlDg==
   dependencies:
     archiver "^4.0.2"
     bluebird "^3.7.2"
