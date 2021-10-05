@@ -26,6 +26,6 @@
   "dependencies": {
     "@tryghost/errors": "^0.2.13",
     "cheerio": "0.22.0",
-    "date-fns": "2.24.0"
+    "date-fns": "2.25.0"
   }
 }
