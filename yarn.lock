@@ -351,15 +351,7 @@
   dependencies:
     "@elastic/elasticsearch" "^7.10.0"
 
-"@tryghost/errors@0.2.14":
-  version "0.2.14"
-  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-0.2.14.tgz#473baacd07eb6b0a8877ad8a6a006c657ea81f33"
-  integrity sha512-EYaOjI8wVrykgS/WkIW/GhSo2vDaXn710SSfS4e7tehAtFoU/XwzFR4yCYzBAMHaZaciSdT2VmssGlPXZib7Lw==
-  dependencies:
-    "@tryghost/ignition-errors" "^0.1.0"
-    lodash "^4.17.21"
-
-"@tryghost/errors@^0.2.13", "@tryghost/errors@^0.2.16":
+"@tryghost/errors@0.2.16", "@tryghost/errors@^0.2.13", "@tryghost/errors@^0.2.16":
   version "0.2.16"
   resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-0.2.16.tgz#5000255aff99b3e07aa343c7f625f1475e55c5cf"
   integrity sha512-iTUv25q/SqQMCsxEX3dlf6pT3QWIkAVeQ7OIf9lY9fBGLZpvriplTV361u7fQYuUvUcCDYqb30s5j/cYHWuJWg==
