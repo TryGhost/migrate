@@ -28,7 +28,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const processed = await process(mapped, ctx);
 
         processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(6);
+        processed.posts.length.should.equal(7);
 
         const post = processed.posts[0];
         post.should.be.an.Object();
@@ -150,7 +150,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         data.html.should.eql('<h2>Lorem Ipsum</h2>\n<p>\n    <a href="#/portal/signup"><span>Sign up now</span></a>\n</p>\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</p>\n<p>Dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>\n<div><hr></div>\n<p>\n    <a href="#/portal/signup"><span>Sign up now</span></a>\n</p>\n');
     });
 
-    it('Can convert a list with an imagr into a HTML card', async function () {
+    it('Can convert a list with an image into a HTML card', async function () {
         const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
         const inputPostsPath = path.resolve('./test/fixtures/posts');
 
@@ -266,7 +266,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const processed = await process(mapped, ctx);
 
         processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(3);
+        processed.posts.length.should.equal(4);
     });
 
     it('Can wrap lists with images in HTML comments', async function () {
@@ -307,5 +307,49 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         '    <li>Lorem</li>\n' +
         '    <li>Ipsum</li>\n' +
         '</ul>\n');
+    });
+
+    it('Can process footnotes in text content', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://dummysite.substack.com',
+                email: 'dummyuser@email.com'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        // The 7th post contains footnotes in <p>, <ol>, and <ul> elements
+        const post = processed.posts[6];
+        const data = post.data;
+        data.html.should.eql('<h2>Text with Footnotes</h2>\n' +
+          '<p>Lorem ipsum</p>\n' +
+          '<!--kg-card-begin: html--><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.<a class="footnote-anchor" id="footnote-anchor-1" href="#footnote-1">1</a></p><!--kg-card-end: html-->\n' +
+          '<!--kg-card-begin: html--><ol>\n' +
+          '    <li>Phasellus scelerisque metus id elit elementum venenatis.<a class="footnote-anchor" id="footnote-anchor-2" href="#footnote-2">2</a></li>\n' +
+          '</ol><!--kg-card-end: html-->\n' +
+          '<!--kg-card-begin: html--><ul>\n' +
+          '    <li>Quisque consectetur laoreet felis, sit amet rutrum mi blandit eu.<a class="footnote-anchor" id="footnote-anchor-3" href="#footnote-3">3</a></li>\n' +
+          '</ul><!--kg-card-end: html-->\n' +
+          '\n' +
+          '\n' +
+          '\n' +
+          '<!--kg-card-begin: html--><div class="footnotes"><hr><ol><li id="footnote-1">\n' +
+          '        <p>Lorem ipsum</p>\n' +
+          '        <p>Dolor simet <a href="#footnote-anchor-1" title="Jump back to footnote NaN in the text.">&#x21A9;</a></p>\n' +
+          '    </li><li id="footnote-2">\n' +
+          '        <p>Consectetur adipiscing <a href="#footnote-anchor-2" title="Jump back to footnote NaN in the text.">&#x21A9;</a></p>\n' +
+          '    </li><li id="footnote-3">\n' +
+          '        <p>Elit elementum venenatis <a href="#footnote-anchor-3" title="Jump back to footnote NaN in the text.">&#x21A9;</a></p>\n' +
+          '    </li></ol></div><!--kg-card-end: html-->'
+        );
     });
 });

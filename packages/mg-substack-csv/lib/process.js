@@ -128,6 +128,35 @@ const processContent = (html, siteUrl, options) => {
         $parent.after('<!--kg-card-end: html-->');
     });
 
+    // Handle footnotes
+    let footnotesMarkup = $(`<div class="footnotes"><hr><ol></ol></div>`);
+    let footnotesCount = 0;
+    $html('.footnote').each((i, el) => {
+        let footnoteBodyAnchor = $(el).find('a').attr('href');
+        let footnoteID = $(el).attr('id');
+        let footnoteNumber = parseInt(footnoteID);
+        let footnoteContent = $(el).find('.footnote-content');
+
+        footnoteContent.find('p').last().append(` <a href="${footnoteBodyAnchor}" title="Jump back to footnote ${footnoteNumber} in the text.">↩</a>`);
+        footnotesMarkup.find('ol').append(`<li id="${footnoteID}">${footnoteContent.html()}</li>`);
+        $(el).remove();
+
+        footnotesCount = footnotesCount + 1;
+    });
+
+    if (footnotesCount > 0) {
+        // Only append notes markup is there are footnotes
+        $html('> *').end().append(`<!--kg-card-begin: html-->${footnotesMarkup}<!--kg-card-end: html-->`);
+    }
+
+    // Wrap content that has footnote anchors in HTML tags to retain the footnote jump anchor
+    $html('p, ul, ol').each((i, el) => {
+        if ($(el).find('a.footnote-anchor').length > 0) {
+            $(el).before('<!--kg-card-begin: html-->');
+            $(el).after('<!--kg-card-end: html-->');
+        }
+    });
+
     // Replace any subscribe link on the same domain with a specific link
     if (options.subscribeLink) {
         $html('a').each((i, anchor) => {
