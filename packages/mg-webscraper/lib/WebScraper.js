@@ -39,6 +39,13 @@ const ScrapeError = ({url, code, statusCode, originalError}) => {
     return error;
 };
 
+// Literally sleep and wait for a set period of time
+const sleep = async (ms) => {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
+};
+
 class WebScraper {
     constructor(fileCache, config, postProcessor, skipFn) {
         this.fileCache = fileCache;
@@ -119,7 +126,7 @@ class WebScraper {
         }
     }
 
-    async scrapeUrl(url, config, filename) {
+    async scrapeUrl(url, config, filename, scrapeWait = false) {
         if (this.fileCache.hasFile(filename, 'tmp')) {
             return await this.fileCache.readTmpJSONFile(filename);
         }
@@ -128,6 +135,10 @@ class WebScraper {
         await this.fileCache.writeTmpFile(response, filename);
 
         response.responseData = omitEmpty(response.responseData);
+
+        if (scrapeWait) {
+            await sleep(scrapeWait);
+        }
 
         return response;
     }
@@ -158,7 +169,7 @@ class WebScraper {
                 },
                 task: async (ctx, task) => { // eslint-disable-line no-shadow
                     try {
-                        let {responseUrl, responseData} = await this.scrapeUrl(url, this.config.posts, filename);
+                        let {responseUrl, responseData} = await this.scrapeUrl(url, this.config.posts, filename, ctx.options.wait_after_scrape);
                         this.processScrapedData(responseData, data, ctx.options);
 
                         if (responseUrl !== url) {

@@ -66,6 +66,10 @@ exports.setup = (sywac) => {
         defaultValue: null,
         desc: 'Only migrate posts after and including a given date e.g. \'August 16 2021\''
     });
+    sywac.number('--wait_after_scrape', {
+        defaultValue: 2000,
+        desc: 'Time in ms to wait after a URL is scraped'
+    });
     sywac.boolean('--fallBackHTMLCard', {
         defaultValue: false,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'

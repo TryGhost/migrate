@@ -138,6 +138,8 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             task: (ctx) => {
                 // 2. Pass the results through the web scraper to get any missing data
                 let tasks = ctx.webScraper.hydrate(ctx); // eslint-disable-line no-shadow
+
+                options.concurrent = 1;
                 return makeTaskRunner(tasks, options);
             },
             skip: () => ['all', 'web'].indexOf(options.scrape) < 0
