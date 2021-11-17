@@ -160,7 +160,7 @@ class FileCache {
         let filepath = path.join(this.tmpDir, filename);
 
         if (isJSON) {
-            await fs.outputJson(filepath, data, {spaces: 2});
+            await fs.outputJson(`${filepath}.json`, data, {spaces: 2});
         } else {
             await fs.writeFile(filepath, data);
         }
@@ -174,7 +174,7 @@ class FileCache {
      * @param {String} filename - name of file to read
      */
     async readTmpJSONFile(filename) {
-        let filepath = path.join(this.tmpDir, filename);
+        let filepath = path.join(this.tmpDir, `${filename}.json`);
 
         return await fs.readJson(filepath);
     }
