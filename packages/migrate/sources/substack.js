@@ -144,7 +144,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
                 options.concurrent = 1;
                 return makeTaskRunner(tasks, options);
             },
-            skip: () => ['all', 'web'].indexOf(options.scrape) < 0
+            skip: () => !options.url || ['all', 'web'].indexOf(options.scrape) < 0
         },
         {
             title: 'Build Link Map',

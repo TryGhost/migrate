@@ -35,7 +35,7 @@ exports.setup = (sywac) => {
         desc: 'Provide an email for users e.g. john@mycompany.com to create a general user w/ slug `john` and provided email'
     });
     sywac.string('-u --url', {
-        defaultValue: 'https://ghost.io',
+        defaultValue: false,
         desc: 'Provide a URL (without trailing slash) to the hosted source site, so we can scrape data'
     });
     sywac.string('-p --readPosts', {
