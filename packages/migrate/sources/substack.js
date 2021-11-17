@@ -97,7 +97,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
     let tasks = [
         {
             title: 'Initialising',
-            task: (ctx) => {
+            task: (ctx, task) => {
                 ctx.options = options;
 
                 // If enabled, set the `og:image` as the feature image
@@ -118,6 +118,8 @@ module.exports.getTaskRunner = (pathToFile, options) => {
                 ctx.imageScraper = new MgImageScraper(ctx.fileCache);
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, null, skipScrape);
                 ctx.linkFixer = new MgLinkFixer();
+
+                task.output = `Workspace initialised at ${ctx.fileCache.cacheDir}`;
             }
         },
         {
