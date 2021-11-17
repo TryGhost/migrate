@@ -86,7 +86,7 @@ module.exports.processExcerpt = (html, excerptSelector) => {
     }
 };
 
-module.exports.processContent = (html, postUrl, excerptSelector, errors) => { // eslint-disable-line no-shadow
+module.exports.processContent = (html, postUrl, excerptSelector, errors, featureImageSrc = false) => { // eslint-disable-line no-shadow
     // Drafts can have empty post bodies
     if (!html) {
         return '';
@@ -95,6 +95,23 @@ module.exports.processContent = (html, postUrl, excerptSelector, errors) => { //
     const $html = $.load(html, {
         decodeEntities: false
     });
+
+    // If the first element in the content is an image, and is the same as the feature image, remove it
+    if (featureImageSrc) {
+        let firstElement = $html('*').first();
+
+        if (firstElement.tagName === 'img' || $(firstElement).find('img').length) {
+            let theElementItself = (firstElement.tagName === 'img') ? firstElement : $(firstElement).find('img');
+
+            // Ensure the feature image and first image both are HTTPS with no size attributes
+            let imgSrcNoSize = $(theElementItself).attr('src').replace('http://', 'https://').replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
+            let featureImageSrcNoSize = featureImageSrc.replace('http://', 'https://').replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
+
+            if (featureImageSrcNoSize === imgSrcNoSize) {
+                $(firstElement).remove();
+            }
+        }
+    }
 
     // Handle twitter embeds
     $html('p > script[src="https://platform.twitter.com/widgets.js"]').remove();
@@ -388,7 +405,7 @@ module.exports.processPost = (wpPost, users, options, errors) => { // eslint-dis
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = this.processContent(post.data.html, post.url, excerptSelector, errors);
+    post.data.html = this.processContent(post.data.html, post.url, excerptSelector, errors, post.data.feature_image);
 
     return post;
 };

@@ -136,4 +136,15 @@ describe('Process', function () {
         data.tags[6].data.slug.should.eql('hash-wp-post');
         data.tags[6].data.name.should.eql('#wp-post');
     });
+
+    it('Can remove first image in post if same as feature image', function () {
+        const fixture = testUtils.fixtures.readSync('single-post-with-duplicate-images.json');
+        const users = [];
+        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: 'mycpt'};
+        const post = processor.processPost(fixture, users, options);
+
+        const data = post.data;
+
+        data.html.should.eql('\n<h2><strong>This is my strong headline thing.</strong></h2>\n\n\n\n<p><em>Note: this article contains awesomeness</em></p>');
+    });
 });
