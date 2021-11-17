@@ -32,7 +32,7 @@ exports.setup = (sywac) => {
     });
     sywac.boolean('-I, --info', {
         defaultValue: false,
-        desc: 'Show initialisation info only'
+        desc: 'Show initialization info only'
     });
     sywac.number('-b, --batch', {
         defaultValue: 0,

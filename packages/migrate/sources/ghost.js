@@ -5,9 +5,9 @@ const MgLinkFixer = require('@tryghost/mg-linkfixer');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const makeTaskRunner = require('../lib/task-runner');
 
-module.exports.initialise = (options) => {
+module.exports.initialize = (options) => {
     return {
-        title: 'Initialising Workspace',
+        title: 'Initializing Workspace',
         task: (ctx, task) => {
             ctx.options = options;
 
@@ -16,7 +16,7 @@ module.exports.initialise = (options) => {
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
             ctx.linkFixer = new MgLinkFixer();
 
-            task.output = `Workspace initialised at ${ctx.fileCache.cacheDir}`;
+            task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
 
             if (options.batch > 0) {
                 task.title += ` batch ${ctx.fileCache.batchName}`;
@@ -27,7 +27,7 @@ module.exports.initialise = (options) => {
 
 module.exports.getInfoTaskList = (options) => {
     return [
-        this.initialise(options),
+        this.initialize(options),
         {
             title: 'Fetch Content Info from Ghost API',
             task: async (ctx) => {
@@ -51,7 +51,7 @@ module.exports.getInfoTaskList = (options) => {
  */
 module.exports.getFullTaskList = (options) => {
     return [
-        this.initialise(options),
+        this.initialize(options),
         {
             title: 'Fetch Content from Ghost API',
             task: async (ctx) => {

@@ -15,14 +15,14 @@ const makeTaskRunner = require('../lib/task-runner');
 module.exports.getTaskRunner = (pathToZip, options) => {
     let tasks = [
         {
-            title: 'Initialising Workspace',
+            title: 'Initializing Workspace',
             task: (ctx, task) => {
                 ctx.options = options;
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
                 ctx.fileCache = new fsUtils.FileCache(pathToZip);
 
-                task.output = `Workspace initialised at ${ctx.fileCache.cacheDir}`;
+                task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
             }
         },
         {

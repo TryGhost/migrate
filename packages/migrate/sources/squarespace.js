@@ -73,7 +73,7 @@ const skipScrape = (post) => {
 module.exports.getTaskRunner = (options) => {
     let tasks = [
         {
-            title: 'Initialising',
+            title: 'Initializing',
             task: (ctx, task) => {
                 ctx.options = options;
 
@@ -83,7 +83,7 @@ module.exports.getTaskRunner = (options) => {
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, null, skipScrape);
                 ctx.linkFixer = new MgLinkFixer();
 
-                task.output = `Workspace initialised at ${ctx.fileCache.cacheDir}`;
+                task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
             }
         },
         {

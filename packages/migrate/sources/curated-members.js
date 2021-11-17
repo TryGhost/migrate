@@ -23,14 +23,14 @@ const MEMBERS_IMPORT_FIELDS = [
 module.exports.getTaskRunner = (pathToFile, options) => {
     let tasks = [
         {
-            title: 'Initialising',
+            title: 'Initializing',
             task: (ctx, task) => {
                 ctx.options = options;
 
                 // 0. Prep a file cache for the work we are about to do.
                 ctx.fileCache = new fsUtils.FileCache(pathToFile, {contentDir: false});
 
-                task.output = `Workspace initialised at ${ctx.fileCache.cacheDir}`;
+                task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
             }
         },
         {

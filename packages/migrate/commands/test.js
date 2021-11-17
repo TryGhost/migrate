@@ -73,7 +73,7 @@ exports.run = async (argv) => {
         };
 
         let topLevelTasks = [{
-            title: 'Step 1: initialise',
+            title: 'Step 1: initialize',
             task: () => {
                 // no op
             }

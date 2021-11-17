@@ -99,7 +99,7 @@ const postProcessor = (scrapedData) => {
 module.exports.getTaskRunner = (pathToZip, options) => {
     let tasks = [
         {
-            title: 'Initialising Workspace',
+            title: 'Initializing Workspace',
             task: (ctx, task) => {
                 ctx.options = options;
 
@@ -109,7 +109,7 @@ module.exports.getTaskRunner = (pathToZip, options) => {
                 ctx.mediumScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
                 ctx.linkFixer = new MgLinkFixer();
 
-                task.output = `Workspace initialised at ${ctx.fileCache.cacheDir}`;
+                task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
             }
         },
         {

@@ -8,7 +8,7 @@ const makeTaskRunner = require('../lib/task-runner');
 
 module.exports.initAPI = (options) => {
     return {
-        title: 'Initialising API',
+        title: 'Initializing API',
         task: async (ctx, task) => {
             ctx.info = await hsAPI.discover(options);
             task.title += ` for ${ctx.info.blog.url}`;
@@ -17,9 +17,9 @@ module.exports.initAPI = (options) => {
     };
 };
 
-module.exports.initialise = (options) => {
+module.exports.initialize = (options) => {
     return {
-        title: 'Initialising Workspace',
+        title: 'Initializing Workspace',
         task: (ctx, task) => {
             ctx.options = options;
 
@@ -28,7 +28,7 @@ module.exports.initialise = (options) => {
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
             ctx.linkFixer = new MgLinkFixer();
 
-            task.output = `Workspace initialised at ${ctx.fileCache.cacheDir}`;
+            task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
 
             if (options.batch > 0) {
                 task.title += ` batch ${ctx.fileCache.batchName}`;
@@ -54,7 +54,7 @@ module.exports.getInfoTaskList = (options) => {
 module.exports.getFullTaskList = (options) => {
     return [
         this.initAPI(options),
-        this.initialise(options),
+        this.initialize(options),
         {
             title: 'Fetch Content from Hubspot API',
             task: async (ctx) => {

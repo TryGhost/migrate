@@ -149,9 +149,9 @@ const postProcessor = (scrapedData, data) => {
     return scrapedData;
 };
 
-module.exports.initialise = (options) => {
+module.exports.initialize = (options) => {
     return {
-        title: 'Initialising Workspace',
+        title: 'Initializing Workspace',
         task: (ctx, task) => {
             ctx.options = options;
 
@@ -161,7 +161,7 @@ module.exports.initialise = (options) => {
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
             ctx.linkFixer = new MgLinkFixer();
 
-            task.output = `Workspace initialised at ${ctx.fileCache.cacheDir}`;
+            task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
         }
     };
 };
@@ -185,7 +185,7 @@ module.exports.getInfoTaskList = (options) => {
  */
 module.exports.getFullTaskList = (options) => {
     return [
-        this.initialise(options),
+        this.initialize(options),
         {
             title: 'Fetch Content from Revue API',
             task: async (ctx) => {

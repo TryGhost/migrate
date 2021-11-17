@@ -86,9 +86,9 @@ const postProcessor = (scrapedData, data, options) => {
     return scrapedData;
 };
 
-module.exports.initialise = (url, options) => {
+module.exports.initialize = (url, options) => {
     return {
-        title: 'Initialising Workspace',
+        title: 'Initializing Workspace',
         task: (ctx, task) => {
             ctx.options = options;
 
@@ -98,7 +98,7 @@ module.exports.initialise = (url, options) => {
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
             ctx.linkFixer = new MgLinkFixer();
 
-            task.output = `Workspace initialised at ${ctx.fileCache.cacheDir}`;
+            task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
 
             if (options.batch > 0) {
                 task.title += ` batch ${ctx.fileCache.batchName}`;
@@ -109,7 +109,7 @@ module.exports.initialise = (url, options) => {
 
 module.exports.getInfoTaskList = (url, options) => {
     return [
-        this.initialise(url, options),
+        this.initialize(url, options),
         {
             title: 'Fetch Content Info from WP API',
             task: async (ctx) => {
@@ -133,7 +133,7 @@ module.exports.getInfoTaskList = (url, options) => {
  */
 module.exports.getFullTaskList = (url, options) => {
     return [
-        this.initialise(url, options),
+        this.initialize(url, options),
         {
             title: 'Fetch Content from WP API',
             task: async (ctx) => {

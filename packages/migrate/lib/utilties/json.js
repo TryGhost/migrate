@@ -120,7 +120,7 @@ const jsonTasks = {
 module.exports.getTaskRunner = (type, pathToJSON, options) => {
     let tasks = [
         {
-            title: 'Initialising',
+            title: 'Initializing',
             task: (ctx) => {
                 ctx.options = options;
                 ctx.fileCache = new fsUtils.FileCache(pathToJSON);
