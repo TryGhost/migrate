@@ -77,6 +77,24 @@ const scrapeConfig = {
 
                 return theAuthors;
             }
+        },
+        labels: {
+            listItem: '.post-header > .post-label > a',
+            name: 'labels',
+            data: {
+                url: {
+                    attr: 'href',
+                    convert: (x) => {
+                        const urlParts = x.match(/.*\/s\/([a-zA-Z0-9-_]{1,})(\/.*)?/);
+                        return urlParts[1]; // [1] is the tag name itself from `https://dummysite.substack.com/s/my-tag/?utm_source=substack`
+                    }
+                },
+                name: {
+                    convert: (x) => {
+                        return x;
+                    }
+                }
+            }
         }
     }
 };
