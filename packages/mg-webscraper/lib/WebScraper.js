@@ -127,7 +127,7 @@ class WebScraper {
     }
 
     async scrapeUrl(url, config, filename, scrapeWait = false) {
-        if (this.fileCache.hasFile(filename, 'tmp')) {
+        if (this.fileCache.hasFile(`${filename}.json`, 'tmp')) {
             return await this.fileCache.readTmpJSONFile(filename);
         }
 
