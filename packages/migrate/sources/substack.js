@@ -159,8 +159,9 @@ module.exports.getTaskRunner = (pathToFile, options) => {
                 // 2. Pass the results through the web scraper to get any missing data
                 let tasks = ctx.webScraper.hydrate(ctx); // eslint-disable-line no-shadow
 
-                options.concurrent = 1;
-                return makeTaskRunner(tasks, options);
+                let webScraperOptions = options;
+                webScraperOptions.concurrent = 1;
+                return makeTaskRunner(tasks, webScraperOptions);
             },
             skip: () => !options.url || ['all', 'web'].indexOf(options.scrape) < 0
         },
