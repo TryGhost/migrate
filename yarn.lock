@@ -367,12 +367,12 @@
     "@tryghost/ignition-errors" "^0.1.0"
     lodash "^4.17.21"
 
-"@tryghost/html-to-mobiledoc@0.7.17":
-  version "0.7.17"
-  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-0.7.17.tgz#52b1bbe85f425c149f18cbd5a2db54cb57b44c15"
-  integrity sha512-IYDmNK+23ThmCG/u5tlA4E7VvBYVKw9RZOA+EtpgJu9c/zCUid5RoE3PpPKcZbA0qFoxyXMRw6oCzuY0GSRsow==
+"@tryghost/html-to-mobiledoc@1.3.4":
+  version "1.3.4"
+  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-1.3.4.tgz#badc3f562beb5e05e5522336bc0a9ae3716e26c1"
+  integrity sha512-DNP5gy5XdtARov2pv4hZDiwYMUQeXyuOC1sxsfzcvfDXQhNdudlMsPAsRtepQWnfKTD/IV7nx+/ND6G8pNgeAg==
   dependencies:
-    "@tryghost/kg-parser-plugins" "^1.1.7"
+    "@tryghost/kg-parser-plugins" "^2.6.4"
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "^16.5.3"
 
@@ -395,17 +395,17 @@
   optionalDependencies:
     sharp "^0.29.0"
 
-"@tryghost/kg-clean-basic-html@^1.0.18":
-  version "1.0.18"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-1.0.18.tgz#2d626c5da951551cf09c28a55ac23df801d2e880"
-  integrity sha512-5jUY/McF01hDi6BsdKOsBhtdhmuCv1djYYj7eVOFGFcdmLkxRHOJWqmRfJTCVdfeU5hnOu+D6XcNsDxmTJXLKQ==
+"@tryghost/kg-clean-basic-html@^2.2.3":
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-2.2.3.tgz#d057db8636cd70588725fe44ddb46f78660c0c79"
+  integrity sha512-zf+3CndT3Im+t0JKSsSfQkpbg2HvWkKqfWV4j+EtwM3OUUzAXReJS+X7hVfrfpDTXyeFern9Tx09TEDZjs48Rg==
 
-"@tryghost/kg-parser-plugins@^1.1.7":
-  version "1.1.8"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-1.1.8.tgz#ce722ed3f8376c8f38d88f0c40ed5d9c04203f7b"
-  integrity sha512-VCIahwP0F0U3l/9lVHcW86PPWLuGW7g3TuxAN9NV8crkJZVxVwNEfYTn7bDiRIELYgQIG7jrH6jMlbm6q6ZueA==
+"@tryghost/kg-parser-plugins@^2.6.4":
+  version "2.6.4"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-2.6.4.tgz#280bea23e32caaa2a52231920ccc9fdd67a3df01"
+  integrity sha512-rktL8SYS9nV/q0KOHFVPWVkAjZVlNvLBOcQh868dd+LtWa3gIc0UoRM72gWUkGTVqCsGQ2421gI/QoZezEr+Mw==
   dependencies:
-    "@tryghost/kg-clean-basic-html" "^1.0.18"
+    "@tryghost/kg-clean-basic-html" "^2.2.3"
 
 "@tryghost/mobiledoc-kit@^0.12.4-ghost.1":
   version "0.12.4-ghost.1"
