@@ -1,0 +1,34 @@
+{
+  "name": "@tryghost/mg-jekyll-export",
+  "version": "0.1.0",
+  "description": "tbc",
+  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-jekyll-export",
+  "author": "Ghost Foundation",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "dev": "echo \"Implement me!\"",
+    "test": "NODE_ENV=testing mocha ./test/**/*.test.js",
+    "lint": "eslint . --ext .js --cache",
+    "posttest": "yarn lint"
+  },
+  "files": [
+    "index.js",
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "mocha": "9.0.3",
+    "should": "13.2.3",
+    "sinon": "11.1.2"
+  },
+  "dependencies": {
+    "@tryghost/mg-fs-utils": "^0.7.11",
+    "@tryghost/string": "^0.1.17",
+    "cheerio": "0.22.0",
+    "front-matter": "4.0.2",
+    "markdown-it": "12.2.0"
+  }
+}

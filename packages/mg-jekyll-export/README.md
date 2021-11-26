@@ -1,6 +1,6 @@
-# Migrate Curated Export
+# Migrate Jekyll Export
 
-Migrate content from Curated using the supplied zip file, and generate a `zip` file you can import into a Ghost installation.
+Migrate content from Jekyll using the supplied zip file, and generate a `zip` file you can import into a Ghost installation.
 
 
 ## Install
@@ -13,19 +13,19 @@ npm install --global @tryghost/migrate
 
 To use this package in your own project:
 
-`npm install @tryghost/mg-curate-export --save`
+`npm install @tryghost/mg-jekyll-export --save`
 
 or
 
-`yarn add @tryghost/mg-curate-export`
+`yarn add @tryghost/mg-jekyll-export`
 
 
 ## Usage
 
-To run a Curated migration, the required command is:
+To run a Jekyll migration, the required command is:
 
 ```sh
-migrate curate <path to zip file>
+migrate jekyll <path to zip file>
 ```
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
@@ -39,15 +39,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`-s` `--scrape`**
     - string - default: `all`
     - Configure scraping tasks (choices: `all`, `web`, `img`, `none`)
-- **`-u` `--url`**
-    - string - default: `false`
-    - Provide a URL (without trailing slash) to the hosted source site e.g. `https://mycompany.com`
 - **`-e` `--email`**
     - string - default: `false`
-    - Provide an email domain for users e.g. `mycompany.com`
-- **`--addTags`**
-    - string - default: `false`
-    - Provide one or more tag names which should be added to every post in this migration
+    - Provide an email domain for users e.g. example.com
 - **`--fallBackHTMLCard`**
     - bool - default: `false`
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
@@ -55,7 +49,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 A more complex migration command could look like this:
 
 ```sh
-migrate curate <path to zip file> --email example.com
+migrate jekyll <path to zip file> --email example.com
 ```
 
 This will process all posts from the zip file, and all authors will have an email address ending in 'example.com'
@@ -75,7 +69,7 @@ Follow the instructions for the top-level repo.
 To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
 
 ```sh
-yarn dev curate <path to zip file>
+yarn dev jekyll <path to zip file>
 ```
 
 
