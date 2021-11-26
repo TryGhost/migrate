@@ -8,6 +8,7 @@ Each tool has its own detailed documentation:
 - [Curated](https://github.com/TryGhost/migrate/tree/master/packages/mg-curated-export)
 - [Curated members](https://github.com/TryGhost/migrate/tree/master/packages/mg-curated-members-csv)
 - [HubSpot](https://github.com/TryGhost/migrate/tree/master/packages/mg-hubspot-api)
+- [Jekyll](https://github.com/TryGhost/migrate/tree/master/packages/mg-jekyll-export)
 - [Medium](https://github.com/TryGhost/migrate/tree/master/packages/mg-medium-export)
 - [Revue](https://github.com/TryGhost/migrate/tree/master/packages/mg-revue-api)
 - [Squarespace](https://github.com/TryGhost/migrate/tree/master/packages/mg-squarespace-xml)
