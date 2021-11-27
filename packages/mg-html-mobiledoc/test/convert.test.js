@@ -65,4 +65,31 @@ describe('Convert', function () {
             error.message.should.eql('Post has no html field to convert');
         }
     });
+
+    it('covert full content to Mobiledoc', function () {
+        let post = {
+            html: '\
+                <h2>Good stuff here</h2>\
+                <img src="https://example.com/image.jpg" alt="Hello" />\
+                <p>Hello <i>world</i></p>\
+                <hr>\
+                <p>Link to <a href="https://example.com">Example</a></p>\
+                <p>Hello <br>world</p>\
+                '
+        };
+        const htmlCard = false;
+
+        convertPost(post, htmlCard);
+
+        const mobiledoc = JSON.parse(post.mobiledoc);
+
+        should.not.exist(mobiledoc.html);
+
+        mobiledoc.should.be.an.Object().with.properties('version', 'markups', 'atoms', 'cards', 'sections');
+        mobiledoc.version.should.eql('0.3.1');
+        mobiledoc.atoms.should.eql([['soft-return', '', {}]]);
+        mobiledoc.cards.should.eql([['image',{src: 'https://example.com/image.jpg', alt: 'Hello', title: ''}],['hr',{}]]);
+        mobiledoc.markups.should.eql([['i'],['a',['href','https://example.com']]]);
+        mobiledoc.sections.should.eql([[1,'h2',[[0,[],0,'Good stuff here']]],[10,0],[1,'p',[[0,[],0,'Hello '],[0,[0],1,'world']]],[10,1],[1,'p',[[0,[],0,'Link to '],[0,[1],1,'Example']]],[1,'p',[[0,[],0,'Hello '],[1,[],0,0],[0,[],0,'world']]]]);
+    });
 });
