@@ -33,7 +33,7 @@ describe('Parse CSV', function () {
     it('Reads a simple comma separated file list with options', async function () {
         const pathToFile = path.resolve('./test/fixtures/example.csv');
 
-        const result = await csv.parse(pathToFile, {skip_lines_with_error: true, columns: false, skip_empty_lines: false});
+        const result = await csv.parse(pathToFile, {skip_lines_with_error: true, columns: false, skip_empty_lines: true});
 
         result.should.have.length(6);
 

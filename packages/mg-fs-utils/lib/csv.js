@@ -1,4 +1,4 @@
-const parse = require('csv-parse');
+const {parse} = require('csv-parse');
 const fs = require('fs-extra');
 const {isDate} = require('date-fns');
 
