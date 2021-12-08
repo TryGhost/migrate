@@ -356,7 +356,7 @@
   dependencies:
     "@elastic/elasticsearch" "^7.10.0"
 
-"@tryghost/errors@1.1.1", "@tryghost/errors@^1.0.0", "@tryghost/errors@^1.1.1":
+"@tryghost/errors@1.1.1", "@tryghost/errors@^1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-1.1.1.tgz#dc38e40591b018b0ac6b5742f7bab5d379c67e60"
   integrity sha512-na0qB5sdy1BWgquzn+m530ohJ3fTeF451xUTR7I8b76TBEL9snnIkXCv5Qdjmnevmgod7aAGsHi2syyKFlvEvQ==
