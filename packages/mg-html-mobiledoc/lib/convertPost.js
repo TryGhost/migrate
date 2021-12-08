@@ -4,7 +4,7 @@ const errors = require('@tryghost/errors');
 
 module.exports.convertPost = (post, htmlCard) => {
     if (!post.html) {
-        throw new errors.GhostError({message: 'Post has no html field to convert'});
+        throw new errors.InternalServerError({message: 'Post has no html field to convert'});
     }
 
     if (htmlCard) {
