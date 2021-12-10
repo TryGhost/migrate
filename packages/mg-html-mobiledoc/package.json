@@ -25,6 +25,6 @@
   },
   "dependencies": {
     "@tryghost/errors": "1.1.1",
-    "@tryghost/html-to-mobiledoc": "1.4.2"
+    "@tryghost/html-to-mobiledoc": "1.5.2"
   }
 }
