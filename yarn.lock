@@ -364,12 +364,12 @@
     lodash "^4.17.21"
     uuid "^8.3.2"
 
-"@tryghost/html-to-mobiledoc@1.4.2":
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-1.4.2.tgz#6b7af5135c5c63c300fec90da92058c3c79ea9f5"
-  integrity sha512-AZUucIESMeoZqjkBh/VkDj+vQolw9jpsG7oicN9FJcT0ElPF1lvhUFfKX9ojUM7ZBfv3/EtcR8DJGEXWEz/V+g==
+"@tryghost/html-to-mobiledoc@1.5.2":
+  version "1.5.2"
+  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-1.5.2.tgz#1e37f1b9103fe5efc637cfebab53f4b8f1816620"
+  integrity sha512-DcMnSymawP/uzJ8znAjMgg8hAkIwNPpTLr1tJqshJOOC33ufyydvtQrFMP/A8ZQBJiaoCej3jG5pQZjbKwzrRQ==
   dependencies:
-    "@tryghost/kg-parser-plugins" "^2.7.2"
+    "@tryghost/kg-parser-plugins" "^2.8.2"
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "^18.0.0"
 
@@ -389,10 +389,10 @@
   resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-2.2.5.tgz#40f0b328a0339d96f1bbb0daed4de4df28a17a30"
   integrity sha512-zZu8KbRulRSx1GUTeSUCYYMk5RB5/T3FFuObbw0TmJPym+3h5uEwk76mHg4WpBl6nDkly6G/iI1ZpapUz6E/OQ==
 
-"@tryghost/kg-parser-plugins@^2.7.2":
-  version "2.7.2"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-2.7.2.tgz#eb2668121ae9b16c803ba74daebfb13cee08837f"
-  integrity sha512-l7ZjO4sQZzHvv87tkG89ZXBt5SUjgt5BSi13AX6MCcZXH4B20MeapULS5ckQKW3LIkrA47D26eVu+UU5lOExmg==
+"@tryghost/kg-parser-plugins@^2.8.2":
+  version "2.8.2"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-2.8.2.tgz#549588682c4a3da541916a551aa4b34d582858b5"
+  integrity sha512-9vVRmihNavKLBHbglnSA7iAV47J/WTfEiEXE6nE7aA02tkOiFAFwE8f5aOfi3ORIGm53BRXi0/Tmr8Lxz2Cb7A==
   dependencies:
     "@tryghost/kg-clean-basic-html" "^2.2.5"
 
