@@ -147,4 +147,27 @@ describe('Process', function () {
 
         data.html.should.eql('\n<h2><strong>This is my strong headline thing.</strong></h2>\n\n\n\n<p><em>Note: this article contains awesomeness</em></p>');
     });
+
+    it('Can use the first available author is none is set ', function () {
+        const fixture = testUtils.fixtures.readSync('single-post-no-author.json');
+        const users = [
+            {
+                url: 'https://mysite.com/author/admin',
+                data: {
+                    id: 1,
+                    slug: 'admin',
+                    name: 'The Admin',
+                    roles: ['Contributor']
+                }
+            }
+        ];
+
+        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com'};
+        const post = processor.processPost(fixture, users, options);
+
+        const data = post.data;
+
+        data.author.data.slug.should.eql('admin');
+        data.author.data.name.should.eql('The Admin');
+    });
 });

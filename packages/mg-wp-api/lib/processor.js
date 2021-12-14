@@ -356,7 +356,7 @@ module.exports.processPost = (wpPost, users, options, errors) => { // eslint-dis
         }
     };
 
-    if (options.featureImage === 'featuredmedia' && wpPost._embedded['wp:featuredmedia']) {
+    if (options.featureImage === 'featuredmedia' && wpPost.featured_media && wpPost._embedded['wp:featuredmedia']) {
         const wpImage = wpPost._embedded['wp:featuredmedia'][0];
         try {
             post.data.feature_image = wpImage.source_url;
@@ -367,13 +367,20 @@ module.exports.processPost = (wpPost, users, options, errors) => { // eslint-dis
         }
     }
 
-    if (wpPost._embedded.author && !post.data.author) {
-        // use the data passed along the post if we couldn't match the user from the API
-        const wpAuthor = wpPost._embedded.author[0];
-        post.data.author = this.processAuthor(wpAuthor);
+    // We no author was defined…
+    if (!post.data.author) {
+        // … but a global author is defined, use that
+        if (wpPost._embedded && wpPost._embedded.author) {
+            // use the data passed along the post if we couldn't match the user from the API
+            const wpAuthor = wpPost._embedded.author[0];
+            post.data.author = this.processAuthor(wpAuthor);
+        // … else, use the first user in the `users` object
+        } else {
+            post.data.author = this.processAuthor(users[0].data);
+        }
     }
 
-    if (wpPost._embedded['wp:term']) {
+    if (wpPost._embedded && wpPost._embedded['wp:term']) {
         const wpTerms = wpPost._embedded['wp:term'];
         post.data.tags = this.processTerms(wpTerms, fetchTags);
 
