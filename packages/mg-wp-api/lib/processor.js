@@ -3,9 +3,10 @@ const _ = require('lodash');
 const $ = require('cheerio');
 const url = require('url');
 const errors = require('@tryghost/errors');
+const MgWebScraper = require('@tryghost/mg-webscraper');
 
 const VideoError = ({src, postUrl}) => {
-    let error = new errors.GhostError({message: `Unsupported video ${src} in post ${postUrl}`});
+    let error = new errors.UnsupportedMediaTypeError({message: `Unsupported video ${src} in post ${postUrl}`});
 
     error.errorType = 'VideoError';
     error.src = src;
@@ -86,7 +87,9 @@ module.exports.processExcerpt = (html, excerptSelector) => {
     }
 };
 
-module.exports.processContent = (html, postUrl, excerptSelector, errors, featureImageSrc = false) => { // eslint-disable-line no-shadow
+module.exports.processContent = async (html, postUrl, excerptSelector, errors, featureImageSrc = false, fileCache = false) => { // eslint-disable-line no-shadow
+    let webScraper = new MgWebScraper(fileCache);
+
     // Drafts can have empty post bodies
     if (!html) {
         return '';
@@ -125,6 +128,63 @@ module.exports.processContent = (html, postUrl, excerptSelector, errors, feature
             $(excerpt).remove();
         });
     }
+
+    // Bookmark embeds
+    let bookmarks = $html('.wp-block-embed.is-type-wp-embed').map(async (i, el) => {
+        let href = $(el).find('blockquote a').attr('href');
+        let iframeSrc = $(el).find('iframe').attr('src');
+
+        let scrapeConfig = {
+            pageTitle: '.wp-embed-heading a',
+            siteTitle: '.wp-embed-site-title a span',
+            siteIcon: {
+                selector: '.wp-embed-site-title a img',
+                attr: 'src'
+            },
+            image: {
+                selector: '.wp-embed-featured-image a img',
+                attr: 'src'
+            },
+            content: {
+                selector: '.wp-embed-excerpt p',
+                how: 'html',
+                convert: (theData) => {
+                    const $bookmarkContent = $.load(theData);
+                    $bookmarkContent('a').each((i, a) => { // eslint-disable-line no-shadow
+                        $(a).remove();
+                    });
+
+                    return $bookmarkContent.html();
+                }
+            }
+        };
+
+        // Scrape `iframe` data, and cache it locally
+        let filename = iframeSrc.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        let {responseData} = await webScraper.scrapeUrl(iframeSrc, scrapeConfig, filename);
+
+        $(el).replaceWith(`
+            <!--kg-card-begin: html-->
+            <figure class="kg-card kg-bookmark-card">
+                <a class="kg-bookmark-container" href="${href}">
+                    <div class="kg-bookmark-content">
+                        <div class="kg-bookmark-title">${responseData.pageTitle}</div>
+                        <div class="kg-bookmark-description">${responseData.content}</div>
+                        <div class="kg-bookmark-metadata">
+                            <img class="kg-bookmark-icon" src="${responseData.siteIcon}">
+                            <span class="kg-bookmark-author">${responseData.siteTitle}</span>
+                        </div>
+                    </div>
+                    <div class="kg-bookmark-thumbnail">
+                        <img src="${responseData.image}" alt="">
+                    </div>
+                </a>
+            </figure>
+            <!--kg-card-end: html-->
+        `);
+    }).get();
+
+    await Promise.all(bookmarks);
 
     $html('blockquote.twitter-tweet').each((i, el) => {
         let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
@@ -331,7 +391,7 @@ module.exports.processContent = (html, postUrl, excerptSelector, errors, feature
  *   ]
  * }
  */
-module.exports.processPost = (wpPost, users, options, errors) => { // eslint-disable-line no-shadow
+module.exports.processPost = async (wpPost, users, options, errors, fileCache) => { // eslint-disable-line no-shadow
     let {tags: fetchTags, addTag, excerptSelector} = options;
     let slug = wpPost.slug;
 
@@ -412,20 +472,22 @@ module.exports.processPost = (wpPost, users, options, errors) => { // eslint-dis
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = this.processContent(post.data.html, post.url, excerptSelector, errors, post.data.feature_image);
+    post.data.html = await this.processContent(post.data.html, post.url, excerptSelector, errors, post.data.feature_image, fileCache);
 
     return post;
 };
 
-module.exports.processPosts = (posts, users, options, errors) => { // eslint-disable-line no-shadow
-    return posts.map(post => this.processPost(post, users, options, errors));
+module.exports.processPosts = async (posts, users, options, errors, fileCache) => { // eslint-disable-line no-shadow
+    return Promise.all(posts.map(post => this.processPost(post, users, options, errors, fileCache)));
 };
 
 module.exports.processAuthors = (authors) => {
     return authors.map(author => this.processAuthor(author));
 };
 
-module.exports.all = async ({result: input, usersJSON, options, errors}) => { // eslint-disable-line no-shadow
+module.exports.all = async (ctx) => {
+    let {result: input, usersJSON, options, errors, fileCache} = ctx; // eslint-disable-line no-shadow
+
     if (usersJSON) {
         const mergedUsers = [];
         try {
@@ -455,7 +517,7 @@ module.exports.all = async ({result: input, usersJSON, options, errors}) => { //
         users: this.processAuthors(input.users)
     };
 
-    output.posts = this.processPosts(input.posts, output.users, options, errors);
+    output.posts = await this.processPosts(input.posts, output.users, options, errors, fileCache);
 
     return output;
 };
