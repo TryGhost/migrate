@@ -4,11 +4,11 @@ const testUtils = require('./utils');
 const processor = require('../lib/processor');
 
 describe('Process', function () {
-    it('Can convert a single post', function () {
+    it('Can convert a single post', async function () {
         const fixture = testUtils.fixtures.readSync('single-post.json');
         const users = [];
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com/bloob'};
-        const post = processor.processPost(fixture, users, options);
+        const post = await processor.processPost(fixture, users, options);
 
         post.should.be.an.Object().with.properties('url', 'data');
 
@@ -78,11 +78,11 @@ describe('Process', function () {
         data.website.should.eql('https://anothersite.com');
     });
 
-    it('Can convert a single page', function () {
+    it('Can convert a single page', async function () {
         const fixture = testUtils.fixtures.readSync('single-page.json');
         const users = null;
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com'};
-        const page = processor.processPost(fixture, users, options);
+        const page = await processor.processPost(fixture, users, options);
 
         page.should.be.an.Object().with.properties('url', 'data');
 
@@ -105,11 +105,11 @@ describe('Process', function () {
         data.feature_image.should.eql('https://mysite.com/wp-content/uploads/2020/09/sample-image-scaled.jpg');
     });
 
-    it('Can convert a custom post type', function () {
+    it('Can convert a custom post type', async function () {
         const fixture = testUtils.fixtures.readSync('single-cpt-post.json');
         const users = [];
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: 'mycpt'};
-        const post = processor.processPost(fixture, users, options);
+        const post = await processor.processPost(fixture, users, options);
 
         const data = post.data;
 
@@ -124,11 +124,11 @@ describe('Process', function () {
         data.tags[6].data.name.should.eql('#mycpt');
     });
 
-    it('Can add a #wp-post tag when also converting a custom post type', function () {
+    it('Can add a #wp-post tag when also converting a custom post type', async function () {
         const fixture = testUtils.fixtures.readSync('single-post.json');
         const users = [];
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: 'mycpt'};
-        const post = processor.processPost(fixture, users, options);
+        const post = await processor.processPost(fixture, users, options);
 
         const data = post.data;
 
@@ -137,18 +137,18 @@ describe('Process', function () {
         data.tags[6].data.name.should.eql('#wp-post');
     });
 
-    it('Can remove first image in post if same as feature image', function () {
+    it('Can remove first image in post if same as feature image', async function () {
         const fixture = testUtils.fixtures.readSync('single-post-with-duplicate-images.json');
         const users = [];
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: 'mycpt'};
-        const post = processor.processPost(fixture, users, options);
+        const post = await processor.processPost(fixture, users, options);
 
         const data = post.data;
 
         data.html.should.eql('\n<h2><strong>This is my strong headline thing.</strong></h2>\n\n\n\n<p><em>Note: this article contains awesomeness</em></p>');
     });
 
-    it('Can use the first available author is none is set ', function () {
+    it('Can use the first available author is none is set ', async function () {
         const fixture = testUtils.fixtures.readSync('single-post-no-author.json');
         const users = [
             {
@@ -163,7 +163,7 @@ describe('Process', function () {
         ];
 
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com'};
-        const post = processor.processPost(fixture, users, options);
+        const post = await processor.processPost(fixture, users, options);
 
         const data = post.data;
 
