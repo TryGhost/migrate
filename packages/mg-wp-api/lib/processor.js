@@ -87,8 +87,10 @@ module.exports.processExcerpt = (html, excerptSelector) => {
     }
 };
 
-module.exports.processContent = async (html, postUrl, excerptSelector, errors, featureImageSrc = false, fileCache = false) => { // eslint-disable-line no-shadow
+module.exports.processContent = async (html, postUrl, excerptSelector, errors, featureImageSrc = false, fileCache = false, options) => { // eslint-disable-line no-shadow
     let webScraper = new MgWebScraper(fileCache);
+
+    const allowRemoteScraping = ['all', 'web'].indexOf(options.scrape) > -1;
 
     // Drafts can have empty post bodies
     if (!html) {
@@ -128,6 +130,65 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
             $(excerpt).remove();
         });
     }
+
+    let libsynPodcasts = $html('iframe[src*="libsyn.com/embed/"]').map(async (i, el) => {
+        if (!allowRemoteScraping) {
+            return;
+        }
+
+        let iframeSrc = $(el).attr('src');
+        let libsynIdRegex = new RegExp('/id/([0-9]{1,})/');
+        let matches = iframeSrc.match(libsynIdRegex);
+        let showId = matches[1];
+
+        let newReqURL = `https://oembed.libsyn.com/embed?item_id=${showId}`;
+
+        let scrapeConfig = {
+            title: {
+                selector: 'meta[property="og:title"]',
+                attr: 'content'
+            },
+            durationSeconds: {
+                selector: 'meta[property="music:duration"]',
+                attr: 'content'
+            },
+            duration: {
+                selector: 'meta[property="music:duration"]',
+                attr: 'content',
+                convert: (data) => {
+                    return (data - (data %= 60)) / 60 + (9 < data ? ':' : ':0') + data;
+                }
+            },
+            image: {
+                selector: 'meta[property="og:image"]',
+                attr: 'content'
+            },
+            audioSrc: {
+                selector: 'meta[name="twitter:player:stream"]',
+                attr: 'content'
+            }
+        };
+
+        let filename = newReqURL.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        let {responseData} = await webScraper.scrapeUrl(newReqURL, scrapeConfig, filename);
+
+        let audioHTML = `
+            <div class="kg-card kg-audio-card">
+                <img src="${responseData.image}" alt="audio-thumbnail" class="kg-audio-thumbnail">
+                <div class="kg-audio-player-container">
+                    <audio src="${responseData.audioSrc}" preload="metadata"></audio>
+                    <div class="kg-audio-title">${responseData.title}</div>
+                    <div class="kg-audio-player">
+                        <span class="kg-audio-current-time">0:00</span>
+                        <div class="kg-audio-time">/<span class="kg-audio-duration">${responseData.duration}</span></div>
+                        <input type="range" class="kg-audio-seek-slider" max="${responseData.durationSeconds}" value="0">
+                    </div>
+                </div>
+            </div>
+        `;
+
+        $(el).replaceWith(audioHTML);
+    }).get();
 
     // Bookmark embeds
     let bookmarks = $html('.wp-block-embed.is-type-wp-embed').map(async (i, el) => {
@@ -184,7 +245,7 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
         `);
     }).get();
 
-    await Promise.all(bookmarks);
+    await Promise.all(libsynPodcasts, bookmarks);
 
     $html('blockquote.twitter-tweet').each((i, el) => {
         let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
@@ -472,7 +533,7 @@ module.exports.processPost = async (wpPost, users, options, errors, fileCache) =
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = await this.processContent(post.data.html, post.url, excerptSelector, errors, post.data.feature_image, fileCache);
+    post.data.html = await this.processContent(post.data.html, post.url, excerptSelector, errors, post.data.feature_image, fileCache, options);
 
     return post;
 };
