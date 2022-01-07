@@ -348,14 +348,6 @@
     lodash "^4.17.21"
     uuid "^8.3.2"
 
-"@tryghost/errors@^0.2.13":
-  version "0.2.17"
-  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-0.2.17.tgz#9b89f3845256ace5650593f41cc86d64965b56ed"
-  integrity sha512-Mj+bedWOwfooNA8fQdp6gIcRvWcKhJ/hOyGzu6OLFDLgEosFEeuFgXE6SsAWkf9+9NTYX30w88qGIWZqOhEAmQ==
-  dependencies:
-    "@tryghost/ignition-errors" "^0.1.0"
-    lodash "^4.17.21"
-
 "@tryghost/errors@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-1.2.0.tgz#989f10434a17286e952b5a9434e50846ea4ad87c"
@@ -364,22 +356,14 @@
     lodash "^4.17.21"
     uuid "^8.3.2"
 
-"@tryghost/html-to-mobiledoc@1.8.2":
-  version "1.8.2"
-  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-1.8.2.tgz#d786a8dbcff56ea2c3db20dce395a46f2df2401b"
-  integrity sha512-GffQdCw0iyOQYBYQD1X2NHTCDuFOHnVzmKzcY5Ws+HRvvukoeIponQxeCSx4zGR+KwxJz1AJinfnZaCbpu0sMQ==
+"@tryghost/html-to-mobiledoc@1.8.3":
+  version "1.8.3"
+  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-1.8.3.tgz#5b7ece4956b8cabcf8a3f24dd42b21f02226df8a"
+  integrity sha512-g3dupVOodfdU5G+IihVEpTnAfWhwb5oO+gSt4s15R3IrcXdWkoxAWr+jZDKTUOF/G4Nb0VLox0FJiy1oOeEB5Q==
   dependencies:
-    "@tryghost/kg-parser-plugins" "^2.11.2"
+    "@tryghost/kg-parser-plugins" "^2.11.3"
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "^18.0.0"
-
-"@tryghost/ignition-errors@^0.1.0":
-  version "0.1.8"
-  resolved "https://registry.yarnpkg.com/@tryghost/ignition-errors/-/ignition-errors-0.1.8.tgz#6d4c4d4e02d32403ca1e574eaa91b3c0d138d6f6"
-  integrity sha512-4KYU+kDXZyP7tmzyHiUkfDy9RWxKAtA/6xTGdxYHurE5ZlT++cDDfdUtF0v3308GGUzKlBzRc3jmLjDYpngcBQ==
-  dependencies:
-    lodash "^4.17.21"
-    uuid "^8.3.2"
 
 "@tryghost/image-transform@1.0.26":
   version "1.0.26"
@@ -392,17 +376,17 @@
   optionalDependencies:
     sharp "^0.29.0"
 
-"@tryghost/kg-clean-basic-html@^2.2.6":
-  version "2.2.6"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-2.2.6.tgz#78f6245f8934a638d5baf150eaaf36bef368fee1"
-  integrity sha512-8kKW4qPtaz3ILYPxvyh3E4jRlP4xfzOnNedwIUbwXSMQsos9RxY6xRHCIr0kympcMueIUcGKTAyudAKpYwvGBA==
+"@tryghost/kg-clean-basic-html@^2.2.7":
+  version "2.2.7"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-2.2.7.tgz#5ad9c260a772e559b9cfdb02d2b8581e24ba90e0"
+  integrity sha512-c1yR88YZR44e1X4/eoiulF1H9Exe7kt/35maD4hf8K97H8xXkNCSy2cCdkxEh3Muti7z4P1ssoAOVtRJa3kNOA==
 
-"@tryghost/kg-parser-plugins@^2.11.2":
-  version "2.11.2"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-2.11.2.tgz#a858523da3cae73dd0477fbca5167df7cbd4f52e"
-  integrity sha512-4n4yIUhhnzqjlsSnhyznrl7BaFqRGI0UOsgqm+ovN4EF+EhCFQXCLkmCndEq1gBDA9U9IsOvUHk7bcstUcDibw==
+"@tryghost/kg-parser-plugins@^2.11.3":
+  version "2.11.3"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-2.11.3.tgz#eb89f58039bbc3911f75cfd428f9816f5eebf53b"
+  integrity sha512-5H9+dVwR4tFy9zePDK2J6/p0Cu4n5EEsK5W27EFdeyuuWGNT8WMTJodwHzurAHkwH5mS2mcIxChhL3/mqFw+JQ==
   dependencies:
-    "@tryghost/kg-clean-basic-html" "^2.2.6"
+    "@tryghost/kg-clean-basic-html" "^2.2.7"
 
 "@tryghost/mobiledoc-kit@^0.12.4-ghost.1":
   version "0.12.4-ghost.1"
