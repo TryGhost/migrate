@@ -18,7 +18,7 @@ const isMobiledocField = field => _.includes(mobiledocFields, field);
 const isImageField = field => /image$/.test(field);
 
 const ScrapeError = ({src, code, statusCode, originalError}) => {
-    let error = new errors.GhostError({message: `Unable to scrape URI ${src}`});
+    let error = new errors.InternalServerError({message: `Unable to scrape URI ${src}`});
 
     error.errorType = 'ScrapeError';
     error.scraper = 'Image';
