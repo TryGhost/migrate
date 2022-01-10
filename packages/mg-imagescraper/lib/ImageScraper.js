@@ -17,8 +17,8 @@ const isHTMLField = field => _.includes(htmlFields, field);
 const isMobiledocField = field => _.includes(mobiledocFields, field);
 const isImageField = field => /image$/.test(field);
 
-const ScrapeError = ({ src, code, statusCode, originalError }) => {
-    let error = new errors.InternalServerError({ message: `Unable to scrape URI ${src}` });
+const ScrapeError = ({src, code, statusCode, originalError}) => {
+    let error = new errors.InternalServerError({message: `Unable to scrape URI ${src}`});
 
     error.errorType = 'ScrapeError';
     error.scraper = 'Image';
@@ -50,7 +50,7 @@ class ImageScraper {
 
     async fetchImage(src) {
         // Timeout after 20 seconds
-        return await got(src, { responseType: 'buffer', timeout: 20000 });
+        return await got(src, {responseType: 'buffer', timeout: 20000});
     }
 
     async downloadImage(src) {
@@ -90,7 +90,7 @@ class ImageScraper {
             await this.fileCache.writeImageFile(response.body, imageOptions);
             return imageFile.outputPath;
         } catch (error) {
-            throw ScrapeError({ src, code: error.code, statusCode: error.statusCode, originalError: error });
+            throw ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error});
         }
     }
 
