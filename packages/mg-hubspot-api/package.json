@@ -1,7 +1,7 @@
 {
   "name": "@tryghost/mg-hubspot-api",
   "version": "0.2.18",
-  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-hubspot-api",
+  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-hubspot-api",
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",

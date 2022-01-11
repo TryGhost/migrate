@@ -1,7 +1,7 @@
 {
   "name": "@tryghost/mg-imagescraper",
   "version": "0.5.10",
-  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-imagescraper",
+  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-imagescraper",
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",

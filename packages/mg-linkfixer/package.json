@@ -1,7 +1,7 @@
 {
   "name": "@tryghost/mg-linkfixer",
   "version": "0.2.3",
-  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-linkfixer",
+  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-linkfixer",
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",

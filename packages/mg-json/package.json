@@ -1,7 +1,7 @@
 {
   "name": "@tryghost/mg-json",
   "version": "0.8.1",
-  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-json",
+  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-json",
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",

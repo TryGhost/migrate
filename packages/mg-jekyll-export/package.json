@@ -2,7 +2,7 @@
   "name": "@tryghost/mg-jekyll-export",
   "version": "0.1.0",
   "description": "tbc",
-  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-jekyll-export",
+  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-jekyll-export",
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",

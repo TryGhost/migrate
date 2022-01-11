@@ -2,7 +2,7 @@
   "name": "@tryghost/mg-medium-export",
   "version": "0.11.3",
   "description": "tbc",
-  "repository": "https://github.com/TryGhost/migrate/tree/master/packages/mg-medium-export",
+  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-medium-export",
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",
