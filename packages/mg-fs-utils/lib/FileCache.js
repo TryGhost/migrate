@@ -157,10 +157,11 @@ class FileCache {
      * @param {Boolean} isJSON - defaults to write a JSON file
      */
     async writeTmpFile(data, filename, isJSON = true) {
-        let filepath = path.join(this.tmpDir, filename);
+        let fileNameWithExt = (filename.endsWith('.json')) ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
+        let filepath = path.join(this.tmpDir, fileNameWithExt);
 
         if (isJSON) {
-            await fs.outputJson(`${filepath}.json`, data, {spaces: 2});
+            await fs.outputJson(filepath, data, {spaces: 2});
         } else {
             await fs.writeFile(filepath, data);
         }
@@ -174,7 +175,8 @@ class FileCache {
      * @param {String} filename - name of file to read
      */
     async readTmpJSONFile(filename) {
-        let filepath = path.join(this.tmpDir, `${filename}.json`);
+        let fileNameWithExt = (filename.endsWith('.json')) ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
+        let filepath = path.join(this.tmpDir, fileNameWithExt);
 
         return await fs.readJson(filepath);
     }
