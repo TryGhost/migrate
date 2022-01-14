@@ -95,6 +95,7 @@ describe('toGhostJSON', function () {
         const input = require(testUtils.fixturesFilename('single-post-only-long-meta.json'));
         const output = toGhostJSON(input);
 
+        output.data.posts[0].custom_excerpt.length.should.be.belowOrEqual(300);
         output.data.posts_meta[0].meta_description.length.should.be.belowOrEqual(500);
         output.data.posts_meta[0].feature_image_alt.length.should.be.belowOrEqual(125);
     });
