@@ -92,11 +92,27 @@ describe('toGhostJSON', function () {
     });
 
     it('Trims strings that are too long', function () {
-        const input = require(testUtils.fixturesFilename('single-post-only.json'));
+        const input = require(testUtils.fixturesFilename('single-post-only-long-meta.json'));
         const output = toGhostJSON(input);
 
-        output.data.posts[0].custom_excerpt.length.should.be.belowOrEqual(300);
-        output.data.posts[0].meta_description.length.should.be.belowOrEqual(500);
-        output.data.posts[0].feature_image_alt.length.should.be.belowOrEqual(125);
+        output.data.posts_meta[0].meta_description.length.should.be.belowOrEqual(500);
+        output.data.posts_meta[0].feature_image_alt.length.should.be.belowOrEqual(125);
+    });
+
+    it('Moves meta data to posts_meta object', function () {
+        const input2 = require(testUtils.fixturesFilename('single-post-only-meta.json'));
+        const output = toGhostJSON(input2);
+
+        // Data should be in `posts_meta[0]`
+        output.data.posts_meta[0].meta_title.should.eql('This is my Blog Post Title');
+        output.data.posts_meta[0].meta_description.should.eql('Morbi lectus purus, blandit eu tristique nec, sollicitudin vel odio.');
+        output.data.posts_meta[0].feature_image_alt.should.eql('Lorem ipsum dolor sit amet');
+        output.data.posts_meta[0].feature_image_caption.should.eql('Caption text');
+
+        // Data should not exist in `posts[0]`
+        should.not.exist(output.data.posts[0].meta_title);
+        should.not.exist(output.data.posts[0].meta_description);
+        should.not.exist(output.data.posts[0].feature_image_alt);
+        should.not.exist(output.data.posts[0].feature_image_caption);
     });
 });

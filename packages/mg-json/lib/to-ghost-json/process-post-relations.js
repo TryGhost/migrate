@@ -91,12 +91,33 @@ module.exports = (json) => {
     };
 
     const processPostMeta = (postData) => {
-        // TODO: Build out this list of meta data
         let postMeta = {
-            post_id: null
+            post_id: postData.id
         };
 
-        postMeta.post_id = postData.id;
+        // List from https://github.com/TryGhost/Ghost/blob/main/core/server/data/schema/schema.js#L63-L79
+        const metaKeys = [
+            'og_image',
+            'og_title',
+            'og_description',
+            'twitter_image',
+            'twitter_title',
+            'twitter_description',
+            'meta_title',
+            'meta_description',
+            'email_subject',
+            'frontmatter',
+            'feature_image_alt',
+            'feature_image_caption',
+            'email_only'
+        ];
+
+        metaKeys.forEach((item) => {
+            if (postData[item]) {
+                postMeta[item] = postData[item];
+                delete postData[item];
+            }
+        });
 
         json.posts_meta.push(postMeta);
 
