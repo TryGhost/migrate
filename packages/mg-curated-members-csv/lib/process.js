@@ -1,4 +1,4 @@
-const {parse, parseISO} = require('date-fns');
+import {parse, parseISO} from 'date-fns';
 
 const processOptions = (member, options) => {
     if (options.freeLabel) {
@@ -25,7 +25,7 @@ const processMember = (sMember, options) => {
     return processOptions(member, options);
 };
 
-module.exports = async (input, ctx) => {
+const process = async (input, ctx) => {
     const {options} = ctx;
     ctx.logs = [];
 
@@ -50,3 +50,5 @@ module.exports = async (input, ctx) => {
 
     return output;
 };
+
+export default process;

@@ -1,8 +1,6 @@
-const path = require('path');
-const parseMembers = require('../');
-
-// Switch these lines once there are useful utils
-require('./utils');
+import path from 'path';
+import should from 'should';
+import parseMembers from '../index.js';
 
 describe('Parses Curated subscribers file', function () {
     it('only signups', async function () {
