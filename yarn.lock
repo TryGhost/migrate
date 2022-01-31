@@ -308,13 +308,13 @@
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-2.0.0.tgz#f544a148d3ab35801c1f633a7441fd87c2e484bf"
   integrity sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==
 
-"@tryghost/admin-api@1.4.5":
-  version "1.4.5"
-  resolved "https://registry.yarnpkg.com/@tryghost/admin-api/-/admin-api-1.4.5.tgz#87be0393ce6ed9b75654838355f190da23ab8107"
-  integrity sha512-zG5XFlrO56I/TbT+ECdSpvbJRZ3nIg54b/lqZVpib6b2FgMvm6iWabFsvDX5bFuQTMifBt9ml+3Qiw0yoJIzbw==
+"@tryghost/admin-api@1.5.0":
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/@tryghost/admin-api/-/admin-api-1.5.0.tgz#6263b1554d63ccb593449d08e5ad2b1703c1d9d5"
+  integrity sha512-YIkpGfUTClcKM3LscmPshr1n4675vILUL5vyq9ytQYtx4hVnr/MgHe5YY+6sq35osj8wam6J0ptyJBAMt/sgug==
   dependencies:
     axios "^0.21.1"
-    form-data "^3.0.0"
+    form-data "^4.0.0"
     jsonwebtoken "^8.4.0"
 
 "@tryghost/bunyan-rotating-filestream@0.0.7":
@@ -2036,15 +2036,6 @@ form-data@^2.3.3:
   dependencies:
     asynckit "^0.4.0"
     combined-stream "^1.0.6"
-    mime-types "^2.1.12"
-
-form-data@^3.0.0:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/form-data/-/form-data-3.0.1.tgz#ebd53791b78356a99af9a300d4282c4d5eb9755f"
-  integrity sha512-RHkBKtLWUVwd7SqRIvCZMEvAMoGUp0XU+seQiZejj0COz3RI3hWP4sCv3gZWWLjJTd7rGwcsF5eKZGii0r/hbg==
-  dependencies:
-    asynckit "^0.4.0"
-    combined-stream "^1.0.8"
     mime-types "^2.1.12"
 
 form-data@^4.0.0:
