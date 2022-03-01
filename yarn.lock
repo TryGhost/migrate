@@ -356,16 +356,16 @@
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "^18.0.0"
 
-"@tryghost/image-transform@1.0.27":
-  version "1.0.27"
-  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.0.27.tgz#1ce25542bba7198081620cbf1d349d063a2e87ee"
-  integrity sha512-ZfUnvgBB2ddEMF/5xztbJJJEMP59426BEPquwjO27g4I0RlEycj7qlATd5zJm5q7Xim/YAjRy7IigWj6CGJkSA==
+"@tryghost/image-transform@1.0.28":
+  version "1.0.28"
+  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.0.28.tgz#403bff8a1970ee62e664b3f7589b5f50fdfd5dd3"
+  integrity sha512-uDBoXn8IoomgA2DS0P2QRhmw2vrjAL0MnVCTe+yR7StDekm/MmNOlh980JxEdHf2Ecn7Br2gaerCpZkJWfMyEQ==
   dependencies:
     "@tryghost/errors" "^1.2.1"
     bluebird "^3.7.2"
     fs-extra "^9.1.0"
   optionalDependencies:
-    sharp "^0.29.0"
+    sharp "^0.30.0"
 
 "@tryghost/kg-clean-basic-html@^2.2.9":
   version "2.2.9"
@@ -1140,10 +1140,10 @@ color-string@^1.9.0:
     color-name "^1.0.0"
     simple-swizzle "^0.2.2"
 
-color@^4.0.1:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/color/-/color-4.1.0.tgz#9502e6a2dcacb26adf4c60910a27628d010b3de3"
-  integrity sha512-o2rkkxyLGgYoeUy1OodXpbPAQNmlNBrirQ8ODO8QutzDiDMNdezSOZLNnusQ6pUpCQJUsaJIo9DZJKqa2HgH7A==
+color@^4.2.0:
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/color/-/color-4.2.1.tgz#498aee5fce7fc982606c8875cab080ac0547c884"
+  integrity sha512-MFJr0uY4RvTQUKvPq7dh9grVOTYSFeXja2mBXioCGjnjJoXrAp9jJ1NQTDR73c9nwBSAQiNKloKl5zq9WB9UPw==
   dependencies:
     color-convert "^2.0.1"
     color-string "^1.9.0"
@@ -1419,10 +1419,10 @@ delegates@^1.0.0:
   resolved "https://registry.yarnpkg.com/delegates/-/delegates-1.0.0.tgz#84c6e159b81904fdca59a0ef44cd870d31250f9a"
   integrity sha1-hMbhWbgZBP3KWaDvRM2HDTElD5o=
 
-detect-libc@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/detect-libc/-/detect-libc-1.0.3.tgz#fa137c4bd698edf55cd5cd02ac559f91a4c4ba9b"
-  integrity sha1-+hN8S9aY7fVc1c0CrFWfkaTEups=
+detect-libc@^2.0.0:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/detect-libc/-/detect-libc-2.0.1.tgz#e1897aa88fa6ad197862937fbc0441ef352ee0cd"
+  integrity sha512-463v3ZeIrcWtdgIg6vI6XUncguvr2TnGl4SzDXinkt9mSLpBJKXT3mW6xT3VQdDN11+WVs29pgvivTc4Lp8v+w==
 
 diff@5.0.0, diff@^5.0.0:
   version "5.0.0"
@@ -3389,10 +3389,10 @@ node-abi@^3.3.0:
   dependencies:
     semver "^7.3.5"
 
-node-addon-api@^4.2.0:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-4.2.0.tgz#117cbb5a959dff0992e1c586ae0393573e4d2a87"
-  integrity sha512-eazsqzwG2lskuzBqCGPi7Ac2UgOoMz8JVOXVhTvvPDYhthvNpefx8jWD8Np7Gv+2Sz0FlPWZk0nJV0z598Wn8Q==
+node-addon-api@^4.3.0:
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-4.3.0.tgz#52a1a0b475193e0928e98e0426a0d1254782b77f"
+  integrity sha512-73sE9+3UaLYYFmDsFZnqCInzPyh3MqIwZO9cw58yIqAZhONrrabrYyYe3TuIqtIiOuTXVhsGau8hcrhhwSsDIQ==
 
 node-loggly-bulk@^2.2.4:
   version "2.2.5"
@@ -3695,12 +3695,12 @@ pluralize@^8.0.0:
   resolved "https://registry.yarnpkg.com/pluralize/-/pluralize-8.0.0.tgz#1a6fa16a38d12a1901e0320fa017051c539ce3b1"
   integrity sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==
 
-prebuild-install@^7.0.0:
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/prebuild-install/-/prebuild-install-7.0.0.tgz#3c5ce3902f1cb9d6de5ae94ca53575e4af0c1574"
-  integrity sha512-IvSenf33K7JcgddNz2D5w521EgO+4aMMjFt73Uk9FRzQ7P+QZPKrp7qPsDydsSwjGt3T5xRNnM1bj1zMTD5fTA==
+prebuild-install@^7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/prebuild-install/-/prebuild-install-7.0.1.tgz#c10075727c318efe72412f333e0ef625beaf3870"
+  integrity sha512-QBSab31WqkyxpnMWQxubYAHR5S9B2+r81ucocew34Fkl98FhvKIF50jIJnNOBmAZfyNV7vE5T6gd3hTVWgY6tg==
   dependencies:
-    detect-libc "^1.0.3"
+    detect-libc "^2.0.0"
     expand-template "^2.0.3"
     github-from-package "0.0.0"
     minimist "^1.2.3"
@@ -4106,17 +4106,17 @@ set-blocking@~2.0.0:
   resolved "https://registry.yarnpkg.com/set-blocking/-/set-blocking-2.0.0.tgz#045f9782d011ae9a6803ddd382b24392b3d890f7"
   integrity sha1-BF+XgtARrppoA93TgrJDkrPYkPc=
 
-sharp@^0.29.0:
-  version "0.29.3"
-  resolved "https://registry.yarnpkg.com/sharp/-/sharp-0.29.3.tgz#0da183d626094c974516a48fab9b3e4ba92eb5c2"
-  integrity sha512-fKWUuOw77E4nhpyzCCJR1ayrttHoFHBT2U/kR/qEMRhvPEcluG4BKj324+SCO1e84+knXHwhJ1HHJGnUt4ElGA==
+sharp@^0.30.0:
+  version "0.30.1"
+  resolved "https://registry.yarnpkg.com/sharp/-/sharp-0.30.1.tgz#203efaf9acfc5c15c8a343800254621e56011c12"
+  integrity sha512-ycpz81q8AeVjz1pGvvirQBeJcYE2sXAjcLXR/69LWOe/oxavBLOrenZcTzvTXn83jqAGqY+OuwF+2kFXzbKtDA==
   dependencies:
-    color "^4.0.1"
-    detect-libc "^1.0.3"
-    node-addon-api "^4.2.0"
-    prebuild-install "^7.0.0"
+    color "^4.2.0"
+    detect-libc "^2.0.0"
+    node-addon-api "^4.3.0"
+    prebuild-install "^7.0.1"
     semver "^7.3.5"
-    simple-get "^4.0.0"
+    simple-get "^4.0.1"
     tar-fs "^2.1.1"
     tunnel-agent "^0.6.0"
 
@@ -4199,6 +4199,15 @@ simple-get@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/simple-get/-/simple-get-4.0.0.tgz#73fa628278d21de83dadd5512d2cc1f4872bd675"
   integrity sha512-ZalZGexYr3TA0SwySsr5HlgOOinS4Jsa8YB2GJ6lUNAazyAu4KG/VmzMTwAt2YVXzzVj8QmefmAonZIK2BSGcQ==
+  dependencies:
+    decompress-response "^6.0.0"
+    once "^1.3.1"
+    simple-concat "^1.0.0"
+
+simple-get@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/simple-get/-/simple-get-4.0.1.tgz#4a39db549287c979d352112fa03fd99fd6bc3543"
+  integrity sha512-brv7p5WgH0jmQJr1ZDDfKDOSeWWg+OVypG99A/5vYGPqJ6pxiaHLy8nxtFjBA7oMa01ebA9gfh1uMCFqOuXxvA==
   dependencies:
     decompress-response "^6.0.0"
     once "^1.3.1"
