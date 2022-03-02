@@ -403,7 +403,14 @@
     caller "^1.0.1"
     find-root "^1.1.0"
 
-"@tryghost/string@0.1.21", "@tryghost/string@^0.1.11", "@tryghost/string@^0.1.17":
+"@tryghost/string@0.1.23":
+  version "0.1.23"
+  resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.1.23.tgz#7d5f556b7e99b7c5d5e4c6966626afc048b21290"
+  integrity sha512-EEX2EdjWl9QJuZxd3iv+OCa5eUGt3r6bx0RbvpbdVG44wWYyWelXsiHLLquGGr6h5z1BHOTVsEyEqFFPVIyVBA==
+  dependencies:
+    unidecode "^0.1.8"
+
+"@tryghost/string@^0.1.11", "@tryghost/string@^0.1.17":
   version "0.1.21"
   resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.1.21.tgz#16d70b4767a472902d5bacc67c3b46642637bff5"
   integrity sha512-CaLVbq5PvayB63pv+pMyPv6QnTc/glp04tra+wtKPViEMz/hr4P05b0810UQyHvEeIQMd8c2yUthwo0SXOpCkQ==

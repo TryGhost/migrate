@@ -24,7 +24,7 @@
     "sinon": "11.1.2"
   },
   "dependencies": {
-    "@tryghost/string": "0.1.21",
+    "@tryghost/string": "0.1.23",
     "bson-objectid": "2.0.2",
     "html-entities": "2.3.2",
     "lodash": "4.17.21"
