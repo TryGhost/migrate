@@ -18,7 +18,7 @@ module.exports.read = (zipPath, callback) => {
     try {
         zip = _private.openZipForRead(zipPath);
     } catch (error) {
-        throw new errors.GhostError({message: `Unable to read zip file ${zipPath}: ${error}`});
+        throw new errors.InternalServerError({message: `Unable to read zip file ${zipPath}: ${error}`});
     }
 
     // Entries is cleaned first

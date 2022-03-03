@@ -197,7 +197,7 @@ module.exports.all = async (input, {options}) => {
     };
 
     if (input.length < 1) {
-        return new errors.GhostError({message: 'Input file is empty'});
+        return new errors.NoContentError({message: 'Input file is empty'});
     }
 
     const $xml = $.load(input, {

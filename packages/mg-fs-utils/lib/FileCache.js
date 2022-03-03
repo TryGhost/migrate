@@ -260,7 +260,7 @@ class FileCache {
         let pathToCheck = filename;
 
         if (type && !_.includes(['tmp', 'json', 'image'], type)) {
-            throw new errors.GhostError({message: 'Unknown file type'});
+            throw new errors.NotFoundError({message: 'Unknown file type'});
         } else if (type) {
             pathToCheck = path.join(this[`${type}Dir`], filename);
         }

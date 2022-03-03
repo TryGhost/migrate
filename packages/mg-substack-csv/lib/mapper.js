@@ -63,7 +63,7 @@ module.exports = async (input, options) => {
     };
 
     if (input.length < 1) {
-        return new errors.GhostError({message: 'Input file is empty'});
+        return new errors.NoContentError({message: 'Input file is empty'});
     }
 
     if (!options.drafts) {

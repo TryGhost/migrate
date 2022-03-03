@@ -198,7 +198,7 @@ module.exports = async (input, ctx) => {
                 delete post.substackId;
             });
         } catch (error) {
-            return new errors.GhostError({message: 'Couldn\'t read post files'});
+            return new errors.InternalServerError({message: 'Couldn\'t read post files'});
         }
     }
 

@@ -569,7 +569,7 @@ module.exports.all = async (ctx) => {
                 mergedUsers.push(Object.assign({}, passedUser, matchedUser));
             });
         } catch (error) {
-            throw new errors.GhostError({message: 'Unable to process passed users file'});
+            throw new errors.InternalServerError({message: 'Unable to process passed users file'});
         }
         input.users = mergedUsers;
     }

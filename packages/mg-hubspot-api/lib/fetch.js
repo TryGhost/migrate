@@ -39,7 +39,7 @@ module.exports.discover = async ({hapikey, url, limit}) => {
     }
 
     if (!blog) {
-        throw new errors.GhostError({message: 'Unable to determine which blog to import'});
+        throw new errors.NotFoundError({message: 'Unable to determine which blog to import'});
     }
 
     // We fetch all topics right away (assuming no one has anymore than 1000 which is the max)

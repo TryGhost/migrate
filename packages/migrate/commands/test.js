@@ -46,7 +46,7 @@ exports.run = async (argv) => {
                             setTimeout(() => {
                                 if (i === 5) {
                                     uniqueErrorId += 1;
-                                    return reject(new errors.GhostError({message: `I am error ${uniqueErrorId}``I am error ${uniqueErrorId}`}));
+                                    return reject(new errors.InternalServerError({message: `I am error ${uniqueErrorId}``I am error ${uniqueErrorId}`}));
                                 }
 
                                 if (i === 7) {
