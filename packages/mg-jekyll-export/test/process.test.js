@@ -263,4 +263,19 @@ describe('Process', function () {
         post.data.tags[1].data.slug.should.eql('nofiledate');
         post.data.tags[1].data.name.should.eql('NoFileDate');
     });
+
+    it('Can process posts that already include HTML', function () {
+        const fakeName = 'posts/2022-03-10-has-html.md';
+        const fixture = testUtils.fixtures.readSync('2022-03-10-has-html.md');
+        const post = processPost(fakeName, fixture, false, {
+            addTags: 'Has HTML'
+        });
+
+        post.data.html.should.eql('<p>Lorem ipsum dolor sit amet.</p>\n' +
+        '<video width="320" height="240" controls>\n' +
+        '  <source src="movie.mp4" type="video/mp4">\n' +
+        '  <source src="movie.ogg" type="video/ogg">\n' +
+        '</video>\n' +
+        '<p>Dolor sit amet.</p>');
+    });
 });
