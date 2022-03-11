@@ -30,7 +30,7 @@ module.exports = (json) => {
         if (!_.has(json, location)) {
             return;
         }
-        return json[location].find((item) => {
+        return json[location].find((item) => { // eslint-disable-line array-callback-return
             // @TODO: need to scrape, or post-process scrape for user and tag slugs
             if (item.data.id && item.data.id === match.data.id) {
                 return item;

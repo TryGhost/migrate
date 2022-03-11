@@ -193,7 +193,7 @@ module.exports = async (input, ctx) => {
             let postFiles = await getFiles(postsDir);
             let postContent = await readFiles(postFiles, postsDir);
 
-            input.posts.map((post) => {
+            input.posts.map((post) => { // eslint-disable-line array-callback-return
                 post.data.html = postContent[post.substackId];
                 delete post.substackId;
             });
