@@ -278,4 +278,42 @@ describe('Process', function () {
         '</video>\n' +
         '<p>Dolor sit amet.</p>');
     });
+
+    it('Can process lists that have spaced between list items', function () {
+        const fakeName = 'posts/2022-03-11-has-spaced-lists.md';
+        const fixture = testUtils.fixtures.readSync('2022-03-11-has-spaced-lists.md');
+        const post = processPost(fakeName, fixture, false, {
+            addTags: 'Has HTML'
+        });
+
+        post.data.html.should.eql('<p>Lorem ipsum.</p>\n' +
+        '<ul>\n' +
+        '<li>This</li>\n' +
+        '<li>Is</li>\n' +
+        '<li>My</li>\n' +
+        '<li>List</li>\n' +
+        '</ul>\n' +
+        '<p>Dolor sit amet.</p>\n' +
+        '<ul>\n' +
+        '<li>This</li>\n' +
+        '<li>Is</li>\n' +
+        '<li>Another</li>\n' +
+        '<li>List</li>\n' +
+        '</ul>\n' +
+        '<p>Lorem ipsum.</p>\n' +
+        '<ul>\n' +
+        '<li>This list</li>\n' +
+        '<li>Has spaces</li>\n' +
+        '<li>Between each</li>\n' +
+        '<li>Line</li>\n' +
+        '</ul>\n' +
+        '<p>Dolor sit amet.</p>\n' +
+        '<ul>\n' +
+        '<li>Likewise</li>\n' +
+        '<li>For this</li>\n' +
+        '<li>Set of</li>\n' +
+        '<li>List Items too</li>\n' +
+        '</ul>\n' +
+        '<p>Lorem ipsum.</p>');
+    });
 });

@@ -38,6 +38,15 @@ module.exports = (markdown, options = {}) => {
         });
     }
 
+    // Unwrap <p> tags that are in <li> tags
+    $html('li').each((i, li) => {
+        const hasP = $(li).find('p').length;
+
+        if (hasP) {
+            $(li).html($(li).find('p').html());
+        }
+    });
+
     let html = $html.html().trim();
 
     return html;
