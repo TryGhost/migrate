@@ -554,7 +554,7 @@ module.exports.all = async (ctx) => {
         try {
             let passedUsers = await fs.readJSON(usersJSON);
             console.log(`Passed a users file with ${passedUsers.length} entries, processing now!`); // eslint-disable-line no-console
-            await passedUsers.map((passedUser) => {
+            await passedUsers.map((passedUser) => { // eslint-disable-line array-callback-return
                 const matchedUser = _.find(input.users, (fetchedUser) => {
                     if (fetchedUser.id && passedUser.id && fetchedUser.id === passedUser.id) {
                         return fetchedUser;
