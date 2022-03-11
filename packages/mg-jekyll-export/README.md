@@ -39,9 +39,19 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`-s` `--scrape`**
     - string - default: `all`
     - Configure scraping tasks (choices: `all`, `web`, `img`, `none`)
+- **`-u` `--url`**
+    - string - default: `false`
+    - Provide a URL (without trailing slash) to the hosted source site
 - **`-e` `--email`**
     - string - default: `false`
     - Provide an email domain for users e.g. example.com
+- **`--addTags`**
+    - string - default: `null`
+    - Provide one or more tag names which should be added to every post in this migration
+- **`--datedPermalinks`** 
+    - Set the dated permalink structure
+    - string - default: `none` 
+    - Choices: `none`, `'/yyyy/mm/'`, `'/yyyy/mm/dd/'`  
 - **`--fallBackHTMLCard`**
     - bool - default: `false`
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails

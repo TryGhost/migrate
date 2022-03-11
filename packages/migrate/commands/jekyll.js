@@ -42,6 +42,11 @@ exports.setup = (sywac) => {
         defaultValue: null,
         desc: 'Provide one or more tag names which should be added to every post in this migration'
     });
+    sywac.enumeration('--datedPermalinks', {
+        choices: ['none', '/yyyy/mm/', '/yyyy/mm/dd/'],
+        defaultValue: 'none',
+        desc: 'Set the dated permalink structure (e.g. /yyyy/mm/dd/)'
+    });
     sywac.boolean('--fallBackHTMLCard', {
         defaultValue: false,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
