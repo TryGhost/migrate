@@ -50,7 +50,16 @@ class ImageScraper {
 
     async fetchImage(src) {
         // Timeout after 20 seconds
-        return await got(src, {responseType: 'buffer', timeout: 20000});
+        // Case: Some servers don't play well when the UA string is blank or default UA string is used.
+        // By defining a real-world the user-agent, we get more consistent results when requesting images.
+        const chromeUserAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.109 Safari/537.36';
+        return await got(src, {
+            responseType: 'buffer',
+            timeout: 20000,
+            headers: {
+                'user-agent': chromeUserAgent
+            }
+        });
     }
 
     async downloadImage(src) {
