@@ -39,6 +39,14 @@ const mapConfig = (data, {url, readPosts, email, useMetaAuthor}) => {
         }
     };
 
+    // Add tags based on post visibility, allowing future manipulation via API that is easily reversible
+    mappedData.data.tags.push({
+        url: `migrator-added-tag-visibility-${mappedData.data.visibility}`,
+        data: {
+            name: `#access-${mappedData.data.visibility}`
+        }
+    });
+
     if (email && !useMetaAuthor) {
         const authorSlug = email.replace(/(^[\w_-]*)(@[\w_-]*\.\w*(?:\.\w{0,2})?)/, '$1');
 

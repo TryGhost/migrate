@@ -49,7 +49,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         data.status.should.eql('published');
         data.visibility.should.eql('public');
 
-        data.tags.length.should.equal(2);
+        data.tags.length.should.equal(3);
 
         const tag1 = data.tags[0];
         tag1.url.should.eql('migrator-added-tag');
@@ -58,6 +58,10 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const tag2 = data.tags[1];
         tag2.url.should.eql('https://dummysite.substack.com/tag/newsletter');
         tag2.data.name.should.eql('Newsletter');
+
+        const tag3 = data.tags[2];
+        tag3.url.should.eql('migrator-added-tag-visibility-public');
+        tag3.data.name.should.eql('#access-public');
 
         const author = data.author;
         author.url.should.eql('https://dummysite.substack.com/author/dummyuser');
