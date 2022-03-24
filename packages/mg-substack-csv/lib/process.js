@@ -171,6 +171,18 @@ const processContent = (html, siteUrl, options) => {
         });
     }
 
+    // Replace any signup forms with a Portal signup button
+    if (options.subscribeLink) {
+        $html('.subscription-widget-wrap').each((i, div) => {
+            const hasForm = $(div).find('form');
+
+            if (hasForm.length) {
+                const buttonText = $(div).find('form input[type="submit"]').attr('value');
+                $(div).find('form').replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="__GHOST_URL__/${options.subscribeLink}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+            }
+        });
+    }
+
     // convert HTML back to a string
     html = $html.html();
 

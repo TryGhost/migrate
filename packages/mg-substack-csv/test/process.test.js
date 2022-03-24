@@ -28,7 +28,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const processed = await process(mapped, ctx);
 
         processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(7);
+        processed.posts.length.should.equal(8);
 
         const post = processed.posts[0];
         post.should.be.an.Object();
@@ -154,6 +154,31 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         data.html.should.eql('<h2>Lorem Ipsum</h2>\n<p>\n    <a href="#/portal/signup"><span>Sign up now</span></a>\n</p>\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</p>\n<p>Dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>\n<div><hr></div>\n<p>\n    <a href="#/portal/signup"><span>Sign up now</span></a>\n</p>\n');
     });
 
+    it('Can convert signup forms to signup buttons', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://dummysite.substack.com',
+                email: 'dummyuser@email.com',
+                subscribeLink: '#/portal/signup'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        // The first post contains 2 subscribe links
+        const post = processed.posts[7];
+        const data = post.data;
+        data.html.should.eql('<h2>Text with a signup form</h2>\n<p>Lorem ipsum</p>\n\n<div class="subscription-widget-wrap" data-attrs="{&quot;url&quot;:&quot;https://dummysite.substack.com/subscribe?&quot;,&quot;text&quot;:&quot;Subscribe&quot;}">\n    <div class="subscription-widget show-subscribe">\n        <div class="preamble">\n            <p class="cta-caption">You should sign up!</p>\n        </div>\n        <div class="kg-card kg-button-card kg-align-center"><a href="__GHOST_URL__/#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>\n    </div>\n</div>\n');
+    });
+
     it('Can convert a list with an image into a HTML card', async function () {
         const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
         const inputPostsPath = path.resolve('./test/fixtures/posts');
@@ -270,7 +295,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const processed = await process(mapped, ctx);
 
         processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(4);
+        processed.posts.length.should.equal(5);
     });
 
     it('Can wrap lists with images in HTML comments', async function () {
