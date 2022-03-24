@@ -21,7 +21,7 @@
   "dependencies": {
     "@tryghost/errors": "1.2.7",
     "@tryghost/image-transform": "1.0.28",
-    "@tryghost/zip": "1.1.20",
+    "@tryghost/zip": "1.1.21",
     "adm-zip": "0.5.9",
     "csv-parse": "5.0.4",
     "date-fns": "2.28.0",
