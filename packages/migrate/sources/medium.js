@@ -159,7 +159,7 @@ module.exports.getTaskRunner = (pathToZip, options) => {
             }
         },
         {
-            title: 'Fetch images via ImageSraper',
+            title: 'Fetch images via ImageScraper',
             task: async (ctx) => {
                 // 5. Pass the JSON file through the image scraper
                 let tasks = ctx.imageScraper.fetch(ctx); // eslint-disable-line no-shadow

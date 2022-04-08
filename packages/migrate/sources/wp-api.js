@@ -200,7 +200,7 @@ module.exports.getFullTaskList = (url, options) => {
             }
         },
         {
-            title: 'Fetch images via ImageSraper',
+            title: 'Fetch images via ImageScraper',
             task: async (ctx) => {
                 // 6. Pass the JSON file through the image scraper
                 let tasks = ctx.imageScraper.fetch(ctx);
