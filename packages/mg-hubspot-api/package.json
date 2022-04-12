@@ -27,7 +27,7 @@
     "@tryghost/errors": "1.2.10",
     "cheerio": "0.22.0",
     "date-fns": "2.28.0",
-    "html-to-text": "8.1.0",
+    "html-to-text": "8.2.0",
     "hubspot-api": "2.15.3"
   }
 }
