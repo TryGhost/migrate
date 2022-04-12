@@ -42,7 +42,7 @@ module.exports.createCleanExcerpt = (summaryContent = '') => {
     let excerpt = htmlToText(summaryContent, {
         tags: {
             img: {format: 'skip'},
-            a: {options: {ignoreHref: true}},
+            a: {format: 'inline', options: {ignoreHref: true}},
             p: {format: 'inline', options: {uppercase: false}},
             h1: {format: 'inline', options: {uppercase: false}},
             h2: {format: 'inline', options: {uppercase: false}},
