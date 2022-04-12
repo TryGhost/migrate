@@ -183,6 +183,27 @@ const processContent = (html, siteUrl, options) => {
         });
     }
 
+    $html('.embedded-post-wrap').each((i, div) => {
+        let bookmarkJSON = JSON.parse($(div).attr('data-attrs').replace(/&quot;/gm, '"'));
+
+        let bookmarkLink = bookmarkJSON.url;
+        let bookmarkPubName = bookmarkJSON.publication_name;
+        let bookmarkPubIcon = bookmarkJSON.publication_logo_url;
+        let bookmarkTitle = bookmarkJSON.title;
+        let bookmarkContent = bookmarkJSON.truncated_body_text;
+
+        let $bookmark = $('<figure class="kg-card kg-bookmark-card"></figure>');
+        let $link = $(`<a class="kg-bookmark-container" href="${bookmarkLink}"></a>`);
+        let $content = $(`<div class="kg-bookmark-content"><div class="kg-bookmark-title">${bookmarkTitle}</div><div class="kg-bookmark-description">${bookmarkContent}</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="${bookmarkPubIcon}"><span class="kg-bookmark-author">${bookmarkPubName}</span></div></div>`);
+
+        $link.append($content);
+        $bookmark.append($link);
+
+        $(div).replaceWith($bookmark);
+        $bookmark.before('<!--kg-card-begin: html-->');
+        $bookmark.after('<!--kg-card-end: html-->');
+    });
+
     // convert HTML back to a string
     html = $html.html();
 

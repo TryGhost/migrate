@@ -28,7 +28,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const processed = await process(mapped, ctx);
 
         processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(8);
+        processed.posts.length.should.equal(9);
 
         const post = processed.posts[0];
         post.should.be.an.Object();
@@ -295,7 +295,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const processed = await process(mapped, ctx);
 
         processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(5);
+        processed.posts.length.should.equal(6);
     });
 
     it('Can wrap lists with images in HTML comments', async function () {
@@ -379,6 +379,36 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
           '    </li><li id="footnote-3">\n' +
           '        <p>Elit elementum venenatis <a href="#footnote-anchor-3" title="Jump back to footnote NaN in the text.">&#x21A9;</a></p>\n' +
           '    </li></ol></div><!--kg-card-end: html-->'
+        );
+    });
+
+    it('Can process embedded posts', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://dummysite.substack.com',
+                email: 'dummyuser@email.com'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        // The 9th post contains an embedded post
+        const post = processed.posts[8];
+
+        const data = post.data;
+        data.html.should.eql('<p>Lorem ipsum</p>\n' +
+        '\n' +
+        '<!--kg-card-begin: html--><figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://dummysite.substack.com/p/example-post"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Lorem ipsum, This is the Title I’m Showing You</div><div class="kg-bookmark-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad it’s veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat …</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://bucketeer-1234.s3.amazonaws.com/public/images/5678_680x680.png"><span class="kg-bookmark-author">Dummy Site</span></div></div></a></figure><!--kg-card-end: html-->\n' +
+        '\n' +
+        '<p>Dolor Simet</p>\n'
         );
     });
 });
