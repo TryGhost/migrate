@@ -47,6 +47,8 @@ module.exports.jsonToCSV = (data, fields = Object.keys(data[0])) => {
             if (entry[field] !== null) {
                 if (isDate(entry[field])) {
                     fieldToAdd = entry[field].toISOString();
+                } else if (entry[field] && entry[field].toString().indexOf(',') !== -1) { // If the field contains a comma, wrap it in quotes
+                    fieldToAdd = `"${entry[field]}"`;
                 } else {
                     fieldToAdd = entry[field];
                 }
