@@ -2,7 +2,8 @@ const {
     isDate,
     parseISO,
     addYears,
-    isAfter
+    isAfter,
+    format
 } = require('date-fns');
 
 const processCompGift = (member, {thresholdYearOrDate, beforeThreshold}) => {
@@ -15,6 +16,7 @@ const processCompGift = (member, {thresholdYearOrDate, beforeThreshold}) => {
         member.stripe_customer_id = null;
         member.note = `Substack expiry date: ${member.expiry.toISOString()}`;
         member.info = `${sType} member after threshold - importing as complimentary: ${member.email}`;
+        member.labels = [format(member.expiry, 'yyyy-MM')];
     } else if (beforeThreshold === 'none') {
         member.type = 'skip';
         member.info = `${sType} member below threshold - skipping: ${member.email}`;
@@ -38,15 +40,18 @@ const processOptions = (member, options) => {
 
     if (member.type === 'comp') {
         member = processCompGift(member, comp);
-        member.labels = options.compLabel;
+        member.labels.push(options.compLabel);
     } else if (member.type === 'gift') {
         member = processCompGift(member, gift);
-        member.labels = options.giftLabel;
+        member.labels.push(options.giftLabel);
     } else if (member.type === 'paid') {
-        member.labels = options.paidLabel;
+        member.labels.push(options.paidLabel);
     } else {
-        member.labels = options.freeLabel;
+        member.labels.push(options.freeLabel);
     }
+
+    // Combine the array of labels into a comma-separated string
+    member.labels = member.labels.join(', ');
 
     return member;
 };
@@ -60,7 +65,8 @@ const processMember = (sMember, options) => {
         stripe_customer_id: sMember.stripe_customer_id ? sMember.stripe_customer_id : null,
         created_at: parseISO(sMember.created_at) || parseISO(new Date()),
         expiry: sMember.expiry ? parseISO(sMember.expiry) : null,
-        type: sMember.type
+        type: sMember.type,
+        labels: []
     };
 
     if (member.type === 'free' && member.stripe_customer_id) {

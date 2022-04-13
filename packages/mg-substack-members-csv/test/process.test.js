@@ -85,6 +85,27 @@ describe('Normalizes and processes Substack members', function () {
         result.skip.should.have.length(4);
     });
 
+    it('includes expiry label comp and gift members', async function () {
+        const input = parsedMembers.subscribed;
+        const options = {
+            options: {
+                comp: {thresholdYearOrDate: new Date('2020-12-31T00:00:00.000Z'), beforeThreshold: 'free'},
+                gift: {thresholdYearOrDate: new Date('2010-12-31T00:00:00.000Z'), beforeThreshold: 'free'},
+                compLabel: 'substack-comp',
+                giftLabel: 'substack-gift',
+                freeLabel: 'substack-free',
+                paidLabel: 'substack-paid'
+            }
+        };
+
+        const result = await processMembers(input, options);
+        result.should.be.an.object;
+        result.comp[0].email.should.eql('maguirec086@comm.ca');
+        result.comp[0].labels.should.eql('2025-06, substack-comp');
+        result.comp[3].email.should.eql('ömil@gmail.com');
+        result.comp[3].labels.should.eql('2020-10, substack-gift');
+    });
+
     it('skips delete requests', async function () {
         const input = [
             {
