@@ -101,9 +101,9 @@ describe('Normalizes and processes Substack members', function () {
         const result = await processMembers(input, options);
         result.should.be.an.object;
         result.comp[0].email.should.eql('maguirec086@comm.ca');
-        result.comp[0].labels.should.eql('2025-06, substack-comp');
+        result.comp[0].labels.should.eql('exp-2025-06, substack-comp');
         result.comp[3].email.should.eql('ömil@gmail.com');
-        result.comp[3].labels.should.eql('2020-10, substack-gift');
+        result.comp[3].labels.should.eql('exp-2020-10, substack-gift');
     });
 
     it('skips delete requests', async function () {

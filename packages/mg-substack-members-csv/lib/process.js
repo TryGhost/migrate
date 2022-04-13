@@ -16,7 +16,7 @@ const processCompGift = (member, {thresholdYearOrDate, beforeThreshold}) => {
         member.stripe_customer_id = null;
         member.note = `Substack expiry date: ${member.expiry.toISOString()}`;
         member.info = `${sType} member after threshold - importing as complimentary: ${member.email}`;
-        member.labels = [format(member.expiry, 'yyyy-MM')];
+        member.labels = [`exp-${format(member.expiry, 'yyyy-MM')}`];
     } else if (beforeThreshold === 'none') {
         member.type = 'skip';
         member.info = `${sType} member below threshold - skipping: ${member.email}`;
