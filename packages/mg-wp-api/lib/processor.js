@@ -2,18 +2,7 @@ const fs = require('fs-extra');
 const _ = require('lodash');
 const $ = require('cheerio');
 const url = require('url');
-const errors = require('@tryghost/errors');
 const MgWebScraper = require('@tryghost/mg-webscraper');
-
-const VideoError = ({src, postUrl}) => {
-    let error = new errors.UnsupportedMediaTypeError({message: `Unsupported video ${src} in post ${postUrl}`});
-
-    error.errorType = 'VideoError';
-    error.src = src;
-    error.url = postUrl;
-
-    return error;
-};
 
 const stripHtml = (html) => {
     // Remove HTML tags, new line characters, and trim white-space
@@ -395,14 +384,32 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
     });
 
     // Convert videos to HTML cards and report as errors
-    // TODO make this a parser plugin
     $html('video').each((i, el) => {
-        $(el).before('<!--kg-card-begin: html-->');
-        $(el).after('<!--kg-card-end: html-->');
+        const isInFigure = el.parent.name === 'figure';
 
-        let src = $(el).attr('src') || $(el).find('source').attr('src');
+        $(el).css('width', '100%');
 
-        errors.push(VideoError({src, postUrl}));
+        if (isInFigure) {
+            $(el.parent).before('<!--kg-card-begin: html-->');
+            $(el.parent).after('<!--kg-card-end: html-->');
+        } else {
+            $(el).before('<!--kg-card-begin: html-->');
+            $(el).after('<!--kg-card-end: html-->');
+        }
+    });
+
+    $html('audio').each((i, el) => {
+        const isInFigure = el.parent.name === 'figure';
+
+        $(el).css('width', '100%');
+
+        if (isInFigure) {
+            $(el.parent).before('<!--kg-card-begin: html-->');
+            $(el.parent).after('<!--kg-card-end: html-->');
+        } else {
+            $(el).before('<!--kg-card-begin: html-->');
+            $(el).after('<!--kg-card-end: html-->');
+        }
     });
 
     // (Some) WordPress renders gifs a different way. They use an `img` tag with a `src` for a still image,

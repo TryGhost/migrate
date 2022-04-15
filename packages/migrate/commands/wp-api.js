@@ -1,5 +1,6 @@
 const wpAPISource = require('../sources/wp-api');
 const ui = require('@tryghost/pretty-cli').ui;
+const Table = require('tty-table');
 
 // Internal ID in case we need one.
 exports.id = 'wp-api';
@@ -26,7 +27,7 @@ exports.setup = (sywac) => {
         desc: 'Create a zip file (set to false to skip)'
     });
     sywac.enumeration('-s --scrape', {
-        choices: ['all', 'img', 'web', 'none'],
+        choices: ['all', 'img', 'web', 'media', 'none'],
         defaultValue: 'all',
         desc: 'Configure scraping tasks'
     });
@@ -76,6 +77,10 @@ exports.setup = (sywac) => {
         defaultValue: null,
         desc: 'The slug(s) of custom post type(s), e.g. `resources,newsletters`'
     });
+    sywac.number('--size_limit', {
+        defaultValue: false,
+        desc: 'Files larger than this size (defined in MB) will be flagged as oversize'
+    });
     sywac.string('--excerptSelector', {
         defaultValue: null,
         desc: 'Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`'
@@ -123,8 +128,53 @@ exports.run = async (argv) => {
             ui.log.info(`Batch info: ${context.info.totals.posts} posts, ${context.info.totals.pages} pages, ${batches} batches.`);
         }
 
+        if (context.reports && argv.size_limit) {
+            let tableColOpts = {
+                headerAlign: 'left',
+                headerColor: 'cyan',
+                align: 'left',
+                color: 'gray',
+                formatter: function (cellValue) {
+                    return this.style(cellValue, 'red', 'bold');
+                }
+            };
+
+            Object.entries(context.reports).forEach(([reportTypeKey, reportTypeValue]) => {
+                let tableHeader = [
+                    Object.assign({}, tableColOpts, {
+                        alias: 'Size',
+                        value: 'humanSize'
+                    }),
+                    Object.assign({}, tableColOpts, {
+                        alias: 'Bytes',
+                        value: 'bytesSize'
+                    }),
+                    Object.assign({}, tableColOpts, {
+                        alias: 'Path',
+                        value: 'path'
+                    })
+                ];
+
+                let tableRows = [];
+
+                reportTypeValue.data.forEach((element) => {
+                    if (element.overSizeLimit) {
+                        tableRows.push(element);
+                    }
+                });
+
+                if (tableRows.length) {
+                    const out = Table(tableHeader, tableRows, {compact: true}).render();
+                    ui.log.warn(`${tableRows.length} '${reportTypeKey}' ${(tableRows.length === 1) ? 'file' : 'files'} is too large - Full report at ${reportTypeValue.path}`, out);
+                } else {
+                    ui.log.ok(`All files are ${reportTypeKey} are OK - Full report at ${reportTypeValue.path}`);
+                }
+            });
+        }
+
         if (argv.verbose) {
-            ui.log.info('Done', require('util').inspect(context.result.data, false, 2));
+            // ui.log.info('Done', require('util').inspect(context.result.data, false, 2));
+            ui.log.info('Done');
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);

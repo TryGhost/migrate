@@ -23,6 +23,7 @@
     "@tryghost/image-transform": "1.0.30",
     "@tryghost/zip": "1.1.23",
     "adm-zip": "0.5.9",
+    "bytes": "3.1.1",
     "csv-parse": "5.0.4",
     "date-fns": "2.28.0",
     "fs-extra": "10.1.0",
