@@ -11,11 +11,16 @@ const htmlFields = ['html'];
 const mobiledocFields = ['mobiledoc'];
 
 // @TODO: should probably be a shared list
-const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico', '.webp'];
+const knownImageExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico', '.webp'];
 
 const isHTMLField = field => _.includes(htmlFields, field);
 const isMobiledocField = field => _.includes(mobiledocFields, field);
 const isImageField = field => /image$/.test(field);
+
+// @TODO: Also handle images in new media cards
+// audio - thumbnailSrc
+// video - thumbnailSrc
+// video - customThumbnailSrc
 
 const ScrapeError = ({src, code, statusCode, originalError}) => {
     let error = new errors.InternalServerError({message: `Unable to scrape URI ${src}`});
@@ -67,8 +72,13 @@ class ImageScraper {
         if (!src) {
             return;
         }
+
+        if (src.startsWith('//')){
+            src = `https:${src}`;
+        }
+
         let imageUrl = url.parse(src);
-        let imageFile = this.fileCache.resolveImageFileName(imageUrl.pathname);
+        let imageFile = this.fileCache.resolveFileName(imageUrl.pathname, 'images');
         let imageOptions = Object.assign(imageFile, this.defaultImageOptions);
 
         if (this.fileCache.hasFile(imageFile.storagePath)) {
@@ -89,7 +99,7 @@ class ImageScraper {
                 let contentTypeParts = response.headers['content-type'].split('/');
                 let newExt = '.' + contentTypeParts[1];
 
-                if (knownExtensions.includes(newExt)) {
+                if (knownImageExtensions.includes(newExt)) {
                     imageOptions.filename = this.changeExtension(imageOptions.filename, newExt);
                     imageOptions.storagePath = this.changeExtension(imageOptions.storagePath, newExt);
                     imageOptions.outputPath = this.changeExtension(imageOptions.outputPath, newExt);
@@ -114,6 +124,18 @@ class ImageScraper {
             $image.attr(type, newSrc);
         }).get();
 
+        let videoPosters = $('video').map(async (i, el) => {
+            let $video = $(el);
+
+            if (!$video.attr('poster')) {
+                return;
+            }
+
+            let src = $video.attr('poster');
+            let newSrc = await this.downloadImage(src);
+            $video.attr('poster', newSrc);
+        }).get();
+
         let bgImages = $('[style*="background-image"]').map(async (i, el) => {
             let $image = $(el);
             let match = $image.css('background-image').match(/url\(([^)]*?)\)/);
@@ -125,22 +147,22 @@ class ImageScraper {
             }
         }).get();
 
-        await Promise.all(images, bgImages);
+        await Promise.all(images, videoPosters, bgImages);
         return $.html();
     }
 
-    async processField(field, value) {
-        if (isImageField(field)) {
-            // field has image in the name, value is null or a valid image URL
-            // @TODO: fetch value & then update value
-            return value;
-        } else if (isHTMLField(field)) {
-            // field is an html field, we need to process the whole field looking for images
-            return await this.processHTML(value);
-        }
+    // async processField(field, value) {
+    //     if (isImageField(field)) {
+    //         // field has image in the name, value is null or a valid image URL
+    //         // @TODO: fetch value & then update value
+    //         return value;
+    //     } else if (isHTMLField(field)) {
+    //         // field is an html field, we need to process the whole field looking for images
+    //         return await this.processHTML(value);
+    //     }
 
-        return value;
-    }
+    //     return value;
+    // }
 
     async processMobiledoc(value) {
         let json = JSON.parse(value);

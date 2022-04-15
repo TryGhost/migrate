@@ -3,11 +3,13 @@ const fs = require('fs-extra');
 const path = require('path');
 const crypto = require('crypto');
 const os = require('os');
+const bytes = require('bytes');
 const imageTransform = require('@tryghost/image-transform');
 const errors = require('@tryghost/errors');
+const csv = require('./csv');
 
 const basePath = 'mg';
-const knownExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico', 'webp'];
+const knownImageExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico', 'webp'];
 
 class FileCache {
     constructor(cacheName, options = {}) {
@@ -45,6 +47,8 @@ class FileCache {
      *      - json file
      *      - /content/images
      *        - image files
+     *      - /content/media
+     *        - non-image media files like videos or audio files
      */
     get cacheDir() {
         if (!this._cacheDir) {
@@ -54,6 +58,7 @@ class FileCache {
             // don't create the content directory when migrating members
             if (this.options && this.options.contentDir) {
                 fs.mkdirpSync(path.join(this.imageDir));
+                fs.mkdirpSync(path.join(this.mediaDir));
             } else {
                 fs.mkdirpSync(path.join(this.zipDir));
             }
@@ -81,6 +86,14 @@ class FileCache {
         return path.join(this.zipDir, this.imagePath);
     }
 
+    get mediaPath() {
+        return path.join('content', 'media');
+    }
+
+    get mediaDir() {
+        return path.join(this.zipDir, this.mediaPath);
+    }
+
     get defaultCacheFileName() {
         if (this.batchName) {
             return `gh-${this.cacheName}-batch-${this.batchName}-${Date.now()}`;
@@ -104,6 +117,55 @@ class FileCache {
         return `${this.defaultCacheFileName}.errors.json`;
     }
 
+    getAllFiles(dirPath) {
+        const files = fs.readdirSync(dirPath);
+
+        let arrayOfFiles = [];
+
+        files.forEach((file) => {
+            if (fs.statSync(dirPath + '/' + file).isDirectory()) {
+                arrayOfFiles = this.getAllFiles(dirPath + '/' + file, arrayOfFiles);
+            } else {
+                arrayOfFiles.push(path.join(dirPath, '/', file));
+            }
+        });
+
+        return arrayOfFiles;
+    }
+
+    getFileSize(filePath) {
+        let theSize = fs.statSync(filePath);
+        return theSize;
+    }
+
+    getFileSizes(dirPath, sizeLimit = false) {
+        const arrayOfFiles = this.getAllFiles(dirPath);
+        const sizeLimitInBytes = (sizeLimit) ? (sizeLimit * 1000000) : false;// TODO: Check this assumption
+
+        let sizes = [];
+
+        arrayOfFiles.forEach((item) => {
+            let theSize = this.getFileSize(item);
+
+            let theItem = {
+                humanSize: bytes.format(theSize.size),
+                bytesSize: theSize.size,
+                path: item.replace(this.zipDir, ''),
+                overSizeLimit: false
+            };
+
+            if (sizeLimit && sizeLimitInBytes) {
+                theItem.overSizeLimit = (theSize.size > sizeLimitInBytes) ? true : false;
+            }
+
+            sizes.push(theItem);
+        });
+
+        let newSizes = _.reverse(_.sortBy(sizes, ['bytesSize']));
+
+        return newSizes;
+    }
+
     // @TODO: move this somewhere shared,
     // it's currently duplicated from https://github.com/TryGhost/Ghost-Storage-Base/blob/master/BaseStorage.js#L62
     sanitizeFileName(src) {
@@ -125,16 +187,35 @@ class FileCache {
     }
 
     resolveImageFileName(filename) {
+        return this.resolveFileName(filename, 'images');
+    }
+
+    resolveMediaFileName(filename) {
+        return this.resolveFileName(filename, 'media');
+    }
+
+    resolveFileName(filename, type = 'images') {
         let ext = path.extname(filename);
 
-        // remove the base imagePath if it already exists in the path, so we don't get nested imagePath directories
-        filename = filename.replace(`/${this.imagePath}`, '');
+        let typeDir = null;
+        let typePath = null;
+
+        if (type === 'images') {
+            typeDir = this.imageDir;
+            typePath = this.imagePath;
+        } else if (type === 'media') {
+            typeDir = this.mediaDir;
+            typePath = this.mediaPath;
+        }
+
+        // remove the base filePath if it already exists in the path, so we don't get nested filePath directories
+        filename = filename.replace(`/${typePath}`, '');
 
         // replace the basename part with a sanitized version
         filename = filename.replace(filename, this.sanitizeFileName(filename));
 
         // @TODO: use content type on request to infer this, rather than assuming jpeg?
-        if (!_.includes(knownExtensions, ext)) {
+        if (type === 'image' && !_.includes(knownImageExtensions, ext)) {
             if (!ext) {
                 filename += '.jpeg';
             } else {
@@ -144,8 +225,8 @@ class FileCache {
 
         return {
             filename: filename,
-            storagePath: path.join(this.imageDir, filename),
-            outputPath: path.join('/', this.imagePath, filename)
+            storagePath: path.join(typeDir, filename),
+            outputPath: path.join('/', typePath, filename)
         };
     }
 
@@ -224,6 +305,22 @@ class FileCache {
     }
 
     /**
+     * Create a CSV file with our reports
+     *
+     * @param {Object} data - a valid JSON object
+     * @param {Object} options - config
+     */
+    async writeReportCSVFile(data, options = {}) {
+        const fileName = options.filename || false;
+        const filePath = path.join(this.cacheDir, `report-${fileName}.csv`);
+        const fileData = csv.jsonToCSV(data);
+
+        await fs.writeFile(filePath, fileData);
+
+        return filePath;
+    }
+
+    /**
      * Create a binary image file with fetched data
      *
      * @param {String} data - a valid binary image
@@ -246,6 +343,20 @@ class FileCache {
         } else {
             await fs.outputFile(options.storagePath, data);
         }
+
+        return options.outputPath;
+    }
+
+    async writeMediaFile(data, options) {
+        return this.writeFile(data, options, 'media');
+    }
+
+    async writeFile(data, options, type = 'images') {
+        if (!options.storagePath || !options.outputPath) {
+            options = this.resolveFileName(options.filename, type);
+        }
+
+        await fs.outputFile(options.storagePath, data);
 
         return options.outputPath;
     }

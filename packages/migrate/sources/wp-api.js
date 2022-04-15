@@ -3,6 +3,7 @@ const mgJSON = require('@tryghost/mg-json');
 const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
 const MgWebScraper = require('@tryghost/mg-webscraper');
 const MgImageScraper = require('@tryghost/mg-imagescraper');
+const MgMediaScraper = require('@tryghost/mg-mediascraper');
 const MgLinkFixer = require('@tryghost/mg-linkfixer');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const makeTaskRunner = require('../lib/task-runner');
@@ -96,7 +97,19 @@ module.exports.initialize = (url, options) => {
             ctx.fileCache = new fsUtils.FileCache(url, {batchName: options.batch});
             ctx.wpScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
+            ctx.mediaScraper = new MgMediaScraper(ctx.fileCache);
             ctx.linkFixer = new MgLinkFixer();
+
+            ctx.reports = {
+                images: {
+                    path: null,
+                    data: null
+                },
+                media: {
+                    path: null,
+                    data: null
+                }
+            };
 
             task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
 
@@ -209,9 +222,18 @@ module.exports.getFullTaskList = (url, options) => {
             skip: () => ['all', 'img'].indexOf(options.scrape) < 0
         },
         {
+            title: 'Fetch media via MediaScraper',
+            task: async (ctx) => {
+                // 7. Pass the JSON file through the file scraper
+                let tasks = ctx.mediaScraper.fetch(ctx);
+                return makeTaskRunner(tasks, options);
+            },
+            skip: () => ['all', 'media'].indexOf(options.scrape) < 0
+        },
+        {
             title: 'Update links in content via LinkFixer',
             task: async (ctx, task) => {
-                // 7. Process the content looking for known links, and update them to new links
+                // 8. Process the content looking for known links, and update them to new links
                 let tasks = ctx.linkFixer.fix(ctx, task);
                 return makeTaskRunner(tasks, options);
             }
@@ -220,7 +242,7 @@ module.exports.getFullTaskList = (url, options) => {
             // @TODO don't duplicate this with the utils json file
             title: 'Convert HTML -> MobileDoc',
             task: (ctx) => {
-                // 8. Convert post HTML -> MobileDoc
+                // 9. Convert post HTML -> MobileDoc
                 try {
                     let tasks = mgHtmlMobiledoc.convert(ctx);
                     return makeTaskRunner(tasks, options);
@@ -233,7 +255,7 @@ module.exports.getFullTaskList = (url, options) => {
         {
             title: 'Write Ghost import JSON File',
             task: async (ctx) => {
-                // 9. Write a valid Ghost import zip
+                // 10. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
                     await ctx.fileCache.writeErrorJSONFile(ctx.errors);
@@ -244,10 +266,26 @@ module.exports.getFullTaskList = (url, options) => {
             }
         },
         {
+            title: 'Report file sizes',
+            skip: () => !options.size_limit,
+            task: async (ctx) => {
+                try {
+                    ctx.reports.images.data = await ctx.fileCache.getFileSizes(ctx.fileCache.imageDir, options.size_limit);
+                    ctx.reports.images.path = await ctx.fileCache.writeReportCSVFile(ctx.reports.images.data, {filename: 'images'});
+
+                    ctx.reports.media.data = await ctx.fileCache.getFileSizes(ctx.fileCache.mediaDir, options.size_limit);
+                    ctx.reports.media.path = await ctx.fileCache.writeReportCSVFile(ctx.reports.media.data, {filename: 'media'});
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
+            }
+        },
+        {
             title: 'Write Ghost import zip',
             skip: () => !options.zip,
             task: async (ctx) => {
-                // 10. Write a valid Ghost import zip
+                // 12. Write a valid Ghost import zip
                 try {
                     ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
                 } catch (error) {

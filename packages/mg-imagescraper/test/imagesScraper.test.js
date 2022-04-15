@@ -14,14 +14,14 @@ describe('Download Image', function () {
 
     beforeEach(function () {
         mockFileCache = {
-            resolveImageFileName: sinon.stub(),
+            resolveFileName: sinon.stub(),
             hasFile: sinon.stub(),
             writeImageFile: sinon.stub()
         };
 
         mockFileCache.writeImageFile.resolves();
 
-        mockFileCache.resolveImageFileName.returns({
+        mockFileCache.resolveFileName.returns({
             fileName: mockFile,
             storagePath: mockStoragePath,
             outputPath: mockOutputPath
@@ -39,7 +39,7 @@ describe('Download Image', function () {
 
         let resultPath = await imageScraper.downloadImage(mockUrl);
 
-        mockFileCache.resolveImageFileName.calledOnce.should.be.true();
+        mockFileCache.resolveFileName.calledOnce.should.be.true();
         mockFileCache.hasFile.calledOnce.should.be.true();
 
         resultPath.should.eql(mockOutputPath);
@@ -55,7 +55,7 @@ describe('Download Image', function () {
 
         let resultPath = await imageScraper.downloadImage(mockUrl);
 
-        mockFileCache.resolveImageFileName.calledOnce.should.be.true();
+        mockFileCache.resolveFileName.calledOnce.should.be.true();
         mockFileCache.hasFile.calledOnce.should.be.true();
         mockFileCache.writeImageFile.calledOnce.should.be.true();
 
