@@ -117,6 +117,10 @@ class FileCache {
         return `${this.defaultCacheFileName}.errors.json`;
     }
 
+    convertMbToBytes(mb) {
+        return (mb * 1048576);
+    }
+
     getAllFiles(dirPath) {
         const files = fs.readdirSync(dirPath);
 
@@ -140,7 +144,7 @@ class FileCache {
 
     getFileSizes(dirPath, sizeLimit = false) {
         const arrayOfFiles = this.getAllFiles(dirPath);
-        const sizeLimitInBytes = (sizeLimit) ? (sizeLimit * 1000000) : false;// TODO: Check this assumption
+        const sizeLimitInBytes = (sizeLimit) ? this.convertMbToBytes(sizeLimit) : false;
 
         let sizes = [];
 
