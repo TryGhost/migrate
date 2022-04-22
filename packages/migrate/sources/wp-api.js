@@ -97,14 +97,19 @@ module.exports.initialize = (url, options) => {
             ctx.fileCache = new fsUtils.FileCache(url, {batchName: options.batch});
             ctx.wpScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
-            ctx.mediaScraper = new MgMediaScraper(ctx.fileCache);
+
+            const mediaScraperConfig = {};
+            if (ctx.options.size_limit) {
+                mediaScraperConfig.sizeLimit = ctx.options.size_limit;
+            }
+
+            ctx.mediaSizeWarnings = [];
+
+            ctx.mediaScraper = new MgMediaScraper(ctx.fileCache, mediaScraperConfig, ctx.mediaSizeWarnings);
+
             ctx.linkFixer = new MgLinkFixer();
 
             ctx.reports = {
-                images: {
-                    path: null,
-                    data: null
-                },
                 media: {
                     path: null,
                     data: null
@@ -270,11 +275,10 @@ module.exports.getFullTaskList = (url, options) => {
             skip: () => !options.size_limit,
             task: async (ctx) => {
                 try {
-                    ctx.reports.images.data = await ctx.fileCache.getFileSizes(ctx.fileCache.imageDir, options.size_limit);
-                    ctx.reports.images.path = await ctx.fileCache.writeReportCSVFile(ctx.reports.images.data, {filename: 'images'});
+                    const mediaReport = await ctx.fileCache.writeReportCSVFile(ctx.mediaSizeWarnings, {filename: 'media', sizeLimit: options.size_limit});
 
-                    ctx.reports.media.data = await ctx.fileCache.getFileSizes(ctx.fileCache.mediaDir, options.size_limit);
-                    ctx.reports.media.path = await ctx.fileCache.writeReportCSVFile(ctx.reports.media.data, {filename: 'media'});
+                    ctx.reports.media.data = mediaReport.data;
+                    ctx.reports.media.path = mediaReport.path;
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;

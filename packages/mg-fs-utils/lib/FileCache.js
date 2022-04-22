@@ -3,7 +3,6 @@ const fs = require('fs-extra');
 const path = require('path');
 const crypto = require('crypto');
 const os = require('os');
-const bytes = require('bytes');
 const imageTransform = require('@tryghost/image-transform');
 const errors = require('@tryghost/errors');
 const csv = require('./csv');
@@ -121,10 +120,8 @@ class FileCache {
         return (mb * 1048576);
     }
 
-    getAllFiles(dirPath) {
+    getAllFiles(dirPath, arrayOfFiles = []) {
         const files = fs.readdirSync(dirPath);
-
-        let arrayOfFiles = [];
 
         files.forEach((file) => {
             if (fs.statSync(dirPath + '/' + file).isDirectory()) {
@@ -135,39 +132,6 @@ class FileCache {
         });
 
         return arrayOfFiles;
-    }
-
-    getFileSize(filePath) {
-        let theSize = fs.statSync(filePath);
-        return theSize;
-    }
-
-    getFileSizes(dirPath, sizeLimit = false) {
-        const arrayOfFiles = this.getAllFiles(dirPath);
-        const sizeLimitInBytes = (sizeLimit) ? this.convertMbToBytes(sizeLimit) : false;
-
-        let sizes = [];
-
-        arrayOfFiles.forEach((item) => {
-            let theSize = this.getFileSize(item);
-
-            let theItem = {
-                humanSize: bytes.format(theSize.size),
-                bytesSize: theSize.size,
-                path: item.replace(this.zipDir, ''),
-                overSizeLimit: false
-            };
-
-            if (sizeLimit && sizeLimitInBytes) {
-                theItem.overSizeLimit = (theSize.size > sizeLimitInBytes) ? true : false;
-            }
-
-            sizes.push(theItem);
-        });
-
-        let newSizes = _.reverse(_.sortBy(sizes, ['bytesSize']));
-
-        return newSizes;
     }
 
     // @TODO: move this somewhere shared,
@@ -317,11 +281,19 @@ class FileCache {
     async writeReportCSVFile(data, options = {}) {
         const fileName = options.filename || false;
         const filePath = path.join(this.cacheDir, `report-${fileName}.csv`);
-        const fileData = csv.jsonToCSV(data);
+
+        const dedupedData = _.uniqBy(data, (e) => {
+            return e.src;
+        });
+
+        const fileData = csv.jsonToCSV(dedupedData);
 
         await fs.writeFile(filePath, fileData);
 
-        return filePath;
+        return {
+            data: dedupedData,
+            path: filePath
+        };
     }
 
     /**
