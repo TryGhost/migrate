@@ -31,6 +31,10 @@ exports.setup = (sywac) => {
         defaultValue: 'all',
         desc: 'Configure scraping tasks'
     });
+    sywac.number('--size_limit', {
+        defaultValue: false,
+        desc: 'Media files larger than this size (defined in MB) will be flagged as oversize'
+    });
     sywac.boolean('-I, --info', {
         defaultValue: false,
         desc: 'Show initalisation info only'
@@ -76,10 +80,6 @@ exports.setup = (sywac) => {
     sywac.string('--cpt', {
         defaultValue: null,
         desc: 'The slug(s) of custom post type(s), e.g. `resources,newsletters`'
-    });
-    sywac.number('--size_limit', {
-        defaultValue: false,
-        desc: 'Files larger than this size (defined in MB) will be flagged as oversize'
     });
     sywac.string('--excerptSelector', {
         defaultValue: null,

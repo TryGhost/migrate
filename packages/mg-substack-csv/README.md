@@ -39,7 +39,10 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`-s` `--scrape`** 
     - Configure scraping tasks
     - string - default: `all` 
-    - Choices: `all`, `web`, `img`, `none`            
+    - Choices: `all`, `img`, `web`, `media`, `none`    
+- **`--size_limit`**
+    - number - default: `false`
+    - Media files larger than this size (defined in MB [i.e. `5`]) will be flagged as oversize     
 - **`-e` `--email`** 
     - Provide an email domain for users e.g. `person@example.com`
     - bool/string - default: `false`            
