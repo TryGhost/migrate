@@ -98,23 +98,12 @@ module.exports.initialize = (url, options) => {
             ctx.wpScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
 
-            const mediaScraperConfig = {};
-            if (ctx.options.size_limit) {
-                mediaScraperConfig.sizeLimit = ctx.options.size_limit;
-            }
-
-            ctx.mediaSizeWarnings = [];
-
-            ctx.mediaScraper = new MgMediaScraper(ctx.fileCache, mediaScraperConfig, ctx.mediaSizeWarnings);
+            ctx.sizeReports = {};
+            ctx.mediaScraper = new MgMediaScraper(ctx.fileCache, {
+                sizeLimit: ctx.options.size_limit || false
+            });
 
             ctx.linkFixer = new MgLinkFixer();
-
-            ctx.reports = {
-                media: {
-                    path: null,
-                    data: null
-                }
-            };
 
             task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
 
@@ -276,10 +265,7 @@ module.exports.getFullTaskList = (url, options) => {
             task: async (ctx) => {
                 // 11. Report assets that were not downloaded
                 try {
-                    const mediaReport = await ctx.fileCache.writeReportCSVFile(ctx.mediaSizeWarnings, {filename: 'media', sizeLimit: options.size_limit});
-
-                    ctx.reports.media.data = mediaReport.data;
-                    ctx.reports.media.path = mediaReport.path;
+                    ctx.sizeReports.media = await ctx.fileCache.writeReportCSVFile(ctx.mediaScraper.sizeReport, {filename: 'media', sizeLimit: options.size_limit});
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;

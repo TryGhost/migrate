@@ -131,9 +131,9 @@ describe('Download Media File', function () {
 
         resultPath.should.eql(mockAudioUrl);
 
-        mediaScraper.sizeWarnings.should.be.an.Array().with.lengthOf(1);
-        mediaScraper.sizeWarnings[0].src.should.eql('https://mysite.com/files/audio.mp3');
-        mediaScraper.sizeWarnings[0].bytesSize.should.eql(3145728);
+        mediaScraper.sizeReport.data.should.be.an.Array().with.lengthOf(1);
+        mediaScraper.sizeReport.data[0].src.should.eql('https://mysite.com/files/audio.mp3');
+        mediaScraper.sizeReport.data[0].bytesSize.should.eql(3145728);
     });
 
     it('Will fetch files that are within the defined sizeLimit', async function () {
@@ -153,7 +153,7 @@ describe('Download Media File', function () {
 
         resultPath.should.eql(mockVideoOutputPath);
 
-        mediaScraper.sizeWarnings.should.be.an.Array().with.lengthOf(0);
+        mediaScraper.sizeReport.data.should.be.an.Array().with.lengthOf(0);
     });
 
     it('Will find and replace video elements in HTML', async function () {

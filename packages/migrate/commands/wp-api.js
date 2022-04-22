@@ -128,7 +128,7 @@ exports.run = async (argv) => {
             ui.log.info(`Batch info: ${context.info.totals.posts} posts, ${context.info.totals.pages} pages, ${batches} batches.`);
         }
 
-        if (context.reports && argv.size_limit) {
+        if (context.sizeReports && argv.size_limit) {
             let tableColOpts = {
                 headerAlign: 'left',
                 headerColor: 'cyan',
@@ -139,7 +139,7 @@ exports.run = async (argv) => {
                 }
             };
 
-            Object.entries(context.reports).forEach(([reportTypeKey, reportTypeValue]) => {
+            Object.entries(context.sizeReports).forEach(([reportTypeKey, reportTypeValue]) => {
                 let tableHeader = [
                     Object.assign({}, tableColOpts, {
                         alias: 'Bytes',

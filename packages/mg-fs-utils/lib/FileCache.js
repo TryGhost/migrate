@@ -120,20 +120,6 @@ class FileCache {
         return (mb * 1048576);
     }
 
-    getAllFiles(dirPath, arrayOfFiles = []) {
-        const files = fs.readdirSync(dirPath);
-
-        files.forEach((file) => {
-            if (fs.statSync(dirPath + '/' + file).isDirectory()) {
-                arrayOfFiles = this.getAllFiles(dirPath + '/' + file, arrayOfFiles);
-            } else {
-                arrayOfFiles.push(path.join(dirPath, '/', file));
-            }
-        });
-
-        return arrayOfFiles;
-    }
-
     // @TODO: move this somewhere shared,
     // it's currently duplicated from https://github.com/TryGhost/Ghost-Storage-Base/blob/main/BaseStorage.js#L63
     sanitizeFileName(src) {
@@ -278,11 +264,11 @@ class FileCache {
      * @param {Object} data - a valid JSON object
      * @param {Object} options - config
      */
-    async writeReportCSVFile(data, options = {}) {
+    async writeReportCSVFile(report, options = {}) {
         const fileName = options.filename || false;
         const filePath = path.join(this.cacheDir, `report-${fileName}.csv`);
 
-        const dedupedData = _.uniqBy(data, (e) => {
+        const dedupedData = _.uniqBy(report.data, (e) => {
             return e.src;
         });
 

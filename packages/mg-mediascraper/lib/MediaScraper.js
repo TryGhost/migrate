@@ -37,16 +37,19 @@ const ScrapeError = ({src, code, statusCode, originalError}) => {
 };
 
 class MediaScraper {
-    constructor(fileCache, defaultOptions, sizeWarnings = []) {
+    constructor(fileCache, defaultOptions) {
         this.fileCache = fileCache;
         this.defaultFileOptions = Object.assign({
-            sizeLimit: false
+            sizeLimit: false,
+            report: {
+                path: null,
+                data: []
+            }
         }, defaultOptions);
 
         this.sizeLimit = this.defaultFileOptions.sizeLimit;
         this.sizeLimitAsBytes = (this.defaultFileOptions.sizeLimit * 1048576);
-
-        this.sizeWarnings = sizeWarnings;
+        this.sizeReport = this.defaultFileOptions.report;
     }
 
     async fetchMedia(src) {
@@ -85,7 +88,7 @@ class MediaScraper {
             const contentLength = response.headers && parseInt(response.headers['content-length']);
 
             if (this.sizeLimit && contentLength && contentLength > this.sizeLimitAsBytes) {
-                this.sizeWarnings.push({
+                this.sizeReport.data.push({
                     src: src,
                     bytesSize: contentLength
                 });
