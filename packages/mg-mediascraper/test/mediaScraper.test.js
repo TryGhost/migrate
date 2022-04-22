@@ -6,11 +6,13 @@ const makeTaskRunner = require('../../migrate/lib/task-runner.js');
 
 const mockAudioUrl = 'https://mysite.com/files/audio.mp3';
 const mockAudioFile = 'audio.mp3';
+const mockAudioFileSize = 3145728; // 3mb as bytes
 const mockAudioStoragePath = `/tmp/blah/${mockAudioFile}`;
 const mockAudioOutputPath = `/content/media/${mockAudioFile}`;
 
 const mockVideoUrl = 'https://mysite.com/files/video.mp4';
 const mockVideoFile = 'video.mp4';
+const mockVideoFileSize = 5242880; // 5mb as bytes
 const mockVideoStoragePath = `/tmp/blah/${mockVideoFile}`;
 const mockVideoOutputPath = `/content/media/${mockVideoFile}`;
 
@@ -110,6 +112,48 @@ describe('Download Media File', function () {
         mockVideoFileCache.writeFile.calledOnce.should.be.true();
 
         resultPath.should.eql(mockVideoOutputPath);
+    });
+
+    it('Will not fetch files that are too large if sizeLimit is defined', async function () {
+        mockAudioFileCache.hasFile.returns(false);
+
+        let mediaScraper = new MediaScraper(mockAudioFileCache, {
+            sizeLimit: 1
+        });
+
+        // Fake fetching the image, we don't need to test that part
+        mediaScraper.fetchMedia = sinon.stub().resolves({
+            headers: {'content-length': mockAudioFileSize},
+            body: 'myfakeaudiobody'
+        });
+
+        let resultPath = await mediaScraper.downloadMedia(mockAudioUrl);
+
+        resultPath.should.eql(mockAudioUrl);
+
+        mediaScraper.sizeWarnings.should.be.an.Array().with.lengthOf(1);
+        mediaScraper.sizeWarnings[0].src.should.eql('https://mysite.com/files/audio.mp3');
+        mediaScraper.sizeWarnings[0].bytesSize.should.eql(3145728);
+    });
+
+    it('Will fetch files that are within the defined sizeLimit', async function () {
+        mockVideoFileCache.hasFile.returns(false);
+
+        let mediaScraper = new MediaScraper(mockVideoFileCache, {
+            sizeLimit: 10
+        });
+
+        // Fake fetching the image, we don't need to test that part
+        mediaScraper.fetchMedia = sinon.stub().resolves({
+            headers: {'content-length': mockVideoFileSize},
+            body: 'myfakevideobody'
+        });
+
+        let resultPath = await mediaScraper.downloadMedia(mockVideoUrl);
+
+        resultPath.should.eql(mockVideoOutputPath);
+
+        mediaScraper.sizeWarnings.should.be.an.Array().with.lengthOf(0);
     });
 
     it('Will find and replace video elements in HTML', async function () {

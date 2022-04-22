@@ -37,9 +37,16 @@ const ScrapeError = ({src, code, statusCode, originalError}) => {
 };
 
 class MediaScraper {
-    constructor(fileCache, defaultOptions) {
+    constructor(fileCache, defaultOptions, sizeWarnings = []) {
         this.fileCache = fileCache;
-        this.defaultFileOptions = Object.assign({}, defaultOptions);
+        this.defaultFileOptions = Object.assign({
+            sizeLimit: false
+        }, defaultOptions);
+
+        this.sizeLimit = this.defaultFileOptions.sizeLimit;
+        this.sizeLimitAsBytes = (this.defaultFileOptions.sizeLimit * 1048576);
+
+        this.sizeWarnings = sizeWarnings;
     }
 
     async fetchMedia(src) {
@@ -75,8 +82,18 @@ class MediaScraper {
             // Timeout after 20 seconds
             let response = await this.fetchMedia(src);
 
-            await this.fileCache.writeFile(response.body, fileOptions, 'media');
-            return theFile.outputPath;
+            const contentLength = response.headers && parseInt(response.headers['content-length']);
+
+            if (this.sizeLimit && contentLength && contentLength > this.sizeLimitAsBytes) {
+                this.sizeWarnings.push({
+                    src: src,
+                    bytesSize: contentLength
+                });
+                return src;
+            } else {
+                await this.fileCache.writeFile(response.body, fileOptions, 'media');
+                return theFile.outputPath;
+            }
         } catch (error) {
             throw ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error});
         }

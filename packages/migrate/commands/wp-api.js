@@ -142,25 +142,19 @@ exports.run = async (argv) => {
             Object.entries(context.reports).forEach(([reportTypeKey, reportTypeValue]) => {
                 let tableHeader = [
                     Object.assign({}, tableColOpts, {
-                        alias: 'Size',
-                        value: 'humanSize'
-                    }),
-                    Object.assign({}, tableColOpts, {
                         alias: 'Bytes',
                         value: 'bytesSize'
                     }),
                     Object.assign({}, tableColOpts, {
-                        alias: 'Path',
-                        value: 'path'
+                        alias: 'Source',
+                        value: 'src'
                     })
                 ];
 
                 let tableRows = [];
 
                 reportTypeValue.data.forEach((element) => {
-                    if (element.overSizeLimit) {
-                        tableRows.push(element);
-                    }
+                    tableRows.push(element);
                 });
 
                 if (tableRows.length) {
