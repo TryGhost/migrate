@@ -1,6 +1,7 @@
 const ghostAPI = require('@tryghost/mg-ghost-api');
 const mgJSON = require('@tryghost/mg-json');
 const MgImageScraper = require('@tryghost/mg-imagescraper');
+const MgMediaScraper = require('@tryghost/mg-mediascraper');
 const MgLinkFixer = require('@tryghost/mg-linkfixer');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const makeTaskRunner = require('../lib/task-runner');
@@ -14,6 +15,12 @@ module.exports.initialize = (options) => {
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
             ctx.fileCache = new fsUtils.FileCache(options.url, {batchName: options.batch});
             ctx.imageScraper = new MgImageScraper(ctx.fileCache);
+
+            ctx.sizeReports = {};
+            ctx.mediaScraper = new MgMediaScraper(ctx.fileCache, {
+                sizeLimit: ctx.options.size_limit || false
+            });
+
             ctx.linkFixer = new MgLinkFixer();
 
             task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
@@ -118,9 +125,18 @@ module.exports.getFullTaskList = (options) => {
             skip: () => ['img'].indexOf(options.scrape) < 0
         },
         {
+            title: 'Fetch media via MediaScraper',
+            task: async (ctx) => {
+                // 6. Pass the JSON file through the file scraper
+                let tasks = ctx.mediaScraper.fetch(ctx);
+                return makeTaskRunner(tasks, options);
+            },
+            skip: () => ['all', 'media'].indexOf(options.scrape) < 0
+        },
+        {
             title: 'Update links in content via LinkFixer',
             task: async (ctx, task) => {
-                // 6. Process the content looking for known links, and update them to new links
+                // 7. Process the content looking for known links, and update them to new links
                 let tasks = ctx.linkFixer.fix(ctx, task);
                 return makeTaskRunner(tasks, options);
             }
@@ -128,7 +144,7 @@ module.exports.getFullTaskList = (options) => {
         {
             title: 'Write Ghost import JSON File',
             task: async (ctx) => {
-                // 7. Write a valid Ghost import zip
+                // 8. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
                     await ctx.fileCache.writeErrorJSONFile(ctx.errors);
@@ -139,10 +155,23 @@ module.exports.getFullTaskList = (options) => {
             }
         },
         {
+            title: 'Report file sizes',
+            skip: () => !options.size_limit,
+            task: async (ctx) => {
+                // 9. Report assets that were not downloaded
+                try {
+                    ctx.sizeReports.media = await ctx.fileCache.writeReportCSVFile(ctx.mediaScraper.sizeReport, {filename: 'media', sizeLimit: options.size_limit});
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
+            }
+        },
+        {
             title: 'Write Ghost import zip',
             skip: () => !options.zip,
             task: async (ctx) => {
-                // 8. Write a valid Ghost import zip
+                // 10. Write a valid Ghost import zip
                 try {
                     ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
                 } catch (error) {
