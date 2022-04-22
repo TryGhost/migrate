@@ -274,6 +274,7 @@ module.exports.getFullTaskList = (url, options) => {
             title: 'Report file sizes',
             skip: () => !options.size_limit,
             task: async (ctx) => {
+                // 11. Report assets that were not downloaded
                 try {
                     const mediaReport = await ctx.fileCache.writeReportCSVFile(ctx.mediaSizeWarnings, {filename: 'media', sizeLimit: options.size_limit});
 

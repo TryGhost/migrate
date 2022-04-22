@@ -1,12 +1,12 @@
-# Migrate Imagescraper
+# Migrate Mediascraper
 
 ## Install
 
-`npm install @tryghost/mg-imagescraper --save`
+`npm install @tryghost/mg-mediascraper --save`
 
 or
 
-`yarn add @tryghost/mg-imagescraper`
+`yarn add @tryghost/mg-mediascraper`
 
 
 ## Usage

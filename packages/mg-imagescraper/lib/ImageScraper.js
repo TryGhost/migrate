@@ -151,19 +151,6 @@ class ImageScraper {
         return $.html();
     }
 
-    // async processField(field, value) {
-    //     if (isImageField(field)) {
-    //         // field has image in the name, value is null or a valid image URL
-    //         // @TODO: fetch value & then update value
-    //         return value;
-    //     } else if (isHTMLField(field)) {
-    //         // field is an html field, we need to process the whole field looking for images
-    //         return await this.processHTML(value);
-    //     }
-
-    //     return value;
-    // }
-
     async processMobiledoc(value) {
         let json = JSON.parse(value);
 
