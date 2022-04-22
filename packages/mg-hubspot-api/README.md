@@ -1,6 +1,6 @@
-# Migrate Hubspot API
+# Migrate HubSpot API
 
-Export content from Hubspot using their API, and generate a `zip` file you can import into a Ghost installation.
+Export content from HubSpot using their API, and generate a `zip` file you can import into a Ghost installation.
 
 See how to [get your API key](https://knowledge.hubspot.com/integrations/how-do-i-get-my-hubspot-api-key).
 
@@ -37,9 +37,13 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--zip`**
     - bool - default: `true`
     - Create a zip file
-- **`-s` `--scrape`**
-    - string - default: `all`
-    - Configure scraping tasks (choices: `all`, `web`, `img`, `none`)
+- **`-s` `--scrape`** 
+    - Configure scraping tasks
+    - string - default: `all` 
+    - Choices: `all`, `img`, `web`, `media`, `none`
+- **`--size_limit`**
+    - number - default: `false`
+    - Media files larger than this size (defined in MB [i.e. `5`]) will be flagged as oversize
 - **`-e` `--email`**
     - string - default: `false`
     - Provide an email domain for users e.g. example.com
