@@ -167,8 +167,7 @@ exports.run = async (argv) => {
         }
 
         if (argv.verbose) {
-            // ui.log.info('Done', require('util').inspect(context.result.data, false, 2));
-            ui.log.info('Done');
+            ui.log.info('Done', require('util').inspect(context.result.data, false, 2));
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);

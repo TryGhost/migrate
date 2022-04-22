@@ -135,7 +135,7 @@ class FileCache {
     }
 
     // @TODO: move this somewhere shared,
-    // it's currently duplicated from https://github.com/TryGhost/Ghost-Storage-Base/blob/master/BaseStorage.js#L62
+    // it's currently duplicated from https://github.com/TryGhost/Ghost-Storage-Base/blob/main/BaseStorage.js#L63
     sanitizeFileName(src) {
         let basename;
 
