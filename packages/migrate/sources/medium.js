@@ -98,7 +98,7 @@ const postProcessor = (scrapedData) => {
  * @param {Object} options
  */
 module.exports.getTaskRunner = (pathToZip, options) => {
-    let tasks = [
+    let runnerTasks = [
         {
             title: 'Initializing Workspace',
             task: (ctx, task) => {
@@ -247,5 +247,5 @@ module.exports.getTaskRunner = (pathToZip, options) => {
     ];
 
     // Configure a new Listr task manager, we can use different renderers for different configs
-    return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
+    return makeTaskRunner(runnerTasks, Object.assign({topLevel: true}, options));
 };

@@ -113,7 +113,7 @@ const skipScrape = (post) => {
  * @param {Object} options
  */
 module.exports.getTaskRunner = (pathToFile, options) => {
-    let tasks = [
+    let runnerTasks = [
         {
             title: 'Initializing',
             task: (ctx, task) => {
@@ -278,5 +278,5 @@ module.exports.getTaskRunner = (pathToFile, options) => {
     ];
 
     // Configure a new Listr task manager, we can use different renderers for different configs
-    return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
+    return makeTaskRunner(runnerTasks, Object.assign({topLevel: true}, options));
 };
