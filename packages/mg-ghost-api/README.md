@@ -36,9 +36,13 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--zip`**
     - bool - default: `true`
     - Create a zip file
-- **`-s` `--scrape`**
-    - string - default: `img`
-    - Configure scraping tasks (choices: `img`, `none`)
+- **`-s` `--scrape`** 
+    - Configure scraping tasks
+    - string - default: `all` 
+    - Choices: `all`, `img`, `web`, `media`, `none`
+- **`--size_limit`**
+    - number - default: `false`
+    - Media files larger than this size (defined in MB [i.e. `5`]) will be flagged as oversize
 - **`-I` `--info`**
     - bool - default: `false`
     - Show initalisation info only
