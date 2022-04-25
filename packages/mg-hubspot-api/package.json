@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-hubspot-api",
-  "version": "0.2.19",
+  "version": "0.2.20",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-hubspot-api",
   "author": "Ghost Foundation",
   "license": "MIT",

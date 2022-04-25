@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-html-mobiledoc",
-  "version": "0.7.23",
+  "version": "0.7.24",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-html-mobiledoc",
   "author": "Ghost Foundation",
   "license": "MIT",
