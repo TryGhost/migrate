@@ -24,7 +24,7 @@
     "sinon": "11.1.2"
   },
   "dependencies": {
-    "@tryghost/errors": "1.2.10",
+    "@tryghost/errors": "1.2.11",
     "cheerio": "^1.0.0-rc.2",
     "got": "11.8.3",
     "lodash": "4.17.21"
