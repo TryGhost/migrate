@@ -24,7 +24,7 @@
     "sinon": "11.1.2"
   },
   "dependencies": {
-    "@tryghost/errors": "1.2.10",
+    "@tryghost/errors": "1.2.11",
     "@tryghost/mg-webscraper": "^0.6.23",
     "cheerio": "0.22.0",
     "wpapi": "^1.2.1"
