@@ -25,7 +25,7 @@
     "access": "public"
   },
   "dependencies": {
-    "chalk": "4.1.2",
+    "chalk": "5.0.1",
     "cli-truncate": "^2.0.0",
     "elegant-spinner": "^2.0.0",
     "figures": "3.2.0",
