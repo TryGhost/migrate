@@ -2,10 +2,9 @@
 const chalk = require('chalk');
 const logSymbols = require('log-symbols');
 const indentString = require('indent-string');
-const figures = require('figures');
 const elegantSpinner = require('elegant-spinner');
-const pointer = chalk.yellow(figures.pointer);
-const skipped = chalk.yellow(figures.arrowDown);
+const pointer = chalk.yellow('›');
+const skipped = chalk.yellow('↓');
 
 exports.isDefined = x => x !== null && x !== undefined;
 

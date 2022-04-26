@@ -1,10 +1,11 @@
 'use strict';
 const logUpdate = require('log-update');
 const chalk = require('chalk');
-const figures = require('figures');
 const cliTruncate = require('cli-truncate');
 const stripAnsi = require('strip-ansi');
 const {indentString, getSymbol, isDefined, taskNumber} = require('./utils');
+const arrowRight = '→';
+const arrowDown = '↓';
 
 const dataRenderer = (data, prefix = '') => {
     if (typeof data === 'string') {
@@ -16,7 +17,7 @@ const dataRenderer = (data, prefix = '') => {
     }
 
     if (isDefined(data)) {
-        return `   ${chalk.gray(cliTruncate(`${figures.arrowRight} ${prefix} ${data}`, process.stdout.columns - 3))}`;
+        return `   ${chalk.gray(cliTruncate(`${arrowRight} ${prefix} ${data}`, process.stdout.columns - 3))}`;
     }
 };
 
@@ -60,7 +61,7 @@ const summaryRenderer = (tasks, options, level = 0) => {
             states.failed.push(task);
 
             if (!task.output && task.hasSubtasks()) {
-                task.output = `${chalk.red.dim(`Subtask failed ${figures.arrowDown}`)}`;
+                task.output = `${chalk.red.dim(`Subtask failed ${arrowDown}`)}`;
             }
             output.push(indentString(`${getSymbol(task, options)} ${taskNumber(index, tasks)}: ${task.title} - ${task.output}`, level));
         } else {
