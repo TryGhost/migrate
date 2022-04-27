@@ -63,6 +63,11 @@ exports.run = async (argv) => {
     let timer = Date.now();
     let context = {errors: []};
 
+    // Remove trailing slash from URL
+    if (argv.url.endsWith('/')) {
+        argv.url = argv.url.slice(0, -1);
+    }
+
     if (argv.verbose) {
         ui.log.info(`Migrating from export at ${argv.pathToZip}`);
     }
