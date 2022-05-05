@@ -122,7 +122,7 @@ module.exports.getFullTaskList = (options) => {
                 let tasks = ctx.imageScraper.fetch(ctx);
                 return makeTaskRunner(tasks, options);
             },
-            skip: () => ['img'].indexOf(options.scrape) < 0
+            skip: () => ['all', 'img'].indexOf(options.scrape) < 0
         },
         {
             title: 'Fetch media via MediaScraper',
