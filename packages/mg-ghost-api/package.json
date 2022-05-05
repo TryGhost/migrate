@@ -24,6 +24,6 @@
     "sinon": "13.0.2"
   },
   "dependencies": {
-    "@tryghost/admin-api": "1.11.2"
+    "@tryghost/admin-api": "1.11.3"
   }
 }
