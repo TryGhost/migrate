@@ -72,7 +72,9 @@ const scrapeConfig = {
                 authorSplit.forEach((item) => {
                     theAuthors.push({
                         url: slugify(item),
-                        name: item
+                        data: {
+                            name: item
+                        }
                     });
                 });
 
