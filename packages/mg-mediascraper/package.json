@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-mediascraper",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-mediascraper",
   "author": "Ghost Foundation",
   "license": "MIT",

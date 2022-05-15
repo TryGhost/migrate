@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-substack-members-csv",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-substack-members-csv",
   "author": "Ghost Foundation",
   "license": "MIT",
