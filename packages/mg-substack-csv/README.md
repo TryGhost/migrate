@@ -44,7 +44,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - number - default: `false`
     - Media files larger than this size (defined in MB [i.e. `5`]) will be flagged as oversize     
 - **`-e` `--email`** 
-    - Provide an email domain for users e.g. `person@example.com`
+    - Provide an email domain for users e.g. `person@example.com` (Is ignored if `--useMetaAuthor` is provided)
     - bool/string - default: `false`            
 - **`-u` `--url`** 
     - Provide a URL (without trailing slash) to the hosted source site, so we can scrape data e.g. `https://example.substack.com`
@@ -79,7 +79,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 A more realistic command for a Substack migration looks like this:
 
 ```sh
-migrate substack <path to post.csv file> --url <URL to substack instance> --readPosts <path to directory containing html files> --email <main author email> --subscribeLink \#/portal/signup --useMetaImage --useMetaAuthor --drafts false
+migrate substack <path to post.csv file> --url <URL to substack instance> --readPosts <path to directory containing html files> --subscribeLink \#/portal/signup --useMetaImage --useMetaAuthor
 ```
 
 
