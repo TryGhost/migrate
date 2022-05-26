@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-linkfixer",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-linkfixer",
   "author": "Ghost Foundation",
   "license": "MIT",
