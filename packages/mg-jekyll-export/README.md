@@ -28,6 +28,15 @@ To run a Jekyll migration, the required command is:
 migrate jekyll <path to zip file>
 ```
 
+The `<path to zip file>` value should be the location of a zip file that has a structure like:
+
+```
+posts/
+├── 2020-10-27-my-post.md
+├── 2021-05-19-another-post.md
+└── 2022-06-03-newest-post.md
+```
+
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
 - **`-V` `--verbose`**
