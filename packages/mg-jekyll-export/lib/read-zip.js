@@ -8,7 +8,7 @@ module.exports = (zipPath, options) => {
 
     let skippedFileCount = 0;
 
-    // We only support the current Medium export file structure:
+    // We only support the current Jekyll export file structure:
     // - posts
     //   - 2020-10-27-my-post.md
     //   - 2021-05-19-2020-was-quite-a-year.md
