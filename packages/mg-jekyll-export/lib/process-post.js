@@ -79,16 +79,62 @@ const processMeta = (fileName, markdown, options) => {
         };
     }
 
-    // Add post-specific tags
+    // Add tags ^ categories from front matter
+    // `tag` & `category` are interpreted as a single item
+    // `tags` & `categories` are interpreted as a list of items
     post.data.tags = [];
 
-    if (nonStandardPostType) {
-        let typeTagSlug = `hash-${string.slugify(postType)}`;
+    if (frontmatterAttributes.tag) {
         post.data.tags.push({
-            url: `migrator-added-tag-${typeTagSlug}`,
+            url: `migrator-added-tag-${string.slugify(frontmatterAttributes.tag)}`,
+            data: {
+                name: frontmatterAttributes.tag,
+                slug: string.slugify(frontmatterAttributes.tag)
+            }
+        });
+    }
+
+    if (frontmatterAttributes.tags) {
+        frontmatterAttributes.tags.split(' ').forEach((tag) => {
+            post.data.tags.push({
+                url: `migrator-added-tag-${string.slugify(tag)}`,
+                data: {
+                    name: tag,
+                    slug: string.slugify(tag)
+                }
+            });
+        });
+    }
+
+    if (frontmatterAttributes.category) {
+        post.data.tags.push({
+            url: `migrator-added-tag-category-${string.slugify(frontmatterAttributes.category)}`,
+            data: {
+                name: frontmatterAttributes.category,
+                slug: `category-${string.slugify(frontmatterAttributes.category)}`
+            }
+        });
+    }
+
+    if (frontmatterAttributes.categories) {
+        frontmatterAttributes.categories.split(' ').forEach((tag) => {
+            post.data.tags.push({
+                url: `migrator-added-tag-category-${string.slugify(tag)}`,
+                data: {
+                    name: tag,
+                    slug: `category-${string.slugify(tag)}`
+                }
+            });
+        });
+    }
+
+    // Add post-specific tags
+    if (nonStandardPostType) {
+        post.data.tags.push({
+            url: `migrator-added-tag-hash-${string.slugify(postType)}`,
             data: {
                 name: `#${postType}`,
-                slug: typeTagSlug
+                slug: `hash-${string.slugify(postType)}`
             }
         });
     }

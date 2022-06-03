@@ -316,4 +316,48 @@ describe('Process', function () {
         '</ul>\n' +
         '<p>Lorem ipsum.</p>');
     });
+
+    it('Can process front matter tags & categories', function () {
+        const fakeName = 'posts/2022-06-03-front-matter-tags-cats.md';
+        const fixture = testUtils.fixtures.readSync('2022-06-03-front-matter-tags-cats.md');
+        const post = processPost(fakeName, fixture, false, {
+            addTags: 'My Extra Tag'
+        });
+
+        post.data.tags.should.be.an.Array().with.lengthOf(8);
+        post.data.tags.should.eql([
+            {
+                url: 'migrator-added-tag-lorem-ipsum',
+                data: {name: 'Lorem Ipsum', slug: 'lorem-ipsum'}
+            },
+            {
+                url: 'migrator-added-tag-dolor',
+                data: {name: 'dolor', slug: 'dolor'}
+            },
+            {
+                url: 'migrator-added-tag-simet-amet',
+                data: {name: 'Simet-Amet', slug: 'simet-amet'}
+            },
+            {
+                url: 'migrator-added-tag-category-news',
+                data: {name: 'News', slug: 'category-news'}
+            },
+            {
+                url: 'migrator-added-tag-category-posts',
+                data: {name: 'Posts', slug: 'category-posts'}
+            },
+            {
+                url: 'migrator-added-tag-category-articles',
+                data: {name: 'Articles', slug: 'category-articles'}
+            },
+            {
+                url: 'migrator-added-tag',
+                data: {name: '#jekyll', slug: 'hash-jekyll'}
+            },
+            {
+                url: 'migrator-added-tag-my-extra-tag',
+                data: {name: 'My Extra Tag', slug: 'my-extra-tag'}
+            }
+        ]);
+    });
 });
