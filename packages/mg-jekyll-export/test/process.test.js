@@ -189,7 +189,7 @@ describe('Process', function () {
     });
 
     it('Can process draft posts', function () {
-        const fakeName = 'drafts/relative-links.md';
+        const fakeName = '_drafts/relative-links.md';
         const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
         const post = processPost(fakeName, fixture);
 
