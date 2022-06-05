@@ -31,7 +31,7 @@ migrate jekyll <path to zip file>
 The `<path to zip file>` value should be the location of a zip file that has a structure like:
 
 ```
-posts/
+_posts/
 ├── 2020-10-27-my-post.md
 ├── 2021-05-19-another-post.md
 └── 2022-06-03-newest-post.md

@@ -9,13 +9,13 @@ module.exports = (zipPath, options) => {
     let skippedFileCount = 0;
 
     // We only support the current Jekyll export file structure:
-    // - posts
+    // - _posts
     //   - 2020-10-27-my-post.md
     //   - 2021-05-19-2020-was-quite-a-year.md
 
     fsUtils.zip.read(zipPath, (entryName, zipEntry) => {
         // Catch all HTML files inside `profile/`
-        if (/^posts\/.*\.md$/.test(entryName)) {
+        if (/^_posts\/.*\.md$/.test(entryName)) {
             content.posts.push({
                 fileName: entryName,
                 markdown: zipEntry.getData().toString('utf8')

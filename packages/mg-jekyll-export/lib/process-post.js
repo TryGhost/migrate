@@ -33,7 +33,7 @@ const processMeta = (fileName, markdown, options) => {
         const datedSlugRegex = new RegExp('([0-9a-zA-Z-_]+)/([0-9]{4}-[0-9]{1,2}-[0-9]{1,2})-(.*).md');
         slugParts = fileName.match(datedSlugRegex);
 
-        if (slugParts[1] !== 'posts') {
+        if (slugParts[1] !== '_posts') {
             postType = slugParts[1];
             nonStandardPostType = true;
         }
