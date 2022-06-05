@@ -6,7 +6,7 @@ const processPost = require('../lib/process-post');
 
 describe('Process', function () {
     it('Can process a basic Jekyll post', function () {
-        const fakeName = 'posts/2021-08-23-basic-post.md';
+        const fakeName = '_posts/2021-08-23-basic-post.md';
         const fixture = testUtils.fixtures.readSync('2021-08-23-basic-post.md');
         const post = processPost(fakeName, fixture);
 
@@ -77,7 +77,7 @@ describe('Process', function () {
     });
 
     it('Can process a basic Jekyll post with no author', function () {
-        const fakeName = 'posts/2021-08-24-no-author.md';
+        const fakeName = '_posts/2021-08-24-no-author.md';
         const fixture = testUtils.fixtures.readSync('2021-08-24-no-author.md');
         const post = processPost(fakeName, fixture,
             {
@@ -99,7 +99,7 @@ describe('Process', function () {
     });
 
     it('Can leave relative links when no URL is defined', function () {
-        const fakeName = 'posts/2021-08-25-relative-links.md';
+        const fakeName = '_posts/2021-08-25-relative-links.md';
         const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
         const post = processPost(fakeName, fixture);
 
@@ -111,7 +111,7 @@ describe('Process', function () {
     });
 
     it('Can fix relative links when a URL is defined', function () {
-        const fakeName = 'posts/2021-08-25-relative-links.md';
+        const fakeName = '_posts/2021-08-25-relative-links.md';
         const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
         const post = processPost(fakeName, fixture, false,
             {
@@ -129,7 +129,7 @@ describe('Process', function () {
     });
 
     it('Can fix relative links when a URL with subdirectory is defined', function () {
-        const fakeName = 'posts/2021-08-25-relative-links.md';
+        const fakeName = '_posts/2021-08-25-relative-links.md';
         const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
         const post = processPost(fakeName, fixture, false,
             {
@@ -147,7 +147,7 @@ describe('Process', function () {
     });
 
     it('Can use a non-standard post date format', function () {
-        const fakeName = 'posts/2021-9-1-alt-date-format.md';
+        const fakeName = '_posts/2021-9-1-alt-date-format.md';
         const fixture = testUtils.fixtures.readSync('2021-9-1-alt-date-format.md');
         const post = processPost(fakeName, fixture);
 
@@ -157,7 +157,7 @@ describe('Process', function () {
     });
 
     it('Can use a supplied email domain for auhtors', function () {
-        const fakeName = 'posts/2021-08-25-relative-links.md';
+        const fakeName = '_posts/2021-08-25-relative-links.md';
         const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
         const post = processPost(fakeName, fixture, false, {
             email: 'company.com'
@@ -167,7 +167,7 @@ describe('Process', function () {
     });
 
     it('Can add specified tags to each post', function () {
-        const fakeName = 'posts/2021-08-25-relative-links.md';
+        const fakeName = '_posts/2021-08-25-relative-links.md';
         const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
         const post = processPost(fakeName, fixture, false, {
             addTags: 'Hello,  #World'
@@ -242,7 +242,7 @@ describe('Process', function () {
     });
 
     it('Can process posts without a date in the file name', function () {
-        const fakeName = 'posts/my-first-post.md';
+        const fakeName = '_posts/my-first-post.md';
         const fixture = testUtils.fixtures.readSync('my-first-post.md');
         const post = processPost(fakeName, fixture, false, {
             addTags: 'NoFileDate'
@@ -265,7 +265,7 @@ describe('Process', function () {
     });
 
     it('Can process posts that already include HTML', function () {
-        const fakeName = 'posts/2022-03-10-has-html.md';
+        const fakeName = '_posts/2022-03-10-has-html.md';
         const fixture = testUtils.fixtures.readSync('2022-03-10-has-html.md');
         const post = processPost(fakeName, fixture, false, {
             addTags: 'Has HTML'
@@ -280,7 +280,7 @@ describe('Process', function () {
     });
 
     it('Can process lists that have spaced between list items', function () {
-        const fakeName = 'posts/2022-03-11-has-spaced-lists.md';
+        const fakeName = '_posts/2022-03-11-has-spaced-lists.md';
         const fixture = testUtils.fixtures.readSync('2022-03-11-has-spaced-lists.md');
         const post = processPost(fakeName, fixture, false, {
             addTags: 'Has HTML'
@@ -318,7 +318,7 @@ describe('Process', function () {
     });
 
     it('Can process front matter tags & categories', function () {
-        const fakeName = 'posts/2022-06-03-front-matter-tags-cats.md';
+        const fakeName = '_posts/2022-06-03-front-matter-tags-cats.md';
         const fixture = testUtils.fixtures.readSync('2022-06-03-front-matter-tags-cats.md');
         const post = processPost(fakeName, fixture, false, {
             addTags: 'My Extra Tag'
