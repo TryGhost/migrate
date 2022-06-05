@@ -14,7 +14,6 @@ module.exports = (zipPath, options) => {
     //   - 2021-05-19-2020-was-quite-a-year.md
 
     fsUtils.zip.read(zipPath, (entryName, zipEntry) => {
-        // Catch all HTML files inside `profile/`
         if (/^_posts\/.*\.md$/.test(entryName)) {
             content.posts.push({
                 fileName: entryName,
