@@ -197,6 +197,15 @@ describe('Process', function () {
         post.data.status.should.eql('draft');
     });
 
+    it('Can process published:false frontmatter', function () {
+        const fakeName = '_posts/2022-06-05-published-false.md';
+        const fixture = testUtils.fixtures.readSync('2022-06-05-published-false.md');
+        const post = processPost(fakeName, fixture);
+
+        post.data.type.should.eql('post');
+        post.data.status.should.eql('draft');
+    });
+
     it('Can process non-standard post types and add related tag', function () {
         const fakeName = 'w31rd_type-here/2021-08-25-relative-links.md';
         const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
