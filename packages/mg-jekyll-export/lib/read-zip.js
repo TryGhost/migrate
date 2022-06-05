@@ -12,9 +12,9 @@ module.exports = (zipPath, options) => {
     // - _posts
     //   - 2020-10-27-my-post.md
     //   - 2021-05-19-2020-was-quite-a-year.md
-
+    // The file extension may be ".md" or ".markdown"
     fsUtils.zip.read(zipPath, (entryName, zipEntry) => {
-        if (/^_posts\/.*\.md$/.test(entryName)) {
+        if (/^_posts\/.*\.(md|markdown)$/.test(entryName)) {
             content.posts.push({
                 fileName: entryName,
                 markdown: zipEntry.getData().toString('utf8')
