@@ -3,7 +3,7 @@ const fm = require('front-matter');
 const processContent = require('./process-content');
 
 const processMeta = (fileName, markdown, options) => {
-    const isDraft = fileName.startsWith('_drafts/');
+    const inDraftsDir = fileName.startsWith('_drafts/');
 
     let frontmatter = fm(markdown);
     let frontmatterAttributes = frontmatter.attributes;
@@ -17,7 +17,7 @@ const processMeta = (fileName, markdown, options) => {
     // Get an ISO 8601 date
     const dateNow = new Date().toISOString();
 
-    if (isDraft) {
+    if (inDraftsDir) {
         const slugRegex = new RegExp('(_drafts/)(.*).(md|markdown)');
         slugParts = fileName.match(slugRegex);
         postSlug = slugParts[2];
@@ -52,6 +52,8 @@ const processMeta = (fileName, markdown, options) => {
             slug: postSlug
         }
     };
+
+    const isDraft = (inDraftsDir || frontmatterAttributes.published === false);
 
     post.data.status = 'published';
     post.data.created_at = postDate || dateNow;
