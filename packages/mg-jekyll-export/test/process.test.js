@@ -5,7 +5,7 @@ const testUtils = require('./utils');
 const processPost = require('../lib/process-post');
 
 describe('Process', function () {
-    it('Can process a basic Jekyll post', function () {
+    it('Can process a basic Jekyll Markdown post', function () {
         const fakeName = '_posts/2021-08-23-basic-post.md';
         const fixture = testUtils.fixtures.readSync('2021-08-23-basic-post.md');
         const post = processPost(fakeName, fixture);
@@ -74,6 +74,21 @@ describe('Process', function () {
         post.data.author.data.name.should.eql('Persons Name');
         post.data.author.data.slug.should.eql('persons-name');
         post.data.author.data.roles[0].should.eql('Contributor');
+    });
+
+    it('Can process a basic Jekyll HTML post', function () {
+        const fakeName = '_posts/2022-06-05-basic.html';
+        const fixture = testUtils.fixtures.readSync('2022-06-05-basic.html');
+        const post = processPost(fakeName, fixture);
+
+        post.data.title.should.eql('Basic HTML Post');
+
+        // Here are testing that Markdown syntax is left alone
+        post.data.html.should.eql('<p>First Paragraph</p>\n' +
+            '\n' +
+            '* First\n' +
+            '* Second');
+        post.data.author.data.name.should.eql('Mark Stosberg');
     });
 
     it('Can process a basic Jekyll post with no author', function () {

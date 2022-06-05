@@ -1,11 +1,22 @@
+const MarkdownIt = require('markdown-it');
+const md = new MarkdownIt({
+    html: true
+});
 const string = require('@tryghost/string');
+const errors = require('@tryghost/errors');
 const fm = require('front-matter');
-const processContent = require('./process-content');
+const processHtml = require('./process-html');
 
-const processMeta = (fileName, markdown, options) => {
+/*
+Process both the frontmatter metadata and content of a single Jekyll Markdown post.
+
+The body may be ein Markdown or HTML.
+*/
+
+const processMeta = (fileName, fileContents, options) => {
     const inDraftsDir = fileName.startsWith('_drafts/');
 
-    let frontmatter = fm(markdown);
+    let frontmatter = fm(fileContents);
     let frontmatterAttributes = frontmatter.attributes;
 
     let postDate = false;
@@ -18,7 +29,7 @@ const processMeta = (fileName, markdown, options) => {
     const dateNow = new Date().toISOString();
 
     if (inDraftsDir) {
-        const slugRegex = new RegExp('(_drafts/)(.*).(md|markdown)');
+        const slugRegex = new RegExp('(_drafts/)(.*).(md|markdown|html)');
         slugParts = fileName.match(slugRegex);
         postSlug = slugParts[2];
     } else if (frontmatterAttributes.date) {
@@ -26,11 +37,11 @@ const processMeta = (fileName, markdown, options) => {
         const dateParts = frontmatterAttributes.date.match(frontMaterDateRegex);
         postDate = new Date(Date.UTC(dateParts[1], (dateParts[2] - 1), dateParts[3], 12, 0, 0)); // Months are zero-index, so 12 equals December
 
-        const slugRegex = new RegExp('([0-9a-zA-Z-_]+)/(.*).(md|markdown)');
+        const slugRegex = new RegExp('([0-9a-zA-Z-_]+)/(.*).(md|markdown|html)');
         slugParts = fileName.match(slugRegex);
         postSlug = slugParts[2];
     } else {
-        const datedSlugRegex = new RegExp('([0-9a-zA-Z-_]+)/([0-9]{4}-[0-9]{1,2}-[0-9]{1,2})-(.*).(md|markdown)');
+        const datedSlugRegex = new RegExp('([0-9a-zA-Z-_]+)/([0-9]{4}-[0-9]{1,2}-[0-9]{1,2})-(.*).(md|markdown|html)');
         slugParts = fileName.match(datedSlugRegex);
 
         if (slugParts[1] !== '_posts') {
@@ -54,6 +65,9 @@ const processMeta = (fileName, markdown, options) => {
     };
 
     const isDraft = (inDraftsDir || frontmatterAttributes.published === false);
+
+    // This will be processed more later and deleted
+    post._body = frontmatter.body;
 
     post.data.status = 'published';
     post.data.created_at = postDate || dateNow;
@@ -144,11 +158,30 @@ const processMeta = (fileName, markdown, options) => {
     return post;
 };
 
-module.exports = (fileName, markdown, globalUser = false, options = {}) => {
-    const post = processMeta(fileName, markdown, options);
+module.exports = (fileName, fileContents, globalUser = false, options = {}) => {
+    const post = processMeta(fileName, fileContents, options);
 
-    // Process content
-    post.data.html = processContent(markdown, options);
+    // The post body may be in Markdown or HTML.
+    // If it's in Markdown, convert the Markdown to HTML
+    const htmlRegex = new RegExp('.*.html$');
+    const markdownRegex = new RegExp('.*.(md|markdown)$');
+    const isHtml = fileName.match(htmlRegex);
+    const isMarkdown = fileName.match(markdownRegex);
+    let rawHtml;
+    if (isHtml) {
+        rawHtml = post._body;
+    } else if (isMarkdown) {
+        rawHtml = md.render(post._body);
+    } else {
+        throw new errors.GhostError({
+            message: 'Unrecognized file extension. Only .md, .markdown and .html are supported'
+        });
+    }
+    // Now we are done with this temporary attribute
+    delete post._body;
+
+    // Clean up the HTML
+    post.data.html = processHtml(rawHtml, options);
 
     // Process author
     if (!post.data.author) {

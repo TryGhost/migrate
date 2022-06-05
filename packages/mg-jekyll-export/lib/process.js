@@ -16,7 +16,7 @@ module.exports = (input, options = {}) => {
     };
 
     if (input.posts && input.posts.length > 0) {
-        output.posts = input.posts.map(post => processPost(post.fileName, post.markdown, globalUser, options));
+        output.posts = input.posts.map(post => processPost(post.fileName, post.fileContents, globalUser, options));
     }
 
     return output;
