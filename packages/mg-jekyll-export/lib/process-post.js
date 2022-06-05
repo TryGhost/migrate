@@ -3,7 +3,7 @@ const fm = require('front-matter');
 const processContent = require('./process-content');
 
 const processMeta = (fileName, markdown, options) => {
-    const isDraft = fileName.startsWith('drafts/');
+    const isDraft = fileName.startsWith('_drafts/');
 
     let frontmatter = fm(markdown);
     let frontmatterAttributes = frontmatter.attributes;
@@ -18,7 +18,7 @@ const processMeta = (fileName, markdown, options) => {
     const dateNow = new Date().toISOString();
 
     if (isDraft) {
-        const slugRegex = new RegExp('(drafts/)(.*).md');
+        const slugRegex = new RegExp('(_drafts/)(.*).(md|markdown)');
         slugParts = fileName.match(slugRegex);
         postSlug = slugParts[2];
     } else if (frontmatterAttributes.date) {
@@ -26,11 +26,11 @@ const processMeta = (fileName, markdown, options) => {
         const dateParts = frontmatterAttributes.date.match(frontMaterDateRegex);
         postDate = new Date(Date.UTC(dateParts[1], (dateParts[2] - 1), dateParts[3], 12, 0, 0)); // Months are zero-index, so 12 equals December
 
-        const slugRegex = new RegExp('([0-9a-zA-Z-_]+)/(.*).md');
+        const slugRegex = new RegExp('([0-9a-zA-Z-_]+)/(.*).(md|markdown)');
         slugParts = fileName.match(slugRegex);
         postSlug = slugParts[2];
     } else {
-        const datedSlugRegex = new RegExp('([0-9a-zA-Z-_]+)/([0-9]{4}-[0-9]{1,2}-[0-9]{1,2})-(.*).md');
+        const datedSlugRegex = new RegExp('([0-9a-zA-Z-_]+)/([0-9]{4}-[0-9]{1,2}-[0-9]{1,2})-(.*).(md|markdown)');
         slugParts = fileName.match(datedSlugRegex);
 
         if (slugParts[1] !== '_posts') {
