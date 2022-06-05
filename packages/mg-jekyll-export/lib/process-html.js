@@ -1,14 +1,13 @@
-const MarkdownIt = require('markdown-it');
-const md = new MarkdownIt({
-    html: true
-});
-const fm = require('front-matter');
 const $ = require('cheerio');
 
-module.exports = (markdown, options = {}) => {
-    const frontmatter = fm(markdown);
-    const processedMarkdown = md.render(frontmatter.body);
-    const $html = $.load(processedMarkdown, {
+/*
+Process the HTML of a single Jekyll Post.
+
+Receives raw HTML, returns processed HTML
+*/
+
+module.exports = (rawHtml, options = {}) => {
+    const $html = $.load(rawHtml, {
         decodeEntities: false
     });
 

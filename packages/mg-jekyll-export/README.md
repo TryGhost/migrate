@@ -33,10 +33,11 @@ The `<path to zip file>` value should be the location of a zip file that has a s
 ```
 _posts/
 ├── 2020-10-27-my-post.md
-├── 2021-05-19-another-post.md
-└── 2022-06-03-newest-post.md
+├── 2021-05-19-another-post.markdown
+└── 2022-06-03-newest-post.html
+_drafts/
+└── 2022-06-03-some-draft.md
 ```
-
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
 - **`-V` `--verbose`**
