@@ -105,7 +105,30 @@ const processMeta = (fileName, fileContents, options) => {
     // Add tags ^ categories from front matter
     // `tag` & `category` are interpreted as a single item
     // `tags` & `categories` are interpreted as a list of items
+    // `category` and `categories` are processed first so that they become the "primary tag"
     post.data.tags = [];
+
+    if (frontmatterAttributes.category) {
+        post.data.tags.push({
+            url: `migrator-added-tag-category-${string.slugify(frontmatterAttributes.category)}`,
+            data: {
+                name: frontmatterAttributes.category,
+                slug: `category-${string.slugify(frontmatterAttributes.category)}`
+            }
+        });
+    }
+
+    if (frontmatterAttributes.categories) {
+        frontmatterAttributes.categories.split(' ').forEach((tag) => {
+            post.data.tags.push({
+                url: `migrator-added-tag-category-${string.slugify(tag)}`,
+                data: {
+                    name: tag,
+                    slug: `category-${string.slugify(tag)}`
+                }
+            });
+        });
+    }
 
     if (frontmatterAttributes.tag) {
         post.data.tags.push({
@@ -132,28 +155,6 @@ const processMeta = (fileName, fileContents, options) => {
                 data: {
                     name: tag,
                     slug: string.slugify(tag)
-                }
-            });
-        });
-    }
-
-    if (frontmatterAttributes.category) {
-        post.data.tags.push({
-            url: `migrator-added-tag-category-${string.slugify(frontmatterAttributes.category)}`,
-            data: {
-                name: frontmatterAttributes.category,
-                slug: `category-${string.slugify(frontmatterAttributes.category)}`
-            }
-        });
-    }
-
-    if (frontmatterAttributes.categories) {
-        frontmatterAttributes.categories.split(' ').forEach((tag) => {
-            post.data.tags.push({
-                url: `migrator-added-tag-category-${string.slugify(tag)}`,
-                data: {
-                    name: tag,
-                    slug: `category-${string.slugify(tag)}`
                 }
             });
         });

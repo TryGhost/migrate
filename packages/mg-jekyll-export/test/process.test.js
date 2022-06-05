@@ -368,18 +368,6 @@ describe('Process', function () {
         post.data.tags.should.be.an.Array().with.lengthOf(8);
         post.data.tags.should.eql([
             {
-                url: 'migrator-added-tag-lorem-ipsum',
-                data: {name: 'Lorem Ipsum', slug: 'lorem-ipsum'}
-            },
-            {
-                url: 'migrator-added-tag-dolor',
-                data: {name: 'dolor', slug: 'dolor'}
-            },
-            {
-                url: 'migrator-added-tag-simet-amet',
-                data: {name: 'Simet-Amet', slug: 'simet-amet'}
-            },
-            {
                 url: 'migrator-added-tag-category-news',
                 data: {name: 'News', slug: 'category-news'}
             },
@@ -390,6 +378,18 @@ describe('Process', function () {
             {
                 url: 'migrator-added-tag-category-articles',
                 data: {name: 'Articles', slug: 'category-articles'}
+            },
+            {
+                url: 'migrator-added-tag-lorem-ipsum',
+                data: {name: 'Lorem Ipsum', slug: 'lorem-ipsum'}
+            },
+            {
+                url: 'migrator-added-tag-dolor',
+                data: {name: 'dolor', slug: 'dolor'}
+            },
+            {
+                url: 'migrator-added-tag-simet-amet',
+                data: {name: 'Simet-Amet', slug: 'simet-amet'}
             },
             {
                 url: 'migrator-added-tag',
