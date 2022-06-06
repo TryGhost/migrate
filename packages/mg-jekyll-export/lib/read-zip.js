@@ -15,7 +15,11 @@ module.exports = (zipPath, options) => {
     //   - 2021-05-19-2020-was-quite-a-year.md
     // The file extension may be ".md", ".markdown" or ".html"
     fsUtils.zip.read(zipPath, (entryName, zipEntry) => {
-        if (/^_posts\/.*\.(md|markdown|html)$/.test(entryName)) {
+        // The `entryName` arg here lacks the directory name.
+        // We need zipEntry.entryName instead, which contains it.
+        entryName = zipEntry.entryName;
+
+        if (/^_(posts|drafts)\/.*\.(md|markdown|html)$/.test(entryName)) {
             content.posts.push({
                 fileName: entryName,
                 fileContents: zipEntry.getData().toString('utf8')
@@ -24,7 +28,7 @@ module.exports = (zipPath, options) => {
         // Skip if not matched above, and report skipped files if `--verbose`
         } else {
             if (options.verbose) {
-                ui.log.info('Skipped: ' + entryName);
+                ui.log.info('Skipped: ' + zipEntry.entryName);
             }
             skippedFileCount += 1;
         }
