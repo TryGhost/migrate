@@ -288,6 +288,16 @@ describe('Process', function () {
         post.data.tags[1].data.name.should.eql('NoFileDate');
     });
 
+    it('Can process posts with unquoted date in frontmatter, using .markdown extension', function () {
+        const fakeName = '_posts/unquoted-date.markdown';
+        const fixture = testUtils.fixtures.readSync('unquoted-date.markdown');
+        const post = processPost(fakeName, fixture, false);
+
+        post.data.created_at.toISOString().should.eql('2022-06-06T00:00:00.000Z');
+        post.data.published_at.toISOString().should.eql('2022-06-06T00:00:00.000Z');
+        post.data.updated_at.toISOString().should.eql('2022-06-06T00:00:00.000Z');
+    });
+
     it('Can process posts that already include HTML', function () {
         const fakeName = '_posts/2022-03-10-has-html.md';
         const fixture = testUtils.fixtures.readSync('2022-03-10-has-html.md');

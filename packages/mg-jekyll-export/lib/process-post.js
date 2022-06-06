@@ -33,10 +33,17 @@ const processMeta = (fileName, fileContents, options) => {
         slugParts = fileName.match(slugRegex);
         postSlug = slugParts[2];
     } else if (frontmatterAttributes.date) {
-        const frontMaterDateRegex = new RegExp('([0-9]{4})[-:/\\ ]([0-9]{2})[-:/\\ ]([0-9]{2})');
-        const dateParts = frontmatterAttributes.date.match(frontMaterDateRegex);
-        postDate = new Date(Date.UTC(dateParts[1], (dateParts[2] - 1), dateParts[3])); // Months are zero-index, so 11 equals December
+        // The date was unquoted in the frontmatter, it gets parsed into a data object
+        if (typeof frontmatterAttributes.date === 'object') {
+            postDate = frontmatterAttributes.date;
+        // Otherwise the date gets parsed as a string
+        } else {
+            const frontMaterDateRegex = new RegExp('([0-9]{4})[-:/\\ ]([0-9]{2})[-:/\\ ]([0-9]{2})');
+            // console.warn(`GOT ${typeof frontmatterAttributes.date}`)
 
+            const dateParts = frontmatterAttributes.date.match(frontMaterDateRegex);
+            postDate = new Date(Date.UTC(dateParts[1], (dateParts[2] - 1), dateParts[3])); // Months are zero-index, so 11 equals December
+        }
         const slugRegex = new RegExp('([0-9a-zA-Z-_]+)/(.*).(md|markdown|html)');
         slugParts = fileName.match(slugRegex);
         postSlug = slugParts[2];
