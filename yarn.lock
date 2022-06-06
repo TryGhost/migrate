@@ -333,6 +333,15 @@
     utils-copy-error "^1.0.1"
     uuid "^8.3.2"
 
+"@tryghost/errors@^1.2.14":
+  version "1.2.14"
+  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-1.2.14.tgz#af5e0ea1450b6fac7bde94585177943f85f0e41f"
+  integrity sha512-ycXhblMBlbwXo+PfmVJZtT26/B1wu6Ae/8SBjXlzHAp6qlkho/Z5hZPKMRo0frfBt6CDGyX/abKTeVQzSkTPYA==
+  dependencies:
+    lodash "^4.17.21"
+    utils-copy-error "^1.0.1"
+    uuid "^8.3.2"
+
 "@tryghost/html-to-mobiledoc@1.8.6":
   version "1.8.6"
   resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-1.8.6.tgz#8c253fde1e0bbaa15fd427dfe89a5a505ca70ef9"

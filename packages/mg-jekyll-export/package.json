@@ -25,6 +25,7 @@
     "sinon": "14.0.0"
   },
   "dependencies": {
+    "@tryghost/errors": "^1.2.14",
     "@tryghost/mg-fs-utils": "^0.8.2",
     "@tryghost/string": "^0.1.17",
     "cheerio": "0.22.0",

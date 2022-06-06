@@ -1,3 +1,4 @@
+const errors = require('@tryghost/errors');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const ui = require('@tryghost/pretty-cli').ui;
 
