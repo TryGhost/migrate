@@ -32,5 +32,10 @@ module.exports = (zipPath, options) => {
 
     ui.log.info('Skipped files: ' + skippedFileCount);
 
+    if (!content.posts.length) {
+        ui.log.error('No content found to import! Quitting.');
+        throw new errors.InternalServerError();
+    }
+
     return content;
 };
