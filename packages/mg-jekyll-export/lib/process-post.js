@@ -35,7 +35,7 @@ const processMeta = (fileName, fileContents, options) => {
     } else if (frontmatterAttributes.date) {
         const frontMaterDateRegex = new RegExp('([0-9]{4})[-:/\\ ]([0-9]{2})[-:/\\ ]([0-9]{2})');
         const dateParts = frontmatterAttributes.date.match(frontMaterDateRegex);
-        postDate = new Date(Date.UTC(dateParts[1], (dateParts[2] - 1), dateParts[3], 12, 0, 0)); // Months are zero-index, so 12 equals December
+        postDate = new Date(Date.UTC(dateParts[1], (dateParts[2] - 1), dateParts[3])); // Months are zero-index, so 11 equals December
 
         const slugRegex = new RegExp('([0-9a-zA-Z-_]+)/(.*).(md|markdown|html)');
         slugParts = fileName.match(slugRegex);
@@ -53,7 +53,7 @@ const processMeta = (fileName, fileContents, options) => {
         const dateYear = slugParts[2].split(/[-/]/)[0];
         const dateMonth = ('0' + slugParts[2].split(/[-/]/)[1]).slice(-2);
         const dateDay = ('0' + slugParts[2].split(/[-/]/)[2]).slice(-2);
-        postDate = new Date(Date.UTC(dateYear, (dateMonth - 1), dateDay, 12, 0, 0)); // Months are zero-index, so 12 equals December
+        postDate = new Date(Date.UTC(dateYear, (dateMonth - 1), dateDay)); // Months are zero-index, so 11 equals December
         postSlug = slugParts[3];
     }
 

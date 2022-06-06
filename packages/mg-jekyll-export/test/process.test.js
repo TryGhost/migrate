@@ -16,9 +16,9 @@ describe('Process', function () {
         post.data.type.should.eql('post');
         post.data.status.should.eql('published');
 
-        post.data.created_at.toISOString().should.eql('2021-08-23T12:00:00.000Z');
-        post.data.published_at.toISOString().should.eql('2021-08-23T12:00:00.000Z');
-        post.data.updated_at.toISOString().should.eql('2021-08-23T12:00:00.000Z');
+        post.data.created_at.toISOString().should.eql('2021-08-23T00:00:00.000Z');
+        post.data.published_at.toISOString().should.eql('2021-08-23T00:00:00.000Z');
+        post.data.updated_at.toISOString().should.eql('2021-08-23T00:00:00.000Z');
 
         post.data.tags[0].url.should.eql('migrator-added-tag');
         post.data.tags[0].data.name.should.eql('#jekyll');
@@ -166,9 +166,9 @@ describe('Process', function () {
         const fixture = testUtils.fixtures.readSync('2021-9-1-alt-date-format.md');
         const post = processPost(fakeName, fixture);
 
-        post.data.created_at.toISOString().should.eql('2021-09-01T12:00:00.000Z');
-        post.data.published_at.toISOString().should.eql('2021-09-01T12:00:00.000Z');
-        post.data.updated_at.toISOString().should.eql('2021-09-01T12:00:00.000Z');
+        post.data.created_at.toISOString().should.eql('2021-09-01T00:00:00.000Z');
+        post.data.published_at.toISOString().should.eql('2021-09-01T00:00:00.000Z');
+        post.data.updated_at.toISOString().should.eql('2021-09-01T00:00:00.000Z');
     });
 
     it('Can use a supplied email domain for auhtors', function () {
@@ -275,9 +275,9 @@ describe('Process', function () {
         post.data.type.should.eql('post');
         post.data.status.should.eql('published');
 
-        post.data.created_at.toISOString().should.eql('2021-11-26T12:00:00.000Z');
-        post.data.published_at.toISOString().should.eql('2021-11-26T12:00:00.000Z');
-        post.data.updated_at.toISOString().should.eql('2021-11-26T12:00:00.000Z');
+        post.data.created_at.toISOString().should.eql('2021-11-26T00:00:00.000Z');
+        post.data.published_at.toISOString().should.eql('2021-11-26T00:00:00.000Z');
+        post.data.updated_at.toISOString().should.eql('2021-11-26T00:00:00.000Z');
 
         post.data.tags[0].url.should.eql('migrator-added-tag');
         post.data.tags[0].data.slug.should.eql('hash-jekyll');
