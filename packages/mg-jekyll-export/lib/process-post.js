@@ -180,7 +180,7 @@ module.exports = (fileName, fileContents, globalUser = false, options = {}) => {
     } else if (isMarkdown) {
         rawHtml = md.render(post._body);
     } else {
-        throw new errors.GhostError({
+        throw new errors.InternalServerError({
             message: 'Unrecognized file extension. Only .md, .markdown and .html are supported'
         });
     }
