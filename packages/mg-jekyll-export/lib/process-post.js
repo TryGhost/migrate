@@ -118,7 +118,15 @@ const processMeta = (fileName, fileContents, options) => {
     }
 
     if (frontmatterAttributes.tags) {
-        frontmatterAttributes.tags.split(' ').forEach((tag) => {
+        // Jekyll allows tags to be space separated or a YAML list. We support both cases.
+        let normalizedTags;
+        if (typeof frontmatterAttributes.tags === 'object') {
+            normalizedTags = frontmatterAttributes.tags;
+        } else {
+            normalizedTags = frontmatterAttributes.tags.split(' ');
+        }
+
+        normalizedTags.forEach((tag) => {
             post.data.tags.push({
                 url: `migrator-added-tag-${string.slugify(tag)}`,
                 data: {
