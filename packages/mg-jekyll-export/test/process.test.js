@@ -298,12 +298,16 @@ describe('Process', function () {
         post.data.updated_at.toISOString().should.eql('2022-06-06T00:00:00.000Z');
     });
 
-    it('Can process posts with tags in YAML list format', function () {
+    it('Can process posts with tags and categories in YAML list format', function () {
         const fakeName = '_posts/2022-06-06-tag-list.md';
         const fixture = testUtils.fixtures.readSync('2022-06-06-tag-list.md');
         const post = processPost(fakeName, fixture, false);
 
-        post.data.tags[0].data.slug.should.eql('some-word');
+        post.data.tags[0].data.name.should.eql('cat');
+        post.data.tags[0].data.slug.should.eql('category-cat');
+        post.data.tags[1].data.name.should.eql('photos');
+        post.data.tags[1].data.slug.should.eql('category-photos');
+        post.data.tags[2].data.slug.should.eql('some-word');
     });
     it('Can process posts that already include HTML', function () {
         const fakeName = '_posts/2022-03-10-has-html.md';
