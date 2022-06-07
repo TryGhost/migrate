@@ -20,7 +20,7 @@ module.exports = (rawHtml, options = {}) => {
             const thisURL = $(anchor).attr('href');
 
             // If it starts with a slash, append the base URL
-            if (thisURL.indexOf('/') === 0) {
+            if (thisURL && thisURL.indexOf('/') === 0) {
                 const updatedURL = `${urlOrigin.replace(/^\/|\/$/g, '')}/${thisURL.replace(/^\/|\/$/g, '')}`;
                 $(anchor).attr('href', updatedURL);
             }
@@ -30,7 +30,7 @@ module.exports = (rawHtml, options = {}) => {
             const thisSrc = $(img).attr('src');
 
             // If it starts with a slash, append the base URL
-            if (thisSrc.indexOf('/') === 0) {
+            if (thisSrc && thisSrc.indexOf('/') === 0) {
                 const updatedURL = `${urlOrigin.replace(/^\/|\/$/g, '')}/${thisSrc.replace(/^\/|\/$/g, '')}`;
                 $(img).attr('src', updatedURL);
             }
