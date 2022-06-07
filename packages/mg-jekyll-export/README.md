@@ -61,7 +61,8 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Provide an email domain for users e.g. example.com
 - **`--addTags`**
     - string - default: `null`
-    - Provide one or more tag names which should be added to every post in this migration
+    - Provide one or more tag names which should be added to every post in this migration.
+      This is addition to a '#jekyll' tag, which is always added.
 - **`--datedPermalinks`** 
     - Set the dated permalink structure
     - string - default: `none` 
