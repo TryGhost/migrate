@@ -14,7 +14,10 @@ module.exports = (rawHtml, options = {}) => {
     // Convert relative links and image paths to absolute
     if (options.url) {
         const urlData = new URL(options.url);
-        const urlOrigin = urlData.href;
+        // The "origin" the URL truncated to the domain.
+        // The difference between the "href" matters for blogs that were hosted
+        // in sub-directories so that relative and relative-to-root URLs resolve correctly.
+        const urlOrigin = urlData.origin;
 
         $html('a').each((i, anchor) => {
             const thisURL = $(anchor).attr('href');

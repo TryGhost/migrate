@@ -7,6 +7,8 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. [Pellentesque rutrum](/
 
 ![A nice photo](/images/photo.jpg)
 
+![Relative-to-root image](/news/images/photo.jpg)
+
 Duis efficitur nisl pharetra enim lobortis consequat. Curabitur vestibulum diam vel elit ultricies semper.
 
 ![Another nice photo](http://example.com/images/photo.jpg)

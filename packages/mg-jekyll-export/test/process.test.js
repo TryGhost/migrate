@@ -120,6 +120,7 @@ describe('Process', function () {
 
         post.data.html.should.eql('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <a href="/another-page">Pellentesque rutrum</a> ante in <a href="https://example.com">sapien ultrices</a>, sit amet auctor tellus iaculis.</p>\n' +
             '<p><img src="/images/photo.jpg" alt="A nice photo"></p>\n' +
+            '<p><img src="/news/images/photo.jpg" alt="Relative-to-root image"></p>\n' +
             '<p>Duis efficitur nisl pharetra enim lobortis consequat. Curabitur vestibulum diam vel elit ultricies semper.</p>\n' +
             '<p><img src="http://example.com/images/photo.jpg" alt="Another nice photo"></p>\n' +
             '<p>Sed nec sagittis risus, vitae tempor mi. Suspendisse potenti.</p>');
@@ -136,6 +137,7 @@ describe('Process', function () {
 
         post.data.html.should.eql('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <a href="https://www.my-site.com/another-page">Pellentesque rutrum</a> ante in <a href="https://example.com">sapien ultrices</a>, sit amet auctor tellus iaculis.</p>\n' +
             '<p><img src="https://www.my-site.com/images/photo.jpg" alt="A nice photo"></p>\n' +
+            '<p><img src="https://www.my-site.com/news/images/photo.jpg" alt="Relative-to-root image"></p>\n' +
             '<p>Duis efficitur nisl pharetra enim lobortis consequat. Curabitur vestibulum diam vel elit ultricies semper.</p>\n' +
             '<p><img src="http://example.com/images/photo.jpg" alt="Another nice photo"></p>\n' +
             '<p>Sed nec sagittis risus, vitae tempor mi. Suspendisse potenti.</p>');
@@ -152,8 +154,9 @@ describe('Process', function () {
             }
         );
 
-        post.data.html.should.eql('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <a href="https://blog.my-site.com/news/another-page">Pellentesque rutrum</a> ante in <a href="https://example.com">sapien ultrices</a>, sit amet auctor tellus iaculis.</p>\n' +
-            '<p><img src="https://blog.my-site.com/news/images/photo.jpg" alt="A nice photo"></p>\n' +
+        post.data.html.should.eql('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <a href="https://blog.my-site.com/another-page">Pellentesque rutrum</a> ante in <a href="https://example.com">sapien ultrices</a>, sit amet auctor tellus iaculis.</p>\n' +
+            '<p><img src="https://blog.my-site.com/images/photo.jpg" alt="A nice photo"></p>\n' +
+            '<p><img src="https://blog.my-site.com/news/images/photo.jpg" alt="Relative-to-root image"></p>\n' +
             '<p>Duis efficitur nisl pharetra enim lobortis consequat. Curabitur vestibulum diam vel elit ultricies semper.</p>\n' +
             '<p><img src="http://example.com/images/photo.jpg" alt="Another nice photo"></p>\n' +
             '<p>Sed nec sagittis risus, vitae tempor mi. Suspendisse potenti.</p>');
@@ -171,7 +174,7 @@ describe('Process', function () {
         post.data.updated_at.toISOString().should.eql('2021-09-01T00:00:00.000Z');
     });
 
-    it('Can use a supplied email domain for auhtors', function () {
+    it('Can use a supplied email domain for authors', function () {
         const fakeName = '_posts/2021-08-25-relative-links.md';
         const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
         const post = processPost(fakeName, fixture, false, {
