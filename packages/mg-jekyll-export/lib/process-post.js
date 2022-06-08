@@ -10,7 +10,7 @@ const processHtml = require('./process-html');
 /*
 Process both the frontmatter metadata and content of a single Jekyll Markdown post.
 
-The body may be ein Markdown or HTML.
+The body may be in Markdown or HTML.
 */
 
 const processMeta = (fileName, fileContents, options) => {
