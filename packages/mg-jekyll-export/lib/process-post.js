@@ -8,7 +8,7 @@ const fm = require('front-matter');
 const processHtml = require('./process-html');
 
 // The frontmatter date may be a Date object or a string
-function _parseFrontMatterDate (fmDate) {
+function _parseFrontMatterDate(fmDate) {
     let postDate;
     // The date was unquoted in the frontmatter, it gets parsed into a data object
     if (typeof fmDate === 'object') {
@@ -45,16 +45,24 @@ const processMeta = (fileName, fileContents, options) => {
     // Get an ISO 8601 date
     const dateNow = new Date().toISOString();
 
-    if (inDraftsDir) {
+    // If `basename` is supposed in the frontmatter, use that as the `slug`
+    if (frontmatterAttributes.basename) {
+        postSlug = frontmatterAttributes.basename;
+    }
+
+    if (inDraftsDir && !postSlug) {
         // Posts in _drafts don't have a date in the filename
         const slugRegex = new RegExp('(_drafts/)(.*).(md|markdown|html)');
         slugParts = fileName.match(slugRegex);
         postSlug = slugParts[2];
-    } else if (frontmatterAttributes.date) {
+    } else if (!inDraftsDir && frontmatterAttributes.date) {
         postDate = _parseFrontMatterDate(frontmatterAttributes.date);
-        const slugRegex = new RegExp('([0-9a-zA-Z-_]+)/(.*).(md|markdown|html)');
-        slugParts = fileName.match(slugRegex);
-        postSlug = slugParts[2];
+        if (!postSlug) {
+            const slugRegex = new RegExp('([0-9a-zA-Z-_]+)/(.*).(md|markdown|html)');
+            slugParts = fileName.match(slugRegex);
+            postSlug = slugParts[2];
+        }
+    // If it's a post with no `date` frontmatter
     } else {
         const datedSlugRegex = new RegExp('([0-9a-zA-Z-_]+)/([0-9]{4}-[0-9]{1,2}-[0-9]{1,2})-(.*).(md|markdown|html)');
         slugParts = fileName.match(datedSlugRegex);
@@ -69,7 +77,9 @@ const processMeta = (fileName, fileContents, options) => {
         const dateMonth = ('0' + slugParts[2].split(/[-/]/)[1]).slice(-2);
         const dateDay = ('0' + slugParts[2].split(/[-/]/)[2]).slice(-2);
         postDate = new Date(Date.UTC(dateYear, (dateMonth - 1), dateDay)); // Months are zero-index, so 11 equals December
-        postSlug = slugParts[3];
+        if (!postSlug) {
+            postSlug = slugParts[3];
+        }
     }
 
     const post = {
