@@ -57,7 +57,9 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Provide a user and password to authenticate the WordPress API (<user>:<password>)
 - **`-u` `--users`**
     - string - default: `null`
-    - Provide a JSON file with users
+    - Provide a JSON file with users. Contents should be a JSON array of objects that match
+      the format returned by the Wordpress API, including the following keys:
+      "id", "slug", "name", "description", "email" and "url".
 - **`--tags`**
     - boolean - default: `true`
     - Set to false if you don't want to import WordPress tags, only categories
