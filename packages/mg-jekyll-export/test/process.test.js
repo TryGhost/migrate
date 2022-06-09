@@ -224,6 +224,14 @@ describe('Process', function () {
         post.data.status.should.eql('draft');
     });
 
+    it('Can process `basename` frontmatter into slug', function () {
+        const fakeName = '_posts/2022-06-09-basename.md';
+        const fixture = testUtils.fixtures.readSync('2022-06-09-basename.md');
+        const post = processPost(fakeName, fixture);
+
+        post.data.slug.should.eql('custom-basename');
+    });
+
     it('Can process non-standard post types and add related tag', function () {
         const fakeName = 'w31rd_type-here/2021-08-25-relative-links.md';
         const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
