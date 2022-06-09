@@ -7,6 +7,23 @@ const errors = require('@tryghost/errors');
 const fm = require('front-matter');
 const processHtml = require('./process-html');
 
+// The frontmatter date may be a Date object or a string
+function _parseFrontMatterDate (fmDate) {
+    let postDate;
+    // The date was unquoted in the frontmatter, it gets parsed into a data object
+    if (typeof fmDate === 'object') {
+        postDate = fmDate;
+    // Otherwise the date gets parsed as a string
+    } else {
+        const frontMaterDateRegex = new RegExp('([0-9]{4})[-:/\\ ]([0-9]{2})[-:/\\ ]([0-9]{2})');
+
+        const dateParts = fmDate.match(frontMaterDateRegex);
+        postDate = new Date(Date.UTC(dateParts[1], (dateParts[2] - 1), dateParts[3])); // Months are zero-index, so 11 equals December
+    }
+
+    return postDate;
+}
+
 /*
 Process both the frontmatter metadata and content of a single Jekyll Markdown post.
 
@@ -29,21 +46,12 @@ const processMeta = (fileName, fileContents, options) => {
     const dateNow = new Date().toISOString();
 
     if (inDraftsDir) {
+        // Posts in _drafts don't have a date in the filename
         const slugRegex = new RegExp('(_drafts/)(.*).(md|markdown|html)');
         slugParts = fileName.match(slugRegex);
         postSlug = slugParts[2];
     } else if (frontmatterAttributes.date) {
-        // The date was unquoted in the frontmatter, it gets parsed into a data object
-        if (typeof frontmatterAttributes.date === 'object') {
-            postDate = frontmatterAttributes.date;
-        // Otherwise the date gets parsed as a string
-        } else {
-            const frontMaterDateRegex = new RegExp('([0-9]{4})[-:/\\ ]([0-9]{2})[-:/\\ ]([0-9]{2})');
-            // console.warn(`GOT ${typeof frontmatterAttributes.date}`)
-
-            const dateParts = frontmatterAttributes.date.match(frontMaterDateRegex);
-            postDate = new Date(Date.UTC(dateParts[1], (dateParts[2] - 1), dateParts[3])); // Months are zero-index, so 11 equals December
-        }
+        postDate = _parseFrontMatterDate(frontmatterAttributes.date);
         const slugRegex = new RegExp('([0-9a-zA-Z-_]+)/(.*).(md|markdown|html)');
         slugParts = fileName.match(slugRegex);
         postSlug = slugParts[2];
