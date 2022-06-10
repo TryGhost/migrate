@@ -4822,10 +4822,10 @@ tslib@^2.0.3, tslib@^2.2.0:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.3.1.tgz#e8a335add5ceae51aa261d32a490158ef042ef01"
   integrity sha512-77EbyPPpMz+FRFRuAFlWMtmgUWGe9UOG2Z25NqCwiIjRhOf5iKGuzSe5P2w1laq+FkRy4p+PCuVkJSGkzTEKVw==
 
-tty-table@4.1.5:
-  version "4.1.5"
-  resolved "https://registry.yarnpkg.com/tty-table/-/tty-table-4.1.5.tgz#752db752dd34961c0a52ebff893555cbe6113b94"
-  integrity sha512-qqyvTBHXUiGa6YO++VUsUyHdNAHwx5/JZeTW4jkxMO9T8sTb/bSNTLa47Ci9Qg5g9FQBrH/A04OfU/B+DCWSZA==
+tty-table@4.1.6:
+  version "4.1.6"
+  resolved "https://registry.yarnpkg.com/tty-table/-/tty-table-4.1.6.tgz#6bd58338f36c94cce478c3337934d8a65ab40a73"
+  integrity sha512-kRj5CBzOrakV4VRRY5kUWbNYvo/FpOsz65DzI5op9P+cHov3+IqPbo1JE1ZnQGkHdZgNFDsrEjrfqqy/Ply9fw==
   dependencies:
     chalk "^4.1.2"
     csv "^5.5.0"
