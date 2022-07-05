@@ -19,7 +19,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@tryghost/errors": "1.2.12",
+    "@tryghost/errors": "1.2.14",
     "@tryghost/image-transform": "1.0.32",
     "@tryghost/zip": "1.1.26",
     "adm-zip": "0.5.9",
