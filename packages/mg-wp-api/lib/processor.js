@@ -1,4 +1,3 @@
-const fs = require('fs-extra');
 const _ = require('lodash');
 const $ = require('cheerio');
 const url = require('url');
@@ -559,7 +558,7 @@ module.exports.all = async (ctx) => {
     if (usersJSON) {
         const mergedUsers = [];
         try {
-            let passedUsers = await fs.readJSON(usersJSON);
+            let passedUsers = usersJSON;
             console.log(`Passed a users file with ${passedUsers.length} entries, processing now!`); // eslint-disable-line no-console
             await passedUsers.map((passedUser) => { // eslint-disable-line array-callback-return
                 const matchedUser = _.find(input.users, (fetchedUser) => {

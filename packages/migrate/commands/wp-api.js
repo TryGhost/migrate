@@ -1,6 +1,9 @@
+const fs = require('fs-extra');
+const path = require('path');
 const wpAPISource = require('../sources/wp-api');
 const ui = require('@tryghost/pretty-cli').ui;
 const Table = require('tty-table');
+const xml2json = require('xml2json');
 
 // Internal ID in case we need one.
 exports.id = 'wp-api';
@@ -105,7 +108,33 @@ exports.run = async (argv) => {
     }
 
     if (argv.users) {
-        context.usersJSON = argv.users;
+        const usersFileExt = path.extname(argv.users).replace('.', '').toLowerCase();
+
+        if (usersFileExt === 'json') {
+            context.usersJSON = await fs.readJSON(argv.users);
+        } else if (usersFileExt === 'xml') {
+            const xmlData = fs.readFileSync(argv.users, 'utf8');
+            const userXMLJSON = xml2json.toJson(xmlData, {
+                object: true
+            });
+
+            let usersObjects = [];
+
+            userXMLJSON.root.row.forEach((user) => {
+                usersObjects.push({
+                    id: (user.source_user_id.length) ? parseInt(user.source_user_id) : null,
+                    slug: (user.user_nicename.length) ? user.user_nicename : null,
+                    name: (user.display_name.length) ? user.display_name : null,
+                    description: (user.description.length) ? user.description : null,
+                    email: (user.user_email.length) ? user.user_email : null,
+                    url: (user.user_url.length) ? user.user_url : null
+                });
+            });
+
+            context.usersJSON = usersObjects;
+        } else {
+            ui.log.warn(`${argv.users} is an unsupported file format. Should be JSON or XML`);
+        }
     }
 
     if (argv.verbose) {

@@ -1,6 +1,6 @@
 const WPAPI = require('wpapi');
 
-module.exports.discover = async (url, {apiUser, limit, cpt}) => {
+module.exports.discover = async (url, {apiUser, usersJSON, limit, cpt}) => {
     const requestOptions = {endpoint: `${url}/wp-json`};
 
     if (apiUser && apiUser.username && apiUser.password) {
@@ -39,9 +39,12 @@ module.exports.discover = async (url, {apiUser, limit, cpt}) => {
     values.totals.pages = pages._paging && pages._paging.total ? pages._paging.total : 0;
     values.batches.pages = pages._paging && pages._paging.totalPages ? pages._paging.totalPages : 0;
 
-    const users = await site.users().perPage(limit);
-    values.totals.users = users._paging && users._paging.total ? users._paging.total : 0;
-    values.batches.users = users._paging && users._paging.totalPages ? users._paging.totalPages : 0;
+    // If users were already supplied, don't fetch them
+    if (!usersJSON) {
+        const users = await site.users().perPage(limit);
+        values.totals.users = users._paging && users._paging.total ? users._paging.total : 0;
+        values.batches.users = users._paging && users._paging.totalPages ? users._paging.totalPages : 0;
+    }
 
     return values;
 };
@@ -85,13 +88,14 @@ module.exports.tasks = async (url, ctx) => {
     const {apiUser} = ctx || {};
     const {limit} = ctx.options;
     const {cpt} = ctx.options;
+    const {usersJSON} = ctx || null;
     let isAuthRequest = false;
 
     if (apiUser && apiUser.username && apiUser.password) {
         isAuthRequest = true;
     }
 
-    const api = await this.discover(url, {apiUser, limit, cpt});
+    const api = await this.discover(url, {apiUser, usersJSON, limit, cpt});
 
     const tasks = [];
 
@@ -102,7 +106,11 @@ module.exports.tasks = async (url, ctx) => {
 
     buildTasks(ctx.fileCache, tasks, api, 'posts', limit, isAuthRequest);
     buildTasks(ctx.fileCache, tasks, api, 'pages', limit, isAuthRequest);
-    buildTasks(ctx.fileCache, tasks, api, 'users', limit, isAuthRequest);
+
+    // If users were already supplied, don't fetch them
+    if (!usersJSON) {
+        buildTasks(ctx.fileCache, tasks, api, 'users', limit, isAuthRequest);
+    }
 
     if (cpt) {
         const CPTs = cpt.split(',');
