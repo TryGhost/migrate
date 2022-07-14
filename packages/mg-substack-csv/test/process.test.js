@@ -28,7 +28,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const processed = await process(mapped, ctx);
 
         processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(9);
+        processed.posts.length.should.equal(11);
 
         const post = processed.posts[0];
         post.should.be.an.Object();
@@ -43,7 +43,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         data.updated_at.should.eql('2019-07-26T20:48:19.814Z');
         data.created_at.should.eql('2019-07-26T20:48:19.814Z');
         data.title.should.eql('Plain Text');
-        data.html.should.eql('<h2>Lorem Ipsum</h2>\n<p>\n    <a href="/subscribe/"><span>Sign up now</span></a>\n</p>\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</p>\n<p>Dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>\n<div><hr></div>\n<p>\n    <a href="/subscribe/"><span>Sign up now</span></a>\n</p>\n');
+        data.html.should.eql('<h2>Lorem Ipsum</h2>\n<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div>\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</p>\n<p>Dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>\n<div><hr></div>\n<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up</a></div>\n');
         data.custom_excerpt.should.eql('Lorem ipsum dolor sit amet.');
         data.type.should.eql('post');
         data.status.should.eql('published');
@@ -142,7 +142,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
                 drafts: true,
                 url: 'https://dummysite.substack.com',
                 email: 'dummyuser@email.com',
-                subscribeLink: '#/portal/signup'
+                subscribeLink: '#/portal/signup/free'
             }
         };
         const mapped = await map(input, ctx.options);
@@ -151,7 +151,57 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         // The first post contains 2 subscribe links
         const post = processed.posts[0];
         const data = post.data;
-        data.html.should.eql('<h2>Lorem Ipsum</h2>\n<p>\n    <a href="#/portal/signup"><span>Sign up now</span></a>\n</p>\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</p>\n<p>Dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>\n<div><hr></div>\n<p>\n    <a href="#/portal/signup"><span>Sign up now</span></a>\n</p>\n');
+        data.html.should.eql('<h2>Lorem Ipsum</h2>\n<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup/free" class="kg-btn kg-btn-accent">Sign up now</a></div>\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</p>\n<p>Dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>\n<div><hr></div>\n<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup/free" class="kg-btn kg-btn-accent">Sign up</a></div>\n');
+    });
+
+    it('Will not change button element hrefs that are not subscribe buttons', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://dummysite.substack.com',
+                email: 'dummyuser@email.com'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        // The 10th contains 2 button elements
+        const post = processed.posts[9];
+        const data = post.data;
+
+        data.html.should.eql('<h2>Buttons</h2>\n<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div>\n<p>Lorem ipsum dolor sit.</p>\n<div class="kg-card kg-button-card kg-align-center"><a href="https://ghost.org/" class="kg-btn kg-btn-accent">Try Ghost</a></div>\n<p>Dolore magna aliqua.</p>\n');
+    });
+
+    it('Will remove share buttons', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://dummysite.substack.com',
+                email: 'dummyuser@email.com'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        // The 11th contains a share button
+        const post = processed.posts[10];
+        const data = post.data;
+
+        data.html.should.eql('<h2>Share Buttons</h2>\n<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div>\n<p>Dolore magna aliqua.</p>\n\n<p>Dolor sit amet.</p>\n');
     });
 
     it('Can convert signup forms to signup buttons', async function () {
@@ -295,7 +345,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const processed = await process(mapped, ctx);
 
         processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(6);
+        processed.posts.length.should.equal(8);
     });
 
     it('Can wrap lists with images in HTML comments', async function () {

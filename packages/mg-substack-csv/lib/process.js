@@ -88,12 +88,10 @@ const processContent = (html, siteUrl, options) => {
         }
     });
 
-    // Replace Substack share and subscribe buttons with normal links
-    // External links stay the same, but internal links should be turned into relative ones
+    // Remove Substack share buttons
     $html('p.button-wrapper').each((i, button) => {
         let shareLinks = $(button).children('a.button');
         if (shareLinks.length === 1 && siteUrl) {
-            let siteRegex = new RegExp(`^(?:${siteUrl}(?:\\/?)(?:p\\/)?)([a-zA-Z-_\\d]*)(?:\\/?)`, 'gi');
             let shareLink = $(shareLinks).get(0);
             let src = $(shareLink).attr('href');
             let parsed = url.parse(src);
@@ -102,21 +100,34 @@ const processContent = (html, siteUrl, options) => {
                 // If it's a share button, there's no use for it and completely remove the button
                 $(button).remove();
                 return;
-            } else if (parsed.search) {
-                // remove possible query params
-                parsed.search = null;
             }
-            src = url.format(parsed, {search: false});
+        }
+    });
 
-            if (src.match(siteRegex)) {
-                src = src.replace(siteRegex, '/$1/');
+    // Update button elements
+    $html('p.button-wrapper').each((i, button) => {
+        let buttons = $(button).children('a.button');
+        if (buttons.length === 1 && siteUrl) {
+            let siteRegex = new RegExp(`^(?:${siteUrl}(?:\\/?)(?:p\\/)?)([a-zA-Z-_\\d]*)(?:\\/?)`, 'gi');
+            let buttonLink = $(buttons).get(0);
+            let buttonHref = $(buttonLink).attr('href');
+            let buttonText = $(buttonLink).text();
+            let parsed = url.parse(buttonHref);
+
+            // remove possible query params
+            parsed.search = null;
+
+            buttonHref = url.format(parsed, {search: false});
+
+            if (buttonHref.match(siteRegex)) {
+                buttonHref = buttonHref.replace(siteRegex, '/$1/');
             }
 
-            $(shareLink).attr('href', src);
-            $(shareLink).removeAttr('class');
-            $(button).removeAttr('data-attrs');
-            $(button).removeAttr('class');
-            $(button).removeClass('button-wrapper');
+            if (buttonHref === '/subscribe/') {
+                buttonHref = options.subscribeLink || '#/portal/signup';
+            }
+
+            $(button).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
         }
     });
 

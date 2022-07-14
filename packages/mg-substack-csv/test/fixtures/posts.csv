@@ -8,3 +8,5 @@ post_id,post_date,is_published,email_sent_at,type,audience,title,subtitle,podcas
 789456.text-with-footnotes,2021-02-22T11:05:54.230Z,TRUE,2021-01-20T13:17:12.230Z,newsletter,everyone,Text and Footnotes,Eiusmod tempor incididunt ut labore.,
 789567.signup-form,2022-03-23T10:02:34.230Z,TRUE,2022-03-23T10:04:32.230Z,newsletter,everyone,Text with a signup form,Eiusmod tempor incididunt ut labore.,
 789568.embedded-post,2022-04-12T10:02:34.230Z,TRUE,2022-04-12T10:04:34.230Z,newsletter,everyone,Embedded Post,Eiusmod tempor incididunt ut labore.,
+789679.buttons,2022-07-12T12:11:23.230Z,TRUE,2022-07-12T12:12:23.230Z,newsletter,everyone,Buttons,Eiusmod tempor incididunt ut labore.,
+789680.share-buttons,2022-07-12T12:11:23.230Z,TRUE,2022-07-12T12:12:23.230Z,newsletter,everyone,Share Buttons,Eiusmod tempor incididunt ut labore.,
