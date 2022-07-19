@@ -79,7 +79,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 A more realistic command for a Substack migration looks like this:
 
 ```sh
-migrate substack <path to post.csv file> --url <URL to substack instance> --readPosts <path to directory containing html files> --subscribeLink \#/portal/signup --useMetaImage --useMetaAuthor
+migrate substack <path to post.csv file> --url <URL to substack instance> --readPosts <path to directory containing html files> --subscribeLink \#/portal/signup --useMetaImage true --useMetaAuthor true
 ```
 
 
