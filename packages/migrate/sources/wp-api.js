@@ -239,7 +239,9 @@ module.exports.getFullTaskList = (url, options) => {
                 // 9. Convert post HTML -> MobileDoc
                 try {
                     let tasks = mgHtmlMobiledoc.convert(ctx);
-                    return makeTaskRunner(tasks, options);
+                    let convertOptions = JSON.parse(JSON.stringify(options)); // Clone the options object
+                    convertOptions.concurrent = false;
+                    return makeTaskRunner(tasks, convertOptions);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
