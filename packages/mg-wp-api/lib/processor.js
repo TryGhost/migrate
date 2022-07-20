@@ -398,7 +398,7 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
     });
 
     $html('audio').each((i, el) => {
-        const isInFigure = el.parent.name === 'figure';
+        const isInFigure = el?.parent?.name === 'figure' || false;
 
         $(el).css('width', '100%');
 
