@@ -116,6 +116,17 @@ class ImageScraper {
     async processHTML(html) {
         let $ = cheerio.load(html);
 
+        let links = $('a[href]').map(async (i, el) => {
+            let $link = $(el);
+            let href = $link.attr('href') || false;
+            let hrefExt = (href) ? path.extname(href) : false;
+
+            if (hrefExt && knownImageExtensions.includes(hrefExt)) {
+                let newHref = await this.downloadImage(href);
+                $link.attr('href', newHref);
+            }
+        }).get();
+
         let images = $('img').map(async (i, el) => {
             let $image = $(el);
             let type = $image.attr('src') === undefined ? 'data-src' : 'src';
@@ -147,7 +158,7 @@ class ImageScraper {
             }
         }).get();
 
-        await Promise.all(images, videoPosters, bgImages);
+        await Promise.all(links, images, videoPosters, bgImages);
         return $.html();
     }
 

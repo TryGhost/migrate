@@ -82,4 +82,24 @@ describe('Download Image', function () {
         post.feature_image_alt.should.eql('Feature image alt text');
         post.feature_image_caption.should.eql('Feature image caption text');
     });
+
+    it('Will find and replace linked images in posts', async function () {
+        let ctx = testUtils.fixtures.readSync('ctx.json');
+
+        mockFileCache.hasFile.returns(true);
+        let imageScraper = new ImageScraper(mockFileCache);
+
+        let tasks = imageScraper.fetch(ctx);
+        const doTasks = makeTaskRunner(tasks, {renderer: 'silent'});
+        await doTasks.run();
+
+        const post = ctx.result.data.posts[0];
+
+        post.feature_image.should.eql(mockOutputPath);
+        post.html.should.containEql('<a href="/content/images/test.jpg">image</a>');
+        post.html.should.not.containEql('<a href="https://mysite.com/images/test.jpg">image</a>');
+
+        post.html.should.containEql('<a href="/content/images/test.jpg">relative image</a>');
+        post.html.should.not.containEql('<a href="/images/test.jpg">relative image</a>');
+    });
 });
