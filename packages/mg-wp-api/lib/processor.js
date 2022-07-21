@@ -8,6 +8,19 @@ const stripHtml = (html) => {
     return html.replace(/<[^>]+>/g, '').replace(/\r?\n|\r/g, ' ').trim();
 };
 
+const largerSrc = (imageSrc) => {
+    let newSrc = imageSrc;
+
+    const fileSizeRegExp = new RegExp('-([0-9]+x[0-9]+).([a-zA-Z]{2,4})$');
+    const fileSizeMatches = imageSrc.match(fileSizeRegExp);
+
+    if (fileSizeMatches) {
+        newSrc = imageSrc.replace(fileSizeRegExp, '.$2');
+    }
+
+    return newSrc;
+};
+
 module.exports.processAuthor = (wpAuthor) => {
     let profileImage = wpAuthor.avatar_urls && wpAuthor.avatar_urls['96'];
     profileImage = profileImage ? profileImage.replace(/s=96/, 's=3000') : undefined;
@@ -344,6 +357,19 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
         }
     });
 
+    // Remove links around images that link to the same file
+    $html('a > img').each((l, img) => {
+        let $image = $(img);
+        let imageSrc = $(img).attr('src');
+        let newSrc = largerSrc(imageSrc);
+        let $link = $($image).parent('a');
+        let linkHref = $($link).attr('href');
+
+        if (newSrc === linkHref) {
+            $($link).replaceWith($($link).html());
+        }
+    });
+
     // Linked images
     // It's not possible to convert the image to a full kg-image incl. wrapping it in a `figure` tag,
     // as the mobiledoc parser won't leave the figure within the anchor tag, even when it's wrapped in
@@ -416,6 +442,13 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
     $html('img[data-gif]').each((i, gif) => {
         let gifSrc = $(gif).attr('data-gif');
         $(gif).attr('src', gifSrc);
+    });
+
+    $html('img').each((i, img) => {
+        let $image = $(img);
+        let imageSrc = $($image).attr('src');
+        let newSrc = largerSrc(imageSrc);
+        $($image).attr('src', newSrc);
     });
 
     // Detect full size images

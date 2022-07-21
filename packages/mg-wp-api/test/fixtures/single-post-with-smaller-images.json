@@ -1,0 +1,483 @@
+{
+  "id": 12345,
+  "date": "2019-11-07T10:36:54",
+  "date_gmt": "2019-11-07T15:36:54",
+  "guid": {
+    "rendered": "http:\/\/mysite.com\/?p=12345"
+  },
+  "modified": "2019-11-07T10:37:03",
+  "modified_gmt": "2019-11-07T15:37:03",
+  "slug": "my-awesome-post",
+  "status": "publish",
+  "type": "post",
+  "link": "https:\/\/mysite.com\/bloob\/2020\/09\/05\/my-awesome-post-with-a-canonical",
+  "title": {
+    "rendered": "My Awesome Post"
+  },
+  "content": {
+    "rendered": "<h2><strong>This is my strong headline thing.<\/strong><\/h2>\n<img src=\"https://mysite.com/wp-content/uploads/2020/06/image-300x200.png\" />",
+    "protected": false
+  },
+  "excerpt": {
+    "rendered": "<p>This is my strong headline thing. Here we have some excerpt content [&hellip;]<\/p>\n",
+    "protected": false
+  },
+  "author": 29,
+  "featured_media": 12367,
+  "comment_status": "closed",
+  "ping_status": "open",
+  "sticky": false,
+  "template": "",
+  "format": "standard",
+  "meta": {
+    "jetpack_publicize_message": ""
+  },
+  "categories": [
+    3456
+  ],
+  "tags": [
+    800,
+    1200,
+    12212,
+    12800
+  ],
+  "jetpack_featured_media_url": "https:\/\/mysite.com\/wp-content\/uploads\/2019\/11\/BOOP.jpg",
+  "jetpack_publicize_connections": [],
+  "jetpack_shortlink": "https:\/\/wp.me\/f3bPnX-dEf",
+  "jetpack_sharing_enabled": true,
+  "_links": {
+    "self": [
+      {
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/posts\/12345"
+      }
+    ],
+    "collection": [
+      {
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/posts"
+      }
+    ],
+    "about": [
+      {
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/types\/post"
+      }
+    ],
+    "author": [
+      {
+        "embeddable": true,
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/users\/29"
+      }
+    ],
+    "replies": [
+      {
+        "embeddable": true,
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/comments?post=12345"
+      }
+    ],
+    "version-history": [
+      {
+        "count": 3,
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/posts\/12345\/revisions"
+      }
+    ],
+    "predecessor-version": [
+      {
+        "id": 12344,
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/posts\/12345\/revisions\/52427"
+      }
+    ],
+    "wp:featuredmedia": [
+      {
+        "embeddable": true,
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/media\/12367"
+      }
+    ],
+    "wp:attachment": [
+      {
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/media?parent=12345"
+      }
+    ],
+    "wp:term": [
+      {
+        "taxonomy": "category",
+        "embeddable": true,
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/categories?post=12345"
+      },
+      {
+        "taxonomy": "post_tag",
+        "embeddable": true,
+        "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/tags?post=12345"
+      }
+    ],
+    "curies": [
+      {
+        "name": "wp",
+        "href": "https:\/\/api.w.org\/{rel}",
+        "templated": true
+      }
+    ]
+  },
+  "_embedded": {
+    "author": [
+      {
+        "id": 29,
+        "name": "Guest Writer",
+        "url": "",
+        "description": "",
+        "link": "https:\/\/mysite.com\/team\/guest-writer",
+        "slug": "guest-writer",
+        "avatar_urls": {
+          "24": "https:\/\/secure.gravatar.com\/avatar\/a123b456c789?s=24&d=mm&r=g",
+          "48": "https:\/\/secure.gravatar.com\/avatar\/a123b456c789?s=48&d=mm&r=g",
+          "96": "https:\/\/secure.gravatar.com\/avatar\/a123b456c789?s=96&d=mm&r=g"
+        },
+        "_links": {
+          "self": [
+            {
+              "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/users\/29"
+            }
+          ],
+          "collection": [
+            {
+              "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/users"
+            }
+          ]
+        }
+      }
+    ],
+    "wp:featuredmedia": [
+      {
+        "id": 12367,
+        "date": "2019-11-07T10:27:49",
+        "slug": "boop",
+        "type": "attachment",
+        "link": "https:\/\/mysite.com\/boop\/my-awesome-post\/attachment\/boop",
+        "title": {
+          "rendered": "Boopity"
+        },
+        "author": 84,
+        "jetpack_shortlink": "https:\/\/wp.me\/f3bPnX-dEf",
+        "jetpack_sharing_enabled": true,
+        "caption": {
+          "rendered": "<p>This is Boopity</p>\n"
+        },
+        "alt_text": "Boopity",
+        "media_type": "image",
+        "mime_type": "image\/jpeg",
+        "media_details": {
+          "width": 625,
+          "height": 415,
+          "file": "2019\/11\/BOOP.jpg",
+          "sizes": {
+            "thumbnail": {
+              "file": "BOOP-360x360.jpg",
+              "width": 360,
+              "height": 360,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2019\/11\/BOOP-360x360.jpg"
+            },
+            "medium": {
+              "file": "BOOP-400x266.jpg",
+              "width": 400,
+              "height": 266,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2019\/11\/BOOP-400x266.jpg"
+            },
+            "post-slider-thumb-size": {
+              "file": "BOOP-330x190.jpg",
+              "width": 330,
+              "height": 190,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2019\/11\/BOOP-330x190.jpg"
+            },
+            "team-500px": {
+              "file": "BOOP-500x415.jpg",
+              "width": 500,
+              "height": 415,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2019\/11\/BOOP-500x415.jpg"
+            },
+            "wpmtpv2-thumb": {
+              "file": "BOOP-250x250.jpg",
+              "width": 250,
+              "height": 250,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2019\/11\/BOOP-250x250.jpg"
+            },
+            "wpmtpv2-single": {
+              "file": "BOOP-300x199.jpg",
+              "width": 300,
+              "height": 199,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2019\/11\/BOOP-300x199.jpg"
+            },
+            "wpmtpv2-admin-thumb": {
+              "file": "BOOP-90x90.jpg",
+              "width": 90,
+              "height": 90,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2019\/11\/BOOP-90x90.jpg"
+            },
+            "home-middle": {
+              "file": "BOOP-625x350.jpg",
+              "width": 625,
+              "height": 350,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2019\/11\/BOOP-625x350.jpg"
+            },
+            "sidebar-thumbnail": {
+              "file": "BOOP-100x100.jpg",
+              "width": 100,
+              "height": 100,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2019\/11\/BOOP-100x100.jpg"
+            },
+            "alm-thumbnail": {
+              "file": "BOOP-150x150.jpg",
+              "width": 150,
+              "height": 150,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2019\/11\/BOOP-150x150.jpg"
+            },
+            "full": {
+              "file": "BOOP.jpg",
+              "width": 625,
+              "height": 415,
+              "mime_type": "image\/jpeg",
+              "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2019\/11\/BOOP.jpg"
+            }
+          },
+          "image_meta": {
+            "aperture": "0",
+            "credit": "",
+            "camera": "",
+            "caption": "",
+            "created_timestamp": "0",
+            "copyright": "",
+            "focal_length": "0",
+            "iso": "0",
+            "shutter_speed": "0",
+            "title": "",
+            "orientation": "0",
+            "keywords": []
+          }
+        },
+        "source_url": "https:\/\/mysite.com\/wp-content\/uploads\/2019\/11\/BOOP.jpg",
+        "_links": {
+          "self": [
+            {
+              "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/media\/12367"
+            }
+          ],
+          "collection": [
+            {
+              "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/media"
+            }
+          ],
+          "about": [
+            {
+              "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/types\/attachment"
+            }
+          ],
+          "author": [
+            {
+              "embeddable": true,
+              "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/users\/84"
+            }
+          ],
+          "replies": [
+            {
+              "embeddable": true,
+              "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/comments?post=12367"
+            }
+          ]
+        }
+      }
+    ],
+    "wp:term": [
+      [
+        {
+          "id": 3456,
+          "link": "https:\/\/mysite.com\/category\/boop",
+          "name": "Boop",
+          "slug": "boop",
+          "taxonomy": "category",
+          "_links": {
+            "self": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/categories\/3456"
+              }
+            ],
+            "collection": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/categories"
+              }
+            ],
+            "about": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/taxonomies\/category"
+              }
+            ],
+            "wp:post_type": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/posts?categories=3456"
+              }
+            ],
+            "curies": [
+              {
+                "name": "wp",
+                "href": "https:\/\/api.w.org\/{rel}",
+                "templated": true
+              }
+            ]
+          }
+        }
+      ],
+      [
+        {
+          "id": 800,
+          "link": "https:\/\/mysite.com\/tag\/foo",
+          "name": "foo",
+          "slug": "foo",
+          "taxonomy": "post_tag",
+          "_links": {
+            "self": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/tags\/800"
+              }
+            ],
+            "collection": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/tags"
+              }
+            ],
+            "about": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/taxonomies\/post_tag"
+              }
+            ],
+            "wp:post_type": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/posts?tags=800"
+              }
+            ],
+            "curies": [
+              {
+                "name": "wp",
+                "href": "https:\/\/api.w.org\/{rel}",
+                "templated": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 1200,
+          "link": "https:\/\/mysite.com\/tag\/bar-baz",
+          "name": "Bar Baz",
+          "slug": "bar-baz",
+          "taxonomy": "post_tag",
+          "_links": {
+            "self": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/tags\/1200"
+              }
+            ],
+            "collection": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/tags"
+              }
+            ],
+            "about": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/taxonomies\/post_tag"
+              }
+            ],
+            "wp:post_type": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/posts?tags=1200"
+              }
+            ],
+            "curies": [
+              {
+                "name": "wp",
+                "href": "https:\/\/api.w.org\/{rel}",
+                "templated": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 12212,
+          "link": "https:\/\/mysite.com\/tag\/boop",
+          "name": "boop",
+          "slug": "boop",
+          "taxonomy": "post_tag",
+          "_links": {
+            "self": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/tags\/12212"
+              }
+            ],
+            "collection": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/tags"
+              }
+            ],
+            "about": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/taxonomies\/post_tag"
+              }
+            ],
+            "wp:post_type": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/posts?tags=12212"
+              }
+            ],
+            "curies": [
+              {
+                "name": "wp",
+                "href": "https:\/\/api.w.org\/{rel}",
+                "templated": true
+              }
+            ]
+          }
+        },
+        {
+          "id": 12800,
+          "link": "https:\/\/mysite.com\/tag\/beep",
+          "name": "beep",
+          "slug": "beep",
+          "taxonomy": "post_tag",
+          "_links": {
+            "self": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/tags\/12800"
+              }
+            ],
+            "collection": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/tags"
+              }
+            ],
+            "about": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/taxonomies\/post_tag"
+              }
+            ],
+            "wp:post_type": [
+              {
+                "href": "https:\/\/mysite.com\/wp-json\/wp\/v2\/posts?tags=12800"
+              }
+            ],
+            "curies": [
+              {
+                "name": "wp",
+                "href": "https:\/\/api.w.org\/{rel}",
+                "templated": true
+              }
+            ]
+          }
+        }
+      ]
+    ]
+  }
+}

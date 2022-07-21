@@ -33,6 +33,32 @@ describe('Process', function () {
         data.tags[5].data.name.should.eql('#wp');
     });
 
+    it('Can find & update smaller images', async function () {
+        const fixture = testUtils.fixtures.readSync('single-post-with-smaller-images.json');
+        const users = [];
+        const options = {tags: true};
+        const post = await processor.processPost(fixture, users, options);
+
+        post.data.should.be.an.Object();
+        const data = post.data;
+
+        data.html.should.eql('<h2><strong>This is my strong headline thing.</strong></h2>\n' +
+        '<img src="https://mysite.com/wp-content/uploads/2020/06/image.png">'); /* eslint-disable-line no-useless-escape */
+    });
+
+    it('Can find & remove links around images that link to the same image', async function () {
+        const fixture = testUtils.fixtures.readSync('single-post-with-linked-images.json');
+        const users = [];
+        const options = {tags: true};
+        const post = await processor.processPost(fixture, users, options);
+
+        post.data.should.be.an.Object();
+        const data = post.data;
+
+        data.html.should.eql('<h2><strong>This is my strong headline thing.</strong></h2>\n' +
+        '<img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><!--kg-card-begin: html--><a href="https://mysite.com" class="kg-card kg-image-card" style="display: block;"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png" class="kg-image"></a><!--kg-card-end: html--><!--kg-card-begin: html--><a href="https://mysite.com/wp-content/uploads/2020/06/another-image.png" class="kg-card kg-image-card" style="display: block;"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png" class="kg-image"></a><!--kg-card-end: html-->'); /* eslint-disable-line no-useless-escape */
+    });
+
     it('Can convert a single user', function () {
         const fixture = testUtils.fixtures.readSync('single-user.json');
         const user = processor.processAuthor(fixture);
