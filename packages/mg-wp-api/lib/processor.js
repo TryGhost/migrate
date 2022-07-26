@@ -304,7 +304,7 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
 
     // TODO: this should be a parser plugin
     // Wrap nested lists in HTML card
-    $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {
+    $html('ul li ul, ol li ol, ol li ul, ul li ol, ul [style], ol [style]').each((i, nestedList) => {
         let $parent = $(nestedList).parentsUntil('ul, ol').parent();
         $parent.before('<!--kg-card-begin: html-->');
         $parent.after('<!--kg-card-end: html-->');
