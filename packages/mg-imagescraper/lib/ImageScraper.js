@@ -58,13 +58,22 @@ class ImageScraper {
         // Case: Some servers don't play well when the UA string is blank or default UA string is used.
         // By defining a real-world the user-agent, we get more consistent results when requesting images.
         const chromeUserAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.109 Safari/537.36';
-        return await got(src, {
+        let response = await got(src, {
             responseType: 'buffer',
             timeout: 20000,
             headers: {
                 'user-agent': chromeUserAgent
             }
         });
+
+        let responseContentType = response.headers['content-type'].split('/');
+
+        // If the requested file does not have an image mime type…
+        if (responseContentType[0] !== 'image') {
+            return false;
+        }
+
+        return response;
     }
 
     async downloadImage(src) {
@@ -88,6 +97,11 @@ class ImageScraper {
         try {
             // Timeout after 20 seconds
             let response = await this.fetchImage(src);
+
+            // Skip is no response
+            if (!response) {
+                return false;
+            }
 
             // Get the file extension from `src`
             // Will return then last `.` with anything after if, eg `.`, `.png`
