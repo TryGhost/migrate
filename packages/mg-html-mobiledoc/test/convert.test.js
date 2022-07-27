@@ -92,4 +92,33 @@ describe('Convert', function () {
         mobiledoc.markups.should.eql([['i'],['a',['href','https://example.com']]]);
         mobiledoc.sections.should.eql([[1,'h2',[[0,[],0,'Good stuff here']]],[10,0],[1,'p',[[0,[],0,'Hello '],[0,[0],1,'world']]],[10,1],[1,'p',[[0,[],0,'Link to '],[0,[1],1,'Example']]],[1,'p',[[0,[],0,'Hello '],[1,[],0,0],[0,[],0,'world']]]]);
     });
+
+    it('correctly transforms relative Portal links that start with #', function () {
+        let post = {
+            html: '\
+                <div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>\
+                <p>Please <a href="#/portal/signup">Subscribe</a></p>\
+                <div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>\
+                <p>Please <a href="#/portal/signup">Subscribe</a></p>\
+                <div class="kg-card kg-button-card kg-align-center"><a href="/#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>\
+                <p>Please <a href="/#/portal/signup">Subscribe</a></p>\
+                <div class="kg-card kg-button-card kg-align-center"><a href="https://example.com/#/portal/signup/free" class="kg-btn kg-btn-accent">Subscribe</a></div>\
+                <p>Please <a href="https://example.com/#/portal/signup/free">Subscribe</a></p>\
+                '
+        };
+        const htmlCard = false;
+
+        convertPost(post, htmlCard);
+
+        const mobiledoc = JSON.parse(post.mobiledoc);
+
+        should.not.exist(mobiledoc.html);
+
+        mobiledoc.should.be.an.Object().with.properties('version', 'markups', 'atoms', 'cards', 'sections');
+        mobiledoc.version.should.eql('0.3.1');
+        mobiledoc.atoms.should.eql([]);
+        mobiledoc.cards.should.eql([['button',{alignment: 'center', buttonUrl: '#/portal/signup', buttonText: 'Subscribe'}],['button',{alignment: 'center', buttonUrl: '#/portal/signup',buttonText: 'Subscribe'}],['button',{alignment: 'center', buttonUrl: '/#/portal/signup', buttonText: 'Subscribe'}],['button',{alignment: 'center', buttonUrl: 'https://example.com/#/portal/signup/free', buttonText: 'Subscribe'}]]);
+        mobiledoc.markups.should.eql([['a',['href','#/portal/signup']],['a',['href','/#/portal/signup']],['a',['href','https://example.com/#/portal/signup/free']]]);
+        mobiledoc.sections.should.eql([[10,0],[1,'p',[[0,[],0,'Please '],[0,[0],1,'Subscribe']]],[10,1],[1,'p',[[0,[],0,'Please '],[0,[0],1,'Subscribe']]],[10,2],[1,'p',[[0,[],0,'Please '],[0,[1],1,'Subscribe']]],[10,3],[1,'p',[[0,[],0,'Please '],[0,[2],1,'Subscribe']]]]);
+    });
 });

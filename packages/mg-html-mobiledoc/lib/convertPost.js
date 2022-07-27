@@ -13,5 +13,8 @@ module.exports.convertPost = (post, htmlCard = false) => {
         post.mobiledoc = JSON.stringify(converter.toMobiledoc(post.html));
     }
 
+    // `about:blank` has no place here
+    post.mobiledoc = post.mobiledoc.replace(/about:blank/gm, '');
+
     delete post.html;
 };
