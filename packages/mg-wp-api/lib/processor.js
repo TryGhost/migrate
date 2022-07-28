@@ -191,62 +191,7 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
         $(el).replaceWith(audioHTML);
     }).get();
 
-    // Bookmark embeds
-    let bookmarks = $html('.wp-block-embed.is-type-wp-embed').map(async (i, el) => {
-        let href = $(el).find('blockquote a').attr('href');
-        let iframeSrc = $(el).find('iframe').attr('src');
-
-        let scrapeConfig = {
-            pageTitle: '.wp-embed-heading a',
-            siteTitle: '.wp-embed-site-title a span',
-            siteIcon: {
-                selector: '.wp-embed-site-title a img',
-                attr: 'src'
-            },
-            image: {
-                selector: '.wp-embed-featured-image a img',
-                attr: 'src'
-            },
-            content: {
-                selector: '.wp-embed-excerpt p',
-                how: 'html',
-                convert: (theData) => {
-                    const $bookmarkContent = $.load(theData);
-                    $bookmarkContent('a').each((i, a) => { // eslint-disable-line no-shadow
-                        $(a).remove();
-                    });
-
-                    return $bookmarkContent.html();
-                }
-            }
-        };
-
-        // Scrape `iframe` data, and cache it locally
-        let filename = iframeSrc.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        let {responseData} = await webScraper.scrapeUrl(iframeSrc, scrapeConfig, filename);
-
-        $(el).replaceWith(`
-            <!--kg-card-begin: html-->
-            <figure class="kg-card kg-bookmark-card">
-                <a class="kg-bookmark-container" href="${href}">
-                    <div class="kg-bookmark-content">
-                        <div class="kg-bookmark-title">${responseData.pageTitle}</div>
-                        <div class="kg-bookmark-description">${responseData.content}</div>
-                        <div class="kg-bookmark-metadata">
-                            <img class="kg-bookmark-icon" src="${responseData.siteIcon}">
-                            <span class="kg-bookmark-author">${responseData.siteTitle}</span>
-                        </div>
-                    </div>
-                    <div class="kg-bookmark-thumbnail">
-                        <img src="${responseData.image}" alt="">
-                    </div>
-                </a>
-            </figure>
-            <!--kg-card-end: html-->
-        `);
-    }).get();
-
-    await Promise.all(libsynPodcasts, bookmarks);
+    await Promise.all(libsynPodcasts);
 
     $html('blockquote.twitter-tweet').each((i, el) => {
         let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
