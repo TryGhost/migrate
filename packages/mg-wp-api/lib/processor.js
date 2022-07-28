@@ -446,6 +446,8 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
 
     $html('img').each((i, img) => {
         let $image = $(img);
+        $($image).removeAttr('srcset');
+        $($image).removeAttr('sizes');
         let imageSrc = $($image).attr('src');
         let newSrc = largerSrc(imageSrc);
         $($image).attr('src', newSrc);
