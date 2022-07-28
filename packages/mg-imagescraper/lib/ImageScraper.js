@@ -22,7 +22,7 @@ const isImageField = field => /image$/.test(field);
 // video - thumbnailSrc
 // video - customThumbnailSrc
 
-const ScrapeError = ({src, code, statusCode, originalError}) => {
+const ScrapeError = ({src, code, statusCode, originalError, note}) => {
     let error = new errors.InternalServerError({message: `Unable to scrape URI ${src}`});
 
     error.errorType = 'ScrapeError';
@@ -31,6 +31,9 @@ const ScrapeError = ({src, code, statusCode, originalError}) => {
     error.code = code;
     if (statusCode) {
         error.statusCode = statusCode;
+    }
+    if (note) {
+        error.note = note;
     }
     if (originalError.body) {
         // We really don't need the buffer for our error file
@@ -69,23 +72,23 @@ class ImageScraper {
             });
 
             if (response.statusCode < 200 || response.statusCode >= 400) {
-                let fetchError = ScrapeError({src, code: response.code, statusCode: response.statusCode, originalError: 'Non 200 or 300 status code'});
+                let fetchError = ScrapeError({src, code: response.code, statusCode: response.statusCode, note: 'Non 200 or 300 status code'});
                 ctx.errors.push(fetchError);
-                return false;
+                return;
             }
 
             let responseContentType = response.headers['content-type'].split('/');
 
             // If the requested file does not have an image mime type…
             if (responseContentType[0] !== 'image') {
-                let fetchError = ScrapeError({src, code: response.code, statusCode: response.statusCode, originalError: 'Non-image mime type'});
+                let fetchError = ScrapeError({src, code: response.code, statusCode: response.statusCode, note: 'Non-image mime type'});
                 ctx.errors.push(fetchError);
-                return false;
+                return;
             }
 
             return response;
         } catch (error) {
-            let fetchError = ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error});
+            let fetchError = ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error, note: 'Catch-all error'});
             ctx.errors.push(fetchError);
         }
     }
@@ -137,7 +140,7 @@ class ImageScraper {
             await this.fileCache.writeImageFile(response.body, imageOptions);
             return imageFile.outputPath;
         } catch (error) {
-            throw ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error});
+            throw ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error, note: 'Error saving image'});
         }
     }
 
