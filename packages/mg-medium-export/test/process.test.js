@@ -106,4 +106,17 @@ describe('Process', function () {
         post.data.tags[2].data.name.should.eql('#medium');
         post.data.tags[3].data.name.should.eql('#auto-feature-image');
     });
+
+    it('Can process blockquotes', function () {
+        const fixture = testUtils.fixtures.readSync('quote-post.html');
+        const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
+        const post = processPost(fakeName, fixture);
+
+        post.should.be.a.MediumMetaObject();
+
+        const html = post.data.html;
+
+        html.should.containEql('<blockquote><p>“Lorem Ipsum”&nbsp;<a href="https://example/com" rel="noopener" target="_blank">Example</a></p></blockquote>');
+        html.should.containEql('<blockquote><p>Lorem Ipsum</p></blockquote>');
+    });
 });

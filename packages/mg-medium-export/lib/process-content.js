@@ -24,5 +24,18 @@ module.exports = (content, post) => {
         $content.find(firstTitle).remove();
     }
 
+    $content.find('blockquote.graf--pullquote, blockquote.graf--blockquote').each((i, bq) => {
+        $(bq).removeAttr('name');
+        $(bq).removeAttr('id');
+        $(bq).removeAttr('class');
+
+        $(bq).find('a').each((ii, a) => {
+            $(a).removeAttr('data-href');
+            $(a).removeAttr('class');
+        });
+
+        $(bq).html(`<p>${$(bq).html()}</p>`);
+    });
+
     return $content.html().trim();
 };
