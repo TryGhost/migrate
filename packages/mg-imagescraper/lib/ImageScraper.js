@@ -53,30 +53,44 @@ class ImageScraper {
         return path.join(path.dirname(string), path.basename(string, path.extname(string)) + ext);
     }
 
-    async fetchImage(src) {
-        // Timeout after 20 seconds
-        // Case: Some servers don't play well when the UA string is blank or default UA string is used.
-        // By defining a real-world the user-agent, we get more consistent results when requesting images.
-        const chromeUserAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.109 Safari/537.36';
-        let response = await got(src, {
-            responseType: 'buffer',
-            timeout: 20000,
-            headers: {
-                'user-agent': chromeUserAgent
+    async fetchImage(src, ctx) {
+        try {
+            // Timeout after 20 seconds
+            // Case: Some servers don't play well when the UA string is blank or default UA string is used.
+            // By defining a real-world the user-agent, we get more consistent results when requesting images.
+            const chromeUserAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.109 Safari/537.36';
+            let response = await got(src, {
+                responseType: 'buffer',
+                timeout: 20000,
+                throwHttpErrors: false,
+                headers: {
+                    'user-agent': chromeUserAgent
+                }
+            });
+
+            if (response.statusCode < 200 || response.statusCode >= 400) {
+                let fetchError = ScrapeError({src, code: response.code, statusCode: response.statusCode, originalError: 'Non 200 or 300 status code'});
+                ctx.errors.push(fetchError);
+                return false;
             }
-        });
 
-        let responseContentType = response.headers['content-type'].split('/');
+            let responseContentType = response.headers['content-type'].split('/');
 
-        // If the requested file does not have an image mime type…
-        if (responseContentType[0] !== 'image') {
-            return false;
+            // If the requested file does not have an image mime type…
+            if (responseContentType[0] !== 'image') {
+                let fetchError = ScrapeError({src, code: response.code, statusCode: response.statusCode, originalError: 'Non-image mime type'});
+                ctx.errors.push(fetchError);
+                return false;
+            }
+
+            return response;
+        } catch (error) {
+            let fetchError = ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error});
+            ctx.errors.push(fetchError);
         }
-
-        return response;
     }
 
-    async downloadImage(src) {
+    async downloadImage(src, ctx) {
         // Do not try parsing a URL when there is none
         if (!src) {
             return;
@@ -96,7 +110,7 @@ class ImageScraper {
 
         try {
             // Timeout after 20 seconds
-            let response = await this.fetchImage(src);
+            let response = await this.fetchImage(src, ctx);
 
             // Skip is no response
             if (!response) {
@@ -127,7 +141,7 @@ class ImageScraper {
         }
     }
 
-    async processHTML(html) {
+    async processHTML(html, ctx) {
         let $ = cheerio.load(html);
 
         let links = $('a[href]').map(async (i, el) => {
@@ -136,7 +150,7 @@ class ImageScraper {
             let hrefExt = (href) ? path.extname(href) : false;
 
             if (hrefExt && knownImageExtensions.includes(hrefExt)) {
-                let newHref = await this.downloadImage(href);
+                let newHref = await this.downloadImage(href, ctx);
                 $link.attr('href', newHref);
             }
         }).get();
@@ -145,7 +159,7 @@ class ImageScraper {
             let $image = $(el);
             let type = $image.attr('src') === undefined ? 'data-src' : 'src';
             let src = $image.attr(type);
-            let newSrc = await this.downloadImage(src);
+            let newSrc = await this.downloadImage(src, ctx);
             $image.attr(type, newSrc);
         }).get();
 
@@ -157,7 +171,7 @@ class ImageScraper {
             }
 
             let src = $video.attr('poster');
-            let newSrc = await this.downloadImage(src);
+            let newSrc = await this.downloadImage(src, ctx);
             $video.attr('poster', newSrc);
         }).get();
 
@@ -167,7 +181,7 @@ class ImageScraper {
             // @TODO: figure out error handling here, so we can at least get info about broken cases
             if (match) {
                 let src = match[1];
-                let newSrc = await this.downloadImage(src);
+                let newSrc = await this.downloadImage(src, ctx);
                 $image.css('background-image', `url(${newSrc})`);
             }
         }).get();
@@ -176,7 +190,7 @@ class ImageScraper {
         return $.html();
     }
 
-    async processMobiledoc(value) {
+    async processMobiledoc(value, ctx) {
         let json = JSON.parse(value);
 
         const imageKeys = ['src'];
@@ -189,13 +203,13 @@ class ImageScraper {
                     await processMobiledocImages(objectValue);
                 } else {
                     if (imageKeys.includes(objectKey)) {
-                        let newSrc = await this.downloadImage(objectValue);
+                        let newSrc = await this.downloadImage(objectValue, ctx);
                         object.src = newSrc;
                     } else if (object.markdown) {
-                        object.markdown = await this.processHTML(object.markdown);
+                        object.markdown = await this.processHTML(object.markdown, ctx);
                         let matches = [...object.markdown.matchAll(markdownImageRegex)];
                         matches.forEach(async (match) => {
-                            let newSrc = await this.downloadImage(match[2]);
+                            let newSrc = await this.downloadImage(match[2], ctx);
                             object.markdown = object.markdown.replace(match[2], newSrc);
                         });
                     }
@@ -220,27 +234,29 @@ class ImageScraper {
             _.forEach(resources, (resource) => {
                 // For each field
                 _.forEach(resource, (value, field) => {
-                    tasks.push({
-                        title: `${type}: ${resource.slug} ${field}`,
-                        task: async () => {
-                            try {
-                                if (isImageField(field) && value) {
-                                    resource[field] = await this.downloadImage(value);
-                                } else if (isHTMLField(field) && value) {
-                                    resource[field] = await this.processHTML(value);
-                                } else if (isMobiledocField(field) && value) {
-                                    resource[field] = await this.processMobiledoc(value);
+                    if (!['posts_tags', 'posts_authors'].includes(type)) { // 'posts_tags' & 'posts_authors' never contain any images
+                        tasks.push({
+                            title: `Images for ${type}: ${resource.slug} ${field}`,
+                            task: async () => {
+                                try {
+                                    if (isImageField(field) && value) {
+                                        resource[field] = await this.downloadImage(value, ctx);
+                                    } else if (isHTMLField(field) && value) {
+                                        resource[field] = await this.processHTML(value, ctx);
+                                    } else if (isMobiledocField(field) && value) {
+                                        resource[field] = await this.processMobiledoc(value, ctx);
+                                    }
+                                } catch (error) {
+                                    error.resource = {
+                                        title: resource.title,
+                                        slug: resource.slug
+                                    };
+                                    ctx.errors.push(error);
+                                    throw error;
                                 }
-                            } catch (error) {
-                                error.resource = {
-                                    title: resource.title,
-                                    slug: resource.slug
-                                };
-                                ctx.errors.push(error);
-                                throw error;
                             }
-                        }
-                    });
+                        });
+                    }
                 });
             });
         });
