@@ -62,16 +62,16 @@ describe('writeImageFile', function () {
         let fileCache = new FileCache('test');
 
         let resultPath = await fileCache.writeImageFile('imagebuffer', {
-            filename: 'blah.gif',
-            storagePath: '/tmp/blah.gif',
-            outputPath: '/content/images/blah.gif',
+            filename: 'blah.bmp',
+            storagePath: '/tmp/blah.bmp',
+            outputPath: '/content/images/blah.bmp',
             optimize: true
         });
 
         outputFileStub.calledOnce.should.be.true();
         transformStub.calledOnce.should.be.false();
 
-        resultPath.should.eql('/content/images/blah.gif');
+        resultPath.should.eql('/content/images/blah.bmp');
     });
 
     it('Correctly converts file sizes', async function () {
