@@ -293,9 +293,9 @@ class FileCache {
             options = this.resolveImageFileName(options.filename);
         }
 
-        // CASE: image manipulator is uncapable of transforming file (e.g. .gif)
-        let fileExt = path.parse(options.filename).ext;
-        if (options.optimize && imageTransform.canTransformFileExtension(fileExt)) {
+        // CASE: image manipulator is uncapable of transforming file (e.g. .bmp)
+        let fileExt = path.extname(options.filename).substr(1);
+        if (options.optimize && imageTransform.canTransformToFormat(fileExt)) {
             const optimizedStoragePath = options.storagePath;
             const originalStoragePath = imageTransform.generateOriginalImageName(options.storagePath);
             const optimizedData = await imageTransform.resizeFromBuffer(data, {width: 2000});
