@@ -92,8 +92,7 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
     let webScraper = new MgWebScraper(fileCache);
 
     let allowRemoteScraping = false;
-
-    if (options.scrape.includes('all') || options.scrape.includes('media')) {
+    if (options.scrape?.includes('all') || options.scrape?.includes('media')) {
         allowRemoteScraping = true;
     }
 
