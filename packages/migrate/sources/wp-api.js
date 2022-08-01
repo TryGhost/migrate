@@ -107,6 +107,13 @@ module.exports.initialize = (url, options) => {
 
             task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
 
+            ctx.allowScrape = {
+                all: ctx.options.scrape.includes('all'),
+                images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),
+                media: ctx.options.scrape.includes('media') || ctx.options.scrape.includes('all'),
+                web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
+            };
+
             if (options.batch > 0) {
                 task.title += ` batch ${ctx.fileCache.batchName}`;
             }
@@ -175,12 +182,12 @@ module.exports.getFullTaskList = (url, options) => {
         },
         {
             title: 'Fetch missing metadata via WebScraper',
+            skip: ctx => !ctx.allowScrape.web,
             task: (ctx) => {
                 // 3. Pass the results through the web scraper to get any missing data
                 let tasks = ctx.wpScraper.hydrate(ctx);
                 return makeTaskRunner(tasks, options);
-            },
-            skip: () => ['all', 'web'].indexOf(options.scrape) < 0
+            }
         },
         {
             title: 'Build Link Map',
@@ -208,21 +215,21 @@ module.exports.getFullTaskList = (url, options) => {
         },
         {
             title: 'Fetch images via ImageScraper',
+            skip: ctx => !ctx.allowScrape.images,
             task: async (ctx) => {
                 // 6. Pass the JSON file through the image scraper
                 let tasks = ctx.imageScraper.fetch(ctx);
                 return makeTaskRunner(tasks, options);
-            },
-            skip: () => ['all', 'img'].indexOf(options.scrape) < 0
+            }
         },
         {
             title: 'Fetch media via MediaScraper',
+            skip: ctx => !ctx.allowScrape.media,
             task: async (ctx) => {
                 // 7. Pass the JSON file through the file scraper
                 let tasks = ctx.mediaScraper.fetch(ctx);
                 return makeTaskRunner(tasks, options);
-            },
-            skip: () => ['all', 'media'].indexOf(options.scrape) < 0
+            }
         },
         {
             title: 'Update links in content via LinkFixer',

@@ -91,7 +91,11 @@ module.exports.processExcerpt = (html, excerptSelector) => {
 module.exports.processContent = async (html, postUrl, excerptSelector, errors, featureImageSrc = false, fileCache = false, options) => { // eslint-disable-line no-shadow
     let webScraper = new MgWebScraper(fileCache);
 
-    const allowRemoteScraping = ['all', 'web'].indexOf(options.scrape) > -1;
+    let allowRemoteScraping = false;
+
+    if (options.scrape.includes('all') || options.scrape.includes('media')) {
+        allowRemoteScraping = true;
+    }
 
     // Drafts can have empty post bodies
     if (!html) {
