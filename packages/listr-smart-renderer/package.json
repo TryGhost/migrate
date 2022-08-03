@@ -32,5 +32,15 @@
     "log-symbols": "4.1.0",
     "log-update": "^4.0.0",
     "strip-ansi": "^6.0.0"
+  },
+  "renovate": {
+    "ignoreDeps": [
+      "chalk",
+      "cli-truncate",
+      "indent-string",
+      "log-symbols",
+      "log-update",
+      "strip-ansi"
+    ]
   }
 }

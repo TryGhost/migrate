@@ -30,5 +30,10 @@
     "image-type": "4.1.0",
     "is-svg": "4.3.2",
     "lodash": "4.17.21"
+  },
+  "renovate": {
+    "ignoreDeps": [
+      "image-type"
+    ]
   }
 }
