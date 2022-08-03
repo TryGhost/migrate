@@ -92,6 +92,11 @@ migrate wp-api https://example.com --auth person:pa55w0rd --addTag 'From old sit
 
 This will fetch the newest 50 posts, in 5 batches of 10, collect real author data including email addresses), and add the tag 'From old site'.
 
+```sh
+migrate wp-api https://example.com --scrape img web
+```
+
+This will fetch all posts, and only scrape image & web meta data
 
 ## Develop
 

@@ -25,8 +25,10 @@
   },
   "dependencies": {
     "@tryghost/errors": "1.2.14",
+    "axios": "0.27.2",
     "cheerio": "^1.0.0-rc.2",
-    "got": "11.8.5",
+    "image-type": "4.1.0",
+    "is-svg": "4.3.2",
     "lodash": "4.17.21"
   }
 }
