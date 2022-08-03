@@ -1,7 +1,9 @@
 const _ = require('lodash');
 const cheerio = require('cheerio');
 const url = require('url');
-const got = require('got');
+const axios = require('axios');
+const imageType = require('image-type');
+const isSvg = require('is-svg');
 const path = require('path');
 const errors = require('@tryghost/errors');
 
@@ -10,8 +12,9 @@ const htmlFields = ['html'];
 
 const mobiledocFields = ['mobiledoc'];
 
-// @TODO: should probably be a shared list
+// Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/shared/config/overrides.json
 const knownImageExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico', '.webp'];
+const knownImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/webp'];
 
 const isHTMLField = field => _.includes(htmlFields, field);
 const isMobiledocField = field => _.includes(mobiledocFields, field);
@@ -22,7 +25,7 @@ const isImageField = field => /image$/.test(field);
 // video - thumbnailSrc
 // video - customThumbnailSrc
 
-const ScrapeError = ({src, code, statusCode, originalError, note}) => {
+const ScrapeError = ({src, code, statusCode, originalError = {}, note}) => {
     let error = new errors.InternalServerError({message: `Unable to scrape URI ${src}`});
 
     error.errorType = 'ScrapeError';
@@ -52,39 +55,24 @@ class ImageScraper {
         }, defaultOptions);
     }
 
+    getImageDataFromBuffer(buffer) {
+        const imageTypeData = imageType(buffer);
+        return imageTypeData;
+    }
+
     changeExtension(string, ext) {
-        return path.join(path.dirname(string), path.basename(string, path.extname(string)) + ext);
+        return path.join(path.dirname(string), path.basename(string, path.extname(string)) + '.' + ext);
     }
 
     async fetchImage(src, ctx) {
         try {
-            // Timeout after 20 seconds
-            // Case: Some servers don't play well when the UA string is blank or default UA string is used.
-            // By defining a real-world the user-agent, we get more consistent results when requesting images.
-            const chromeUserAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.109 Safari/537.36';
-            let response = await got(src, {
-                responseType: 'buffer',
-                timeout: 20000,
-                throwHttpErrors: false,
-                headers: {
-                    'user-agent': chromeUserAgent
+            const response = await axios.get(encodeURI(src), {
+                responseType: 'arraybuffer',
+                timeout: 2000,
+                validateStatus: (status) => {
+                    return status >= 200 && status <= 400; // default
                 }
             });
-
-            if (response.statusCode < 200 || response.statusCode >= 400) {
-                let fetchError = ScrapeError({src, code: response.code, statusCode: response.statusCode, note: 'Non 200 or 300 status code'});
-                ctx.errors.push(fetchError);
-                return;
-            }
-
-            let responseContentType = response.headers['content-type'].split('/');
-
-            // If the requested file does not have an image mime type…
-            if (responseContentType[0] !== 'image') {
-                let fetchError = ScrapeError({src, code: response.code, statusCode: response.statusCode, note: 'Non-image mime type'});
-                ctx.errors.push(fetchError);
-                return;
-            }
 
             return response;
         } catch (error) {
@@ -93,7 +81,7 @@ class ImageScraper {
         }
     }
 
-    async downloadImage(src, ctx) {
+    async downloadImage(src, ctx = {}) {
         // Do not try parsing a URL when there is none
         if (!src) {
             return;
@@ -105,6 +93,13 @@ class ImageScraper {
 
         let imageUrl = url.parse(src);
         let imageFile = this.fileCache.resolveFileName(imageUrl.pathname, 'images');
+
+        // CASE: We infer file extension based on the mime type, which always returns 'jpg' for 'image/jpeg',
+        // and saves files with this extension. So, we must change the extsneion here to check if a file exists.
+        imageFile.filename = imageFile.filename.replace('.jpeg', '.jpg');
+        imageFile.storagePath = imageFile.storagePath.replace('.jpeg', '.jpg');
+        imageFile.outputPath = imageFile.outputPath.replace('.jpeg', '.jpg');
+
         let imageOptions = Object.assign(imageFile, this.defaultImageOptions);
 
         if (this.fileCache.hasFile(imageFile.storagePath)) {
@@ -115,29 +110,39 @@ class ImageScraper {
             // Timeout after 20 seconds
             let response = await this.fetchImage(src, ctx);
 
-            // Skip is no response
+            // Return original remote src if no response
             if (!response) {
+                return src;
+            }
+
+            const isImageSvg = isSvg(response.data);
+
+            // Get file type from image buffer
+            const imageData = this.getImageDataFromBuffer(response.data);
+
+            if (isImageSvg) {
+                imageOptions.filename = this.changeExtension(imageOptions.filename, 'svg');
+                imageOptions.storagePath = this.changeExtension(imageOptions.storagePath, 'svg');
+                imageOptions.outputPath = this.changeExtension(imageOptions.outputPath, 'svg');
+            } else if (imageData) {
+                const imageExtension = imageData.ext || false;
+                const imageMime = imageData.mime || false;
+                if (knownImageTypes.includes(imageMime)) {
+                    imageOptions.filename = this.changeExtension(imageOptions.filename, imageExtension);
+                    imageOptions.storagePath = this.changeExtension(imageOptions.storagePath, imageExtension);
+                    imageOptions.outputPath = this.changeExtension(imageOptions.outputPath, imageExtension);
+                } else {
+                    let fetchError = ScrapeError({src, code: `Unsupported image type (${imageExtension} / ${imageMime} / ${src})`, statusCode: 415});
+                    ctx.errors.push(fetchError);
+                    return false;
+                }
+            } else {
+                let fetchError = ScrapeError({src, code: `Unsupported image type (${src})`, statusCode: 415});
+                ctx.errors.push(fetchError);
                 return false;
             }
 
-            // Get the file extension from `src`
-            // Will return then last `.` with anything after if, eg `.`, `.png`
-            let extension = path.extname(src);
-
-            // If we have an extension of 2 or less characters
-            if (extension.length <= 2) {
-                // Get the content type from response headers and convert to extension
-                let contentTypeParts = response.headers['content-type'].split('/');
-                let newExt = '.' + contentTypeParts[1];
-
-                if (knownImageExtensions.includes(newExt)) {
-                    imageOptions.filename = this.changeExtension(imageOptions.filename, newExt);
-                    imageOptions.storagePath = this.changeExtension(imageOptions.storagePath, newExt);
-                    imageOptions.outputPath = this.changeExtension(imageOptions.outputPath, newExt);
-                }
-            }
-
-            await this.fileCache.writeImageFile(response.body, imageOptions);
+            await this.fileCache.writeImageFile(response.data, imageOptions);
             return imageFile.outputPath;
         } catch (error) {
             throw ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error, note: 'Error saving image'});
