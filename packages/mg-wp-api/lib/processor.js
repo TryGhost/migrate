@@ -466,7 +466,7 @@ module.exports.processPost = async (wpPost, users, options, errors, fileCache) =
         }
     };
 
-    if (options.featureImage === 'featuredmedia' && wpPost.featured_media && wpPost._embedded['wp:featuredmedia']) {
+    if (options.featureImage === 'featuredmedia' && wpPost.featured_media && wpPost._embedded['wp:featuredmedia'] && !post.data.feature_image) {
         const wpImage = wpPost._embedded['wp:featuredmedia'][0];
         try {
             post.data.feature_image = wpImage.source_url;

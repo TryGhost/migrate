@@ -81,7 +81,7 @@ const postProcessor = (scrapedData, data, options) => {
     }
 
     if (options.featureImage === 'og:image' && scrapedData.og_image) {
-        data.feature_image = scrapedData.og_image;
+        scrapedData.feature_image = scrapedData.og_image;
     }
 
     return scrapedData;
