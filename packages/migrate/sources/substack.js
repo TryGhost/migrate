@@ -61,22 +61,34 @@ const scrapeConfig = {
             selector: 'script[type="application/ld+json"]',
             convert: (x) => {
                 let ldJSON = JSON.parse(x);
-                let author = ldJSON.author.name;
                 let theAuthors = [];
 
-                // Split string by ['and', '&', ','], trim white space from the resulting array items, and remove empty items
-                let authorSplit = author.split(/(?:,|and|&)+/).map(function (item) {
-                    return item.trim();
-                }).filter(i => i);
-
-                authorSplit.forEach((item) => {
-                    theAuthors.push({
-                        url: slugify(item),
-                        data: {
-                            name: item
-                        }
+                if (ldJSON.author.length > 1) {
+                    ldJSON.author.forEach((person) => {
+                        theAuthors.push({
+                            url: slugify(person.url),
+                            data: {
+                                name: person.name
+                            }
+                        });
                     });
-                });
+                } else {
+                    let author = ldJSON.author[0].name;
+
+                    // Split string by ['and', '&', ','], trim white space from the resulting array items, and remove empty items
+                    let authorSplit = author.split(/(?:,|and|&)+/).map(function (item) {
+                        return item.trim();
+                    }).filter(i => i);
+
+                    authorSplit.forEach((item) => {
+                        theAuthors.push({
+                            url: slugify(item),
+                            data: {
+                                name: item
+                            }
+                        });
+                    });
+                }
 
                 return theAuthors;
             }
