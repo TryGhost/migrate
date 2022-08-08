@@ -2,6 +2,7 @@ const _ = require('lodash');
 const $ = require('cheerio');
 const url = require('url');
 const MgWebScraper = require('@tryghost/mg-webscraper');
+const {slugify} = require('@tryghost/string');
 
 const stripHtml = (html) => {
     // Remove HTML tags, new line characters, and trim white-space
@@ -495,24 +496,40 @@ module.exports.processPost = async (wpPost, users, options, errors, fileCache) =
         post.data.tags = this.processTerms(wpTerms, fetchTags);
 
         post.data.tags.push({
-            url: 'migrator-added-tag', data: {slug: 'hash-wp', name: '#wp'}
+            url: 'migrator-added-tag',
+            data: {
+                slug: 'hash-wp',
+                name: '#wp'
+            }
         });
+    }
 
-        if (addTag) {
-            post.data.tags.push({
-                url: 'migrator-added-tag-2', data: {slug: addTag, name: addTag}
-            });
-        }
+    if (addTag) {
+        post.data.tags.push({
+            url: 'migrator-added-tag-custom',
+            data: {
+                slug: slugify(addTag),
+                name: addTag
+            }
+        });
     }
 
     if (options.cpt) {
         if (!['post', 'page'].includes(wpPost.type)) {
             post.data.tags.push({
-                url: 'migrator-added-tag-cpt', data: {slug: `hash-${wpPost.type}`, name: `#${wpPost.type}`}
+                url: 'migrator-added-tag-cpt',
+                data: {
+                    slug: `hash-${slugify(wpPost.type)}`,
+                    name: `#${wpPost.type}`
+                }
             });
         } else if (wpPost.type === 'post') {
             post.data.tags.push({
-                url: 'migrator-added-tag-post', data: {slug: `hash-wp-post`, name: `#wp-post`}
+                url: 'migrator-added-tag-post',
+                data: {
+                    slug: `hash-wp-post`,
+                    name: `#wp-post`
+                }
             });
         }
     }

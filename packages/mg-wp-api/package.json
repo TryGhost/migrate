@@ -26,6 +26,7 @@
   "dependencies": {
     "@tryghost/errors": "1.2.14",
     "@tryghost/mg-webscraper": "^0.6.27",
+    "@tryghost/string": "0.1.27",
     "cheerio": "0.22.0",
     "wpapi": "^1.2.1"
   }

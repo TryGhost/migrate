@@ -196,4 +196,19 @@ describe('Process', function () {
         data.author.data.slug.should.eql('admin');
         data.author.data.name.should.eql('The Admin');
     });
+
+    it('Can add addTag to value pages', async function () {
+        const fixture = testUtils.fixtures.readSync('single-page.json');
+        const users = [];
+
+        const options = {tags: true, addTag: 'My New Tag'};
+        const post = await processor.processPost(fixture, users, options);
+
+        const data = post.data;
+
+        data.tags.should.be.an.Array().with.lengthOf(1);
+
+        data.tags[0].data.slug.should.eql('my-new-tag');
+        data.tags[0].data.name.should.eql('My New Tag');
+    });
 });
