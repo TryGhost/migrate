@@ -68,7 +68,9 @@ const scrapeConfig = {
                         theAuthors.push({
                             url: slugify(person.url),
                             data: {
-                                name: person.name
+                                name: person.name,
+                                slug: slugify(person.name),
+                                email: `${slugify(person.name)}@example.com`
                             }
                         });
                     });
@@ -84,7 +86,9 @@ const scrapeConfig = {
                         theAuthors.push({
                             url: slugify(item),
                             data: {
-                                name: item
+                                name: item,
+                                slug: slugify(item),
+                                email: `${slugify(item)}@example.com`
                             }
                         });
                     });
@@ -101,7 +105,7 @@ const scrapeConfig = {
                     attr: 'href',
                     convert: (x) => {
                         const urlParts = x.match(/.*\/s\/([a-zA-Z0-9-_]{1,})(\/.*)?/);
-                        return urlParts[1]; // [1] is the tag name itself from `https://dummysite.substack.com/s/my-tag/?utm_source=substack`
+                        return urlParts[1]; // [1] is the tag name itself from `https://example.substack.com/s/my-tag/?utm_source=substack`
                     }
                 },
                 name: {
@@ -112,6 +116,26 @@ const scrapeConfig = {
             }
         }
     }
+};
+
+const postProcessor = (scrapedData, data, options) => {
+    if (options.useMetaAuthor && scrapedData.authors) {
+        let usersArray = [];
+
+        scrapedData.authors.forEach((user) => {
+            usersArray.push({
+                data: {
+                    slug: user.data.slug,
+                    name: `${user.data.name}`,
+                    email: user.data.email
+                }
+            });
+        });
+
+        scrapedData.authors = usersArray;
+    }
+
+    return scrapedData;
 };
 
 const skipScrape = (post) => {
@@ -155,7 +179,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
                     sizeLimit: ctx.options.size_limit || false
                 });
 
-                ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, null, skipScrape);
+                ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor, skipScrape);
                 ctx.linkFixer = new MgLinkFixer();
 
                 task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
