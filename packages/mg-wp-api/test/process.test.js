@@ -23,7 +23,7 @@ describe('Process', function () {
         data.slug.should.eql('my-awesome-post');
         data.title.should.eql('My Awesome Post');
 
-        data.html.should.eql('\n<h2><strong>This is my strong headline thing.<\/strong><\/h2>\n\n\n\n<p><em>Note: this article contains awesomeness<\/em><\/p>\n\n\n\n<p>This is a paragraph of text. This is a very short dummy post.<\/p>\n\n\n\n<!--kg-card-begin: html--><div style=\"height:43px\" aria-hidden=\"true\" class=\"wp-block-spacer\"><\/div><!--kg-card-end: html-->\n\n<figure id=\"attachment_15945\" style=\"width: 1148px\" class=\"wp-caption aligncenter kg-card-hascaption\"><img src=\"https://mysite.com/wp-content/uploads/2020/06/image.png\"><figcaption class=\"wp-caption-text\">My awesome image<\/figcaption><\/figure>\n<!--kg-card-begin: html--><div style=\"width: 1148px\"><img src=\"https://mysite.com/wp-content/uploads/2020/06/image.png\"><img src=\"https://mysite.com/wp-content/uploads/2020/06/another_image.png\"><span class=\"wp-caption-text\">srcset images<\/span><\/div><!--kg-card-end: html--><blockquote><p>Lorem ipsum<\/p><p>Dolor simet<\/p><\/blockquote>'); /* eslint-disable-line no-useless-escape */
+        data.html.should.eql('\n<h2><strong>This is my strong headline thing.<\/strong><\/h2>\n\n\n\n<p><em>Note: this article contains awesomeness<\/em><\/p>\n\n\n\n<p>This is a paragraph of text. This is a very short example post.<\/p>\n\n\n\n<!--kg-card-begin: html--><div style=\"height:43px\" aria-hidden=\"true\" class=\"wp-block-spacer\"><\/div><!--kg-card-end: html-->\n\n<figure id=\"attachment_15945\" style=\"width: 1148px\" class=\"wp-caption aligncenter kg-card-hascaption\"><img src=\"https://mysite.com/wp-content/uploads/2020/06/image.png\"><figcaption class=\"wp-caption-text\">My awesome image<\/figcaption><\/figure>\n<!--kg-card-begin: html--><div style=\"width: 1148px\"><img src=\"https://mysite.com/wp-content/uploads/2020/06/image.png\"><img src=\"https://mysite.com/wp-content/uploads/2020/06/another_image.png\"><span class=\"wp-caption-text\">srcset images<\/span><\/div><!--kg-card-end: html--><blockquote><p>Lorem ipsum<\/p><p>Dolor simet<\/p><\/blockquote>'); /* eslint-disable-line no-useless-escape */
 
         data.feature_image.should.eql('https://mysite.com/wp-content/uploads/2019/11/BOOP.jpg');
         data.feature_image_alt.should.eql('Boopity');
@@ -65,17 +65,17 @@ describe('Process', function () {
 
         user.should.be.an.Object().with.properties('url', 'data');
 
-        user.url.should.eql('https://mysite.com/author/dummy');
+        user.url.should.eql('https://mysite.com/author/example');
 
         user.data.should.be.an.Object();
         const data = user.data;
 
         data.id.should.eql(29);
-        data.slug.should.eql('dummy');
-        data.name.should.eql('Dummy User');
+        data.slug.should.eql('example');
+        data.name.should.eql('Example User');
         data.bio.should.eql('Lorem ipsum small bio.\r\n\r\nAnd emoji 🤓 on the second line.');
         data.profile_image.should.eql('https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=3000&d=mm&r=g');
-        data.website.should.eql('https://dummysite.com');
+        data.website.should.eql('https://example.com');
     });
 
     it('Can convert a multiple users', function () {
@@ -143,7 +143,7 @@ describe('Process', function () {
         data.slug.should.eql('my-cpt-post');
         data.title.should.eql('My CPT Post');
 
-        data.html.should.eql('<p>This is a very short dummy post.</p>');
+        data.html.should.eql('<p>This is a very short example post.</p>');
 
         data.tags.should.be.an.Array().with.lengthOf(7);
         data.tags[6].data.slug.should.eql('hash-mycpt');

@@ -18,7 +18,7 @@ describe('Process', function () {
         const post = processed.posts[1];
 
         post.should.be.an.Object();
-        post.url.should.eql('http://dummysite.com/blog/basic-post.html');
+        post.url.should.eql('http://example.com/blog/basic-post.html');
 
         const data = post.data;
 
@@ -45,10 +45,10 @@ describe('Process', function () {
         const author = data.author;
 
         author.should.be.an.Object();
-        author.url.should.eql('hermione-dummysite-com');
-        author.data.slug.should.eql('hermione-dummysite-com');
+        author.url.should.eql('hermione-example-com');
+        author.data.slug.should.eql('hermione-example-com');
         author.data.name.should.eql('Hermione Granger');
-        author.data.email.should.eql('hermione@dummysite.com');
+        author.data.email.should.eql('hermione@example.com');
     });
 
     it('Can convert a single draft post', async function () {
@@ -65,7 +65,7 @@ describe('Process', function () {
         const post = processed.posts[0];
 
         post.should.be.an.Object();
-        post.url.should.eql('http://dummysite.com/draft-post');
+        post.url.should.eql('http://example.com/draft-post');
 
         const data = post.data;
 
@@ -92,10 +92,10 @@ describe('Process', function () {
         const author = data.author;
 
         author.should.be.an.Object();
-        author.url.should.eql('harry-dummysite-com');
-        author.data.slug.should.eql('harry-dummysite-com');
+        author.url.should.eql('harry-example-com');
+        author.data.slug.should.eql('harry-example-com');
         author.data.name.should.eql('Harry Potter');
-        author.data.email.should.eql('harry@dummysite.com');
+        author.data.email.should.eql('harry@example.com');
     });
 
     it('Can convert a published page', async function () {
@@ -112,7 +112,7 @@ describe('Process', function () {
         const page = processed.posts[2];
 
         page.should.be.an.Object();
-        page.url.should.eql('http://dummysite.com/services');
+        page.url.should.eql('http://example.com/services');
 
         const data = page.data;
 

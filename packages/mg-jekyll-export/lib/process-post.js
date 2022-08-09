@@ -110,7 +110,7 @@ const processMeta = (fileName, fileContents, options) => {
         post.data.author = {
             url: string.slugify(frontmatterAttributes.author),
             data: {
-                email: `${string.slugify(frontmatterAttributes.author)}@${(options.email) ? options.email : 'dummyemail.com'}`,
+                email: `${string.slugify(frontmatterAttributes.author)}@${(options.email) ? options.email : 'example.com'}`,
                 name: frontmatterAttributes.author,
                 slug: string.slugify(frontmatterAttributes.author),
                 roles: [

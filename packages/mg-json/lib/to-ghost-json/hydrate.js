@@ -16,8 +16,8 @@ const Entities = require('html-entities');
  * - an email address
  */
 
-const fakeName = 'Dummy User';
-const fakeEmailDomain = `dummyemail.com`;
+const fakeName = 'Example User';
+const fakeEmailDomain = `example.com`;
 const fakeEmail = (nameSlug, domain) => `${nameSlug}@${domain}`;
 
 const hydrateUser = (input, options) => {

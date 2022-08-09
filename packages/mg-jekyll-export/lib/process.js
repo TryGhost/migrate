@@ -4,11 +4,11 @@ module.exports = (input, options = {}) => {
     let output = {};
 
     let globalUser = {
-        url: `/author/dummyuser`,
+        url: `/author/exampleuser`,
         data: {
-            email: `dummyuser@dummyemail.com`,
-            name: 'Dummy User',
-            slug: 'dummyuser',
+            email: `exampleuser@example.com`,
+            name: 'Example User',
+            slug: 'exampleuser',
             roles: [
                 'Contributor'
             ]

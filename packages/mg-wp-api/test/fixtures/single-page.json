@@ -93,11 +93,11 @@
     "author": [
       {
         "id": 29,
-        "name": "Dummy User",
-        "url": "https:\/\/dummysite.com",
+        "name": "Example User",
+        "url": "https:\/\/example.com",
         "description": "Lorem ipsum small bio.",
-        "link": "https:\/\/mysite.com\/author\/dummy",
-        "slug": "dummy",
+        "link": "https:\/\/mysite.com\/author\/example",
+        "slug": "example",
         "avatar_urls": {
           "24": "https:\/\/secure.gravatar.com\/avatar\/3911103eeb906a2975aa28c1127eea76?s=24&d=mm&r=g",
           "48": "https:\/\/secure.gravatar.com\/avatar\/3911103eeb906a2975aa28c1127eea76?s=48&d=mm&r=g",

@@ -9,7 +9,7 @@ describe('Process', function () {
             result: fixture,
             options: {
                 addPrimaryTag: 'Newsletter',
-                email: 'person@dummyurl.com',
+                email: 'person@example.com',
                 pubName: 'samplenews'
             }
         };
@@ -50,7 +50,7 @@ describe('Process', function () {
         const author = data.author;
 
         author.url.should.eql('/author/samplenews');
-        author.data.email.should.eql('person@dummyurl.com');
+        author.data.email.should.eql('person@example.com');
         author.data.slug.should.eql('samplenews');
     });
 
@@ -60,7 +60,7 @@ describe('Process', function () {
             result: fixture,
             options: {
                 addPrimaryTag: 'Newsletter',
-                email: 'person@dummyurl.com',
+                email: 'person@example.com',
                 pubName: 'samplenews'
             }
         };
@@ -90,7 +90,7 @@ describe('Process', function () {
             result: fixture,
             options: {
                 addPrimaryTag: 'Newsletter',
-                email: 'person@dummyurl.com',
+                email: 'person@example.com',
                 pubName: 'samplenews'
             }
         };

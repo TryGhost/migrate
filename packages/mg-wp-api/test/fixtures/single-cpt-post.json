@@ -15,7 +15,7 @@
     "rendered": "My CPT Post"
   },
   "content": {
-    "rendered": "<p>This is a very short dummy post.</p>",
+    "rendered": "<p>This is a very short example post.</p>",
     "protected": false
   },
   "excerpt": {

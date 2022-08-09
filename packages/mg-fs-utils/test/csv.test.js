@@ -66,7 +66,7 @@ describe('Format JSON to CSV', function () {
                 labels: 'substack-free'
             },
             {
-                email: 'dummy@gmail.com',
+                email: 'example@gmail.com',
                 subscribed_to_emails: true,
                 complimentary_plan: false,
                 stripe_customer_id: null,
@@ -81,7 +81,7 @@ describe('Format JSON to CSV', function () {
         const result = await csv.jsonToCSV(jsonInput, fields);
 
         result.should.be.a.String;
-        result.should.match(/email,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,labels,note\r\npatrickstarfish@gmail.com,true,false,,2018-12-25T20:43:22.178Z,substack-free,\r\nelpaper@gmail.com,true,false,,2019-08-18T13:36:31.230Z,substack-free,\r\ndummy@gmail.com,true,false,,2022-03-13T13:36:31.230Z,"substack-comp, 2023-02",\r\n/);
+        result.should.match(/email,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,labels,note\r\npatrickstarfish@gmail.com,true,false,,2018-12-25T20:43:22.178Z,substack-free,\r\nelpaper@gmail.com,true,false,,2019-08-18T13:36:31.230Z,substack-free,\r\nexample@gmail.com,true,false,,2022-03-13T13:36:31.230Z,"substack-comp, 2023-02",\r\n/);
     });
 
     it('can read column headers from data when fields not passed', async function () {

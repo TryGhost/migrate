@@ -70,7 +70,7 @@ describe('Process', function () {
             '</ol>\n' +
             '<p>Nunc eget magna sed dolor eleifend hendrerit. In quam dui, posuere eu tincidunt ullamcorper, tempor elementum ex. Vivamus lacus quam, bibendum ac felis vel, scelerisque rhoncus lacus. Integer posuere sollicitudin orci, quis dictum enim tempor et. Suspendisse potenti. Sed a ante ante.</p>');
 
-        post.data.author.data.email.should.eql('persons-name@dummyemail.com');
+        post.data.author.data.email.should.eql('persons-name@example.com');
         post.data.author.data.name.should.eql('Persons Name');
         post.data.author.data.slug.should.eql('persons-name');
         post.data.author.data.roles[0].should.eql('Contributor');

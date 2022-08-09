@@ -16,8 +16,8 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
             postsDir: inputPostsPath,
             options: {
                 drafts: true,
-                url: 'https://dummysite.substack.com',
-                email: 'dummyuser@email.com'
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com'
             }
         };
         const mapped = await map(input, ctx.options);
@@ -33,7 +33,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const post = processed.posts[0];
         post.should.be.an.Object();
 
-        post.url.should.eql('https://dummysite.substack.com/p/plain-text');
+        post.url.should.eql('https://example.substack.com/p/plain-text');
 
         const data = post.data;
         data.should.be.an.Object();
@@ -56,7 +56,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         tag1.data.name.should.eql('#substack');
 
         const tag2 = data.tags[1];
-        tag2.url.should.eql('https://dummysite.substack.com/tag/newsletter');
+        tag2.url.should.eql('https://example.substack.com/tag/newsletter');
         tag2.data.name.should.eql('Newsletter');
 
         const tag3 = data.tags[2];
@@ -64,9 +64,9 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         tag3.data.name.should.eql('#access-public');
 
         const author = data.author;
-        author.url.should.eql('https://dummysite.substack.com/author/dummyuser');
-        author.data.email.should.eql('dummyuser@email.com');
-        author.data.slug.should.eql('dummyuser');
+        author.url.should.eql('https://example.substack.com/author/exampleuser');
+        author.data.email.should.eql('exampleuser@email.com');
+        author.data.slug.should.eql('exampleuser');
     });
 
     it('Can convert JSON to Ghost JSON', async function () {
@@ -80,8 +80,8 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
             postsDir: inputPostsPath,
             options: {
                 drafts: true,
-                url: 'https://dummysite.substack.com',
-                email: 'dummyuser@email.com'
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com'
             }
         };
         const mapped = await map(input, ctx.options);
@@ -94,7 +94,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         '<blockquote>\n' +
         '    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam aliquam magna ligula, pretium ornare est luctus eget. Ut commodo sit amet tellus quis commodo.</p>\n' +
         '</blockquote>\n' +
-        '<p>Pellentesque <a href="https://dummyurl.com">eget dapibus</a> ante, ut consectetur dolor.</p>\n' +
+        '<p>Pellentesque <a href="https://exampleurl.com">eget dapibus</a> ante, ut consectetur dolor.</p>\n' +
         '<h3>Mauris ut dapibus neque</h3>\n' +
         '<ul>\n' +
         '    <li>Vestibulum vitae condimentum massa. Aliquam eu pellentesque purus, et hendrerit quam</li>\n' +
@@ -115,8 +115,8 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
             postsDir: inputPostsPath,
             options: {
                 drafts: true,
-                url: 'https://dummysite.substack.com',
-                email: 'dummyuser@email.com'
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com'
             }
         };
         const mapped = await map(input, ctx.options);
@@ -140,8 +140,8 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
             postsDir: inputPostsPath,
             options: {
                 drafts: true,
-                url: 'https://dummysite.substack.com',
-                email: 'dummyuser@email.com',
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com',
                 subscribeLink: '#/portal/signup/free'
             }
         };
@@ -165,8 +165,8 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
             postsDir: inputPostsPath,
             options: {
                 drafts: true,
-                url: 'https://dummysite.substack.com',
-                email: 'dummyuser@email.com'
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com'
             }
         };
         const mapped = await map(input, ctx.options);
@@ -190,8 +190,8 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
             postsDir: inputPostsPath,
             options: {
                 drafts: true,
-                url: 'https://dummysite.substack.com',
-                email: 'dummyuser@email.com'
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com'
             }
         };
         const mapped = await map(input, ctx.options);
@@ -215,8 +215,8 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
             postsDir: inputPostsPath,
             options: {
                 drafts: true,
-                url: 'https://dummysite.substack.com',
-                email: 'dummyuser@email.com',
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com',
                 subscribeLink: '#/portal/signup'
             }
         };
@@ -226,7 +226,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         // The first post contains 2 subscribe links
         const post = processed.posts[7];
         const data = post.data;
-        data.html.should.eql('<h2>Text with a signup form</h2>\n<p>Lorem ipsum</p>\n\n<div class="subscription-widget-wrap" data-attrs="{&quot;url&quot;:&quot;https://dummysite.substack.com/subscribe?&quot;,&quot;text&quot;:&quot;Subscribe&quot;}">\n    <div class="subscription-widget show-subscribe">\n        <div class="preamble">\n            <p class="cta-caption">You should sign up!</p>\n        </div>\n        <div class="kg-card kg-button-card kg-align-center"><a href="__GHOST_URL__/#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>\n    </div>\n</div>\n');
+        data.html.should.eql('<h2>Text with a signup form</h2>\n<p>Lorem ipsum</p>\n\n<div class="subscription-widget-wrap" data-attrs="{&quot;url&quot;:&quot;https://example.substack.com/subscribe?&quot;,&quot;text&quot;:&quot;Subscribe&quot;}">\n    <div class="subscription-widget show-subscribe">\n        <div class="preamble">\n            <p class="cta-caption">You should sign up!</p>\n        </div>\n        <div class="kg-card kg-button-card kg-align-center"><a href="__GHOST_URL__/#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>\n    </div>\n</div>\n');
     });
 
     it('Can convert a list with an image into a HTML card', async function () {
@@ -240,8 +240,8 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
             postsDir: inputPostsPath,
             options: {
                 drafts: true,
-                url: 'https://dummysite.substack.com',
-                email: 'dummyuser@email.com',
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com',
                 subscribeLink: '#/portal/signup'
             }
         };
@@ -265,8 +265,8 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
             postsDir: inputPostsPath,
             options: {
                 drafts: true,
-                url: 'https://dummysite.substack.com',
-                email: 'dummyuser@email.com'
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com'
             }
         };
         const mapped = await map(input, ctx.options);
@@ -289,8 +289,8 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
             postsDir: inputPostsPath,
             options: {
                 drafts: true,
-                url: 'https://dummysite.substack.com',
-                email: 'dummyuser@email.com',
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com',
                 postsBefore: 'January 20, 2021'
             }
         };
@@ -312,8 +312,8 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
             postsDir: inputPostsPath,
             options: {
                 drafts: true,
-                url: 'https://dummysite.substack.com',
-                email: 'dummyuser@email.com',
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com',
                 postsAfter: 'July 29, 2019',
                 postsBefore: 'January 20, 2021'
             }
@@ -336,8 +336,8 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
             postsDir: inputPostsPath,
             options: {
                 drafts: true,
-                url: 'https://dummysite.substack.com',
-                email: 'dummyuser@email.com',
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com',
                 postsAfter: 'January 10, 2021'
             }
         };
@@ -359,8 +359,8 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
             postsDir: inputPostsPath,
             options: {
                 drafts: true,
-                url: 'https://dummysite.substack.com',
-                email: 'dummyuser@email.com'
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com'
             }
         };
         const mapped = await map(input, ctx.options);
@@ -372,14 +372,14 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         data.html.should.eql('<h2>Text with Image</h2>\n' +
         '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam aliquam magna ligula, pretium ornare est luctus eget.</p>\n' +
         '<figure class="kg-card kg-image-card">\n' +
-        '        <a target="_blank" href="https://dummysite.substack.com/image.jpg">\n' +
-        '            <img src="https://dummysite.substack.com/image.jpg" alt class="kg-image">\n' +
+        '        <a target="_blank" href="https://example.substack.com/image.jpg">\n' +
+        '            <img src="https://example.substack.com/image.jpg" alt class="kg-image">\n' +
         '        </a>\n' +
         '    </figure>\n' +
         '<p>Phasellus scelerisque metus id elit elementum venenatis. Quisque consectetur laoreet felis, sit amet rutrum mi blandit eu.</p>\n' +
         '<!--kg-card-begin: html--><ul>\n' +
         '    <li>\n' +
-        '        <img src="https://dummysite.substack.com/image.jpg" alt>\n' +
+        '        <img src="https://example.substack.com/image.jpg" alt>\n' +
         '    </li>\n' +
         '</ul><!--kg-card-end: html-->\n' +
         '<ul>\n' +
@@ -399,8 +399,8 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
             postsDir: inputPostsPath,
             options: {
                 drafts: true,
-                url: 'https://dummysite.substack.com',
-                email: 'dummyuser@email.com'
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com'
             }
         };
         const mapped = await map(input, ctx.options);
@@ -443,8 +443,8 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
             postsDir: inputPostsPath,
             options: {
                 drafts: true,
-                url: 'https://dummysite.substack.com',
-                email: 'dummyuser@email.com'
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com'
             }
         };
         const mapped = await map(input, ctx.options);
@@ -456,7 +456,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const data = post.data;
         data.html.should.eql('<p>Lorem ipsum</p>\n' +
         '\n' +
-        '<!--kg-card-begin: html--><figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://dummysite.substack.com/p/example-post"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Lorem ipsum, This is the Title I’m Showing You</div><div class="kg-bookmark-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad it’s veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat …</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://bucketeer-1234.s3.amazonaws.com/public/images/5678_680x680.png"><span class="kg-bookmark-author">Dummy Site</span></div></div></a></figure><!--kg-card-end: html-->\n' +
+        '<!--kg-card-begin: html--><figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.substack.com/p/example-post"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Lorem ipsum, This is the Title I’m Showing You</div><div class="kg-bookmark-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad it’s veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat …</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://bucketeer-1234.s3.amazonaws.com/public/images/5678_680x680.png"><span class="kg-bookmark-author">Example Site</span></div></div></a></figure><!--kg-card-end: html-->\n' +
         '\n' +
         '<p>Dolor Simet</p>\n'
         );

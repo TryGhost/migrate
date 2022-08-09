@@ -76,7 +76,7 @@ describe('LinkFixer', function () {
     it('Does not replace external links', async function () {
         const posts = await getPosts();
 
-        posts[0].html.should.containEql('<a href="https://dummyurl.com/eos-quia-quos-voluptas-aliquam-et-et-omnis.html">Sunt tempore nisi similique</a>');
+        posts[0].html.should.containEql('<a href="https://exampleurl.com/eos-quia-quos-voluptas-aliquam-et-et-omnis.html">Sunt tempore nisi similique</a>');
         posts[0].html.should.not.containEql('<a href="/eos-quia-quos-voluptas-aliquam-et-et-omnis.html">Sunt tempore nisi similique</a>');
     });
 
