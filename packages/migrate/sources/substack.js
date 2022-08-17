@@ -75,7 +75,7 @@ const scrapeConfig = {
                         });
                     });
                 } else {
-                    let author = ldJSON.author[0].name;
+                    let author = (ldJSON.author[0]) ? ldJSON.author[0].name : ldJSON.author.name;
 
                     // Split string by ['and', '&', ','], trim white space from the resulting array items, and remove empty items
                     let authorSplit = author.split(/(?:,|and|&)+/).map(function (item) {
