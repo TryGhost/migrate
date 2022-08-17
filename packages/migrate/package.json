@@ -40,6 +40,7 @@
     "@tryghost/mg-imagescraper": "^0.6.0",
     "@tryghost/mg-json": "^0.8.6",
     "@tryghost/mg-linkfixer": "^0.2.8",
+    "@tryghost/mg-mediascraper": "0.1.5",
     "@tryghost/mg-medium-export": "^0.11.9",
     "@tryghost/mg-revue-api": "^0.2.23",
     "@tryghost/mg-squarespace-xml": "^0.1.21",
