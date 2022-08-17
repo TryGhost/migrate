@@ -96,8 +96,14 @@ const processContent = (html, siteUrl, options) => {
             let src = $(shareLink).attr('href');
             let parsed = url.parse(src);
 
+            // If it's a share button, there's no use for it and completely remove the button
             if (parsed.search && parsed.search.indexOf('action=share') >= 0) {
-                // If it's a share button, there's no use for it and completely remove the button
+                $(button).remove();
+                return;
+            }
+
+            // If it's a gift button, there's no use for it and completely remove the button
+            if (parsed.search && parsed.search.indexOf('gift=true') >= 0) {
                 $(button).remove();
                 return;
             }
@@ -125,6 +131,10 @@ const processContent = (html, siteUrl, options) => {
 
             if (buttonHref === '/subscribe/') {
                 buttonHref = options.subscribeLink || '#/portal/signup';
+            }
+
+            if (buttonHref.endsWith('/comments')) {
+                buttonHref = options.commentLink || '#ghost-comments-root';
             }
 
             $(button).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);

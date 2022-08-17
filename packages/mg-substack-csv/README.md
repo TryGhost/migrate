@@ -58,6 +58,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--subscribeLink`** 
     - Provide a path that existing `/subscribe` anchors will link to e.g. `/join-us` or `#/portal/signup` (`#` characters need to be escaped with a `\`)
     - string - default: `null`
+- **`--commentLink`** 
+    - Provide a path that existing `/comments` anchors will link to e.g. `#ghost-comments-root` (`#` characters need to be escaped with a `\`)
+    - string - default: `null`
 - **`--useMetaImage`** 
     - Use `og:image` value as the feature image
     - bool - default: `false`  

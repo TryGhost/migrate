@@ -10,3 +10,4 @@ post_id,post_date,is_published,email_sent_at,type,audience,title,subtitle,podcas
 789568.embedded-post,2022-04-12T10:02:34.230Z,TRUE,2022-04-12T10:04:34.230Z,newsletter,everyone,Embedded Post,Eiusmod tempor incididunt ut labore.,
 789679.buttons,2022-07-12T12:11:23.230Z,TRUE,2022-07-12T12:12:23.230Z,newsletter,everyone,Buttons,Eiusmod tempor incididunt ut labore.,
 789680.share-buttons,2022-07-12T12:11:23.230Z,TRUE,2022-07-12T12:12:23.230Z,newsletter,everyone,Share Buttons,Eiusmod tempor incididunt ut labore.,
+789681.comment-buttons,2022-08-12T12:11:23.230Z,TRUE,2022-07-12T12:12:23.230Z,newsletter,everyone,Comment Buttons,Eiusmod tempor incididunt ut labore.,

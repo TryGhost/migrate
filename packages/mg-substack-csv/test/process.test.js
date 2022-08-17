@@ -28,7 +28,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const processed = await process(mapped, ctx);
 
         processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(11);
+        processed.posts.length.should.equal(12);
 
         const post = processed.posts[0];
         post.should.be.an.Object();
@@ -152,6 +152,31 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const post = processed.posts[0];
         const data = post.data;
         data.html.should.eql('<h2>Lorem Ipsum</h2>\n<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup/free" class="kg-btn kg-btn-accent">Sign up now</a></div>\n<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</p>\n<p>Dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>\n<div><hr></div>\n<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup/free" class="kg-btn kg-btn-accent">Sign up</a></div>\n');
+    });
+
+    it('Can transform comment links with custom defined URL', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com',
+                commentLink: '#post-comments'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        // The 12th post contains 1 comments links
+        const post = processed.posts[11];
+        const data = post.data;
+        data.html.should.eql('<h2>Comment Buttons</h2>\n<p>Dolore magna aliqua.</p>\n<div class="kg-card kg-button-card kg-align-center"><a href="#post-comments" class="kg-btn kg-btn-accent">Leave a comment</a></div>\n<p>Dolor sit amet.</p>\n');
     });
 
     it('Will not change button element hrefs that are not subscribe buttons', async function () {
@@ -345,7 +370,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const processed = await process(mapped, ctx);
 
         processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(8);
+        processed.posts.length.should.equal(9);
     });
 
     it('Can wrap lists with images in HTML comments', async function () {
