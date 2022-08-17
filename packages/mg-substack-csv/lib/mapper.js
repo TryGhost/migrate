@@ -1,12 +1,16 @@
 const {formatISO, parseISO, isBefore, isAfter, add} = require('date-fns');
 const _ = require('lodash');
 const errors = require('@tryghost/errors');
+const {slugify} = require('@tryghost/string');
 
 const mapConfig = (data, {url, readPosts, email, useMetaAuthor}) => {
     const slug = data.post_id.replace(/^(?:\d{1,10}\.)(\S*)/gm, '$1');
 
     // Get an ISO 8601 date - https://date-fns.org/docs/formatISO
     const dateNow = formatISO(new Date());
+
+    const typeSlug = slugify(data.type);
+    const visibilitySlug = slugify(data.audience);
 
     const mappedData = {
         url: `${url}/p/${slug}`,
@@ -30,20 +34,30 @@ const mapConfig = (data, {url, readPosts, email, useMetaAuthor}) => {
                     }
                 },
                 {
-                    url: `${url}/tag/newsletter`,
+                    url: `${url}/tag/${typeSlug}`,
                     data: {
-                        name: _.startCase(data.type)
+                        name: _.startCase(typeSlug)
                     }
                 }
             ]
         }
     };
 
-    // Add tags based on post visibility, allowing future manipulation via API that is easily reversible
+    // Add an internal tag based on the type of post
     mappedData.data.tags.push({
-        url: `migrator-added-tag-visibility-${mappedData.data.visibility}`,
+        url: `migrator-added-tag-substack-type-${typeSlug}`,
         data: {
-            name: `#access-${mappedData.data.visibility}`
+            slug: `hash-substack-type-${typeSlug}`,
+            name: `#substack-type-${typeSlug}`
+        }
+    });
+
+    // Add tags based on post visibility
+    mappedData.data.tags.push({
+        url: `migrator-added-tag-substack-access-${visibilitySlug}`,
+        data: {
+            slug: `hash-substack-access-${visibilitySlug}`,
+            name: `#substack-access-${visibilitySlug}`
         }
     });
 

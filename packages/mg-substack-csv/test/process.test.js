@@ -49,7 +49,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         data.status.should.eql('published');
         data.visibility.should.eql('public');
 
-        data.tags.length.should.equal(3);
+        data.tags.length.should.equal(4);
 
         const tag1 = data.tags[0];
         tag1.url.should.eql('migrator-added-tag');
@@ -60,13 +60,59 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         tag2.data.name.should.eql('Newsletter');
 
         const tag3 = data.tags[2];
-        tag3.url.should.eql('migrator-added-tag-visibility-public');
-        tag3.data.name.should.eql('#access-public');
+        tag3.url.should.eql('migrator-added-tag-substack-type-newsletter');
+        tag3.data.name.should.eql('#substack-type-newsletter');
+
+        const tag4 = data.tags[3];
+        tag4.url.should.eql('migrator-added-tag-substack-access-everyone');
+        tag4.data.name.should.eql('#substack-access-everyone');
 
         const author = data.author;
         author.url.should.eql('https://example.substack.com/author/exampleuser');
         author.data.email.should.eql('exampleuser@email.com');
         author.data.slug.should.eql('exampleuser');
+    });
+
+    it('Can add a tag based on the post type', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://example.substack.com'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        // The 12th post is a podcast
+        const post = processed.posts[11];
+        const data = post.data;
+
+        data.tags.length.should.equal(4);
+
+        // console.log(data.tags);
+
+        const tag1 = data.tags[0];
+        tag1.url.should.eql('migrator-added-tag');
+        tag1.data.name.should.eql('#substack');
+
+        const tag2 = data.tags[1];
+        tag2.url.should.eql('https://example.substack.com/tag/podcast');
+        tag2.data.name.should.eql('Podcast');
+
+        const tag3 = data.tags[2];
+        tag3.url.should.eql('migrator-added-tag-substack-type-podcast');
+        tag3.data.name.should.eql('#substack-type-podcast');
+
+        const tag4 = data.tags[3];
+        tag4.url.should.eql('migrator-added-tag-substack-access-everyone');
+        tag4.data.name.should.eql('#substack-access-everyone');
     });
 
     it('Can convert JSON to Ghost JSON', async function () {

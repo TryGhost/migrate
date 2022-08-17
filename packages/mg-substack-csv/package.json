@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@tryghost/errors": "1.2.14",
+    "@tryghost/string": "0.1.27",
     "bluebird": "^3.7.2",
     "csv-parse": "5.3.0",
     "date-fns": "2.29.1",
