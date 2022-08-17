@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-fs-utils",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-fs-utils",
   "author": "Ghost Foundation",
   "license": "MIT",
