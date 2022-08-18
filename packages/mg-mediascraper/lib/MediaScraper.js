@@ -105,50 +105,52 @@ class MediaScraper {
     async processHTML(html) {
         let $ = cheerio.load(html);
 
-        for (const el of $('audio source')) {
+        let audioSource = $('audio source').map(async (i, el) => {
             let src = $(el).attr('src');
 
             if (src && knownFileExtensions.includes(path.extname(src))) {
                 let newSrc = await this.downloadMedia(src);
                 $(el).attr('src', newSrc);
             }
-        }
+        }).get();
 
-        for (const el of $('audio')) {
+        let audio = $('audio').map(async (i, el) => {
             let src = $(el).attr('src');
 
             if (src && knownFileExtensions.includes(path.extname(src))) {
                 let newSrc = await this.downloadMedia(src);
                 $(el).attr('src', newSrc);
             }
-        }
+        }).get();
 
-        for (const el of $('video source')) {
+        let videoSource = $('video source').map(async (i, el) => {
             let src = $(el).attr('src');
 
             if (src && knownFileExtensions.includes(path.extname(src))) {
                 let newSrc = await this.downloadMedia(src);
                 $(el).attr('src', newSrc);
             }
-        }
+        }).get();
 
-        for (const el of $('video')) {
+        let video = $('video').map(async (i, el) => {
             let src = $(el).attr('src');
 
             if (src && knownFileExtensions.includes(path.extname(src))) {
                 let newSrc = await this.downloadMedia(src);
                 $(el).attr('src', newSrc);
             }
-        }
+        }).get();
 
-        for (const el of $('a')) {
+        let anchors = $('a').map(async (i, el) => {
             let href = $(el).attr('href');
 
             if (href && knownFileExtensions.includes(path.extname(href))) {
                 let newSrc = await this.downloadMedia(href);
                 $(el).attr('href', newSrc);
             }
-        }
+        }).get();
+
+        await Promise.all(audioSource, audio, videoSource, video, anchors);
 
         return $.html();
     }
