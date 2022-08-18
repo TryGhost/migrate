@@ -163,7 +163,7 @@ describe('Download Media File', function () {
         let mediaScraper = new MediaScraper(mockVideoFileCache);
 
         let tasks = mediaScraper.fetch(ctx);
-        const doTasks = makeTaskRunner(tasks, {renderer: 'silent', exitOnError: true});
+        const doTasks = makeTaskRunner(tasks, {renderer: 'silent'});
         await doTasks.run();
 
         const post = ctx.result.data.posts[0];
@@ -235,8 +235,8 @@ describe('Download Media File', function () {
         collectedJSON.cards[2][0].should.eql('html');
         collectedJSON.cards[2][1].should.be.an.Object();
         collectedJSON.cards[2][1].html.should.be.an.String();
-        collectedJSON.cards[2][1].html.should.containEql(`<audio controls><source src="${mockAudioOutputPath}"></audio>`);
-        collectedJSON.cards[2][1].html.should.containEql(`<audio controls src="${mockAudioOutputPath}"></audio>`);
+        collectedJSON.cards[2][1].html.should.containEql(`<audio controls=""><source src="${mockAudioOutputPath}"></audio>`);
+        collectedJSON.cards[2][1].html.should.containEql(`<audio controls="" src="${mockAudioOutputPath}"></audio>`);
 
         // Check Mobiledoc links
         collectedJSON.markups[0][0].should.eql('a');
@@ -310,7 +310,7 @@ describe('Download Media File', function () {
         collectedJSON.cards[0][0].should.eql('markdown');
         collectedJSON.cards[0][1].should.be.an.Object();
         collectedJSON.cards[0][1].markdown.should.containEql(`This is [My MP3 File](${mockAudioOutputPath})`);
-        collectedJSON.cards[0][1].markdown.should.containEql(`<audio controls><source src="${mockAudioOutputPath}"></audio>`);
+        collectedJSON.cards[0][1].markdown.should.containEql(`<audio controls=""><source src="${mockAudioOutputPath}"></audio>`);
     });
 
     it('Will not find and replace unsupported media elements & links in Mobiledoc', async function () {
@@ -347,7 +347,7 @@ describe('Download Media File', function () {
 
         const post = ctx.result.data.posts[4];
 
-        post.html.should.containEql('<img width="1024" height="683" src="https://mysite.com/files/uploads/2021/12/image.jpg" alt>');
+        post.html.should.containEql('<img width="1024" height="683" src="https://mysite.com/files/uploads/2021/12/image.jpg" alt="">');
         post.html.should.containEql('<p>A link to <a href="https://mysite.com/files/uploads/2021/12/image.jpg">my JPG file</a></p>');
 
         post.html.should.containEql(`<p>A link to <a href="${mockAudioOutputPath}">my MP3 file</a></p>`);
