@@ -38,6 +38,7 @@
     "@tryghost/mg-html-mobiledoc": "^0.7.28",
     "@tryghost/mg-hubspot-api": "^0.2.24",
     "@tryghost/mg-imagescraper": "^0.6.0",
+    "@tryghost/mg-jekyll-export": "^0.1.6",
     "@tryghost/mg-json": "^0.8.6",
     "@tryghost/mg-linkfixer": "^0.2.8",
     "@tryghost/mg-mediascraper": "^0.2.0",
