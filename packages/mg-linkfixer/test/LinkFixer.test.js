@@ -41,6 +41,13 @@ describe('LinkFixer', function () {
         posts[3].html.should.containEql('<a href="/lorem-ipsum/">Consectetur</a>');
     });
 
+    it('Treats http and https links to the same domain equally', async function () {
+        const posts = await getPosts();
+
+        posts[4].html.should.not.containEql('<a href="http://example.com/sample-page/">your dashboard</a>');
+        posts[4].html.should.containEql('<a href="/sample-page/">your dashboard</a>');
+    });
+
     it('Fixes yyyy-mm-dd dated links to posts', async function () {
         const posts = await getPosts({
             datedPermalinks: '/yyyy/mm/dd/'

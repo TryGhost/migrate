@@ -11,6 +11,10 @@ class LinkFixer {
         this.linkMap = {};
     }
 
+    removeProtocol(url) {
+        return url.replace(/^https?:\/\//, '');
+    }
+
     buildMap(ctx) {
         if (!ctx.result.posts) {
             return;
@@ -41,6 +45,12 @@ class LinkFixer {
                 this.linkMap[data.author.url] = `/author/${data.author.data.slug}/`;
             }
         });
+
+        // Remove the protocol, ensuring we treat `http` and `https` sites in the same way
+        Object.keys(this.linkMap).forEach((key) => {
+            let noProtocolKey = this.removeProtocol(key);
+            this.linkMap[noProtocolKey] = this.linkMap[key];
+        });
     }
 
     async processHTML(html) {
@@ -48,8 +58,12 @@ class LinkFixer {
 
         let links = $('a').map(async (i, el) => {
             let href = $(el).attr('href');
-            if (this.linkMap[href]) {
-                $(el).attr('href', this.linkMap[href]);
+
+            // Remove protocol, matching the protocol links stored in the linkMap
+            let noProtocolHref = this.removeProtocol(href);
+
+            if (this.linkMap[noProtocolHref]) {
+                $(el).attr('href', this.linkMap[noProtocolHref]);
             }
         }).get();
 
