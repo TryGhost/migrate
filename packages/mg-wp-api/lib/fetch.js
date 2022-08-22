@@ -91,6 +91,10 @@ module.exports.tasks = async (url, ctx) => {
     const {usersJSON} = ctx || null;
     let isAuthRequest = false;
 
+    if (ctx.options.trustSelfSignedCert) {
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+    }
+
     if (apiUser && apiUser.username && apiUser.password) {
         isAuthRequest = true;
     }

@@ -88,6 +88,10 @@ exports.setup = (sywac) => {
         defaultValue: null,
         desc: 'Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`'
     });
+    sywac.boolean('--trustSelfSignedCert', {
+        defaultValue: false,
+        desc: 'Trust self-signed certificates (such as for local installs)'
+    });
 };
 
 // What to do when this command is executed
