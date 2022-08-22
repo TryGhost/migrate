@@ -84,7 +84,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
     - bool - default: `false`
 - **`--trustSelfSignedCert`** 
-    - rust self-signed certificates (such as for local installs)
+    - Trust self-signed certificates (such as for local installs)
     - bool - default: `false`
 
 A more realistic command for a WordPress migration looks like this:
