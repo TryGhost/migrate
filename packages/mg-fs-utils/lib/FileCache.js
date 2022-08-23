@@ -162,6 +162,15 @@ class FileCache {
             typePath = this.mediaPath;
         }
 
+        // CASE: Some image URLs are very long and can cause various issues with storage.
+        // If the filepath is more than 200 characters, slice the last 200 and use that
+        let theBasename = path.basename(filename);
+        let filePath = filename.replace(theBasename, '');
+        if (filePath.length > 200) {
+            let shorter = filePath.slice(-200);
+            filename = path.join('/', shorter, theBasename);
+        }
+
         // remove the base filePath if it already exists in the path, so we don't get nested filePath directories
         filename = filename.replace(`/${typePath}`, '');
 

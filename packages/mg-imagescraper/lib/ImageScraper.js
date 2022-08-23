@@ -95,7 +95,7 @@ class ImageScraper {
         let imageFile = this.fileCache.resolveFileName(imageUrl.pathname, 'images');
 
         // CASE: We infer file extension based on the mime type, which always returns 'jpg' for 'image/jpeg',
-        // and saves files with this extension. So, we must change the extsneion here to check if a file exists.
+        // and saves files with this extension. So, we must change the extension here to check if a file exists.
         imageFile.filename = imageFile.filename.replace('.jpeg', '.jpg');
         imageFile.storagePath = imageFile.storagePath.replace('.jpeg', '.jpg');
         imageFile.outputPath = imageFile.outputPath.replace('.jpeg', '.jpg');
