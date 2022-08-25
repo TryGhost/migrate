@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@tryghost/errors": "1.2.14",
+    "@tryghost/string": "0.1.27",
     "lodash": "4.17.21",
     "omit-empty": "^1.0.0",
     "scrape-it": "5.3.2"

@@ -2,6 +2,7 @@ const _ = require('lodash');
 const scrapeIt = require('scrape-it');
 const omitEmpty = require('omit-empty');
 const errors = require('@tryghost/errors');
+const {slugify} = require('@tryghost/string');
 
 const makeMetaObject = (item) => {
     if (!item.url) {
@@ -148,6 +149,84 @@ class WebScraper {
         this.mergeResource(data, scrapedData);
     }
 
+    // TODO: This is a temporary step while this gets a re-think
+    get(ctx) {
+        let tasks = [];
+        let res = ctx.result;
+
+        // We only handle posts ATM, escape if there's nothing to do
+        if (!this.config.posts || !res.posts || res.posts.length === 0) {
+            return res;
+        }
+
+        tasks = res.posts.map((post) => {
+            let {url} = post;
+            let filename = slugify(url);
+
+            return {
+                title: url,
+                skip: () => {
+                    return this.skipFn ? this.skipFn(post) : false;
+                },
+                task: async (ctx) => { // eslint-disable-line no-shadow
+                    try {
+                        let response = await this.scrapeUrl(url, this.config.posts, filename, ctx.options.wait_after_scrape);
+
+                        let responseUrl = response.responseUrl || false;
+                        let responseData = response.responseData || {};
+
+                        post.metaData = {responseUrl, responseData};
+                    } catch (error) {
+                        ctx.errors.push(error);
+                        throw error;
+                    }
+                }
+            };
+        });
+
+        return tasks;
+    }
+
+    // TODO: This is a temporary step while this gets a re-think
+    apply(ctx) {
+        let tasks = [];
+        let res = ctx.result;
+
+        // We only handle posts ATM, escape if there's nothing to do
+        if (!this.config.posts || !res.posts || res.posts.length === 0) {
+            return res;
+        }
+
+        tasks = res.posts.map((post) => {
+            let {url, data} = post;
+
+            return {
+                title: url,
+                skip: () => {
+                    return this.skipFn ? this.skipFn(post) : false;
+                },
+                task: async (ctx, task) => { // eslint-disable-line no-shadow
+                    try {
+                        let {responseUrl, responseData} = post.metaData;
+
+                        this.processScrapedData(responseData, data, ctx.options);
+
+                        if (responseUrl !== url) {
+                            post.originalUrl = url;
+                            post.url = responseUrl;
+                            task.title = responseUrl;
+                        }
+                    } catch (error) {
+                        ctx.errors.push(error);
+                        throw error;
+                    }
+                }
+            };
+        });
+
+        return tasks;
+    }
+
     hydrate(ctx) {
         let tasks = [];
         let res = ctx.result;
@@ -159,8 +238,7 @@ class WebScraper {
 
         tasks = res.posts.map((post) => {
             let {url, data} = post;
-            // @TODO: replace this with a proper solution: i.e. Ghost's slugify, or xxhash, or similar
-            let filename = url.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            let filename = slugify(url);
 
             return {
                 title: url,
