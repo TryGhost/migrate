@@ -15,6 +15,7 @@ const mapConfig = (data, {url, readPosts, email, useMetaAuthor}) => {
     const mappedData = {
         url: `${url}/p/${slug}`,
         substackId: data.post_id,
+        substackPodcastURL: data.podcast_url || false,
         data: {
             slug: slug,
             published_at: data.post_date || dateNow,

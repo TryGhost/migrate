@@ -3,6 +3,8 @@ const path = require('path');
 const $ = require('cheerio');
 const url = require('url');
 const errors = require('@tryghost/errors');
+const SimpleDom = require('simple-dom');
+const audioCard = require('@tryghost/kg-default-cards/lib/cards/audio');
 
 const getFiles = async (filePath) => {
     let filenames = await fs.readdir(filePath);
@@ -25,14 +27,69 @@ const readFiles = async (files, postsDir) => {
     return postContent;
 };
 
-const processContent = (html, siteUrl, options) => {
+const getUnsizedImageName = (str) => {
+    const noSizeRegex = /(.*)(_[0-9]{1,4}x[0-9]{1,4}.[a-z]{2,4})/gmi;
+    let srcParts = str.split(/\/|%2F/);
+    let last = srcParts.slice(-1)[0];
+    let matches = noSizeRegex.exec(last);
+
+    return matches[1];
+};
+
+const processContent = (post, siteUrl, options) => {
+    const {substackPodcastURL, metaData} = post;
+    const responseData = metaData?.responseData || {};
+
+    let html = post.data.html;
+
+    // If there's no HTML, exit & return an empty string to avoid errors
     if (!html) {
         return '';
     }
 
-    const $html = $.load(html, {
+    // As there is HTML, pass it to Cheerio inside a `<body>` tag so we have a global wrapper to target later on
+    const $html = $.load(`<body>${html}</body>`, {
         decodeEntities: false
     });
+
+    // We use the `'og:image` as the feature image. If the first item in the content is an image and is the same as the `og:image`, remove it
+    if (responseData?.og_image) {
+        let firstElement = $html('body *').first();
+
+        if (firstElement.tagName === 'img' || $(firstElement).find('img').length) {
+            let theElementItself = (firstElement.tagName === 'img') ? firstElement : $(firstElement).find('img');
+
+            let firstImgSrc = $(theElementItself).attr('src');
+            let unsizedFirstSrc = getUnsizedImageName(firstImgSrc);
+
+            let ogImgSrc = responseData.og_image;
+            let unsizedOgSrc = getUnsizedImageName(ogImgSrc);
+
+            if (unsizedFirstSrc === unsizedOgSrc) {
+                if ($(firstElement).find('figcaption').length) {
+                    post.data.feature_image_caption = $(firstElement).find('figcaption').html();
+                }
+
+                $(firstElement).remove();
+            }
+        }
+    }
+
+    // If we have a podcast URL, embed an audio card at the start of the document
+    if (substackPodcastURL) {
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: substackPodcastURL,
+                title: post.data.title
+            }
+        };
+
+        const buildCard = audioCard.render(cardOpts);
+        const cardHTML = buildCard.nodeValue;
+
+        $html('body').prepend(cardHTML);
+    }
 
     $html('div.tweet').each((i, el) => {
         let src = $(el).children('a').attr('href');
@@ -167,7 +224,7 @@ const processContent = (html, siteUrl, options) => {
 
     if (footnotesCount > 0) {
         // Only append notes markup is there are footnotes
-        $html('> *').end().append(`<!--kg-card-begin: html-->${footnotesMarkup}<!--kg-card-end: html-->`);
+        $html('body').append(`<!--kg-card-begin: html-->${footnotesMarkup}<!--kg-card-end: html-->`);
     }
 
     // Wrap content that has footnote anchors in HTML tags to retain the footnote jump anchor
@@ -226,13 +283,16 @@ const processContent = (html, siteUrl, options) => {
     });
 
     // convert HTML back to a string
-    html = $html.html();
+    html = $html('body').html();
 
-    return html;
+    // Apply our new HTML back to the post object
+    post.data.html = html;
+
+    return post;
 };
 
 const processPost = (post, siteUrl, options) => {
-    post.data.html = processContent(post.data.html, siteUrl, options);
+    post = processContent(post, siteUrl, options);
 
     return post;
 };
@@ -249,7 +309,6 @@ module.exports = async (input, ctx) => {
 
             input.posts.map((post) => { // eslint-disable-line array-callback-return
                 post.data.html = postContent[post.substackId];
-                delete post.substackId;
             });
         } catch (error) {
             return new errors.InternalServerError({message: 'Couldn\'t read post files'});
@@ -257,7 +316,9 @@ module.exports = async (input, ctx) => {
     }
 
     if (input.posts && input.posts.length > 0) {
-        output.posts = input.posts.map(post => processPost(post, siteUrl, options));
+        output.posts = input.posts.map((post) => {
+            return processPost(post, siteUrl, options);
+        });
     }
 
     return output;

@@ -11,3 +11,5 @@ post_id,post_date,is_published,email_sent_at,type,audience,title,subtitle,podcas
 789679.buttons,2022-07-12T12:11:23.230Z,TRUE,2022-07-12T12:12:23.230Z,newsletter,everyone,Buttons,Eiusmod tempor incididunt ut labore.,
 789680.share-buttons,2022-07-12T12:11:23.230Z,TRUE,2022-07-12T12:12:23.230Z,newsletter,everyone,Share Buttons,Eiusmod tempor incididunt ut labore.,
 789681.comment-buttons,2022-08-12T12:11:23.230Z,TRUE,2022-07-12T12:12:23.230Z,podcast,everyone,Comment Buttons,Eiusmod tempor incididunt ut labore.,
+789682.podcast,2022-08-12T12:11:23.230Z,TRUE,2022-07-12T12:12:23.230Z,podcast,everyone,Comment Buttons,Eiusmod tempor incididunt ut labore.,https://example.com/my-audio/file.mp3
+789683.thread,2022-08-12T12:11:23.230Z,TRUE,2022-07-12T12:12:23.230Z,thread,everyone,Talk to Us,Eiusmod tempor incididunt ut labore.,

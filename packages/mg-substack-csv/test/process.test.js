@@ -28,7 +28,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const processed = await process(mapped, ctx);
 
         processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(12);
+        processed.posts.length.should.equal(13);
 
         const post = processed.posts[0];
         post.should.be.an.Object();
@@ -416,7 +416,7 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         const processed = await process(mapped, ctx);
 
         processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(9);
+        processed.posts.length.should.equal(10);
     });
 
     it('Can wrap lists with images in HTML comments', async function () {
@@ -531,5 +531,55 @@ describe('Convert Substack CSV format to Ghost JSON format', function () {
         '\n' +
         '<p>Dolor Simet</p>\n'
         );
+    });
+
+    it('Can add an audio card for podcast posts', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+        const processed = await process(mapped, ctx);
+
+        // The 7th post contains footnotes in <p>, <ol>, and <ul> elements
+        const post = processed.posts[12];
+        const data = post.data;
+
+        data.html.should.containEql('<div class="kg-card kg-audio-card">');
+        data.html.should.containEql('<div class="kg-audio-player-container">');
+        data.html.should.containEql('<audio src="https://example.com/my-audio/file.mp3" preload="metadata"></audio>');
+        data.html.should.containEql('<div class="kg-audio-title">Comment Buttons</div>');
+    });
+
+    it('Can optionally include thread posts', async function () {
+        const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
+        const inputPostsPath = path.resolve('./test/fixtures/posts');
+
+        const input = await parse(inputCSVPath);
+        input.should.be.an.Object();
+
+        const ctx = {
+            postsDir: inputPostsPath,
+            options: {
+                drafts: true,
+                threads: true,
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com'
+            }
+        };
+        const mapped = await map(input, ctx.options);
+
+        mapped.posts.should.be.an.Object();
+        mapped.posts.length.should.equal(14);
     });
 });

@@ -60,6 +60,10 @@ const scrapeConfig = {
         authors: {
             selector: 'script[type="application/ld+json"]',
             convert: (x) => {
+                if (!x) {
+                    return;
+                }
+
                 let ldJSON = JSON.parse(x);
                 let theAuthors = [];
 
@@ -182,6 +186,13 @@ module.exports.getTaskRunner = (pathToFile, options) => {
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor, skipScrape);
                 ctx.linkFixer = new MgLinkFixer();
 
+                ctx.allowScrape = {
+                    all: ctx.options.scrape.includes('all'),
+                    images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),
+                    media: ctx.options.scrape.includes('media') || ctx.options.scrape.includes('all'),
+                    web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
+                };
+
                 task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
             }
         },
@@ -191,7 +202,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
                 // 1. Read the csv file
                 try {
                     ctx.result = await csvIngest(ctx);
-                    await ctx.fileCache.writeTmpFile(ctx.result, 'csv-export-data.json');
+                    await ctx.fileCache.writeTmpFile(ctx.result, 'csv-export-mapped.json');
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
@@ -200,20 +211,44 @@ module.exports.getTaskRunner = (pathToFile, options) => {
         },
         {
             title: 'Fetch missing data via WebScraper',
+            skip: ctx => !ctx.allowScrape.web,
             task: (ctx) => {
                 // 2. Pass the results through the web scraper to get any missing data
-                let tasks = ctx.webScraper.hydrate(ctx); // eslint-disable-line no-shadow
+                let tasks = ctx.webScraper.get(ctx); // eslint-disable-line no-shadow
 
                 let webScraperOptions = options;
                 webScraperOptions.concurrent = 1;
                 return makeTaskRunner(tasks, webScraperOptions);
-            },
-            skip: () => !options.url || ['all', 'web'].indexOf(options.scrape) < 0
+            }
+        },
+        {
+            title: 'Process content',
+            task: async (ctx) => {
+                // 3. Pass the results through the processor to change the HTML structure
+                try {
+                    ctx.result = await csvIngest.process(ctx.result, ctx);
+                    await ctx.fileCache.writeTmpFile(ctx.result, 'csv-export-data.json');
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
+            }
+        },
+        {
+            title: 'Apply missing data from WebScraper',
+            skip: ctx => !ctx.allowScrape.web,
+            task: (ctx) => {
+                // 4. Pass the results through the web scraper to apply any missing data
+                let tasks = ctx.webScraper.apply(ctx); // eslint-disable-line no-shadow
+                let webScraperOptions = options;
+                webScraperOptions.concurrent = 1;
+                return makeTaskRunner(tasks, webScraperOptions);
+            }
         },
         {
             title: 'Build Link Map',
             task: async (ctx) => {
-                // 3. Create a map of all known links for use later
+                // 5. Create a map of all known links for use later
                 try {
                     ctx.linkFixer.buildMap(ctx);
                 } catch (error) {
@@ -225,7 +260,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
         {
             title: 'Format data as Ghost JSON',
             task: (ctx) => {
-                // 4. Format the data as a valid Ghost JSON file
+                // 6. Format the data as a valid Ghost JSON file
                 try {
                     ctx.result = mgJSON.toGhostJSON(ctx.result, ctx.options);
                 } catch (error) {
@@ -236,26 +271,26 @@ module.exports.getTaskRunner = (pathToFile, options) => {
         },
         {
             title: 'Fetch images via ImageScraper',
+            skip: ctx => !ctx.allowScrape.images,
             task: async (ctx) => {
-                // 5. Pass the JSON file through the image scraper
+                // 7. Pass the JSON file through the image scraper
                 let tasks = ctx.imageScraper.fetch(ctx); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
-            },
-            skip: () => ['all', 'img'].indexOf(options.scrape) < 0
+            }
         },
         {
             title: 'Fetch media via MediaScraper',
+            skip: ctx => !ctx.allowScrape.media,
             task: async (ctx) => {
-                // 6. Pass the JSON file through the file scraper
+                // 8. Pass the JSON file through the file scraper
                 let tasks = ctx.mediaScraper.fetch(ctx);
                 return makeTaskRunner(tasks, options);
-            },
-            skip: () => ['all', 'media'].indexOf(options.scrape) < 0
+            }
         },
         {
             title: 'Update links in content via LinkFixer',
             task: async (ctx, task) => {
-                // 7. Process the content looking for known links, and update them to new links
+                // 9. Process the content looking for known links, and update them to new links
                 let tasks = ctx.linkFixer.fix(ctx, task); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
             }
@@ -264,7 +299,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             // @TODO don't duplicate this with the utils json file
             title: 'Convert HTML -> MobileDoc',
             task: (ctx) => {
-                // 8. Convert post HTML -> MobileDoc
+                // 10. Convert post HTML -> MobileDoc
                 try {
                     let tasks = mgHtmlMobiledoc.convert(ctx); // eslint-disable-line no-shadow
                     return makeTaskRunner(tasks, options);
@@ -277,7 +312,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
         {
             title: 'Write Ghost import JSON File',
             task: async (ctx) => {
-                // 9. Write a valid Ghost import zip
+                // 11. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
                     await ctx.fileCache.writeErrorJSONFile(ctx.errors);
@@ -291,7 +326,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             title: 'Report file sizes',
             skip: () => !options.size_limit,
             task: async (ctx) => {
-                // 10. Report assets that were not downloaded
+                // 12. Report assets that were not downloaded
                 try {
                     ctx.sizeReports.media = await ctx.fileCache.writeReportCSVFile(ctx.mediaScraper.sizeReport, {filename: 'media', sizeLimit: options.size_limit});
                 } catch (error) {
@@ -304,7 +339,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             title: 'Write Ghost import zip',
             skip: () => !options.zip,
             task: async (ctx) => {
-                // 11. Write a valid Ghost import zip
+                // 13. Write a valid Ghost import zip
                 try {
                     ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
                 } catch (error) {
