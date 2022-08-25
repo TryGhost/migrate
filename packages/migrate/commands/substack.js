@@ -51,6 +51,10 @@ exports.setup = (sywac) => {
         defaultValue: true,
         desc: 'Import draft posts'
     });
+    sywac.boolean('--threads', {
+        defaultValue: false,
+        desc: 'Import thread posts'
+    });
     sywac.boolean('--useMetaImage', {
         defaultValue: false,
         desc: 'Use "og:image" value as the feature image'

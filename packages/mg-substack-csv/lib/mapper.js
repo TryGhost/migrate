@@ -92,6 +92,10 @@ module.exports = async (input, options) => {
         input = input.filter(data => data.is_published.toLowerCase() === `true`);
     }
 
+    if (!options.threads) {
+        input = input.filter(data => data.type.toLowerCase() !== `thread`);
+    }
+
     if (options.postsBefore && options.postsAfter) {
         const startDate = parseISO(formatISO(new Date(options.postsAfter)));
         const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
