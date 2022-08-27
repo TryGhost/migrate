@@ -52,8 +52,8 @@ describe('writeImageFile', function () {
         outputFileStub.calledTwice.should.be.true();
         transformStub.calledOnce.should.be.true();
 
-        outputFileStub.firstCall.args.should.eql([mockStoragePath, 'optimizedimagebuffer']);
-        outputFileStub.secondCall.args.should.eql([mockOriginalPath, 'imagebuffer']);
+        outputFileStub.secondCall.args.should.eql([mockStoragePath, 'optimizedimagebuffer']);
+        outputFileStub.firstCall.args.should.eql([mockOriginalPath, 'imagebuffer']);
 
         resultPath.should.eql(mockOutputPath);
     });

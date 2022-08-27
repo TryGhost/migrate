@@ -309,15 +309,21 @@ class FileCache {
             options = this.resolveImageFileName(options.filename);
         }
 
-        // CASE: image manipulator is uncapable of transforming file (e.g. .bmp)
-        let fileExt = path.extname(options.filename).substr(1);
-        if (options.optimize && imageTransform.canTransformToFormat(fileExt)) {
-            const optimizedStoragePath = options.storagePath;
-            const originalStoragePath = imageTransform.generateOriginalImageName(options.storagePath);
-            const optimizedData = await imageTransform.resizeFromBuffer(data, {width: 2000});
+        const fileExt = path.extname(options.filename).substr(1);
 
-            await fs.outputFile(optimizedStoragePath, optimizedData);
-            await fs.outputFile(originalStoragePath, data);
+        // CASE: image manipulator is incapable of transforming file (e.g. .bmp)
+        if (options.optimize && imageTransform.canTransformToFormat(fileExt)) {
+            try {
+                const originalStoragePath = imageTransform.generateOriginalImageName(options.storagePath);
+                await fs.outputFile(originalStoragePath, data);
+                const optimizedStoragePath = options.storagePath;
+                const optimizedData = await imageTransform.resizeFromBuffer(data, {width: 2000});
+                await fs.outputFile(optimizedStoragePath, optimizedData);
+            } catch (error) {
+                // Silently fail and only save the original image without manipulation
+                // TODO: Catch errors and push to ctx.errors
+                await fs.outputFile(options.storagePath, data);
+            }
         } else {
             await fs.outputFile(options.storagePath, data);
         }
