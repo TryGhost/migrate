@@ -157,6 +157,13 @@ class FileCache {
         if (type === 'images') {
             typeDir = this.imageDir;
             typePath = this.imagePath;
+
+            // CASE: In ImageSCraper, we infer file type based on the first few bytes of the image.
+            // The extension we get for `image/jpeg` is `.jpg`, so here transform `.jpeg` to `.jpg`
+            // to ensure we don't miss images that already exist
+            if (ext.toLowerCase() === '.jpeg') {
+                filename = filename.replace('.jpeg', '.jpg');
+            }
         } else if (type === 'media') {
             typeDir = this.mediaDir;
             typePath = this.mediaPath;

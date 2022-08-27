@@ -104,4 +104,13 @@ describe('writeImageFile', function () {
         fileName.storagePath.should.containEql('/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
         fileName.outputPath.should.eql('/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
     });
+
+    it('Will change jpeg to jpg', async function () {
+        let fileCache = new FileCache('test');
+        let fileName = await fileCache.resolveFileName('/my-images/blah.jpeg');
+
+        fileName.filename.should.eql('/my-images/blah.jpg');
+        fileName.storagePath.should.containEql('/content/images/my-images/blah.jpg');
+        fileName.outputPath.should.eql('/content/images/my-images/blah.jpg');
+    });
 });
