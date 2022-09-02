@@ -163,6 +163,29 @@ describe('Process', function () {
         data.tags[6].data.name.should.eql('#wp-post');
     });
 
+    it('Can convert entities in tags names', async function () {
+        const fixture = testUtils.fixtures.readSync('single-post.json');
+        const users = [];
+        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com'};
+        const post = await processor.processPost(fixture, users, options);
+
+        const data = post.data;
+
+        data.tags.should.be.an.Array().with.lengthOf(6);
+        data.tags[0].data.slug.should.eql('boop');
+        data.tags[0].data.name.should.eql('Boop');
+        data.tags[1].data.slug.should.eql('foo');
+        data.tags[1].data.name.should.eql('foo');
+        data.tags[2].data.slug.should.eql('bar-baz');
+        data.tags[2].data.name.should.eql('Bar & Baz');
+        data.tags[3].data.slug.should.eql('boop');
+        data.tags[3].data.name.should.eql('boop');
+        data.tags[4].data.slug.should.eql('beep');
+        data.tags[4].data.name.should.eql('beep');
+        data.tags[5].data.slug.should.eql('hash-wp');
+        data.tags[5].data.name.should.eql('#wp');
+    });
+
     it('Can remove first image in post if same as feature image', async function () {
         const fixture = testUtils.fixtures.readSync('single-post-with-duplicate-images.json');
         const users = [];

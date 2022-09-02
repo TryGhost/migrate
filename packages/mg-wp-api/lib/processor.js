@@ -45,7 +45,7 @@ module.exports.processTerm = (wpTerm) => {
         url: wpTerm.link,
         data: {
             slug: wpTerm.slug,
-            name: wpTerm.name
+            name: _.unescape(wpTerm.name)
         }
     };
 };

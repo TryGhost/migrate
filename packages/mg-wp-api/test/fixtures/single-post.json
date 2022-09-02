@@ -372,7 +372,7 @@
         {
           "id": 1200,
           "link": "https:\/\/mysite.com\/tag\/bar-baz",
-          "name": "Bar Baz",
+          "name": "Bar &amp; Baz",
           "slug": "bar-baz",
           "taxonomy": "post_tag",
           "_links": {
