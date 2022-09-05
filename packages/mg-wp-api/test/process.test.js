@@ -234,4 +234,16 @@ describe('Process', function () {
         data.tags[0].data.slug.should.eql('my-new-tag');
         data.tags[0].data.name.should.eql('My New Tag');
     });
+
+    it('Can remove HTML from post titles', async function () {
+        const fixture = testUtils.fixtures.readSync('single-post-with-html-in-title.json');
+
+        const users = [];
+        const options = {};
+        const post = await processor.processPost(fixture, users, options);
+
+        const data = post.data;
+
+        data.title.should.eql('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua');
+    });
 });

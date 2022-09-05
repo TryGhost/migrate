@@ -442,16 +442,18 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
  *   ]
  * }
  */
-module.exports.processPost = async (wpPost, users, options, errors, fileCache) => { // eslint-disable-line no-shadow
+module.exports.processPost = async (wpPost, users, options = {}, errors, fileCache) => { // eslint-disable-line no-shadow
     let {tags: fetchTags, addTag, excerptSelector} = options;
+
     let slug = wpPost.slug;
+    let titleText = $.load(wpPost.title.rendered).text();
 
     // @note: we don't copy excerpts because WP generated excerpts aren't better than Ghost ones but are often too long.
     const post = {
         url: wpPost.link,
         data: {
             slug: slug,
-            title: wpPost.title.rendered,
+            title: titleText,
             comment_id: wpPost.id,
             html: wpPost.content.rendered,
             type: wpPost.type === 'page' ? 'page' : 'post',
