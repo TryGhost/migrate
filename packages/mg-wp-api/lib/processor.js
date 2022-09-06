@@ -117,8 +117,16 @@ module.exports.processShortcodes = async ({html}) => {
         let newString = [];
         let classes = ['kg-card', 'kg-image-card'];
 
+        if (matches.groups.openlink) {
+            newString.push(matches.groups.openlink);
+        }
+
         if (matches.groups.image) {
             newString.push(matches.groups.image);
+        }
+
+        if (matches.groups.closelink) {
+            newString.push(matches.groups.closelink);
         }
 
         if (matches.groups.text) {
@@ -158,7 +166,7 @@ module.exports.processContent = async ({html, excerptSelector, featureImageSrc =
     let webScraper = new MgWebScraper(fileCache);
 
     let allowRemoteScraping = false;
-    if (options.scrape?.includes('all') || options.scrape?.includes('media')) {
+    if (options?.scrape?.includes('all') || options?.scrape?.includes('media')) {
         allowRemoteScraping = true;
     }
 
@@ -429,8 +437,9 @@ module.exports.processContent = async ({html, excerptSelector, featureImageSrc =
         let newSrc = largerSrc(imageSrc);
         let $link = $($image).parent('a');
         let linkHref = $($link).attr('href');
+        let newLinkHref = largerSrc(linkHref);
 
-        if (newSrc === linkHref) {
+        if (newSrc === newLinkHref) {
             $($link).replaceWith($($link).html());
         }
     });
@@ -442,6 +451,7 @@ module.exports.processContent = async ({html, excerptSelector, featureImageSrc =
     // TODO: this should be possible within the Mobiledoc parser
     $html('a > img').each((l, linkedImg) => {
         let anchor = $(linkedImg).parent('a').get(0);
+        let parentFigure = $(anchor).parent('figure');
 
         if ($(anchor).attr('href').indexOf($(linkedImg).attr('src') < 0)) {
             $(linkedImg).addClass('kg-image');
@@ -461,8 +471,14 @@ module.exports.processContent = async ({html, excerptSelector, featureImageSrc =
 
             // add display block, so the margin bottom from `kg-card` takes effect on the anchor tag
             $(anchor).css({display: 'block'});
-            $(anchor).before('<!--kg-card-begin: html-->');
-            $(anchor).after('<!--kg-card-end: html-->');
+
+            if (parentFigure.length) {
+                $(parentFigure).before('<!--kg-card-begin: html-->');
+                $(parentFigure).after('<!--kg-card-end: html-->');
+            } else {
+                $(anchor).before('<!--kg-card-begin: html-->');
+                $(anchor).after('<!--kg-card-end: html-->');
+            }
         }
     });
 

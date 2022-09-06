@@ -250,3 +250,37 @@ describe('Process', function () {
         data.title.should.eql('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua');
     });
 });
+
+describe('Process HTML', function () {
+    it('Can convert a basic [caption] shortcode', async function () {
+        let transformedShortcode = await processor.processContent({
+            html: '[caption id="attachment_6" align="alignright" width="300"]<img src="http://localhost/wp-content/uploads/2010/07/800px-Great_Wave_off_Kanagawa2-300x205.jpg" alt="Kanagawa" title="The Great Wave" width="300" height="205" class="size-medium wp-image-6" /> The Great Wave[/caption]'
+        });
+
+        transformedShortcode.should.eql('<figure class="kg-card kg-image-card kg-card-hascaption"><img src="http://localhost/wp-content/uploads/2010/07/800px-Great_Wave_off_Kanagawa2.jpg" alt="Kanagawa" title="The Great Wave" width="300" height="205" class="size-medium wp-image-6"><figcaption>The Great Wave</figcaption></figure>');
+    });
+
+    it('Can convert a basic [caption] where the image is wrapped in an anchor', async function () {
+        let transformedShortcode = await processor.processContent({
+            html: '[caption id="attachment_6" align="alignright" width="300"]<a href="https://example.com"><img src="http://localhost/wp-content/uploads/2010/07/800px-Great_Wave_off_Kanagawa2-300x205.jpg" alt="Kanagawa" title="The Great Wave" width="300" height="205" class="size-medium wp-image-6" /></a> The Great Wave[/caption]'
+        });
+
+        transformedShortcode.should.eql('<!--kg-card-begin: html--><figure class="kg-card kg-image-card kg-card-hascaption"><a href="https://example.com" class="kg-card kg-image-card" style="display: block;"><img src="http://localhost/wp-content/uploads/2010/07/800px-Great_Wave_off_Kanagawa2.jpg" alt="Kanagawa" title="The Great Wave" width="300" height="205" class="size-medium wp-image-6 kg-image"></a><figcaption>The Great Wave</figcaption></figure><!--kg-card-end: html-->');
+    });
+
+    it('Can convert a basic [caption] where the image is wrapped in an anchor to the same image', async function () {
+        let transformedShortcode = await processor.processContent({
+            html: '[caption id="attachment_6" align="alignright" width="300"]<a href="http://localhost/wp-content/uploads/2010/07/800px-Great_Wave_off_Kanagawa2-300x205.jpg"><img src="http://localhost/wp-content/uploads/2010/07/800px-Great_Wave_off_Kanagawa2-300x205.jpg" alt="Kanagawa" title="The Great Wave" width="300" height="205" class="size-medium wp-image-6" /></a> The Great Wave[/caption]'
+        });
+
+        transformedShortcode.should.eql('<figure class="kg-card kg-image-card kg-card-hascaption"><img src="http://localhost/wp-content/uploads/2010/07/800px-Great_Wave_off_Kanagawa2.jpg" alt="Kanagawa" title="The Great Wave" width="300" height="205" class="size-medium wp-image-6"><figcaption>The Great Wave</figcaption></figure>');
+    });
+
+    it('Can convert a [caption] shortcode with HTML in the caption', async function () {
+        let transformedShortcode = await processor.processContent({
+            html: '[caption id="attachment_6" align="alignright" width="300"]<img src="http://localhost/wp-content/uploads/2010/07/800px-Great_Wave_off_Kanagawa2-300x205.jpg" alt="Kanagawa" title="The Great Wave" width="300" height="205" class="size-medium wp-image-6" /> <strong>The Great Wave</strong>[/caption]'
+        });
+
+        transformedShortcode.should.eql('<figure class="kg-card kg-image-card kg-card-hascaption"><img src="http://localhost/wp-content/uploads/2010/07/800px-Great_Wave_off_Kanagawa2.jpg" alt="Kanagawa" title="The Great Wave" width="300" height="205" class="size-medium wp-image-6"><figcaption><strong>The Great Wave</strong></figcaption></figure>');
+    });
+});
