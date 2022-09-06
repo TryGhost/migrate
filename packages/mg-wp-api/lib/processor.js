@@ -1,8 +1,12 @@
 const _ = require('lodash');
 const $ = require('cheerio');
 const url = require('url');
+const path = require('path');
 const MgWebScraper = require('@tryghost/mg-webscraper');
 const {slugify} = require('@tryghost/string');
+const Muteferrika = require('muteferrika');
+const SimpleDom = require('simple-dom');
+const fileCard = require('@tryghost/kg-default-cards/lib/cards/file');
 
 const stripHtml = (html) => {
     // Remove HTML tags, new line characters, and trim white-space
@@ -10,6 +14,10 @@ const stripHtml = (html) => {
 };
 
 const largerSrc = (imageSrc) => {
+    if (!imageSrc || imageSrc.length <= 1) {
+        return imageSrc;
+    }
+
     let newSrc = imageSrc;
 
     const fileSizeRegExp = new RegExp('-([0-9]+x[0-9]+).([a-zA-Z]{2,4})$');
@@ -89,7 +97,64 @@ module.exports.processExcerpt = (html, excerptSelector) => {
     }
 };
 
-module.exports.processContent = async (html, postUrl, excerptSelector, errors, featureImageSrc = false, fileCache = false, options) => { // eslint-disable-line no-shadow
+// Some WordPress sites use shortcodes. This is where to handle them.
+module.exports.processShortcodes = async ({html}) => {
+    const shortcodes = new Muteferrika();
+
+    /**
+     * An example. Say you have `[button url="https://ghost.org"]Ghost[/button]`
+     * The code below turns it into a button card.
+     */
+    // shortcodes.add('button', async (attrs, content) => {
+    //     return `<div class="kg-card kg-button-card kg-align-center"><a href="${attrs.url}" class="kg-btn kg-btn-accent">${content}</a></div>`;
+    // });
+
+    // Match [caption]<a href="https://example.com/newsletter"><img src="https://example.com/my/image.jpg" /></a>[/caption]
+    // Match [caption]<img src="https://example.com/my/image.jpg" />[/caption]
+    shortcodes.add('caption', async (attrs, content) => {
+        let matches = content.match(/(?<openlink><a.*>)? ?(?<image><img [^>]*src=\\?"[^"]*\\?"[^>]*>) ?(?<closelink><\/a.*>)? ?(?<text>.*)/m);
+
+        let newString = [];
+        let classes = ['kg-card', 'kg-image-card'];
+
+        if (matches.groups.image) {
+            newString.push(matches.groups.image);
+        }
+
+        if (matches.groups.text) {
+            newString.push(`<figcaption>${matches.groups.text.trim()}</figcaption>`);
+            classes.push('kg-card-hascaption');
+        }
+
+        return `<figure class="${classes.join(' ')}">${newString.join('')}</figure>`;
+    });
+
+    /**
+     * Another example. Say the WP site uses shortcodes for layout, such as `[row][column]Keep this bit[/column][/row]`
+     * We don't want to change them as such, but only retain what's inside. TThe below results in `Keep this bit`
+     */
+    // let toRemove = [
+    //     {
+    //         name: 'row',
+    //         callback: (attrs, content) => {
+    //             return content;
+    //         }
+    //     },
+    //     {
+    //         name: 'column',
+    //         callback: (attrs, content) => {
+    //             return content;
+    //         }
+    //     }
+    // ];
+    // shortcodes.addRange(toRemove);
+
+    const output = await shortcodes.render(html);
+
+    return output;
+};
+
+module.exports.processContent = async ({html, excerptSelector, featureImageSrc = false, fileCache = false, options}) => { // eslint-disable-line no-shadow
     let webScraper = new MgWebScraper(fileCache);
 
     let allowRemoteScraping = false;
@@ -101,6 +166,8 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
     if (!html) {
         return '';
     }
+
+    html = await this.processShortcodes({html});
 
     const $html = $.load(html, {
         decodeEntities: false
@@ -125,6 +192,10 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
 
     // Handle twitter embeds
     $html('p > script[src="https://platform.twitter.com/widgets.js"]').remove();
+
+    $html('[style="font-weight: 400"]').each((i, el) => {
+        $(el).removeAttr('style');
+    });
 
     $html('#toc_container').each((i, toc) => {
         $(toc).remove();
@@ -197,6 +268,24 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
 
     await Promise.all(libsynPodcasts);
 
+    // TODO: Need to handle playlist URLs like https://youtube.com/playlist?list=ABCDEFHG12345678B0Og6F_yAXM6jAO-rq
+    $html('figure.wp-block-embed-youtube').each((i, el) => {
+        const text = $(el).text();
+        const videoMatch = text.match(/(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/user\/\S+|\/ytscreeningroom\?v=))([\w\-]{10,12})\b/); // eslint-disable-line no-useless-escape
+
+        if (videoMatch && videoMatch[1]) {
+            const linkToUse = `https://www.youtube.com/embed/${videoMatch[1]}?feature=oembed`;
+
+            $(el).replaceWith(`<figure class="kg-card kg-embed-card"><iframe width="480" height="270" src="${linkToUse}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></figure>`);
+        }
+    });
+
+    $html('figure.wp-block-embed-twitter').each((i, el) => {
+        const link = $(el).text();
+
+        $(el).replaceWith(`<blockquote class="twitter-tweet"><a href="${link}"></a></blockquote>`);
+    });
+
     $html('blockquote.twitter-tweet').each((i, el) => {
         let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
         let $script = $('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
@@ -230,6 +319,12 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
         $(el).remove();
     });
 
+    $html('figure.wp-block-embed-instagram').each((i, el) => {
+        const link = $(el).text();
+
+        $(el).replaceWith(`<blockquote class="instagram-media"><a href="${link}"></a></blockquote>`);
+    });
+
     $html('blockquote.instagram-media').each((i, el) => {
         let src = $(el).find('a').attr('href');
         let parsed = url.parse(src);
@@ -249,6 +344,27 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
         $figure.append($script);
 
         $(el).replaceWith($figure);
+    });
+
+    $html('.wp-block-file').each((i, el) => {
+        let fileUrl = $(el).find('a').eq(0).attr('href');
+        let fileName = path.basename(fileUrl);
+        let fileTitle = $(el).find('a').eq(0).text();
+
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                fileName: fileName,
+                fileTitle: fileTitle,
+                src: fileUrl,
+                fileSize: 0
+            }
+        };
+
+        const buildCard = fileCard.render(cardOpts);
+        const cardHTML = buildCard.nodeValue;
+
+        $(el).replaceWith(cardHTML);
     });
 
     // TODO: this should be a parser plugin
@@ -422,6 +538,15 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
         }
     });
 
+    // Remove empty <p> tags
+    $html('p').each((i, p) => {
+        let content = $(p).html().trim();
+
+        if (content.length === 0) {
+            $(p).remove();
+        }
+    });
+
     // convert HTML back to a string
     html = $html.html();
 
@@ -496,14 +621,6 @@ module.exports.processPost = async (wpPost, users, options = {}, errors, fileCac
     if (wpPost._embedded && wpPost._embedded['wp:term']) {
         const wpTerms = wpPost._embedded['wp:term'];
         post.data.tags = this.processTerms(wpTerms, fetchTags);
-
-        post.data.tags.push({
-            url: 'migrator-added-tag',
-            data: {
-                slug: 'hash-wp',
-                name: '#wp'
-            }
-        });
     }
 
     if (addTag) {
@@ -515,6 +632,14 @@ module.exports.processPost = async (wpPost, users, options = {}, errors, fileCac
             }
         });
     }
+
+    post.data.tags.push({
+        url: 'migrator-added-tag',
+        data: {
+            slug: 'hash-wp',
+            name: '#wp'
+        }
+    });
 
     if (options.cpt) {
         if (!['post', 'page'].includes(wpPost.type)) {
@@ -541,7 +666,14 @@ module.exports.processPost = async (wpPost, users, options = {}, errors, fileCac
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = await this.processContent(post.data.html, post.url, excerptSelector, errors, post.data.feature_image, fileCache, options);
+    // post.data.html = await this.processContent(post.data.html, post.url, excerptSelector, errors, post.data.feature_image, fileCache, options);
+    post.data.html = await this.processContent({
+        html: post.data.html,
+        excerptSelector: excerptSelector,
+        featureImageSrc: post.data.feature_image,
+        fileCache: fileCache,
+        options: options
+    });
 
     return post;
 };

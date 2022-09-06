@@ -27,7 +27,13 @@ const scrapeConfig = {
         },
         meta_description: {
             selector: 'meta[name="description"]',
-            attr: 'content'
+            attr: 'content',
+            convert: (x) => {
+                if (!x) {
+                    return;
+                }
+                return x.slice(0, 499);
+            }
         },
         og_image: {
             selector: 'meta[property="og:image"]',
@@ -39,7 +45,13 @@ const scrapeConfig = {
         },
         og_description: {
             selector: 'meta[property="og:description"]',
-            attr: 'content'
+            attr: 'content',
+            convert: (x) => {
+                if (!x) {
+                    return;
+                }
+                return x.slice(0, 499);
+            }
         },
         twitter_image: {
             selector: 'meta[name="twitter:image"], meta[name="twitter:image:src"]',
@@ -51,7 +63,13 @@ const scrapeConfig = {
         },
         twitter_description: {
             selector: 'meta[name="twitter:description"]',
-            attr: 'content'
+            attr: 'content',
+            convert: (x) => {
+                if (!x) {
+                    return;
+                }
+                return x.slice(0, 499);
+            }
         },
         codeinjection_head: {
             selector: 'body > style',
@@ -105,14 +123,14 @@ module.exports.initialize = (url, options) => {
 
             ctx.linkFixer = new MgLinkFixer();
 
-            task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
-
             ctx.allowScrape = {
                 all: ctx.options.scrape.includes('all'),
                 images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),
                 media: ctx.options.scrape.includes('media') || ctx.options.scrape.includes('all'),
                 web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
             };
+
+            task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
 
             if (options.batch > 0) {
                 task.title += ` batch ${ctx.fileCache.batchName}`;

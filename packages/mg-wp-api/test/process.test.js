@@ -229,10 +229,13 @@ describe('Process', function () {
 
         const data = post.data;
 
-        data.tags.should.be.an.Array().with.lengthOf(1);
+        data.tags.should.be.an.Array().with.lengthOf(2);
 
         data.tags[0].data.slug.should.eql('my-new-tag');
         data.tags[0].data.name.should.eql('My New Tag');
+
+        data.tags[1].data.slug.should.eql('hash-wp');
+        data.tags[1].data.name.should.eql('#wp');
     });
 
     it('Can remove HTML from post titles', async function () {
