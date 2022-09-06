@@ -88,6 +88,14 @@ module.exports.preProcessContent = async ({html}) => { // eslint-disable-line no
     return html;
 };
 
+module.exports.processHTMLContent = async (args) => {
+    return await processContent({
+        html: args.html,
+        postUrl: args.postUrl,
+        options: args.options
+    });
+};
+
 module.exports.processPost = async ($post, users, options) => {
     const {addTag, tags: fetchTags, siteUrl} = options;
     const postType = $($post).children('wp\\:post_type').text();
@@ -132,7 +140,7 @@ module.exports.processPost = async ($post, users, options) => {
     });
     post.data.html = mdParser.render(post.data.html);
 
-    post.data.html = await processContent({
+    post.data.html = await this.processHTMLContent({
         html: post.data.html,
         postUrl: post.url,
         options: options

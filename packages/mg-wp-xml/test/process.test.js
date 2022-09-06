@@ -4,6 +4,16 @@ const fs = require('fs').promises;
 const process = require('../lib/process');
 
 describe('Process', function () {
+    // We're not testing HTML transformation here, so stub the function so it's not called upon
+    beforeEach(function () {
+        process.processHTMLContent = sinon.stub();
+        process.processHTMLContent.returns('Example content');
+    });
+
+    afterEach(function () {
+        sinon.restore();
+    });
+
     it('Can convert a single published post', async function () {
         let ctx = {
             options: {
