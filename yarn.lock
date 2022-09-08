@@ -427,6 +427,18 @@
     lodash "^4.17.21"
     luxon "^2.1.1"
 
+"@tryghost/kg-default-cards@5.16.5":
+  version "5.16.5"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-default-cards/-/kg-default-cards-5.16.5.tgz#67c6c3d1f50d95e078c3687aec14d399c339394d"
+  integrity sha512-FjCol54TJw5wLZnGhw74m/dY+TQAqa5kjkD5AJ4dUwzIzvcKCD3hSK4VQmiYtpyvFQ7qn+5ot7u683ZRyDDQZw==
+  dependencies:
+    "@tryghost/kg-markdown-html-renderer" "^5.1.6"
+    "@tryghost/url-utils" "^2.0.0"
+    handlebars "^4.7.6"
+    juice "^8.0.0"
+    lodash "^4.17.21"
+    luxon "^2.1.1"
+
 "@tryghost/kg-markdown-html-renderer@^5.1.6":
   version "5.1.6"
   resolved "https://registry.yarnpkg.com/@tryghost/kg-markdown-html-renderer/-/kg-markdown-html-renderer-5.1.6.tgz#be932439a4aed1994101c800d993a7b4b844256d"
@@ -3915,9 +3927,9 @@ mocha@10.0.0:
     yargs-unparser "2.0.0"
 
 moment-timezone@^0.5.31:
-  version "0.5.35"
-  resolved "https://registry.yarnpkg.com/moment-timezone/-/moment-timezone-0.5.35.tgz#6fa2631bdbe8ff04f6b8753f7199516be6dc9839"
-  integrity sha512-cY/pBOEXepQvlgli06ttCTKcIf8cD1nmNwOKQQAdHBqYApQSpAqotBMX0RJZNgMp6i0PlZuf1mFtnlyEkwyvFw==
+  version "0.5.37"
+  resolved "https://registry.yarnpkg.com/moment-timezone/-/moment-timezone-0.5.37.tgz#adf97f719c4e458fdb12e2b4e87b8bec9f4eef1e"
+  integrity sha512-uEDzDNFhfaywRl+vwXxffjjq1q0Vzr+fcQpQ1bU0kbzorfS7zVtZnCnGc8mhWmF39d4g4YriF6kwA75mJKE/Zg==
   dependencies:
     moment ">= 2.9.0"
 

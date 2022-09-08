@@ -1,4 +1,5 @@
 const {parse} = require('csv-parse');
+const {parse: parseSync} = require('csv-parse/sync');
 const fs = require('fs-extra');
 const {isDate} = require('date-fns');
 
@@ -22,6 +23,17 @@ module.exports.parse = (filePath, options = {skip_lines_with_error: true, column
                 return reject(error);
             });
     });
+};
+
+/**
+ * Parse a CSV string and make available as JSON
+ * @param {String} csvString - CSV as a string
+ * @param {Object} options - optional options to pass to `csv-parse`
+ */
+module.exports.parseString = (csvString, options = {skip_lines_with_error: true, columns: true, skip_empty_lines: true}) => {
+    const data = parseSync(csvString, options);
+
+    return data;
 };
 
 /**
