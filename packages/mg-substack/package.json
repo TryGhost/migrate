@@ -1,0 +1,38 @@
+{
+  "name": "@tryghost/mg-substack",
+  "version": "0.1.0",
+  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-substack",
+  "author": "Ghost Foundation",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "dev": "echo \"Implement me!\"",
+    "test": "NODE_ENV=testing mocha './test/**/*.test.js'",
+    "lint": "eslint . --ext .js --cache",
+    "posttest": "yarn lint"
+  },
+  "files": [
+    "index.js",
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "mocha": "10.0.0",
+    "should": "13.2.3",
+    "sinon": "14.0.0"
+  },
+  "dependencies": {
+    "@tryghost/errors": "1.2.14",
+    "@tryghost/kg-default-cards": "5.16.5",
+    "@tryghost/mg-fs-utils": "0.8.3",
+    "@tryghost/string": "0.1.27",
+    "bluebird": "^3.7.2",
+    "csv-parse": "5.3.0",
+    "date-fns": "2.29.1",
+    "ghost-ignition": "4.6.3",
+    "lodash": "4.17.21",
+    "simple-dom": "1.4.0"
+  }
+}
