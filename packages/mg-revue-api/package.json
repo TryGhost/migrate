@@ -24,7 +24,7 @@
     "sinon": "14.0.0"
   },
   "dependencies": {
-    "@tryghost/string": "^0.1.11",
+    "@tryghost/string": "^0.2.0",
     "cheerio": "0.22.0",
     "got": "11.8.5"
   }

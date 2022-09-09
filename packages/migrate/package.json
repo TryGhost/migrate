@@ -50,7 +50,7 @@
     "@tryghost/mg-webscraper": "^0.7.0",
     "@tryghost/mg-wp-api": "^0.7.9",
     "@tryghost/pretty-cli": "1.2.29",
-    "@tryghost/string": "0.1.26",
+    "@tryghost/string": "0.2.1",
     "cheerio": "0.22.0",
     "fs-extra": "10.1.0",
     "listr": "0.14.3",

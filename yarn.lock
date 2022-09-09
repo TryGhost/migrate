@@ -478,17 +478,10 @@
     caller "^1.0.1"
     find-root "^1.1.0"
 
-"@tryghost/string@0.1.26":
-  version "0.1.26"
-  resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.1.26.tgz#f9f1ce40070234a2f0b452d282405be09e78f91b"
-  integrity sha512-NZQ6EdSm373Q9JJwev552vjloqmV/G4vNe8GAlyJ1w+PCOniMZbmPWiadjsaD9lt6/lwzy4JlwTAp/v4hPRCpg==
-  dependencies:
-    unidecode "^0.1.8"
-
-"@tryghost/string@0.1.27", "@tryghost/string@^0.1.11", "@tryghost/string@^0.1.17":
-  version "0.1.27"
-  resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.1.27.tgz#c8f9b9748e2a7bea02953763865e0820223a2918"
-  integrity sha512-M3vUxiV4atX10aV45VOgs8DW9X29z5gd/KhfSP3AzKeu2rEiLx3nWC4lD7xTMZocZED1QNwvGXbjMEwM9aNGmw==
+"@tryghost/string@0.2.1", "@tryghost/string@^0.2.0":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.2.1.tgz#709bcd97eba753c382bf272199a9d2205056099b"
+  integrity sha512-uKJk5jvHkJbKZkR1NHsXmvOEXxZhXehEU0lkEgvgD902iKLj/u8gLssOs5SsE5i8dL3iIXEBxhtt71UIc4Rc9Q==
   dependencies:
     unidecode "^0.1.8"
 
