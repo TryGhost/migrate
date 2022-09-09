@@ -23,7 +23,7 @@ describe('Process', function () {
         data.slug.should.eql('my-awesome-post');
         data.title.should.eql('My Awesome Post');
 
-        data.html.should.eql('\n<h2><strong>This is my strong headline thing.<\/strong><\/h2>\n\n\n\n<p><em>Note: this article contains awesomeness<\/em><\/p>\n\n\n\n<p>This is a paragraph of text. This is a very short example post.<\/p>\n\n\n\n<!--kg-card-begin: html--><div style=\"height:43px\" aria-hidden=\"true\" class=\"wp-block-spacer\"><\/div><!--kg-card-end: html-->\n\n<figure id=\"attachment_15945\" style=\"width: 1148px\" class=\"wp-caption aligncenter kg-card-hascaption\"><img src=\"https://mysite.com/wp-content/uploads/2020/06/image.png\"><figcaption class=\"wp-caption-text\">My awesome image<\/figcaption><\/figure>\n<!--kg-card-begin: html--><div style=\"width: 1148px\"><img src=\"https://mysite.com/wp-content/uploads/2020/06/image.png\"><img src=\"https://mysite.com/wp-content/uploads/2020/06/another_image.png\"><span class=\"wp-caption-text\">srcset images<\/span><\/div><!--kg-card-end: html--><blockquote><p>Lorem ipsum<\/p><p>Dolor simet<\/p><\/blockquote>'); /* eslint-disable-line no-useless-escape */
+        data.html.should.eql('\n<h2><strong>This is my strong headline thing.</strong></h2>\n\n\n\n<p><em>Note: this article contains awesomeness</em></p>\n\n\n\n<p>This is a paragraph of text. This is a very short example post.</p>\n\n\n\n<hr>\n\n<figure class="kg-card-hascaption"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><figcaption class="wp-caption-text">My awesome image</figcaption></figure>\n<!--kg-card-begin: html--><div style="width: 1148px"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/another_image.png"><span class="wp-caption-text">srcset images</span></div><!--kg-card-end: html--><blockquote><p>Lorem ipsum</p><p>Dolor simet</p></blockquote>'); /* eslint-disable-line no-useless-escape */
 
         data.feature_image.should.eql('https://mysite.com/wp-content/uploads/2019/11/BOOP.jpg');
         data.feature_image_alt.should.eql('Boopity');
@@ -55,8 +55,7 @@ describe('Process', function () {
         post.data.should.be.an.Object();
         const data = post.data;
 
-        data.html.should.eql('<h2><strong>This is my strong headline thing.</strong></h2>\n' +
-        '<img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><!--kg-card-begin: html--><a href="https://mysite.com" class="kg-card kg-image-card" style="display: block;"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png" class="kg-image"></a><!--kg-card-end: html--><!--kg-card-begin: html--><a href="https://mysite.com/wp-content/uploads/2020/06/another-image.png" class="kg-card kg-image-card" style="display: block;"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png" class="kg-image"></a><!--kg-card-end: html-->'); /* eslint-disable-line no-useless-escape */
+        data.html.should.eql('<h2><strong>This is my strong headline thing.</strong></h2>\n<figure class="kg-card kg-image-card"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png" alt title></figure><figure class="kg-card kg-image-card"><a href="https://mysite.com"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png" alt title></a></figure><figure class="kg-card kg-image-card"><a href="https://mysite.com/wp-content/uploads/2020/06/another-image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png" alt title></a></figure>');
     });
 
     it('Can convert a single user', function () {
