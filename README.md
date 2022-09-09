@@ -12,7 +12,7 @@ Each tool has its own detailed documentation:
 - [Medium](https://github.com/TryGhost/migrate/tree/main/packages/mg-medium-export)
 - [Revue](https://github.com/TryGhost/migrate/tree/main/packages/mg-revue-api)
 - [Squarespace](https://github.com/TryGhost/migrate/tree/main/packages/mg-squarespace-xml)
-- [Substack](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack-csv)
+- [Substack](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack)
 - [Substack members](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack-members-csv)
 - [WordPress](https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-api)
 
