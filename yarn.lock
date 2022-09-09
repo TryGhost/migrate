@@ -415,18 +415,6 @@
   resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-2.2.11.tgz#d4d78a257a97e82e5f6ca73a1a608dc5e3baa326"
   integrity sha512-0/B1JiQa29JqhCb4QtnW3Oy+FL1434itZHLu5/88J0AUZIuggOQlAM6E1dpIpKXndoSZflpABy48pQnthic0Xg==
 
-"@tryghost/kg-default-cards@5.16.3":
-  version "5.16.3"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-default-cards/-/kg-default-cards-5.16.3.tgz#c674307a8ce4325aec16f2dece3ab3f49c8e5295"
-  integrity sha512-uWxaUyAlIlDYg01uZ3WNnehxYKWU7KgcWoVSdcl9V68j8wa0TDFBWA7HUJIwj6qdKNobxd4pKfCEl6y5Aeui1A==
-  dependencies:
-    "@tryghost/kg-markdown-html-renderer" "^5.1.6"
-    "@tryghost/url-utils" "^2.0.0"
-    handlebars "^4.7.6"
-    juice "^8.0.0"
-    lodash "^4.17.21"
-    luxon "^2.1.1"
-
 "@tryghost/kg-default-cards@5.16.5":
   version "5.16.5"
   resolved "https://registry.yarnpkg.com/@tryghost/kg-default-cards/-/kg-default-cards-5.16.5.tgz#67c6c3d1f50d95e078c3687aec14d399c339394d"
