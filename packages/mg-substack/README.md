@@ -25,7 +25,7 @@ or
 To run an absolute basic Substack migration, the required command is this:
 
 ```sh
-migrate substack <path to zip file>
+migrate substack <pathToZip>
 ```
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
@@ -82,7 +82,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 A more realistic command for a Substack migration looks like this:
 
 ```sh
-migrate substack <path to zip file> --url <URL to substack instance> --subscribeLink \#/portal/signup --useMetaImage true --useMetaAuthor true
+migrate substack <pathToZip> --url <susbtackURL> --subscribeLink \#/portal/signup --useMetaImage true --useMetaAuthor true
 ```
 
 
@@ -100,7 +100,7 @@ Follow the instructions for the top-level repo.
 To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
 
 ```sh
-yarn dev substack <path to csv file>
+yarn dev substack <pathToZip>
 ```
 
 
