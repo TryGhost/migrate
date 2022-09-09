@@ -381,10 +381,10 @@
   dependencies:
     "@elastic/elasticsearch" "^7.10.0"
 
-"@tryghost/errors@1.2.14", "@tryghost/errors@^1.2.1", "@tryghost/errors@^1.2.14":
-  version "1.2.14"
-  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-1.2.14.tgz#af5e0ea1450b6fac7bde94585177943f85f0e41f"
-  integrity sha512-ycXhblMBlbwXo+PfmVJZtT26/B1wu6Ae/8SBjXlzHAp6qlkho/Z5hZPKMRo0frfBt6CDGyX/abKTeVQzSkTPYA==
+"@tryghost/errors@1.2.15", "@tryghost/errors@^1.2.1", "@tryghost/errors@^1.2.14":
+  version "1.2.15"
+  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-1.2.15.tgz#0f9e63f3c8d1024fe53fd5e6eb600657f366a46f"
+  integrity sha512-3T0KA5qpxM3JU2ZI3s5w2qUztA2CG3h+G86zKxbZc9ZnOP+nzsJ2fn9nkkqVwFUvxOr76mjWMgVETdH6yXiu1g==
   dependencies:
     lodash "^4.17.21"
     utils-copy-error "^1.0.1"
@@ -478,14 +478,14 @@
     caller "^1.0.1"
     find-root "^1.1.0"
 
-"@tryghost/string@0.1.26", "@tryghost/string@^0.1.11", "@tryghost/string@^0.1.17":
+"@tryghost/string@0.1.26":
   version "0.1.26"
   resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.1.26.tgz#f9f1ce40070234a2f0b452d282405be09e78f91b"
   integrity sha512-NZQ6EdSm373Q9JJwev552vjloqmV/G4vNe8GAlyJ1w+PCOniMZbmPWiadjsaD9lt6/lwzy4JlwTAp/v4hPRCpg==
   dependencies:
     unidecode "^0.1.8"
 
-"@tryghost/string@0.1.27":
+"@tryghost/string@0.1.27", "@tryghost/string@^0.1.11", "@tryghost/string@^0.1.17":
   version "0.1.27"
   resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.1.27.tgz#c8f9b9748e2a7bea02953763865e0820223a2918"
   integrity sha512-M3vUxiV4atX10aV45VOgs8DW9X29z5gd/KhfSP3AzKeu2rEiLx3nWC4lD7xTMZocZED1QNwvGXbjMEwM9aNGmw==
@@ -3926,15 +3926,10 @@ moment@2.27.0:
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.27.0.tgz#8bff4e3e26a236220dfe3e36de756b6ebaa0105d"
   integrity sha512-al0MUK7cpIcglMv3YF13qSgdAIqxHTO7brRtaz3DlSULbqfazqkc5kEjNrLDOM7fsjshoFIihnU8snrP7zUvhQ==
 
-"moment@>= 2.9.0", moment@^2.27.0:
+"moment@>= 2.9.0", moment@^2.18.1, moment@^2.19.3, moment@^2.27.0:
   version "2.29.4"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.4.tgz#3dbe052889fe7c1b2ed966fcb3a77328964ef108"
   integrity sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==
-
-moment@^2.18.1, moment@^2.19.3:
-  version "2.29.1"
-  resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.1.tgz#b2be769fa31940be9eeea6469c075e35006fa3d3"
-  integrity sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
 
 moo@^0.5.0, moo@^0.5.1:
   version "0.5.1"

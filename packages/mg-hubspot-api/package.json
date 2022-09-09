@@ -24,7 +24,7 @@
     "sinon": "14.0.0"
   },
   "dependencies": {
-    "@tryghost/errors": "1.2.14",
+    "@tryghost/errors": "1.2.15",
     "cheerio": "0.22.0",
     "date-fns": "2.29.1",
     "html-to-text": "8.2.1",
