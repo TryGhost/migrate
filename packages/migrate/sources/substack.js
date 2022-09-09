@@ -6,7 +6,7 @@ const MgMediaScraper = require('@tryghost/mg-mediascraper');
 const MgLinkFixer = require('@tryghost/mg-linkfixer');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const makeTaskRunner = require('../lib/task-runner');
-const csvIngest = require('@tryghost/mg-substack-csv');
+const zipIngest = require('@tryghost/mg-substack');
 const {slugify} = require('@tryghost/string');
 
 const scrapeConfig = {
@@ -201,8 +201,8 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             task: async (ctx) => {
                 // 1. Read the csv file
                 try {
-                    ctx.result = await csvIngest(ctx);
-                    await ctx.fileCache.writeTmpFile(ctx.result, 'csv-export-mapped.json');
+                    ctx.result = await zipIngest(ctx);
+                    await ctx.fileCache.writeTmpFile(ctx.result, 'zip-export-mapped.json');
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
@@ -226,7 +226,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             task: async (ctx) => {
                 // 3. Pass the results through the processor to change the HTML structure
                 try {
-                    ctx.result = await csvIngest.process(ctx.result, ctx);
+                    ctx.result = await zipIngest.process(ctx.result, ctx);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'csv-export-data.json');
                 } catch (error) {
                     ctx.errors.push(error);

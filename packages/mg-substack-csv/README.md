@@ -1,5 +1,9 @@
 # Migrate Substack Posts CSV Export
 
+⛔️ This package has been superseded by [mg-substack](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack), and is no longer maintained.
+
+---
+
 Converts the Substack Posts CSV (plus optional posts directory) and generates a `zip` file you can import into a Ghost installation.
 
 

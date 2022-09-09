@@ -8,13 +8,13 @@ exports.id = 'substack';
 exports.group = 'Sources:';
 
 // The command to run and any params
-exports.flags = 'substack <pathToFile>';
+exports.flags = 'substack <pathToZip>';
 
 // Description for the top level command
-exports.desc = 'Migrate from a Substack CSV';
+exports.desc = 'Migrate from a Substack ZIP file';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Path to a csv file'];
+exports.paramsDesc = ['Path to a zip file'];
 
 // Configure all the options
 exports.setup = (sywac) => {
@@ -42,10 +42,6 @@ exports.setup = (sywac) => {
     sywac.string('-u --url', {
         defaultValue: false,
         desc: 'Provide a URL (without trailing slash) to the hosted source site, so we can scrape data'
-    });
-    sywac.string('-p --readPosts', {
-        defaultValue: null,
-        desc: 'Provide a path to a posts folder that contains HTML files (file name = post id) to read the post content'
     });
     sywac.boolean('--drafts', {
         defaultValue: true,
@@ -100,16 +96,12 @@ exports.run = async (argv) => {
     }
 
     if (argv.verbose) {
-        ui.log.info(`Migrating from export at ${argv.pathToFile}`);
-    }
-
-    if (argv.readPosts) {
-        context.postsDir = argv.readPosts;
+        ui.log.info(`Migrating from export at ${argv.pathToZip}`);
     }
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = substack.getTaskRunner(argv.pathToFile, argv);
+        let migrate = substack.getTaskRunner(argv.pathToZip, argv);
 
         // Run the migration
         await migrate.run(context);

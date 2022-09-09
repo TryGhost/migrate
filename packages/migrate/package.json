@@ -45,6 +45,7 @@
     "@tryghost/mg-medium-export": "^0.11.10",
     "@tryghost/mg-revue-api": "^0.2.23",
     "@tryghost/mg-squarespace-xml": "^0.1.21",
+    "@tryghost/mg-substack": "0.1.1",
     "@tryghost/mg-substack-csv": "^0.1.32",
     "@tryghost/mg-substack-members-csv": "^0.2.19",
     "@tryghost/mg-webscraper": "^0.7.0",
