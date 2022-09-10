@@ -28,6 +28,12 @@ To run an absolute basic Substack migration, the required command is this:
 migrate substack <pathToZip>
 ```
 
+A more realistic command for a Substack migration looks like this:
+
+```sh
+migrate substack <pathToZip> --url <susbtackURL>
+```
+
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
 - **`-V` `--verbose`** 
@@ -78,12 +84,6 @@ It's possible to pass more options, in order to achieve a better migration file 
     - bool - default: `false`      
 
 **Note**: You can combine `--postsBefore` and `--postsAfter` to migrate posts between 2 dates.
-
-A more realistic command for a Substack migration looks like this:
-
-```sh
-migrate substack <pathToZip> --url <susbtackURL> --subscribeLink \#/portal/signup --useMetaImage true --useMetaAuthor true
-```
 
 
 ## Develop
