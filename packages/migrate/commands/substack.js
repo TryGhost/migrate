@@ -52,20 +52,20 @@ exports.setup = (sywac) => {
         desc: 'Import thread posts'
     });
     sywac.boolean('--useMetaImage', {
-        defaultValue: false,
+        defaultValue: true,
         desc: 'Use "og:image" value as the feature image'
     });
     sywac.boolean('--useMetaAuthor', {
-        defaultValue: false,
+        defaultValue: true,
         desc: 'Use the author field from ld+json (useful for posts with multiple authors)'
     });
     sywac.string('--subscribeLink', {
-        defaultValue: null,
+        defaultValue: '#/portal/signup',
         desc: 'Provide a path that existing "subscribe" anchors will link to e.g. "/join-us" or "#/portal/signup" (# characters need to be escaped with a \\)'
     });
     sywac.string('--commentLink', {
-        defaultValue: null,
-        desc: 'Provide a path that existing "comment" anchors will link to e.g. "#comments" (# characters need to be escaped with a \\)'
+        defaultValue: '#ghost-comments-root',
+        desc: 'Provide a path that existing "comment" anchors will link to e.g. "#comments" or "#ghost-comments-root" (# characters need to be escaped with a \\)'
     });
     sywac.string('--postsBefore', {
         defaultValue: null,

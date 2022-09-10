@@ -57,16 +57,16 @@ It's possible to pass more options, in order to achieve a better migration file 
     - bool - default: `false`       
 - **`--subscribeLink`** 
     - Provide a path that existing `/subscribe` anchors will link to e.g. `/join-us` or `#/portal/signup` (`#` characters need to be escaped with a `\`)
-    - string - default: `null`
+    - string - default: `#/portal/signu`
 - **`--commentLink`** 
     - Provide a path that existing `/comments` anchors will link to e.g. `#ghost-comments-root` (`#` characters need to be escaped with a `\`)
-    - string - default: `null`
+    - string - default: `#ghost-comments-root`
 - **`--useMetaImage`** 
     - Use `og:image` value as the feature image
-    - bool - default: `false`  
+    - bool - default: `true`  
 - **`--useMetaAuthor`** 
     - Use the author field from `ld+json` (useful for posts with multiple authors)
-    - bool - default: `false`  
+    - bool - default: `true`  
 - **`--postsBefore`** 
     - Only migrate posts before and including a given date e.g. 'March 20 2018'
     - string - default: `null`
