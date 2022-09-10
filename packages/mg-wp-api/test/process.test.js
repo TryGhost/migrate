@@ -3,7 +3,7 @@ const testUtils = require('./utils');
 
 const processor = require('../lib/processor');
 
-describe('Process', function () {
+describe('Process WordPress REST API JSON', function () {
     it('Can convert a single post', async function () {
         const fixture = testUtils.fixtures.readSync('single-post.json');
         const users = [];
@@ -23,39 +23,12 @@ describe('Process', function () {
         data.slug.should.eql('my-awesome-post');
         data.title.should.eql('My Awesome Post');
 
-        data.html.should.eql('\n<h2><strong>This is my strong headline thing.</strong></h2>\n\n\n\n<p><em>Note: this article contains awesomeness</em></p>\n\n\n\n<p>This is a paragraph of text. This is a very short example post.</p>\n\n\n\n<hr>\n\n<figure class="kg-card-hascaption"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><figcaption class="wp-caption-text">My awesome image</figcaption></figure>\n<!--kg-card-begin: html--><div style="width: 1148px"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/another_image.png"><span class="wp-caption-text">srcset images</span></div><!--kg-card-end: html--><blockquote><p>Lorem ipsum</p><p>Dolor simet</p></blockquote>'); /* eslint-disable-line no-useless-escape */
-
         data.feature_image.should.eql('https://mysite.com/wp-content/uploads/2019/11/BOOP.jpg');
         data.feature_image_alt.should.eql('Boopity');
         data.feature_image_caption.should.eql('This is Boopity');
 
         data.tags.should.be.an.Array().with.lengthOf(6);
         data.tags[5].data.name.should.eql('#wp');
-    });
-
-    it('Can find & update smaller images', async function () {
-        const fixture = testUtils.fixtures.readSync('single-post-with-smaller-images.json');
-        const users = [];
-        const options = {tags: true};
-        const post = await processor.processPost(fixture, users, options);
-
-        post.data.should.be.an.Object();
-        const data = post.data;
-
-        data.html.should.eql('<h2><strong>This is my strong headline thing.</strong></h2>\n' +
-        '<img src="https://mysite.com/wp-content/uploads/2020/06/image.png">'); /* eslint-disable-line no-useless-escape */
-    });
-
-    it('Can find & remove links around images that link to the same image', async function () {
-        const fixture = testUtils.fixtures.readSync('single-post-with-linked-images.json');
-        const users = [];
-        const options = {tags: true};
-        const post = await processor.processPost(fixture, users, options);
-
-        post.data.should.be.an.Object();
-        const data = post.data;
-
-        data.html.should.eql('<h2><strong>This is my strong headline thing.</strong></h2>\n<figure class="kg-card kg-image-card"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png" alt title></figure><figure class="kg-card kg-image-card"><a href="https://mysite.com"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png" alt title></a></figure><figure class="kg-card kg-image-card"><a href="https://mysite.com/wp-content/uploads/2020/06/another-image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png" alt title></a></figure>');
     });
 
     it('Can convert a single user', function () {
@@ -125,8 +98,6 @@ describe('Process', function () {
         data.slug.should.eql('sample-page');
         data.title.should.eql('Sample Page');
 
-        data.html.should.eql('\n<p>This is an example page. It&#8217;s different from a blog post because it will stay in one place and will show up in your site navigation (in most themes). Most people start with an About page that introduces them to potential site visitors.</p>\n'); /* eslint-disable-line no-useless-escape */
-
         data.feature_image.should.eql('https://mysite.com/wp-content/uploads/2020/09/sample-image-scaled.jpg');
     });
 
@@ -141,8 +112,6 @@ describe('Process', function () {
         data.type.should.eql('post');
         data.slug.should.eql('my-cpt-post');
         data.title.should.eql('My CPT Post');
-
-        data.html.should.eql('<p>This is a very short example post.</p>');
 
         data.tags.should.be.an.Array().with.lengthOf(7);
         data.tags[6].data.slug.should.eql('hash-mycpt');
@@ -245,4 +214,146 @@ describe('Process', function () {
 
         data.title.should.eql('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua');
     });
+});
+
+describe('Process WordPress HTML', function () {
+    it('Can process basic HTML', async function () {
+        const html = `<p>This is an example page. It&#8217;s different from a blog post.</p><ul><li>Lorem</li><li>Ipsum</li></ul><p><strong>Dolor</strong> <a href="https://ghost.org" title="Try Ghost">sit</a> <em>amet</em>.</p>`;
+
+        const processed = await processor.processContent(html);
+
+        processed.should.eql('<p>This is an example page. It&#8217;s different from a blog post.</p><ul><li>Lorem</li><li>Ipsum</li></ul><p><strong>Dolor</strong> <a href="https://ghost.org" title="Try Ghost">sit</a> <em>amet</em>.</p>');
+    });
+
+    it('Can wrap a nested unordered list in a HTML card', async function () {
+        const html = `<ul><li>Lorem</li><li>Ipsum<ul><li>Sit Amet</li></ul></li></ul>`;
+
+        const processed = await processor.processContent(html);
+
+        processed.should.eql('<!--kg-card-begin: html--><ul><li>Lorem</li><li>Ipsum<ul><li>Sit Amet</li></ul></li></ul><!--kg-card-end: html-->');
+    });
+
+    it('Can wrap a nested ordered list in a HTML card', async function () {
+        const html = `<ol><li>Lorem</li><li>Ipsum<ol><li>Sit Amet</li></ol></li></ol>`;
+
+        const processed = await processor.processContent(html);
+
+        processed.should.eql('<!--kg-card-begin: html--><ol><li>Lorem</li><li>Ipsum<ol><li>Sit Amet</li></ol></li></ol><!--kg-card-end: html-->');
+    });
+
+    it('Can wrap an ordered list with `type` attr in a HTML card', async function () {
+        const html = `<ol type="a"><li>Lorem</li><li>Ipsum</li></ol>`;
+
+        const processed = await processor.processContent(html);
+
+        processed.should.eql('<!--kg-card-begin: html--><ol type="a"><li>Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html-->');
+    });
+
+    it('Can wrap an ordered list with `start` attr in a HTML card', async function () {
+        const html = `<ol start="2"><li>Lorem</li><li>Ipsum</li></ol>`;
+
+        const processed = await processor.processContent(html);
+
+        processed.should.eql('<!--kg-card-begin: html--><ol start="2"><li>Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html-->');
+    });
+
+    it('Can wrap an list that contains a list item with a `value` attribute n a HTML card', async function () {
+        const html = `<ul><li value="10">Lorem</li><li>Ipsum</li></ul><ol><li value="10">Lorem</li><li>Ipsum</li></ol>`;
+
+        const processed = await processor.processContent(html);
+
+        processed.should.eql('<!--kg-card-begin: html--><ul><li value="10">Lorem</li><li>Ipsum</li></ul><!--kg-card-end: html--><!--kg-card-begin: html--><ol><li value="10">Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html-->');
+    });
+
+    it('Can wrap an list in a div that contains a list item with a `value` attribute n a HTML card', async function () {
+        const html = `<div><ul><li value="10">Lorem</li><li>Ipsum</li></ul><ol><li value="10">Lorem</li><li>Ipsum</li></ol></div>`;
+
+        const processed = await processor.processContent(html);
+
+        processed.should.eql('<div><!--kg-card-begin: html--><ul><li value="10">Lorem</li><li>Ipsum</li></ul><!--kg-card-end: html--><!--kg-card-begin: html--><ol><li value="10">Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html--></div>');
+    });
+
+    it('Can leave image divs alone', async function () {
+        const html = `<div style="padding: 20px; background: #ff6600;"><img src="https://example.com/images/photo.jpg" /></div>`;
+
+        const processed = await processor.processContent(html);
+
+        processed.should.eql('<div style="padding: 20px; background: #ff6600;"><img src="https://example.com/images/photo.jpg"></div>');
+    });
+
+    it('Can wrap styled elements in a HTML card', async function () {
+        const html = `<div style="padding: 20px; background: #ff6600;"><p>Hello</p></div>`;
+
+        const processed = await processor.processContent(html);
+
+        processed.should.eql('<!--kg-card-begin: html--><div style="padding: 20px; background: #ff6600;"><p>Hello</p></div><!--kg-card-end: html-->');
+    });
+
+    it('Can find & update smaller images', async function () {
+        const html = `<img src="https://mysite.com/wp-content/uploads/2020/06/image-300x200.png" /><img src="https://mysite.com/wp-content/uploads/2020/06/another-image-1200x800.png" />`;
+
+        const processed = await processor.processContent(html);
+
+        processed.should.eql('<img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/another-image.png">');
+    });
+
+    it('Can find & remove links around images that link to the same image', async function () {
+        const html = `<a href="https://mysite.com/wp-content/uploads/2020/06/image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/image-300x200.png" /></a><a href="https://mysite.com"><img src="https://mysite.com/wp-content/uploads/2020/06/image-300x200.png" /></a><a href="https://mysite.com/wp-content/uploads/2020/06/another-image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/image-300x200.png" /></a>`;
+
+        const processed = await processor.processContent(html);
+
+        processed.should.eql('<img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><a href="https://mysite.com"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png"></a><a href="https://mysite.com/wp-content/uploads/2020/06/another-image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png"></a>');
+    });
+
+    it('Can handle a single button element', async function () {
+        const html = `<div class="wp-container-1 is-horizontal is-content-justification-center wp-block-buttons">
+        <div class="wp-block-button"><a class="wp-block-button__link" href="https://ghost.org" target="_blank" rel="noreferrer noopener">Ghost</a></div>
+        </div>`;
+        const processed = await processor.processContent(html);
+
+        processed.should.eql('<div class="kg-card kg-button-card kg-align-center"><a href="https://ghost.org" class="kg-btn kg-btn-accent">Ghost</a></div>');
+    });
+
+    it('Can handle a multiple button element', async function () {
+        const html = `<div class="wp-container-2 wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="Ghost.org">Hello</a></div><div class="wp-block-button"><a class="wp-block-button__link" href="apple.com">World</a></div></div>`;
+        const processed = await processor.processContent(html);
+
+        processed.should.eql('<div class="kg-card kg-button-card kg-align-left"><a href="Ghost.org" class="kg-btn kg-btn-accent">Hello</a></div><div class="kg-card kg-button-card kg-align-left"><a href="apple.com" class="kg-btn kg-btn-accent">World</a></div>');
+    });
+
+    // it('Can process audio files', async function () {
+    //     const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3"></audio><figcaption>My audio file</figcaption></figure>`;
+    //     const processed = await processor.processContent(html);
+
+    //     console.log(processed);
+
+    //     // processed.should.eql('');
+    // });
+
+    // it('Can process autoplay audio files', async function () {
+    //     const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay=""></audio><figcaption>My autoplay audio file</figcaption></figure>`;
+    //     const processed = await processor.processContent(html);
+
+    //     console.log(processed);
+
+    //     // processed.should.eql('');
+    // });
+
+    // it('Can process looped audio files', async function () {
+    //     const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3" loop=""></audio><figcaption>My looped audio file</figcaption></figure>`;
+    //     const processed = await processor.processContent(html);
+
+    //     console.log(processed);
+
+    //     // processed.should.eql('');
+    // });
+
+    // it('Can process looped autoplay audio files', async function () {
+    //     const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay="" loop=""></audio><figcaption>My looped autoplay audio file</figcaption></figure>`;
+    //     const processed = await processor.processContent(html);
+
+    //     console.log(processed);
+
+    //     // processed.should.eql('');
+    // });
 });

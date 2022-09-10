@@ -89,7 +89,12 @@ module.exports.processExcerpt = (html, excerptSelector) => {
     }
 };
 
-module.exports.processContent = async (html, postUrl, excerptSelector, errors, featureImageSrc = false, fileCache = false, options) => { // eslint-disable-line no-shadow
+/**
+ * The rationale behind transforming the content is to allow `mg-html-mobiledoc` to do its best job
+ * In some cases, transformation isn't needed as the parser handles it correctly.
+ * In other cases, we need to *do* change the HTML structure, and this is where that happens.
+ */
+module.exports.processContent = async (html, excerptSelector, featureImageSrc = false, fileCache = false, options = {}) => { // eslint-disable-line no-shadow
     let webScraper = new MgWebScraper(fileCache);
 
     let allowRemoteScraping = false;
@@ -253,16 +258,39 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
 
     // TODO: this should be a parser plugin
     // Wrap nested lists in HTML card
-    $html('ul li ul, ol li ol, ol li ul, ul li ol, ul [style], ol [style]').each((i, nestedList) => {
-        let $parent = $(nestedList).parentsUntil('ul, ol').parent();
-        $parent.before('<!--kg-card-begin: html-->');
-        $parent.after('<!--kg-card-end: html-->');
+    $html('ol, ul').each((i, list) => {
+        let $parent = ($(list).parents('ul, ol').last().length) ? $(list).parents('ul, ol').last() : $(list);
+
+        let hasStyle = ($($parent).attr('style') || $($parent).find('[style]').length) ? true : false;
+        let hasType = ($($parent).attr('type') || $($parent).find('[type]').length) ? true : false;
+        let hasValue = ($($parent).attr('value') || $($parent).find('[value]').length) ? true : false;
+        let hasStart = ($($parent).attr('start') || $($parent).find('[start]').length) ? true : false;
+        let hasOLList = ($($parent).find('ol').length) ? true : false;
+        let hasULList = ($($parent).find('ul').length) ? true : false;
+
+        if (hasStyle || hasType || hasValue || hasStart || hasOLList || hasULList) {
+            // If parent is not wrapped ina  HTML card, wrap it in one
+            if ($parent.get(0)?.prev?.data !== 'kg-card-begin: html') {
+                $($parent).before('<!--kg-card-begin: html-->');
+                $($parent).after('<!--kg-card-end: html-->');
+            }
+        }
     });
 
-    // Wrap lists with offsets in HTML card so the offset doesn't get lost on conversion
-    $html('ol[start]').each((i, ol) => {
-        $(ol).before('<!--kg-card-begin: html-->');
-        $(ol).after('<!--kg-card-end: html-->');
+    // Handle button elements
+    $html('.wp-block-buttons').each((i, el) => {
+        let buttons = [];
+        let isCentered = $(el).hasClass('is-content-justification-center');
+        let positionClass = (isCentered) ? 'kg-align-center' : 'kg-align-left';
+
+        $(el).find('.wp-block-button__link').each((ii, button) => {
+            let buttonHref = $(button).attr('href');
+            let buttonText = $(button).text();
+
+            buttons.push(`<div class="kg-card kg-button-card ${positionClass}"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+        });
+
+        $(el).replaceWith(buttons.join(''));
     });
 
     // Replace spacers with horizontal rules
@@ -274,63 +302,26 @@ module.exports.processContent = async (html, postUrl, excerptSelector, errors, f
     $html('div[style], p[style], a[style], span[style]').each((i, styled) => {
         let imgChildren = $(styled).children('img:not([data-gif])');
 
-        // If this is a simple element with a single image
-        if ($(imgChildren).length === 1 && $(imgChildren.get(0)).attr('src')) {
-            styled.tagName = 'figure';
-            let img = $(imgChildren.get(0));
-            let caption = $(styled).find('.wp-caption-text').get(0);
-
-            $(styled).removeAttr('id');
-            $(styled).removeAttr('style');
-            $(styled).removeClass('wp-caption');
-            $(styled).removeClass('aligncenter');
-
-            // This is a full width image
-            if (img.hasClass('full')) {
-                $(styled).addClass('kg-width-wide');
-            }
-
-            if (caption) {
-                $(styled).addClass('kg-card-hascaption');
-                caption.tagName = 'figcaption';
-            }
-        } else {
-            // To prevent visual issues, we need to delete `srcset` (we don't scrape those images anyway),
-            // `sizes`, and dimensions (for `srcset` images).
-            if ($(imgChildren).length > 0) {
-                $(imgChildren).each((k, img) => {
-                    if ($(img).attr('srcset')) {
-                        $(img).removeAttr('width');
-                        $(img).removeAttr('height');
-                        $(img).removeAttr('srcset');
-                        $(img).removeAttr('sizes');
-                    }
-                });
-            }
-
-            // Ignore the styles, when only the font-weight is set to 400
-            if ($(styled).attr('style') !== 'font-weight: 400;') {
-                $(styled).before('<!--kg-card-begin: html-->');
-                $(styled).after('<!--kg-card-end: html-->');
-            }
+        if ($(imgChildren).length === 0) {
+            $(styled).before('<!--kg-card-begin: html-->');
+            $(styled).after('<!--kg-card-end: html-->');
         }
     });
 
     // Remove links around images that link to the same file
     $html('a > img').each((l, img) => {
+        // <img> src
         let $image = $(img);
         let imageSrc = $(img).attr('src');
-        let newSrc = largerSrc(imageSrc);
+        let largeSrc = largerSrc(imageSrc);
+
+        // <a> href
         let $link = $($image).parent('a');
         let linkHref = $($link).attr('href');
+        let largeHref = largerSrc(linkHref);
 
-        let imageAlt = $($image).attr('alt') ?? '';
-        let imageTitle = $($image).attr('title') ?? '';
-
-        if (newSrc === linkHref) {
-            $($link).replaceWith(`<figure class="kg-card kg-image-card"><img src="${newSrc}" alt="${imageAlt}" title="${imageTitle}" /></figure>`);
-        } else {
-            $($link).replaceWith(`<figure class="kg-card kg-image-card"><a href="${linkHref}"><img src="${newSrc}" alt="${imageAlt}" title="${imageTitle}" /></a></figure>`);
+        if (largeSrc === largeHref) {
+            $($link).replaceWith($($link).html());
         }
     });
 
@@ -525,7 +516,7 @@ module.exports.processPost = async (wpPost, users, options = {}, errors, fileCac
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = await this.processContent(post.data.html, post.url, excerptSelector, errors, post.data.feature_image, fileCache, options);
+    post.data.html = await this.processContent(post.data.html, excerptSelector, post.data.feature_image, fileCache, options);
 
     return post;
 };
