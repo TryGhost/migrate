@@ -52,25 +52,36 @@ const processContent = (post, siteUrl, options) => {
         decodeEntities: false
     });
 
+    // Empty text elements are commonplace and are not needed
+    $html('p').each((i, el) => {
+        let content = $(el).html().trim();
+
+        if (content.length === 0) {
+            $(el).remove();
+        }
+    });
+
     // We use the `'og:image` as the feature image. If the first item in the content is an image and is the same as the `og:image`, remove it
     if (responseData?.og_image) {
         let firstElement = $html('body *').first();
 
-        if (firstElement.tagName === 'img' || $(firstElement).find('img').length) {
-            let theElementItself = (firstElement.tagName === 'img') ? firstElement : $(firstElement).find('img');
-
+        if (firstElement.tagName === 'img' || $(firstElement).get(0).name === 'img' || $(firstElement).find('img').length) {
+            let theElementItself = (firstElement.tagName === 'img' || $(firstElement).get(0).name === 'img') ? firstElement : $(firstElement).find('img');
             let firstImgSrc = $(theElementItself).attr('src');
-            let unsizedFirstSrc = getUnsizedImageName(firstImgSrc);
 
-            let ogImgSrc = responseData.og_image;
-            let unsizedOgSrc = getUnsizedImageName(ogImgSrc);
+            if (firstImgSrc.length > 0) {
+                let unsizedFirstSrc = getUnsizedImageName(firstImgSrc);
 
-            if (unsizedFirstSrc === unsizedOgSrc) {
-                if ($(firstElement).find('figcaption').length) {
-                    post.data.feature_image_caption = $(firstElement).find('figcaption').html();
+                let ogImgSrc = responseData.og_image;
+                let unsizedOgSrc = getUnsizedImageName(ogImgSrc);
+
+                if (unsizedFirstSrc === unsizedOgSrc) {
+                    if ($(firstElement).find('figcaption').length) {
+                        post.data.feature_image_caption = $(firstElement).find('figcaption').html();
+                    }
+
+                    $(firstElement).remove();
                 }
-
-                $(firstElement).remove();
             }
         }
     }

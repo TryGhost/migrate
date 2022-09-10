@@ -524,4 +524,24 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         processed.data.html.should.containEql('<audio src="https://example.com/files/audio.mp3" preload="metadata"></audio>');
         processed.data.html.should.containEql('<div class="kg-audio-title">My Podcast Episode #1</div>');
     });
+
+    it('Can remove the first image if it is the same as `og:image`', async function () {
+        const post = {
+            data: {
+                html: `<p></p><img src="https://example.com/content/file_1200x800.jpg" /><p>My content</p>`,
+                title: 'My Image Post'
+            },
+            metaData: {
+                responseData: {
+                    og_image: 'https://example.com/content/file_1024x768.jpg'
+                }
+            }
+        };
+        const url = 'https://example.com';
+        const options = {};
+
+        const processed = await process.processContent(post, url, options);
+
+        processed.data.html.should.eql('<p>My content</p>');
+    });
 });
