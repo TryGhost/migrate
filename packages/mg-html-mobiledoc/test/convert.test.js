@@ -4,7 +4,7 @@ require('./utils');
 const {convertPost} = require('../lib/convertPost');
 
 describe('Convert', function () {
-    it('can convert to a HTML card', function () {
+    it('Can convert to a HTML card', function () {
         let post = {
             html: '<h2>Good stuff here</h2>'
         };
@@ -30,7 +30,7 @@ describe('Convert', function () {
         card[1].html.should.eql('<h2>Good stuff here</h2>');
     });
 
-    it('covert to Mobiledoc section', function () {
+    it('Covert to Mobiledoc section', function () {
         let post = {
             html: '<h2>Good stuff here</h2>'
         };
@@ -50,7 +50,7 @@ describe('Convert', function () {
         mobiledoc.sections.should.eql([[1, 'h2', [[0, [], 0, 'Good stuff here']]]]);
     });
 
-    it('can catch an error', function () {
+    it('Can catch an error', function () {
         // `wrong_key` should be `html`, and will throw an error
         let post = {
             wrong_key: '<h2>Good stuff here</h2>'
@@ -66,7 +66,7 @@ describe('Convert', function () {
         }
     });
 
-    it('covert full content to Mobiledoc', function () {
+    it('Covert full content to Mobiledoc', function () {
         let post = {
             html: '\
                 <h2>Good stuff here</h2>\
@@ -93,7 +93,7 @@ describe('Convert', function () {
         mobiledoc.sections.should.eql([[1,'h2',[[0,[],0,'Good stuff here']]],[10,0],[1,'p',[[0,[],0,'Hello '],[0,[0],1,'world']]],[10,1],[1,'p',[[0,[],0,'Link to '],[0,[1],1,'Example']]],[1,'p',[[0,[],0,'Hello '],[1,[],0,0],[0,[],0,'world']]]]);
     });
 
-    it('correctly transforms relative Portal links that start with #', function () {
+    it('Correctly transforms relative Portal links that start with #', function () {
         let post = {
             html: '\
                 <div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>\
@@ -154,6 +154,42 @@ describe('Convert', function () {
         mobiledoc.version.should.eql('0.3.1');
         mobiledoc.atoms.should.eql([]);
         mobiledoc.cards.should.eql([['image',{src: 'https://example.com/images/photo.jpg', alt: 'My alt text', href: 'https://example.com/', title: 'My title'}]]);
+        mobiledoc.markups.should.eql([]);
+        mobiledoc.sections.should.eql([[10,0]]);
+    });
+
+    it('Correctly converts a WordPress flavoured image', function () {
+        let post = {
+            html: '<figure class="wp-block-image alignwide size-large"><img loading="lazy" width="1024" height="683" src="https://example.com/wp-content/uploads/2021/12/photo-1024x683.jpg" alt="" class="wp-image-9438"><figcaption>My awesome page</figcaption></figure>'
+        };
+        const htmlCard = false;
+
+        convertPost(post, htmlCard);
+
+        const mobiledoc = JSON.parse(post.mobiledoc);
+
+        mobiledoc.should.be.an.Object().with.properties('version', 'markups', 'atoms', 'cards', 'sections');
+        mobiledoc.version.should.eql('0.3.1');
+        mobiledoc.atoms.should.eql([]);
+        mobiledoc.cards.should.eql([['image',{src: 'https://example.com/wp-content/uploads/2021/12/photo-1024x683.jpg', width: 1024, height: 683, caption: 'My awesome page'}]]);
+        mobiledoc.markups.should.eql([]);
+        mobiledoc.sections.should.eql([[10,0]]);
+    });
+
+    it('Correctly converts a WordPress flavoured linked image', function () {
+        let post = {
+            html: '<figure class="wp-block-image alignwide size-large"><a href="https://example.com/2021/12/13/compare/"><img loading="lazy" width="1024" height="683" src="https://example.com/wp-content/uploads/2021/12/photo-1024x683.jpg" alt="" class="wp-image-9438"></a><figcaption>My awesome page</figcaption></figure>'
+        };
+        const htmlCard = false;
+
+        convertPost(post, htmlCard);
+
+        const mobiledoc = JSON.parse(post.mobiledoc);
+
+        mobiledoc.should.be.an.Object().with.properties('version', 'markups', 'atoms', 'cards', 'sections');
+        mobiledoc.version.should.eql('0.3.1');
+        mobiledoc.atoms.should.eql([]);
+        mobiledoc.cards.should.eql([['image',{src: 'https://example.com/wp-content/uploads/2021/12/photo-1024x683.jpg', width: 1024, height: 683, href: 'https://example.com/2021/12/13/compare/', caption: 'My awesome page'}]]);
         mobiledoc.markups.should.eql([]);
         mobiledoc.sections.should.eql([[10,0]]);
     });
