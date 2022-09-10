@@ -201,7 +201,7 @@ module.exports.getTaskRunner = (pathToFile, options) => {
             task: async (ctx) => {
                 // 1. Read the csv file
                 try {
-                    ctx.result = await zipIngest(ctx);
+                    ctx.result = await zipIngest.ingest(ctx);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'zip-export-mapped.json');
                 } catch (error) {
                     ctx.errors.push(error);

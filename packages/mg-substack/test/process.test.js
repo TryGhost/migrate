@@ -28,7 +28,7 @@ describe('Process Substack ZIP file', function () {
     });
 
     it('Reads ZIP and generates Ghost JSON', async function () {
-        const processed = await processZip({
+        const processed = await processZip.ingest({
             options: {
                 pathToZip: inputZipPath,
                 drafts: true,
