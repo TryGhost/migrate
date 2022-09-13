@@ -334,7 +334,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await process.processContent(post, url, options);
 
-        processed.data.html.should.eql(`<p>Lorem ipsum</p><div class="kg-card kg-button-card kg-align-center"><a href="__GHOST_URL__/#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>`);
+        processed.data.html.should.eql(`<p>Lorem ipsum</p><div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>`);
     });
 
     it('Can convert an image wrapped with a link', async function () {

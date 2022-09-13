@@ -267,7 +267,7 @@ const processContent = (post, siteUrl, options) => {
 
             if (hasForm.length) {
                 const buttonText = $(div).find('form input[type="submit"]').attr('value');
-                $(div).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="__GHOST_URL__/${options.subscribeLink}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+                $(div).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
             }
         });
     }
