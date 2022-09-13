@@ -22,23 +22,23 @@ or
 
 ## Usage
 
-To run an absolute basic Substack migration, the required command is this:
+To run basic Substack migration, the required command is this:
 
 ```sh
-migrate substack <pathToZip>
+migrate substack <pathToZip> <susbtackURL>
 ```
 
-A more realistic command for a Substack migration looks like this:
+A more complex command for a Substack migration looks like this:
 
 ```sh
-migrate substack <pathToZip> --url <susbtackURL>
+migrate substack <pathToZip> <susbtackURL> --email 'person@example.com' --drafts false
 ```
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
 - **`-V` `--verbose`** 
     - Show verbose output
-    - bool - default: `false`        
+    - bool - default: `false`
 - **`--zip`** 
     - Create a zip file
     - bool - default: `true`            
@@ -51,16 +51,13 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Media files larger than this size (defined in MB [i.e. `5`]) will be flagged as oversize     
 - **`-e` `--email`** 
     - Provide an email domain for users e.g. `person@example.com` (Is ignored if `--useMetaAuthor` is provided)
-    - bool/string - default: `false`            
-- **`-u` `--url`** 
-    - Provide a URL (without trailing slash) to the hosted source site, so we can scrape data e.g. `https://example.substack.com`
-    - string - default:`https://ghost.io`          
+    - bool/string - default: `false`
 - **`--drafts`** 
     - Import draft posts
-    - bool - default: `true`       
+    - bool - default: `true`
 - **`--threads`** 
     - Import thread posts
-    - bool - default: `false`       
+    - bool - default: `false`
 - **`--subscribeLink`** 
     - Provide a path that existing `/subscribe` anchors will link to e.g. `/join-us` or `#/portal/signup` (`#` characters need to be escaped with a `\`)
     - string - default: `#/portal/signup`

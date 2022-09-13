@@ -8,13 +8,16 @@ exports.id = 'substack';
 exports.group = 'Sources:';
 
 // The command to run and any params
-exports.flags = 'substack <pathToZip>';
+exports.flags = 'substack <pathToZip> <url>';
 
 // Description for the top level command
 exports.desc = 'Migrate from a Substack ZIP file';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Path to a zip file'];
+exports.paramsDesc = [
+    'Path to a zip file',
+    'Provide a URL (without trailing slash) to the hosted source site, so we can scrape data'
+];
 
 // Configure all the options
 exports.setup = (sywac) => {
@@ -38,10 +41,6 @@ exports.setup = (sywac) => {
     sywac.string('-e --email', {
         defaultValue: null,
         desc: 'Provide an email for users e.g. john@mycompany.com to create a general user w/ slug `john` and provided email'
-    });
-    sywac.string('-u --url', {
-        defaultValue: false,
-        desc: 'Provide a URL (without trailing slash) to the hosted source site, so we can scrape data'
     });
     sywac.boolean('--drafts', {
         defaultValue: true,
