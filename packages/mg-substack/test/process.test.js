@@ -260,7 +260,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
     it('Can transform subscribe links with custom defined URL', async function () {
         const post = {
             data: {
-                html: `<p class="button-wrapper" data-attrs='{"url":"https://example.com/subscribe?","text":"Sign up now","class":null}'><a class="button primary" href="https://example.com/subscribe?"><span>Sign up now</span></a></p>`
+                html: `<p class="button-wrapper" data-attrs='{"url":"https://example.com/subscribe?","text":"Sign up now","class":null}'><a class="button primary" href="https://example.com/subscribe?"><span>Sign up now</span></a></p><p><a href="https://example.com/subscribe">Subscribe</a></p>`
             }
         };
         const url = 'https://example.com';
@@ -270,7 +270,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await process.processContent(post, url, options);
 
-        processed.data.html.should.eql(`<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div>`);
+        processed.data.html.should.eql(`<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div><p><a href="#/portal/signup">Subscribe</a></p>`);
     });
 
     it('Can transform comment links with custom defined URL', async function () {
