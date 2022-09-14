@@ -273,7 +273,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         processed.data.html.should.eql(`<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div><p><a href="#/portal/signup">Subscribe</a></p>`);
     });
 
-    it('Can transform comment links with custom defined URL', async function () {
+    it('Can transform comment buttons with custom defined URL', async function () {
         const post = {
             data: {
                 html: `<p class="button-wrapper" data-attrs="{&quot;url&quot;:&quot;https://example.com/p/my-post/comments&quot;,&quot;text&quot;:&quot;Leave a comment&quot;,&quot;action&quot;:null,&quot;class&quot;:null}"><a class="button primary" href="https://example.com/p/my-post/comments"><span>Leave a comment</span></a></p>`
@@ -281,12 +281,29 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         };
         const url = 'https://example.com';
         const options = {
+            comments: true,
             commentLink: '#post-comments'
         };
 
         const processed = await process.processContent(post, url, options);
 
         processed.data.html.should.eql(`<div class="kg-card kg-button-card kg-align-center"><a href="#post-comments" class="kg-btn kg-btn-accent">Leave a comment</a></div>`);
+    });
+
+    it('Can remove transform comment buttons', async function () {
+        const post = {
+            data: {
+                html: `<p>Hello</p><p class="button-wrapper" data-attrs="{&quot;url&quot;:&quot;https://example.com/p/my-post/comments&quot;,&quot;text&quot;:&quot;Leave a comment&quot;,&quot;action&quot;:null,&quot;class&quot;:null}"><a class="button primary" href="https://example.com/p/my-post/comments"><span>Leave a comment</span></a></p><p>World</p>`
+            }
+        };
+        const url = 'https://example.com';
+        const options = {
+            comments: false
+        };
+
+        const processed = await process.processContent(post, url, options);
+
+        processed.data.html.should.eql(`<p>Hello</p><p>World</p>`);
     });
 
     it('Will not change button element hrefs that are not subscribe buttons', async function () {

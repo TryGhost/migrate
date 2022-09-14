@@ -62,6 +62,10 @@ exports.setup = (sywac) => {
         defaultValue: '#/portal/signup',
         desc: 'Provide a path that existing "subscribe" anchors will link to e.g. "/join-us" or "#/portal/signup" (# characters need to be escaped with a \\)'
     });
+    sywac.boolean('--comments', {
+        defaultValue: true,
+        desc: 'Keep comment buttons'
+    });
     sywac.string('--commentLink', {
         defaultValue: '#ghost-comments-root',
         desc: 'Provide a path that existing "comment" anchors will link to e.g. "#comments" or "#ghost-comments-root" (# characters need to be escaped with a \\)'

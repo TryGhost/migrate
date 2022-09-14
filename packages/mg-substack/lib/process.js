@@ -203,6 +203,11 @@ const processContent = (post, siteUrl, options) => {
 
             if (buttonHref.endsWith('/comments')) {
                 buttonHref = options.commentLink || '#ghost-comments-root';
+
+                if (!options.comments) {
+                    $(button).remove();
+                    return;
+                }
             }
 
             $(button).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);

@@ -61,6 +61,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--subscribeLink`** 
     - Provide a path that existing `/subscribe` anchors will link to e.g. `/join-us` or `#/portal/signup` (`#` characters need to be escaped with a `\`)
     - string - default: `#/portal/signup`
+- **`--comments`** 
+    - Keep comment buttons
+    - bool - default: `true`
 - **`--commentLink`** 
     - Provide a path that existing `/comments` anchors will link to e.g. `#ghost-comments-root` (`#` characters need to be escaped with a `\`)
     - string - default: `#ghost-comments-root`
