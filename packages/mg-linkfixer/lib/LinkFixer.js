@@ -59,6 +59,10 @@ class LinkFixer {
         let links = $('a').map(async (i, el) => {
             let href = $(el).attr('href');
 
+            if (!href) {
+                return;
+            }
+
             // Remove protocol, matching the protocol links stored in the linkMap
             let noProtocolHref = this.removeProtocol(href);
 
