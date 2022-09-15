@@ -10,6 +10,10 @@ const stripHtml = (html) => {
 };
 
 const largerSrc = (imageSrc) => {
+    if (!imageSrc) {
+        return imageSrc;
+    }
+
     let newSrc = imageSrc;
 
     const fileSizeRegExp = new RegExp('-([0-9]+x[0-9]+).([a-zA-Z]{2,4})$');
