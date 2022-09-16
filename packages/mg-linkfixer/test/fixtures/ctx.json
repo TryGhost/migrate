@@ -305,7 +305,32 @@
           "slug": "query-params",
           "title": "Query Params",
           "comment_id": 20,
-          "html": "\n<p><a href=\"https://example.com/sample-page/?hello=world\">Sample page with query params</a><a href=\"https://example.com/sample-page/child-sample-page/?lorem=ipsum\">Child sample page with query params</a><a href=\"https://exampleurl.com/sample-page/?let=amos\">External sample page with query params</a><a href=\"https://exampleurl.com/sample-page/child-sample-page/?dolor=simet\">External child sample page with query params</a></p>\n",
+          "html": "\n<p><a href=\"https://example.com/sample-page/?hello=world\">Sample page with query params</a><a href=\"https://example.com/sample-page/child-sample-page/?lorem=ipsum\">Child sample page with query params</a><a href=\"https://exampleurl.com/sample-page/?let=amos\">External sample page with query params</a><a href=\"https://exampleurl.com/sample-page/child-sample-page/?dolor=simet\">External child sample page with query params</a></p><p><a href=\"https://example.com/p/substack-url/?s=w\">Substack-like URL</a></p>\n",
+          "type": "page",
+          "status": "published",
+          "created_at": "2021-03-10T09:48:32",
+          "published_at": "2021-03-10T09:48:32",
+          "updated_at": "2021-03-10T09:48:32",
+          "author": {
+            "url": "https://example.com/author/theauthor/",
+            "data": {
+              "id": 1,
+              "slug": "theauthor",
+              "name": "The Author",
+              "bio": "",
+              "profile_image": "",
+              "website": "https://example.com"
+            }
+          }
+        }
+      },
+      {
+        "url": "https://example.com/p/substack-url/",
+        "data": {
+          "slug": "substack-url",
+          "title": "Query Params",
+          "comment_id": 21,
+          "html": "\n<p>Hey there</p>\n",
           "type": "page",
           "status": "published",
           "created_at": "2021-03-10T09:48:32",
