@@ -35,7 +35,7 @@ describe('LinkFixer', function () {
     it('Fixes links to posts', async function () {
         const posts = await getPosts();
 
-        posts.should.be.an.Array().with.lengthOf(5);
+        posts.should.be.an.Array().with.lengthOf(6);
 
         posts[3].html.should.not.containEql('<a href="https://example.com/2020/06/27/lorem-ipsum/">Consectetur</a>');
         posts[3].html.should.containEql('<a href="/lorem-ipsum/">Consectetur</a>');
@@ -99,5 +99,21 @@ describe('LinkFixer', function () {
 
         posts[0].html.should.containEql('<a href="https://example.com/tag/delivery/">soluta</a>');
         posts[0].html.should.not.containEql('<a href="/tag/delivery/">soluta</a>');
+    });
+
+    it('Fixes links internal that contain query parameters', async function () {
+        const posts = await getPosts();
+
+        posts[5].html.should.containEql('<a href="/sample-page/">Sample page with query params</a>');
+        posts[5].html.should.not.containEql('<a href="https://example.com/sample-page/?hello=world">Sample page with query params</a>');
+
+        posts[5].html.should.containEql('<a href="/child-sample-page/">Child sample page with query params</a>');
+        posts[5].html.should.not.containEql('<a href="https://example.com/sample-page/child-sample-page/?lorem=ipsum">Child sample page with query params</a>');
+
+        posts[5].html.should.containEql('<a href="https://exampleurl.com/sample-page/?let=amos">External sample page with query params</a>');
+        posts[5].html.should.not.containEql('<a href="/sample-page/">External sample page with query params</a>');
+
+        posts[5].html.should.containEql('<a href="https://exampleurl.com/sample-page/child-sample-page/?dolor=simet">External child sample page with query params</a></p>');
+        posts[5].html.should.not.containEql('<a href="/child-sample-page/">External child sample page with query params</a></p>');
     });
 });

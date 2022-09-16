@@ -1,3 +1,4 @@
+const path = require('path');
 const _ = require('lodash');
 const cheerio = require('cheerio');
 
@@ -11,8 +12,29 @@ class LinkFixer {
         this.linkMap = {};
     }
 
-    removeProtocol(url) {
-        return url.replace(/^https?:\/\//, '');
+    /**
+     * Clean the URL
+     * @param {String} url The given URL
+     * @returns {String} A cleaned URL with no protocol or parameters
+     *
+     * @example
+     * cleanURL('https://exampleurl.com/sample-page/child-sample-page/?dolor=simet');
+     * => exampleurl.com/sample-page/child-sample-page/
+     *
+     * @example
+     * cleanURL('https://exampleurl.com/sample-page/');
+     * => exampleurl.com/sample-page/
+     */
+    cleanURL(url) {
+        try {
+            const urlParts = new URL(url);
+            const cleanedURL = path.join(urlParts.host, urlParts.pathname);
+
+            return cleanedURL;
+        } catch (error) {
+            // If it's an invalid URL, return the original string
+            return url;
+        }
     }
 
     buildMap(ctx) {
@@ -48,8 +70,8 @@ class LinkFixer {
 
         // Remove the protocol, ensuring we treat `http` and `https` sites in the same way
         Object.keys(this.linkMap).forEach((key) => {
-            let noProtocolKey = this.removeProtocol(key);
-            this.linkMap[noProtocolKey] = this.linkMap[key];
+            let updatedURL = this.cleanURL(key);
+            this.linkMap[updatedURL] = this.linkMap[key];
         });
     }
 
@@ -63,11 +85,11 @@ class LinkFixer {
                 return;
             }
 
-            // Remove protocol, matching the protocol links stored in the linkMap
-            let noProtocolHref = this.removeProtocol(href);
+            // Clean the URL, matching the links stored in the linkMap
+            let updatedURL = this.cleanURL(href);
 
-            if (this.linkMap[noProtocolHref]) {
-                $(el).attr('href', this.linkMap[noProtocolHref]);
+            if (this.linkMap[updatedURL]) {
+                $(el).attr('href', this.linkMap[updatedURL]);
             }
         }).get();
 
