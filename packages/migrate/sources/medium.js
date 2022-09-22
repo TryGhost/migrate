@@ -116,6 +116,13 @@ module.exports.getTaskRunner = (pathToZip, options) => {
                 ctx.mediumScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
                 ctx.linkFixer = new MgLinkFixer();
 
+                ctx.allowScrape = {
+                    all: ctx.options.scrape.includes('all'),
+                    images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),
+                    media: ctx.options.scrape.includes('media') || ctx.options.scrape.includes('all'),
+                    web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
+                };
+
                 task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
             }
         },
@@ -134,12 +141,12 @@ module.exports.getTaskRunner = (pathToZip, options) => {
         },
         {
             title: 'Fetch missing data via WebScraper',
+            skip: ctx => !ctx.allowScrape.web,
             task: (ctx) => {
                 // 2. Pass the results through the web scraper to get any missing data
                 let tasks = ctx.mediumScraper.hydrate(ctx); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
-            },
-            skip: () => ['all', 'web'].indexOf(options.scrape) < 0
+            }
         },
         {
             title: 'Build Link Map',
@@ -167,21 +174,21 @@ module.exports.getTaskRunner = (pathToZip, options) => {
         },
         {
             title: 'Fetch images via ImageScraper',
+            skip: ctx => !ctx.allowScrape.images,
             task: async (ctx) => {
                 // 5. Pass the JSON file through the image scraper
                 let tasks = ctx.imageScraper.fetch(ctx); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
-            },
-            skip: () => ['all', 'img'].indexOf(options.scrape) < 0
+            }
         },
         {
             title: 'Fetch media via MediaScraper',
+            skip: ctx => !ctx.allowScrape.media,
             task: async (ctx) => {
                 // 6. Pass the JSON file through the file scraper
                 let tasks = ctx.mediaScraper.fetch(ctx);
                 return makeTaskRunner(tasks, options);
-            },
-            skip: () => ['all', 'media'].indexOf(options.scrape) < 0
+            }
         },
         {
             title: 'Update links in content via LinkFixer',
