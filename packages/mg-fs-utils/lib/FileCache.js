@@ -48,6 +48,8 @@ class FileCache {
      *        - image files
      *      - /content/media
      *        - non-image media files like videos or audio files
+     *      - /content/files
+     *        - non-image and non-media files like pdfs
      */
     get cacheDir() {
         if (!this._cacheDir) {
@@ -58,6 +60,7 @@ class FileCache {
             if (this.options && this.options.contentDir) {
                 fs.mkdirpSync(path.join(this.imageDir));
                 fs.mkdirpSync(path.join(this.mediaDir));
+                fs.mkdirpSync(path.join(this.filesDir));
             } else {
                 fs.mkdirpSync(path.join(this.zipDir));
             }
@@ -91,6 +94,14 @@ class FileCache {
 
     get mediaDir() {
         return path.join(this.zipDir, this.mediaPath);
+    }
+
+    get filesPath() {
+        return path.join('content', 'files');
+    }
+
+    get filesDir() {
+        return path.join(this.zipDir, this.filesPath);
     }
 
     get defaultCacheFileName() {
@@ -167,6 +178,9 @@ class FileCache {
         } else if (type === 'media') {
             typeDir = this.mediaDir;
             typePath = this.mediaPath;
+        } else {
+            typeDir = this.filesDir;
+            typePath = this.filesPath;
         }
 
         // CASE: Some image URLs are very long and can cause various issues with storage.
@@ -230,6 +244,18 @@ class FileCache {
         let filepath = path.join(this.tmpDir, fileNameWithExt);
 
         return await fs.readJson(filepath);
+    }
+
+    /**
+     * Read a JSON file containing temporary data
+     *
+     * @param {String} filename - name of file to read
+     */
+    hasTmpJSONFile(filename) {
+        let fileNameWithExt = (filename.endsWith('.json')) ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
+        let filepath = path.join(this.tmpDir, fileNameWithExt);
+
+        return fs.existsSync(filepath);
     }
 
     /**
