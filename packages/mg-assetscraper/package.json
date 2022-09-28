@@ -7,8 +7,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "echo \"Implement me!\"",
-    "test_old": "NODE_ENV=testing mocha './test/**/*.test.js'",
-    "test": "NODE_ENV=testing jest --verbose",
+    "test": "NODE_ENV=testing jest",
     "lint": "eslint . --ext .js --cache",
     "posttest": "yarn lint",
     "benchmarks": "node test/benchmarks.js"
