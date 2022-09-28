@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@tryghost/errors": "1.2.15",
-    "@tryghost/kg-default-cards": "5.18.2",
+    "@tryghost/kg-default-cards": "5.18.3",
     "@tryghost/mg-fs-utils": "^0.9.2",
     "@tryghost/string": "0.2.1",
     "date-fns": "2.29.3",
