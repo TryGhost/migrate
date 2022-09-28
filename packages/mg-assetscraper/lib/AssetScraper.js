@@ -15,13 +15,19 @@ const knownMediaTypes = ['video/mp4', 'video/webm', 'video/ogg', 'audio/mpeg', '
 const knownFileTypes = ['application/pdf', 'application/json', 'application/ld+json', 'application/vnd.oasis.opendocument.presentation', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.text', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/rtf', 'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/xml', 'application/atom+xml'];
 const knownTypes = [...knownImageTypes, ...knownMediaTypes, ...knownFileTypes];
 
-const ScrapeError = ({src, code, statusCode, originalError = {}}) => {
+const ScrapeError = ({src, code, statusCode, originalError = {}, property = null, context = null}) => {
     let error = new errors.InternalServerError({message: `Unable to scrape URI ${src}`});
 
     error.errorType = 'ScrapeError';
-    error.scraper = 'Image';
+    error.scraper = 'Asset';
     error.src = src;
     error.code = code;
+    if (property) {
+        error.property = property;
+    }
+    if (context) {
+        error.context = context;
+    }
     if (statusCode) {
         error.statusCode = statusCode;
     }
@@ -65,6 +71,9 @@ class ImageScraper {
 
         // Assets found in `this._initialValue` will be stored here
         this._foundAssets = [];
+
+        // Assets that are too big will be pushed to this
+        this._oversizedAssetErrors = [];
 
         // Like `this._initialValue`, but will be updated with locally-stored asset paths
         this._fixedValues = null;
@@ -233,6 +242,14 @@ class ImageScraper {
      */
     finalObjectValue() {
         return JSON.parse(this._fixedValues);
+    }
+
+    /**
+     * Return the list of oversizes asset objects
+     * @returns {Array}
+     */
+    oversizedAssets() {
+        return this._oversizedAssetErrors;
     }
 
     /**
@@ -694,6 +711,8 @@ class ImageScraper {
     isWithinSizeLimit(obj) {
         if (this.defaultOptions.sizeLimit) {
             if (obj.head.contentLength > this.defaultOptions.sizeLimit) {
+                let sizeError = ScrapeError({src: obj.newRemote, code: 'Payload Too Large', statusCode: 413, property: obj, context: `File size is ${obj.head.contentLength} - Maximum specified is ${this.defaultOptions.sizeLimit}`});
+                this._oversizedAssetErrors.push(sizeError);
                 return false;
             }
         }
@@ -942,6 +961,8 @@ class ImageScraper {
                 } else {
                     ctx = update;
                 }
+
+                ctx.errors.push(...this.oversizedAssets());
             }
         });
 

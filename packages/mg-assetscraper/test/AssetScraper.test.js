@@ -436,6 +436,8 @@ describe('AssetScraper', function () {
         (sizeAllowed1).should.be.true();
         (sizeAllowed2).should.be.true();
         (sizeAllowed3).should.be.true();
+
+        assetScraper.oversizedAssets().should.be.an.Array().with.lengthOf(0);
     });
 
     it('Will skip downloading large assets if a filesize is defined', function () {
@@ -452,6 +454,8 @@ describe('AssetScraper', function () {
         (sizeAllowed1).should.be.false();
         (sizeAllowed2).should.be.false();
         (sizeAllowed3).should.be.true();
+
+        assetScraper.oversizedAssets().should.be.an.Array().with.lengthOf(2);
     });
 });
 
