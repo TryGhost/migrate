@@ -2,8 +2,7 @@ const wpAPI = require('@tryghost/mg-wp-api');
 const mgJSON = require('@tryghost/mg-json');
 const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
 const MgWebScraper = require('@tryghost/mg-webscraper');
-const MgImageScraper = require('@tryghost/mg-imagescraper');
-const MgMediaScraper = require('@tryghost/mg-mediascraper');
+const MgAssetScraper = require('@tryghost/mg-assetscraper');
 const MgLinkFixer = require('@tryghost/mg-linkfixer');
 const fsUtils = require('@tryghost/mg-fs-utils');
 const makeTaskRunner = require('../lib/task-runner');
@@ -92,27 +91,26 @@ module.exports.initialize = (url, options) => {
         title: 'Initializing Workspace',
         task: (ctx, task) => {
             ctx.options = options;
-
-            // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-            ctx.fileCache = new fsUtils.FileCache(url, {batchName: options.batch});
-            ctx.wpScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
-            ctx.imageScraper = new MgImageScraper(ctx.fileCache);
-
-            ctx.sizeReports = {};
-            ctx.mediaScraper = new MgMediaScraper(ctx.fileCache, {
-                sizeLimit: ctx.options.size_limit || false
-            });
-
-            ctx.linkFixer = new MgLinkFixer();
-
-            task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
-
             ctx.allowScrape = {
                 all: ctx.options.scrape.includes('all'),
                 images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),
                 media: ctx.options.scrape.includes('media') || ctx.options.scrape.includes('all'),
+                files: ctx.options.scrape.includes('files') || ctx.options.scrape.includes('all'),
                 web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
             };
+
+            // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
+            ctx.fileCache = new fsUtils.FileCache(url, {batchName: options.batch});
+            ctx.wpScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
+            ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
+                sizeLimit: ctx.options.sizeLimit,
+                allowImages: ctx.allowScrape.images,
+                allowMedia: ctx.allowScrape.media,
+                allowFiles: ctx.allowScrape.files
+            });
+            ctx.linkFixer = new MgLinkFixer();
+
+            task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
 
             if (options.batch > 0) {
                 task.title += ` batch ${ctx.fileCache.batchName}`;
@@ -214,27 +212,22 @@ module.exports.getFullTaskList = (url, options) => {
             }
         },
         {
-            title: 'Fetch images via ImageScraper',
-            skip: ctx => !ctx.allowScrape.images,
+            title: 'Fetch images via AssetScraper',
+            skip: (ctx) => {
+                return ![ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].some(() => true);
+            },
             task: async (ctx) => {
-                // 6. Pass the JSON file through the image scraper
-                let tasks = ctx.imageScraper.fetch(ctx);
-                return makeTaskRunner(tasks, options);
-            }
-        },
-        {
-            title: 'Fetch media via MediaScraper',
-            skip: ctx => !ctx.allowScrape.media,
-            task: async (ctx) => {
-                // 7. Pass the JSON file through the file scraper
-                let tasks = ctx.mediaScraper.fetch(ctx);
-                return makeTaskRunner(tasks, options);
+                // 6. Format the data as a valid Ghost JSON file
+                let tasks = ctx.assetScraper.fetch(ctx);
+                let assetScraperOptions = JSON.parse(JSON.stringify(options)); // Clone the options object
+                assetScraperOptions.concurrent = false;
+                return makeTaskRunner(tasks, assetScraperOptions);
             }
         },
         {
             title: 'Update links in content via LinkFixer',
             task: async (ctx, task) => {
-                // 8. Process the content looking for known links, and update them to new links
+                // 7. Process the content looking for known links, and update them to new links
                 let tasks = ctx.linkFixer.fix(ctx, task);
                 return makeTaskRunner(tasks, options);
             }
@@ -243,7 +236,7 @@ module.exports.getFullTaskList = (url, options) => {
             // @TODO don't duplicate this with the utils json file
             title: 'Convert HTML -> MobileDoc',
             task: (ctx) => {
-                // 9. Convert post HTML -> MobileDoc
+                // 8. Convert post HTML -> MobileDoc
                 try {
                     let tasks = mgHtmlMobiledoc.convert(ctx);
                     let convertOptions = JSON.parse(JSON.stringify(options)); // Clone the options object
@@ -258,7 +251,7 @@ module.exports.getFullTaskList = (url, options) => {
         {
             title: 'Write Ghost import JSON File',
             task: async (ctx) => {
-                // 10. Write a valid Ghost import zip
+                // 9. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
                     await ctx.fileCache.writeErrorJSONFile(ctx.errors);
@@ -269,23 +262,10 @@ module.exports.getFullTaskList = (url, options) => {
             }
         },
         {
-            title: 'Report file sizes',
-            skip: () => !options.size_limit,
-            task: async (ctx) => {
-                // 11. Report assets that were not downloaded
-                try {
-                    ctx.sizeReports.media = await ctx.fileCache.writeReportCSVFile(ctx.mediaScraper.sizeReport, {filename: 'media', sizeLimit: options.size_limit});
-                } catch (error) {
-                    ctx.errors.push(error);
-                    throw error;
-                }
-            }
-        },
-        {
             title: 'Write Ghost import zip',
             skip: () => !options.zip,
             task: async (ctx) => {
-                // 12. Write a valid Ghost import zip
+                // 10. Write a valid Ghost import zip
                 try {
                     ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
                 } catch (error) {
