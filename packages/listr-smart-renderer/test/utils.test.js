@@ -1,50 +1,47 @@
-// Switch these lines once there are useful utils
-// const testUtils = require('./utils');
-require('./utils');
-
+/* eslint no-undef: 0 */
 const utils = require('../lib/utils');
 
 describe('Task Number', function () {
     let index, tasks;
 
-    const taskNumberShouldEql = result => utils.taskNumber(index, tasks).should.eql(result);
+    const taskNumberShouldEql = result => expect(utils.taskNumber(index, tasks)).toEqual(result);
 
-    it('Correctly outputs a simple task number in the format x/y', function () {
+    test('Correctly outputs a simple task number in the format x/y', function () {
         index = 0;
         tasks = new Array(3); // Fake tasks array
 
         taskNumberShouldEql('1/3');
     });
 
-    it('Can pad a task number correctly in the format 0x/yy', function () {
+    test('Can pad a task number correctly in the format 0x/yy', function () {
         index = 3;
         tasks = new Array(14); // Fake tasks array
 
         taskNumberShouldEql('04/14');
     });
 
-    it('Can pad a task number correctly in the format xx/yy', function () {
+    test('Can pad a task number correctly in the format xx/yy', function () {
         index = 11;
         tasks = new Array(14); // Fake tasks array
 
         taskNumberShouldEql('12/14');
     });
 
-    it('Can pad a task number correctly in the format 00x/yyy', function () {
+    test('Can pad a task number correctly in the format 00x/yyy', function () {
         index = 3;
         tasks = new Array(111); // Fake tasks array
 
         taskNumberShouldEql('004/111');
     });
 
-    it('Can pad a task number correctly in the format 0xx/yyy', function () {
+    test('Can pad a task number correctly in the format 0xx/yyy', function () {
         index = 11;
         tasks = new Array(111); // Fake tasks array
 
         taskNumberShouldEql('012/111');
     });
 
-    it('Can pad a task number correctly in the format xxx/yyy', function () {
+    test('Can pad a task number correctly in the format xxx/yyy', function () {
         index = 100;
         tasks = new Array(111); // Fake tasks array
 

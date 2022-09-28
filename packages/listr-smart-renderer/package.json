@@ -7,7 +7,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "echo \"Implement me!\"",
-    "test": "NODE_ENV=testing mocha './test/**/*.test.js'",
+    "test": "NODE_ENV=testing jest",
     "lint": "eslint . --ext .js --cache",
     "posttest": "yarn lint"
   },
@@ -23,6 +23,10 @@
   ],
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "jest": "29.1.1",
+    "jest-extended": "3.1.0"
   },
   "dependencies": {
     "chalk": "4.1.2",
