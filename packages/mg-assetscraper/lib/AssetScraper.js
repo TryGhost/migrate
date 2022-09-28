@@ -43,7 +43,7 @@ class ImageScraper {
      * @param {FileCache} fileCache
      * @param {Object} options
      * @param {Bool} options.optimize
-     * @param {Bool} options.sizeLimit
+     * @param {Int|Bool} options.sizeLimit A size limit in binary bytes (i.e. 1 MB is supplied as 1048576)
      * @param {Bool} options.allowImages
      * @param {Bool} options.allowMedia
      * @param {Bool} options.allowFiles
@@ -751,40 +751,36 @@ class ImageScraper {
             const impliedFileType = item.head.contentType || null;
             const saveLocation = this.determineSaveLocation(impliedFileType);
 
+            const imageUrl = url.parse(src);
+            const imageFile = this.fileCache.resolveFileName(imageUrl.pathname, saveLocation);
+            let imageOptions = Object.assign(imageFile, this.defaultOptions);
+
+            const assetAlreadyDownloaded = this.fileCache.hasFile(imageFile.storagePath);
+
             tasks.push({
                 title: `Downloading file: ${src}`,
                 skip: () => {
-                    if (!saveLocation) {
-                        return true;
-                    } else if (item.newLocal) {
+                    if (assetAlreadyDownloaded) {
                         return true;
                     }
                 },
                 task: async () => {
                     try {
-                        let imageUrl = url.parse(src);
-                        let imageFile = this.fileCache.resolveFileName(imageUrl.pathname, saveLocation);
-                        let imageOptions = Object.assign(imageFile, this.defaultOptions);
-
                         let newFile = await this.fetchFile(src, ctx);
 
-                        if (this.fileCache.hasFile(imageFile.storagePath)) {
+                        if ((knownTypes.includes(newFile.fileData.mime))) {
+                            // Set the file extension to match the buffers mime type
+                            imageOptions.filename = this.changeExtension(imageOptions.filename, newFile.fileData.ext);
+                            imageOptions.storagePath = this.changeExtension(imageOptions.storagePath, newFile.fileData.ext);
+                            imageOptions.outputPath = this.changeExtension(imageOptions.outputPath, newFile.fileData.ext);
+
+                            await this.fileCache.writeImageFile(newFile.response.data, imageOptions);
+
                             item.newLocal = imageOptions.outputPath;
-                        } else {
-                            if ((knownTypes.includes(newFile.fileData.mime))) {
-                                // Set the file extension to match the buffers mime type
-                                imageOptions.filename = this.changeExtension(imageOptions.filename, newFile.fileData.ext);
-                                imageOptions.storagePath = this.changeExtension(imageOptions.storagePath, newFile.fileData.ext);
-                                imageOptions.outputPath = this.changeExtension(imageOptions.outputPath, newFile.fileData.ext);
 
-                                await this.fileCache.writeImageFile(newFile.response.data, imageOptions);
+                            this.AssetCache.add(item);
 
-                                item.newLocal = imageOptions.outputPath;
-
-                                this.AssetCache.add(item);
-
-                                this._assetCache[index] = item;
-                            }
+                            this._assetCache[index] = item;
                         }
                     } catch (error) {
                         let fetchError = ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error});
@@ -801,8 +797,8 @@ class ImageScraper {
      * Create & run tasks to update asset references
      */
     updateReferences() {
-        let intialValueString = JSON.stringify(this._initialValue);
-        this._fixedValues = intialValueString;
+        let initialValueString = JSON.stringify(this._initialValue);
+        this._fixedValues = initialValueString;
 
         let tasks = [];
 
