@@ -24,7 +24,7 @@
     "sinon": "14.0.0"
   },
   "dependencies": {
-    "@tryghost/errors": "1.2.15",
+    "@tryghost/errors": "1.2.17",
     "@tryghost/string": "0.2.1",
     "lodash": "4.17.21",
     "omit-empty": "^1.0.0",
