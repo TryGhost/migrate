@@ -1,33 +1,29 @@
+/* eslint no-undef: 0 */
 const path = require('path');
 const {parseISO} = require('date-fns');
-
-// Switch these lines once there are useful utils
-// const testUtils = require('./utils');
-require('./utils');
-
-// Require the csv module
 const csv = require('../lib/csv');
 
 describe('Parse CSV', function () {
-    it('Reads a simple comma separated file list with default options', async function () {
+    test('Reads a simple comma separated file list with default options', async function () {
         const pathToFile = path.resolve('./test/fixtures/example.csv');
 
         const result = await csv.parse(pathToFile);
 
-        result.should.have.length(5);
+        expect(result).toBeArrayOfSize(5);
 
         const [row] = result;
-        row.should.be.an.object;
-        row.should.deepEqual({
-            Username: 'booker12',
-            Identifier: '9012',
-            'One-time password': '12se74',
-            'Recovery code': 'rb9012',
-            'First name': 'Rachel',
-            'Last name': 'Booker',
-            Department: 'Sales',
-            Location: 'Manchester'
-        });
+        expect(row).toBeObject();
+
+        expect(row).toContainEntries([
+            ['Username', 'booker12'],
+            ['Identifier', '9012'],
+            ['One-time password', '12se74'],
+            ['Recovery code', 'rb9012'],
+            ['First name', 'Rachel'],
+            ['Last name', 'Booker'],
+            ['Department', 'Sales'],
+            ['Location', 'Manchester']
+        ]);
     });
 
     it('Reads a simple comma separated file list with options', async function () {
@@ -35,10 +31,10 @@ describe('Parse CSV', function () {
 
         const result = await csv.parse(pathToFile, {skip_lines_with_error: true, columns: false, skip_empty_lines: true});
 
-        result.should.have.length(6);
+        expect(result).toBeArrayOfSize(6);
 
         const [row] = result;
-        row.should.be.an.array;
+        expect(row).toBeArray();
     });
 });
 
@@ -80,8 +76,11 @@ describe('Format JSON to CSV', function () {
 
         const result = await csv.jsonToCSV(jsonInput, fields);
 
-        result.should.be.a.String;
-        result.should.match(/email,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,labels,note\r\npatrickstarfish@gmail.com,true,false,,2018-12-25T20:43:22.178Z,substack-free,\r\nelpaper@gmail.com,true,false,,2019-08-18T13:36:31.230Z,substack-free,\r\nexample@gmail.com,true,false,,2022-03-13T13:36:31.230Z,"substack-comp, 2023-02",\r\n/);
+        expect(result).toBeString();
+        expect(result).toInclude('email,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,labels,note');
+        expect(result).toInclude('patrickstarfish@gmail.com,true,false,,2018-12-25T20:43:22.178Z,substack-free,');
+        expect(result).toInclude('elpaper@gmail.com,true,false,,2019-08-18T13:36:31.230Z,substack-free,');
+        expect(result).toInclude('example@gmail.com,true,false,,2022-03-13T13:36:31.230Z,"substack-comp, 2023-02');
     });
 
     it('can read column headers from data when fields not passed', async function () {
@@ -110,10 +109,12 @@ describe('Format JSON to CSV', function () {
 
         const result = await csv.jsonToCSV(jsonInput);
 
-        result.should.be.a.String;
-        result.should.match(/email,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,expiry,type,labels\r\npatrickstarfish@gmail.com,true,false,,2018-12-25T20:43:22.178Z,,free,substack-free\r\nelpaper@gmail.com,true,false,,2019-08-18T13:36:31.230Z,,free,substack-free\r\n/);
+        expect(result).toBeString();
+        expect(result).toInclude('email,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,expiry,type,labels');
+        expect(result).toInclude('patrickstarfish@gmail.com,true,false,,2018-12-25T20:43:22.178Z,,free,substack-free');
+        expect(result).toInclude('elpaper@gmail.com,true,false,,2019-08-18T13:36:31.230Z,,free,substack-free');
 
         const resultArray = result.split(',');
-        resultArray.should.have.length(22);
+        expect(resultArray).toBeArrayOfSize(22);
     });
 });

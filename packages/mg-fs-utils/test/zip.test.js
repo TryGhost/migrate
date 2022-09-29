@@ -1,15 +1,11 @@
-// Switch these lines once there are useful utils
-// const testUtils = require('./utils');
-require('./utils');
-
-// Require the zip module
+/* eslint no-undef: 0 */
 const zip = require('../lib/zip');
 
 describe('Read Zip', function () {
     let fakeEntries = [];
 
-    before(function () {
-        sinon.stub(zip._private, 'openZipForRead').callsFake(() => {
+    beforeAll(function () {
+        jest.spyOn(zip._private, 'openZipForRead').mockImplementation(() => {
             return {
                 getEntries: function getEntries() {
                     return fakeEntries;
@@ -18,12 +14,12 @@ describe('Read Zip', function () {
         });
     });
 
-    after(function () {
-        sinon.restore();
+    afterAll(function () {
+        jest.restoreAllMocks();
     });
 
-    it('Reads a simple file list', function () {
-        let entryCallbackSpy = sinon.spy();
+    test('Reads a simple file list', function () {
+        let entryCallbackSpy = jest.fn();
 
         fakeEntries = [
             {isDirectory: false, entryName: 'file1.html'},
@@ -33,14 +29,14 @@ describe('Read Zip', function () {
 
         zip.read('testFilePath', entryCallbackSpy);
 
-        entryCallbackSpy.callCount.should.eql(3);
-        entryCallbackSpy.getCall(0).args[0].should.eql('file1.html');
-        entryCallbackSpy.getCall(1).args[0].should.eql('file2.html');
-        entryCallbackSpy.getCall(2).args[0].should.eql('file3.html');
+        expect(entryCallbackSpy).toHaveBeenCalledTimes(3);
+        expect(entryCallbackSpy.mock.calls[0][0]).toEqual('file1.html');
+        expect(entryCallbackSpy.mock.calls[1][0]).toEqual('file2.html');
+        expect(entryCallbackSpy.mock.calls[2][0]).toEqual('file3.html');
     });
 
-    it('Flattens a single top level directory', function () {
-        let entryCallbackSpy = sinon.spy();
+    test('Flattens a single top level directory', function () {
+        let entryCallbackSpy = jest.fn();
 
         fakeEntries = [
             {isDirectory: true, entryName: 'test-folder/'},
@@ -50,14 +46,14 @@ describe('Read Zip', function () {
 
         zip.read('testFilePath', entryCallbackSpy);
 
-        entryCallbackSpy.callCount.should.eql(2);
+        expect(entryCallbackSpy).toHaveBeenCalledTimes(2);
 
-        entryCallbackSpy.getCall(0).args[0].should.eql('file1.html');
-        entryCallbackSpy.getCall(1).args[0].should.eql('random.js');
+        expect(entryCallbackSpy.mock.calls[0][0]).toEqual('file1.html');
+        expect(entryCallbackSpy.mock.calls[1][0]).toEqual('random.js');
     });
 
-    it('Skips a single top level directory if there are other files', function () {
-        let entryCallbackSpy = sinon.spy();
+    test('Skips a single top level directory if there are other files', function () {
+        let entryCallbackSpy = jest.fn();
 
         fakeEntries = [
             {isDirectory: true, entryName: 'test-folder/'},
@@ -67,15 +63,15 @@ describe('Read Zip', function () {
 
         zip.read('testFilePath', entryCallbackSpy);
 
-        entryCallbackSpy.callCount.should.eql(3);
+        expect(entryCallbackSpy).toHaveBeenCalledTimes(3);
 
-        entryCallbackSpy.getCall(0).args[0].should.eql('test-folder/');
-        entryCallbackSpy.getCall(1).args[0].should.eql('test-folder/file1.html');
-        entryCallbackSpy.getCall(2).args[0].should.eql('random.js');
+        expect(entryCallbackSpy.mock.calls[0][0]).toEqual('test-folder/');
+        expect(entryCallbackSpy.mock.calls[1][0]).toEqual('test-folder/file1.html');
+        expect(entryCallbackSpy.mock.calls[2][0]).toEqual('random.js');
     });
 
-    it('Keeps multiple directories', function () {
-        let entryCallbackSpy = sinon.spy();
+    test('Keeps multiple directories', function () {
+        let entryCallbackSpy = jest.fn();
 
         fakeEntries = [
             {isDirectory: true, entryName: 'posts/'},
@@ -87,11 +83,12 @@ describe('Read Zip', function () {
 
         zip.read('testFilePath', entryCallbackSpy);
 
-        entryCallbackSpy.callCount.should.eql(5);
-        entryCallbackSpy.getCall(0).args[0].should.eql('posts/');
-        entryCallbackSpy.getCall(1).args[0].should.eql('posts/file1.html');
-        entryCallbackSpy.getCall(2).args[0].should.eql('posts/file2.html');
-        entryCallbackSpy.getCall(3).args[0].should.eql('profile/');
-        entryCallbackSpy.getCall(4).args[0].should.eql('profile/profile.html');
+        expect(entryCallbackSpy).toHaveBeenCalledTimes(5);
+
+        expect(entryCallbackSpy.mock.calls[0][0]).toEqual('posts/');
+        expect(entryCallbackSpy.mock.calls[1][0]).toEqual('posts/file1.html');
+        expect(entryCallbackSpy.mock.calls[2][0]).toEqual('posts/file2.html');
+        expect(entryCallbackSpy.mock.calls[3][0]).toEqual('profile/');
+        expect(entryCallbackSpy.mock.calls[4][0]).toEqual('profile/profile.html');
     });
 });

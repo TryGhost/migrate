@@ -1,7 +1,4 @@
-// Switch these lines once there are useful utils
-// const testUtils = require('./utils');
-require('./utils');
-
+/* eslint no-undef: 0 */
 const fs = require('fs-extra');
 const imageTransform = require('@tryghost/image-transform');
 const FileCache = require('../').FileCache;
@@ -15,12 +12,13 @@ describe('writeImageFile', function () {
     let outputFileStub, transformStub;
 
     beforeEach(function () {
-        outputFileStub = sinon.stub(fs, 'outputFile');
-        transformStub = sinon.stub(imageTransform, 'resizeFromBuffer').returns('optimizedimagebuffer');
+        outputFileStub = jest.spyOn(fs, 'outputFile');
+        transformStub = jest.spyOn(imageTransform, 'resizeFromBuffer').mockReturnValue('optimizedimagebuffer');
     });
 
     afterEach(function () {
-        sinon.restore();
+        outputFileStub.mockReset();
+        transformStub.mockReset();
     });
 
     it('Writes one file if optimize is false', async function () {
@@ -33,10 +31,10 @@ describe('writeImageFile', function () {
             optimize: false
         });
 
-        outputFileStub.calledOnce.should.be.true();
-        transformStub.calledOnce.should.be.false();
+        expect(outputFileStub).toHaveBeenCalledTimes(1);
+        expect(transformStub).toHaveBeenCalledTimes(0);
 
-        resultPath.should.eql(mockOutputPath);
+        expect(resultPath).toEqual(mockOutputPath);
     });
 
     it('Writes two files if optimize is true', async function () {
@@ -49,13 +47,13 @@ describe('writeImageFile', function () {
             optimize: true
         });
 
-        outputFileStub.calledTwice.should.be.true();
-        transformStub.calledOnce.should.be.true();
+        expect(outputFileStub).toHaveBeenCalledTimes(2);
+        expect(transformStub).toHaveBeenCalledTimes(1);
 
-        outputFileStub.secondCall.args.should.eql([mockStoragePath, 'optimizedimagebuffer']);
-        outputFileStub.firstCall.args.should.eql([mockOriginalPath, 'imagebuffer']);
+        expect(outputFileStub.mock.calls[1]).toEqual([mockStoragePath, 'optimizedimagebuffer']);
+        expect(outputFileStub.mock.calls[0]).toEqual([mockOriginalPath, 'imagebuffer']);
 
-        resultPath.should.eql(mockOutputPath);
+        expect(resultPath).toEqual(mockOutputPath);
     });
 
     it('Writes one file if the extension is not supported for optimization', async function () {
@@ -68,49 +66,49 @@ describe('writeImageFile', function () {
             optimize: true
         });
 
-        outputFileStub.calledOnce.should.be.true();
-        transformStub.calledOnce.should.be.false();
+        expect(outputFileStub).toHaveBeenCalledTimes(1);
+        expect(transformStub).toHaveBeenCalledTimes(0);
 
-        resultPath.should.eql('/content/images/blah.bmp');
+        expect(resultPath).toEqual('/content/images/blah.bmp');
     });
 
     it('Correctly converts file sizes', async function () {
         let fileCache = new FileCache('test');
 
         const check1 = fileCache.convertMbToBytes(1.5);
-        check1.should.equal(1572864);
+        expect(check1).toEqual(1572864);
 
         const check2 = fileCache.convertMbToBytes('1.5');
-        check2.should.equal(1572864);
+        expect(check2).toEqual(1572864);
 
         const check3 = fileCache.convertMbToBytes(20);
-        check3.should.equal(20971520);
+        expect(check3).toEqual(20971520);
     });
 
     it('Will not shortern the storage path is too long', async function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
 
-        fileName.filename.should.eql('/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
-        fileName.storagePath.should.containEql('/content/images/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
-        fileName.outputPath.should.eql('/content/images/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+        expect(fileName.filename).toEqual('/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+        expect(fileName.storagePath).toInclude('/content/images/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+        expect(fileName.outputPath).toEqual('/content/images/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
     });
 
     it('Will shortern the storage path is too long', async function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
 
-        fileName.filename.should.eql('/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
-        fileName.storagePath.should.containEql('/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
-        fileName.outputPath.should.eql('/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+        expect(fileName.filename).toEqual('/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+        expect(fileName.storagePath).toInclude('/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+        expect(fileName.outputPath).toEqual('/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
     });
 
     it('Will change jpeg to jpg', async function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/blah.jpeg');
 
-        fileName.filename.should.eql('/my-images/blah.jpg');
-        fileName.storagePath.should.containEql('/content/images/my-images/blah.jpg');
-        fileName.outputPath.should.eql('/content/images/my-images/blah.jpg');
+        expect(fileName.filename).toEqual('/my-images/blah.jpg');
+        expect(fileName.storagePath).toInclude('/content/images/my-images/blah.jpg');
+        expect(fileName.outputPath).toEqual('/content/images/my-images/blah.jpg');
     });
 });
