@@ -1,23 +1,23 @@
-const testUtils = require('./utils');
+/* eslint no-undef: 0 */
 const processor = require('../lib/processor');
 
 describe('Process', function () {
-    it('Can convert a single post', async function () {
-        const fixture = testUtils.fixtures.readSync('posts.json');
+    test('Can convert a single post', async function () {
+        const fixture = require('./fixtures/posts.json');
 
         const post = await processor.processPosts(fixture.posts);
         const firstPost = post[0];
 
-        firstPost.should.be.an.Object().with.properties('url', 'data');
-        firstPost.url.should.eql('https://demo.ghost.io/welcome-short/');
+        expect(firstPost).toContainKeys(['url', 'data']);
+        expect(firstPost.url).toEqual('https://demo.ghost.io/welcome-short/');
 
-        firstPost.data.should.be.an.Object();
+        expect(firstPost.data).toBeObject();
 
         const data = firstPost.data;
 
-        data.title.should.eql('Welcome');
-        data.tags.should.be.an.Array().with.lengthOf(2);
-        data.tags[1].data.name.should.eql('#ghost');
-        data.tags[1].data.slug.should.eql('hash-ghost');
+        expect(data.title).toEqual('Welcome');
+        expect(data.tags).toBeArrayOfSize(2);
+        expect(data.tags[1].data.name).toEqual('#ghost');
+        expect(data.tags[1].data.slug).toEqual('hash-ghost');
     });
 });
