@@ -29,7 +29,7 @@
     "@tryghost/listr-smart-renderer": "0.2.10",
     "axios": "0.27.2",
     "cheerio": "1.0.0-rc.2",
-    "file-type": "16.5.3",
+    "file-type": "16.5.4",
     "listr": "0.14.3",
     "lodash": "4.17.21",
     "markdown-it": "13.0.1"
