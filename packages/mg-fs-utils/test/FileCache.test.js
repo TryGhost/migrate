@@ -21,7 +21,7 @@ describe('writeImageFile', function () {
         transformStub.mockReset();
     });
 
-    it('Writes one file if optimize is false', async function () {
+    test('Writes one file if optimize is false', async function () {
         let fileCache = new FileCache('test');
 
         let resultPath = await fileCache.writeImageFile('imagebuffer', {
@@ -37,7 +37,7 @@ describe('writeImageFile', function () {
         expect(resultPath).toEqual(mockOutputPath);
     });
 
-    it('Writes two files if optimize is true', async function () {
+    test('Writes two files if optimize is true', async function () {
         let fileCache = new FileCache('test');
 
         let resultPath = await fileCache.writeImageFile('imagebuffer', {
@@ -56,7 +56,7 @@ describe('writeImageFile', function () {
         expect(resultPath).toEqual(mockOutputPath);
     });
 
-    it('Writes one file if the extension is not supported for optimization', async function () {
+    test('Writes one file if the extension is not supported for optimization', async function () {
         let fileCache = new FileCache('test');
 
         let resultPath = await fileCache.writeImageFile('imagebuffer', {
@@ -72,7 +72,7 @@ describe('writeImageFile', function () {
         expect(resultPath).toEqual('/content/images/blah.bmp');
     });
 
-    it('Correctly converts file sizes', async function () {
+    test('Correctly converts file sizes', async function () {
         let fileCache = new FileCache('test');
 
         const check1 = fileCache.convertMbToBytes(1.5);
@@ -85,7 +85,7 @@ describe('writeImageFile', function () {
         expect(check3).toEqual(20971520);
     });
 
-    it('Will not shortern the storage path is too long', async function () {
+    test('Will not shortern the storage path is too long', async function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
 
@@ -94,7 +94,7 @@ describe('writeImageFile', function () {
         expect(fileName.outputPath).toEqual('/content/images/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
     });
 
-    it('Will shortern the storage path is too long', async function () {
+    test('Will shortern the storage path is too long', async function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
 
@@ -103,7 +103,7 @@ describe('writeImageFile', function () {
         expect(fileName.outputPath).toEqual('/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
     });
 
-    it('Will change jpeg to jpg', async function () {
+    test('Will change jpeg to jpg', async function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/blah.jpeg');
 

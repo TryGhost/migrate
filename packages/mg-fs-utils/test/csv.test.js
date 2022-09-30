@@ -26,7 +26,7 @@ describe('Parse CSV', function () {
         ]);
     });
 
-    it('Reads a simple comma separated file list with options', async function () {
+    test('Reads a simple comma separated file list with options', async function () {
         const pathToFile = path.resolve('./test/fixtures/example.csv');
 
         const result = await csv.parse(pathToFile, {skip_lines_with_error: true, columns: false, skip_empty_lines: true});
@@ -39,7 +39,7 @@ describe('Parse CSV', function () {
 });
 
 describe('Format JSON to CSV', function () {
-    it('formats a JSON file into CSV', async function () {
+    test('formats a JSON file into CSV', async function () {
         const jsonInput = [
             {
                 email: 'patrickstarfish@gmail.com',
@@ -83,7 +83,7 @@ describe('Format JSON to CSV', function () {
         expect(result).toInclude('example@gmail.com,true,false,,2022-03-13T13:36:31.230Z,"substack-comp, 2023-02');
     });
 
-    it('can read column headers from data when fields not passed', async function () {
+    test('can read column headers from data when fields not passed', async function () {
         const jsonInput = [
             {
                 email: 'patrickstarfish@gmail.com',
@@ -114,7 +114,7 @@ describe('Format JSON to CSV', function () {
         expect(result).toInclude('patrickstarfish@gmail.com,true,false,,2018-12-25T20:43:22.178Z,,free,substack-free');
         expect(result).toInclude('elpaper@gmail.com,true,false,,2019-08-18T13:36:31.230Z,,free,substack-free');
 
-        const resultArray = result.split(',');
+        const resultArray = result.spltest(',');
         expect(resultArray).toBeArrayOfSize(22);
     });
 });

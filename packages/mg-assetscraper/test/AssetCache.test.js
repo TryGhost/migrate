@@ -31,7 +31,7 @@ describe('AssetCache', function () {
         expect(assetCache._cache).toBeArrayOfSize(1);
     });
 
-    it('Can skip adding item to cache if it already exists', function () {
+    test('Can skip adding item to cache if it already exists', function () {
         const assetCache = new AssetCache();
 
         assetCache.add({
@@ -49,7 +49,7 @@ describe('AssetCache', function () {
         expect(assetCache._cache).toBeArrayOfSize(1);
     });
 
-    it('Can read a specific item', function () {
+    test('Can read a specific item', function () {
         const assetCache = new AssetCache();
 
         assetCache.load(cachedJSON);
@@ -60,7 +60,7 @@ describe('AssetCache', function () {
         expect(found.remote).toEqual('__GHOST_URL__/content/images/2022/09/screenshot-40-54-21-02-09-2023.png');
     });
 
-    it('Can update a specific item', function () {
+    test('Can update a specific item', function () {
         const assetCache = new AssetCache();
 
         assetCache.add({
@@ -83,7 +83,7 @@ describe('AssetCache', function () {
         expect(assetCache._cache[1].newRemote).toEqual('https://example.com/content/images/2022/09/another-photo.jpg');
     });
 
-    it('Can delete a specific item', function () {
+    test('Can delete a specific item', function () {
         const assetCache = new AssetCache();
 
         assetCache.add({
