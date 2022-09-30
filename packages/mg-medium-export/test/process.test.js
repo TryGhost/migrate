@@ -1,122 +1,159 @@
-// Switch these lines once there are useful utils
-const testUtils = require('./utils');
+/* eslint no-undef: 0 */
+const fs = require('fs');
+const path = require('path');
 
-// Thing we are testing
+const readSync = (name) => {
+    let fixtureFileName = path.join(__dirname, './', 'fixtures', name);
+    return fs.readFileSync(fixtureFileName, {encoding: 'utf8'});
+};
+
 const processPost = require('../lib/process-post');
+
+expect.extend({
+    toBeMediumMetaObject(received, expected) {
+        const MediumMetaObject = (value) => {
+            expect(value).toBeObject();
+            expect(value).toHaveProperty('url');
+            expect(value).toHaveProperty('data');
+
+            expect(value.url).toBeString();
+            expect(value.url).toMatch(/^https:\/\/medium\.com/);
+            expect(value.data).toBeObject();
+            expect(value.data).toHaveProperty('slug');
+        };
+
+        // expected can either be an array or an object
+        const expectedResult = MediumMetaObject(received);
+
+        // equality check for received todo and expected todo
+        const pass = this.equals(expected, expectedResult);
+
+        if (pass) {
+            return {
+                message: () => `Expected: ${this.utils.printExpected(expected)}\nReceived: ${this.utils.printReceived(received)}`,
+                pass: true
+            };
+        }
+        return {
+            message: () => `Expected: ${this.utils.printExpected(expected)}\nReceived: ${this.utils.printReceived(received)}\n\n${this.utils.diff(expected, received)}`,
+            pass: false
+        };
+    }
+});
 
 describe('Process', function () {
     it('Can process a basic medium post', function () {
-        const fixture = testUtils.fixtures.readSync('basic-post.html');
+        const fixture = readSync('basic-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
         const post = processPost(fakeName, fixture);
 
-        post.should.be.a.MediumMetaObject();
+        expect(post).toBeMediumMetaObject();
 
-        post.url.should.eql('https://medium.com/@JoeBloggs/testpost-efefef12121212');
+        expect(post.url).toEqual('https://medium.com/@JoeBloggs/testpost-efefef12121212');
 
-        post.data.title.should.eql('Blog Post Title');
-        post.data.slug.should.eql('testpost');
-        post.data.custom_excerpt.should.eql('This is a subtitle of some sort');
-        post.data.status.should.eql('published');
+        expect(post.data.title).toEqual('Blog Post Title');
+        expect(post.data.slug).toEqual('testpost');
+        expect(post.data.custom_excerpt).toEqual('This is a subtitle of some sort');
+        expect(post.data.status).toEqual('published');
 
-        post.data.created_at.should.eql('2018-08-11T11:23:34.123Z');
-        post.data.published_at.should.eql('2018-08-11T11:23:34.123Z');
-        post.data.updated_at.should.eql('2018-08-11T11:23:34.123Z');
+        expect(post.data.created_at).toEqual('2018-08-11T11:23:34.123Z');
+        expect(post.data.published_at).toEqual('2018-08-11T11:23:34.123Z');
+        expect(post.data.updated_at).toEqual('2018-08-11T11:23:34.123Z');
 
-        post.data.html.should.match(/^<section name="007"/);
-        post.data.html.should.match(/<\/section>$/);
+        expect(post.data.html).toMatch(/^<section name="007"/);
+        expect(post.data.html).toMatch(/<\/section>$/);
 
-        post.data.author.should.be.a.MediumMetaObject();
+        expect(post.data.author).toBeMediumMetaObject();
 
-        post.data.author.url.should.eql('https://medium.com/@JoeBloggs');
-        post.data.author.data.name.should.eql('Joe Bloggs');
-        post.data.author.data.slug.should.eql('joebloggs');
-        post.data.author.data.slug.should.eql('joebloggs');
-        post.data.author.data.roles[0].should.eql('Contributor');
+        expect(post.data.author.url).toEqual('https://medium.com/@JoeBloggs');
+        expect(post.data.author.data.name).toEqual('Joe Bloggs');
+        expect(post.data.author.data.slug).toEqual('joebloggs');
+        expect(post.data.author.data.slug).toEqual('joebloggs');
+        expect(post.data.author.data.roles[0]).toEqual('Contributor');
 
-        post.data.tags.should.be.an.Array().with.lengthOf(3);
+        expect(post.data.tags).toBeArrayOfSize(3);
 
-        post.data.tags[0].should.be.a.MediumMetaObject();
-        post.data.tags[0].url.should.eql('https://medium.com/tag/things');
-        post.data.tags[0].data.name.should.eql('Things');
-        post.data.tags[0].data.slug.should.eql('things');
-        post.data.tags[1].should.be.a.MediumMetaObject();
-        post.data.tags[1].url.should.eql('https://medium.com/tag/stuff');
-        post.data.tags[1].data.name.should.eql('Stuff');
-        post.data.tags[1].data.slug.should.eql('stuff');
+        expect(post.data.tags[0]).toBeMediumMetaObject();
+        expect(post.data.tags[0].url).toEqual('https://medium.com/tag/things');
+        expect(post.data.tags[0].data.name).toEqual('Things');
+        expect(post.data.tags[0].data.slug).toEqual('things');
+        expect(post.data.tags[1]).toBeMediumMetaObject();
+        expect(post.data.tags[1].url).toEqual('https://medium.com/tag/stuff');
+        expect(post.data.tags[1].data.name).toEqual('Stuff');
+        expect(post.data.tags[1].data.slug).toEqual('stuff');
         // Migrator always marks posts with an internal tag
-        post.data.tags[2].data.name.should.eql('#medium');
+        expect(post.data.tags[2].data.name).toEqual('#medium');
     });
 
     it('Can process a draft medium post', function () {
-        const fixture = testUtils.fixtures.readSync('draft-post.html');
+        const fixture = readSync('draft-post.html');
         const fakeName = 'draft_blog-post-title-ababab121212.html';
         const post = processPost(fakeName, fixture);
 
-        post.should.be.a.MediumMetaObject();
+        expect(post).toBeMediumMetaObject();
 
-        post.url.should.eql('https://medium.com/p/ababab12121212');
+        expect(post.url).toEqual('https://medium.com/p/ababab12121212');
 
-        post.data.title.should.eql('Blog Post Title');
-        post.data.slug.should.eql('blog-post-title');
-        post.data.custom_excerpt.should.eql('This is a subtitle of some sort');
-        post.data.status.should.eql('draft');
-        post.data.html.should.match(/^<section name="007"/);
-        post.data.html.should.match(/<\/section>$/);
+        expect(post.data.title).toEqual('Blog Post Title');
+        expect(post.data.slug).toEqual('blog-post-title');
+        expect(post.data.custom_excerpt).toEqual('This is a subtitle of some sort');
+        expect(post.data.status).toEqual('draft');
+        expect(post.data.html).toMatch(/^<section name="007"/);
+        expect(post.data.html).toMatch(/<\/section>$/);
 
         // Migrator always marks posts with an internal tag
-        post.data.tags.should.be.an.Array().with.lengthOf(1);
-        post.data.tags[0].data.name.should.eql('#medium');
+        expect(post.data.tags).toBeArrayOfSize(1);
+        expect(post.data.tags[0].data.name).toEqual('#medium');
 
         // Drafts don't have these
-        should.not.exist(post.data.published_at);
-        should.not.exist(post.data.author);
+        expect(post.data.published_at).not.toBeDefined();
+        expect(post.data.author).not.toBeDefined();
     });
 
     it('Can do advanced content processing on medium posts', function () {
-        const fixture = testUtils.fixtures.readSync('advanced-post.html');
+        const fixture = readSync('advanced-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
         const post = processPost(fakeName, fixture);
 
-        post.should.be.a.MediumMetaObject();
+        expect(post).toBeMediumMetaObject();
 
         const html = post.data.html;
         const firstDivRegex = /^<section name="007" class="section section--body section--first">[^\w<>]+<div class="(.*?)"/;
 
         // should start with a section followed by a div
-        html.should.match(firstDivRegex);
+        expect(html).toMatch(firstDivRegex);
 
         // the first div should not be a section divider anymore (what's in the fixture)
-        html.match(firstDivRegex)[1].should.not.eql('section-divider');
+        expect(html.match(firstDivRegex)[1]).not.toEqual('section-divider');
         // this is what we expect instead
-        html.match(firstDivRegex)[1].should.eql('section-content');
+        expect(html.match(firstDivRegex)[1]).toEqual('section-content');
 
         // should not contain a header with the post title
-        html.should.not.match(/<h3[^>]*>Blog Post Title/);
+        expect(html).not.toMatch(/<h3[^>]*>Blog Post Title/);
 
         // should have feature image with caption & alt text
-        post.data.feature_image.should.eql('https://cdn-images-1.medium.com/max/2000/abc123.jpeg');
-        post.data.feature_image_alt.should.eql('This is image alt text');
-        post.data.feature_image_caption.should.eql('This is an image caption');
+        expect(post.data.feature_image).toEqual('https://cdn-images-1.medium.com/max/2000/abc123.jpeg');
+        expect(post.data.feature_image_alt).toEqual('This is image alt text');
+        expect(post.data.feature_image_caption).toEqual('This is an image caption');
 
         // Migrator always marks posts with an internal tag
-        post.data.tags.should.be.an.Array().with.lengthOf(4);
-        post.data.tags[0].data.name.should.eql('Things');
-        post.data.tags[1].data.name.should.eql('Stuff');
-        post.data.tags[2].data.name.should.eql('#medium');
-        post.data.tags[3].data.name.should.eql('#auto-feature-image');
+        expect(post.data.tags).toBeArrayOfSize(4);
+        expect(post.data.tags[0].data.name).toEqual('Things');
+        expect(post.data.tags[1].data.name).toEqual('Stuff');
+        expect(post.data.tags[2].data.name).toEqual('#medium');
+        expect(post.data.tags[3].data.name).toEqual('#auto-feature-image');
     });
 
     it('Can process blockquotes', function () {
-        const fixture = testUtils.fixtures.readSync('quote-post.html');
+        const fixture = readSync('quote-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
         const post = processPost(fakeName, fixture);
 
-        post.should.be.a.MediumMetaObject();
+        expect(post).toBeMediumMetaObject();
 
         const html = post.data.html;
 
-        html.should.containEql('<blockquote><p>“Lorem Ipsum”&nbsp;<a href="https://example/com" rel="noopener" target="_blank">Example</a></p></blockquote>');
-        html.should.containEql('<blockquote><p>Lorem Ipsum</p></blockquote>');
+        expect(html).toContain('<blockquote><p>“Lorem Ipsum”&nbsp;<a href="https://example/com" rel="noopener" target="_blank">Example</a></p></blockquote>');
+        expect(html).toContain('<blockquote><p>Lorem Ipsum</p></blockquote>');
     });
 });
