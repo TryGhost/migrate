@@ -1,9 +1,6 @@
+/* eslint no-undef: 0 */
 const processMembers = require('../lib/process');
 const parsedMembers = require('./fixtures/parsed');
-
-// Switch these lines once there are useful utils
-// const testUtils = require('./utils');
-require('./utils');
 
 const DEFAULT_OPTIONS = {
     options: {
@@ -17,13 +14,13 @@ const DEFAULT_OPTIONS = {
 };
 
 describe('Normalizes and processes Substack members', function () {
-    it('only free with default options', async function () {
+    test('only free with default options', async function () {
         const input = parsedMembers.free;
 
         const result = await processMembers(input, DEFAULT_OPTIONS);
 
-        result.should.be.an.object;
-        result.free.should.have.length(21);
+        expect(result).toBeObject();
+        expect(result.free).toBeArrayOfSize(21);
     });
 
     it('subscribers with default options', async function () {
@@ -31,10 +28,10 @@ describe('Normalizes and processes Substack members', function () {
 
         const result = await processMembers(input, DEFAULT_OPTIONS);
 
-        result.should.be.an.object;
-        result.free.should.have.length(11);
-        result.comp.should.have.length(1);
-        result.paid.should.have.length(9);
+        expect(result).toBeObject();
+        expect(result.free).toBeArrayOfSize(11);
+        expect(result.comp).toBeArrayOfSize(1);
+        expect(result.paid).toBeArrayOfSize(9);
     });
 
     it('correctly switches the email subscription preferences', async function () {
@@ -55,13 +52,13 @@ describe('Normalizes and processes Substack members', function () {
 
         const result = await processMembers(input, DEFAULT_OPTIONS);
 
-        result.should.be.an.object;
-        result.free.should.have.length(2);
+        expect(result).toBeObject();
+        expect(result.free).toBeArrayOfSize(2);
 
         const [m1, m2] = result.free;
 
-        m1.subscribed_to_emails.should.be.false();
-        m2.subscribed_to_emails.should.be.true();
+        expect(m1.subscribed_to_emails).toBeFalsy();
+        expect(m2.subscribed_to_emails).toBeTruthy();
     });
 
     it('with date or year threshold for comp and gift', async function () {
@@ -78,11 +75,11 @@ describe('Normalizes and processes Substack members', function () {
         };
 
         const result = await processMembers(input, options);
-        result.should.be.an.object;
-        result.free.should.have.length(5);
-        result.paid.should.have.length(9);
-        result.comp.should.have.length(3);
-        result.skip.should.have.length(4);
+        expect(result).toBeObject();
+        expect(result.free).toBeArrayOfSize(5);
+        expect(result.paid).toBeArrayOfSize(9);
+        expect(result.comp).toBeArrayOfSize(3);
+        expect(result.skip).toBeArrayOfSize(4);
     });
 
     it('includes expiry label comp and gift members', async function () {
@@ -99,11 +96,11 @@ describe('Normalizes and processes Substack members', function () {
         };
 
         const result = await processMembers(input, options);
-        result.should.be.an.object;
-        result.comp[0].email.should.eql('maguirec086@comm.ca');
-        result.comp[0].labels.should.eql('exp-2025-06, substack-comp');
-        result.comp[3].email.should.eql('ömil@gmail.com');
-        result.comp[3].labels.should.eql('exp-2020-10, substack-gift');
+        expect(result).toBeObject();
+        expect(result.comp[0].email).toEqual('maguirec086@comm.ca');
+        expect(result.comp[0].labels).toEqual('exp-2025-06, substack-comp');
+        expect(result.comp[3].email).toEqual('ömil@gmail.com');
+        expect(result.comp[3].labels).toEqual('exp-2020-10, substack-gift');
     });
 
     it('skips delete requests', async function () {
@@ -123,9 +120,9 @@ describe('Normalizes and processes Substack members', function () {
 
         const result = await processMembers(input, DEFAULT_OPTIONS);
 
-        result.should.be.an.object;
-        result.free.should.have.length(1);
-        result.skip.should.have.length(1);
+        expect(result).toBeObject();
+        expect(result.free).toBeArrayOfSize(1);
+        expect(result.skip).toBeArrayOfSize(1);
     });
 
     it('detects and logs possible group memberships and imports as `free`', async function () {
@@ -146,13 +143,13 @@ describe('Normalizes and processes Substack members', function () {
 
         const result = await processMembers(input, DEFAULT_OPTIONS);
 
-        result.should.be.an.object;
-        result.free.should.have.length(2);
+        expect(result).toBeObject();
+        expect(result.free).toBeArrayOfSize(2);
 
         const [m1, m2] = result.free;
 
-        m1.info.should.be.match(/possible group membership: harry_potter@gmail.com/);
-        m2.info.should.be.match(/possible group membership: dumbledore@gmail.com/);
+        expect(m1.info).toMatch(/possible group membership: harry_potter@gmail.com/);
+        expect(m2.info).toMatch(/possible group membership: dumbledore@gmail.com/);
     });
 });
 
