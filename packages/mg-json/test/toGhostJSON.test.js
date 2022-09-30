@@ -1,38 +1,126 @@
-// Switch these lines once there are useful utils
-const testUtils = require('./utils');
-
-// Thing we are testing
+/* eslint no-undef: 0 */
 const toGhostJSON = require('../lib/to-ghost-json');
 
-// Temp utility
-// const inspect = (title, obj) => console.log(title, require('util').inspect(obj, false, null)); // eslint-disable-line no-console
+expect.extend({
+    toBeGhostJSON(received, expected) {
+        const GhostPost = (post) => {
+            expect(post).toBeObject();
+            expect(post).not.toContainKeys(['url', 'data']);
+            expect(post).toContainKeys(['slug', 'title', 'status']);
+        };
+
+        const GhostUser = (user) => {
+            expect(user).toBeObject();
+            expect(user).not.toContainKeys(['url', 'data']);
+            expect(user).toContainKeys(['slug', 'name', 'email', 'roles']);
+        };
+
+        const GhostTag = (tag) => {
+            expect(tag).toBeObject();
+            expect(tag).not.toContainKeys(['url', 'data']);
+            expect(tag).toContainKeys(['slug', 'name']);
+        };
+
+        const GhostJSON = (value) => {
+            expect(value).toBeObject();
+            expect(value).toHaveProperty('meta');
+            expect(value).toHaveProperty('data');
+
+            expect(value.meta).toBeObject();
+            expect(value.meta).toHaveProperty('exported_on');
+            expect(value.meta).toHaveProperty('version');
+
+            expect(value.data).toContainAllKeys(['posts', 'posts_authors', 'posts_meta', 'posts_tags', 'tags', 'users']);
+
+            // posts
+            expect(value.data.posts).toBeArray();
+            value.data.posts.forEach(post => GhostPost(post));
+
+            // users
+            expect(value.data.users).toBeArray();
+            value.data.users.forEach(user => GhostUser(user));
+
+            // tags
+            if (value.data.tags) {
+                expect(value.data.tags).toBeArray();
+                value.data.tags.forEach(tag => GhostTag(tag));
+            }
+
+            // Relations...
+
+            // Posts must have a valid relation in the posts_meta object
+            expect(value.data.posts_meta).toBeArray();
+            expect(value.data.posts_meta.length).toBeGreaterThanOrEqual(1);
+            value.data.posts_meta.forEach((postMeta) => {
+                expect(postMeta).toBeObject();
+                expect(postMeta).toContainKey('post_id');
+            });
+
+            // Ghost posts must have at least one author, but we still convert to Ghost's expected multiauthor format
+            expect(value.data.posts_authors).toBeArray();
+            expect(value.data.posts_authors.length).toBeGreaterThanOrEqual(1);
+            value.data.posts_authors.forEach((postAuthor) => {
+                expect(postAuthor).toBeObject();
+                expect(postAuthor).toContainKey('post_id');
+                expect(postAuthor).toContainKey('author_id');
+            });
+
+            // there can be mutliple tags, but also no tags
+            expect(value.data.posts_tags).toBeArray();
+            if (value.data.posts_tags.length > 0) {
+                value.data.posts_tags.forEach((postTag) => {
+                    expect(postTag).toBeObject();
+                    expect(postTag).toContainKey('post_id');
+                    expect(postTag).toContainKey('tag_id');
+                });
+            }
+        };
+
+        // expected can either be an array or an object
+        const expectedResult = GhostJSON(received);
+
+        // equality check for received todo and expected todo
+        const pass = this.equals(expected, expectedResult);
+
+        if (pass) {
+            return {
+                message: () => `Expected: ${this.utils.printExpected(expected)}\nReceived: ${this.utils.printReceived(received)}`,
+                pass: true
+            };
+        }
+        return {
+            message: () => `Expected: ${this.utils.printExpected(expected)}\nReceived: ${this.utils.printReceived(received)}\n\n${this.utils.diff(expected, received)}`,
+            pass: false
+        };
+    }
+});
 
 describe('toGhostJSON', function () {
-    it('Calculates relations when it only has a post', function () {
-        const input = require(testUtils.fixturesFilename('single-post-only.json'));
+    test('Calculates relations when it only has a post', function () {
+        const input = require('./fixtures/single-post-only.json');
         const output = toGhostJSON(input);
 
-        output.should.be.GhostJSON();
-        output.data.posts.should.be.an.Array().with.lengthOf(1);
-        output.data.tags.should.be.an.Array().with.lengthOf(2);
+        expect(output).toBeGhostJSON();
+        expect(output.data.posts).toBeArrayOfSize(1);
+        expect(output.data.tags).toBeArrayOfSize(2);
 
-        output.data.users.should.be.an.Array().with.lengthOf(1);
-        output.data.users[0].roles[0].should.eql('Administrator');
+        expect(output.data.users).toBeArrayOfSize(1);
+        expect(output.data.users[0].roles[0]).toEqual('Administrator');
 
-        output.data.posts_authors.should.be.an.Array().with.lengthOf(1);
-        output.data.posts_authors[0].post_id.should.eql(output.data.posts[0].id);
-        output.data.posts_authors[0].author_id.should.eql(output.data.users[0].id);
+        expect(output.data.posts_authors).toBeArrayOfSize(1);
+        expect(output.data.posts_authors[0].post_id).toEqual(output.data.posts[0].id);
+        expect(output.data.posts_authors[0].author_id).toEqual(output.data.users[0].id);
 
-        output.data.posts_tags.should.be.an.Array().with.lengthOf(2);
-        output.data.posts_tags[0].post_id.should.eql(output.data.posts[0].id);
-        output.data.posts_tags[0].tag_id.should.eql(output.data.tags[0].id);
-        output.data.posts_tags[1].post_id.should.eql(output.data.posts[0].id);
-        output.data.posts_tags[1].tag_id.should.eql(output.data.tags[1].id);
+        expect(output.data.posts_tags).toBeArrayOfSize(2);
+        expect(output.data.posts_tags[0].post_id).toEqual(output.data.posts[0].id);
+        expect(output.data.posts_tags[0].tag_id).toEqual(output.data.tags[0].id);
+        expect(output.data.posts_tags[1].post_id).toEqual(output.data.posts[0].id);
+        expect(output.data.posts_tags[1].tag_id).toEqual(output.data.tags[1].id);
     });
 
     // @TODO: make it so that this test doesn't need a post slug or an author
     // Hydrator should be able to cope with absolutely minimal data
-    it('Correctly decodes titles', function () {
+    test('Correctly decodes titles', function () {
         const input = {
             posts: [{
                 url: 'https://mysite.com',
@@ -53,67 +141,64 @@ describe('toGhostJSON', function () {
         };
         const output = toGhostJSON(input);
 
-        output.should.be.GhostJSON();
-        output.data.posts.should.be.an.Array().with.lengthOf(1);
-        output.data.posts[0].title.should.eql('This shit’s cool');
+        expect(output).toBeGhostJSON();
+        expect(output.data.posts).toBeArrayOfSize(1);
+        expect(output.data.posts[0].title).toEqual('This shit’s cool');
     });
 
-    it('Calculates relations with both post and users', function () {
-        const input = require(testUtils.fixturesFilename('single-post-author.json'));
-
-        // inspect('input', input);
+    test('Calculates relations with both post and users', function () {
+        const input = require('./fixtures/single-post-author.json');
 
         const output = toGhostJSON(input);
 
-        // inspect('output', output);
-
-        output.should.be.GhostJSON();
+        expect(output).toBeGhostJSON();
     });
 
-    it('Calculates relations across multiple posts', function () {
-        const input = require(testUtils.fixturesFilename('multi-post-only.json'));
-
-        // inspect('input', input);
+    test('Calculates relations across multiple posts', function () {
+        const input = require('./fixtures/multi-post-only.json');
 
         const output = toGhostJSON(input);
 
-        // inspect('output', output);
-        output.should.be.GhostJSON();
+        expect(output).toBeGhostJSON();
     });
 
-    it('Ensures internal tags are listed last', function () {
-        const input = require(testUtils.fixturesFilename('single-post-with-bad-tag-order.json'));
+    test('Ensures internal tags are listed last', function () {
+        const input = require('./fixtures/single-post-with-bad-tag-order.json');
         const output = toGhostJSON(input);
 
-        output.data.tags.should.be.an.Array().with.lengthOf(3);
-        output.data.tags[0].name.should.eql('Things');
-        output.data.tags[1].name.should.eql('Stuff');
-        output.data.tags[2].name.should.eql('#internal');
+        expect(output.data.tags).toBeArrayOfSize(3);
+        expect(output.data.tags[0].name).toEqual('Things');
+        expect(output.data.tags[1].name).toEqual('Stuff');
+        expect(output.data.tags[2].name).toEqual('#internal');
     });
 
-    it('Trims strings that are too long', function () {
-        const input = require(testUtils.fixturesFilename('single-post-only-long-meta.json'));
+    test('Trims strings that are too long', function () {
+        const input = require('./fixtures/single-post-only-long-meta.json');
         const output = toGhostJSON(input);
 
-        output.data.posts[0].custom_excerpt.length.should.be.belowOrEqual(300);
-        output.data.posts_meta[0].meta_description.length.should.be.belowOrEqual(500);
-        output.data.posts_meta[0].feature_image_alt.length.should.be.belowOrEqual(125);
+        expect(output.data.posts[0].custom_excerpt.length).toBeLessThanOrEqual(300);
+        expect(output.data.posts_meta[0].meta_description.length).toBeLessThanOrEqual(500);
+        expect(output.data.posts_meta[0].feature_image_alt.length).toBeLessThanOrEqual(125);
     });
 
-    it('Moves meta data to posts_meta object', function () {
-        const input2 = require(testUtils.fixturesFilename('single-post-only-meta.json'));
+    test('Moves meta data to posts_meta object', function () {
+        const input2 = require('./fixtures/single-post-only-meta.json');
         const output = toGhostJSON(input2);
 
         // Data should be in `posts_meta[0]`
-        output.data.posts_meta[0].meta_title.should.eql('This is my Blog Post Title');
-        output.data.posts_meta[0].meta_description.should.eql('Morbi lectus purus, blandit eu tristique nec, sollicitudin vel odio.');
-        output.data.posts_meta[0].feature_image_alt.should.eql('Lorem ipsum dolor sit amet');
-        output.data.posts_meta[0].feature_image_caption.should.eql('Caption text');
+        expect(output.data.posts_meta[0].meta_title).toEqual('This is my Blog Post Title');
+        expect(output.data.posts_meta[0].meta_description).toEqual('Morbi lectus purus, blandit eu tristique nec, sollicitudin vel odio.');
+        expect(output.data.posts_meta[0].feature_image_alt).toEqual('Lorem ipsum dolor sit amet');
+        expect(output.data.posts_meta[0].feature_image_caption).toEqual('Caption text');
 
         // Data should not exist in `posts[0]`
-        should.not.exist(output.data.posts[0].meta_title);
-        should.not.exist(output.data.posts[0].meta_description);
-        should.not.exist(output.data.posts[0].feature_image_alt);
-        should.not.exist(output.data.posts[0].feature_image_caption);
+        // should.not.exist(output.data.posts[0].meta_title);
+        expect(output.data.posts[0].meta_title).not.toBeDefined();
+        // should.not.exist(output.data.posts[0].meta_description);
+        expect(output.data.posts[0].meta_description).not.toBeDefined();
+        // should.not.exist(output.data.posts[0].feature_image_alt);
+        expect(output.data.posts[0].feature_image_alt).not.toBeDefined();
+        // should.not.exist(output.data.posts[0].feature_image_caption);
+        expect(output.data.posts[0].feature_image_caption).not.toBeDefined();
     });
 });
