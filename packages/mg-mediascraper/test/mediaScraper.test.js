@@ -54,7 +54,7 @@ describe('Download Media File', function () {
         sinon.restore();
     });
 
-    test('Will load audio from cache', async function () {
+    it('Will load audio from cache', async function () {
         mockAudioFileCache.hasFile.returns(true);
 
         let mediaScraper = new MediaScraper(mockAudioFileCache);
@@ -67,7 +67,7 @@ describe('Download Media File', function () {
         resultPath.should.eql(mockAudioOutputPath);
     });
 
-    test('Will load video from cache', async function () {
+    it('Will load video from cache', async function () {
         mockVideoFileCache.hasFile.returns(true);
 
         let mediaScraper = new MediaScraper(mockVideoFileCache);
@@ -80,7 +80,7 @@ describe('Download Media File', function () {
         resultPath.should.eql(mockVideoOutputPath);
     });
 
-    test('Will fetch and cache audio when not in the cache', async function () {
+    it('Will fetch and cache audio when not in the cache', async function () {
         mockAudioFileCache.hasFile.returns(false);
 
         let mediaScraper = new MediaScraper(mockAudioFileCache);
@@ -97,7 +97,7 @@ describe('Download Media File', function () {
         resultPath.should.eql(mockAudioOutputPath);
     });
 
-    test('Will fetch and cache video when not in the cache', async function () {
+    it('Will fetch and cache video when not in the cache', async function () {
         mockVideoFileCache.hasFile.returns(false);
 
         let mediaScraper = new MediaScraper(mockVideoFileCache);
@@ -114,7 +114,7 @@ describe('Download Media File', function () {
         resultPath.should.eql(mockVideoOutputPath);
     });
 
-    test('Will not fetch files that are too large if sizeLimit is defined', async function () {
+    it('Will not fetch files that are too large if sizeLimit is defined', async function () {
         mockAudioFileCache.hasFile.returns(false);
 
         let mediaScraper = new MediaScraper(mockAudioFileCache, {
@@ -136,7 +136,7 @@ describe('Download Media File', function () {
         mediaScraper.sizeReport.data[0].bytesSize.should.eql(3145728);
     });
 
-    test('Will fetch files that are within the defined sizeLimit', async function () {
+    it('Will fetch files that are within the defined sizeLimit', async function () {
         mockVideoFileCache.hasFile.returns(false);
 
         let mediaScraper = new MediaScraper(mockVideoFileCache, {
@@ -156,7 +156,7 @@ describe('Download Media File', function () {
         mediaScraper.sizeReport.data.should.be.an.Array().with.lengthOf(0);
     });
 
-    test('Will find and replace video elements in HTML', async function () {
+    it('Will find and replace video elements in HTML', async function () {
         let ctx = testUtils.fixtures.readSync('ctx.json');
 
         mockVideoFileCache.hasFile.returns(true);
@@ -175,7 +175,7 @@ describe('Download Media File', function () {
         post.html.should.not.containEql(`<video src="${mockVideoUrl}"></video>`);
     });
 
-    test('Will find and replace audio elements in HTML', async function () {
+    it('Will find and replace audio elements in HTML', async function () {
         let ctx = testUtils.fixtures.readSync('ctx.json');
 
         mockAudioFileCache.hasFile.returns(true);
@@ -194,7 +194,7 @@ describe('Download Media File', function () {
         post.html.should.not.containEql(`<audio src="${mockAudioUrl}"></audio>`);
     });
 
-    test('Will find and replace media links in HTML', async function () {
+    it('Will find and replace media links in HTML', async function () {
         let ctx = testUtils.fixtures.readSync('ctx.json');
 
         mockAudioFileCache.hasFile.returns(true);
@@ -210,7 +210,7 @@ describe('Download Media File', function () {
         post.html.should.not.containEql(`<a href=${mockAudioUrl}">Repudiandae</a>`);
     });
 
-    test('Will find and replace audio elements in Mobiledoc posts', async function () {
+    it('Will find and replace audio elements in Mobiledoc posts', async function () {
         let ctx = testUtils.fixtures.readSync('ctx.json');
 
         mockAudioFileCache.hasFile.returns(true);
@@ -245,7 +245,7 @@ describe('Download Media File', function () {
         collectedJSON.markups[0][1][1].should.eql(mockAudioOutputPath);
     });
 
-    test('Will find and replace audio links in Mobiledoc posts', async function () {
+    it('Will find and replace audio links in Mobiledoc posts', async function () {
         let ctx = testUtils.fixtures.readSync('ctx.json');
 
         mockAudioFileCache.hasFile.returns(true);
@@ -266,7 +266,7 @@ describe('Download Media File', function () {
         collectedJSON.markups[0][1][1].should.eql(mockAudioOutputPath);
     });
 
-    test('Will find and replace video elements in Mobiledoc posts', async function () {
+    it('Will find and replace video elements in Mobiledoc posts', async function () {
         let ctx = testUtils.fixtures.readSync('ctx.json');
 
         mockVideoFileCache.hasFile.returns(true);
@@ -292,7 +292,7 @@ describe('Download Media File', function () {
         collectedJSON.cards[1][1].mimeType.should.eql('video/mp4');
     });
 
-    test('Will find and replace media elements & links in Markdown posts', async function () {
+    it('Will find and replace media elements & links in Markdown posts', async function () {
         let ctx = testUtils.fixtures.readSync('ctx.json');
 
         mockAudioFileCache.hasFile.returns(true);
@@ -313,7 +313,7 @@ describe('Download Media File', function () {
         collectedJSON.cards[0][1].markdown.should.containEql(`<audio controls=""><source src="${mockAudioOutputPath}"></audio>`);
     });
 
-    test('Will not find and replace unsupported media elements & links in Mobiledoc', async function () {
+    it('Will not find and replace unsupported media elements & links in Mobiledoc', async function () {
         let ctx = testUtils.fixtures.readSync('ctx.json');
 
         mockAudioFileCache.hasFile.returns(true);
@@ -335,7 +335,7 @@ describe('Download Media File', function () {
         collectedJSON.cards[0][1].duration.should.eql(52.819592);
     });
 
-    test('Will not find and replace unsupported media elements & links in HTML', async function () {
+    it('Will not find and replace unsupported media elements & links in HTML', async function () {
         let ctx = testUtils.fixtures.readSync('ctx.json');
 
         mockAudioFileCache.hasFile.returns(true);

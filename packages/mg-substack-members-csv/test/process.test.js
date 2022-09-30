@@ -23,7 +23,7 @@ describe('Normalizes and processes Substack members', function () {
         expect(result.free).toBeArrayOfSize(21);
     });
 
-    test('subscribers with default options', async function () {
+    it('subscribers with default options', async function () {
         const input = parsedMembers.subscribed;
 
         const result = await processMembers(input, DEFAULT_OPTIONS);
@@ -34,7 +34,7 @@ describe('Normalizes and processes Substack members', function () {
         expect(result.paid).toBeArrayOfSize(9);
     });
 
-    test('correctly switches the email subscription preferences', async function () {
+    it('correctly switches the email subscription preferences', async function () {
         const input = [
             {
                 email: 'edwinjeans@gmail.com',
@@ -61,7 +61,7 @@ describe('Normalizes and processes Substack members', function () {
         expect(m2.subscribed_to_emails).toBeTruthy();
     });
 
-    test('with date or year threshold for comp and gift', async function () {
+    it('with date or year threshold for comp and gift', async function () {
         const input = parsedMembers.subscribed;
         const options = {
             options: {
@@ -82,7 +82,7 @@ describe('Normalizes and processes Substack members', function () {
         expect(result.skip).toBeArrayOfSize(4);
     });
 
-    test('includes expiry label comp and gift members', async function () {
+    it('includes expiry label comp and gift members', async function () {
         const input = parsedMembers.subscribed;
         const options = {
             options: {
@@ -103,7 +103,7 @@ describe('Normalizes and processes Substack members', function () {
         expect(result.comp[3].labels).toEqual('exp-2020-10, substack-gift');
     });
 
-    test('skips delete requests', async function () {
+    it('skips delete requests', async function () {
         const input = [
             {
                 email: '@deletion-request.substack.com',
@@ -125,7 +125,7 @@ describe('Normalizes and processes Substack members', function () {
         expect(result.skip).toBeArrayOfSize(1);
     });
 
-    test('detects and logs possible group memberships and imports as `free`', async function () {
+    it('detects and logs possible group memberships and imports as `free`', async function () {
         const input = [
             {
                 email: 'harry_potter@gmail.com',

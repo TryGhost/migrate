@@ -54,7 +54,7 @@ describe('Process', function () {
         expect(author.data.slug).toEqual('samplenews');
     });
 
-    test('Can convert a post with embeds', function () {
+    it('Can convert a post with embeds', function () {
         const fixture = require('./fixtures/api-response.json');
         const ctx = {
             result: fixture,
@@ -84,7 +84,7 @@ describe('Process', function () {
         '</figure><!--kg-card-end: embed-->\n');
     });
 
-    test('Can remove UTM properties from link block headers', function () {
+    it('Can remove UTM properties from link block headers', function () {
         const fixture = require('./fixtures/api-response.json');
         const ctx = {
             result: fixture,

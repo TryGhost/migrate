@@ -56,7 +56,7 @@ describe('Process', function () {
         expect(author.data.email).toEqual('hermione@example.com');
     });
 
-    test('Can convert a single draft post', async function () {
+    it('Can convert a single draft post', async function () {
         let ctx = {
             options: {
                 drafts: true,
@@ -102,7 +102,7 @@ describe('Process', function () {
         expect(author.data.email).toEqual('harry@example.com');
     });
 
-    test('Can convert a published page', async function () {
+    it('Can convert a published page', async function () {
         let ctx = {
             options: {
                 drafts: true,
