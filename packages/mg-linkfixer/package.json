@@ -7,7 +7,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "echo \"Implement me!\"",
-    "test": "NODE_ENV=testing mocha './test/**/*.test.js'",
+    "test": "NODE_ENV=testing jest",
     "lint": "eslint . --ext .js --cache",
     "posttest": "yarn lint"
   },
@@ -19,9 +19,9 @@
     "access": "public"
   },
   "devDependencies": {
-    "mocha": "10.0.0",
-    "should": "13.2.3",
-    "sinon": "14.0.0"
+    "eslint": "8.24.0",
+    "jest": "29.1.2",
+    "jest-extended": "3.1.0"
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.3",
