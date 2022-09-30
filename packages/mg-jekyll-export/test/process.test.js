@@ -1,29 +1,35 @@
-// Switch these lines once there are useful utils
-const testUtils = require('./utils');
+/* eslint no-undef: 0 */
+const fs = require('fs');
+const path = require('path');
 
-// Thing we are testing
+const readSync = (name) => {
+    let fixtureFileName = path.join(__dirname, './', 'fixtures', name);
+    return fs.readFileSync(fixtureFileName, {encoding: 'utf8'});
+};
+
 const processPost = require('../lib/process-post');
 
 describe('Process', function () {
-    it('Can process a basic Jekyll Markdown post', function () {
+    test('Can process a basic Jekyll Markdown post', function () {
         const fakeName = '_posts/2021-08-23-basic-post.md';
-        const fixture = testUtils.fixtures.readSync('2021-08-23-basic-post.md');
+        const fixture = readSync('2021-08-23-basic-post.md');
+
         const post = processPost(fakeName, fixture);
 
-        post.data.title.should.eql('This is a Basic Post');
-        post.data.slug.should.eql('basic-post');
+        expect(post.data.title).toEqual('This is a Basic Post');
+        expect(post.data.slug).toEqual('basic-post');
 
-        post.data.type.should.eql('post');
-        post.data.status.should.eql('published');
+        expect(post.data.type).toEqual('post');
+        expect(post.data.status).toEqual('published');
 
-        post.data.created_at.toISOString().should.eql('2021-08-23T00:00:00.000Z');
-        post.data.published_at.toISOString().should.eql('2021-08-23T00:00:00.000Z');
-        post.data.updated_at.toISOString().should.eql('2021-08-23T00:00:00.000Z');
+        expect(post.data.created_at.toISOString()).toEqual('2021-08-23T00:00:00.000Z');
+        expect(post.data.published_at.toISOString()).toEqual('2021-08-23T00:00:00.000Z');
+        expect(post.data.updated_at.toISOString()).toEqual('2021-08-23T00:00:00.000Z');
 
-        post.data.tags[0].url.should.eql('migrator-added-tag');
-        post.data.tags[0].data.name.should.eql('#jekyll');
+        expect(post.data.tags[0].url).toEqual('migrator-added-tag');
+        expect(post.data.tags[0].data.name).toEqual('#jekyll');
 
-        post.data.html.should.eql('<p>Lorem ipsum <em>dolor</em> sit amet, <strong>consectetur</strong> adipiscing elit. <em><strong>Aliquam</strong></em> risus turpis, dictum ut eros vel, mollis fermentum purus. Sed venenatis cursus vestibulum. Proin auctor consequat viverra.</p>\n' +
+        expect(post.data.html).toEqual('<p>Lorem ipsum <em>dolor</em> sit amet, <strong>consectetur</strong> adipiscing elit. <em><strong>Aliquam</strong></em> risus turpis, dictum ut eros vel, mollis fermentum purus. Sed venenatis cursus vestibulum. Proin auctor consequat viverra.</p>\n' +
             '<p>Praesent sed est laoreet, vehicula nisl ac, fermentum magna.</p>\n' +
             '<p>Lorem ipsum <em>dolor</em> sit amet, <strong>consectetur</strong> adipiscing elit. <em><strong>Aliquam</strong></em> risus turpis, dictum ut eros vel, mollis fermentum purus. Sed venenatis cursus vestibulum. Proin auctor consequat viverra.</p>\n' +
             '<h2>Nulla et enim vel augue ultricies tempus</h2>\n' +
@@ -70,30 +76,30 @@ describe('Process', function () {
             '</ol>\n' +
             '<p>Nunc eget magna sed dolor eleifend hendrerit. In quam dui, posuere eu tincidunt ullamcorper, tempor elementum ex. Vivamus lacus quam, bibendum ac felis vel, scelerisque rhoncus lacus. Integer posuere sollicitudin orci, quis dictum enim tempor et. Suspendisse potenti. Sed a ante ante.</p>');
 
-        post.data.author.data.email.should.eql('persons-name@example.com');
-        post.data.author.data.name.should.eql('Persons Name');
-        post.data.author.data.slug.should.eql('persons-name');
-        post.data.author.data.roles[0].should.eql('Contributor');
+        expect(post.data.author.data.email).toEqual('persons-name@example.com');
+        expect(post.data.author.data.name).toEqual('Persons Name');
+        expect(post.data.author.data.slug).toEqual('persons-name');
+        expect(post.data.author.data.roles[0]).toEqual('Contributor');
     });
 
-    it('Can process a basic Jekyll HTML post', function () {
+    test('Can process a basic Jekyll HTML post', function () {
         const fakeName = '_posts/2022-06-05-basic.html';
-        const fixture = testUtils.fixtures.readSync('2022-06-05-basic.html');
+        const fixture = readSync('2022-06-05-basic.html');
         const post = processPost(fakeName, fixture);
 
-        post.data.title.should.eql('Basic HTML Post');
+        expect(post.data.title).toEqual('Basic HTML Post');
 
         // Here are testing that Markdown syntax is left alone
-        post.data.html.should.eql('<p>First Paragraph</p>\n' +
+        expect(post.data.html).toEqual('<p>First Paragraph</p>\n' +
             '\n' +
             '* First\n' +
             '* Second');
-        post.data.author.data.name.should.eql('Mark Stosberg');
+        expect(post.data.author.data.name).toEqual('Mark Stosberg');
     });
 
-    it('Can process a basic Jekyll post with no author', function () {
+    test('Can process a basic Jekyll post with no author', function () {
         const fakeName = '_posts/2021-08-24-no-author.md';
-        const fixture = testUtils.fixtures.readSync('2021-08-24-no-author.md');
+        const fixture = readSync('2021-08-24-no-author.md');
         const post = processPost(fakeName, fixture,
             {
                 data: {
@@ -107,18 +113,18 @@ describe('Process', function () {
             }
         );
 
-        post.data.author.data.email.should.eql('person@name.com');
-        post.data.author.data.name.should.eql('Person Name');
-        post.data.author.data.slug.should.eql('person');
-        post.data.author.data.roles[0].should.eql('Editor');
+        expect(post.data.author.data.email).toEqual('person@name.com');
+        expect(post.data.author.data.name).toEqual('Person Name');
+        expect(post.data.author.data.slug).toEqual('person');
+        expect(post.data.author.data.roles[0]).toEqual('Editor');
     });
 
-    it('Can leave relative links when no URL is defined', function () {
+    test('Can leave relative links when no URL is defined', function () {
         const fakeName = '_posts/2021-08-25-relative-links.md';
-        const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
+        const fixture = readSync('2021-08-25-relative-links.md');
         const post = processPost(fakeName, fixture);
 
-        post.data.html.should.eql('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <a href="/another-page">Pellentesque rutrum</a> ante in <a href="https://example.com">sapien ultrices</a>, sit amet auctor tellus iaculis.</p>\n' +
+        expect(post.data.html).toEqual('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <a href="/another-page">Pellentesque rutrum</a> ante in <a href="https://example.com">sapien ultrices</a>, sit amet auctor tellus iaculis.</p>\n' +
             '<p><img src="/images/photo.jpg" alt="A nice photo"></p>\n' +
             '<p><img src="/news/images/photo.jpg" alt="Relative-to-root image"></p>\n' +
             '<p>Duis efficitur nisl pharetra enim lobortis consequat. Curabitur vestibulum diam vel elit ultricies semper.</p>\n' +
@@ -126,208 +132,208 @@ describe('Process', function () {
             '<p>Sed nec sagittis risus, vitae tempor mi. Suspendisse potenti.</p>');
     });
 
-    it('Can fix relative links when a URL is defined', function () {
+    test('Can fix relative links when a URL is defined', function () {
         const fakeName = '_posts/2021-08-25-relative-links.md';
-        const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
+        const fixture = readSync('2021-08-25-relative-links.md');
         const post = processPost(fakeName, fixture, false,
             {
                 url: `https://www.my-site.com/`
             }
         );
 
-        post.data.html.should.eql('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <a href="https://www.my-site.com/another-page">Pellentesque rutrum</a> ante in <a href="https://example.com">sapien ultrices</a>, sit amet auctor tellus iaculis.</p>\n' +
+        expect(post.data.html).toEqual('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <a href="https://www.my-site.com/another-page">Pellentesque rutrum</a> ante in <a href="https://example.com">sapien ultrices</a>, sit amet auctor tellus iaculis.</p>\n' +
             '<p><img src="https://www.my-site.com/images/photo.jpg" alt="A nice photo"></p>\n' +
             '<p><img src="https://www.my-site.com/news/images/photo.jpg" alt="Relative-to-root image"></p>\n' +
             '<p>Duis efficitur nisl pharetra enim lobortis consequat. Curabitur vestibulum diam vel elit ultricies semper.</p>\n' +
             '<p><img src="http://example.com/images/photo.jpg" alt="Another nice photo"></p>\n' +
             '<p>Sed nec sagittis risus, vitae tempor mi. Suspendisse potenti.</p>');
 
-        post.url.should.eql('https://www.my-site.com/relative-links');
+        expect(post.url).toEqual('https://www.my-site.com/relative-links');
     });
 
-    it('Can fix relative links when a URL with subdirectory is defined', function () {
+    test('Can fix relative links when a URL with subdirectory is defined', function () {
         const fakeName = '_posts/2021-08-25-relative-links.md';
-        const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
+        const fixture = readSync('2021-08-25-relative-links.md');
         const post = processPost(fakeName, fixture, false,
             {
                 url: `https://blog.my-site.com/news/`
             }
         );
 
-        post.data.html.should.eql('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <a href="https://blog.my-site.com/another-page">Pellentesque rutrum</a> ante in <a href="https://example.com">sapien ultrices</a>, sit amet auctor tellus iaculis.</p>\n' +
+        expect(post.data.html).toEqual('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. <a href="https://blog.my-site.com/another-page">Pellentesque rutrum</a> ante in <a href="https://example.com">sapien ultrices</a>, sit amet auctor tellus iaculis.</p>\n' +
             '<p><img src="https://blog.my-site.com/images/photo.jpg" alt="A nice photo"></p>\n' +
             '<p><img src="https://blog.my-site.com/news/images/photo.jpg" alt="Relative-to-root image"></p>\n' +
             '<p>Duis efficitur nisl pharetra enim lobortis consequat. Curabitur vestibulum diam vel elit ultricies semper.</p>\n' +
             '<p><img src="http://example.com/images/photo.jpg" alt="Another nice photo"></p>\n' +
             '<p>Sed nec sagittis risus, vitae tempor mi. Suspendisse potenti.</p>');
 
-        post.url.should.eql('https://blog.my-site.com/news/relative-links');
+        expect(post.url).toEqual('https://blog.my-site.com/news/relative-links');
     });
 
-    it('Can use a non-standard post date format', function () {
+    test('Can use a non-standard post date format', function () {
         const fakeName = '_posts/2021-9-1-alt-date-format.md';
-        const fixture = testUtils.fixtures.readSync('2021-9-1-alt-date-format.md');
+        const fixture = readSync('2021-9-1-alt-date-format.md');
         const post = processPost(fakeName, fixture);
 
-        post.data.created_at.toISOString().should.eql('2021-09-01T00:00:00.000Z');
-        post.data.published_at.toISOString().should.eql('2021-09-01T00:00:00.000Z');
-        post.data.updated_at.toISOString().should.eql('2021-09-01T00:00:00.000Z');
+        expect(post.data.created_at.toISOString()).toEqual('2021-09-01T00:00:00.000Z');
+        expect(post.data.published_at.toISOString()).toEqual('2021-09-01T00:00:00.000Z');
+        expect(post.data.updated_at.toISOString()).toEqual('2021-09-01T00:00:00.000Z');
     });
 
-    it('Can use a supplied email domain for authors', function () {
+    test('Can use a supplied email domain for authors', function () {
         const fakeName = '_posts/2021-08-25-relative-links.md';
-        const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
+        const fixture = readSync('2021-08-25-relative-links.md');
         const post = processPost(fakeName, fixture, false, {
             email: 'company.com'
         });
 
-        post.data.author.data.email.should.eql('persons-name@company.com');
+        expect(post.data.author.data.email).toEqual('persons-name@company.com');
     });
 
-    it('Can add specified tags to each post', function () {
+    test('Can add specified tags to each post', function () {
         const fakeName = '_posts/2021-08-25-relative-links.md';
-        const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
+        const fixture = readSync('2021-08-25-relative-links.md');
         const post = processPost(fakeName, fixture, false, {
             addTags: 'Hello,  #World'
         });
 
-        post.data.tags.should.be.an.Array().with.lengthOf(3);
+        expect(post.data.tags).toBeArrayOfSize(3);
 
-        post.data.tags[0].url.should.eql('migrator-added-tag');
-        post.data.tags[0].data.slug.should.eql('hash-jekyll');
-        post.data.tags[0].data.name.should.eql('#jekyll');
+        expect(post.data.tags[0].url).toEqual('migrator-added-tag');
+        expect(post.data.tags[0].data.slug).toEqual('hash-jekyll');
+        expect(post.data.tags[0].data.name).toEqual('#jekyll');
 
-        post.data.tags[1].url.should.eql('migrator-added-tag-hello');
-        post.data.tags[1].data.slug.should.eql('hello');
-        post.data.tags[1].data.name.should.eql('Hello');
+        expect(post.data.tags[1].url).toEqual('migrator-added-tag-hello');
+        expect(post.data.tags[1].data.slug).toEqual('hello');
+        expect(post.data.tags[1].data.name).toEqual('Hello');
 
-        post.data.tags[2].url.should.eql('migrator-added-tag-hash-world');
-        post.data.tags[2].data.slug.should.eql('hash-world');
-        post.data.tags[2].data.name.should.eql('#World');
+        expect(post.data.tags[2].url).toEqual('migrator-added-tag-hash-world');
+        expect(post.data.tags[2].data.slug).toEqual('hash-world');
+        expect(post.data.tags[2].data.name).toEqual('#World');
     });
 
-    it('Can process draft posts', function () {
+    test('Can process draft posts', function () {
         const fakeName = '_drafts/relative-links.md';
-        const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
+        const fixture = readSync('2021-08-25-relative-links.md');
         const post = processPost(fakeName, fixture);
 
-        post.data.type.should.eql('post');
-        post.data.status.should.eql('draft');
+        expect(post.data.type).toEqual('post');
+        expect(post.data.status).toEqual('draft');
     });
 
-    it('Can process published:false frontmatter', function () {
+    test('Can process published:false frontmatter', function () {
         const fakeName = '_posts/2022-06-05-published-false.md';
-        const fixture = testUtils.fixtures.readSync('2022-06-05-published-false.md');
+        const fixture = readSync('2022-06-05-published-false.md');
         const post = processPost(fakeName, fixture);
 
-        post.data.type.should.eql('post');
-        post.data.status.should.eql('draft');
+        expect(post.data.type).toEqual('post');
+        expect(post.data.status).toEqual('draft');
     });
 
-    it('Can process `basename` frontmatter into slug', function () {
+    test('Can process `basename` frontmatter into slug', function () {
         const fakeName = '_posts/2022-06-09-basename.md';
-        const fixture = testUtils.fixtures.readSync('2022-06-09-basename.md');
+        const fixture = readSync('2022-06-09-basename.md');
         const post = processPost(fakeName, fixture);
 
-        post.data.slug.should.eql('custom-basename');
+        expect(post.data.slug).toEqual('custom-basename');
     });
 
-    it('Can process non-standard post types and add related tag', function () {
+    test('Can process non-standard post types and add related tag', function () {
         const fakeName = 'w31rd_type-here/2021-08-25-relative-links.md';
-        const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
+        const fixture = readSync('2021-08-25-relative-links.md');
         const post = processPost(fakeName, fixture);
 
-        post.data.type.should.eql('post');
-        post.data.status.should.eql('published');
+        expect(post.data.type).toEqual('post');
+        expect(post.data.status).toEqual('published');
 
-        post.data.tags.should.be.an.Array().with.lengthOf(2);
+        expect(post.data.tags).toBeArrayOfSize(2);
 
-        post.data.tags[0].url.should.eql('migrator-added-tag-hash-w31rd_type-here');
-        post.data.tags[0].data.slug.should.eql('hash-w31rd_type-here');
-        post.data.tags[0].data.name.should.eql('#w31rd_type-here');
+        expect(post.data.tags[0].url).toEqual('migrator-added-tag-hash-w31rd_type-here');
+        expect(post.data.tags[0].data.slug).toEqual('hash-w31rd_type-here');
+        expect(post.data.tags[0].data.name).toEqual('#w31rd_type-here');
 
-        post.data.tags[1].url.should.eql('migrator-added-tag');
-        post.data.tags[1].data.slug.should.eql('hash-jekyll');
-        post.data.tags[1].data.name.should.eql('#jekyll');
+        expect(post.data.tags[1].url).toEqual('migrator-added-tag');
+        expect(post.data.tags[1].data.slug).toEqual('hash-jekyll');
+        expect(post.data.tags[1].data.name).toEqual('#jekyll');
     });
 
-    it('Can process non-standard post types and add related tag, with additonal tags', function () {
+    test('Can process non-standard post types and add related tag, with additonal tags', function () {
         const fakeName = 'w31rd_type-here/2021-08-25-relative-links.md';
-        const fixture = testUtils.fixtures.readSync('2021-08-25-relative-links.md');
+        const fixture = readSync('2021-08-25-relative-links.md');
         const post = processPost(fakeName, fixture, false, {
             addTags: 'Hello'
         });
 
-        post.data.type.should.eql('post');
-        post.data.status.should.eql('published');
+        expect(post.data.type).toEqual('post');
+        expect(post.data.status).toEqual('published');
 
-        post.data.tags.should.be.an.Array().with.lengthOf(3);
+        expect(post.data.tags).toBeArrayOfSize(3);
 
-        post.data.tags[0].url.should.eql('migrator-added-tag-hash-w31rd_type-here');
-        post.data.tags[0].data.slug.should.eql('hash-w31rd_type-here');
-        post.data.tags[0].data.name.should.eql('#w31rd_type-here');
+        expect(post.data.tags[0].url).toEqual('migrator-added-tag-hash-w31rd_type-here');
+        expect(post.data.tags[0].data.slug).toEqual('hash-w31rd_type-here');
+        expect(post.data.tags[0].data.name).toEqual('#w31rd_type-here');
 
-        post.data.tags[1].url.should.eql('migrator-added-tag');
-        post.data.tags[1].data.slug.should.eql('hash-jekyll');
-        post.data.tags[1].data.name.should.eql('#jekyll');
+        expect(post.data.tags[1].url).toEqual('migrator-added-tag');
+        expect(post.data.tags[1].data.slug).toEqual('hash-jekyll');
+        expect(post.data.tags[1].data.name).toEqual('#jekyll');
 
-        post.data.tags[2].url.should.eql('migrator-added-tag-hello');
-        post.data.tags[2].data.slug.should.eql('hello');
-        post.data.tags[2].data.name.should.eql('Hello');
+        expect(post.data.tags[2].url).toEqual('migrator-added-tag-hello');
+        expect(post.data.tags[2].data.slug).toEqual('hello');
+        expect(post.data.tags[2].data.name).toEqual('Hello');
     });
 
-    it('Can process posts without a date in the file name', function () {
+    test('Can process posts without a date in the file name', function () {
         const fakeName = '_posts/my-first-post.md';
-        const fixture = testUtils.fixtures.readSync('my-first-post.md');
+        const fixture = readSync('my-first-post.md');
         const post = processPost(fakeName, fixture, false, {
             addTags: 'NoFileDate'
         });
 
-        post.data.type.should.eql('post');
-        post.data.status.should.eql('published');
+        expect(post.data.type).toEqual('post');
+        expect(post.data.status).toEqual('published');
 
-        post.data.created_at.toISOString().should.eql('2021-11-26T00:00:00.000Z');
-        post.data.published_at.toISOString().should.eql('2021-11-26T00:00:00.000Z');
-        post.data.updated_at.toISOString().should.eql('2021-11-26T00:00:00.000Z');
+        expect(post.data.created_at.toISOString()).toEqual('2021-11-26T00:00:00.000Z');
+        expect(post.data.published_at.toISOString()).toEqual('2021-11-26T00:00:00.000Z');
+        expect(post.data.updated_at.toISOString()).toEqual('2021-11-26T00:00:00.000Z');
 
-        post.data.tags[0].url.should.eql('migrator-added-tag');
-        post.data.tags[0].data.slug.should.eql('hash-jekyll');
-        post.data.tags[0].data.name.should.eql('#jekyll');
+        expect(post.data.tags[0].url).toEqual('migrator-added-tag');
+        expect(post.data.tags[0].data.slug).toEqual('hash-jekyll');
+        expect(post.data.tags[0].data.name).toEqual('#jekyll');
 
-        post.data.tags[1].url.should.eql('migrator-added-tag-nofiledate');
-        post.data.tags[1].data.slug.should.eql('nofiledate');
-        post.data.tags[1].data.name.should.eql('NoFileDate');
+        expect(post.data.tags[1].url).toEqual('migrator-added-tag-nofiledate');
+        expect(post.data.tags[1].data.slug).toEqual('nofiledate');
+        expect(post.data.tags[1].data.name).toEqual('NoFileDate');
     });
 
-    it('Can process posts with unquoted date in frontmatter, using .markdown extension', function () {
+    test('Can process posts with unquoted date in frontmatter, using .markdown extension', function () {
         const fakeName = '_posts/unquoted-date.markdown';
-        const fixture = testUtils.fixtures.readSync('unquoted-date.markdown');
+        const fixture = readSync('unquoted-date.markdown');
         const post = processPost(fakeName, fixture, false);
 
-        post.data.created_at.toISOString().should.eql('2022-06-06T00:00:00.000Z');
-        post.data.published_at.toISOString().should.eql('2022-06-06T00:00:00.000Z');
-        post.data.updated_at.toISOString().should.eql('2022-06-06T00:00:00.000Z');
+        expect(post.data.created_at.toISOString()).toEqual('2022-06-06T00:00:00.000Z');
+        expect(post.data.published_at.toISOString()).toEqual('2022-06-06T00:00:00.000Z');
+        expect(post.data.updated_at.toISOString()).toEqual('2022-06-06T00:00:00.000Z');
     });
 
-    it('Can process posts with tags and categories in YAML list format', function () {
+    test('Can process posts with tags and categories in YAML list format', function () {
         const fakeName = '_posts/2022-06-06-tag-list.md';
-        const fixture = testUtils.fixtures.readSync('2022-06-06-tag-list.md');
+        const fixture = readSync('2022-06-06-tag-list.md');
         const post = processPost(fakeName, fixture, false);
 
-        post.data.tags[0].data.name.should.eql('cat');
-        post.data.tags[0].data.slug.should.eql('category-cat');
-        post.data.tags[1].data.name.should.eql('photos');
-        post.data.tags[1].data.slug.should.eql('category-photos');
-        post.data.tags[2].data.slug.should.eql('some-word');
+        expect(post.data.tags[0].data.name).toEqual('cat');
+        expect(post.data.tags[0].data.slug).toEqual('category-cat');
+        expect(post.data.tags[1].data.name).toEqual('photos');
+        expect(post.data.tags[1].data.slug).toEqual('category-photos');
+        expect(post.data.tags[2].data.slug).toEqual('some-word');
     });
-    it('Can process posts that already include HTML', function () {
+    test('Can process posts that already include HTML', function () {
         const fakeName = '_posts/2022-03-10-has-html.md';
-        const fixture = testUtils.fixtures.readSync('2022-03-10-has-html.md');
+        const fixture = readSync('2022-03-10-has-html.md');
         const post = processPost(fakeName, fixture, false, {
             addTags: 'Has HTML'
         });
 
-        post.data.html.should.eql('<p>Lorem ipsum dolor sit amet.</p>\n' +
+        expect(post.data.html).toEqual('<p>Lorem ipsum dolor sit amet.</p>\n' +
         '<video width="320" height="240" controls>\n' +
         '  <source src="movie.mp4" type="video/mp4">\n' +
         '  <source src="movie.ogg" type="video/ogg">\n' +
@@ -335,14 +341,14 @@ describe('Process', function () {
         '<p>Dolor sit amet.</p>');
     });
 
-    it('Can process lists that have spaced between list items', function () {
+    test('Can process lists that have spaced between list items', function () {
         const fakeName = '_posts/2022-03-11-has-spaced-lists.md';
-        const fixture = testUtils.fixtures.readSync('2022-03-11-has-spaced-lists.md');
+        const fixture = readSync('2022-03-11-has-spaced-lists.md');
         const post = processPost(fakeName, fixture, false, {
             addTags: 'Has HTML'
         });
 
-        post.data.html.should.eql('<p>Lorem ipsum.</p>\n' +
+        expect(post.data.html).toEqual('<p>Lorem ipsum.</p>\n' +
         '<ul>\n' +
         '<li>This</li>\n' +
         '<li>Is</li>\n' +
@@ -373,15 +379,15 @@ describe('Process', function () {
         '<p>Lorem ipsum.</p>');
     });
 
-    it('Can process front matter tags & categories', function () {
+    test('Can process front matter tags & categories', function () {
         const fakeName = '_posts/2022-06-03-front-matter-tags-cats.md';
-        const fixture = testUtils.fixtures.readSync('2022-06-03-front-matter-tags-cats.md');
+        const fixture = readSync('2022-06-03-front-matter-tags-cats.md');
         const post = processPost(fakeName, fixture, false, {
             addTags: 'My Extra Tag'
         });
 
-        post.data.tags.should.be.an.Array().with.lengthOf(8);
-        post.data.tags.should.eql([
+        expect(post.data.tags).toBeArrayOfSize(8);
+        expect(post.data.tags).toEqual([
             {
                 url: 'migrator-added-tag-category-news',
                 data: {name: 'News', slug: 'category-news'}
