@@ -1,4 +1,4 @@
-require('./utils');
+/* eslint no-undef: 0 */
 const csv = require('@tryghost/mg-fs-utils/lib/csv');
 const fs = require('fs');
 const path = require('path');
@@ -13,13 +13,13 @@ const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
 const inputPostsPath = path.resolve('./test/fixtures/posts');
 
 describe('Process Substack ZIP file', function () {
-    before(function () {
+    beforeAll(function () {
         childProcess.execSync(`zip -r ${inputZipPath} *`, {
             cwd: inputPath
         });
     });
 
-    after(function () {
+    afterAll(function () {
         fs.unlink(inputZipPath, (err) => {
             if (err) {
                 throw err;
@@ -27,7 +27,7 @@ describe('Process Substack ZIP file', function () {
         });
     });
 
-    it('Reads ZIP and generates Ghost JSON', async function () {
+    test('Reads ZIP and generates Ghost JSON', async function () {
         const processed = await processZip.ingest({
             options: {
                 pathToZip: inputZipPath,
@@ -37,22 +37,22 @@ describe('Process Substack ZIP file', function () {
             }
         });
 
-        processed.posts.length.should.eql(3);
+        expect(processed.posts).toBeArrayOfSize(3);
 
-        processed.posts[0].url.should.eql('https://example.substack.com/p/plain-text');
-        processed.posts[0].substackId.should.eql('123401.plain-text');
-        processed.posts[0].substackPodcastURL.should.eql(false);
-        processed.posts[0].data.slug.should.eql('plain-text');
+        expect(processed.posts[0].url).toEqual('https://example.substack.com/p/plain-text');
+        expect(processed.posts[0].substackId).toEqual('123401.plain-text');
+        expect(processed.posts[0].substackPodcastURL).toEqual(false);
+        expect(processed.posts[0].data.slug).toEqual('plain-text');
 
-        processed.posts[1].url.should.eql('https://example.substack.com/p/podcast');
-        processed.posts[1].substackId.should.eql('123402.podcast');
-        processed.posts[1].substackPodcastURL.should.eql('https://example.com/my-audio/file.mp3');
-        processed.posts[1].data.slug.should.eql('podcast');
+        expect(processed.posts[1].url).toEqual('https://example.substack.com/p/podcast');
+        expect(processed.posts[1].substackId).toEqual('123402.podcast');
+        expect(processed.posts[1].substackPodcastURL).toEqual('https://example.com/my-audio/file.mp3');
+        expect(processed.posts[1].data.slug).toEqual('podcast');
 
-        processed.posts[2].url.should.eql('https://example.substack.com/p/draft-text');
-        processed.posts[2].substackId.should.eql('123404.draft-text');
-        processed.posts[2].substackPodcastURL.should.eql(false);
-        processed.posts[2].data.slug.should.eql('draft-text');
+        expect(processed.posts[2].url).toEqual('https://example.substack.com/p/draft-text');
+        expect(processed.posts[2].substackId).toEqual('123404.draft-text');
+        expect(processed.posts[2].substackPodcastURL).toEqual(false);
+        expect(processed.posts[2].data.slug).toEqual('draft-text');
     });
 });
 
@@ -80,7 +80,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         postDataFromFixtures = input;
     });
 
-    it('Reads CSV and converts to JSON', async function () {
+    test('Reads CSV and converts to JSON', async function () {
         const ctx = {
             options: {
                 drafts: true,
@@ -91,56 +91,55 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const mapped = await map(postDataFromFixtures, ctx.options);
 
         // This attribute gets stripped out in process(), so check it now
-        mapped.posts[0].substackId.should.eql('123401.plain-text');
+        expect(mapped.posts[0].substackId).toEqual('123401.plain-text');
 
         const processed = await process(mapped, ctx);
 
-        processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(3);
+        expect(processed.posts).toBeArrayOfSize(3);
 
         const post = processed.posts[0];
-        post.should.be.an.Object();
+        expect(post).toBeObject();
 
-        post.url.should.eql('https://example.substack.com/p/plain-text');
+        expect(post.url).toEqual('https://example.substack.com/p/plain-text');
 
         const data = post.data;
-        data.should.be.an.Object();
+        expect(data).toBeObject();
 
-        data.slug.should.eql('plain-text');
-        data.published_at.should.eql('2019-07-26T20:48:19.814Z');
-        data.updated_at.should.eql('2019-07-26T20:48:19.814Z');
-        data.created_at.should.eql('2019-07-26T20:48:19.814Z');
-        data.title.should.eql('Plain Text');
-        data.custom_excerpt.should.eql('Lorem ipsum dolor sit amet.');
-        data.type.should.eql('post');
-        data.status.should.eql('published');
-        data.visibility.should.eql('public');
+        expect(data.slug).toEqual('plain-text');
+        expect(data.published_at).toEqual('2019-07-26T20:48:19.814Z');
+        expect(data.updated_at).toEqual('2019-07-26T20:48:19.814Z');
+        expect(data.created_at).toEqual('2019-07-26T20:48:19.814Z');
+        expect(data.title).toEqual('Plain Text');
+        expect(data.custom_excerpt).toEqual('Lorem ipsum dolor sit amet.');
+        expect(data.type).toEqual('post');
+        expect(data.status).toEqual('published');
+        expect(data.visibility).toEqual('public');
 
-        data.tags.length.should.equal(4);
+        expect(data.tags).toBeArrayOfSize(4);
 
         const tag1 = data.tags[0];
-        tag1.url.should.eql('migrator-added-tag');
-        tag1.data.name.should.eql('#substack');
+        expect(tag1.url).toEqual('migrator-added-tag');
+        expect(tag1.data.name).toEqual('#substack');
 
         const tag2 = data.tags[1];
-        tag2.url.should.eql('https://example.substack.com/tag/newsletter');
-        tag2.data.name.should.eql('Newsletter');
+        expect(tag2.url).toEqual('https://example.substack.com/tag/newsletter');
+        expect(tag2.data.name).toEqual('Newsletter');
 
         const tag3 = data.tags[2];
-        tag3.url.should.eql('migrator-added-tag-substack-type-newsletter');
-        tag3.data.name.should.eql('#substack-type-newsletter');
+        expect(tag3.url).toEqual('migrator-added-tag-substack-type-newsletter');
+        expect(tag3.data.name).toEqual('#substack-type-newsletter');
 
         const tag4 = data.tags[3];
-        tag4.url.should.eql('migrator-added-tag-substack-access-everyone');
-        tag4.data.name.should.eql('#substack-access-everyone');
+        expect(tag4.url).toEqual('migrator-added-tag-substack-access-everyone');
+        expect(tag4.data.name).toEqual('#substack-access-everyone');
 
         const author = data.author;
-        author.url.should.eql('https://example.substack.com/author/exampleuser');
-        author.data.email.should.eql('exampleuser@email.com');
-        author.data.slug.should.eql('exampleuser');
+        expect(author.url).toEqual('https://example.substack.com/author/exampleuser');
+        expect(author.data.email).toEqual('exampleuser@email.com');
+        expect(author.data.slug).toEqual('exampleuser');
     });
 
-    it('Can add a tag based on the post type', async function () {
+    test('Can add a tag based on the post type', async function () {
         const ctx = {
             options: {
                 drafts: true,
@@ -154,26 +153,26 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const post = processed.posts[1];
         const data = post.data;
 
-        data.tags.length.should.equal(4);
+        expect(data.tags).toBeArrayOfSize(4);
 
         const tag1 = data.tags[0];
-        tag1.url.should.eql('migrator-added-tag');
-        tag1.data.name.should.eql('#substack');
+        expect(tag1.url).toEqual('migrator-added-tag');
+        expect(tag1.data.name).toEqual('#substack');
 
         const tag2 = data.tags[1];
-        tag2.url.should.eql('https://example.substack.com/tag/podcast');
-        tag2.data.name.should.eql('Podcast');
+        expect(tag2.url).toEqual('https://example.substack.com/tag/podcast');
+        expect(tag2.data.name).toEqual('Podcast');
 
         const tag3 = data.tags[2];
-        tag3.url.should.eql('migrator-added-tag-substack-type-podcast');
-        tag3.data.name.should.eql('#substack-type-podcast');
+        expect(tag3.url).toEqual('migrator-added-tag-substack-type-podcast');
+        expect(tag3.data.name).toEqual('#substack-type-podcast');
 
         const tag4 = data.tags[3];
-        tag4.url.should.eql('migrator-added-tag-substack-access-everyone');
-        tag4.data.name.should.eql('#substack-access-everyone');
+        expect(tag4.url).toEqual('migrator-added-tag-substack-access-everyone');
+        expect(tag4.data.name).toEqual('#substack-access-everyone');
     });
 
-    it('Can convert a draft podcast post', async function () {
+    test('Can convert a draft podcast post', async function () {
         const ctx = {
             options: {
                 drafts: true,
@@ -187,11 +186,11 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         // The 3rd processed post is a draft podcast
         const post = processed.posts[2];
 
-        post.data.status.should.eql('draft');
-        post.data.tags[1].data.name.should.eql('Newsletter');
+        expect(post.data.status).toEqual('draft');
+        expect(post.data.tags[1].data.name).toEqual('Newsletter');
     });
 
-    it('Can migrate posts before a given date', async function () {
+    test('Can migrate posts before a given date', async function () {
         const ctx = {
             options: {
                 drafts: true,
@@ -203,11 +202,10 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const mapped = await map(postDataFromFixtures, ctx.options);
         const processed = await process(mapped, ctx);
 
-        processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(1);
+        expect(processed.posts).toBeArrayOfSize(1);
     });
 
-    it('Can migrate posts between 2 given dates', async function () {
+    test('Can migrate posts between 2 given dates', async function () {
         const ctx = {
             options: {
                 drafts: true,
@@ -220,11 +218,10 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const mapped = await map(postDataFromFixtures, ctx.options);
         const processed = await process(mapped, ctx);
 
-        processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(2);
+        expect(processed.posts).toBeArrayOfSize(2);
     });
 
-    it('Can migrate posts after a given date', async function () {
+    test('Can migrate posts after a given date', async function () {
         const ctx = {
             options: {
                 drafts: true,
@@ -236,11 +233,10 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const mapped = await map(postDataFromFixtures, ctx.options);
         const processed = await process(mapped, ctx);
 
-        processed.posts.should.be.an.Object();
-        processed.posts.length.should.equal(2);
+        expect(processed.posts).toBeArrayOfSize(2);
     });
 
-    it('Can optionally include thread posts', async function () {
+    test('Can optionally include thread posts', async function () {
         const ctx = {
             options: {
                 drafts: true,
@@ -251,13 +247,12 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         };
         const mapped = await map(postDataFromFixtures, ctx.options);
 
-        mapped.posts.should.be.an.Object();
-        mapped.posts.length.should.equal(4);
+        expect(mapped.posts).toBeArrayOfSize(4);
     });
 });
 
 describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
-    it('Can transform subscribe links with custom defined URL', async function () {
+    test('Can transform subscribe links with custom defined URL', async function () {
         const post = {
             data: {
                 html: `<p class="button-wrapper" data-attrs='{"url":"https://example.com/subscribe?","text":"Sign up now","class":null}'><a class="button primary" href="https://example.com/subscribe?"><span>Sign up now</span></a></p><p><a href="https://example.com/subscribe">Subscribe</a></p>`
@@ -270,10 +265,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await process.processContent(post, url, options);
 
-        processed.data.html.should.eql(`<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div><p><a href="#/portal/signup">Subscribe</a></p>`);
+        expect(processed.data.html).toEqual(`<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div><p><a href="#/portal/signup">Subscribe</a></p>`);
     });
 
-    it('Can transform comment buttons with custom defined URL', async function () {
+    test('Can transform comment buttons with custom defined URL', async function () {
         const post = {
             data: {
                 html: `<p class="button-wrapper" data-attrs="{&quot;url&quot;:&quot;https://example.com/p/my-post/comments&quot;,&quot;text&quot;:&quot;Leave a comment&quot;,&quot;action&quot;:null,&quot;class&quot;:null}"><a class="button primary" href="https://example.com/p/my-post/comments"><span>Leave a comment</span></a></p>`
@@ -287,10 +282,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await process.processContent(post, url, options);
 
-        processed.data.html.should.eql(`<div class="kg-card kg-button-card kg-align-center"><a href="#post-comments" class="kg-btn kg-btn-accent">Leave a comment</a></div>`);
+        expect(processed.data.html).toEqual(`<div class="kg-card kg-button-card kg-align-center"><a href="#post-comments" class="kg-btn kg-btn-accent">Leave a comment</a></div>`);
     });
 
-    it('Can remove transform comment buttons', async function () {
+    test('Can remove transform comment buttons', async function () {
         const post = {
             data: {
                 html: `<p>Hello</p><p class="button-wrapper" data-attrs="{&quot;url&quot;:&quot;https://example.com/p/my-post/comments&quot;,&quot;text&quot;:&quot;Leave a comment&quot;,&quot;action&quot;:null,&quot;class&quot;:null}"><a class="button primary" href="https://example.com/p/my-post/comments"><span>Leave a comment</span></a></p><p>World</p>`
@@ -303,10 +298,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await process.processContent(post, url, options);
 
-        processed.data.html.should.eql(`<p>Hello</p><p>World</p>`);
+        expect(processed.data.html).toEqual(`<p>Hello</p><p>World</p>`);
     });
 
-    it('Will not change button element hrefs that are not subscribe buttons', async function () {
+    test('Will not change button element hrefs that are not subscribe buttons', async function () {
         const post = {
             data: {
                 html: `<p class="button-wrapper" data-attrs='{"url":"https://example.com/subscribe?","text":"Sign up now","class":null}'><a class="button primary" href="https://example.com/subscribe?"><span>Sign up now</span></a></p><p>Lorem ipsum dolor sit.</p><p class="button-wrapper" data-attrs='{"url":"https://ghost.org","text":"Try Ghost","class":null}'><a class="button primary" href="https://ghost.org"><span>Try Ghost</span></a></p>`
@@ -319,10 +314,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await process.processContent(post, url, options);
 
-        processed.data.html.should.eql(`<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div><p>Lorem ipsum dolor sit.</p><div class="kg-card kg-button-card kg-align-center"><a href="https://ghost.org/" class="kg-btn kg-btn-accent">Try Ghost</a></div>`);
+        expect(processed.data.html).toEqual(`<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div><p>Lorem ipsum dolor sit.</p><div class="kg-card kg-button-card kg-align-center"><a href="https://ghost.org/" class="kg-btn kg-btn-accent">Try Ghost</a></div>`);
     });
 
-    it('Will remove share buttons', async function () {
+    test('Will remove share buttons', async function () {
         const post = {
             data: {
                 html: `<p class="button-wrapper" data-attrs='{"url":"https://example.com/subscribe?","text":"Sign up now","class":null}'><a class="button primary" href="https://example.com/subscribe?"><span>Sign up now</span></a></p><p class="button-wrapper" data-attrs="{&quot;url&quot;:&quot;https://example.com/?utm_source=substack&amp;utm_medium=email&amp;utm_content=share&amp;action=share&quot;,&quot;text&quot;:&quot;Share PodSnacks&quot;,&quot;action&quot;:null,&quot;class&quot;:null}"><a class="button primary" href="https://example.com/?utm_source=substack&amp;utm_medium=email&amp;utm_content=share&amp;action=share"><span>Share PodSnacks</span></a></p>`
@@ -335,10 +330,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await process.processContent(post, url, options);
 
-        processed.data.html.should.eql(`<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div>`);
+        expect(processed.data.html).toEqual(`<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div>`);
     });
 
-    it('Can convert signup forms to signup buttons', async function () {
+    test('Can convert signup forms to signup buttons', async function () {
         const post = {
             data: {
                 html: `<p>Lorem ipsum</p><div class="subscription-widget-wrap" data-attrs="{&quot;url&quot;:&quot;https://example.com/subscribe?&quot;,&quot;text&quot;:&quot;Subscribe&quot;}"><div class="subscription-widget show-subscribe"><div class="preamble"><p class="cta-caption">You should sign up!</p></div><form class="subscription-widget-subscribe"><input type="email" class="email-input" name="email" placeholder="Type your email…" tabindex="-1"><input type="submit" class="button primary" value="Subscribe"><div class="fake-input-wrapper"><div class="fake-input"></div><div class="fake-button"></div></div></form></div></div>`
@@ -351,10 +346,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await process.processContent(post, url, options);
 
-        processed.data.html.should.eql(`<p>Lorem ipsum</p><div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>`);
+        expect(processed.data.html).toEqual(`<p>Lorem ipsum</p><div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>`);
     });
 
-    it('Can convert an image wrapped with a link', async function () {
+    test('Can convert an image wrapped with a link', async function () {
         const post = {
             data: {
                 html: `<div class="captioned-image-container">
@@ -385,7 +380,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await process.processContent(post, url, options);
 
-        processed.data.html.should.eql('<figure class="kg-card kg-image-card kg-card-hascaption">\n' +
+        expect(processed.data.html).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption">\n' +
         '                        <a target="_blank" href="https://example.com">\n' +
         '                            <img src="https://example.com/photo_1200x800.jpeg" alt="A nice photo" class="kg-image">\n' +
         '                            \n' +
@@ -395,7 +390,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         '                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>');
     });
 
-    it('Can wrap lists with images in HTML comments', async function () {
+    test('Can wrap lists with images in HTML comments', async function () {
         const post = {
             data: {
                 html: `<ul>
@@ -414,7 +409,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await process.processContent(post, url, options);
 
-        processed.data.html.should.eql('<!--kg-card-begin: html--><ul>\n' +
+        expect(processed.data.html).toEqual('<!--kg-card-begin: html--><ul>\n' +
         '                    <li>Proin nunc purus, sollicitudin vitae dui id, condimentum efficitur mauris</li>\n' +
         '                    <li><img src="https://example.com/photo.jpg" alt="A nice photo"></li>\n' +
         '                    <li>Vivamus <a href="https://example.com">congue</a> nisl in gravida blandit</li>\n' +
@@ -425,7 +420,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         '                </ul>');
     });
 
-    it('Can process footnotes in text content', async function () {
+    test('Can process footnotes in text content', async function () {
         const post = {
             data: {
                 html: `<p>Lorem ipsum</p>
@@ -464,7 +459,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await process.processContent(post, url, options);
 
-        processed.data.html.should.eql('<p>Lorem ipsum</p>\n' +
+        expect(processed.data.html).toEqual('<p>Lorem ipsum</p>\n' +
         '                <!--kg-card-begin: html--><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.<a class="footnote-anchor" id="footnote-anchor-1" href="#footnote-1">1</a></p><!--kg-card-end: html-->\n' +
         '                <!--kg-card-begin: html--><ol>\n' +
         '                    <li>Lorem</li>\n' +
@@ -486,7 +481,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         '                    </li></ol></div><!--kg-card-end: html-->');
     });
 
-    it('Can process embedded posts', async function () {
+    test('Can process embedded posts', async function () {
         const post = {
             data: {
                 html: `<p>Lorem ipsum</p>
@@ -515,14 +510,14 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await process.processContent(post, url, options);
 
-        processed.data.html.should.eql('<p>Lorem ipsum</p>\n' +
+        expect(processed.data.html).toEqual('<p>Lorem ipsum</p>\n' +
         '\n' +
         '                <!--kg-card-begin: html--><figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.substack.com/p/example-post"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Lorem ipsum, This is the Title I’m Showing You</div><div class="kg-bookmark-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad it’s veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat …</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://bucketeer-1234.s3.amazonaws.com/public/images/5678_680x680.png"><span class="kg-bookmark-author">Example Site</span></div></div></a></figure><!--kg-card-end: html-->\n' +
         '\n' +
         '                <p>Dolor Simet</p>');
     });
 
-    it('Can add an audio card for podcast posts', async function () {
+    test('Can add an audio card for podcast posts', async function () {
         const post = {
             substackPodcastURL: 'https://example.com/files/audio.mp3',
             data: {
@@ -535,14 +530,14 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await process.processContent(post, url, options);
 
-        processed.data.html.should.containEql('<p>Hello</p>');
-        processed.data.html.should.containEql('<div class="kg-card kg-audio-card">');
-        processed.data.html.should.containEql('<div class="kg-audio-player-container">');
-        processed.data.html.should.containEql('<audio src="https://example.com/files/audio.mp3" preload="metadata"></audio>');
-        processed.data.html.should.containEql('<div class="kg-audio-title">My Podcast Episode #1</div>');
+        expect(processed.data.html).toContain('<p>Hello</p>');
+        expect(processed.data.html).toContain('<div class="kg-card kg-audio-card">');
+        expect(processed.data.html).toContain('<div class="kg-audio-player-container">');
+        expect(processed.data.html).toContain('<audio src="https://example.com/files/audio.mp3" preload="metadata"></audio>');
+        expect(processed.data.html).toContain('<div class="kg-audio-title">My Podcast Episode #1</div>');
     });
 
-    it('Can remove the first image if it is the same as `og:image`', async function () {
+    test('Can remove the first image if it is the same as `og:image`', async function () {
         const post = {
             data: {
                 html: `<p></p><img src="https://example.com/content/file_1200x800.jpg" /><p>My content</p>`,
@@ -559,6 +554,6 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await process.processContent(post, url, options);
 
-        processed.data.html.should.eql('<p>My content</p>');
+        expect(processed.data.html).toEqual('<p>My content</p>');
     });
 });
