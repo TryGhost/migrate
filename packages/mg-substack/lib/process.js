@@ -33,7 +33,11 @@ const getUnsizedImageName = (str) => {
     let last = srcParts.slice(-1)[0];
     let matches = noSizeRegex.exec(last);
 
-    return matches[1];
+    if (matches) {
+        return matches[1];
+    } else {
+        return str;
+    }
 };
 
 const processContent = (post, siteUrl, options) => {
