@@ -214,7 +214,7 @@ module.exports.getFullTaskList = (url, options) => {
         {
             title: 'Fetch images via AssetScraper',
             skip: (ctx) => {
-                return ![ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].some(() => true);
+                return [ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false);
             },
             task: async (ctx) => {
                 // 6. Format the data as a valid Ghost JSON file
