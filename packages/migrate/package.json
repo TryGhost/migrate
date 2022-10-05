@@ -50,7 +50,7 @@
     "@tryghost/mg-substack-members-csv": "^0.2.20",
     "@tryghost/mg-webscraper": "^0.7.2",
     "@tryghost/mg-wp-api": "^0.7.12",
-    "@tryghost/pretty-cli": "1.2.30",
+    "@tryghost/pretty-cli": "1.2.31",
     "@tryghost/string": "0.2.1",
     "cheerio": "0.22.0",
     "fs-extra": "10.1.0",
