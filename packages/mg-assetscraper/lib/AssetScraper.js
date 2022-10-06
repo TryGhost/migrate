@@ -6,6 +6,8 @@ const url = require('url');
 const axios = require('axios');
 const FileType = require('file-type');
 const MarkdownIt = require('markdown-it');
+const https = require('https');
+const http = require('http');
 const makeTaskRunner = require('./task-runner');
 const AssetCache = require('./AssetCache');
 
@@ -543,6 +545,44 @@ class ImageScraper {
     }
 
     /**
+     * Get the headers for a remote file without downloading the whole thing
+     * @param {String} src A URL to a remote asset
+     * @returns {Object} The headers
+     *
+     * @example
+     * getRemoteHeaders('https://example.com/my/file.jpg');
+     * => {status: 200, headers: {...}}
+     */
+    getRemoteHeaders(src) {
+        return new Promise((response, reject) => {
+            let req = src.startsWith('https://') ? https.get(src, {timeout: 20000}) : http.get(src, {timeout: 20000});
+
+            req.once('response', (r) => {
+                req.destroy();
+
+                if (r.headers) {
+                    response({
+                        status: r.statusCode,
+                        headers: r.headers
+                    });
+                } else {
+                    reject('Failed to fetch file data');
+                }
+            });
+
+            req.once('error', (e) => {
+                req.destroy();
+                reject(e);
+            });
+
+            req.once('timeout', (e) => {
+                req.destroy();
+                reject(e);
+            });
+        });
+    }
+
+    /**
      * Create tasks to find out what the file type if for all given assets
      * @param {Object} [ctx]
      * @returns {Array} The list of tasks for Listr to run
@@ -561,10 +601,7 @@ class ImageScraper {
                 },
                 task: async () => {
                     try {
-                        const theHead = await axios.head(encodeURI(item.newRemote), {
-                            timeout: 2000,
-                            validateStatus: false
-                        });
+                        const theHead = await this.getRemoteHeaders(encodeURI(item.newRemote));
 
                         let newCache = item;
 
@@ -831,7 +868,8 @@ class ImageScraper {
             tasks.push({
                 title: `Replace: ${foundItem.remote}`,
                 task: async () => {
-                    let findThis = new RegExp(foundItem.remote, 'gm');
+                    let safeHaystack = item.remote.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    let findThis = new RegExp(safeHaystack, 'g');
 
                     let found = this._fixedValues.match(findThis);
 
@@ -896,7 +934,7 @@ class ImageScraper {
             task: async (ctx) => { // eslint-disable-line no-shadow
                 let fileTypeTasks = this.applyFileTypes(ctx);
 
-                return makeTaskRunner(fileTypeTasks, {concurrent: 5, topLevel: false});
+                return makeTaskRunner(fileTypeTasks, {concurrent: 3, topLevel: false});
             }
         });
 
