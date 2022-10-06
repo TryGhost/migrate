@@ -25,7 +25,7 @@
     "jest-extended": "3.1.0"
   },
   "dependencies": {
-    "@tryghost/errors": "1.2.17",
+    "@tryghost/errors": "1.2.18",
     "@tryghost/listr-smart-renderer": "0.2.10",
     "axios": "0.27.2",
     "cheerio": "1.0.0-rc.2",
