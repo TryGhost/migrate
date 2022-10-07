@@ -380,7 +380,7 @@ class FileCache {
     hasFile(filename, type) {
         let pathToCheck = filename;
 
-        if (type && !_.includes(['tmp', 'json', 'image'], type)) {
+        if (type && !_.includes(['tmp', 'json', 'image', 'zip'], type)) {
             throw new errors.NotFoundError({message: 'Unknown file type'});
         } else if (type) {
             pathToCheck = path.join(this[`${type}Dir`], filename);
