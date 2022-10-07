@@ -13,7 +13,7 @@ const AssetCache = require('./AssetCache');
 
 // Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/shared/config/overrides.json
 const knownImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/webp'];
-const knownMediaTypes = ['video/mp4', 'video/webm', 'video/ogg', 'audio/mpeg', 'audio/vnd.wav', 'audio/wave', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/x-m4a'];
+const knownMediaTypes = ['video/mp4', 'video/webm', 'video/ogg', 'audio/mpeg', 'audio/mp3', 'audio/vnd.wav', 'audio/wave', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/x-m4a'];
 const knownFileTypes = ['application/pdf', 'application/json', 'application/ld+json', 'application/vnd.oasis.opendocument.presentation', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.text', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/rtf', 'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/xml', 'application/atom+xml'];
 const knownTypes = [...knownImageTypes, ...knownMediaTypes, ...knownFileTypes];
 
@@ -156,10 +156,6 @@ class ImageScraper {
             return false;
         }
 
-        if (this.isBlockedDomain(input)) {
-            return false;
-        }
-
         return true;
     }
 
@@ -214,6 +210,12 @@ class ImageScraper {
 
             // Transform relative links starting with `/` or `__GHOST_URL__` to absolute
             obj.newRemote = this.relativeToAbsolute(obj.newRemote);
+
+            // TODO: If a blocked domain, still add to cache but add a `skip: true` value so we don't keep checking it
+            if (this.isBlockedDomain(obj.newRemote)) {
+                obj.skip = true;
+                obj.skipReason = 'Is blocked domain';
+            }
 
             this.AssetCache.add(obj);
 
@@ -375,11 +377,13 @@ class ImageScraper {
 
             let srcsetParts = srcset.match(/[^"\'=\s]+\.(jpe?g|png|gif)/gmi); // eslint-disable-line no-useless-escape
 
-            srcsetParts.forEach((item) => {
-                this.addRawValue({
-                    remote: item
+            if (srcsetParts) {
+                srcsetParts.forEach((item) => {
+                    this.addRawValue({
+                        remote: item
+                    });
                 });
-            });
+            }
         });
 
         $('video').each((i, el) => {
@@ -600,16 +604,16 @@ class ImageScraper {
                     return cacheItem && cacheItem.checked;
                 },
                 task: async () => {
+                    let newCache = item;
+
+                    newCache.checked = true;
+                    newCache.data = {};
+                    newCache.head = {};
+
                     try {
                         const theHead = await this.getRemoteHeaders(encodeURI(item.newRemote));
 
-                        let newCache = item;
-
-                        newCache.checked = true;
-
                         newCache.status = theHead.status;
-                        newCache.data = {};
-                        newCache.head = {};
 
                         if (theHead.headers) {
                             if (theHead.headers['content-type']) {
@@ -624,6 +628,9 @@ class ImageScraper {
 
                         this.AssetCache.add(newCache);
                     } catch (error) {
+                        newCache.skip = true;
+                        newCache.skipReason = error;
+                        this.AssetCache.add(newCache);
                         // Silently fail unless in verbose mode, we don't need ti catch these
                         if (ctx.options.verbose) {
                             ctx.errors.push(`Could not get ${item.newRemote}`);
@@ -790,8 +797,16 @@ class ImageScraper {
         // TODO: Add the ability to rate limit
         let tasks = [];
 
-        this.AssetCache.all().forEach((item, index) => {
+        this.AssetCache.all().forEach((item) => {
+            if (item.skip) {
+                return false;
+            }
+
             if (!item.head) {
+                return false;
+            }
+
+            if (!item.head.contentLength || item.head.contentLength === 0) {
                 return false;
             }
 
@@ -807,11 +822,12 @@ class ImageScraper {
             const impliedFileType = item.head.contentType || null;
             const saveLocation = this.determineSaveLocation(impliedFileType);
 
-            const imageUrl = url.parse(src);
-            const imageFile = this.fileCache.resolveFileName(imageUrl.pathname, saveLocation);
-            let imageOptions = Object.assign(imageFile, this.defaultOptions);
+            const assetUrl = url.parse(src);
+            const assetFile = this.fileCache.resolveFileName(assetUrl.pathname, saveLocation);
+            let imageOptions = Object.assign(assetFile, this.defaultOptions);
 
-            const assetAlreadyDownloaded = this.fileCache.hasFile(imageFile.storagePath);
+            // File extensions and paths can change, so check the saved output path
+            const assetAlreadyDownloaded = this.fileCache.hasFile(item.newLocal, 'zip');
 
             tasks.push({
                 title: `Downloading file: ${src}`,
@@ -835,8 +851,6 @@ class ImageScraper {
                             item.newLocal = imageOptions.outputPath;
 
                             this.AssetCache.add(item);
-
-                            this._assetCache[index] = item;
                         }
                     } catch (error) {
                         let fetchError = ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error});
@@ -934,7 +948,7 @@ class ImageScraper {
             task: async (ctx) => { // eslint-disable-line no-shadow
                 let fileTypeTasks = this.applyFileTypes(ctx);
 
-                return makeTaskRunner(fileTypeTasks, {concurrent: 3, topLevel: false});
+                return makeTaskRunner(fileTypeTasks, {concurrent: 5, topLevel: false});
             }
         });
 
@@ -958,7 +972,7 @@ class ImageScraper {
             task: async (ctx) => { // eslint-disable-line no-shadow
                 let downloadTasks = this.downloadFiles(ctx);
 
-                return makeTaskRunner(downloadTasks, {concurrent: 3, topLevel: false});
+                return makeTaskRunner(downloadTasks, {concurrent: 5, topLevel: false});
             }
         });
 

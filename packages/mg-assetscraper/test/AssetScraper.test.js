@@ -68,8 +68,8 @@ describe('AssetScraper', function () {
 
         const data = assetScraper._foundAssets;
 
-        expect(data).toBeArrayOfSize(1);
-        expect(data[0].newRemote).toEqual('__GHOST_URL__/content/images/2022/07/screenshot-14-04-15-28-07-2022-1.png');
+        expect(data[1].skip).toBeTruthy();
+        expect(data[2].skip).toBeTruthy();
     });
 
     test('Will accept an single blocked domain string', function () {
@@ -107,8 +107,7 @@ describe('AssetScraper', function () {
 
         const data = assetScraper._foundAssets;
 
-        expect(data).toBeArrayOfSize(1);
-        expect(data[0].newRemote).toEqual('__GHOST_URL__/content/images/2022/07/screenshot-14-04-15-28-07-2022-1.png');
+        expect(data[1].skip).toBeTruthy();
     });
 
     test('Will normalize schemaless URLs', function () {
@@ -127,8 +126,9 @@ describe('AssetScraper', function () {
 
         const data = assetScraper._foundAssets;
 
-        expect(data).toBeArrayOfSize(1);
-        expect(data[0].newRemote).toEqual('https://old-service.com/user.png');
+        expect(data).toBeArrayOfSize(2);
+        expect(data[0].newRemote).toEqual('https://www.gravatar.com/avatar/123456782c308a29afbcffde2535a362?s=250&d=mm&r=x');
+        expect(data[1].newRemote).toEqual('https://old-service.com/user.png');
     });
 
     test('Will transform relative links to absolute', function () {
@@ -158,15 +158,17 @@ describe('AssetScraper', function () {
 
         const data = assetScraper._foundAssets;
 
-        expect(data).toBeArrayOfSize(4);
+        expect(data).toBeArrayOfSize(5);
         expect(data[0].remote).toEqual('__GHOST_URL__/content/images/2022/07/photo.jpg');
         expect(data[0].newRemote).toEqual('https://example.com/content/images/2022/07/photo.jpg');
         expect(data[1].remote).toEqual('/content/images/2022/07/another-photo.jpg');
         expect(data[1].newRemote).toEqual('https://example.com/content/images/2022/07/another-photo.jpg');
-        expect(data[2].remote).toEqual('//old-service.com/user.png');
-        expect(data[2].newRemote).toEqual('https://old-service.com/user.png');
-        expect(data[3].remote).toEqual('http://another-example.com/path/to/image.jpg');
-        expect(data[3].newRemote).toEqual('http://another-example.com/path/to/image.jpg');
+        expect(data[2].remote).toEqual('//www.gravatar.com/avatar/123456782c308a29afbcffde2535a362?s=250&d=mm&r=x');
+        expect(data[2].newRemote).toEqual('https://www.gravatar.com/avatar/123456782c308a29afbcffde2535a362?s=250&d=mm&r=x');
+        expect(data[3].remote).toEqual('//old-service.com/user.png');
+        expect(data[3].newRemote).toEqual('https://old-service.com/user.png');
+        expect(data[4].remote).toEqual('http://another-example.com/path/to/image.jpg');
+        expect(data[4].newRemote).toEqual('http://another-example.com/path/to/image.jpg');
     });
 
     test('Will remove duplicate assets', function () {
@@ -225,11 +227,9 @@ describe('AssetScraper', function () {
 
         const data = assetScraper._foundAssets;
 
-        expect(data).toBeArrayOfSize(2);
-        expect(data[0].remote).toEqual('http://another-example.com/path/to/image.jpg');
-        expect(data[0].newRemote).toEqual('http://another-example.com/path/to/image.jpg');
-        expect(data[1].remote).toEqual('http://lorem.ipsum.com/path/to/image.jpg');
-        expect(data[1].newRemote).toEqual('http://lorem.ipsum.com/path/to/image.jpg');
+        expect(data).toBeArrayOfSize(4);
+        expect(data[1].skip).toBeTruthy();
+        expect(data[2].skip).toBeTruthy();
     });
 
     test('Will replace asset references with new URLs', async function () {
@@ -601,10 +601,12 @@ describe('Find assets in content', function () {
 
             const data = assetScraper._foundAssets;
 
-            expect(data).toBeArrayOfSize(3);
+            expect(data).toBeArrayOfSize(4);
             expect(data[0].newRemote).toEqual('__GHOST_URL__/content/images/2022/09/screenshot-40-54-21-02-09-2022.png');
-            expect(data[1].newRemote).toEqual('__GHOST_URL__/content/images/2022/09/screenshot-40-54-21-02-09-2023.png');
-            expect(data[2].newRemote).toEqual('__GHOST_URL__/content/images/2022/09/screenshot-40-54-21-02-09-2024.png');
+            expect(data[1].newRemote).toEqual('https://images.unsplash.com/photo.jpg');
+            expect(data[1].skip).toBeTruthy();
+            expect(data[2].newRemote).toEqual('__GHOST_URL__/content/images/2022/09/screenshot-40-54-21-02-09-2023.png');
+            expect(data[3].newRemote).toEqual('__GHOST_URL__/content/images/2022/09/screenshot-40-54-21-02-09-2024.png');
         });
 
         test('Will find images in a Mobiledoc object', async function () {
