@@ -827,7 +827,7 @@ class ImageScraper {
             let imageOptions = Object.assign(assetFile, this.defaultOptions);
 
             // File extensions and paths can change, so check the saved output path
-            const assetAlreadyDownloaded = this.fileCache.hasFile(item.newLocal, 'zip');
+            const assetAlreadyDownloaded = (item.newLocal) ? this.fileCache.hasFile(item.newLocal, 'zip') : this.fileCache.hasFile(assetFile.storagePath, 'zip');
 
             tasks.push({
                 title: `Downloading file: ${src}`,
