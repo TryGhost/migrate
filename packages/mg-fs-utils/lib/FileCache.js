@@ -386,7 +386,11 @@ class FileCache {
             pathToCheck = path.join(this[`${type}Dir`], filename);
         }
 
-        return fs.existsSync(pathToCheck);
+        try {
+            return fs.existsSync(pathToCheck);
+        } catch (error) {
+            return false;
+        }
     }
 
     /**
