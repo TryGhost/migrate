@@ -4,10 +4,9 @@ const cheerio = require('cheerio');
 const path = require('path');
 const url = require('url');
 const axios = require('axios');
+const got = require('got');
 const FileType = require('file-type');
 const MarkdownIt = require('markdown-it');
-const https = require('https');
-const http = require('http');
 const makeTaskRunner = require('./task-runner');
 const AssetCache = require('./AssetCache');
 
@@ -558,30 +557,31 @@ class ImageScraper {
      * => {status: 200, headers: {...}}
      */
     getRemoteHeaders(src) {
-        return new Promise((response, reject) => {
-            let req = src.startsWith('https://') ? https.get(src, {timeout: 20000}) : http.get(src, {timeout: 20000});
+        return new Promise((resolve, reject) => {
+            const stream = got.stream(src, {
+                timeout: 3000
+            });
 
-            req.once('response', (r) => {
-                req.destroy();
+            let req;
 
-                if (r.headers) {
-                    response({
-                        status: r.statusCode,
-                        headers: r.headers
+            stream.on('request', _req => req = _req);
+
+            stream.on('response', (res) => {
+                req.abort();
+
+                if (res.headers) {
+                    resolve({
+                        status: res.statusCode,
+                        headers: res.headers
                     });
                 } else {
                     reject('Failed to fetch file data');
                 }
             });
 
-            req.once('error', (e) => {
+            stream.on('error', (error) => {
                 req.destroy();
-                reject(e);
-            });
-
-            req.once('timeout', (e) => {
-                req.destroy();
-                reject(e);
+                reject(error);
             });
         });
     }
