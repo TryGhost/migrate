@@ -629,7 +629,7 @@ class ImageScraper {
                         this.AssetCache.add(newCache);
                     } catch (error) {
                         newCache.skip = true;
-                        newCache.skipReason = error.code;
+                        newCache.skipReason = (error && error.code) ? error.code : 'Undefined error';
                         this.AssetCache.add(newCache);
                         // Silently fail unless in verbose mode, we don't need ti catch these
                         if (ctx.options.verbose) {
