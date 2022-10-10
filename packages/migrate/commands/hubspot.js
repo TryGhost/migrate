@@ -1,23 +1,24 @@
-const hubspot = require('../sources/hubspot');
-const ui = require('@tryghost/pretty-cli').ui;
-const Table = require('tty-table');
+import {inspect} from 'node:util';
+import {ui} from '@tryghost/pretty-cli';
+import Table from 'tty-table';
+import hubspot from '../sources/hubspot.js';
 
 // Internal ID in case we need one.
-exports.id = 'hubspot';
+const id = 'hubspot';
 
-exports.group = 'Sources:';
+const group = 'Sources:';
 
 // The command to run and any params
-exports.flags = 'hubspot [url] <hapikey>';
+const flags = 'hubspot [url] <hapikey>';
 
 // Description for the top level command
-exports.desc = 'Migrate from Hubspot using the API';
+const desc = 'Migrate from Hubspot using the API';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['URL of the blog you want to migrate', 'Hubspot API Key (hapikey)'];
+const paramsDesc = ['URL of the blog you want to migrate', 'Hubspot API Key (hapikey)'];
 
 // Configure all the options
-exports.setup = (sywac) => {
+const setup = (sywac) => {
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
@@ -58,7 +59,7 @@ exports.setup = (sywac) => {
 };
 
 // What to do when this command is executed
-exports.run = async (argv) => {
+const run = async (argv) => {
     let timer = Date.now();
     let context = {errors: []};
 
@@ -121,7 +122,7 @@ exports.run = async (argv) => {
         }
 
         if (argv.verbose) {
-            ui.log.info('Done', require('util').inspect(context.result.data, false, 2));
+            ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);
@@ -132,4 +133,14 @@ exports.run = async (argv) => {
         let outputFile = await context.outputFile;
         ui.log.ok(`Successfully written output to ${outputFile.path} in ${Date.now() - timer}ms.`);
     }
+};
+
+export default {
+    id,
+    group,
+    flags,
+    desc,
+    paramsDesc,
+    setup,
+    run
 };

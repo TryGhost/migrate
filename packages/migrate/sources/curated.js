@@ -1,8 +1,8 @@
-const curatedIngest = require('@tryghost/mg-curated-export');
-const mgJSON = require('@tryghost/mg-json');
-const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
-const fsUtils = require('@tryghost/mg-fs-utils');
-const makeTaskRunner = require('../lib/task-runner');
+import curatedIngest from '@tryghost/mg-curated-export';
+import mgJSON from '@tryghost/mg-json';
+import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
+import fsUtils from '@tryghost/mg-fs-utils';
+import makeTaskRunner from '../lib/task-runner.js';
 
 /**
  * getTasks: Steps to Migrate from Curate
@@ -12,7 +12,7 @@ const makeTaskRunner = require('../lib/task-runner');
  * @param {String} pathToZip
  * @param {Object} options
  */
-module.exports.getTaskRunner = (pathToZip, options) => {
+const getTaskRunner = (pathToZip, options) => {
     let tasks = [
         {
             title: 'Initializing Workspace',
@@ -94,4 +94,8 @@ module.exports.getTaskRunner = (pathToZip, options) => {
 
     // Configure a new Listr task manager, we can use different renderers for different configs
     return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
+};
+
+export default {
+    getTaskRunner
 };

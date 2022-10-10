@@ -1,13 +1,13 @@
-const hsAPI = require('@tryghost/mg-hubspot-api');
-const mgJSON = require('@tryghost/mg-json');
-const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
-const MgImageScraper = require('@tryghost/mg-imagescraper');
-const MgMediaScraper = require('@tryghost/mg-mediascraper');
-const MgLinkFixer = require('@tryghost/mg-linkfixer');
-const fsUtils = require('@tryghost/mg-fs-utils');
-const makeTaskRunner = require('../lib/task-runner');
+import hsAPI from '@tryghost/mg-hubspot-api';
+import mgJSON from '@tryghost/mg-json';
+import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
+import MgImageScraper from '@tryghost/mg-imagescraper';
+import MgMediaScraper from '@tryghost/mg-mediascraper';
+import MgLinkFixer from '@tryghost/mg-linkfixer';
+import fsUtils from '@tryghost/mg-fs-utils';
+import makeTaskRunner from '../lib/task-runner.js';
 
-module.exports.initAPI = (options) => {
+const initAPI = (options) => {
     return {
         title: 'Initializing API',
         task: async (ctx, task) => {
@@ -18,7 +18,7 @@ module.exports.initAPI = (options) => {
     };
 };
 
-module.exports.initialize = (options) => {
+const initialize = (options) => {
     return {
         title: 'Initializing Workspace',
         task: (ctx, task) => {
@@ -44,7 +44,7 @@ module.exports.initialize = (options) => {
     };
 };
 
-module.exports.getInfoTaskList = (options) => {
+const getInfoTaskList = (options) => {
     return [
         this.initAPI(options)
     ];
@@ -58,7 +58,7 @@ module.exports.getInfoTaskList = (options) => {
  * @param {String} url
  * @param {Object} options
  */
-module.exports.getFullTaskList = (options) => {
+const getFullTaskList = (options) => {
     return [
         this.initAPI(options),
         this.initialize(options),
@@ -200,7 +200,7 @@ module.exports.getFullTaskList = (options) => {
     ];
 };
 
-module.exports.getTaskRunner = (options) => {
+const getTaskRunner = (options) => {
     let tasks = [];
 
     if (options.info) {
@@ -211,4 +211,12 @@ module.exports.getTaskRunner = (options) => {
 
     // Configure a new Listr task manager, we can use different renderers for different configs
     return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
+};
+
+export default {
+    initAPI,
+    initialize,
+    getInfoTaskList,
+    getFullTaskList,
+    getTaskRunner
 };

@@ -1,6 +1,6 @@
 import {inspect} from 'node:util';
-import substack from '../sources/substack.js';
 import {ui} from '@tryghost/pretty-cli';
+import substack from '../sources/substack.js';
 
 // Internal ID in case we need one.
 const id = 'substack';

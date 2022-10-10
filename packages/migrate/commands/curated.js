@@ -1,22 +1,23 @@
-const curated = require('../sources/curated');
-const ui = require('@tryghost/pretty-cli').ui;
+import {inspect} from 'node:util';
+import {ui} from '@tryghost/pretty-cli';
+import curated from '../sources/curated.js';
 
 // Internal ID in case we need one.
-exports.id = 'curated';
+const id = 'curated';
 
-exports.group = 'Sources:';
+const group = 'Sources:';
 
 // The command to run and any params
-exports.flags = 'curated <pathToZip>';
+const flags = 'curated <pathToZip>';
 
 // Description for the top level command
-exports.desc = 'Migrate from Curated using an export zip';
+const desc = 'Migrate from Curated using an export zip';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Path to a curated export zip'];
+const paramsDesc = ['Path to a curated export zip'];
 
 // Configure all the options
-exports.setup = (sywac) => {
+const setup = (sywac) => {
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
@@ -44,7 +45,7 @@ exports.setup = (sywac) => {
 };
 
 // What to do when this command is executed
-exports.run = async (argv) => {
+const run = async (argv) => {
     let timer = Date.now();
     let context = {errors: []};
 
@@ -65,7 +66,7 @@ exports.run = async (argv) => {
         await migrate.run(context);
 
         if (argv.verbose) {
-            ui.log.info('Done', require('util').inspect(context.result.data, false, 2));
+            ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);
@@ -76,4 +77,14 @@ exports.run = async (argv) => {
         let outputFile = await context.outputFile;
         ui.log.ok(`Successfully written output to ${outputFile.path} in ${Date.now() - timer}ms.`);
     }
+};
+
+export default {
+    id,
+    group,
+    flags,
+    desc,
+    paramsDesc,
+    setup,
+    run
 };

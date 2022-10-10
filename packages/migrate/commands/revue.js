@@ -1,23 +1,24 @@
-const revue = require('../sources/revue');
-const ui = require('@tryghost/pretty-cli').ui;
-const Table = require('tty-table');
+import {inspect} from 'node:util';
+import {ui} from '@tryghost/pretty-cli';
+import Table from 'tty-table';
+import revue from '../sources/revue.js';
 
 // Internal ID in case we need one.
-exports.id = 'revue';
+const id = 'revue';
 
-exports.group = 'Sources:';
+const group = 'Sources:';
 
 // The command to run and any params
-exports.flags = 'revue [pubName] <apitoken>';
+const flags = 'revue [pubName] <apitoken>';
 
 // Description for the top level command
-exports.desc = 'Migrate from Revue using the API';
+const desc = 'Migrate from Revue using the API';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Revue profile name (e. g. https://www.getrevue.co/profile/<pubName>)', 'Revue API Token'];
+const paramsDesc = ['Revue profile name (e. g. https://www.getrevue.co/profile/<pubName>)', 'Revue API Token'];
 
 // Configure all the options
-exports.setup = (sywac) => {
+const setup = (sywac) => {
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
@@ -54,7 +55,7 @@ exports.setup = (sywac) => {
 };
 
 // What to do when this command is executed
-exports.run = async (argv) => {
+const run = async (argv) => {
     let timer = Date.now();
     let context = {errors: []};
 
@@ -116,7 +117,7 @@ exports.run = async (argv) => {
         }
 
         if (argv.verbose && context.result) {
-            ui.log.info('Done', require('util').inspect(context.result.data, false, 2));
+            ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);
@@ -127,4 +128,14 @@ exports.run = async (argv) => {
         let outputFile = await context.outputFile;
         ui.log.ok(`Successfully written output to ${outputFile.path} in ${Date.now() - timer}ms.`);
     }
+};
+
+export default {
+    id,
+    group,
+    flags,
+    desc,
+    paramsDesc,
+    setup,
+    run
 };

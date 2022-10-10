@@ -1,12 +1,13 @@
-const ui = require('@tryghost/pretty-cli').ui;
-const json = require('../../lib/utilties/json');
+import {inspect} from 'node:util';
+import {ui} from '@tryghost/pretty-cli';
+import json from '../../lib/utilties/json.js';
 
-exports.id = 'json-email';
+const id = 'json-email';
 
-exports.flags = 'email <pathToJSON>';
+const flags = 'email <pathToJSON>';
 
 // Configure all the options
-exports.setup = (sywac) => {
+const setup = (sywac) => {
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
@@ -17,12 +18,12 @@ exports.setup = (sywac) => {
     });
 };
 
-exports.desc = 'Add emails to all user resources';
+const desc = 'Add emails to all user resources';
 
-exports.paramsDesc = ['Path to a Ghost JSON file to convert'];
+const paramsDesc = ['Path to a Ghost JSON file to convert'];
 
 // What to do when this command is executed
-exports.run = async (argv) => {
+const run = async (argv) => {
     let timer = Date.now();
     let context = {errors: []};
 
@@ -38,7 +39,7 @@ exports.run = async (argv) => {
         await utility.run(context);
 
         if (argv.verbose) {
-            ui.log.info('Done', require('util').inspect(context.result, false, 3));
+            ui.log.info('Done', inspect(context.result, false, 3));
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);
@@ -50,4 +51,13 @@ exports.run = async (argv) => {
 
     // Report success
     ui.log.ok(`Successfully written output to ${context.outputFile} in ${Date.now() - timer}ms.`);
+};
+
+export default {
+    id,
+    flags,
+    desc,
+    paramsDesc,
+    setup,
+    run
 };

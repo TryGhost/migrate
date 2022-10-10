@@ -1,12 +1,12 @@
-const ghostAPI = require('@tryghost/mg-ghost-api');
-const mgJSON = require('@tryghost/mg-json');
-const MgImageScraper = require('@tryghost/mg-imagescraper');
-const MgMediaScraper = require('@tryghost/mg-mediascraper');
-const MgLinkFixer = require('@tryghost/mg-linkfixer');
-const fsUtils = require('@tryghost/mg-fs-utils');
-const makeTaskRunner = require('../lib/task-runner');
+import ghostAPI from '@tryghost/mg-ghost-api';
+import mgJSON from '@tryghost/mg-json';
+import MgImageScraper from '@tryghost/mg-imagescraper';
+import MgMediaScraper from '@tryghost/mg-mediascraper';
+import MgLinkFixer from '@tryghost/mg-linkfixer';
+import fsUtils from '@tryghost/mg-fs-utils';
+import makeTaskRunner from '../lib/task-runner.js';
 
-module.exports.initialize = (options) => {
+const initialize = (options) => {
     return {
         title: 'Initializing Workspace',
         task: (ctx, task) => {
@@ -32,7 +32,7 @@ module.exports.initialize = (options) => {
     };
 };
 
-module.exports.getInfoTaskList = (options) => {
+const getInfoTaskList = (options) => {
     return [
         this.initialize(options),
         {
@@ -56,7 +56,7 @@ module.exports.getInfoTaskList = (options) => {
  * @param {String} pathToZip
  * @param {Object} options
  */
-module.exports.getFullTaskList = (options) => {
+const getFullTaskList = (options) => {
     return [
         this.initialize(options),
         {
@@ -183,7 +183,7 @@ module.exports.getFullTaskList = (options) => {
     ];
 };
 
-module.exports.getTaskRunner = (options) => {
+const getTaskRunner = (options) => {
     let tasks = [];
 
     if (options.info) {
@@ -194,4 +194,11 @@ module.exports.getTaskRunner = (options) => {
 
     // Configure a new Listr task manager, we can use different renderers for different configs
     return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
+};
+
+export default {
+    initialize,
+    getInfoTaskList,
+    getFullTaskList,
+    getTaskRunner
 };
