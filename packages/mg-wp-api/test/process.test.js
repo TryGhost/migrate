@@ -1,12 +1,21 @@
 /* eslint no-undef: 0 */
-const processor = require('../lib/processor');
+import processor from '../lib/processor.js';
+
+// Import our fixtures
+import singlePostFixture from './fixtures/single-post.json';
+import singleUserfixture from './fixtures/single-user.json';
+import multipleUsersfixture from './fixtures/multiple-users.json';
+import singlePagefixture from './fixtures/single-page.json';
+import singleCptPostfixture from './fixtures/single-cpt-post.json';
+import singlePostWithDuplicateImagesfixture from './fixtures/single-post-with-duplicate-images.json';
+import singlePostWithHtmlInTitlefixture from './fixtures/single-post-with-html-in-title.json';
+import singlePostNoAuthorFixture from './fixtures/single-post-no-author.json';
 
 describe('Process WordPress REST API JSON', function () {
     test('Can convert a single post', async function () {
-        const fixture = require('./fixtures/single-post.json');
         const users = [];
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com/bloob'};
-        const post = await processor.processPost(fixture, users, options);
+        const post = await processor.processPost(singlePostFixture, users, options);
 
         expect(post).toBeObject();
         expect(post).toHaveProperty('url');
@@ -32,8 +41,7 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     test('Can convert a single user', function () {
-        const fixture = require('./fixtures/single-user.json');
-        const user = processor.processAuthor(fixture);
+        const user = processor.processAuthor(singleUserfixture);
 
         expect(user).toBeObject();
         expect(user).toHaveProperty('url');
@@ -53,8 +61,7 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     test('Can convert a multiple users', function () {
-        const fixture = require('./fixtures/multiple-users.json');
-        const users = processor.processAuthors(fixture);
+        const users = processor.processAuthors(multipleUsersfixture);
 
         expect(users).toBeArrayOfSize(2);
 
@@ -80,10 +87,9 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     test('Can convert a single page', async function () {
-        const fixture = require('./fixtures/single-page.json');
         const users = null;
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com'};
-        const page = await processor.processPost(fixture, users, options);
+        const page = await processor.processPost(singlePagefixture, users, options);
 
         expect(page).toBeObject();
         expect(page).toHaveProperty('url');
@@ -106,10 +112,9 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     test('Can convert a custom post type', async function () {
-        const fixture = require('./fixtures/single-cpt-post.json');
         const users = [];
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: 'mycpt'};
-        const post = await processor.processPost(fixture, users, options);
+        const post = await processor.processPost(singleCptPostfixture, users, options);
 
         const data = post.data;
 
@@ -123,10 +128,9 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     test('Can add a #wp-post tag when also converting a custom post type', async function () {
-        const fixture = require('./fixtures/single-post.json');
         const users = [];
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: 'mycpt'};
-        const post = await processor.processPost(fixture, users, options);
+        const post = await processor.processPost(singlePostFixture, users, options);
 
         const data = post.data;
 
@@ -136,10 +140,9 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     test('Can convert entities in tags names', async function () {
-        const fixture = require('./fixtures/single-post.json');
         const users = [];
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com'};
-        const post = await processor.processPost(fixture, users, options);
+        const post = await processor.processPost(singlePostFixture, users, options);
 
         const data = post.data;
 
@@ -159,10 +162,9 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     test('Can remove first image in post if same as feature image', async function () {
-        const fixture = require('./fixtures/single-post-with-duplicate-images.json');
         const users = [];
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: 'mycpt'};
-        const post = await processor.processPost(fixture, users, options);
+        const post = await processor.processPost(singlePostWithDuplicateImagesfixture, users, options);
 
         const data = post.data;
 
@@ -170,7 +172,6 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     test('Can use the first available author is none is set ', async function () {
-        const fixture = require('./fixtures/single-post-no-author.json');
         const users = [
             {
                 url: 'https://mysite.com/author/admin',
@@ -184,7 +185,7 @@ describe('Process WordPress REST API JSON', function () {
         ];
 
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com'};
-        const post = await processor.processPost(fixture, users, options);
+        const post = await processor.processPost(singlePostNoAuthorFixture, users, options);
 
         const data = post.data;
 
@@ -193,11 +194,10 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     test('Can add addTag to value pages', async function () {
-        const fixture = require('./fixtures/single-page.json');
         const users = [];
 
         const options = {tags: true, addTag: 'My New Tag'};
-        const post = await processor.processPost(fixture, users, options);
+        const post = await processor.processPost(singlePagefixture, users, options);
 
         const data = post.data;
 
@@ -208,11 +208,9 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     test('Can remove HTML from post titles', async function () {
-        const fixture = require('./fixtures/single-post-with-html-in-title.json');
-
         const users = [];
         const options = {};
-        const post = await processor.processPost(fixture, users, options);
+        const post = await processor.processPost(singlePostWithHtmlInTitlefixture, users, options);
 
         const data = post.data;
 

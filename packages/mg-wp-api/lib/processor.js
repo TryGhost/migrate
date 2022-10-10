@@ -1,8 +1,8 @@
-const _ = require('lodash');
-const $ = require('cheerio');
-const url = require('url');
-const MgWebScraper = require('@tryghost/mg-webscraper');
-const {slugify} = require('@tryghost/string');
+import url from 'node:url';
+import _ from 'lodash';
+import $ from 'cheerio';
+import MgWebScraper from '@tryghost/mg-webscraper';
+import {slugify} from '@tryghost/string';
 
 const stripHtml = (html) => {
     // Remove HTML tags, new line characters, and trim white-space
@@ -26,7 +26,7 @@ const largerSrc = (imageSrc) => {
     return newSrc;
 };
 
-module.exports.processAuthor = (wpAuthor) => {
+const processAuthor = (wpAuthor) => {
     let profileImage = wpAuthor.avatar_urls && wpAuthor.avatar_urls['96'];
     profileImage = profileImage ? profileImage.replace(/s=96/, 's=3000') : undefined;
 
@@ -44,7 +44,7 @@ module.exports.processAuthor = (wpAuthor) => {
     };
 };
 
-module.exports.processTerm = (wpTerm) => {
+const processTerm = (wpTerm) => {
     return {
         url: wpTerm.link,
         data: {
@@ -54,18 +54,18 @@ module.exports.processTerm = (wpTerm) => {
     };
 };
 
-module.exports.processTerms = (wpTerms, fetchTags) => {
+const processTerms = (wpTerms, fetchTags) => {
     let categories = [];
     let tags = [];
 
     wpTerms.forEach((taxonomy) => {
         taxonomy.forEach((term) => {
             if (term.taxonomy === 'category') {
-                categories.push(this.processTerm(term));
+                categories.push(processTerm(term));
             }
 
             if (fetchTags && term.taxonomy === 'post_tag') {
-                tags.push(this.processTerm(term));
+                tags.push(processTerm(term));
             }
         });
     });
@@ -75,7 +75,7 @@ module.exports.processTerms = (wpTerms, fetchTags) => {
 
 // Sometimes, the custom excerpt can be part of the post content. If the flag with an selector for the
 // custom excerpt class is passed, we use this one to populate the custom excerpt and remove it from the post content
-module.exports.processExcerpt = (html, excerptSelector) => {
+const processExcerpt = (html, excerptSelector) => {
     if (!html) {
         return '';
     }
@@ -98,7 +98,7 @@ module.exports.processExcerpt = (html, excerptSelector) => {
  * In some cases, transformation isn't needed as the parser handles it correctly.
  * In other cases, we need to *do* change the HTML structure, and this is where that happens.
  */
-module.exports.processContent = async (html, excerptSelector, featureImageSrc = false, fileCache = false, options = {}) => { // eslint-disable-line no-shadow
+const processContent = async (html, excerptSelector, featureImageSrc = false, fileCache = false, options = {}) => { // eslint-disable-line no-shadow
     let webScraper = new MgWebScraper(fileCache);
 
     let allowRemoteScraping = false;
@@ -421,7 +421,7 @@ module.exports.processContent = async (html, excerptSelector, featureImageSrc = 
  *   ]
  * }
  */
-module.exports.processPost = async (wpPost, users, options = {}, errors, fileCache) => { // eslint-disable-line no-shadow
+const processPost = async (wpPost, users, options = {}, errors, fileCache) => { // eslint-disable-line no-shadow
     let {tags: fetchTags, addTag, excerptSelector} = options;
 
     let slug = wpPost.slug;
@@ -465,16 +465,16 @@ module.exports.processPost = async (wpPost, users, options = {}, errors, fileCac
         if (wpPost._embedded && wpPost._embedded.author) {
             // use the data passed along the post if we couldn't match the user from the API
             const wpAuthor = wpPost._embedded.author[0];
-            post.data.author = this.processAuthor(wpAuthor);
+            post.data.author = processAuthor(wpAuthor);
         // … else, use the first user in the `users` object
         } else {
-            post.data.author = this.processAuthor(users[0].data);
+            post.data.author = processAuthor(users[0].data);
         }
     }
 
     if (wpPost._embedded && wpPost._embedded['wp:term']) {
         const wpTerms = wpPost._embedded['wp:term'];
-        post.data.tags = this.processTerms(wpTerms, fetchTags);
+        post.data.tags = processTerms(wpTerms, fetchTags);
 
         post.data.tags.push({
             url: 'migrator-added-tag',
@@ -516,24 +516,24 @@ module.exports.processPost = async (wpPost, users, options = {}, errors, fileCac
     }
 
     if (excerptSelector) {
-        post.data.custom_excerpt = this.processExcerpt(post.data.html, excerptSelector);
+        post.data.custom_excerpt = processExcerpt(post.data.html, excerptSelector);
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = await this.processContent(post.data.html, excerptSelector, post.data.feature_image, fileCache, options);
+    post.data.html = await processContent(post.data.html, excerptSelector, post.data.feature_image, fileCache, options);
 
     return post;
 };
 
-module.exports.processPosts = async (posts, users, options, errors, fileCache) => { // eslint-disable-line no-shadow
-    return Promise.all(posts.map(post => this.processPost(post, users, options, errors, fileCache)));
+const processPosts = async (posts, users, options, errors, fileCache) => { // eslint-disable-line no-shadow
+    return Promise.all(posts.map(post => processPost(post, users, options, errors, fileCache)));
 };
 
-module.exports.processAuthors = (authors) => {
-    return authors.map(author => this.processAuthor(author));
+const processAuthors = (authors) => {
+    return authors.map(author => processAuthor(author));
 };
 
-module.exports.all = async (ctx) => {
+const all = async (ctx) => {
     let {result: input, usersJSON, options, errors, fileCache} = ctx; // eslint-disable-line no-shadow
 
     if (usersJSON) {
@@ -562,10 +562,22 @@ module.exports.all = async (ctx) => {
     }
 
     const output = {
-        users: this.processAuthors(input.users)
+        users: processAuthors(input.users)
     };
 
-    output.posts = await this.processPosts(input.posts, output.users, options, errors, fileCache);
+    output.posts = await processPosts(input.posts, output.users, options, errors, fileCache);
 
     return output;
+};
+
+export default {
+    processAuthor,
+    processTerm,
+    processTerms,
+    processExcerpt,
+    processContent,
+    processPost,
+    processPosts,
+    processAuthors,
+    all
 };
