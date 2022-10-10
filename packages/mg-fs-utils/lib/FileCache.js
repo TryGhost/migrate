@@ -235,6 +235,26 @@ class FileCache {
     }
 
     /**
+     * Create a file to store temporary data
+     *
+     * @param {Object} data - a valid Ghost JSON object or data to store
+     * @param {String} filename - name of file to write
+     * @param {Boolean} isJSON - defaults to write a JSON file
+     */
+    writeTmpFileSync(data, filename, isJSON = true) {
+        let fileNameWithExt = (filename.endsWith('.json')) ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
+        let filepath = path.join(this.tmpDir, fileNameWithExt);
+
+        if (isJSON) {
+            fs.outputJsonSync(filepath, data, {spaces: 2});
+        } else {
+            fs.writeFileSync(filepath, data);
+        }
+
+        return filepath;
+    }
+
+    /**
      * Read a JSON file containing temporary data
      *
      * @param {String} filename - name of file to read
