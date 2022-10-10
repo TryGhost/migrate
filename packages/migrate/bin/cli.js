@@ -3,7 +3,6 @@ import prettyCLI from '@tryghost/pretty-cli';
 
 prettyCLI.preface('Command line utilities for migrating content to Ghost.');
 
-
 import cacheCommands from '../commands/cache.js';
 prettyCLI.command(cacheCommands);
 

@@ -14,7 +14,7 @@ const flags = 'json <subtask> <pathToJson>';
 // Description for the top level command
 const desc = 'Run a utility task on a Ghost JSON file';
 
-const ignore = ['<subtask>', '<pathToJson>'];
+const ignore = ['<subtask>', '<pathToJson>']; // eslint-disable-line no-unused-vars
 
 // Configure all the options
 const setup = (sywac) => {
