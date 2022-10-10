@@ -170,7 +170,6 @@ const run = async (argv) => {
             ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
-        console.log(error);
         ui.log.info('Done with errors', context.errors);
     }
 
