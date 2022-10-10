@@ -1,8 +1,8 @@
 const errors = require('@tryghost/errors');
 const _ = require('lodash');
 const cheerio = require('cheerio');
+const {URL} = require('url');
 const path = require('path');
-const url = require('url');
 const axios = require('axios');
 const got = require('got');
 const FileType = require('file-type');
@@ -39,6 +39,15 @@ const ScrapeError = ({src, code, statusCode, originalError = {}, property = null
     error.originalError = originalError;
 
     return error;
+};
+
+const isValidUrlString = (string) => {
+    try {
+        new URL(string);
+        return true;
+    } catch (err) {
+        return false;
+    }
 };
 
 /**
@@ -172,15 +181,10 @@ class ImageScraper {
             assetUrl = assetUrl.replace('__GHOST_URL__', '');
         }
 
-        if (assetUrl.startsWith('/') && theDomain) {
-            let theURL = url.parse(assetUrl);
-
-            let domainParts = url.parse(theDomain);
-
-            theURL.protocol = domainParts.protocol;
-            theURL.hostname = domainParts.hostname;
-
-            newRemoteValue = url.format(theURL);
+        // If we have a domain value, prefix relative links with it
+        if (theDomain) {
+            let parsedUrl = new URL(assetUrl, theDomain);
+            newRemoteValue = parsedUrl.href;
         }
 
         return newRemoteValue;
@@ -206,6 +210,15 @@ class ImageScraper {
 
             // Trim quote marks from the start & end of strings
             obj.newRemote = _.trim(obj.newRemote, '\'"`');
+
+            if (isValidUrlString(obj.newRemote)) {
+                // Remove the commonly long `ref_url`, which can cause `ENAMETOOLONG` errors
+                let parsedUrl = new URL(obj.newRemote);
+                const urlParams = new URLSearchParams(parsedUrl.search);
+                urlParams.delete('ref_url');
+                parsedUrl.search = urlParams.toString();
+                obj.newRemote = parsedUrl.href;
+            }
 
             // Transform relative links starting with `/` or `__GHOST_URL__` to absolute
             obj.newRemote = this.relativeToAbsolute(obj.newRemote);
@@ -822,7 +835,7 @@ class ImageScraper {
             const impliedFileType = item.head.contentType || null;
             const saveLocation = this.determineSaveLocation(impliedFileType);
 
-            const assetUrl = url.parse(src);
+            const assetUrl = new URL(src);
             const assetFile = this.fileCache.resolveFileName(assetUrl.pathname, saveLocation);
             let imageOptions = Object.assign(assetFile, this.defaultOptions);
 
