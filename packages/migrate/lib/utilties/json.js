@@ -1,9 +1,9 @@
-const makeTaskRunner = require('../task-runner');
-const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
-const fsUtils = require('@tryghost/mg-fs-utils');
-const {slugify} = require('@tryghost/string');
-const hydrate = require('@tryghost/mg-json/lib/to-ghost-json/hydrate');
-const _ = require('lodash');
+import makeTaskRunner from '../task-runner.js';
+import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
+import fsUtils from '@tryghost/mg-fs-utils';
+import {slugify} from '@tryghost/string';
+import {hydrate} from '@tryghost/mg-json';
+import _ from 'lodash';
 
 function findResourceRoot(ctx) {
     let root = 'result';
@@ -117,7 +117,7 @@ const jsonTasks = {
     }
 };
 
-module.exports.getTaskRunner = (type, pathToJSON, options) => {
+const getTaskRunner = (type, pathToJSON, options) => {
     let tasks = [
         {
             title: 'Initializing',
@@ -144,3 +144,5 @@ module.exports.getTaskRunner = (type, pathToJSON, options) => {
 
     return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
 };
+
+export default getTaskRunner;

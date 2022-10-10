@@ -1,25 +1,26 @@
-const fs = require('fs-extra');
-const path = require('path');
-const wpAPISource = require('../sources/wp-api');
-const ui = require('@tryghost/pretty-cli').ui;
-const xml2json = require('xml2json');
+import path from 'node:path';
+import {inspect} from 'node:util';
+import fs from 'fs-extra';
+import wpAPISource from '../sources/wp-api.js';
+import {ui} from '@tryghost/pretty-cli';
+import xml2json from 'xml2json';
 
 // Internal ID in case we need one.
-exports.id = 'wp-api';
+const id = 'wp-api';
 
-exports.group = 'Sources:';
+const group = 'Sources:';
 
 // The command to run and any params
-exports.flags = 'wp-api <url>';
+const flags = 'wp-api <url>';
 
 // Description for the top level command
-exports.desc = 'Migrate from WordPress using JSON API';
+const desc = 'Migrate from WordPress using JSON API';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Path to a WordPress site, without trailing slash'];
+const paramsDesc = ['Path to a WordPress site, without trailing slash'];
 
 // Configure all the options
-exports.setup = (sywac) => {
+const setup = (sywac) => {
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
@@ -94,7 +95,7 @@ exports.setup = (sywac) => {
 };
 
 // What to do when this command is executed
-exports.run = async (argv) => {
+const run = async (argv) => {
     let timer = Date.now();
     let context = {errors: []};
 
@@ -166,9 +167,10 @@ exports.run = async (argv) => {
         }
 
         if (argv.verbose) {
-            ui.log.info('Done', require('util').inspect(context.result.data, false, 2));
+            ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
+        console.log(error);
         ui.log.info('Done with errors', context.errors);
     }
 
@@ -177,4 +179,14 @@ exports.run = async (argv) => {
         let outputFile = await context.outputFile;
         ui.log.ok(`Successfully written output to ${outputFile.path} in ${Date.now() - timer}ms.`);
     }
+};
+
+export default {
+    id,
+    group,
+    flags,
+    desc,
+    paramsDesc,
+    setup,
+    run
 };
