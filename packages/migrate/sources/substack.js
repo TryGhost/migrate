@@ -1,12 +1,12 @@
-const mgJSON = require('@tryghost/mg-json');
-const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
-const MgWebScraper = require('@tryghost/mg-webscraper');
-const MgAssetScraper = require('@tryghost/mg-assetscraper');
-const MgLinkFixer = require('@tryghost/mg-linkfixer');
-const fsUtils = require('@tryghost/mg-fs-utils');
-const makeTaskRunner = require('../lib/task-runner');
-const zipIngest = require('@tryghost/mg-substack');
-const {slugify} = require('@tryghost/string');
+import mgJSON from '@tryghost/mg-json';
+import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
+import MgWebScraper from '@tryghost/mg-webscraper';
+import MgAssetScraper from '@tryghost/mg-assetscraper';
+import MgLinkFixer from '@tryghost/mg-linkfixer';
+import fsUtils from '@tryghost/mg-fs-utils';
+import zipIngest from '@tryghost/mg-substack';
+import {slugify} from '@tryghost/string';
+import makeTaskRunner from '../lib/task-runner.js';
 
 const scrapeConfig = {
     posts: {
@@ -153,7 +153,7 @@ const skipScrape = (post) => {
  * @param {String} pathToFile
  * @param {Object} options
  */
-module.exports.getTaskRunner = (pathToFile, options) => {
+const getTaskRunner = (pathToFile, options) => {
     let runnerTasks = [
         {
             title: 'Initializing',
@@ -332,4 +332,8 @@ module.exports.getTaskRunner = (pathToFile, options) => {
 
     // Configure a new Listr task manager, we can use different renderers for different configs
     return makeTaskRunner(runnerTasks, Object.assign({topLevel: true}, options));
+};
+
+export default {
+    getTaskRunner
 };
