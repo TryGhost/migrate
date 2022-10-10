@@ -1,0 +1,14 @@
+{
+    "remote": "__GHOST_URL__/content/images/2022/09/screenshot-40-54-21-02-09-2022.png",
+    "newRemote": "__GHOST_URL__/content/images/2022/09/screenshot-40-54-21-02-09-2022.png",
+    "checked": true,
+    "status": 200,
+    "data": {
+        "type": "image"
+    },
+    "head": {
+        "contentType": "image/png",
+        "contentLength": 104857600
+    },
+    "newLocal": "/content/images/2022/09/screenshot-40-54-21-02-09-2022.png"
+}

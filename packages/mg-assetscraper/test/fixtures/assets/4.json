@@ -1,0 +1,14 @@
+{
+    "remote": "/audio/song.mp4",
+    "newRemote": "https://example.com/audio/song.mp4",
+    "checked": true,
+    "status": 200,
+    "data": {
+        "type": "video"
+    },
+    "head": {
+        "contentType": "video/mp4",
+        "contentLength": 25061980
+    },
+    "newLocal": "/content/media/audio/song.mp4"
+}

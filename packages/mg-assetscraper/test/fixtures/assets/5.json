@@ -1,0 +1,14 @@
+{
+    "remote": "/docs/plan.mp4",
+    "newRemote": "https://example.com/docs/plan.mp4",
+    "checked": true,
+    "status": 200,
+    "data": {
+        "type": "application"
+    },
+    "head": {
+        "contentType": "application/pdf",
+        "contentLength": 1785847
+    },
+    "newLocal": "/content/media/docs/plan.mp4"
+}

@@ -1,4 +1,7 @@
+const path = require('path');
+const fs = require('fs-extra');
 const _ = require('lodash');
+const {slugify} = require('@tryghost/string');
 
 class AssetCache {
     /**
@@ -7,8 +10,24 @@ class AssetCache {
     constructor(fileCache) {
         this.fileCache = fileCache;
 
-        this._fileName = 'file-response-cache.json';
+        // The array that's used in AssetScraper
         this._cache = [];
+
+        // Ensure `/assets/` exists
+        fs.ensureDirSync(`${this.fileCache.tmpDir}/assets/`);
+    }
+
+    /**
+     * @private
+     * Get the filename + relative path for asset cache JSON file
+     * @param {String} assetUrl The file name
+     * @returns {String} The slugified url with the folder prefix
+     * @exmaple
+     * _assetFileCacheName('https://ghost.org');
+     * => 'assets/https-ghost-org'
+     */
+    _assetFileCacheName(assetUrl) {
+        return `assets/${slugify(assetUrl)}`;
     }
 
     /**
@@ -16,7 +35,10 @@ class AssetCache {
      * @param {Object} obj Asset cache object
      */
     add(obj) {
-        if (!this.find(obj)) {
+        if (this.find(obj)) {
+            this.update(obj);
+        } else {
+            this.fileCache.writeTmpFileSync(obj, this._assetFileCacheName(obj.newRemote));
             this._cache.push(obj);
         }
     }
@@ -42,7 +64,10 @@ class AssetCache {
      */
     update(obj) {
         let foundIndex = this._cache.findIndex(x => x.remote === obj.remote);
-        this._cache[foundIndex] = obj;
+        let newObj = Object.assign(this._cache[foundIndex], obj);
+        this._cache[foundIndex] = newObj;
+
+        this.fileCache.writeTmpFileSync(newObj, this._assetFileCacheName(obj.newRemote));
     }
 
     /**
@@ -65,37 +90,23 @@ class AssetCache {
     }
 
     /**
-     * @private
-     * Check if a saved asset cache list JSON file exists
-     * @returns {Bool}
-     */
-    hasCacheFile() {
-        return this.fileCache.hasTmpJSONFile(this._fileName);
-    }
-
-    /**
      * Set the supplied array as the asset cache, or load from the saved JSON file
      * @async
-     * @param {Array} cacheArray
+     * @param {String|Array} data The path the cached asset JSON files folder, or an array of the same data
      */
-    async load(cacheArray = null) {
-        if (cacheArray) {
-            this._cache = cacheArray;
+    async load(data = null) {
+        if (!data) {
+            data = `${this.fileCache.tmpDir}/assets/`;
+        }
+        if (typeof data === 'object') {
+            this._cache = data;
         } else {
-            if (this.hasCacheFile()) {
-                this._cache = await this.fileCache.readTmpJSONFile(this._fileName);
-            } else {
-                this._cache = [];
+            const files = await fs.readdir(data);
+            for (const file of files) {
+                let theJson = await fs.readJson(path.join(data, file));
+                this._cache.push(theJson);
             }
         }
-    }
-
-    /**
-     * Save the asset cache list as a JSON file
-     * @async
-     */
-    async writeFile() {
-        await this.fileCache.writeTmpFile(this._cache, this._fileName);
     }
 }
 
