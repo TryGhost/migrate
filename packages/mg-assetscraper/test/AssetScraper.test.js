@@ -6,8 +6,23 @@ const makeTaskRunner = require('../../migrate/lib/task-runner.js');
 
 const cachedJSON = require('./fixtures/file-response-cache.json');
 
+// We're not testing the ability to write files here, so always return true
+class mockFileCacheClass {
+    writeTmpFileSync() {
+        return false;
+    }
+}
+
 describe('AssetScraper', function () {
     let mockFileCache;
+
+    beforeEach(function () {
+        mockFileCache = new mockFileCacheClass();
+    });
+
+    afterEach(function () {
+        mockFileCache = null;
+    });
 
     test('Will remove falsy values', function () {
         const values = [
@@ -452,6 +467,14 @@ describe('AssetScraper', function () {
 
 describe('Find assets in content', function () {
     let mockFileCache;
+
+    beforeEach(function () {
+        mockFileCache = new mockFileCacheClass();
+    });
+
+    afterEach(function () {
+        mockFileCache = null;
+    });
 
     describe('HTML', function () {
         test('Will find assets in HTML', async function () {

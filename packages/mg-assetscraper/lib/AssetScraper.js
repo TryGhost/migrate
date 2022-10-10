@@ -920,6 +920,16 @@ class ImageScraper {
         let tasks = [];
 
         /**
+         * If we have cached asset files, load them in
+         */
+        tasks.push({
+            title: 'Initializing AssetScraper',
+            task: async () => {
+                await this.AssetCache.load();
+            }
+        });
+
+        /**
          * Loops over the supplied data and where needed, expands the object, Mobiledoc, or HTML,
          * to find any asset references, and saves them, ignoring duplicates and blocked domains.
          */
@@ -927,16 +937,6 @@ class ImageScraper {
             title: 'Finding files',
             task: (ctx) => { // eslint-disable-line no-shadow
                 this.findInObject(jsonData, ctx);
-            }
-        });
-
-        /**
-         * If we have a cached file of asset data from previous runs, load it in
-         */
-        tasks.push({
-            title: 'Loading file types to cache',
-            task: async () => {
-                await this.AssetCache.load();
             }
         });
 
@@ -953,18 +953,6 @@ class ImageScraper {
         });
 
         /**
-         * Now save that updated list of assets, now with data, to the cache file again
-         */
-        tasks.push({
-            title: 'Saving file types to cache',
-            task: async () => {
-                await this.AssetCache.writeFile();
-                // Add an artificial delay here
-                await new Promise(r => setTimeout(r, 1000)); // eslint-disable-line no-promise-executor-return
-            }
-        });
-
-        /**
          * For each file that we have data for, and is allowed to be downloaded, download it
          */
         tasks.push({
@@ -973,18 +961,6 @@ class ImageScraper {
                 let downloadTasks = this.downloadFiles(ctx);
 
                 return makeTaskRunner(downloadTasks, {concurrent: 5, topLevel: false});
-            }
-        });
-
-        /**
-         * Now save that updated list of assets, now with data, to the cache file again
-         */
-        tasks.push({
-            title: 'Saving updated file types to cache',
-            task: async () => {
-                await this.AssetCache.writeFile();
-                // Add an artificial delay here
-                await new Promise(r => setTimeout(r, 1000)); // eslint-disable-line no-promise-executor-return
             }
         });
 
