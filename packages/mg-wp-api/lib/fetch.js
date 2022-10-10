@@ -1,6 +1,6 @@
-const WPAPI = require('wpapi');
+import WPAPI from 'wpapi';
 
-module.exports.discover = async (url, {apiUser, usersJSON, limit, cpt}) => {
+const discover = async (url, {apiUser, usersJSON, limit, cpt}) => {
     const requestOptions = {endpoint: `${url}/wp-json`};
 
     if (apiUser && apiUser.username && apiUser.password) {
@@ -84,7 +84,7 @@ const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest) => {
     }
 };
 
-module.exports.tasks = async (url, ctx) => {
+const tasks = async (url, ctx) => {
     const {apiUser} = ctx || {};
     const {limit} = ctx.options;
     const {cpt} = ctx.options;
@@ -99,30 +99,35 @@ module.exports.tasks = async (url, ctx) => {
         isAuthRequest = true;
     }
 
-    const api = await this.discover(url, {apiUser, usersJSON, limit, cpt});
+    const api = await discover(url, {apiUser, usersJSON, limit, cpt});
 
-    const tasks = [];
+    const theTasks = [];
 
     ctx.result = {
         posts: [],
         users: []
     };
 
-    buildTasks(ctx.fileCache, tasks, api, 'posts', limit, isAuthRequest);
-    buildTasks(ctx.fileCache, tasks, api, 'pages', limit, isAuthRequest);
+    buildTasks(ctx.fileCache, theTasks, api, 'posts', limit, isAuthRequest);
+    buildTasks(ctx.fileCache, theTasks, api, 'pages', limit, isAuthRequest);
 
     // If users were already supplied, don't fetch them
     if (!usersJSON) {
-        buildTasks(ctx.fileCache, tasks, api, 'users', limit, isAuthRequest);
+        buildTasks(ctx.fileCache, theTasks, api, 'users', limit, isAuthRequest);
     }
 
     if (cpt) {
         const CPTs = cpt.split(',');
 
         CPTs.forEach((cptSlug) => {
-            buildTasks(ctx.fileCache, tasks, api, `${cptSlug}`, limit, isAuthRequest);
+            buildTasks(ctx.fileCache, theTasks, api, `${cptSlug}`, limit, isAuthRequest);
         });
     }
 
-    return tasks;
+    return theTasks;
+};
+
+export default {
+    discover,
+    tasks
 };
