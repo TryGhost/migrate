@@ -4,7 +4,7 @@ const testUtils = require('./utils');
 const path = require('path');
 const fs = require('fs').promises;
 const ImageScraper = require('../');
-const makeTaskRunner = require('../../migrate/lib/task-runner.js');
+const makeTaskRunner = require('./utils/task-runner.js');
 
 const mockUrl = 'https://mysite.com/images/test.png';
 const mockFile = 'test.png';

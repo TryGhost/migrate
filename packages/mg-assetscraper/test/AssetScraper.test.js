@@ -2,7 +2,7 @@
 const path = require('path');
 const fs = require('fs').promises;
 const AssetScraper = require('../lib/AssetScraper');
-const makeTaskRunner = require('../../migrate/lib/task-runner.js');
+const makeTaskRunner = require('./utils/task-runner.js');
 
 const cachedJSON = require('./fixtures/file-response-cache.json');
 

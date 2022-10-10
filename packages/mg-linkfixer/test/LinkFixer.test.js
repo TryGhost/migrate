@@ -1,7 +1,7 @@
 /* eslint no-undef: 0 */
 const linkFixer = require('../lib/LinkFixer');
 const mgJSON = require('@tryghost/mg-json');
-const makeTaskRunner = require('../../migrate/lib/task-runner.js');
+const makeTaskRunner = require('./utils/task-runner.js');
 
 const getPosts = async (options = {}) => {
     let ctx = null;

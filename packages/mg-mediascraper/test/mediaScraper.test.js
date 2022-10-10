@@ -2,7 +2,7 @@
 const testUtils = require('./utils');
 
 const MediaScraper = require('..');
-const makeTaskRunner = require('../../migrate/lib/task-runner.js');
+const makeTaskRunner = require('./utils/task-runner.js');
 
 const mockAudioUrl = 'https://mysite.com/files/audio.mp3';
 const mockAudioFile = 'audio.mp3';

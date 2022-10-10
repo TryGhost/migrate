@@ -19,6 +19,8 @@
     "access": "public"
   },
   "devDependencies": {
+    "@tryghost/listr-smart-renderer": "0.2.10",
+    "listr": "0.14.3",
     "mocha": "10.0.0",
     "should": "13.2.3",
     "sinon": "14.0.1"
