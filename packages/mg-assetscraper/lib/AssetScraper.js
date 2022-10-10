@@ -84,7 +84,7 @@ class ImageScraper {
         this._blockedDomains.push('gravatar.com'); // User avatars
         this._blockedDomains.push('www.youtube.com'); // YouTube website
         this._blockedDomains.push('ytimg.com'); // YouTube images
-        this._blockedDomains.push('www.twitter.com'); // Twitter website
+        this._blockedDomains.push('twitter.com'); // Twitter website
         this._blockedDomains.push('pbs.twimg.com'); // Twitter images
         this._blockedDomains.push('facebook.com'); // Facebook website
         this._blockedDomains.push('instagram.com'); // Instagram website
