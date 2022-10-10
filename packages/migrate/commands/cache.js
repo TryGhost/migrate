@@ -1,19 +1,19 @@
-const fsUtils = require('@tryghost/mg-fs-utils');
-const ui = require('@tryghost/pretty-cli').ui;
+import {ui} from '@tryghost/pretty-cli';
+import fsUtils from '@tryghost/mg-fs-utils';
 
 // Internal ID in case we need one.
-exports.id = 'clear-cache';
+const id = 'clear-cache';
 
-exports.group = 'Commands:';
+const group = 'Commands:';
 
 // The command to run and any params
-exports.flags = 'clear-cache';
+const flags = 'clear-cache';
 
 // Description for the top level command
-exports.desc = 'Clear local migration cache';
+const desc = 'Clear local migration cache';
 
 // Configure all the options
-exports.setup = (sywac) => {
+const setup = (sywac) => {
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
@@ -21,7 +21,7 @@ exports.setup = (sywac) => {
 };
 
 // What to do when this command is executed
-exports.run = async (argv) => {
+const run = async (argv) => {
     try {
         let fsCache = new fsUtils.FileCache('test.dev', 'yolo');
         let cacheDir = fsCache.cacheBaseDir;
@@ -40,4 +40,13 @@ exports.run = async (argv) => {
     } catch (error) {
         ui.log.info('Done with errors', error);
     }
+};
+
+export default {
+    id,
+    group,
+    flags,
+    desc,
+    setup,
+    run
 };

@@ -1,6 +1,6 @@
-const makeTaskRunner = require('../lib/task-runner');
-const fsUtils = require('@tryghost/mg-fs-utils');
-const csvIngest = require('@tryghost/mg-curated-members-csv');
+import fsUtils from '@tryghost/mg-fs-utils';
+import csvIngest from '@tryghost/mg-curated-members-csv';
+import makeTaskRunner from '../lib/task-runner.js';
 
 const MEMBERS_IMPORT_FIELDS = [
     'email',
@@ -20,7 +20,7 @@ const MEMBERS_IMPORT_FIELDS = [
  * @param {String} pathToFile
  * @param {Object} options
  */
-module.exports.getTaskRunner = (pathToFile, options) => {
+const getTaskRunner = (pathToFile, options) => {
     let tasks = [
         {
             title: 'Initializing',
@@ -102,4 +102,8 @@ module.exports.getTaskRunner = (pathToFile, options) => {
 
     // Configure a new Listr task manager, we can use different renderers for different configs
     return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
+};
+
+export default {
+    getTaskRunner
 };

@@ -19,6 +19,7 @@
  * }
  */
 module.exports.toGhostJSON = require('./lib/to-ghost-json');
+module.exports.hydrate = require('./lib/to-ghost-json/hydrate');
 
 // @TODO: validator
 // module.exports.validate = require('./lib/validator');

@@ -1,12 +1,12 @@
-const jekyllIngest = require('@tryghost/mg-jekyll-export');
-const mgJSON = require('@tryghost/mg-json');
-const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
-const MgWebScraper = require('@tryghost/mg-webscraper');
-const MgImageScraper = require('@tryghost/mg-imagescraper');
-const MgMediaScraper = require('@tryghost/mg-mediascraper');
-const MgLinkFixer = require('@tryghost/mg-linkfixer');
-const fsUtils = require('@tryghost/mg-fs-utils');
-const makeTaskRunner = require('../lib/task-runner');
+import jekyllIngest from '@tryghost/mg-jekyll-export';
+import mgJSON from '@tryghost/mg-json';
+import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
+import MgWebScraper from '@tryghost/mg-webscraper';
+import MgImageScraper from '@tryghost/mg-imagescraper';
+import MgMediaScraper from '@tryghost/mg-mediascraper';
+import MgLinkFixer from '@tryghost/mg-linkfixer';
+import fsUtils from '@tryghost/mg-fs-utils';
+import makeTaskRunner from '../lib/task-runner.js';
 
 const scrapeConfig = {
     posts: {
@@ -68,7 +68,7 @@ const postProcessor = (scrapedData, data, options) => {
  * @param {String} pathToZip
  * @param {Object} options
  */
-module.exports.getTaskRunner = (pathToZip, options) => {
+const getTaskRunner = (pathToZip, options) => {
     let runnerTasks = [
         {
             title: 'Initialising Workspace',
@@ -219,4 +219,8 @@ module.exports.getTaskRunner = (pathToZip, options) => {
 
     // Configure a new Listr task manager, we can use different renderers for different configs
     return makeTaskRunner(runnerTasks, Object.assign({topLevel: true}, options));
+};
+
+export default {
+    getTaskRunner
 };

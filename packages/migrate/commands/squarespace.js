@@ -1,23 +1,24 @@
-const squarespace = require('../sources/squarespace');
-const ui = require('@tryghost/pretty-cli').ui;
-const Table = require('tty-table');
+import {inspect} from 'node:util';
+import {ui} from '@tryghost/pretty-cli';
+import Table from 'tty-table';
+import squarespace from '../sources/squarespace.js';
 
 // Internal ID in case we need one.
-exports.id = 'squarespace';
+const id = 'squarespace';
 
-exports.group = 'Sources:';
+const group = 'Sources:';
 
 // The command to run and any params
-exports.flags = 'squarespace <pathToFile>';
+const flags = 'squarespace <pathToFile>';
 
 // Description for the top level command
-exports.desc = 'Migrate from a Squarespace XML';
+const desc = 'Migrate from a Squarespace XML';
 
 // Descriptions for the individual params
-exports.paramsDesc = ['Path to a xml file'];
+const paramsDesc = ['Path to a xml file'];
 
 // Configure all the options
-exports.setup = (sywac) => {
+const setup = (sywac) => {
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
@@ -58,7 +59,7 @@ exports.setup = (sywac) => {
 };
 
 // What to do when this command is executed
-exports.run = async (argv) => {
+const run = async (argv) => {
     let timer = Date.now();
     let context = {errors: []};
 
@@ -112,7 +113,7 @@ exports.run = async (argv) => {
         }
 
         if (argv.verbose) {
-            ui.log.info('Done', require('util').inspect(context.result.data, false, 2));
+            ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);
@@ -127,4 +128,14 @@ exports.run = async (argv) => {
         let outputFile = await context.outputFile;
         ui.log.ok(`Successfully written output to ${outputFile.path} in ${Date.now() - timer}ms.`);
     }
+};
+
+export default {
+    id,
+    group,
+    flags,
+    desc,
+    paramsDesc,
+    setup,
+    run
 };

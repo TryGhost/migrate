@@ -4,19 +4,27 @@
  */
 
 // Internal ID in case we need one.
-exports.id = 'json';
+const id = 'json';
 
-exports.group = 'Utilities:';
+const group = 'Utilities:';
 
 // The command to run and any params
-exports.flags = 'json <subtask> <pathToJson>';
+const flags = 'json <subtask> <pathToJson>';
 
 // Description for the top level command
-exports.desc = 'Run a utility task on a Ghost JSON file';
+const desc = 'Run a utility task on a Ghost JSON file';
 
-exports.ignore = ['<subtask>', '<pathToJson>'];
+const ignore = ['<subtask>', '<pathToJson>'];
 
 // Configure all the options
-exports.setup = (sywac) => {
+const setup = (sywac) => {
     sywac.commandDirectory('json');
+};
+
+export default {
+    id,
+    group,
+    flags,
+    desc,
+    setup
 };
