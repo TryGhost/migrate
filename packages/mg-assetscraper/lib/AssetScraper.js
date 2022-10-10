@@ -3,7 +3,6 @@ const _ = require('lodash');
 const cheerio = require('cheerio');
 const {URL} = require('url');
 const path = require('path');
-const axios = require('axios');
 const got = require('got');
 const FileType = require('file-type');
 const MarkdownIt = require('markdown-it');
@@ -693,12 +692,9 @@ class ImageScraper {
      */
     async downloadFile(src, ctx = {}) {
         try {
-            const response = await axios.get(encodeURI(src), {
-                responseType: 'arraybuffer',
-                timeout: 2000,
-                validateStatus: (status) => {
-                    return status >= 200 && status <= 400; // default
-                }
+            const response = await got(src, {
+                responseType: 'buffer',
+                timeout: 20000
             });
 
             return response;
@@ -718,7 +714,7 @@ class ImageScraper {
     async fetchFile(src, ctx = {}) {
         try {
             const response = await this.downloadFile(src, ctx);
-            const fileData = await this.getAssetDataFromBuffer(response.data);
+            const fileData = await this.getAssetDataFromBuffer(response.body);
 
             return {
                 response,
@@ -859,7 +855,7 @@ class ImageScraper {
                             imageOptions.storagePath = this.changeExtension(imageOptions.storagePath, newFile.fileData.ext);
                             imageOptions.outputPath = this.changeExtension(imageOptions.outputPath, newFile.fileData.ext);
 
-                            await this.fileCache.writeImageFile(newFile.response.data, imageOptions);
+                            await this.fileCache.writeImageFile(newFile.response.body, imageOptions);
 
                             item.newLocal = imageOptions.outputPath;
 
