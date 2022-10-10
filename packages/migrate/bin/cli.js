@@ -55,9 +55,6 @@ prettyCLI.preface('Command line utilities for migrating content to Ghost.');
 import substackCommands from '../commands/substack.js';
 prettyCLI.command(substackCommands);
 
-// import testCommands from '../commands/test.js';
-// prettyCLI.command(testCommands);
-
 import wpApiCommands from '../commands/wp-api.js';
 prettyCLI.command(wpApiCommands);
 
