@@ -4,6 +4,7 @@
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/migrate",
   "author": "Ghost Foundation",
   "license": "MIT",
+  "type": "module",
   "bin": {
     "migrate": "./bin/cli.js"
   },

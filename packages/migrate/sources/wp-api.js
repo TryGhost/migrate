@@ -1,11 +1,11 @@
-const wpAPI = require('@tryghost/mg-wp-api');
-const mgJSON = require('@tryghost/mg-json');
-const mgHtmlMobiledoc = require('@tryghost/mg-html-mobiledoc');
-const MgWebScraper = require('@tryghost/mg-webscraper');
-const MgAssetScraper = require('@tryghost/mg-assetscraper');
-const MgLinkFixer = require('@tryghost/mg-linkfixer');
-const fsUtils = require('@tryghost/mg-fs-utils');
-const makeTaskRunner = require('../lib/task-runner');
+import wpAPI from '@tryghost/mg-wp-api';
+import mgJSON from '@tryghost/mg-json';
+import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
+import MgWebScraper from '@tryghost/mg-webscraper';
+import MgAssetScraper from '@tryghost/mg-assetscraper';
+import MgLinkFixer from '@tryghost/mg-linkfixer';
+import fsUtils from '@tryghost/mg-fs-utils';
+import makeTaskRunner from '../lib/task-runner.js';
 
 const scrapeConfig = {
     posts: {
@@ -86,7 +86,7 @@ const postProcessor = (scrapedData, data, options) => {
     return scrapedData;
 };
 
-module.exports.initialize = (url, options) => {
+const initialize = (url, options) => {
     return {
         title: 'Initializing Workspace',
         task: (ctx, task) => {
@@ -119,9 +119,9 @@ module.exports.initialize = (url, options) => {
     };
 };
 
-module.exports.getInfoTaskList = (url, options) => {
+const getInfoTaskList = (url, options) => {
     return [
-        this.initialize(url, options),
+        initialize(url, options),
         {
             title: 'Fetch Content Info from WP API',
             task: async (ctx) => {
@@ -143,9 +143,9 @@ module.exports.getInfoTaskList = (url, options) => {
  * @param {String} pathToZip
  * @param {Object} options
  */
-module.exports.getFullTaskList = (url, options) => {
+const getFullTaskList = (url, options) => {
     return [
-        this.initialize(url, options),
+        initialize(url, options),
         {
             title: 'Fetch Content from WP API',
             task: async (ctx) => {
@@ -277,15 +277,22 @@ module.exports.getFullTaskList = (url, options) => {
     ];
 };
 
-module.exports.getTaskRunner = (url, options) => {
+const getTaskRunner = (url, options) => {
     let tasks = [];
 
     if (options.info) {
-        tasks = this.getInfoTaskList(url, options);
+        tasks = getInfoTaskList(url, options);
     } else {
-        tasks = this.getFullTaskList(url, options);
+        tasks = getFullTaskList(url, options);
     }
 
     // Configure a new Listr task manager, we can use different renderers for different configs
     return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
+};
+
+export default {
+    initialize,
+    getInfoTaskList,
+    getFullTaskList,
+    getTaskRunner
 };
