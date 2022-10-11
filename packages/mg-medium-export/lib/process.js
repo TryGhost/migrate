@@ -1,7 +1,7 @@
-const processPost = require('./process-post');
-const processProfile = require('./process-profile');
+import processPost from './process-post.js';
+import processProfile from './process-profile.js';
 
-module.exports = (input) => {
+export default (input) => {
     let output = {};
 
     if (input.profile) {

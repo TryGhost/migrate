@@ -1,7 +1,8 @@
-const $ = require('cheerio');
-const {formatISO} = require('date-fns');
-const string = require('@tryghost/string');
-const processContent = require('./process-content');
+import $ from 'cheerio';
+import {formatISO} from 'date-fns';
+import string from '@tryghost/string';
+import processContent from './process-content.js';
+
 const sectionTags = ['aside', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'img'];
 
 const processMeta = (name, $post) => {
@@ -32,12 +33,12 @@ const processMeta = (name, $post) => {
         post.data.updated_at = $post('.dt-published').attr('datetime') || dateNow;
     }
 
-    $('img').map(async (i, el) => {
-        let $image = $(el);
-        let type = $image.attr('src') === undefined ? 'data-src' : 'src';
-        let newSrc = await this.downloadImage($image.attr(type));
-        $image.attr(type, newSrc);
-    }).get();
+    // $('img').map(async (i, el) => {
+    //     let $image = $(el);
+    //     let type = $image.attr('src') === undefined ? 'data-src' : 'src';
+    //     let newSrc = await this.downloadImage($image.attr(type));
+    //     $image.attr(type, newSrc);
+    // }).get();
 
     // Ensure the slug is clean and valid according to Ghost
     post.data.slug = string.slugify(urlInfo[1]);
@@ -120,7 +121,7 @@ const processFeatureImage = (html, post) => {
     return $html.html().trim();
 };
 
-module.exports = (name, html, globalUser) => {
+export default (name, html, globalUser) => {
     const $post = $.load(html, {
         decodeEntities: false
     });

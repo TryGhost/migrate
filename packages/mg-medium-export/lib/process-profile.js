@@ -1,4 +1,4 @@
-const cheerio = require('cheerio');
+import cheerio from 'cheerio';
 
 // Keys we've seen so far
 // Profile
@@ -21,7 +21,7 @@ const mediumToGhost = {
     twitter: 'twitter'
 };
 
-module.exports = (html) => {
+export default (html) => {
     let $ = cheerio.load(html);
     let profile = {
         url: $('.u-url').attr('href'),
