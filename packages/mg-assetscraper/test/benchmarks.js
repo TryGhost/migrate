@@ -1,7 +1,7 @@
 // This currently takes ~14 seconds on repeat runs
 
-const AssetScraper = require('../lib/AssetScraper');
-const makeTaskRunner = require('../../migrate/lib/task-runner.js');
+import AssetScraper from '../lib/AssetScraper.js';
+import makeTaskRunner from '../../migrate/lib/task-runner.js.js';
 
 const numOfRuns = 5000;
 

@@ -11,7 +11,6 @@
   "scripts": {
     "dev": "migrate",
     "migrate": "migrate",
-    "test": "NODE_ENV=testing jest",
     "lint": "eslint . --ext .js --cache",
     "posttest": "yarn lint"
   },
@@ -26,9 +25,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.25.0",
-    "jest": "29.1.2",
-    "jest-extended": "3.1.0"
+    "eslint": "8.25.0"
   },
   "dependencies": {
     "@tryghost/listr-smart-renderer": "^0.3.0",
