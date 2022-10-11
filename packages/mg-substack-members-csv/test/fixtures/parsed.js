@@ -382,7 +382,7 @@ const subscribed = [
     }
 ];
 
-module.exports = {
-    free: free,
-    subscribed: subscribed
+export default {
+    free,
+    subscribed
 };

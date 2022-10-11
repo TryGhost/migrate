@@ -1,6 +1,6 @@
 /* eslint no-undef: 0 */
-const processMembers = require('../lib/process');
-const parsedMembers = require('./fixtures/parsed');
+import processMembers from '../lib/process.js';
+import parsedMembers from './fixtures/parsed.js';
 
 const DEFAULT_OPTIONS = {
     options: {

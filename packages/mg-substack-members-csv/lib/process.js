@@ -1,10 +1,10 @@
-const {
+import {
     isDate,
     parseISO,
     addYears,
     isAfter,
     format
-} = require('date-fns');
+} from 'date-fns';
 
 const processCompGift = (member, {thresholdYearOrDate, beforeThreshold}) => {
     const sType = member.type;
@@ -89,7 +89,7 @@ const processMember = (sMember, options) => {
     return processOptions(member, options);
 };
 
-module.exports = async (input, ctx) => {
+export default async (input, ctx) => {
     const {options} = ctx;
     ctx.logs = [];
 
