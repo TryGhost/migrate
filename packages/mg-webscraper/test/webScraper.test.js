@@ -1,7 +1,4 @@
-// Switch these lines once there are useful utils
-// const testUtils = require('./utils');
-require('./utils');
-
+/* eslint no-undef: 0 */
 const WebScraper = require('../');
 
 const mockUrl = 'https://ghost.org/docs/api/v3/migration/';
@@ -28,47 +25,58 @@ const mockResponse = {
 describe('ScrapeURL', function () {
     let mockFileCache;
 
-    beforeEach(function () {
-        mockFileCache = {
-            hasFile: sinon.stub(),
-            writeTmpFile: sinon.stub(),
-            readTmpJSONFile: sinon.stub()
-        };
-
-        mockFileCache.readTmpJSONFile.resolves(mockResponse);
-        mockFileCache.writeTmpFile.resolves();
-    });
-
     afterEach(function () {
-        sinon.restore();
+        mockFileCache.hasFile.mockRestore();
+        mockFileCache.writeTmpFile.mockRestore();
+        mockFileCache.readTmpJSONFile.mockRestore();
     });
 
-    it('Will load from cache', async function () {
-        mockFileCache.hasFile.returns(true);
+    test('Will load from cache', async function () {
+        mockFileCache = {
+            hasFile: jest.fn(() => {
+                return true;
+            }),
+            writeTmpFile: jest.fn(() => {
+                return true;
+            }),
+            readTmpJSONFile: jest.fn(() => {
+                return mockResponse;
+            })
+        };
 
         let webScraper = new WebScraper(mockFileCache, mockConfig);
 
         let response = await webScraper.scrapeUrl(mockUrl, mockConfig.posts, mockFilename);
 
-        mockFileCache.hasFile.calledOnce.should.be.true();
-        mockFileCache.readTmpJSONFile.calledOnce.should.be.true();
+        expect(mockFileCache.hasFile).toHaveBeenCalledTimes(1);
+        expect(mockFileCache.readTmpJSONFile).toHaveBeenCalledTimes(1);
 
-        response.should.eql(mockResponse);
+        expect(response).toEqual(mockResponse);
     });
 
-    it('Will fetch and cache when not in the cache', async function () {
-        mockFileCache.hasFile.returns(false);
+    test('Will fetch and cache when not in the cache', async function () {
+        mockFileCache = {
+            hasFile: jest.fn(() => {
+                return false;
+            }),
+            writeTmpFile: jest.fn(() => {
+                return true;
+            }),
+            readTmpJSONFile: jest.fn(() => {
+                return mockResponse;
+            })
+        };
 
         let webScraper = new WebScraper(mockFileCache, mockConfig);
 
         // Fake scraping the page, we don't need to test that part
-        webScraper.scrape = sinon.stub().resolves(mockResponse);
+        webScraper.scrape = jest.fn(async () => mockResponse);
 
         let response = await webScraper.scrapeUrl(mockUrl, mockConfig.posts, mockFilename);
 
-        mockFileCache.hasFile.calledOnce.should.be.true();
-        mockFileCache.writeTmpFile.calledOnce.should.be.true();
+        expect(mockFileCache.hasFile).toHaveBeenCalledTimes(1);
+        expect(mockFileCache.writeTmpFile).toHaveBeenCalledTimes(1);
 
-        response.should.eql(mockResponse);
+        expect(response).toEqual(mockResponse);
     });
 });
