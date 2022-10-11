@@ -6,6 +6,7 @@ import MgAssetScraper from '@tryghost/mg-assetscraper';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import makeTaskRunner from '../lib/task-runner.js';
+import $ from 'cheerio';
 
 const scrapeConfig = {
     posts: {
@@ -95,7 +96,6 @@ const scrapeConfig = {
 
 const postProcessor = (scrapedData, data) => {
     // TODO: is there a better way to do this?
-    const $ = require('cheerio');
 
     // let primaryTag = addPrimaryTag.toLowerCase();
 
