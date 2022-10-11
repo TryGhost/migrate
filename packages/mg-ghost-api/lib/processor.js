@@ -1,4 +1,4 @@
-module.exports.processTags = (ghTags) => {
+const processTags = (ghTags) => {
     let tags = [];
 
     ghTags.forEach((tag) => {
@@ -23,16 +23,16 @@ module.exports.processTags = (ghTags) => {
     return tags;
 };
 
-module.exports.processPost = (ghPost) => {
+const processPost = (ghPost) => {
     const post = {
         url: ghPost.url,
         data: ghPost
     };
 
-    post.data.authors = this.processAuthors(ghPost.authors);
+    post.data.authors = processAuthors(ghPost.authors);
 
     if (ghPost.tags && ghPost.tags.length > 0) {
-        post.data.tags = this.processTags(ghPost.tags);
+        post.data.tags = processTags(ghPost.tags);
     } else {
         delete post.data.tags;
     }
@@ -40,11 +40,11 @@ module.exports.processPost = (ghPost) => {
     return post;
 };
 
-module.exports.processPosts = (posts) => {
-    return posts.map(post => this.processPost(post));
+const processPosts = (posts) => {
+    return posts.map(post => processPost(post));
 };
 
-module.exports.processAuthor = (ghAuthor) => {
+const processAuthor = (ghAuthor) => {
     let authorData = {
         url: ghAuthor.url,
         data: ghAuthor
@@ -59,15 +59,24 @@ module.exports.processAuthor = (ghAuthor) => {
     return authorData;
 };
 
-module.exports.processAuthors = (authors) => {
-    return authors.map(author => this.processAuthor(author));
+const processAuthors = (authors) => {
+    return authors.map(author => processAuthor(author));
 };
 
-module.exports.all = async ({result: input}) => {
+const all = async ({result: input}) => {
     const output = {};
 
-    output.users = this.processAuthors(input.users);
-    output.posts = this.processPosts(input.posts, output.users);
+    output.users = processAuthors(input.users);
+    output.posts = processPosts(input.posts, output.users);
 
     return output;
+};
+
+export default {
+    processTags,
+    processPost,
+    processPosts,
+    processAuthor,
+    processAuthors,
+    all
 };
