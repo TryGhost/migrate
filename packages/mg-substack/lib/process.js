@@ -1,10 +1,10 @@
-const fs = require('fs').promises;
-const path = require('path');
-const $ = require('cheerio');
-const url = require('url');
-const errors = require('@tryghost/errors');
-const SimpleDom = require('simple-dom');
-const audioCard = require('@tryghost/kg-default-cards/lib/cards/audio');
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import url from 'node:url';
+import $ from 'cheerio';
+import errors from '@tryghost/errors';
+import SimpleDom from 'simple-dom';
+import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 
 const getFiles = async (filePath) => {
     let filenames = await fs.readdir(filePath);
@@ -317,7 +317,7 @@ const processPost = (post, siteUrl, options) => {
     return post;
 };
 
-module.exports = async (input, ctx) => {
+export default async (input, ctx) => {
     let {postsDir, options} = ctx;
     let {url: siteUrl} = options;
     const output = {};
@@ -344,4 +344,4 @@ module.exports = async (input, ctx) => {
     return output;
 };
 
-module.exports.processContent = processContent;
+export {processContent};

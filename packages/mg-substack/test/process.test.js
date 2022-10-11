@@ -1,11 +1,11 @@
 /* eslint no-undef: 0 */
-const csv = require('@tryghost/mg-fs-utils/lib/csv');
-const fs = require('fs');
-const path = require('path');
-const childProcess = require('child_process');
-const processZip = require('../index.js');
-const map = require('../lib/mapper');
-const process = require('../lib/process');
+import fs from 'node:fs';
+import path from 'node:path';
+import childProcess from 'node:child_process';
+import csv from '@tryghost/mg-fs-utils/lib/csv';
+import processZip from '../index.js';
+import map from '../lib/mapper.js';
+import process, {processContent} from '../lib/process.js';
 
 const inputPath = path.resolve('./test/fixtures/');
 const inputZipPath = path.resolve('./test/fixtures/posts.zip');
@@ -263,7 +263,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
             subscribeLink: '#/portal/signup'
         };
 
-        const processed = await process.processContent(post, url, options);
+        const processed = await processContent(post, url, options);
 
         expect(processed.data.html).toEqual(`<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div><p><a href="#/portal/signup">Subscribe</a></p>`);
     });
@@ -280,7 +280,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
             commentLink: '#post-comments'
         };
 
-        const processed = await process.processContent(post, url, options);
+        const processed = await processContent(post, url, options);
 
         expect(processed.data.html).toEqual(`<div class="kg-card kg-button-card kg-align-center"><a href="#post-comments" class="kg-btn kg-btn-accent">Leave a comment</a></div>`);
     });
@@ -296,7 +296,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
             comments: false
         };
 
-        const processed = await process.processContent(post, url, options);
+        const processed = await processContent(post, url, options);
 
         expect(processed.data.html).toEqual(`<p>Hello</p><p>World</p>`);
     });
@@ -312,7 +312,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
             subscribeLink: '#/portal/signup'
         };
 
-        const processed = await process.processContent(post, url, options);
+        const processed = await processContent(post, url, options);
 
         expect(processed.data.html).toEqual(`<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div><p>Lorem ipsum dolor sit.</p><div class="kg-card kg-button-card kg-align-center"><a href="https://ghost.org/" class="kg-btn kg-btn-accent">Try Ghost</a></div>`);
     });
@@ -328,7 +328,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
             subscribeLink: '#/portal/signup'
         };
 
-        const processed = await process.processContent(post, url, options);
+        const processed = await processContent(post, url, options);
 
         expect(processed.data.html).toEqual(`<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div>`);
     });
@@ -344,7 +344,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
             subscribeLink: '#/portal/signup'
         };
 
-        const processed = await process.processContent(post, url, options);
+        const processed = await processContent(post, url, options);
 
         expect(processed.data.html).toEqual(`<p>Lorem ipsum</p><div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>`);
     });
@@ -378,7 +378,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const url = 'https://example.com';
         const options = {};
 
-        const processed = await process.processContent(post, url, options);
+        const processed = await processContent(post, url, options);
 
         expect(processed.data.html).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption">\n' +
         '                        <a target="_blank" href="https://example.com">\n' +
@@ -407,7 +407,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const url = 'https://example.com';
         const options = {};
 
-        const processed = await process.processContent(post, url, options);
+        const processed = await processContent(post, url, options);
 
         expect(processed.data.html).toEqual('<!--kg-card-begin: html--><ul>\n' +
         '                    <li>Proin nunc purus, sollicitudin vitae dui id, condimentum efficitur mauris</li>\n' +
@@ -457,7 +457,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const url = 'https://example.com';
         const options = {};
 
-        const processed = await process.processContent(post, url, options);
+        const processed = await processContent(post, url, options);
 
         expect(processed.data.html).toEqual('<p>Lorem ipsum</p>\n' +
         '                <!--kg-card-begin: html--><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.<a class="footnote-anchor" id="footnote-anchor-1" href="#footnote-1">1</a></p><!--kg-card-end: html-->\n' +
@@ -508,7 +508,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const url = 'https://example.com';
         const options = {};
 
-        const processed = await process.processContent(post, url, options);
+        const processed = await processContent(post, url, options);
 
         expect(processed.data.html).toEqual('<p>Lorem ipsum</p>\n' +
         '\n' +
@@ -528,7 +528,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const url = 'https://example.com';
         const options = {};
 
-        const processed = await process.processContent(post, url, options);
+        const processed = await processContent(post, url, options);
 
         expect(processed.data.html).toContain('<p>Hello</p>');
         expect(processed.data.html).toContain('<div class="kg-card kg-audio-card">');
@@ -552,7 +552,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const url = 'https://example.com';
         const options = {};
 
-        const processed = await process.processContent(post, url, options);
+        const processed = await processContent(post, url, options);
 
         expect(processed.data.html).toEqual('<p>My content</p>');
     });

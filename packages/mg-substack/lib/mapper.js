@@ -1,7 +1,7 @@
-const {formatISO, parseISO, isBefore, isAfter, add} = require('date-fns');
-const _ = require('lodash');
-const errors = require('@tryghost/errors');
-const {slugify} = require('@tryghost/string');
+import {formatISO, parseISO, isBefore, isAfter, add} from 'date-fns';
+import _ from 'lodash';
+import errors from '@tryghost/errors';
+import {slugify} from '@tryghost/string';
 
 const mapConfig = (data, {url, email, useMetaAuthor}) => {
     const slug = data.post_id.replace(/^(?:\d{1,10}\.)(\S*)/gm, '$1');
@@ -89,7 +89,7 @@ const mapConfig = (data, {url, email, useMetaAuthor}) => {
  *
  * @returns {Array} A singular array of post objects, in a structure compatible with the other Migrate tools
  */
-module.exports = async (input, options) => {
+export default async (input, options) => {
     const output = {
         posts: []
     };

@@ -1,6 +1,6 @@
-const fsUtils = require('@tryghost/mg-fs-utils');
+import fsUtils from '@tryghost/mg-fs-utils';
 
-module.exports = (zipPath) => {
+export default (zipPath) => {
     let content = {
         csv: null,
         posts: []
