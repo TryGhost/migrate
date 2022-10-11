@@ -1,6 +1,6 @@
-const path = require('path');
-const _ = require('lodash');
-const cheerio = require('cheerio');
+import path from 'node:path';
+import _ from 'lodash';
+import cheerio from 'cheerio';
 
 // @TODO: expand this list
 const htmlFields = ['html'];
@@ -133,4 +133,4 @@ class LinkFixer {
     }
 }
 
-module.exports = LinkFixer;
+export default LinkFixer;

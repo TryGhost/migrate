@@ -1,1 +1,3 @@
-module.exports = require('./lib/LinkFixer');
+import LinkFixer from './lib/LinkFixer.js';
+
+export default LinkFixer;
