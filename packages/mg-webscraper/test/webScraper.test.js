@@ -1,5 +1,6 @@
 /* eslint no-undef: 0 */
-const WebScraper = require('../');
+import {jest} from '@jest/globals';
+import WebScraper from '../index.js';
 
 const mockUrl = 'https://ghost.org/docs/api/v3/migration/';
 const mockFilename = 'test.json';

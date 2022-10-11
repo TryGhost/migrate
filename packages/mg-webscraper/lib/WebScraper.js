@@ -1,8 +1,8 @@
-const _ = require('lodash');
-const scrapeIt = require('scrape-it');
-const omitEmpty = require('omit-empty');
-const errors = require('@tryghost/errors');
-const {slugify} = require('@tryghost/string');
+import _ from 'lodash';
+import scrapeIt from 'scrape-it';
+import omitEmpty from 'omit-empty';
+import errors from '@tryghost/errors';
+import {slugify} from '@tryghost/string';
 
 const makeMetaObject = (item) => {
     if (!item.url) {
@@ -267,4 +267,4 @@ class WebScraper {
     }
 }
 
-module.exports = WebScraper;
+export default WebScraper;

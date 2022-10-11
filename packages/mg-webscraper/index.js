@@ -1,1 +1,3 @@
-module.exports = require('./lib/WebScraper');
+import WebScraper from './lib/WebScraper.js';
+
+export default WebScraper;
