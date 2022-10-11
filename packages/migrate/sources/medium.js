@@ -1,5 +1,5 @@
 import mediumIngest from '@tryghost/mg-medium-export';
-import mgJSON from '@tryghost/mg-json';
+import {toGhostJSON} from '@tryghost/mg-json';
 import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import MgAssetScraper from '@tryghost/mg-assetscraper';
@@ -163,7 +163,7 @@ const getTaskRunner = (pathToZip, options) => {
             task: (ctx) => {
                 // 4. Format the data as a valid Ghost JSON file
                 try {
-                    ctx.result = mgJSON.toGhostJSON(ctx.result, ctx.options);
+                    ctx.result = toGhostJSON(ctx.result, ctx.options);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;

@@ -1,5 +1,12 @@
 /* eslint no-undef: 0 */
-const toGhostJSON = require('../lib/to-ghost-json');
+import toGhostJSON from '../lib/to-ghost-json/index.js';
+
+import singlePostOnlyFixture from './fixtures/single-post-only.json';
+import singlePostAuthorFixture from './fixtures/single-post-author.json';
+import multiPostOnlyFixture from './fixtures/multi-post-only.json';
+import singlePostWithBadTagOrderFixture from './fixtures/single-post-with-bad-tag-order.json';
+import singlePostOnlyLongMetaFixture from './fixtures/single-post-only-long-meta.json';
+import singlePostOnlyMetaFixture from './fixtures/single-post-only-meta.json';
 
 expect.extend({
     toBeGhostJSON(received, expected) {
@@ -97,8 +104,7 @@ expect.extend({
 
 describe('toGhostJSON', function () {
     test('Calculates relations when it only has a post', function () {
-        const input = require('./fixtures/single-post-only.json');
-        const output = toGhostJSON(input);
+        const output = toGhostJSON(singlePostOnlyFixture);
 
         expect(output).toBeGhostJSON();
         expect(output.data.posts).toBeArrayOfSize(1);
@@ -147,24 +153,19 @@ describe('toGhostJSON', function () {
     });
 
     test('Calculates relations with both post and users', function () {
-        const input = require('./fixtures/single-post-author.json');
-
-        const output = toGhostJSON(input);
+        const output = toGhostJSON(singlePostAuthorFixture);
 
         expect(output).toBeGhostJSON();
     });
 
     test('Calculates relations across multiple posts', function () {
-        const input = require('./fixtures/multi-post-only.json');
-
-        const output = toGhostJSON(input);
+        const output = toGhostJSON(multiPostOnlyFixture);
 
         expect(output).toBeGhostJSON();
     });
 
     test('Ensures internal tags are listed last', function () {
-        const input = require('./fixtures/single-post-with-bad-tag-order.json');
-        const output = toGhostJSON(input);
+        const output = toGhostJSON(singlePostWithBadTagOrderFixture);
 
         expect(output.data.tags).toBeArrayOfSize(3);
         expect(output.data.tags[0].name).toEqual('Things');
@@ -173,8 +174,7 @@ describe('toGhostJSON', function () {
     });
 
     test('Trims strings that are too long', function () {
-        const input = require('./fixtures/single-post-only-long-meta.json');
-        const output = toGhostJSON(input);
+        const output = toGhostJSON(singlePostOnlyLongMetaFixture);
 
         expect(output.data.posts[0].custom_excerpt.length).toBeLessThanOrEqual(300);
         expect(output.data.posts_meta[0].meta_description.length).toBeLessThanOrEqual(500);
@@ -182,8 +182,7 @@ describe('toGhostJSON', function () {
     });
 
     test('Moves meta data to posts_meta object', function () {
-        const input2 = require('./fixtures/single-post-only-meta.json');
-        const output = toGhostJSON(input2);
+        const output = toGhostJSON(singlePostOnlyMetaFixture);
 
         // Data should be in `posts_meta[0]`
         expect(output.data.posts_meta[0].meta_title).toEqual('This is my Blog Post Title');

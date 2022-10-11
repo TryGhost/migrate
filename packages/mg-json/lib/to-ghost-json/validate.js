@@ -1,4 +1,4 @@
-module.exports = (json) => {
+export default (json) => {
     json.posts.forEach((item, index) => {
         let input = item.data;
 

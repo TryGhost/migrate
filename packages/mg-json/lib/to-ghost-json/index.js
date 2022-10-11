@@ -1,10 +1,10 @@
-const baseTemplate = require('./base-template');
-const stripMeta = require('./meta-to-ghost');
-const processPostRelations = require('./process-post-relations');
-const validate = require('./validate');
-const reorderTags = require('./reorder-tags');
+import baseTemplate from './base-template.js';
+import stripMeta from './meta-to-ghost.js';
+import processPostRelations from './process-post-relations.js';
+import validate from './validate.js';
+import reorderTags from './reorder-tags.js';
 
-module.exports = (input, options = {}) => {
+export default (input, options = {}) => {
     // Construct a basic Ghost JSON template
     let output = baseTemplate();
 
