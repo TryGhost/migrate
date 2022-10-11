@@ -1,5 +1,9 @@
 # Migrate Mediascraper
 
+⛔️ This package has been superseded by [mg-assetscraper](https://github.com/TryGhost/migrate/tree/main/packages/mg-assetscraper), and is no longer maintained.
+
+---
+
 ## Install
 
 `npm install @tryghost/mg-mediascraper --save`
