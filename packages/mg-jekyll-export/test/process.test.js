@@ -1,13 +1,15 @@
 /* eslint no-undef: 0 */
-const fs = require('fs');
-const path = require('path');
+import {URL} from 'node:url';
+import fs from 'node:fs';
+import path from 'node:path';
+import processPost from '../lib/process-post.js';
+
+const __dirname = new URL('.', import.meta.url).pathname;
 
 const readSync = (name) => {
     let fixtureFileName = path.join(__dirname, './', 'fixtures', name);
     return fs.readFileSync(fixtureFileName, {encoding: 'utf8'});
 };
-
-const processPost = require('../lib/process-post');
 
 describe('Process', function () {
     test('Can process a basic Jekyll Markdown post', function () {

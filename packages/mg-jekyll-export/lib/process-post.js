@@ -1,11 +1,12 @@
-const MarkdownIt = require('markdown-it');
+import MarkdownIt from 'markdown-it';
+import string from '@tryghost/string';
+import errors from '@tryghost/errors';
+import fm from 'front-matter';
+import processHtml from './process-html.js';
+
 const md = new MarkdownIt({
     html: true
 });
-const string = require('@tryghost/string');
-const errors = require('@tryghost/errors');
-const fm = require('front-matter');
-const processHtml = require('./process-html');
 
 // The frontmatter date may be a Date object or a string
 function _parseFrontMatterDate(fmDate) {
@@ -200,7 +201,7 @@ const processMeta = (fileName, fileContents, options) => {
     return post;
 };
 
-module.exports = (fileName, fileContents, globalUser = false, options = {}) => {
+export default (fileName, fileContents, globalUser = false, options = {}) => {
     const post = processMeta(fileName, fileContents, options);
 
     // The post body may be in Markdown or HTML.

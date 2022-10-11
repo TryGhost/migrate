@@ -1,4 +1,4 @@
-const $ = require('cheerio');
+import $ from 'cheerio';
 
 /*
 Process the HTML of a single Jekyll Post.
@@ -6,7 +6,7 @@ Process the HTML of a single Jekyll Post.
 Receives raw HTML, returns processed HTML
 */
 
-module.exports = (rawHtml, options = {}) => {
+export default (rawHtml, options = {}) => {
     const $html = $.load(rawHtml, {
         decodeEntities: false
     });
