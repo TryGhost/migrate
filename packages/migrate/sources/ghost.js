@@ -1,5 +1,5 @@
 import ghostAPI from '@tryghost/mg-ghost-api';
-import mgJSON from '@tryghost/mg-json';
+import {toGhostJSON} from '@tryghost/mg-json';
 import MgImageScraper from '@tryghost/mg-imagescraper';
 import MgMediaScraper from '@tryghost/mg-mediascraper';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
@@ -108,7 +108,7 @@ const getFullTaskList = (options) => {
             task: (ctx) => {
                 // 4. Format the data as a valid Ghost JSON file
                 try {
-                    ctx.result = mgJSON.toGhostJSON(ctx.result, ctx.options);
+                    ctx.result = toGhostJSON(ctx.result, ctx.options);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;

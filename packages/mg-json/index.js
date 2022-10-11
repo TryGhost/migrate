@@ -18,8 +18,13 @@
  *   }]
  * }
  */
-module.exports.toGhostJSON = require('./lib/to-ghost-json');
-module.exports.hydrate = require('./lib/to-ghost-json/hydrate');
+import toGhostJSON from './lib/to-ghost-json/index.js';
+import hydrate from './lib/to-ghost-json/hydrate.js';
 
 // @TODO: validator
-// module.exports.validate = require('./lib/validator');
+// import validate from './lib/validator.js';
+
+export {
+    toGhostJSON,
+    hydrate
+};

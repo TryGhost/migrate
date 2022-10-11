@@ -1,6 +1,6 @@
-const _ = require('lodash');
-const {slugify} = require('@tryghost/string');
-const Entities = require('html-entities');
+import _ from 'lodash';
+import {slugify} from '@tryghost/string';
+import Entities from 'html-entities';
 /**
  * Hydrate Ghost objects
  * Extend object with the minimum data needed for an import to succeed
@@ -52,8 +52,7 @@ const hydrateUser = (input, options) => {
     return input;
 };
 
-// Alias plural form only, as this should already have been normalised
-module.exports.users = hydrateUser;
+const users = hydrateUser;
 
 /**
  * Tags(s)
@@ -75,7 +74,7 @@ const hydrateTag = (input) => {
     return input;
 };
 
-module.exports.tags = hydrateTag;
+const tags = hydrateTag;
 
 /**
  * Post(s)
@@ -103,4 +102,10 @@ const hydratePost = (input, options) => {
     return input;
 };
 
-module.exports.posts = hydratePost;
+const posts = hydratePost;
+
+export default {
+    users,
+    tags,
+    posts
+};

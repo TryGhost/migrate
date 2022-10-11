@@ -1,7 +1,7 @@
-const _ = require('lodash');
-const schema = require('../utils/schema');
-const hydrate = require('./hydrate');
-const ObjectID = require('bson-objectid');
+import _ from 'lodash';
+import ObjectID from 'bson-objectid';
+import schema from '../utils/schema.js';
+import hydrate from './hydrate.js';
 /**
  * A resource might be a plain resource ready for import, or if it came from our migrate tooling,
  * probably an object with some metadata (like URL) and a `data` key with the resource fields
@@ -78,7 +78,7 @@ const normalizeValue = (value) => {
  * We expect an object with keys that match Ghost resources
  * Iterate over each key and return only ones that we recognise
  */
-module.exports = (input, options) => {
+export default (input, options) => {
     return _.reduce(input, (data, inputValue, inputKey) => {
         let key = normalizeKey(inputKey);
         let entries = normalizeValue(inputValue);

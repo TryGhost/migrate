@@ -1,4 +1,4 @@
-module.exports = (json) => {
+export default (json) => {
     json.posts.forEach((post) => {
         let tags = post.data.tags || [];
         let publicTags = [];

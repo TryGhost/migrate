@@ -1,8 +1,8 @@
-const _ = require('lodash');
-const schema = require('../utils/schema');
-const ObjectID = require('bson-objectid');
+import _ from 'lodash';
+import ObjectID from 'bson-objectid';
+import schema from '../utils/schema.js';
 
-module.exports = (json) => {
+export default (json) => {
     json.users = json.users || [];
     json.tags = json.tags || []; // expected to be empty
 

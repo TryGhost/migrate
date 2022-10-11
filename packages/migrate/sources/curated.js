@@ -1,5 +1,5 @@
 import curatedIngest from '@tryghost/mg-curated-export';
-import mgJSON from '@tryghost/mg-json';
+import {toGhostJSON} from '@tryghost/mg-json';
 import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
 import fsUtils from '@tryghost/mg-fs-utils';
 import makeTaskRunner from '../lib/task-runner.js';
@@ -43,7 +43,7 @@ const getTaskRunner = (pathToZip, options) => {
             task: (ctx) => {
                 // 4. Format the data as a valid Ghost JSON file
                 try {
-                    ctx.result = mgJSON.toGhostJSON(ctx.result, ctx.options);
+                    ctx.result = toGhostJSON(ctx.result, ctx.options);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;

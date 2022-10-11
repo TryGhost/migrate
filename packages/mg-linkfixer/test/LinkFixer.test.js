@@ -1,5 +1,5 @@
 /* eslint no-undef: 0 */
-import mgJSON from '@tryghost/mg-json';
+import {toGhostJSON} from '@tryghost/mg-json';
 import linkFixer from '../lib/LinkFixer.js';
 import makeTaskRunner from '../../migrate/lib/task-runner.js';
 
@@ -22,7 +22,7 @@ const getPosts = async (options = {}) => {
 
     ctx.linkFixer = new linkFixer();
     ctx.linkFixer.buildMap(ctx);
-    ctx.result = mgJSON.toGhostJSON(ctx.result, ctx.options);
+    ctx.result = toGhostJSON(ctx.result, ctx.options);
 
     let tasks = ctx.linkFixer.fix(ctx, []);
 
