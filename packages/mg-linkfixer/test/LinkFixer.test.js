@@ -1,17 +1,21 @@
 /* eslint no-undef: 0 */
-const linkFixer = require('../lib/LinkFixer');
-const mgJSON = require('@tryghost/mg-json');
-const makeTaskRunner = require('./utils/task-runner.js');
+import mgJSON from '@tryghost/mg-json';
+import linkFixer from '../lib/LinkFixer.js';
+import makeTaskRunner from '../../migrate/lib/task-runner.js';
+
+import standardFixtures from './fixtures/ctx.json';
+import yyyymmFixtures from './fixtures/ctx-yyyy-mm.json';
+import yyyymmddFixtures from './fixtures/ctx-yyyy-mm-dd.json';
 
 const getPosts = async (options = {}) => {
     let ctx = null;
 
     if (options.datedPermalinks === '/yyyy/mm/dd/') {
-        ctx = require('./fixtures/ctx-yyyy-mm-dd.json');
+        ctx = yyyymmddFixtures;
     } else if (options.datedPermalinks === '/yyyy/mm/') {
-        ctx = require('./fixtures/ctx-yyyy-mm.json');
+        ctx = yyyymmFixtures;
     } else {
-        ctx = require('./fixtures/ctx.json');
+        ctx = standardFixtures;
     }
 
     ctx.options = {...ctx.options, ...options};
