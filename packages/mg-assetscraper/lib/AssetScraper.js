@@ -1,13 +1,13 @@
-const errors = require('@tryghost/errors');
-const _ = require('lodash');
-const cheerio = require('cheerio');
-const {URL} = require('url');
-const path = require('path');
-const got = require('got');
-const FileType = require('file-type');
-const MarkdownIt = require('markdown-it');
-const makeTaskRunner = require('./task-runner');
-const AssetCache = require('./AssetCache');
+import {URL} from 'node:url';
+import path from 'node:path';
+import errors from '@tryghost/errors';
+import _ from 'lodash';
+import cheerio from 'cheerio';
+import got from 'got';
+import FileType from 'file-type';
+import MarkdownIt from 'markdown-it';
+import makeTaskRunner from './task-runner.js';
+import {AssetCache} from './AssetCache.js';
 
 // Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/shared/config/overrides.json
 const knownImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/webp'];
@@ -53,7 +53,7 @@ const isValidUrlString = (string) => {
  * How does this work?
  * Look at the comments above each task in the `fetch()` method
  */
-class ImageScraper {
+class AssetScraper {
     /**
      * @param {FileCache} fileCache
      * @param {Object} options
@@ -1007,4 +1007,6 @@ class ImageScraper {
     }
 }
 
-module.exports = ImageScraper;
+export {
+    AssetScraper
+};

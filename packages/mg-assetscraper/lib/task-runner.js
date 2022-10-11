@@ -1,7 +1,7 @@
-const Listr = require('listr');
-const smartRenderer = require('@tryghost/listr-smart-renderer');
+import Listr from 'listr';
+import smartRenderer from '@tryghost/listr-smart-renderer';
 
-module.exports = (tasks, options = {}) => {
+export default (tasks, options = {}) => {
     let nonVerboseRenderer = options.renderer || smartRenderer;
 
     options.renderer = options.verbose ? 'verbose' : nonVerboseRenderer;
