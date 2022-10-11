@@ -1,9 +1,9 @@
-const $ = require('cheerio');
-const {slugify} = require('@tryghost/string');
-const {parse} = require('date-fns');
-const errors = require('@tryghost/errors');
+import $ from 'cheerio';
+import {slugify} from '@tryghost/string';
+import {parse} from 'date-fns';
+import errors from '@tryghost/errors';
 
-module.exports.processUser = ($sqUser) => {
+const processUser = ($sqUser) => {
     const authorSlug = slugify($($sqUser).children('wp\\:author_login').text());
 
     return {
@@ -16,7 +16,7 @@ module.exports.processUser = ($sqUser) => {
     };
 };
 
-module.exports.processContent = (html) => {
+const processContent = (html) => {
     if (!html) {
         return '';
     }
@@ -60,7 +60,7 @@ module.exports.processContent = (html) => {
 
 // The feature images is not "connected" to the post, other than it's located
 // in the sibling `<item>` node.
-module.exports.processFeatureImage = ($sqPost) => {
+const processFeatureImage = ($sqPost) => {
     const $nextItem = $($sqPost).next().children('wp\\:attachment_url');
 
     if ($nextItem.length >= 1) {
@@ -70,7 +70,7 @@ module.exports.processFeatureImage = ($sqPost) => {
     return;
 };
 
-module.exports.processTags = ($sqCategories, fetchTags) => {
+const processTags = ($sqCategories, fetchTags) => {
     const categories = [];
     const tags = [];
 
@@ -97,12 +97,12 @@ module.exports.processTags = ($sqCategories, fetchTags) => {
     return categories.concat(tags);
 };
 
-module.exports.processPost = ($sqPost, users, {addTag, tags: fetchTags, siteUrl}) => {
+const processPost = ($sqPost, users, {addTag, tags: fetchTags, siteUrl}) => {
     const postType = $($sqPost).children('wp\\:post_type').text();
 
     // only grab posts and pages
     if (postType !== 'attachment') {
-        const featureImage = this.processFeatureImage($sqPost);
+        const featureImage = processFeatureImage($sqPost);
         const authorSlug = slugify($($sqPost).children('dc\\:creator').text());
         let postSlug = $($sqPost).children('link').text();
 
@@ -130,10 +130,10 @@ module.exports.processPost = ($sqPost, users, {addTag, tags: fetchTags, siteUrl}
             }
         };
 
-        post.data.html = this.processContent($($sqPost).children('content\\:encoded').text());
+        post.data.html = processContent($($sqPost).children('content\\:encoded').text());
 
         if ($($sqPost).children('category').length >= 1) {
-            post.data.tags = this.processTags($($sqPost).children('category'), fetchTags);
+            post.data.tags = processTags($($sqPost).children('category'), fetchTags);
         }
 
         post.data.tags.push({
@@ -168,28 +168,28 @@ module.exports.processPost = ($sqPost, users, {addTag, tags: fetchTags, siteUrl}
     }
 };
 
-module.exports.processPosts = ($xml, users, options) => {
+const processPosts = ($xml, users, options) => {
     const postsOutput = [];
 
     $xml('item').each((i, sqPost) => {
-        postsOutput.push(this.processPost(sqPost, users, options));
+        postsOutput.push(processPost(sqPost, users, options));
     });
 
     // don't return empty post objects
     return postsOutput.filter(post => post);
 };
 
-module.exports.processUsers = ($xml) => {
+const processUsers = ($xml) => {
     const usersOutput = [];
 
     $xml('wp\\:author').each((i, sqUser) => {
-        usersOutput.push(this.processUser(sqUser));
+        usersOutput.push(processUser(sqUser));
     });
 
     return usersOutput;
 };
 
-module.exports.all = async (input, {options}) => {
+const all = async (input, {options}) => {
     const {drafts, pages} = options;
     const output = {
         posts: [],
@@ -211,9 +211,9 @@ module.exports.all = async (input, {options}) => {
 
     // process users first, as we're using this information
     // to populate the author data for posts
-    output.users = this.processUsers($xml);
+    output.users = processUsers($xml);
 
-    output.posts = this.processPosts($xml, output.users, options);
+    output.posts = processPosts($xml, output.users, options);
 
     if (!drafts) {
         // remove draft posts
@@ -226,4 +226,15 @@ module.exports.all = async (input, {options}) => {
     }
 
     return output;
+};
+
+export default {
+    processUser,
+    processContent,
+    processFeatureImage,
+    processTags,
+    processPost,
+    processPosts,
+    processUsers,
+    all
 };

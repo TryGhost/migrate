@@ -1,13 +1,15 @@
 /* eslint no-undef: 0 */
-const path = require('path');
-const fs = require('fs');
+import {URL} from 'node:url';
+import path from 'node:path';
+import fs from 'node:fs';
+import process from '../lib/process.js';
+
+const __dirname = new URL('.', import.meta.url).pathname;
 
 const readSync = (name) => {
     let fixtureFileName = path.join(__dirname, './', 'fixtures', name);
     return fs.readFileSync(fixtureFileName, {encoding: 'utf8'});
 };
-
-const process = require('../lib/process');
 
 describe('Process', function () {
     test('Can convert a single published post', async function () {
