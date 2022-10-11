@@ -1,6 +1,6 @@
-const parse = require('@tryghost/mg-fs-utils/lib/csv').parse;
+import {parse} from '@tryghost/mg-fs-utils/lib/csv.js';
 
-module.exports = async (ctx) => {
+export default async (ctx) => {
     const {options} = ctx;
     let subscribers = [];
 

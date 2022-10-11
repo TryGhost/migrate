@@ -1,6 +1,6 @@
 /* eslint no-undef: 0 */
-const path = require('path');
-const parseMembers = require('../lib/parse-members-csv');
+import path from 'node:path';
+import parseMembers from '../lib/parse-members-csv.js';
 
 describe('Parses Substack members files', function () {
     test('only signups', async function () {
