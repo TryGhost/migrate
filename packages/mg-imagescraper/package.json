@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@tryghost/errors": "1.2.18",
-    "axios": "0.27.2",
+    "axios": "1.1.2",
     "cheerio": "^1.0.0-rc.2",
     "image-type": "4.1.0",
     "is-svg": "4.3.2",
