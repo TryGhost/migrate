@@ -1,5 +1,7 @@
 /* eslint no-undef: 0 */
-const processPost = require('../lib/process-post');
+import processPost from '../lib/process-post.js';
+
+import fixture from './fixtures/12.json';
 
 const globalUser = {
     url: 'test-user',
@@ -25,8 +27,6 @@ const tags = [
 
 describe('Process', function () {
     test('Can convert a single post', function () {
-        const fixture = require('./fixtures/12.json');
-
         const ctx = {
             fileCache: {
                 imagePath: 'content/images/'

@@ -1,5 +1,5 @@
-const cheerio = require('cheerio');
-const path = require('path');
+import path from 'node:path';
+import cheerio from 'cheerio';
 
 const processTextItem = (item, ctx, content) => {
     let itemHtmlChunks = [];
@@ -43,7 +43,7 @@ const processLinkItem = (item, ctx, content) => {
     return itemHtmlChunks.join('');
 };
 
-module.exports = (content, ctx) => {
+export default (content, ctx) => {
     let htmlChunks = [];
 
     content.categories.forEach((element) => {

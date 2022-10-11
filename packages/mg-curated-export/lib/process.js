@@ -1,7 +1,7 @@
-const processPost = require('./process-post');
-const {slugify} = require('@tryghost/string');
+import {slugify} from '@tryghost/string';
+import processPost from './process-post.js';
 
-module.exports = (input, ctx) => {
+export default (input, ctx) => {
     let output = {};
 
     const userSlug = slugify(ctx.options.name);
