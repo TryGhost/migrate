@@ -36,9 +36,6 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--zip`**
     - bool - default: `true`
     - Create a zip file
-- **`-s` `--scrape`**
-    - string - default: `all`
-    - Configure scraping tasks (choices: `all`, `web`, `img`, `none`)
 - **`-u` `--url`**
     - string - default: `false`
     - Provide a URL (without trailing slash) to the hosted source site e.g. `https://mycompany.com`
