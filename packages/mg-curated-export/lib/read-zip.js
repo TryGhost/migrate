@@ -1,7 +1,7 @@
-const fsUtils = require('@tryghost/mg-fs-utils');
-const ui = require('@tryghost/pretty-cli').ui;
+import fsUtils from '@tryghost/mg-fs-utils';
+import {ui} from '@tryghost/pretty-cli';
 
-module.exports = (zipPath, options) => {
+export default (zipPath, options) => {
     let content = {
         posts: []
     };

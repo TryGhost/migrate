@@ -1,6 +1,6 @@
-const processContent = require('./process-content');
+import processContent from './process-content.js';
 
-module.exports = (json, globalUser, tags, ctx) => {
+export default (json, globalUser, tags, ctx) => {
     const post = {
         data: {}
     };
