@@ -1,6 +1,6 @@
-const got = require('got');
+import got from 'got';
 
-module.exports.discover = async ({apitoken}) => {
+const discover = async ({apitoken}) => {
     const APIURL = 'https://www.getrevue.co/api/v2/';
     const requestOptions = {
         prefixUrl: APIURL,
@@ -34,8 +34,8 @@ const cachedFetch = async (fileCache, options) => {
     return response;
 };
 
-module.exports.tasks = async (options) => {
-    const tasks = [{
+const tasks = async (options) => {
+    const tasks = [{ // eslint-disable-line no-shadow
         title: `Fetching posts from Revue`,
         task: async (ctx) => { // eslint-disable-line no-shadow
             try {
@@ -48,4 +48,9 @@ module.exports.tasks = async (options) => {
     }];
 
     return tasks;
+};
+
+export default {
+    discover,
+    tasks
 };
