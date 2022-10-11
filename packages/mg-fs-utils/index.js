@@ -1,4 +1,11 @@
-module.exports.FileCache = require('./lib/FileCache');
-module.exports.zip = require('./lib/zip');
-module.exports.ghostJSON = require('./lib/ghostJSON');
-module.exports.csv = require('./lib/csv');
+import {FileCache} from './lib/FileCache.js';
+import zip from './lib/zip.js';
+import ghostJSON from './lib/ghostJSON.js';
+import csv from './lib/csv.js';
+
+export default {
+    FileCache,
+    zip,
+    ghostJSON,
+    csv
+};

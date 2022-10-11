@@ -1,11 +1,11 @@
-const _ = require('lodash');
-const fs = require('fs-extra');
-const path = require('path');
-const crypto = require('crypto');
-const os = require('os');
-const imageTransform = require('@tryghost/image-transform');
-const errors = require('@tryghost/errors');
-const csv = require('./csv');
+import path from 'node:path';
+import os from 'node:os';
+import crypto from 'node:crypto';
+import _ from 'lodash';
+import fs from 'fs-extra';
+import imageTransform from '@tryghost/image-transform';
+import errors from '@tryghost/errors';
+import csv from './csv.js';
 
 const basePath = 'mg';
 const knownImageExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico', 'webp'];
@@ -453,4 +453,6 @@ class FileCache {
     }
 }
 
-module.exports = FileCache;
+export {
+    FileCache
+};

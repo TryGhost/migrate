@@ -1,14 +1,14 @@
-const {parse} = require('csv-parse');
-const {parse: parseSync} = require('csv-parse/sync');
-const fs = require('fs-extra');
-const {isDate} = require('date-fns');
+import {parse} from 'csv-parse';
+import {parse as parseSync} from 'csv-parse/sync';
+import fs from 'fs-extra';
+import {isDate} from 'date-fns';
 
 /**
  * Parse a CSV file and make available as JSON
  * @param {String} filePath - name of file to write
  * @param {Object} options - optional options to pass to `csv-parse`
  */
-module.exports.parse = (filePath, options = {skip_lines_with_error: true, columns: true, skip_empty_lines: true}) => {
+const parseCSV = (filePath, options = {skip_lines_with_error: true, columns: true, skip_empty_lines: true}) => {
     const parser = parse(options);
     const data = [];
     return new Promise((resolve, reject) => {
@@ -30,7 +30,7 @@ module.exports.parse = (filePath, options = {skip_lines_with_error: true, column
  * @param {String} csvString - CSV as a string
  * @param {Object} options - optional options to pass to `csv-parse`
  */
-module.exports.parseString = (csvString, options = {skip_lines_with_error: true, columns: true, skip_empty_lines: true}) => {
+const parseString = (csvString, options = {skip_lines_with_error: true, columns: true, skip_empty_lines: true}) => {
     const data = parseSync(csvString, options);
 
     return data;
@@ -41,7 +41,7 @@ module.exports.parseString = (csvString, options = {skip_lines_with_error: true,
  * @param {Array} data - the data to format
  * @param {Array} fields - the fields to pick and use as column header
  */
-module.exports.jsonToCSV = (data, fields = Object.keys(data[0])) => {
+const jsonToCSV = (data, fields = Object.keys(data[0])) => {
     let csv = `${fields.join(',')}\r\n`;
     let entry;
     let field;
@@ -79,3 +79,8 @@ module.exports.jsonToCSV = (data, fields = Object.keys(data[0])) => {
     return csv;
 };
 
+export default {
+    parseCSV,
+    parseString,
+    jsonToCSV
+};
