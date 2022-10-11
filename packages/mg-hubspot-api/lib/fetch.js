@@ -1,5 +1,5 @@
-const hsAPI = require('hubspot-api');
-const errors = require('@tryghost/errors');
+import hsAPI from 'hubspot-api';
+import errors from '@tryghost/errors';
 
 const processBlogResult = (blogs) => {
     let results = [];
@@ -18,7 +18,7 @@ const processBlogResult = (blogs) => {
     return results;
 };
 
-module.exports.discover = async ({hapikey, url, limit}) => {
+const discover = async ({hapikey, url, limit}) => {
     const hs = new hsAPI({hapikey});
 
     let blogs = await hs.blog.getAllBlogs();
@@ -70,9 +70,9 @@ const cachedFetch = async (fileCache, hapikey, blogId, limit, offset) => {
     return response;
 };
 
-module.exports.tasks = async ({hapikey, limit}, ctx) => {
+const tasks = async ({hapikey, limit}, ctx) => {
     let info = ctx.info;
-    const tasks = [];
+    const tasks = []; // eslint-disable-line no-shadow
 
     ctx.result = {
         posts: []
@@ -98,4 +98,9 @@ module.exports.tasks = async ({hapikey, limit}, ctx) => {
     }
 
     return tasks;
+};
+
+export default {
+    discover,
+    tasks
 };
