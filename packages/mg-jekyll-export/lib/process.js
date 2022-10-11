@@ -1,6 +1,6 @@
-const processPost = require('./process-post');
+import processPost from './process-post.js';
 
-module.exports = (input, options = {}) => {
+export default (input, options = {}) => {
     let output = {};
 
     let globalUser = {
