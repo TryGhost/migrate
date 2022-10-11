@@ -1,8 +1,8 @@
-const converter = require('@tryghost/html-to-mobiledoc');
-const {convertToHTMLCard} = require('./convertToHTMLCard');
-const errors = require('@tryghost/errors');
+import converter from '@tryghost/html-to-mobiledoc';
+import errors from '@tryghost/errors';
+import {convertToHTMLCard} from './convertToHTMLCard.js';
 
-module.exports.convertPost = (post, htmlCard = false) => {
+const convertPost = (post, htmlCard = false) => {
     if (!post.html) {
         throw new errors.InternalServerError({message: 'Post has no html field to convert'});
     }
@@ -17,4 +17,8 @@ module.exports.convertPost = (post, htmlCard = false) => {
     post.mobiledoc = post.mobiledoc.replace(/about:blank/gm, '');
 
     delete post.html;
+};
+
+export {
+    convertPost
 };
