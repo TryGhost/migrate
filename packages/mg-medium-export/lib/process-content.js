@@ -1,4 +1,4 @@
-const $ = require('cheerio');
+import $ from 'cheerio';
 
 const equivalentTitles = (title1, title2) => {
     title1 = title1.replace(/[\s\n]/g, '');
@@ -7,7 +7,7 @@ const equivalentTitles = (title1, title2) => {
     return title1 === title2;
 };
 
-module.exports = (content, post) => {
+export default (content, post) => {
     let $content = $(content);
 
     // Medium usually has an hr divider at the very beginning of the content

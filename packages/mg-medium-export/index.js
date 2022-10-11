@@ -1,13 +1,9 @@
-const readZip = require('./lib/read-zip');
-const process = require('./lib/process');
+import readZip from './lib/read-zip.js';
+import process from './lib/process.js';
 
-const mediumExport = module.exports = (pathToZip, options) => {
+export default (pathToZip, options) => {
     let input = readZip(pathToZip, options);
     let output = process(input);
 
     return output;
 };
-
-if (require.main === module && process.argv[2]) {
-   console.log(JSON.stringify(mediumExport(process.argv[2]), null, 2)); // eslint-disable-line
-}
