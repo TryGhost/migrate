@@ -2,8 +2,7 @@ import jekyllIngest from '@tryghost/mg-jekyll-export';
 import {toGhostJSON} from '@tryghost/mg-json';
 import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
 import MgWebScraper from '@tryghost/mg-webscraper';
-import MgImageScraper from '@tryghost/mg-imagescraper';
-import MgMediaScraper from '@tryghost/mg-mediascraper';
+import MgAssetScraper from '@tryghost/mg-assetscraper';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import makeTaskRunner from '../lib/task-runner.js';
@@ -74,15 +73,22 @@ const getTaskRunner = (pathToZip, options) => {
             title: 'Initialising Workspace',
             task: (ctx, task) => {
                 ctx.options = options;
+                ctx.allowScrape = {
+                    all: ctx.options.scrape.includes('all'),
+                    images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),
+                    media: ctx.options.scrape.includes('media') || ctx.options.scrape.includes('all'),
+                    files: ctx.options.scrape.includes('files') || ctx.options.scrape.includes('all'),
+                    web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
+                };
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
                 ctx.fileCache = new fsUtils.FileCache(pathToZip);
                 ctx.jekyllScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
-                ctx.imageScraper = new MgImageScraper(ctx.fileCache);
-
-                ctx.sizeReports = {};
-                ctx.mediaScraper = new MgMediaScraper(ctx.fileCache, {
-                    sizeLimit: ctx.options.size_limit || false
+                ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
+                    sizeLimit: ctx.options.sizeLimit,
+                    allowImages: ctx.allowScrape.images,
+                    allowMedia: ctx.allowScrape.media,
+                    allowFiles: ctx.allowScrape.files
                 });
 
                 ctx.linkFixer = new MgLinkFixer();
@@ -105,12 +111,12 @@ const getTaskRunner = (pathToZip, options) => {
         },
         {
             title: 'Fetch missing data via WebScraper',
+            skip: ctx => !ctx.allowScrape.web,
             task: (ctx) => {
                 // 2. Pass the results through the web scraper to get any missing data
                 let tasks = ctx.jekyllScraper.hydrate(ctx); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
-            },
-            skip: () => ['all', 'web'].indexOf(options.scrape) < 0
+            }
         },
         {
             title: 'Build Link Map',
@@ -137,27 +143,22 @@ const getTaskRunner = (pathToZip, options) => {
             }
         },
         {
-            title: 'Fetch images via ImageScraper',
-            task: async (ctx) => {
-                // 5. Pass the JSON file through the image scraper
-                let tasks = ctx.imageScraper.fetch(ctx); // eslint-disable-line no-shadow
-                return makeTaskRunner(tasks, options);
+            title: 'Fetch images via AssetScraper',
+            skip: (ctx) => {
+                return [ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false);
             },
-            skip: () => ['all', 'img'].indexOf(options.scrape) < 0
-        },
-        {
-            title: 'Fetch media via MediaScraper',
             task: async (ctx) => {
-                // 6. Pass the JSON file through the file scraper
-                let tasks = ctx.mediaScraper.fetch(ctx);
-                return makeTaskRunner(tasks, options);
-            },
-            skip: () => ['all', 'media'].indexOf(options.scrape) < 0
+                // 5. Format the data as a valid Ghost JSON file
+                let tasks = ctx.assetScraper.fetch(ctx);
+                let assetScraperOptions = JSON.parse(JSON.stringify(options)); // Clone the options object
+                assetScraperOptions.concurrent = false;
+                return makeTaskRunner(tasks, assetScraperOptions);
+            }
         },
         {
             title: 'Update links in content via LinkFixer',
             task: async (ctx, task) => {
-                // 7. Process the content looking for known links, and update them to new links
+                // 6. Process the content looking for known links, and update them to new links
                 let tasks = ctx.linkFixer.fix(ctx, task); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
             }
@@ -166,7 +167,7 @@ const getTaskRunner = (pathToZip, options) => {
             // @TODO don't duplicate this with the utils json file
             title: 'Convert HTML -> MobileDoc',
             task: (ctx) => {
-                // 8. Convert post HTML -> MobileDoc
+                // 7. Convert post HTML -> MobileDoc
                 try {
                     let tasks = mgHtmlMobiledoc.convert(ctx); // eslint-disable-line no-shadow
                     return makeTaskRunner(tasks, options);
@@ -179,7 +180,7 @@ const getTaskRunner = (pathToZip, options) => {
         {
             title: 'Write Ghost import JSON File',
             task: async (ctx) => {
-                // 9. Write a valid Ghost import zip
+                // 8. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
                     await ctx.fileCache.writeErrorJSONFile(ctx.errors);
@@ -190,23 +191,10 @@ const getTaskRunner = (pathToZip, options) => {
             }
         },
         {
-            title: 'Report file sizes',
-            skip: () => !options.size_limit,
-            task: async (ctx) => {
-                // 10. Report assets that were not downloaded
-                try {
-                    ctx.sizeReports.media = await ctx.fileCache.writeReportCSVFile(ctx.mediaScraper.sizeReport, {filename: 'media', sizeLimit: options.size_limit});
-                } catch (error) {
-                    ctx.errors.push(error);
-                    throw error;
-                }
-            }
-        },
-        {
             title: 'Write Ghost import zip',
             skip: () => !options.zip,
             task: async (ctx) => {
-                // 11. Write a valid Ghost import zip
+                // 9. Write a valid Ghost import zip
                 try {
                     ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
                 } catch (error) {

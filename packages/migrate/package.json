@@ -39,11 +39,9 @@
     "@tryghost/mg-ghost-api": "^0.2.18",
     "@tryghost/mg-html-mobiledoc": "^0.7.31",
     "@tryghost/mg-hubspot-api": "^0.2.27",
-    "@tryghost/mg-imagescraper": "^0.7.2",
     "@tryghost/mg-jekyll-export": "^0.1.10",
     "@tryghost/mg-json": "^0.8.7",
     "@tryghost/mg-linkfixer": "^0.3.1",
-    "@tryghost/mg-mediascraper": "^0.2.3",
     "@tryghost/mg-medium-export": "^0.11.13",
     "@tryghost/mg-revue-api": "^0.2.24",
     "@tryghost/mg-squarespace-xml": "^0.1.24",
@@ -57,7 +55,6 @@
     "fs-extra": "10.1.0",
     "listr": "0.14.3",
     "lodash": "4.17.21",
-    "tty-table": "4.1.6",
     "xml2json": "0.12.0"
   }
 }

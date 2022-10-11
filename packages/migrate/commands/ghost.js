@@ -1,6 +1,5 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
-import Table from 'tty-table';
 import ghost from '../sources/ghost.js';
 
 // Internal ID in case we need one.
@@ -27,14 +26,14 @@ const setup = (sywac) => {
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
     });
-    sywac.enumeration('-s --scrape', {
-        choices: ['all', 'img', 'web', 'media', 'none'],
+    sywac.array('-s --scrape', {
+        choices: ['all', 'img', 'web', 'media', 'files', 'none'],
         defaultValue: 'all',
         desc: 'Configure scraping tasks'
     });
-    sywac.number('--size_limit', {
+    sywac.number('--sizeLimit', {
         defaultValue: false,
-        desc: 'Media files larger than this size (defined in MB) will be flagged as oversize'
+        desc: 'Assets larger than this size (defined in MB) will be ignored'
     });
     sywac.boolean('-I, --info', {
         defaultValue: false,
@@ -89,44 +88,6 @@ const run = async (argv) => {
         if (argv.info && context.info) {
             let batches = context.info.batches.posts;
             ui.log.info(`Batch info: ${context.info.totals.posts} posts ${batches} batches.`);
-        }
-
-        if (context.sizeReports && argv.size_limit) {
-            let tableColOpts = {
-                headerAlign: 'left',
-                headerColor: 'cyan',
-                align: 'left',
-                color: 'gray',
-                formatter: function (cellValue) {
-                    return this.style(cellValue, 'red', 'bold');
-                }
-            };
-
-            Object.entries(context.sizeReports).forEach(([reportTypeKey, reportTypeValue]) => {
-                let tableHeader = [
-                    Object.assign({}, tableColOpts, {
-                        alias: 'Bytes',
-                        value: 'bytesSize'
-                    }),
-                    Object.assign({}, tableColOpts, {
-                        alias: 'Source',
-                        value: 'src'
-                    })
-                ];
-
-                let tableRows = [];
-
-                reportTypeValue.data.forEach((element) => {
-                    tableRows.push(element);
-                });
-
-                if (tableRows.length) {
-                    const out = Table(tableHeader, tableRows, {compact: true}).render();
-                    ui.log.warn(`${tableRows.length} '${reportTypeKey}' ${(tableRows.length === 1) ? 'file' : 'files'} is too large - Full report at ${reportTypeValue.path}`, out);
-                } else {
-                    ui.log.ok(`All files are ${reportTypeKey} are OK - Full report at ${reportTypeValue.path}`);
-                }
-            });
         }
 
         if (argv.verbose) {

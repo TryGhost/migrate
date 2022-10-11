@@ -38,7 +38,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Create a zip file
 - **`-s` `--scrape`** 
     - Configure scraping tasks
-    - array - default: `all` 
+    - string - default: `all` 
     - Choices: `all`, `img`, `web`, `media`, `files`, `none`
 - **`--sizeLimit`**
     - number - default: `false`
