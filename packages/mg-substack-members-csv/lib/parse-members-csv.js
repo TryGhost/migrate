@@ -1,15 +1,17 @@
-import {parse} from '@tryghost/mg-fs-utils/lib/csv.js';
+import fsUtils from '@tryghost/mg-fs-utils';
+
+const parseCSV = fsUtils.csv.parseCSV;
 
 export default async (ctx) => {
     const {options} = ctx;
     let subscribers = [];
 
     // grab the main file "signups"
-    let parsed = await parse(options.pathToFile);
+    let parsed = await parseCSV(options.pathToFile);
 
     if (options.hasSubscribers) {
         // grap the "subscribers" file if option is passed
-        subscribers = await parse(options.subs);
+        subscribers = await parseCSV(options.subs);
     }
 
     parsed = parsed.map((signup) => {
