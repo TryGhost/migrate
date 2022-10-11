@@ -1,7 +1,8 @@
 /* eslint no-undef: 0 */
-const fs = require('fs-extra');
-const imageTransform = require('@tryghost/image-transform');
-const FileCache = require('../').FileCache;
+import {jest} from '@jest/globals';
+import fs from 'fs-extra';
+import imageTransform from '@tryghost/image-transform';
+import {FileCache} from '../lib/FileCache.js';
 
 const mockFile = 'test.jpg';
 const mockStoragePath = `/tmp/blah/${mockFile}`;
@@ -9,7 +10,8 @@ const mockOutputPath = `/content/images/${mockFile}`;
 const mockOriginalPath = `/tmp/blah/test_o.jpg`;
 
 describe('writeImageFile', function () {
-    let outputFileStub, transformStub;
+    let outputFileStub;
+    let transformStub;
 
     beforeEach(function () {
         outputFileStub = jest.spyOn(fs, 'outputFile');

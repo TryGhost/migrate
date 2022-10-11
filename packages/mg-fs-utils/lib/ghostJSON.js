@@ -1,4 +1,4 @@
-const fs = require('fs-extra');
+import fs from 'fs-extra';
 
 /**
  * Read a JSON file containing Ghost JSON data
@@ -10,6 +10,10 @@ const fs = require('fs-extra');
  *
  * @param {String} jsonPath - name of file to read
  */
-module.exports.read = async (jsonPath) => {
+const read = async (jsonPath) => {
     return await fs.readJson(jsonPath);
+};
+
+export default {
+    read
 };

@@ -1,8 +1,9 @@
-const AdmZip = require('adm-zip');
-const {compress} = require('@tryghost/zip');
-const path = require('path');
+import path from 'path';
+import AdmZip from 'adm-zip';
+import zip from '@tryghost/zip';
+import errors from '@tryghost/errors';
+
 const _private = {};
-const errors = require('@tryghost/errors');
 
 _private.openZipForRead = (zipPath) => {
     return AdmZip(zipPath);
@@ -13,8 +14,8 @@ _private.openZipForRead = (zipPath) => {
  * - Flattens the structure if there's one top-level directory, so we only get the files inside
  * @TODO: Refactor to use @tryghost/zip to extract zip files and drop adm-zip dependency
  */
-module.exports.read = (zipPath, callback) => {
-    let zip;
+const read = (zipPath, callback) => {
+    let zip; // eslint-disable-line no-shadow
     try {
         zip = _private.openZipForRead(zipPath);
     } catch (error) {
@@ -41,10 +42,14 @@ module.exports.read = (zipPath, callback) => {
     });
 };
 
-module.exports.write = (zipPath, contentFolder, fileName) => {
+const write = (zipPath, contentFolder, fileName) => {
     const outputPath = path.join(zipPath, fileName || `ghost-import-${Date.now()}.zip`);
 
-    return compress(contentFolder, outputPath);
+    return zip.compress(contentFolder, outputPath);
 };
 
-module.exports._private = _private;
+export default {
+    read,
+    write,
+    _private
+};
