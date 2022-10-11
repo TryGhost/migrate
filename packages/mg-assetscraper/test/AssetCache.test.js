@@ -1,6 +1,9 @@
 /* eslint no-undef: 0 */
-const path = require('path');
-const AssetCache = require('../lib/AssetCache');
+import {URL} from 'node:url';
+import path from 'node:path';
+import {AssetCache} from '../lib/AssetCache.js';
+
+const __dirname = new URL('.', import.meta.url).pathname;
 
 // We're not testing the ability to write files here, so always return true
 class mockFileCacheClass {

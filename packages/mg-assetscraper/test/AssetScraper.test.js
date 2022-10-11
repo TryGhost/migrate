@@ -1,10 +1,13 @@
 /* eslint no-undef: 0 */
-const path = require('path');
-const fs = require('fs').promises;
-const AssetScraper = require('../lib/AssetScraper');
-const makeTaskRunner = require('./utils/task-runner.js');
+import {URL} from 'node:url';
+import path from 'node:path';
+import {promises as fs} from 'node:fs';
+import {AssetScraper} from '../lib/AssetScraper.js';
+import makeTaskRunner from '../../migrate/lib/task-runner.js';
 
-const cachedJSON = require('./fixtures/file-response-cache.json');
+const __dirname = new URL('.', import.meta.url).pathname;
+
+import cachedJSON from './fixtures/file-response-cache.json';
 
 // We're not testing the ability to write files here, so always return true
 class mockFileCacheClass {

@@ -1,7 +1,7 @@
-const path = require('path');
-const fs = require('fs-extra');
-const _ = require('lodash');
-const {slugify} = require('@tryghost/string');
+import path from 'node:path';
+import fs from 'fs-extra';
+import _ from 'lodash';
+import {slugify} from '@tryghost/string';
 
 class AssetCache {
     /**
@@ -110,4 +110,6 @@ class AssetCache {
     }
 }
 
-module.exports = AssetCache;
+export {
+    AssetCache
+};
