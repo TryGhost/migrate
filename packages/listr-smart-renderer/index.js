@@ -1,1 +1,3 @@
-module.exports = require('./lib/smart-renderer');
+import SmartRenderer from './lib/smart-renderer.js';
+
+export default SmartRenderer;

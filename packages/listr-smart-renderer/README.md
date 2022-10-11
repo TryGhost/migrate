@@ -20,8 +20,8 @@ or
 ## Usage
 
 ```
-const SmartRenderer = require('@tryghost/listr-smart-renderer');
-const Listr = require('listr');
+import SmartRenderer from '@tryghost/listr-smart-renderer';
+import Listr from 'listr';
 
 const list = new Listr([
     {

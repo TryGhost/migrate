@@ -1,9 +1,9 @@
-'use strict';
-const logUpdate = require('log-update');
-const chalk = require('chalk');
-const cliTruncate = require('cli-truncate');
-const stripAnsi = require('strip-ansi');
-const {indentString, getSymbol, isDefined, taskNumber} = require('./utils');
+import logUpdate from 'log-update';
+import chalk from 'chalk';
+import cliTruncate from 'cli-truncate';
+import stripAnsi from 'strip-ansi';
+import {indentString, getSymbol, isDefined, taskNumber} from './utils.js';
+
 const arrowRight = '→';
 const arrowDown = '↓';
 
@@ -146,4 +146,4 @@ class SmartRenderer {
     }
 }
 
-module.exports = SmartRenderer;
+export default SmartRenderer;

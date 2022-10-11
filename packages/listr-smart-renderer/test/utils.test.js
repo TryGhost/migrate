@@ -1,10 +1,13 @@
 /* eslint no-undef: 0 */
-const utils = require('../lib/utils');
+import {taskNumber} from '../lib/utils.js';
 
 describe('Task Number', function () {
-    let index, tasks;
+    let index;
+    let tasks;
 
-    const taskNumberShouldEql = result => expect(utils.taskNumber(index, tasks)).toEqual(result);
+    const taskNumberShouldEql = (result) => {
+        return expect(taskNumber(index, tasks)).toEqual(result);
+    };
 
     test('Correctly outputs a simple task number in the format x/y', function () {
         index = 0;
