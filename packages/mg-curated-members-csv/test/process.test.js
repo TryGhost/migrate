@@ -1,6 +1,6 @@
 /* eslint no-undef: 0 */
-const path = require('path');
-const parseMembers = require('../');
+import path from 'node:path';
+import parseMembers from '../index.js';
 
 describe('Parses Curated subscribers file', function () {
     test('only signups', async function () {

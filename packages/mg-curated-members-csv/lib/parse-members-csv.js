@@ -1,10 +1,11 @@
-const parse = require('@tryghost/mg-fs-utils/lib/csv').parse;
+import fsUtils from '@tryghost/mg-fs-utils';
+const parseCSV = fsUtils.csv.parseCSV;
 
-module.exports = async (ctx) => {
+export default async (ctx) => {
     const {options} = ctx;
 
     // grab the main file "signups"
-    let parsed = await parse(options.pathToFile);
+    let parsed = await parseCSV(options.pathToFile);
 
     return parsed;
 };
