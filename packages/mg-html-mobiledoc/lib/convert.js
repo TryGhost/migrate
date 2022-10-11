@@ -1,7 +1,7 @@
-const {ConvertError} = require('./ConvertError');
-const {convertPost} = require('./convertPost');
+import {ConvertError} from './ConvertError.js';
+import {convertPost} from './convertPost.js';
 
-module.exports.convert = (ctx, htmlCard) => {
+const convert = (ctx, htmlCard) => {
     let {options} = ctx;
     let res = ctx.result;
     let posts = res.posts;
@@ -59,4 +59,8 @@ module.exports.convert = (ctx, htmlCard) => {
     });
 
     return tasks;
+};
+
+export {
+    convert
 };

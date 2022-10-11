@@ -1,6 +1,6 @@
-const errors = require('@tryghost/errors');
+import errors from '@tryghost/errors';
 
-module.exports.ConvertError = ({src, message = `Unable to convert post to Mobiledoc`, reference, originalError}) => {
+const ConvertError = ({src, message = `Unable to convert post to Mobiledoc`, reference, originalError}) => {
     let error = new errors.InternalServerError({message: `${message} - ${src}`});
 
     error.errorType = 'ConvertError';
@@ -12,4 +12,8 @@ module.exports.ConvertError = ({src, message = `Unable to convert post to Mobile
     error.originalError = originalError;
 
     return error;
+};
+
+export {
+    ConvertError
 };

@@ -1,5 +1,5 @@
 /* eslint no-undef: 0 */
-const {convertPost} = require('../lib/convertPost');
+import {convertPost} from '../lib/convertPost.js';
 
 describe('Convert', function () {
     test('Can convert to a HTML card', function () {

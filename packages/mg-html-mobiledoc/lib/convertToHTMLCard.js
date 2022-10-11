@@ -1,4 +1,4 @@
-module.exports.convertToHTMLCard = (html) => {
+const convertToHTMLCard = (html) => {
     let structure = {
         version: '0.3.1',
         markups: [],
@@ -8,4 +8,8 @@ module.exports.convertToHTMLCard = (html) => {
     };
 
     return structure;
+};
+
+export {
+    convertToHTMLCard
 };

@@ -1,4 +1,6 @@
-const {convert} = require('./lib/convert');
+import {convert} from './lib/convert.js';
 
 // Understands the data formats, so knows where to look for posts to convert
-module.exports.convert = convert;
+export default {
+    convert
+};
