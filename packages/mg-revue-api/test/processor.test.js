@@ -1,9 +1,10 @@
 /* eslint no-undef: 0 */
-const processor = require('../lib/processor');
+import processor from '../lib/processor.js';
+
+import fixture from './fixtures/api-response.json';
 
 describe('Process', function () {
     test('Can convert a single post', function () {
-        const fixture = require('./fixtures/api-response.json');
         const ctx = {
             result: fixture,
             options: {
@@ -55,7 +56,6 @@ describe('Process', function () {
     });
 
     it('Can convert a post with embeds', function () {
-        const fixture = require('./fixtures/api-response.json');
         const ctx = {
             result: fixture,
             options: {
@@ -85,7 +85,6 @@ describe('Process', function () {
     });
 
     it('Can remove UTM properties from link block headers', function () {
-        const fixture = require('./fixtures/api-response.json');
         const ctx = {
             result: fixture,
             options: {

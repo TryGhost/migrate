@@ -1,8 +1,10 @@
-const fetch = require('./lib/fetch');
-const process = require('./lib/processor');
+import fetch from './lib/fetch.js';
+import process from './lib/processor.js';
 
-module.exports.discover = fetch.discover;
+const discover = fetch.discover;
 
-module.exports.fetch = fetch;
-
-module.exports.process = process;
+export default {
+    discover,
+    fetch,
+    process
+};

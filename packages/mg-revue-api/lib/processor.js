@@ -1,7 +1,7 @@
-const $ = require('cheerio');
-const {slugify} = require('@tryghost/string');
-const url = require('url');
-const querystring = require('querystring');
+import url from 'node:url';
+import $ from 'cheerio';
+import {slugify} from '@tryghost/string';
+import querystring from 'querystring';
 
 const UTM_PARAMS = ['utm_campaign', 'utm_medium', 'utm_source'];
 
@@ -25,7 +25,7 @@ const cleanUrl = (src) => {
     return url.format(parsed);
 };
 
-module.exports.processContent = (html, postUrl) => {
+const processContent = (html, postUrl) => {
     // Drafts can have empty post bodies
     if (!html) {
         return '';
@@ -147,7 +147,7 @@ module.exports.processContent = (html, postUrl) => {
  *   ]
  * }
  */
-module.exports.processPost = (data, {addPrimaryTag, email, pubName}) => {
+const processPost = (data, {addPrimaryTag, email, pubName}) => {
     const slugRegexp = new RegExp(`https:\\/\\/www\\.getrevue\\.co\\/profile\\/${pubName}\\/issues\\/(\\S*)-${data.id}`);
 
     const post = {
@@ -188,19 +188,26 @@ module.exports.processPost = (data, {addPrimaryTag, email, pubName}) => {
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = this.processContent(data.html, post.url);
+    post.data.html = processContent(data.html, post.url);
 
     return post;
 };
 
-module.exports.processPosts = (posts, options) => {
-    return posts.map(post => this.processPost(post, options));
+const processPosts = (posts, options) => {
+    return posts.map(post => processPost(post, options));
 };
 
-module.exports.all = ({result, options}) => {
+const all = ({result, options}) => {
     const output = {
-        posts: this.processPosts(result.posts, options)
+        posts: processPosts(result.posts, options)
     };
 
     return output;
+};
+
+export default {
+    processContent,
+    processPost,
+    processPosts,
+    all
 };
