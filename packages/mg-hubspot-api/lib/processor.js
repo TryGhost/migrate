@@ -1,8 +1,8 @@
-const {htmlToText} = require('html-to-text');
-const $ = require('cheerio');
-const url = require('url');
-const {formatISO, parse} = require('date-fns');
-const errors = require('@tryghost/errors');
+import url from 'node:url';
+import {htmlToText} from 'html-to-text';
+import $ from 'cheerio';
+import {formatISO, parse} from 'date-fns';
+import errors from '@tryghost/errors';
 
 const VideoError = ({src, postUrl}) => {
     let error = new errors.InternalServerError({message: `Unsupported video ${src} in post ${postUrl}`});
@@ -14,7 +14,7 @@ const VideoError = ({src, postUrl}) => {
     return error;
 };
 
-module.exports.processAuthor = (hsAuthor) => {
+const processAuthor = (hsAuthor) => {
     return {
         url: hsAuthor.slug,
         data: {
@@ -30,11 +30,11 @@ module.exports.processAuthor = (hsAuthor) => {
     };
 };
 
-module.exports.linkTopicsAsTags = (topicIds, tags) => {
+const linkTopicsAsTags = (topicIds, tags) => {
     return topicIds.map(id => tags[id]);
 };
 
-module.exports.createCleanExcerpt = (summaryContent = '') => {
+const createCleanExcerpt = (summaryContent = '') => {
     // Don't know why this doesn't happen in htmlToText, it should
     summaryContent = summaryContent.replace('&nbsp;', ' ');
 
@@ -90,7 +90,7 @@ module.exports.createCleanExcerpt = (summaryContent = '') => {
     return excerpt;
 };
 
-module.exports.handleFeatureImageInContent = (post, hsPost) => {
+const handleFeatureImageInContent = (post, hsPost) => {
     let bodyContent = hsPost.post_body;
     let summaryContent = hsPost.post_summary;
     let featureImage = hsPost.featured_image;
@@ -110,10 +110,10 @@ module.exports.handleFeatureImageInContent = (post, hsPost) => {
     post.data.html = bodyContent;
     post.data.feature_image = featureImage;
 
-    post.data.custom_excerpt = this.createCleanExcerpt(summaryContent);
+    post.data.custom_excerpt = createCleanExcerpt(summaryContent);
 };
 
-module.exports.processContent = (html, postUrl, errors) => { // eslint-disable-line no-shadow
+const processContent = (html, postUrl, errors) => { // eslint-disable-line no-shadow
     // Drafts can have empty post bodies
     if (!html) {
         return '';
@@ -224,7 +224,7 @@ module.exports.processContent = (html, postUrl, errors) => { // eslint-disable-l
  *   ]
  * }
  */
-module.exports.processPost = (hsPost, tags, errors) => { // eslint-disable-line no-shadow
+const processPost = (hsPost, tags, errors) => { // eslint-disable-line no-shadow
     // Get an ISO 8601 date - https://date-fns.org/docs/formatISO
     const dateNow = formatISO(new Date());
 
@@ -245,16 +245,16 @@ module.exports.processPost = (hsPost, tags, errors) => { // eslint-disable-line 
     };
 
     // Hubspot has some complex interplay between HTML content and the featured image that we need to unpick
-    this.handleFeatureImageInContent(post, hsPost);
+    handleFeatureImageInContent(post, hsPost);
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = this.processContent(post.data.html, post.url, errors);
+    post.data.html = processContent(post.data.html, post.url, errors);
 
     if (hsPost.blog_author) {
-        post.data.author = this.processAuthor(hsPost.blog_author);
+        post.data.author = processAuthor(hsPost.blog_author);
     }
 
-    post.data.tags = this.linkTopicsAsTags(hsPost.topic_ids, tags);
+    post.data.tags = linkTopicsAsTags(hsPost.topic_ids, tags);
 
     post.data.tags.push({
         url: 'migrator-added-tag', data: {name: '#hubspot'}
@@ -263,7 +263,7 @@ module.exports.processPost = (hsPost, tags, errors) => { // eslint-disable-line 
     return post;
 };
 
-module.exports.processTopics = (topics, blogUrl) => {
+const processTopics = (topics, blogUrl) => {
     let tags = {};
 
     topics.forEach((topic) => {
@@ -284,16 +284,28 @@ module.exports.processTopics = (topics, blogUrl) => {
     return tags;
 };
 
-module.exports.processPosts = (posts, info, errors) => { // eslint-disable-line no-shadow
-    let tags = this.processTopics(info.topics, info.blog.url);
+const processPosts = (posts, info, errors) => { // eslint-disable-line no-shadow
+    let tags = processTopics(info.topics, info.blog.url);
 
-    return posts.map(post => this.processPost(post, tags, errors));
+    return posts.map(post => processPost(post, tags, errors));
 };
 
-module.exports.all = ({result, info, errors}) => { // eslint-disable-line no-shadow
+const all = ({result, info, errors}) => { // eslint-disable-line no-shadow
     const output = {
-        posts: this.processPosts(result.posts, info, errors)
+        posts: processPosts(result.posts, info, errors)
     };
 
     return output;
+};
+
+export default {
+    processAuthor,
+    linkTopicsAsTags,
+    createCleanExcerpt,
+    handleFeatureImageInContent,
+    processContent,
+    processPost,
+    processTopics,
+    processPosts,
+    all
 };

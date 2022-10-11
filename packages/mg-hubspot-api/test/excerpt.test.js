@@ -1,5 +1,5 @@
 /* eslint no-undef: 0 */
-let processor = require('../lib/processor');
+import processor from '../lib/processor.js';
 
 describe('Generates sane excerpts', function () {
     test('Handles long paragraphs', function () {
