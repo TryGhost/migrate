@@ -1,6 +1,6 @@
-const ghostAPI = require('@tryghost/admin-api');
+import ghostAPI from '@tryghost/admin-api';
 
-module.exports.discover = async (options) => {
+const discover = async (options) => {
     const requestOptions = {
         url: options.url,
         version: 'v2',
@@ -94,12 +94,12 @@ const buildTasks = (fileCache, tasks, api, type, options) => {
     }
 };
 
-module.exports.tasks = async (options, ctx) => {
+const tasks = async (options, ctx) => {
     const {limit} = ctx.options;
 
-    const api = await this.discover(options, {limit});
+    const api = await discover(options, {limit});
 
-    const tasks = [];
+    const tasks = []; // eslint-disable-line no-shadow
 
     ctx.result = {
         posts: [],
@@ -111,4 +111,9 @@ module.exports.tasks = async (options, ctx) => {
     buildTasks(ctx.fileCache, tasks, api, 'users', options);
 
     return tasks;
+};
+
+export default {
+    discover,
+    tasks
 };

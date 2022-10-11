@@ -1,10 +1,10 @@
 /* eslint no-undef: 0 */
-const processor = require('../lib/processor');
+import processor from '../lib/processor.js';
+
+import fixture from './fixtures/posts.json';
 
 describe('Process', function () {
     test('Can convert a single post', async function () {
-        const fixture = require('./fixtures/posts.json');
-
         const post = await processor.processPosts(fixture.posts);
         const firstPost = post[0];
 
