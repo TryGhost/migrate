@@ -5,9 +5,10 @@
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "dev": "echo \"Implement me!\"",
-    "test": "NODE_ENV=testing jest",
+    "test": "node --experimental-vm-modules $(yarn bin jest)",
     "lint": "eslint . --ext .js --cache",
     "posttest": "yarn lint"
   },

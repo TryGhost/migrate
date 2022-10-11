@@ -1,9 +1,9 @@
-const readZip = require('./lib/read-zip');
-const csv = require('@tryghost/mg-fs-utils').csv;
-const map = require('./lib/mapper');
-const process = require('./lib/process');
+import readZip from './lib/read-zip.js';
+import {csv} from '@tryghost/mg-fs-utils';
+import map from './lib/mapper.js';
+import process from './lib/process.js';
 
-module.exports.ingest = async (ctx) => {
+const ingest = async (ctx) => {
     // Extract the ZIP file
     let zipContent = readZip(ctx.options.pathToZip);
 
@@ -19,4 +19,7 @@ module.exports.ingest = async (ctx) => {
     return mapped;
 };
 
-module.exports.process = process;
+export default {
+    ingest,
+    process
+};
