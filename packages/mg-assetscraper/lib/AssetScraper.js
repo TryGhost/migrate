@@ -4,7 +4,7 @@ import errors from '@tryghost/errors';
 import _ from 'lodash';
 import cheerio from 'cheerio';
 import got from 'got';
-import FileType from 'file-type';
+import {fileTypeFromBuffer} from 'file-type';
 import MarkdownIt from 'markdown-it';
 import makeTaskRunner from './task-runner.js';
 import {AssetCache} from './AssetCache.js';
@@ -665,7 +665,7 @@ class AssetScraper {
      * await getAssetDataFromBuffer(<Buffer>);
      */
     async getAssetDataFromBuffer(buffer) {
-        const fileTypeData = await FileType.fromBuffer(buffer);
+        const fileTypeData = await fileTypeFromBuffer(buffer);
 
         return fileTypeData;
     }
