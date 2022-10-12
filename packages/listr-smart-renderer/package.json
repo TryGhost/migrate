@@ -32,7 +32,7 @@
   "dependencies": {
     "chalk": "4.1.2",
     "cli-truncate": "^3.0.0",
-    "elegant-spinner": "^2.0.0",
+    "elegant-spinner": "^3.0.0",
     "indent-string": "^5.0.0",
     "log-symbols": "4.1.0",
     "log-update": "^4.0.0",
