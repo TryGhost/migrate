@@ -32,7 +32,7 @@
     "@tryghost/listr-smart-renderer": "^0.3.0",
     "@tryghost/string": "0.2.1",
     "cheerio": "1.0.0-rc.2",
-    "file-type": "16.5.4",
+    "file-type": "18.0.0",
     "fs-extra": "10.1.0",
     "got": "11.8.5",
     "listr": "0.14.3",
