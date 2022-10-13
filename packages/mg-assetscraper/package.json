@@ -10,8 +10,7 @@
     "dev": "echo \"Implement me!\"",
     "test": "node --experimental-vm-modules $(yarn bin jest)",
     "lint": "eslint . --ext .js --cache",
-    "posttest": "yarn lint",
-    "benchmarks": "node test/benchmarks.js"
+    "posttest": "yarn lint"
   },
   "files": [
     "index.js",
