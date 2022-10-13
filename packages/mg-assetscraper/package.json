@@ -21,7 +21,6 @@
     "access": "public"
   },
   "devDependencies": {
-    "@tryghost/listr-smart-renderer": "0.2.10",
     "eslint": "8.25.0",
     "jest": "29.1.2",
     "jest-extended": "3.1.0",
@@ -29,7 +28,7 @@
   },
   "dependencies": {
     "@tryghost/errors": "1.2.18",
-    "@tryghost/listr-smart-renderer": "^0.3.0",
+    "@tryghost/listr-smart-renderer": "0.3.0",
     "@tryghost/string": "0.2.1",
     "cheerio": "1.0.0-rc.2",
     "file-type": "18.0.0",
