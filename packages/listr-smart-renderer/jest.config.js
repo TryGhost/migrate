@@ -5,6 +5,7 @@ const __dirname = new URL('.', import.meta.url).pathname;
 
 export default async () => {
     return {
+        verbose: true,
         setupFilesAfterEnv: ['jest-extended/all'],
         resolver: join(__dirname, 'test/utils/resolver.cjs')
     };
