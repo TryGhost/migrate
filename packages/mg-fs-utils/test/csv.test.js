@@ -1,11 +1,14 @@
 /* eslint no-undef: 0 */
+import {URL} from 'node:url';
 import path from 'node:path';
 import {parseISO} from 'date-fns';
 import csv from '../lib/csv.js';
 
+const __dirname = new URL('.', import.meta.url).pathname;
+
 describe('Parse CSV', function () {
     test('Reads a simple comma separated file list with default options', async function () {
-        const pathToFile = path.resolve('./test/fixtures/example.csv');
+        const pathToFile = path.join(__dirname, '/fixtures/example.csv');
 
         const result = await csv.parseCSV(pathToFile);
 
@@ -27,7 +30,7 @@ describe('Parse CSV', function () {
     });
 
     it('Reads a simple comma separated file list with options', async function () {
-        const pathToFile = path.resolve('./test/fixtures/example.csv');
+        const pathToFile = path.join(__dirname, '/fixtures/example.csv');
 
         const result = await csv.parseCSV(pathToFile, {skip_lines_with_error: true, columns: false, skip_empty_lines: true});
 

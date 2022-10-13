@@ -1,12 +1,15 @@
 /* eslint no-undef: 0 */
+import {URL} from 'node:url';
 import path from 'node:path';
 import parseMembers from '../index.js';
+
+const __dirname = new URL('.', import.meta.url).pathname;
 
 describe('Parses Curated subscribers file', function () {
     test('only signups', async function () {
         const ctx = {
             options: {
-                pathToFile: path.resolve('./test/fixtures/subscribers.csv')
+                pathToFile: path.join(__dirname, 'fixtures/subscribers.csv')
             }
         };
 

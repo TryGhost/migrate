@@ -1,12 +1,15 @@
 /* eslint no-undef: 0 */
+import {URL} from 'node:url';
 import path from 'node:path';
 import parseMembers from '../lib/parse-members-csv.js';
+
+const __dirname = new URL('.', import.meta.url).pathname;
 
 describe('Parses Substack members files', function () {
     test('only signups', async function () {
         const ctx = {
             options: {
-                pathToFile: path.resolve('./test/fixtures/fixtures_signup_emails.csv')
+                pathToFile: path.join(__dirname, '/fixtures/fixtures_signup_emails.csv')
             }
         };
 
@@ -22,8 +25,8 @@ describe('Parses Substack members files', function () {
     test('signups and subscribers', async function () {
         const ctx = {
             options: {
-                pathToFile: path.resolve('./test/fixtures/fixtures_signup_emails.csv'),
-                subs: path.resolve('./test/fixtures/fixtures_subscriber_emails.csv'),
+                pathToFile: path.join(__dirname, '/fixtures/fixtures_signup_emails.csv'),
+                subs: path.join(__dirname, '/fixtures/fixtures_subscriber_emails.csv'),
                 hasSubscribers: true
             }
         };

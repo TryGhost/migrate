@@ -1,4 +1,5 @@
 /* eslint no-undef: 0 */
+import {URL} from 'node:url';
 import fs from 'node:fs';
 import path from 'node:path';
 import childProcess from 'node:child_process';
@@ -7,10 +8,12 @@ import processZip from '../index.js';
 import map from '../lib/mapper.js';
 import process, {processContent} from '../lib/process.js';
 
-const inputPath = path.resolve('./test/fixtures/');
-const inputZipPath = path.resolve('./test/fixtures/posts.zip');
-const inputCSVPath = path.resolve('./test/fixtures/posts.csv');
-const inputPostsPath = path.resolve('./test/fixtures/posts');
+const __dirname = new URL('.', import.meta.url).pathname;
+
+const inputPath = path.join(__dirname, '/fixtures/');
+const inputZipPath = path.join(__dirname, '/fixtures/posts.zip');
+const inputCSVPath = path.join(__dirname, '/fixtures/posts.csv');
+const inputPostsPath = path.join(__dirname, '/fixtures/posts');
 
 describe('Process Substack ZIP file', function () {
     beforeAll(function () {
