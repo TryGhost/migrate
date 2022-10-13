@@ -5,7 +5,7 @@ import MgAssetScraper from '@tryghost/mg-assetscraper';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import xmlIngest from '@tryghost/mg-squarespace-xml';
-import makeTaskRunner from '../lib/task-runner.js';
+import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 
 const scrapeConfig = {
     posts: {

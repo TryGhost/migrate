@@ -19,7 +19,7 @@ or
 
 ## Usage
 
-```
+```js
 import SmartRenderer from '@tryghost/listr-smart-renderer';
 import Listr from 'listr';
 
@@ -34,6 +34,31 @@ const list = new Listr([
 });
 
 list.run();
+```
+
+This package also exports a `makeTaskRunner` method that simplifies your script:
+
+```js
+import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
+
+let tasks = [
+    {
+        title: 'Do some thing',
+        task: async (ctx) => {
+            // Things here
+        }
+    },
+    {
+        title: 'Do more thing',
+        task: async (ctx) => {
+            // more here
+        }
+    }
+];
+
+let taskRunner = makeTaskRunner(tasks);
+
+await taskRunner.run();
 ```
 
 ## Options

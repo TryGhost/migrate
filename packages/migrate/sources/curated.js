@@ -2,7 +2,7 @@ import curatedIngest from '@tryghost/mg-curated-export';
 import {toGhostJSON} from '@tryghost/mg-json';
 import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
 import fsUtils from '@tryghost/mg-fs-utils';
-import makeTaskRunner from '../lib/task-runner.js';
+import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 
 /**
  * getTasks: Steps to Migrate from Curate

@@ -1,6 +1,6 @@
 import fsUtils from '@tryghost/mg-fs-utils';
 import csvIngest from '@tryghost/mg-curated-members-csv';
-import makeTaskRunner from '../lib/task-runner.js';
+import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 
 const MEMBERS_IMPORT_FIELDS = [
     'email',

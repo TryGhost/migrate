@@ -3,7 +3,7 @@ import {toGhostJSON} from '@tryghost/mg-json';
 import MgAssetScraper from '@tryghost/mg-assetscraper';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
-import makeTaskRunner from '../lib/task-runner.js';
+import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 
 const initialize = (options) => {
     return {

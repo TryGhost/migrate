@@ -1,7 +1,7 @@
 /* eslint no-undef: 0 */
 import {toGhostJSON} from '@tryghost/mg-json';
 import linkFixer from '../lib/LinkFixer.js';
-import makeTaskRunner from '../../migrate/lib/task-runner.js';
+import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 
 import standardFixtures from './fixtures/ctx.json';
 import yyyymmFixtures from './fixtures/ctx-yyyy-mm.json';

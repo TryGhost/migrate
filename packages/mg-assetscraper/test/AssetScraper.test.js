@@ -2,8 +2,8 @@
 import {URL} from 'node:url';
 import path from 'node:path';
 import {promises as fs} from 'node:fs';
+import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {AssetScraper} from '../lib/AssetScraper.js';
-import makeTaskRunner from '../../migrate/lib/task-runner.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 

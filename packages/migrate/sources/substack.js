@@ -6,7 +6,7 @@ import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import zipIngest from '@tryghost/mg-substack';
 import {slugify} from '@tryghost/string';
-import makeTaskRunner from '../lib/task-runner.js';
+import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 
 const scrapeConfig = {
     posts: {

@@ -6,7 +6,7 @@ import cheerio from 'cheerio';
 import got from 'got';
 import {fileTypeFromBuffer} from 'file-type';
 import MarkdownIt from 'markdown-it';
-import makeTaskRunner from './task-runner.js';
+import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {AssetCache} from './AssetCache.js';
 
 // Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/shared/config/overrides.json

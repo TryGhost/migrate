@@ -1,6 +1,6 @@
 import fsUtils from '@tryghost/mg-fs-utils';
 import csvIngest from '@tryghost/mg-substack-members-csv';
-import makeTaskRunner from '../lib/task-runner.js';
+import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 
 const MAX_COMP_BATCH_SIZE = 500;
 const MEMBERS_IMPORT_FIELDS = [

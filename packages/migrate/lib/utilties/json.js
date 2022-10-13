@@ -1,4 +1,4 @@
-import makeTaskRunner from '../task-runner.js';
+import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {slugify} from '@tryghost/string';

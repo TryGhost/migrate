@@ -1,5 +1,5 @@
 import Listr from 'listr';
-import smartRenderer from '@tryghost/listr-smart-renderer';
+import smartRenderer from './smart-renderer.js';
 
 export default (tasks, options = {}) => {
     let nonVerboseRenderer = options.renderer || smartRenderer;
