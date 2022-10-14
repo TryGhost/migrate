@@ -4,6 +4,7 @@ import errors from '@tryghost/errors';
 import _ from 'lodash';
 import cheerio from 'cheerio';
 import got from 'got';
+import {parseSrcset} from 'srcset';
 import {fileTypeFromBuffer} from 'file-type';
 import MarkdownIt from 'markdown-it';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
@@ -385,13 +386,12 @@ class AssetScraper {
 
         $('picture source').each((i, el) => {
             let srcset = $(el).attr('srcset');
-
-            let srcsetParts = srcset.match(/[^"\'=\s]+\.(jpe?g|png|gif)/gmi); // eslint-disable-line no-useless-escape
+            let srcsetParts = parseSrcset(srcset);
 
             if (srcsetParts) {
                 srcsetParts.forEach((item) => {
                     this.addRawValue({
-                        remote: item
+                        remote: item.url
                     });
                 });
             }

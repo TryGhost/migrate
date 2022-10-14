@@ -35,6 +35,7 @@
     "got": "11.8.5",
     "listr": "0.14.3",
     "lodash": "4.17.21",
-    "markdown-it": "13.0.1"
+    "markdown-it": "13.0.1",
+    "srcset": "5.0.0"
   }
 }

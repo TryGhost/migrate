@@ -530,7 +530,7 @@ describe('Find assets in content', function () {
             expect(data[0].newRemote).toEqual('/image-320.jpg');
             expect(data[1].newRemote).toEqual('https://example.com/image-768.jpg');
             expect(data[2].newRemote).toEqual('/image-768-1.5x.jpg');
-            expect(data[3].newRemote).toEqual('https://example.com/image-480.jpg');
+            expect(data[3].newRemote).toEqual('https://example.com/image-480.jpg?quality=80');
             expect(data[4].newRemote).toEqual('/image-480-2x.jpg');
         });
 
