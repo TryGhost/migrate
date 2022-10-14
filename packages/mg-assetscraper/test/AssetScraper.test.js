@@ -67,6 +67,46 @@ describe('AssetScraper', function () {
         expect(data[1].newRemote).toEqual('/my-relative-image/path/image.jpg');
     });
 
+    test('Will trim values', function () {
+        const values = [
+            {
+                remote: 'https://ghost.org'
+            },
+            {
+                remote: '  https://ghost.org'
+            },
+            {
+                remote: 'https://ghost.org  '
+            },
+            {
+                remote: '  https://ghost.org  '
+            },
+            {
+                remote: '"https://ghost.org'
+            },
+            {
+                remote: 'https://ghost.org\'"`'
+            },
+            {
+                remote: '\'"`https://ghost.org'
+            }
+        ];
+
+        const assetScraper = new AssetScraper(mockFileCache);
+
+        assetScraper.addRawValues(values);
+
+        const data = assetScraper._foundAssets;
+
+        expect(data[0].newRemote).toEqual('https://ghost.org/');
+        expect(data[1].newRemote).toEqual('https://ghost.org/');
+        expect(data[2].newRemote).toEqual('https://ghost.org/');
+        expect(data[3].newRemote).toEqual('https://ghost.org/');
+        expect(data[4].newRemote).toEqual('https://ghost.org/');
+        expect(data[5].newRemote).toEqual('https://ghost.org/');
+        expect(data[6].newRemote).toEqual('https://ghost.org/');
+    });
+
     test('Will filter out blocked domains', function () {
         const values = [
             {

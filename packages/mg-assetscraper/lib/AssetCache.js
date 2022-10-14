@@ -1,7 +1,13 @@
 import path from 'node:path';
 import fs from 'fs-extra';
-import _ from 'lodash';
 import {slugify} from '@tryghost/string';
+
+const remove = (array, iteratee) => {
+    const toRemove = [];
+    const result = array.filter((item, i) => iteratee(item) && toRemove.push(i));
+    toRemove.reverse().forEach(i => array.splice(i, 1));
+    return result;
+};
 
 class AssetCache {
     /**
@@ -84,8 +90,8 @@ class AssetCache {
      * @param {String} obj.remote The asset path as it exists in the content
      */
     delete(obj) {
-        this._cache = _.remove(this._cache, {
-            remote: obj.remote
+        this._cache = remove(this._cache, (item) => {
+            return item.remote === obj.remote;
         });
     }
 

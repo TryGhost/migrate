@@ -1,7 +1,6 @@
 import {URL} from 'node:url';
 import path from 'node:path';
 import errors from '@tryghost/errors';
-import _ from 'lodash';
 import cheerio from 'cheerio';
 import got from 'got';
 import {parseSrcset} from 'srcset';
@@ -48,6 +47,10 @@ const isValidUrlString = (string) => {
     } catch (err) {
         return false;
     }
+};
+
+const trim = (str, c = '\\s') => {
+    return str.replace(new RegExp(`^([${c}]*)(.*?)([${c}]*)$`), '$2');
 };
 
 /**
@@ -209,7 +212,7 @@ class AssetScraper {
             }
 
             // Trim quote marks from the start & end of strings
-            obj.newRemote = _.trim(obj.newRemote, '\'"`');
+            obj.newRemote = trim(obj.newRemote, '\'"`');
 
             if (isValidUrlString(obj.newRemote)) {
                 // Remove the commonly long `ref_url`, which can cause `ENAMETOOLONG` errors
