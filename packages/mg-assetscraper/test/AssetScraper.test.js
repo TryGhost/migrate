@@ -1,6 +1,6 @@
 /* eslint no-undef: 0 */
 import {URL} from 'node:url';
-import path from 'node:path';
+import {join} from 'node:path';
 import {promises as fs} from 'node:fs';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {AssetScraper} from '../lib/AssetScraper.js';
@@ -13,6 +13,10 @@ import cachedJSON from './fixtures/file-response-cache.json';
 class mockFileCacheClass {
     writeTmpFileSync() {
         return false;
+    }
+
+    get tmpDir() {
+        return join(__dirname, './fixtures');
     }
 }
 
@@ -350,7 +354,7 @@ describe('AssetScraper', function () {
     test('Will read image file type data from a buffer', async function () {
         const assetScraper = new AssetScraper(mockFileCache);
 
-        const imageBuffer = await fs.readFile(path.join(__dirname, 'fixtures/test.jpeg'));
+        const imageBuffer = await fs.readFile(join(__dirname, 'fixtures/test.jpeg'));
         const imageData = await assetScraper.getAssetDataFromBuffer(imageBuffer);
 
         expect(imageData.ext).toEqual('jpg');
@@ -360,7 +364,7 @@ describe('AssetScraper', function () {
     test('Will read video file type data from a buffer', async function () {
         const assetScraper = new AssetScraper(mockFileCache);
 
-        const videoBuffer = await fs.readFile(path.join(__dirname, 'fixtures/video.mp4'));
+        const videoBuffer = await fs.readFile(join(__dirname, 'fixtures/video.mp4'));
         const videoData = await assetScraper.getAssetDataFromBuffer(videoBuffer);
 
         expect(videoData.ext).toEqual('mp4');
