@@ -1,4 +1,3 @@
-/* eslint no-undef: 0 */
 import processor from '../lib/processor.js';
 
 describe('Generates sane excerpts', function () {

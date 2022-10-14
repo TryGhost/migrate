@@ -1,4 +1,3 @@
-/* eslint no-undef: 0 */
 import {jest} from '@jest/globals';
 import WebScraper from '../index.js';
 

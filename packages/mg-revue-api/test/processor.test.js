@@ -1,4 +1,3 @@
-/* eslint no-undef: 0 */
 import processor from '../lib/processor.js';
 
 import fixture from './fixtures/api-response.json';

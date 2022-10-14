@@ -1,4 +1,3 @@
-/* eslint no-undef: 0 */
 import fs from 'node:fs';
 import path from 'node:path';
 import processPost from '../lib/process-post.js';

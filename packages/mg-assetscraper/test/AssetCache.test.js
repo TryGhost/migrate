@@ -1,4 +1,3 @@
-/* eslint no-undef: 0 */
 import {URL} from 'node:url';
 import {join} from 'node:path';
 import {AssetCache} from '../lib/AssetCache.js';

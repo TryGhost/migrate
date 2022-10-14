@@ -1,4 +1,3 @@
-/* eslint no-undef: 0 */
 import toGhostJSON from '../lib/to-ghost-json/index.js';
 
 import singlePostOnlyFixture from './fixtures/single-post-only.json';

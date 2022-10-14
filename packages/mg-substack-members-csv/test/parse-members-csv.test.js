@@ -1,4 +1,3 @@
-/* eslint no-undef: 0 */
 import {URL} from 'node:url';
 import path from 'node:path';
 import parseMembers from '../lib/parse-members-csv.js';

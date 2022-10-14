@@ -1,4 +1,3 @@
-/* eslint no-undef: 0 */
 import {taskNumber} from '../lib/utils.js';
 
 describe('Task Number', function () {

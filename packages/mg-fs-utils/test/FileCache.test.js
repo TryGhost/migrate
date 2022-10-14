@@ -1,4 +1,3 @@
-/* eslint no-undef: 0 */
 import {jest} from '@jest/globals';
 import fs from 'fs-extra';
 import imageTransform from '@tryghost/image-transform';

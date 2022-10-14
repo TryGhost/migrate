@@ -1,4 +1,3 @@
-/* eslint no-undef: 0 */
 import {URL} from 'node:url';
 import path from 'node:path';
 import {parseISO} from 'date-fns';

@@ -1,4 +1,3 @@
-/* eslint no-undef: 0 */
 import processMembers from '../lib/process.js';
 import parsedMembers from './fixtures/parsed.js';
 

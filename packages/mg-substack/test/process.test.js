@@ -1,4 +1,3 @@
-/* eslint no-undef: 0 */
 import {URL} from 'node:url';
 import fs from 'node:fs';
 import path from 'node:path';

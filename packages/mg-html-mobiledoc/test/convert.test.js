@@ -1,4 +1,3 @@
-/* eslint no-undef: 0 */
 import {convertPost} from '../lib/convertPost.js';
 
 describe('Convert', function () {

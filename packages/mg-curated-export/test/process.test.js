@@ -1,4 +1,3 @@
-/* eslint no-undef: 0 */
 import processPost from '../lib/process-post.js';
 
 import fixture from './fixtures/12.json';

@@ -1,4 +1,3 @@
-/* eslint no-undef: 0 */
 import {toGhostJSON} from '@tryghost/mg-json';
 import linkFixer from '../lib/LinkFixer.js';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
