@@ -1,5 +1,5 @@
 import {URL} from 'node:url';
-import path from 'node:path';
+import {join, dirname, basename, extname} from 'node:path';
 import errors from '@tryghost/errors';
 import cheerio from 'cheerio';
 import got from 'got';
@@ -683,7 +683,7 @@ class AssetScraper {
      * changeExtension('/my-file.jpeg', 'jpg');
      */
     changeExtension(string, ext) {
-        return path.join(path.dirname(string), path.basename(string, path.extname(string)) + '.' + ext);
+        return join(dirname(string), basename(string, extname(string)) + '.' + ext);
     }
 
     /**

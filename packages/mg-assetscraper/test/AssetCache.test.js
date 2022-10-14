@@ -1,6 +1,6 @@
 /* eslint no-undef: 0 */
 import {URL} from 'node:url';
-import path from 'node:path';
+import {join} from 'node:path';
 import {AssetCache} from '../lib/AssetCache.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
@@ -9,6 +9,10 @@ const __dirname = new URL('.', import.meta.url).pathname;
 class mockFileCacheClass {
     writeTmpFileSync() {
         return false;
+    }
+
+    get tmpDir() {
+        return join(__dirname, './fixtures');
     }
 }
 
@@ -33,7 +37,7 @@ describe('AssetCache', function () {
     test('Can load in a cache file', async function () {
         const assetCache = new AssetCache(mockFileCache);
 
-        await assetCache.load(path.join(__dirname, './fixtures/assets/'));
+        await assetCache.load(join(__dirname, './fixtures/assets/'));
 
         expect(assetCache._cache).toBeArray();
         expect(assetCache._cache).toBeArrayOfSize(5);
@@ -71,7 +75,7 @@ describe('AssetCache', function () {
     it('Can read a specific item', async function () {
         const assetCache = new AssetCache(mockFileCache);
 
-        await assetCache.load(path.join(__dirname, './fixtures/assets/'));
+        await assetCache.load(join(__dirname, './fixtures/assets/'));
 
         let found = assetCache.find({remote: '__GHOST_URL__/content/images/2022/09/screenshot-40-54-21-02-09-2023.png'});
 
