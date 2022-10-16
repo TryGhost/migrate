@@ -2,6 +2,7 @@
 export default async () => {
     return {
         verbose: true,
+        watchman: false,
         setupFilesAfterEnv: ['jest-extended/all']
     };
 };
