@@ -42,10 +42,10 @@ const read = (zipPath, callback) => {
     });
 };
 
-const write = (zipPath, contentFolder, fileName) => {
+const write = async (zipPath, contentFolder, fileName) => {
     const outputPath = path.join(zipPath, fileName || `ghost-import-${Date.now()}.zip`);
 
-    return zip.compress(contentFolder, outputPath);
+    return await zip.compress(contentFolder, outputPath);
 };
 
 export default {

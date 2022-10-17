@@ -83,7 +83,7 @@ const getTaskRunner = (pathToZip, options) => {
             task: async (ctx) => {
                 // 9. Write a valid Ghost import zip
                 try {
-                    ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+                    ctx.outputFile = await fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;

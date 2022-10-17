@@ -96,7 +96,7 @@ const getTaskRunner = (pathToFile, options) => {
             skip: () => !options.zip,
             task: async (ctx) => {
                 try {
-                    ctx.outputFile = fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, `gh-members-${ctx.fileCache.cacheName}-${Date.now()}.zip`);
+                    ctx.outputFile = await fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, `gh-members-${ctx.fileCache.cacheName}-${Date.now()}.zip`);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
