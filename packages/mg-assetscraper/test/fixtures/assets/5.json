@@ -1,6 +1,6 @@
 {
-    "remote": "/docs/plan.mp4",
-    "newRemote": "https://example.com/docs/plan.mp4",
+    "remote": "/docs/plan.pdf",
+    "newRemote": "https://example.com/docs/plan.pdf",
     "checked": true,
     "status": 200,
     "data": {
@@ -10,5 +10,5 @@
         "contentType": "application/pdf",
         "contentLength": 1785847
     },
-    "newLocal": "/content/media/docs/plan.mp4"
+    "newLocal": "/content/media/docs/plan.pdf"
 }
