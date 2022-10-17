@@ -104,13 +104,17 @@ class AssetCache {
         if (!data) {
             data = `${this.fileCache.tmpDir}/assets/`;
         }
+
         if (typeof data === 'object') {
             this._cache = data;
         } else {
             const files = await fs.readdir(data);
+
             for (const file of files) {
-                let theJson = await fs.readJson(path.join(data, file));
-                this._cache.push(theJson);
+                if (file.endsWith('.json')) {
+                    let theJson = await fs.readJson(path.join(data, file));
+                    this._cache.push(theJson);
+                }
             }
         }
     }

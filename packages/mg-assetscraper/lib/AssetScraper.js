@@ -939,7 +939,7 @@ class AssetScraper {
          * If we have cached asset files, load them in
          */
         tasks.push({
-            title: 'Initializing AssetScraper',
+            title: 'Initializing AssetScraper cache',
             task: async () => {
                 await this.AssetCache.load();
             }
