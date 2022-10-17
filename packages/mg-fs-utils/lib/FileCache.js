@@ -413,6 +413,21 @@ class FileCache {
         }
     }
 
+    async emptyCurrentCacheDir() {
+        if (!this.cacheKey) {
+            return false;
+        }
+
+        let siteCachePath = path.join(this.cacheBaseDir, this.cacheKey);
+
+        try {
+            await fs.remove(siteCachePath);
+            return true;
+        } catch (error) {
+            throw new errors.NotFoundError({message: 'Unknown file type'});
+        }
+    }
+
     /**
      * Empties the local cache directory
      */
