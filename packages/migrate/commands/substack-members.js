@@ -61,6 +61,10 @@ const setup = (sywac) => {
         defaultValue: 'substack-paid',
         desc: 'Provide a label for Substack paid subscribers'
     });
+    sywac.boolean('--cache', {
+        defaultValue: true,
+        desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
+    });
 };
 
 const parseCompGift = (val) => {

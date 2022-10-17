@@ -86,6 +86,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--trustSelfSignedCert`** 
     - Trust self-signed certificates (such as for local installs)
     - bool - default: `false`
+- **`--cache`** 
+    - Persist local cache after migration is complete (Only if `--zip` is `true`)
+    - bool - default: `true`
 
 A more realistic command for a WordPress migration looks like this:
 

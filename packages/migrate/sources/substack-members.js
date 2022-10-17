@@ -102,6 +102,18 @@ const getTaskRunner = (pathToFile, options) => {
                     throw error;
                 }
             }
+        },
+        {
+            title: 'Clearing cached files',
+            enabled: () => !options.cache && options.zip,
+            task: async (ctx) => {
+                try {
+                    await ctx.fileCache.emptyCurrentCacheDir();
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
+            }
         }
     ];
 

@@ -65,6 +65,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--paidLabel`**
     - Provide a label for Substack `paid` subscribers
     - string - default: `substack-paid`
+- **`--cache`** 
+    - Persist local cache after migration is complete (Only if `--zip` is `true`)
+    - bool - default: `true`
 
 A more complex migration command that accounts for Stripe data could look like this:
 

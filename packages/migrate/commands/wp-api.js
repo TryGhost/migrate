@@ -92,6 +92,10 @@ const setup = (sywac) => {
         defaultValue: false,
         desc: 'Trust self-signed certificates (such as for local installs)'
     });
+    sywac.boolean('--cache', {
+        defaultValue: true,
+        desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
+    });
 };
 
 // What to do when this command is executed

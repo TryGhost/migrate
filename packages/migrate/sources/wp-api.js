@@ -276,9 +276,14 @@ const getFullTaskList = (url, options) => {
         },
         {
             title: 'Clearing cached files',
+            enabled: () => !options.cache && options.zip,
             task: async (ctx) => {
-                let derp = await ctx.fileCache.emptySiteCache();
-                console.log({derp});
+                try {
+                    await ctx.fileCache.emptyCurrentCacheDir();
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
             }
         }
     ];

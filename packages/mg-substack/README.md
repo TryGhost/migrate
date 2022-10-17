@@ -82,6 +82,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
     - bool - default: `false`      
+- **`--cache`** 
+    - Persist local cache after migration is complete (Only if `--zip` is `true`)
+    - bool - default: `true`
 
 **Note**: You can combine `--postsBefore` and `--postsAfter` to migrate posts between 2 dates.
 

@@ -51,6 +51,10 @@ const setup = (sywac) => {
         defaultValue: false,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
+    sywac.boolean('--cache', {
+        defaultValue: true,
+        desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
+    });
 };
 
 // What to do when this command is executed

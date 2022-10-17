@@ -64,6 +64,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--pageFilter`**
     - string - default: `null`
     - A string of page filters, as defined in the Ghost Admin API
+- **`--cache`** 
+    - Persist local cache after migration is complete (Only if `--zip` is `true`)
+    - bool - default: `true`
 
 A more complex migration command could look like this:
 

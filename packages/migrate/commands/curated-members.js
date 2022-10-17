@@ -34,6 +34,10 @@ const setup = (sywac) => {
         defaultValue: 'curated-free',
         desc: 'Provide a label for Curated free subscribers'
     });
+    sywac.boolean('--cache', {
+        defaultValue: true,
+        desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
+    });
 };
 
 // What to do when this command is executed
