@@ -214,6 +214,10 @@ class AssetScraper {
             // Trim quote marks from the start & end of strings
             obj.newRemote = trim(obj.newRemote, '\'"`');
 
+            if (obj.newRemote.includes('#:~:')) {
+                obj.newRemote = obj.newRemote.slice(0, obj.newRemote.indexOf('#:~:'));
+            }
+
             if (isValidUrlString(obj.newRemote)) {
                 // Remove the commonly long `ref_url`, which can cause `ENAMETOOLONG` errors
                 let parsedUrl = new URL(obj.newRemote);

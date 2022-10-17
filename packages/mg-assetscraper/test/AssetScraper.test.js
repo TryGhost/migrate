@@ -110,6 +110,38 @@ describe('AssetScraper', function () {
         expect(data[6].newRemote).toEqual('https://ghost.org/');
     });
 
+    test('Will removed unwanted query parameters', function () {
+        const values = [
+            {
+                remote: 'https://forum.ghost.org/?ref_url=ghost'
+            },
+            {
+                remote: 'https://forum.ghost.org/?s=node&ref_url=ghost'
+            },
+            {
+                remote: 'https://forum.ghost.org/?ref_url=ghost&s=node'
+            },
+            {
+                remote: 'https://ghost.org/docs/#:~:text=Learn%20how%20to%20build%20and%20develop%20beautiful%2C%20independent%20publications'
+            }
+        ];
+
+        const assetScraper = new AssetScraper(mockFileCache);
+
+        assetScraper.addRawValues(values);
+
+        const data = assetScraper._foundAssets;
+
+        expect(data[0].remote).toEqual('https://forum.ghost.org/?ref_url=ghost');
+        expect(data[0].newRemote).toEqual('https://forum.ghost.org/');
+        expect(data[1].remote).toEqual('https://forum.ghost.org/?s=node&ref_url=ghost');
+        expect(data[1].newRemote).toEqual('https://forum.ghost.org/?s=node');
+        expect(data[2].remote).toEqual('https://forum.ghost.org/?ref_url=ghost&s=node');
+        expect(data[2].newRemote).toEqual('https://forum.ghost.org/?s=node');
+        expect(data[3].remote).toEqual('https://ghost.org/docs/#:~:text=Learn%20how%20to%20build%20and%20develop%20beautiful%2C%20independent%20publications');
+        expect(data[3].newRemote).toEqual('https://ghost.org/docs/');
+    });
+
     test('Will filter out blocked domains', function () {
         const values = [
             {
