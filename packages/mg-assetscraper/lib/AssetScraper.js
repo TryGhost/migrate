@@ -384,11 +384,16 @@ class AssetScraper {
         $('img').each((i, el) => {
             let $image = $(el);
             let type = $image.attr('src') === undefined ? 'data-src' : 'src';
+
+            if ($image.attr('src').startsWith('data:')) {
+                type = 'data-src';
+            }
+
             let src = $image.attr(type);
 
-            $image.attr('src', this.addRawValue({
+            this.addRawValue({
                 remote: src
-            }));
+            });
         });
 
         $('picture source').each((i, el) => {

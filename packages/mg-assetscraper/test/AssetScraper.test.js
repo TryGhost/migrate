@@ -566,6 +566,17 @@ describe('Find assets in content', function () {
             expect(data[0].newRemote).toEqual('https://example.com/my/image.jpg');
         });
 
+        test('Will find assets with `data-src` in HTML', async function () {
+            const assetScraper = new AssetScraper(mockFileCache);
+
+            assetScraper.findInHTML(`<p>Hello</p><figure><noscript><img src="https://example.com/my-image.jpg" alt=""/></noscript><img class="lazyload" src='data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20210%20140%22%3E%3C/svg%3E' data-src="https://example.com/my-image.jpg" alt="" /></figure>`);
+
+            const data = assetScraper._foundAssets;
+
+            expect(data).toBeArrayOfSize(1);
+            expect(data[0].newRemote).toEqual('https://example.com/my-image.jpg');
+        });
+
         test('Will find assets links in HTML', async function () {
             const assetScraper = new AssetScraper(mockFileCache);
 
