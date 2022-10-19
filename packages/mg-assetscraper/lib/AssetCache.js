@@ -33,7 +33,9 @@ class AssetCache {
      * => 'assets/https-ghost-org'
      */
     _assetFileCacheName(assetUrl) {
-        return `assets/${slugify(assetUrl)}`;
+        let assetSlug = slugify(assetUrl);
+        assetSlug = assetSlug.substring(0, 250);
+        return `assets/${assetSlug}`;
     }
 
     /**
