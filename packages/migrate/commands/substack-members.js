@@ -89,7 +89,6 @@ const parseCompGift = (val) => {
 
 // What to do when this command is executed
 const run = async (argv) => {
-    let timer = Date.now();
     let context = {errors: []};
 
     if (argv.subs) {
@@ -133,12 +132,6 @@ const run = async (argv) => {
         context.result.skip.forEach((skipped) => {
             ui.log.warn(`Skipped import: ${skipped.info}`);
         });
-    }
-
-    // Report success
-    if (argv.zip) {
-        let outputFile = await context.outputFile;
-        ui.log.ok(`Successfully written output to ${outputFile.path} in ${Date.now() - timer}ms.`);
     }
 };
 

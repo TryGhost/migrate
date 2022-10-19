@@ -6,6 +6,7 @@ import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import xmlIngest from '@tryghost/mg-squarespace-xml';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
+import prettyMilliseconds from 'pretty-ms';
 
 const scrapeConfig = {
     posts: {
@@ -195,10 +196,12 @@ const getTaskRunner = (options) => {
         {
             title: 'Write Ghost import zip',
             skip: () => !options.zip,
-            task: async (ctx) => {
+            task: async (ctx, task) => {
                 // 9. Write a valid Ghost import zip
                 try {
+                    let timer = Date.now();
                     ctx.outputFile = await fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+                    task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;

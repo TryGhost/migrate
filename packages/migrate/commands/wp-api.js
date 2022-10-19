@@ -100,7 +100,6 @@ const setup = (sywac) => {
 
 // What to do when this command is executed
 const run = async (argv) => {
-    let timer = Date.now();
     let context = {errors: []};
 
     if (argv.auth) {
@@ -175,12 +174,6 @@ const run = async (argv) => {
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);
-    }
-
-    // Report success
-    if (argv.zip) {
-        let outputFile = await context.outputFile;
-        ui.log.ok(`Successfully written output to ${outputFile.path} in ${Date.now() - timer}ms.`);
     }
 };
 

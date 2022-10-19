@@ -63,7 +63,6 @@ const setup = (sywac) => {
 
 // What to do when this command is executed
 const run = async (argv) => {
-    let timer = Date.now();
     let context = {errors: []};
 
     if (argv.verbose) {
@@ -86,12 +85,6 @@ const run = async (argv) => {
 
     if (argv.verbose) {
         ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
-    }
-
-    // Report success
-    if (argv.zip) {
-        let outputFile = await context.outputFile;
-        ui.log.ok(`Successfully written output to ${outputFile.path} in ${Date.now() - timer}ms.`);
     }
 };
 

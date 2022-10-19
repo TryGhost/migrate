@@ -1,6 +1,7 @@
 import fsUtils from '@tryghost/mg-fs-utils';
 import csvIngest from '@tryghost/mg-substack-members-csv';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
+import prettyMilliseconds from 'pretty-ms';
 
 const MAX_COMP_BATCH_SIZE = 500;
 const MEMBERS_IMPORT_FIELDS = [
@@ -94,9 +95,11 @@ const getTaskRunner = (pathToFile, options) => {
         {
             title: 'Write zip file',
             skip: () => !options.zip,
-            task: async (ctx) => {
+            task: async (ctx, task) => {
                 try {
+                    let timer = Date.now();
                     ctx.outputFile = await fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, `gh-members-${ctx.fileCache.cacheName}-${Date.now()}.zip`);
+                    task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
