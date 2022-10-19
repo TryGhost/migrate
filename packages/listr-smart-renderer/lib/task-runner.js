@@ -1,4 +1,4 @@
-import Listr from 'listr';
+import {Listr} from 'listr2';
 import smartRenderer from './smart-renderer.js';
 
 export default (tasks, options = {}) => {

@@ -14,7 +14,7 @@ const getSymbol = (task, options) => {
     }
 
     if (task.isPending()) {
-        return options.showSubtasks !== false && task.subtasks.length > 0 ? pointer : chalk.yellow(task.spinner());
+        return options.showSubtasks !== false && task.subtasks?.length > 0 ? pointer : chalk.yellow(task.spinner());
     }
 
     if (task.isCompleted()) {

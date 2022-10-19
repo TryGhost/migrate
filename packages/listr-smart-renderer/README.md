@@ -1,6 +1,6 @@
 # Listr Smart Renderer
 
-A renderer for [Listr](https://github.com/SamVerschueren/listr) that handles extremely long lists of tasks by collapsing into a summary view.
+A renderer for [Listr](https://github.com/SamVerschueren/listr) & [listr2](https://github.com/cenk1cenk2/listr2) that handles extremely long lists of tasks by collapsing into a summary view.
 
 Pass in `maxFullTasks` to tell the renderer when to collapse into summary view.
 The summary outputs one line for each task that is currently being executed, one line for each task that fails and a final summary line.
@@ -20,8 +20,10 @@ or
 ## Usage
 
 ```js
-import SmartRenderer from '@tryghost/listr-smart-renderer';
+// Either of these 2 will work
 import Listr from 'listr';
+import {Listr} from 'listr2';
+import SmartRenderer from '@tryghost/listr-smart-renderer';
 
 const list = new Listr([
     {
@@ -36,7 +38,7 @@ const list = new Listr([
 list.run();
 ```
 
-This package also exports a `makeTaskRunner` method that simplifies your script:
+This package also exports a `makeTaskRunner` method that simplifies your script. `listr2` is used here.
 
 ```js
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
@@ -63,7 +65,7 @@ await taskRunner.run();
 
 ## Options
 
-These options should be provided in the [Listr](https://github.com/SamVerschueren/listr) options object.
+These options should be provided in the[Listr](https://github.com/SamVerschueren/listr) or [listr2](https://listr2.kilic.dev/getting-started/task-object) options object.
 
 ### maxFullTasks
 
