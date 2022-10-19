@@ -22,7 +22,7 @@ const getSymbol = (task, options) => {
     }
 
     if (task.hasFailed()) {
-        return task.subtasks.length > 0 ? pointer : logSymbols.error;
+        return task.subtasks?.length > 0 ? pointer : logSymbols.error;
     }
 
     if (task.isSkipped()) {
