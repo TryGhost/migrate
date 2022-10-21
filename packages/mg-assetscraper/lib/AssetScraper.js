@@ -636,7 +636,7 @@ class AssetScraper {
                     newCache.head = {};
 
                     try {
-                        const theHead = await this.getRemoteHeaders(encodeURI(item.newRemote));
+                        const theHead = await this.getRemoteHeaders(item.newRemote);
 
                         newCache.status = theHead.status;
 
