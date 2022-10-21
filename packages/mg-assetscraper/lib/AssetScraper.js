@@ -583,7 +583,8 @@ class AssetScraper {
     getRemoteHeaders(src) {
         return new Promise((resolve, reject) => {
             const stream = got.stream(src, {
-                timeout: 3000
+                timeout: 3000,
+                retry: 0 // Not needed as we're requesting headers that either exist or don't
             });
 
             let req;
@@ -706,7 +707,8 @@ class AssetScraper {
         try {
             const response = await got(src, {
                 responseType: 'buffer',
-                timeout: 20000
+                timeout: 20000,
+                retry: 0 // Not needed as we're requesting files that either exist or don't
             });
 
             return response;
