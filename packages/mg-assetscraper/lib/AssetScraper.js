@@ -912,9 +912,13 @@ class AssetScraper {
 
                     if (!found) {
                         return false;
+                skip: () => {
+                    if (!foundItem || !foundItem.newLocal) {
+                        return 'No cache file found';
                     }
 
                     this._fixedValues = this._fixedValues.replace(findThis, foundItem.newLocal);
+                },
 
                     // Add an artificial delay here so tasks are shown properly
                     await new Promise(r => setTimeout(r, 2)); // eslint-disable-line no-promise-executor-return
