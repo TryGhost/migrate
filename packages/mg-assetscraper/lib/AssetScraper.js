@@ -7,6 +7,7 @@ import {parseSrcset} from 'srcset';
 import {fileTypeFromBuffer} from 'file-type';
 import MarkdownIt from 'markdown-it';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
+import replaceString from 'replace-string';
 import {AssetCache} from './AssetCache.js';
 
 // Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/shared/config/overrides.json
@@ -904,21 +905,13 @@ class AssetScraper {
 
             tasks.push({
                 title: `Replace: ${foundItem.remote}`,
-                task: async () => {
-                    let safeHaystack = item.remote.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    let findThis = new RegExp(safeHaystack, 'g');
-
-                    let found = this._fixedValues.match(findThis);
-
-                    if (!found) {
-                        return false;
                 skip: () => {
                     if (!foundItem || !foundItem.newLocal) {
                         return 'No cache file found';
                     }
-
-                    this._fixedValues = this._fixedValues.replace(findThis, foundItem.newLocal);
                 },
+                task: async () => {
+                    this._fixedValues = replaceString(this._fixedValues, item.remote, foundItem.newLocal);
 
                     // Add an artificial delay here so tasks are shown properly
                     await new Promise(r => setTimeout(r, 2)); // eslint-disable-line no-promise-executor-return

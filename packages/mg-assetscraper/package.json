@@ -35,6 +35,7 @@
     "got": "11.8.5",
     "listr": "0.14.3",
     "markdown-it": "13.0.1",
+    "replace-string": "4.0.0",
     "srcset": "5.0.0"
   }
 }
