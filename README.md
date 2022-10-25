@@ -14,7 +14,8 @@ Each tool has its own detailed documentation:
 - [Squarespace](https://github.com/TryGhost/migrate/tree/main/packages/mg-squarespace-xml)
 - [Substack](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack)
 - [Substack members](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack-members-csv)
-- [WordPress](https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-api)
+- [WordPress API](https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-api)
+- [WordPress XML](https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-xml)
 
 
 ## Install

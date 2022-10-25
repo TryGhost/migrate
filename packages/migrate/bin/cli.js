@@ -18,6 +18,7 @@ import squarespaceCommands from '../commands/squarespace.js';
 import substackMembersCommands from '../commands/substack-members.js';
 import substackCommands from '../commands/substack.js';
 import wpApiCommands from '../commands/wp-api.js';
+import wpXMLCommands from '../commands/wp-xml.js';
 
 prettyCLI.preface('Command line utilities for migrating content to Ghost.');
 
@@ -38,6 +39,7 @@ prettyCLI.command(squarespaceCommands);
 prettyCLI.command(substackMembersCommands);
 prettyCLI.command(substackCommands);
 prettyCLI.command(wpApiCommands);
+prettyCLI.command(wpXMLCommands);
 
 prettyCLI.style({
     usageCommandPlaceholder: () => '<source or utility>'
