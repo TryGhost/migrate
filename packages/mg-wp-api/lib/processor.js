@@ -3,6 +3,7 @@ import _ from 'lodash';
 import $ from 'cheerio';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import {slugify} from '@tryghost/string';
+import Muteferrika from 'muteferrika';
 
 const stripHtml = (html) => {
     // Remove HTML tags, new line characters, and trim white-space
@@ -93,18 +94,104 @@ const processExcerpt = (html, excerptSelector) => {
     }
 };
 
+const processShortcodes = async ({html}) => {
+    const shortcodes = new Muteferrika();
+
+    shortcodes.add('vc_btn', async (attrs) => {
+        let buttonHref = attrs.link;
+
+        // Sometimes URLs have a `url:` prefix which we don't want
+        if (buttonHref.startsWith('url:')) {
+            buttonHref = buttonHref.slice(4);
+        }
+
+        buttonHref = decodeURIComponent(buttonHref);
+
+        return `<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="${buttonHref}">${attrs.title}</a></div></div>`;
+    });
+
+    shortcodes.add('caption', async (attrs, content) => {
+        const $html = $.load(content, {
+            decodeEntities: false
+        });
+
+        let theImage = $html('img');
+        let theCaption = $html.text().trim();
+
+        let $figure = $('<figure class="wp-block-image"></figure>');
+
+        $figure.append(theImage);
+
+        if (theCaption && theCaption.length) {
+            $figure.append(`<figcaption>${theCaption.trim()}</figcaption>`);
+        }
+
+        return $.html($figure);
+    });
+
+    shortcodes.add('vc_separator', async () => {
+        return '<hr>';
+    });
+
+    shortcodes.add('gravityform', async () => {
+        return ' ';
+    });
+
+    // We don't want to change these, but only retain what's inside.
+    let toRemove = [
+        {
+            name: 'row',
+            callback: (attrs, content) => {
+                return `${content} `;
+            }
+        },
+        {
+            name: 'column',
+            callback: (attrs, content) => {
+                return `${content} `;
+            }
+        },
+        {
+            name: 'vc_row',
+            callback: (attrs, content) => {
+                return `${content} `;
+            }
+        },
+        {
+            name: 'vc_column',
+            callback: (attrs, content) => {
+                return `${content} `;
+            }
+        },
+        {
+            name: 'vc_column_text',
+            callback: (attrs, content) => {
+                return `${content} `;
+            }
+        }
+    ];
+
+    shortcodes.addRange(toRemove);
+
+    const output = await shortcodes.render(html);
+
+    return output;
+};
+
 /**
  * The rationale behind transforming the content is to allow `mg-html-mobiledoc` to do its best job
  * In some cases, transformation isn't needed as the parser handles it correctly.
  * In other cases, we need to *do* change the HTML structure, and this is where that happens.
  */
-const processContent = async (html, excerptSelector, featureImageSrc = false, fileCache = false, options = {}) => { // eslint-disable-line no-shadow
+const processContent = async ({html, excerptSelector, featureImageSrc = false, fileCache = false, options = {}}) => { // eslint-disable-line no-shadow
     let webScraper = new MgWebScraper(fileCache);
 
     let allowRemoteScraping = false;
-    if (options.scrape?.includes('all') || options.scrape?.includes('media')) {
+    if (options?.scrape?.includes('all') || options.scrape?.includes('media')) {
         allowRemoteScraping = true;
     }
+
+    html = await processShortcodes({html});
 
     // Drafts can have empty post bodies
     if (!html) {
@@ -520,7 +607,13 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = await processContent(post.data.html, excerptSelector, post.data.feature_image, fileCache, options);
+    post.data.html = await processContent({
+        html: post.data.html,
+        excerptSelector,
+        featureImageSrc: post.data.feature_image,
+        fileCache,
+        options
+    });
 
     return post;
 };
@@ -575,6 +668,7 @@ export default {
     processTerm,
     processTerms,
     processExcerpt,
+    processShortcodes,
     processContent,
     processPost,
     processPosts,

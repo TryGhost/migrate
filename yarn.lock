@@ -5158,6 +5158,11 @@ ms@^2.1.1, ms@^2.1.3:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"
   integrity sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==
 
+muteferrika@1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/muteferrika/-/muteferrika-1.3.1.tgz#b1aee6296f946c9d8d22544c2239213faf19a928"
+  integrity sha512-kP5+oPYkJ/djDJ+XnAH0mV41sNz+B0xA8Rf1YzVzo1TeKVWjgBHnckWDi5I2CZBnEl67MRgGA3i8WsEFaiXqFA==
+
 mv@~2:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/mv/-/mv-2.1.1.tgz#ae6ce0d6f6d5e0a4f7d893798d03c1ea9559b6a2"

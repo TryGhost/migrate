@@ -221,7 +221,7 @@ describe('Process WordPress HTML', function () {
     test('Can process basic HTML', async function () {
         const html = `<p>This is an example page. It&#8217;s different from a blog post.</p><ul><li>Lorem</li><li>Ipsum</li></ul><p><strong>Dolor</strong> <a href="https://ghost.org" title="Try Ghost">sit</a> <em>amet</em>.</p>`;
 
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<p>This is an example page. It&#8217;s different from a blog post.</p><ul><li>Lorem</li><li>Ipsum</li></ul><p><strong>Dolor</strong> <a href="https://ghost.org" title="Try Ghost">sit</a> <em>amet</em>.</p>');
     });
@@ -229,7 +229,7 @@ describe('Process WordPress HTML', function () {
     test('Can wrap a nested unordered list in a HTML card', async function () {
         const html = `<ul><li>Lorem</li><li>Ipsum<ul><li>Sit Amet</li></ul></li></ul>`;
 
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<!--kg-card-begin: html--><ul><li>Lorem</li><li>Ipsum<ul><li>Sit Amet</li></ul></li></ul><!--kg-card-end: html-->');
     });
@@ -237,7 +237,7 @@ describe('Process WordPress HTML', function () {
     test('Can wrap a nested ordered list in a HTML card', async function () {
         const html = `<ol><li>Lorem</li><li>Ipsum<ol><li>Sit Amet</li></ol></li></ol>`;
 
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<!--kg-card-begin: html--><ol><li>Lorem</li><li>Ipsum<ol><li>Sit Amet</li></ol></li></ol><!--kg-card-end: html-->');
     });
@@ -245,7 +245,7 @@ describe('Process WordPress HTML', function () {
     test('Can wrap an ordered list with `type` attr in a HTML card', async function () {
         const html = `<ol type="a"><li>Lorem</li><li>Ipsum</li></ol>`;
 
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<!--kg-card-begin: html--><ol type="a"><li>Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html-->');
     });
@@ -253,7 +253,7 @@ describe('Process WordPress HTML', function () {
     test('Can wrap an ordered list with `start` attr in a HTML card', async function () {
         const html = `<ol start="2"><li>Lorem</li><li>Ipsum</li></ol>`;
 
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<!--kg-card-begin: html--><ol start="2"><li>Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html-->');
     });
@@ -261,7 +261,7 @@ describe('Process WordPress HTML', function () {
     test('Can wrap an list that contains a list item with a `value` attribute n a HTML card', async function () {
         const html = `<ul><li value="10">Lorem</li><li>Ipsum</li></ul><ol><li value="10">Lorem</li><li>Ipsum</li></ol>`;
 
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<!--kg-card-begin: html--><ul><li value="10">Lorem</li><li>Ipsum</li></ul><!--kg-card-end: html--><!--kg-card-begin: html--><ol><li value="10">Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html-->');
     });
@@ -269,7 +269,7 @@ describe('Process WordPress HTML', function () {
     test('Can wrap an list in a div that contains a list item with a `value` attribute n a HTML card', async function () {
         const html = `<div><ul><li value="10">Lorem</li><li>Ipsum</li></ul><ol><li value="10">Lorem</li><li>Ipsum</li></ol></div>`;
 
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<div><!--kg-card-begin: html--><ul><li value="10">Lorem</li><li>Ipsum</li></ul><!--kg-card-end: html--><!--kg-card-begin: html--><ol><li value="10">Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html--></div>');
     });
@@ -277,7 +277,7 @@ describe('Process WordPress HTML', function () {
     test('Can leave image divs alone', async function () {
         const html = `<div style="padding: 20px; background: #ff6600;"><img src="https://example.com/images/photo.jpg" /></div>`;
 
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<div style="padding: 20px; background: #ff6600;"><img src="https://example.com/images/photo.jpg"></div>');
     });
@@ -285,7 +285,7 @@ describe('Process WordPress HTML', function () {
     test('Can wrap styled elements in a HTML card', async function () {
         const html = `<div style="padding: 20px; background: #ff6600;"><p>Hello</p></div>`;
 
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<!--kg-card-begin: html--><div style="padding: 20px; background: #ff6600;"><p>Hello</p></div><!--kg-card-end: html-->');
     });
@@ -293,7 +293,7 @@ describe('Process WordPress HTML', function () {
     test('Can find & update smaller images', async function () {
         const html = `<img src="https://mysite.com/wp-content/uploads/2020/06/image-300x200.png" /><img src="https://mysite.com/wp-content/uploads/2020/06/another-image-1200x800.png" />`;
 
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/another-image.png">');
     });
@@ -301,7 +301,7 @@ describe('Process WordPress HTML', function () {
     test('Can find & remove links around images that link to the same image', async function () {
         const html = `<a href="https://mysite.com/wp-content/uploads/2020/06/image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/image-300x200.png" /></a><a href="https://mysite.com"><img src="https://mysite.com/wp-content/uploads/2020/06/image-300x200.png" /></a><a href="https://mysite.com/wp-content/uploads/2020/06/another-image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/image-300x200.png" /></a>`;
 
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><a href="https://mysite.com"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png"></a><a href="https://mysite.com/wp-content/uploads/2020/06/another-image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png"></a>');
     });
@@ -310,43 +310,95 @@ describe('Process WordPress HTML', function () {
         const html = `<div class="wp-container-1 is-horizontal is-content-justification-center wp-block-buttons">
         <div class="wp-block-button"><a class="wp-block-button__link" href="https://ghost.org" target="_blank" rel="noreferrer noopener">Ghost</a></div>
         </div>`;
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<div class="kg-card kg-button-card kg-align-center"><a href="https://ghost.org" class="kg-btn kg-btn-accent">Ghost</a></div>');
     });
 
     test('Can handle a multiple button element', async function () {
         const html = `<div class="wp-container-2 wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="Ghost.org">Hello</a></div><div class="wp-block-button"><a class="wp-block-button__link" href="apple.com">World</a></div></div>`;
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<div class="kg-card kg-button-card kg-align-left"><a href="Ghost.org" class="kg-btn kg-btn-accent">Hello</a></div><div class="kg-card kg-button-card kg-align-left"><a href="apple.com" class="kg-btn kg-btn-accent">World</a></div>');
     });
 
     test('Can process audio files', async function () {
         const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3"></audio><figcaption>My audio file</figcaption></figure>`;
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<!--kg-card-begin: html--><figure class="wp-block-audio"><audio controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" style="width: 100%;"></audio><figcaption>My audio file</figcaption></figure><!--kg-card-end: html-->');
     });
 
     test('Can process autoplay audio files', async function () {
         const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay=""></audio><figcaption>My autoplay audio file</figcaption></figure>`;
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<!--kg-card-begin: html--><figure class="wp-block-audio"><audio controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay style="width: 100%;"></audio><figcaption>My autoplay audio file</figcaption></figure><!--kg-card-end: html-->');
     });
 
     test('Can process looped audio files', async function () {
         const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3" loop=""></audio><figcaption>My looped audio file</figcaption></figure>`;
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<!--kg-card-begin: html--><figure class="wp-block-audio"><audio controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" loop style="width: 100%;"></audio><figcaption>My looped audio file</figcaption></figure><!--kg-card-end: html-->');
     });
 
     test('Can process looped autoplay audio files', async function () {
         const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay="" loop=""></audio><figcaption>My looped autoplay audio file</figcaption></figure>`;
-        const processed = await processor.processContent(html);
+        const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<!--kg-card-begin: html--><figure class="wp-block-audio"><audio controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay loop style="width: 100%;"></audio><figcaption>My looped autoplay audio file</figcaption></figure><!--kg-card-end: html-->');
+    });
+});
+
+describe('Process shortcodes', function () {
+    test('Convert convert a caption shortcode to a WP image figure', async function () {
+        let html = 'Hello [caption id="attachment_6" align="alignright" width="300"]<img src="http://example.com/wp-content/uploads/2010/07/image.jpg" alt="Image of a thing" title="The Great Image" width="300" height="205" class="size-medium wp-image-6" />[/caption] World';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        expect(convertedHtml).toEqual('Hello <figure class="wp-block-image"><img src="http://example.com/wp-content/uploads/2010/07/image.jpg" alt="Image of a thing" title="The Great Image" width="300" height="205" class="size-medium wp-image-6"></figure> World');
+    });
+
+    test('Convert convert a caption shortcode with text to a WP image figure', async function () {
+        let html = 'Hello [caption id="attachment_6" align="alignright" width="300"]<img src="http://example.com/wp-content/uploads/2010/07/image.jpg" alt="Image of a thing" title="The Great Image" width="300" height="205" class="size-medium wp-image-6" /> The Great Image[/caption] World';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        expect(convertedHtml).toEqual('Hello <figure class="wp-block-image"><img src="http://example.com/wp-content/uploads/2010/07/image.jpg" alt="Image of a thing" title="The Great Image" width="300" height="205" class="size-medium wp-image-6"><figcaption>The Great Image</figcaption></figure> World');
+    });
+
+    test('Can convert vc_separator to <hr>', async function () {
+        let html = 'Hello[vc_separator]World';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        expect(convertedHtml).toEqual('Hello<hr>World');
+    });
+
+    test('Can convert vc_btn to WP button element', async function () {
+        let html = '[vc_btn title="Read more 1" shape="square" color="black" align="center" link="https%3A%2F%2Fexample.com"] [vc_btn title="Read more 2" shape="square" color="black" align="center" link="https://example.com"] [vc_btn title="Read more 3" shape="square" color="black" align="center" link="url:https%3A%2F%2Fexample.com"]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        expect(convertedHtml).toInclude('<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="https://example.com">Read more 1</a></div></div>');
+        expect(convertedHtml).toInclude('<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="https://example.com">Read more 2</a></div></div>');
+        expect(convertedHtml).toInclude('<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="https://example.com">Read more 3</a></div></div>');
+    });
+
+    test('Can unwrap common layout shortcodes', async function () {
+        let html = 'Hello [vc_row][vc_column][vc_column_text]Lorem[/vc_column_text][/vc_column][vc_column][vc_column_text]Ipsum[/vc_column_text][/vc_column][/vc_row] World';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        expect(convertedHtml).toEqual('Hello Lorem  Ipsum    World');
+    });
+
+    test('Can remove gravityform shortcodes', async function () {
+        let html = 'Hello [gravityform id="1" title="false" description="false" ajax="true" tabindex="49" field_values="check=First Choice,Second Choice"] World [gravityform id="1" title="false" description="false" ajax="true" tabindex="49" field_values="check=First Choice,Second Choice"/]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        expect(convertedHtml).toEqual('Hello   World  ');
     });
 });
