@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/migrate",
-  "version": "0.26.2",
+  "version": "0.26.3",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/migrate",
   "author": "Ghost Foundation",
   "license": "MIT",
