@@ -70,7 +70,7 @@ const processContent = (post, siteUrl, options) => {
     if (responseData?.og_image) {
         let firstElement = $html('body *').first();
 
-        if (firstElement.tagName === 'img' || $(firstElement).get(0).name === 'img' || $(firstElement).find('img').length) {
+        if (firstElement.tagName === 'img' || ($(firstElement).get(0) && $(firstElement).get(0).name === 'img') || $(firstElement).find('img').length) {
             let theElementItself = (firstElement.tagName === 'img' || $(firstElement).get(0).name === 'img') ? firstElement : $(firstElement).find('img');
             let firstImgSrc = $(theElementItself).attr('src');
 
