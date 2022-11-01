@@ -5,6 +5,7 @@ import $ from 'cheerio';
 import errors from '@tryghost/errors';
 import SimpleDom from 'simple-dom';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
+import {decode} from 'html-entities';
 
 const getFiles = async (filePath) => {
     let filenames = await fs.readdir(filePath);
@@ -282,7 +283,14 @@ const processContent = (post, siteUrl, options) => {
     }
 
     $html('.embedded-post-wrap').each((i, div) => {
-        let bookmarkJSON = JSON.parse($(div).attr('data-attrs').replace(/&quot;/gm, '"'));
+        const attrs = $(div).attr('data-attrs') || false;
+
+        if (!attrs) {
+            return;
+        }
+
+        // CASE: Some embedded posts are double-encoded, so we need to decode twice
+        let bookmarkJSON = JSON.parse(decode(decode(attrs)));
 
         let bookmarkLink = bookmarkJSON.url;
         let bookmarkPubName = bookmarkJSON.publication_name;
