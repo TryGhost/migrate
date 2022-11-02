@@ -1,5 +1,11 @@
 #!/usr/bin/env node
-import prettyCLI from '@tryghost/pretty-cli';
+import {Api, styles} from '@tryghost/pretty-cli';
+
+import {URL} from 'node:url';
+import fs from 'node:fs';
+import {join} from 'node:path';
+const __dirname = new URL('.', import.meta.url).pathname;
+const packageJSON = JSON.parse(fs.readFileSync(join(__dirname, '../package.json'), 'utf-8'));
 
 import cacheCommands from '../commands/cache.js';
 import curatedMembersCommands from '../commands/curated-members.js';
@@ -18,6 +24,16 @@ import substackMembersCommands from '../commands/substack-members.js';
 import substackCommands from '../commands/substack.js';
 import wpApiCommands from '../commands/wp-api.js';
 import wpXMLCommands from '../commands/wp-xml.js';
+
+const prettyCLI = Api.get()
+    .help('-h, --help', {group: 'Global Options:'})
+    .version('-v, --version', {
+        group: 'Global Options:',
+        version: packageJSON.version
+    })
+    .style(styles)
+    .epilogue(' ')
+    .showHelpByDefault();
 
 prettyCLI.preface('Command line utilities for migrating content to Ghost.');
 
