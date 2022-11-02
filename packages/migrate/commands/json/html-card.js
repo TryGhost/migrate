@@ -4,7 +4,9 @@ import json from '../../lib/utilties/json.js';
 
 const id = 'json-html-card';
 
-const flags = 'html-card <pathToJSON>';
+const group = 'Utilities:';
+
+const flags = 'json-html-card <pathToJSON>';
 
 // Configure all the options
 const setup = (sywac) => {
@@ -53,6 +55,7 @@ const run = async (argv) => {
 
 export default {
     id,
+    group,
     flags,
     desc,
     paramsDesc,

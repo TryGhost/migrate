@@ -4,7 +4,9 @@ import json from '../../lib/utilties/json.js';
 
 const id = 'json-email';
 
-const flags = 'email <pathToJSON>';
+const group = 'Utilities:';
+
+const flags = 'json-email <pathToJSON>';
 
 // Configure all the options
 const setup = (sywac) => {
@@ -55,6 +57,7 @@ const run = async (argv) => {
 
 export default {
     id,
+    group,
     flags,
     desc,
     paramsDesc,

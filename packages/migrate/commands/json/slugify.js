@@ -4,7 +4,9 @@ import json from '../../lib/utilties/json.js';
 
 const id = 'json-slugify';
 
-const flags = 'slugify <pathToJSON>';
+const group = 'Utilities:';
+
+const flags = 'json-slugify <pathToJSON>';
 
 // Configure all the options
 const setup = (sywac) => {
@@ -51,6 +53,7 @@ const run = async (argv) => {
 
 export default {
     id,
+    group,
     flags,
     desc,
     paramsDesc,
