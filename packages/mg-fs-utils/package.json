@@ -33,6 +33,7 @@
     "date-fns": "2.29.3",
     "fs-extra": "10.1.0",
     "lodash": "4.17.21",
-    "sharp": "0.31.2"
+    "sharp": "0.31.2",
+    "transliteration": "2.3.5"
   }
 }

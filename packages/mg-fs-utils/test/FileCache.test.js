@@ -113,3 +113,59 @@ describe('writeImageFile', function () {
         expect(fileName.outputPath).toEqual('/content/images/my-images/blah.jpg');
     });
 });
+
+describe('resolveFileName character handling', function () {
+    it('Will handle Russian characters', async function () {
+        let fileCache = new FileCache('test');
+        let fileName = await fileCache.resolveFileName('/my-images/счастливые-маленькие-деревья.jpeg');
+
+        expect(fileName.filename).toEqual('/my-images/schastlivye-malenkie-derevya.jpg');
+        expect(fileName.storagePath).toInclude('/content/images/my-images/schastlivye-malenkie-derevya.jpg');
+        expect(fileName.outputPath).toEqual('/content/images/my-images/schastlivye-malenkie-derevya.jpg');
+    });
+
+    it('Will handle Bulgarian characters', async function () {
+        let fileCache = new FileCache('test');
+        let fileName = await fileCache.resolveFileName('/my-images/щастливи-малки-дървета.jpeg');
+
+        expect(fileName.filename).toEqual('/my-images/shchastlivi-malki-drveta.jpg');
+        expect(fileName.storagePath).toInclude('/content/images/my-images/shchastlivi-malki-drveta.jpg');
+        expect(fileName.outputPath).toEqual('/content/images/my-images/shchastlivi-malki-drveta.jpg');
+    });
+
+    it('Will handle Serbian characters', async function () {
+        let fileCache = new FileCache('test');
+        let fileName = await fileCache.resolveFileName('/my-images/с-ећна=мала-дрвећа.jpeg');
+
+        expect(fileName.filename).toEqual('/my-images/s-etshna-mala-drvetsha.jpg');
+        expect(fileName.storagePath).toInclude('/content/images/my-images/s-etshna-mala-drvetsha.jpg');
+        expect(fileName.outputPath).toEqual('/content/images/my-images/s-etshna-mala-drvetsha.jpg');
+    });
+
+    it('Will handle Chinese characters', async function () {
+        let fileCache = new FileCache('test');
+        let fileName = await fileCache.resolveFileName('/my-images/快乐的小树.jpeg');
+
+        expect(fileName.filename).toEqual('/my-images/kuai-le-de-xiao-shu.jpg');
+        expect(fileName.storagePath).toInclude('/content/images/my-images/kuai-le-de-xiao-shu.jpg');
+        expect(fileName.outputPath).toEqual('/content/images/my-images/kuai-le-de-xiao-shu.jpg');
+    });
+
+    it('Will handle Japanese characters', async function () {
+        let fileCache = new FileCache('test');
+        let fileName = await fileCache.resolveFileName('/my-images/幸せな小さな木.jpeg');
+
+        expect(fileName.filename).toEqual('/my-images/xing-senaxiao-sanamu.jpg');
+        expect(fileName.storagePath).toInclude('/content/images/my-images/xing-senaxiao-sanamu.jpg');
+        expect(fileName.outputPath).toEqual('/content/images/my-images/xing-senaxiao-sanamu.jpg');
+    });
+
+    it('Will handle Arabic characters', async function () {
+        let fileCache = new FileCache('test');
+        let fileName = await fileCache.resolveFileName('/my-images/أشجار صغيرة سعيدة.jpeg');
+
+        expect(fileName.filename).toEqual('/my-images/shjr-sgyr-saayd.jpg');
+        expect(fileName.storagePath).toInclude('/content/images/my-images/shjr-sgyr-saayd.jpg');
+        expect(fileName.outputPath).toEqual('/content/images/my-images/shjr-sgyr-saayd.jpg');
+    });
+});

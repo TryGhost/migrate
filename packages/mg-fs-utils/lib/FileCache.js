@@ -5,6 +5,7 @@ import _ from 'lodash';
 import fs from 'fs-extra';
 import imageTransform from '@tryghost/image-transform';
 import errors from '@tryghost/errors';
+import transliterate from 'transliteration';
 import csv from './csv.js';
 
 const basePath = 'mg';
@@ -131,24 +132,12 @@ class FileCache {
         return (mb * 1048576);
     }
 
-    // @TODO: move this somewhere shared,
-    // it's currently duplicated from https://github.com/TryGhost/Ghost-Storage-Base/blob/main/BaseStorage.js#L63
     sanitizeFileName(src) {
-        let basename;
+        let fileNameNoExt = path.parse(src).name;
 
-        // remove unsupported characters from the dir name first
-        src = src.replace(src, this.sanitizeDirName(src));
+        let safeFileNameNoExt = transliterate.slugify(fileNameNoExt);
 
-        basename = path.basename(src);
-        // below only matches ascii characters, @, and .
-        // unicode filenames like город.zip would therefore resolve to ----.zip
-        return src.replace(basename, basename.replace(/[^\w@.]/gi, '-'));
-    }
-
-    sanitizeDirName(src) {
-        // Slighly different regex from sanitizing the filename, as we still want to
-        // support characters like `/`, `_`, and `-`
-        return src.replace(/[^\w@./-_]/gi, '-');
+        return src.replace(fileNameNoExt, safeFileNameNoExt);
     }
 
     resolveImageFileName(filename) {
@@ -183,6 +172,12 @@ class FileCache {
             typePath = this.filesPath;
         }
 
+        // remove the base filePath if it already exists in the path, so we don't get nested filePath directories
+        filename = filename.replace(`/${typePath}`, '');
+
+        // replace the basename part with a sanitized version
+        filename = filename.replace(filename, this.sanitizeFileName(filename));
+
         // CASE: Some image URLs are very long and can cause various issues with storage.
         // If the filepath is more than 200 characters, slice the last 200 and use that
         let theBasename = path.basename(filename);
@@ -191,12 +186,6 @@ class FileCache {
             let shorter = filePath.slice(-200);
             filename = path.join('/', shorter, theBasename);
         }
-
-        // remove the base filePath if it already exists in the path, so we don't get nested filePath directories
-        filename = filename.replace(`/${typePath}`, '');
-
-        // replace the basename part with a sanitized version
-        filename = filename.replace(filename, this.sanitizeFileName(filename));
 
         // @TODO: use content type on request to infer this, rather than assuming jpeg?
         if (type === 'image' && !_.includes(knownImageExtensions, ext)) {
