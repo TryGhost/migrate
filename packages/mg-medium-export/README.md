@@ -28,6 +28,8 @@ To run a Medium migration, the required command is:
 migrate medium <path to zip file>
 ```
 
+**Note:** The zip path can be to a singular zip file or a folder of zip files
+
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
 - **`-V` `--verbose`**
