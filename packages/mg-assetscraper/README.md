@@ -32,7 +32,7 @@ await taskRunner.run();
 // Set some options
 // 2 MB maximum, and no media files
 const assetScraper = new AssetScraper(fileCache, {
-    sizeLimit: 2097152, // 2 MB
+    sizeLimit: 2, // 2 MB
     allowMedia: false,
     baseDomain: 'https://example.com' // Set this domain to be added to relative asset links
 });

@@ -144,11 +144,6 @@ const run = async (argv) => {
         }
     }
 
-    // Convert supplied size limit in MB to binary bytes
-    if (argv.sizeLimit) {
-        argv.sizeLimit = (argv.sizeLimit * 1048576);
-    }
-
     if (argv.verbose) {
         ui.log.info(`${argv.info ? 'Fetching info' : 'Migrating'} from site at ${argv.url}`);
     }

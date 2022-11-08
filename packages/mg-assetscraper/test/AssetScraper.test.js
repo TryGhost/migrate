@@ -540,7 +540,7 @@ describe('AssetScraper', function () {
 
     test('Will skip downloading large assets if a filesize is defined', function () {
         const assetScraper = new AssetScraper(mockFileCache, {
-            sizeLimit: (1048576 * 2) // 2 MB
+            sizeLimit: 2 // 2 MB
         });
 
         const sizeAllowed1 = assetScraper.isWithinSizeLimit(cachedJSON[0]);
@@ -552,6 +552,30 @@ describe('AssetScraper', function () {
         expect(sizeAllowed3).toBeTruthy();
 
         expect(assetScraper.oversizedAssets()).toBeArrayOfSize(2);
+    });
+
+    test('Will convert sizeLimit unit from 0.5MB to bytes', function () {
+        const assetScraper = new AssetScraper(mockFileCache, {
+            sizeLimit: 0.5 // 0.5 MB
+        });
+
+        expect(assetScraper.defaultOptions.sizeLimit).toEqual(524288);
+    });
+
+    test('Will convert sizeLimit unit from 1MB to bytes', function () {
+        const assetScraper = new AssetScraper(mockFileCache, {
+            sizeLimit: 1 // 1 MB
+        });
+
+        expect(assetScraper.defaultOptions.sizeLimit).toEqual(1048576);
+    });
+
+    test('Will convert sizeLimit unit from 250MB to bytes', function () {
+        const assetScraper = new AssetScraper(mockFileCache, {
+            sizeLimit: 250 // 250 MB
+        });
+
+        expect(assetScraper.defaultOptions.sizeLimit).toEqual(262144000);
     });
 });
 

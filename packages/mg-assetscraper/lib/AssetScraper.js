@@ -63,7 +63,7 @@ class AssetScraper {
      * @param {FileCache} fileCache
      * @param {Object} options
      * @param {Bool} options.optimize
-     * @param {Int|Bool} options.sizeLimit A size limit in binary bytes (i.e. 1 MB is supplied as 1048576)
+     * @param {Int|Bool} options.sizeLimit A size limit in MB
      * @param {Bool} options.allowImages
      * @param {Bool} options.allowMedia
      * @param {Bool} options.allowFiles
@@ -79,6 +79,11 @@ class AssetScraper {
             allowFiles: true,
             baseDomain: null
         }, options);
+
+        // Convert MB to bytes for file size comparison
+        if (this.defaultOptions.sizeLimit) {
+            this.defaultOptions.sizeLimit = (this.defaultOptions.sizeLimit * 1048576);
+        }
 
         // Assets will be found in this value
         this._initialValue = null;
