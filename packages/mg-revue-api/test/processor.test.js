@@ -8,8 +8,7 @@ describe('Process', function () {
             result: fixture,
             options: {
                 addPrimaryTag: 'Newsletter',
-                email: 'person@example.com',
-                pubName: 'samplenews'
+                email: 'person@example.com'
             }
         };
         const response = processor.all(ctx);
@@ -47,21 +46,18 @@ describe('Process', function () {
         expect(tags[1].url).toEqual('migrator-added-tag');
         expect(tags[1].data.name).toEqual('#revue');
 
-        const author = data.author;
+        const authors = data.authors;
 
-        expect(author.url).toEqual('/author/samplenews');
-        expect(author.data.email).toEqual('person@example.com');
-        expect(author.data.slug).toEqual('samplenews');
+        expect(authors).toBeArrayOfSize(1);
+        expect(authors[0].url).toEqual('/author/samplenews');
+        expect(authors[0].data.email).toEqual('person@example.com');
+        expect(authors[0].data.slug).toEqual('samplenews');
     });
 
     it('Can convert a post with embeds', function () {
         const ctx = {
             result: fixture,
-            options: {
-                addPrimaryTag: 'Newsletter',
-                email: 'person@example.com',
-                pubName: 'samplenews'
-            }
+            options: {}
         };
         const response = processor.all(ctx);
         const posts = response.posts;
@@ -86,11 +82,7 @@ describe('Process', function () {
     it('Can remove UTM properties from link block headers', function () {
         const ctx = {
             result: fixture,
-            options: {
-                addPrimaryTag: 'Newsletter',
-                email: 'person@example.com',
-                pubName: 'samplenews'
-            }
+            options: {}
         };
         const response = processor.all(ctx);
         const posts = response.posts;

@@ -7,6 +7,7 @@ import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import prettyMilliseconds from 'pretty-ms';
+import {v4 as uuidv4} from 'uuid';
 import $ from 'cheerio';
 
 const scrapeConfig = {
@@ -164,7 +165,7 @@ const initialize = (options) => {
             };
 
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-            ctx.fileCache = new fsUtils.FileCache(ctx.options.pubName);
+            ctx.fileCache = new fsUtils.FileCache(`revue-${uuidv4()}`);
             ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
             ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
                 sizeLimit: ctx.options.sizeLimit,

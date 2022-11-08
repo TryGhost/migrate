@@ -8,13 +8,13 @@ const id = 'revue';
 const group = 'Sources:';
 
 // The command to run and any params
-const flags = 'revue [pubName] <apitoken>';
+const flags = 'revue <apitoken>';
 
 // Description for the top level command
 const desc = 'Migrate from Revue using the API';
 
 // Descriptions for the individual params
-const paramsDesc = ['Revue profile name (e. g. https://www.getrevue.co/profile/<pubName>)', 'Revue API Token'];
+const paramsDesc = ['Revue API Token'];
 
 // Configure all the options
 const setup = (sywac) => {
@@ -60,10 +60,6 @@ const setup = (sywac) => {
 // What to do when this command is executed
 const run = async (argv) => {
     let context = {errors: []};
-
-    if (argv.pubName.indexOf('http') >= 0) {
-        return ui.log.error('Please provide Revue profile name without URL (e. g. https://www.getrevue.co/profile/<pubName>)');
-    }
 
     if (argv.verbose) {
         ui.log.info(`${argv.info ? 'Fetching info' : 'Migrating'} from Revue site`);

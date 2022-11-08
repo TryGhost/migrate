@@ -148,7 +148,7 @@ const processContent = (html, postUrl) => {
  * }
  */
 const processPost = (data, {addPrimaryTag, email, pubName}) => {
-    const slugRegexp = new RegExp(`https:\\/\\/www\\.getrevue\\.co\\/profile\\/${pubName}\\/issues\\/(\\S*)-${data.id}`);
+    const slugRegexp = new RegExp(`https:\\/\\/www\\.getrevue\\.co\\/profile\\/[a-zA-Z0-9-_]+\\/issues\\/(\\S*)-${data.id}`);
 
     const post = {
         url: data.url,
@@ -160,7 +160,8 @@ const processPost = (data, {addPrimaryTag, email, pubName}) => {
             created_at: data.sent_at,
             updated_at: data.sent_at,
             published_at: data.sent_at,
-            tags: []
+            tags: [],
+            authors: []
         }
     };
 
@@ -174,18 +175,20 @@ const processPost = (data, {addPrimaryTag, email, pubName}) => {
     }
 
     post.data.tags.push({
-        url: 'migrator-added-tag', data: {name: '#revue'}
+        url: 'migrator-added-tag',
+        data: {
+            slug: 'hash-revue',
+            name: '#revue'
+        }
     });
 
-    if (email) {
-        post.data.author = {
-            url: `/author/${pubName}`,
-            data: {
-                email: email,
-                slug: pubName
-            }
-        };
-    }
+    post.data.authors.push({
+        url: `/author/${pubName}`,
+        data: {
+            email: (email) ? email : `${pubName}@example.com`,
+            slug: pubName
+        }
+    });
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
     post.data.html = processContent(data.html, post.url);
@@ -198,6 +201,10 @@ const processPosts = (posts, options) => {
 };
 
 const all = ({result, options}) => {
+    // We don't ask for the publication name, so we'll infer it from the user profile instead
+    // It's only used for author information
+    options.pubName = result.users.url.replace(/https:\/\/www\.getrevue\.co\/profile\/([a-zA-Z0-9-_]+)/, '$1');
+
     const output = {
         posts: processPosts(result.posts, options)
     };
