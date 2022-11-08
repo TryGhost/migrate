@@ -43,6 +43,10 @@ const setup = (sywac) => {
         defaultValue: null,
         desc: 'Provide an email for users e.g. john@mycompany.com to create a general author for the posts'
     });
+    sywac.boolean('--createAuthors', {
+        defaultValue: true,
+        desc: 'Create authors based on data from Revue'
+    });
     sywac.boolean('-I, --info', {
         defaultValue: false,
         desc: 'Show Revue API info only'

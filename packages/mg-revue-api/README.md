@@ -54,6 +54,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`-e` `--email`**
     - string - default: `null`
     - Provide an email for users e.g. test@example.com to create a general author for the posts
+- **`--createAuthors`**
+    - bool - default: `true`
+    - Create authors based on data from Revue
 - **`-I` `--info`**
     - bool - default: `false`
     - Show initalisation info only

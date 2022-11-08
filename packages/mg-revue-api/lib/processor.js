@@ -147,7 +147,7 @@ const processContent = (html, postUrl) => {
  *   ]
  * }
  */
-const processPost = (data, {addPrimaryTag, email, pubName}) => {
+const processPost = (data, {addPrimaryTag, email, pubName, createAuthors}) => {
     const slugRegexp = new RegExp(`https:\\/\\/www\\.getrevue\\.co\\/profile\\/[a-zA-Z0-9-_]+\\/issues\\/(\\S*)-${data.id}`);
 
     const post = {
@@ -182,13 +182,15 @@ const processPost = (data, {addPrimaryTag, email, pubName}) => {
         }
     });
 
-    post.data.authors.push({
-        url: `/author/${pubName}`,
-        data: {
-            email: (email) ? email : `${pubName}@example.com`,
-            slug: pubName
-        }
-    });
+    if (createAuthors) {
+        post.data.authors.push({
+            url: `/author/${pubName}`,
+            data: {
+                email: (email) ? email : `${pubName}@example.com`,
+                slug: pubName
+            }
+        });
+    }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
     post.data.html = processContent(data.html, post.url);

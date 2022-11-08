@@ -8,7 +8,8 @@ describe('Process', function () {
             result: fixture,
             options: {
                 addPrimaryTag: 'Newsletter',
-                email: 'person@example.com'
+                email: 'person@example.com',
+                createAuthors: true
             }
         };
         const response = processor.all(ctx);
@@ -57,7 +58,9 @@ describe('Process', function () {
     it('Can convert a post with embeds', function () {
         const ctx = {
             result: fixture,
-            options: {}
+            options: {
+                createAuthors: true
+            }
         };
         const response = processor.all(ctx);
         const posts = response.posts;
@@ -82,7 +85,9 @@ describe('Process', function () {
     it('Can remove UTM properties from link block headers', function () {
         const ctx = {
             result: fixture,
-            options: {}
+            options: {
+                createAuthors: true
+            }
         };
         const response = processor.all(ctx);
         const posts = response.posts;
@@ -100,5 +105,20 @@ describe('Process', function () {
         '</p>\n' +
         '<div style="clear: both;"></div>\n' +
         '<p></p><p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p><p></p>\n');
+    });
+
+    it('Can skip creating authors if desired', function () {
+        const ctx = {
+            result: fixture,
+            options: {
+                createAuthors: false
+            }
+        };
+        const response = processor.all(ctx);
+        const posts = response.posts;
+
+        const post = posts[0];
+
+        expect(post.data.authors).toBeArrayOfSize(0);
     });
 });
