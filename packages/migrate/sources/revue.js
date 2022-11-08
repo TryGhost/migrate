@@ -199,7 +199,7 @@ const getInfoTaskList = (options) => {
  */
 const getFullTaskList = (options) => {
     return [
-        this.initialize(options),
+        initialize(options),
         {
             title: 'Fetch Content from Revue API',
             task: async (ctx) => {
@@ -342,9 +342,9 @@ const getTaskRunner = (options) => {
     let tasks = [];
 
     if (options.info) {
-        tasks = this.getInfoTaskList(options);
+        tasks = getInfoTaskList(options);
     } else {
-        tasks = this.getFullTaskList(options);
+        tasks = getFullTaskList(options);
     }
 
     // Configure a new Listr task manager, we can use different renderers for different configs
