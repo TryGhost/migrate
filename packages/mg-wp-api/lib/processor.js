@@ -219,6 +219,12 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         }
     }
 
+    if (options.removeSelectors) {
+        $html(options.removeSelectors).each((i, el) => {
+            $(el).remove();
+        });
+    }
+
     // Handle twitter embeds
     $html('p > script[src="https://platform.twitter.com/widgets.js"]').remove();
 

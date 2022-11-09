@@ -88,6 +88,10 @@ const setup = (sywac) => {
         defaultValue: null,
         desc: 'Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`'
     });
+    sywac.string('--removeSelectors', {
+        defaultValue: null,
+        desc: 'Pass in a string of CSS selectors for elements that will be removed, e.g. \'.ads, script[src*="adnetwork.com"]\''
+    });
     sywac.boolean('--trustSelfSignedCert', {
         defaultValue: false,
         desc: 'Trust self-signed certificates (such as for local installs)'

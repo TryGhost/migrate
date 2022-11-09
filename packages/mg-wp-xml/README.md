@@ -60,6 +60,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--fallBackHTMLCard`**
     - bool - default: `false`
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
+- **`--removeSelectors`** 
+    - `Pass in a string of CSS selectors for elements that will be removed, e.g. '.ads, script[src*="adnetwork.com"]'`
+    - string - default: `null`
 - **`--cache`** 
     - Persist local cache after migration is complete (Only if `--zip` is `true`)
     - bool - default: `true`

@@ -349,6 +349,16 @@ describe('Process WordPress HTML', function () {
 
         expect(processed).toEqual('<!--kg-card-begin: html--><figure class="wp-block-audio"><audio controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay loop style="width: 100%;"></audio><figcaption>My looped autoplay audio file</figcaption></figure><!--kg-card-end: html-->');
     });
+
+    test('Can remove elements by CSS selector', async function () {
+        const html = `<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sagittis vel purus sed placerat.</p><div class="ads"><img src="#" /></div><p>Proin est justo, mollis non turpis et, suscipit consequat orci.</p><script src="https://addnetwork.example.com"></script>`;
+        let options = {
+            removeSelectors: '.ads, script[src*="https://addnetwork.example.com"]'
+        };
+        const processed = await processor.processContent({html, options});
+
+        expect(processed).toEqual('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sagittis vel purus sed placerat.</p><p>Proin est justo, mollis non turpis et, suscipit consequat orci.</p>');
+    });
 });
 
 describe('Process shortcodes', function () {

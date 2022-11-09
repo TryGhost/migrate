@@ -56,6 +56,10 @@ const setup = (sywac) => {
         defaultValue: false,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
+    sywac.string('--removeSelectors', {
+        defaultValue: null,
+        desc: 'Pass in a string of CSS selectors for elements that will be removed, e.g. \'.ads, script[src*="adnetwork.com"]\''
+    });
     sywac.boolean('--cache', {
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
