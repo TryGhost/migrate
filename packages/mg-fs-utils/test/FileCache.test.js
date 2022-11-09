@@ -22,6 +22,15 @@ describe('writeImageFile', function () {
         transformStub.mockReset();
     });
 
+    it('Can use a custom specified cache directory', async function () {
+        let fileCache = new FileCache('test', {
+            tmpPath: '/Users/MyName/Desktop/Files'
+        });
+
+        expect(fileCache.tmpDirPath).toEqual('/Users/MyName/Desktop/Files');
+        expect(fileCache.cacheBaseDir).toEqual('/Users/MyName/Desktop/Files/mg');
+    });
+
     it('Writes one file if optimize is false', async function () {
         let fileCache = new FileCache('test');
 

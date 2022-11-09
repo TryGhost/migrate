@@ -165,7 +165,9 @@ const initialize = (options) => {
             };
 
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-            ctx.fileCache = new fsUtils.FileCache(`revue-${uuidv4()}`);
+            ctx.fileCache = new fsUtils.FileCache(`revue-${uuidv4()}`, {
+                tmpPath: options.tmpPath
+            });
             ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
             ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
                 sizeLimit: ctx.options.sizeLimit,
@@ -316,7 +318,8 @@ const getFullTaskList = (options) => {
                 // 10. Write a valid Ghost import zip
                 try {
                     let timer = Date.now();
-                    ctx.outputFile = await fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+                    const zipFinalPath = options.outputPath || process.cwd();
+                    ctx.outputFile = await fsUtils.zip.write(zipFinalPath, ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
                     ctx.errors.push(error);

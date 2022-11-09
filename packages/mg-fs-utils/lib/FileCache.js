@@ -13,6 +13,8 @@ const knownImageExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', 
 
 class FileCache {
     constructor(cacheName, options = {}) {
+        this.tmpPath = options.tmpPath || false;
+
         this.originalName = cacheName;
         this.options = Object.assign({contentDir: true}, options);
 
@@ -25,8 +27,13 @@ class FileCache {
         }
     }
 
+    // This will be the path specified by `--tmpPath` if set. If not, it'll use a hidden tmp dir
+    get tmpDirPath() {
+        return this.tmpPath || os.tmpdir();
+    }
+
     get cacheBaseDir() {
-        return path.join(os.tmpdir(), basePath);
+        return path.join(this.tmpDirPath, basePath);
     }
 
     get cacheKey() {
@@ -54,7 +61,7 @@ class FileCache {
      */
     get cacheDir() {
         if (!this._cacheDir) {
-            this._cacheDir = path.join(os.tmpdir(), basePath, this.cacheKey);
+            this._cacheDir = path.join(this.tmpDirPath, basePath, this.cacheKey);
             fs.mkdirpSync(path.join(this.tmpDir));
 
             // don't create the content directory when migrating members
