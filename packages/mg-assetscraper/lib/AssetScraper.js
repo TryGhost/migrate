@@ -1022,8 +1022,6 @@ class AssetScraper {
                 } else {
                     ctx = update;
                 }
-
-                ctx.errors.push(...this.oversizedAssets());
             }
         });
 
