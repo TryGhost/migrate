@@ -662,10 +662,8 @@ class AssetScraper {
                         newCache.skip = true;
                         newCache.skipReason = (error && error.code) ? error.code : 'Undefined error';
                         this.AssetCache.add(newCache);
-                        // Silently fail unless in verbose mode, we don't need ti catch these
-                        if (ctx.options.verbose) {
-                            ctx.errors.push(`Could not get ${item.newRemote}`);
-                        }
+
+                        ctx.logger.debug({message: 'Failed to fetch asset', error});
                     }
                 }
             });
@@ -719,8 +717,7 @@ class AssetScraper {
 
             return response;
         } catch (error) {
-            let fetchError = ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error});
-            ctx.errors.push(fetchError);
+            ctx.logger.error({message: 'Failed to download asset', error});
         }
     }
 
@@ -741,8 +738,7 @@ class AssetScraper {
                 fileData
             };
         } catch (error) {
-            let fetchError = ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error});
-            ctx.errors.push(fetchError);
+            ctx.logger.error({message: 'Failed to get data from file buffer', error});
         }
     }
 
@@ -882,8 +878,7 @@ class AssetScraper {
                             this.AssetCache.add(item);
                         }
                     } catch (error) {
-                        let fetchError = ScrapeError({src, code: error.code, statusCode: error.statusCode, originalError: error});
-                        ctx.errors.push(fetchError);
+                        ctx.logger.error({message: 'Failed to save image', error});
                     }
                 }
             });
