@@ -88,7 +88,7 @@ const run = async (argv) => {
     const logger = new GhostLogger({
         domain: argv.cacheName || 'revue-migration', // This can be unique per migration
         mode: 'long',
-        transports: ['stdout', 'file'],
+        transports: (argv.verbose) ? ['stdout', 'file'] : ['file'],
         path: join(__dirname, '../logs')
     });
 
