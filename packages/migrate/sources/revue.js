@@ -474,8 +474,7 @@ const getTaskRunner = (options, logger) => {
     }
 
     // Configure a new Listr task manager, we can use different renderers for different configs
-    // return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
-    return makeTaskRunner(tasks, Object.assign({renderer: 'silent', topLevel: true}, options));
+    return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
 };
 
 export default {
