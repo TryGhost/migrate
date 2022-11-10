@@ -25,6 +25,10 @@ const fullRenderer = (tasks, options, level = 0) => {
     let output = [];
 
     for (const task of tasks) {
+        if (!task.title) {
+            task.title = chalk.dim('[silent task]');
+        }
+
         if (!task.isEnabled()) {
             continue;
         }
@@ -57,6 +61,10 @@ const summaryRenderer = (tasks, options, level = 0) => {
     let states = {complete: [], failed: [], skipped: [], disabled: []};
 
     tasks.forEach((task, index) => {
+        if (!task.title) {
+            task.title = chalk.dim('[silent task]');
+        }
+
         if (task.hasFailed()) {
             states.failed.push(task);
 
