@@ -28,10 +28,8 @@ or
 To run a Ghost API migration, the required command is:
 
 ```sh
-migrate revue <pubName> <API token>
+migrate revue <API token>
 ```
-
-* The `pubName` value is the publication or user name. It's the last part of the profile URL, e. g. https://www.getrevue.co/profile/**`<pubName>`**
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
