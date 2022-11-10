@@ -328,12 +328,12 @@ describe('AssetScraper', function () {
     test('Will replace asset references with new URLs', async function () {
         const assetScraper = new AssetScraper(mockFileCache);
 
-        let mobiledocObject = "{\"version\":\"0.3.1\",\"atoms\":[],\"cards\":[[\"image\",{\"src\":\"__GHOST_URL__/content/images/2022/09/image-1.jpg\",\"width\":1052,\"height\":804,\"caption\":\"A sunset photo\"}],[\"image\",{\"src\":\"https://images.unsplash.com/photo.jpg\",\"width\":5472,\"height\":3648,\"caption\":\"Photo by <a href=\\\"https://unsplash.com/@jonathanborba?utm_source=ghost&utm_medium=referral&utm_campaign=api-credit\\\">Jonathan Borba</a> / <a href=\\\"https://unsplash.com/?utm_source=ghost&utm_medium=referral&utm_campaign=api-credit\\\">Unsplash</a>\",\"alt\":\"\"}],[\"html\",{\"html\":\"<div class=\\\"photo\\\"><img src=\\\"__GHOST_URL__/content/images/2022/09/image-2.jpg\\\" /></div>\"}],[\"markdown\",{\"markdown\":\"![Last sunset](https://example.com/wp-content/uploads/2022/09/image-3.jpg?fit=900%2C599&ssl=1)![Last sunset](https://example.com/wp-content/uploads/2022/09/image-4.jpg?fit=900%2C599&ssl=1)\"}]],\"markups\":[],\"sections\":[[10,0],[1,\"p\",[[0,[],0,\"Test content\"]]],[10,1],[10,2],[1,\"p\",[[0,[],0,\"More test content\"]]],[10,3],[1,\"p\",[]]],\"ghostVersion\":\"4.0\"}"; //eslint-disable-line quotes
+        let mobiledocObject = "{\"version\":\"0.3.1\",\"atoms\":[],\"cards\":[[\"image\",{\"src\":\"__GHOST_URL__/content/images/2022/09/image-1.jpg\",\"width\":1052,\"height\":804,\"caption\":\"A sunset photo\"}],[\"image\",{\"src\":\"https://images.unsplash.com/photo.jpg\",\"width\":5472,\"height\":3648,\"caption\":\"Photo by <a href=\\\"https://unsplash.com/@jonathanborba?utm_source=ghost&utm_medium=referral&utm_campaign=api-credit\\\">Jonathan Borba</a> / <a href=\\\"https://unsplash.com/?utm_source=ghost&utm_medium=referral&utm_campaign=api-credit\\\">Unsplash</a>\",\"alt\":\"\"}],[\"html\",{\"html\":\"<div class=\\\"photo\\\"><img src=\\\"__GHOST_URL__/content/images/2022/09/image-2.jpg\\\" /></div>\"}],[\"markdown\",{\"markdown\":\"![Last sunset](https://example.com/wp-content/uploads/2022/09/image-3.jpg?fit=900%2C599&ssl=1)![Last sunset](https://i0.wp.com/example.com/wp-content/uploads/2021/12/sunset.jpg?resize=750%2C500)\"}]],\"markups\":[],\"sections\":[[10,0],[1,\"p\",[[0,[],0,\"Test content\"]]],[10,1],[10,2],[1,\"p\",[[0,[],0,\"More test content\"]]],[10,3],[1,\"p\",[]]],\"ghostVersion\":\"4.0\"}"; //eslint-disable-line quotes
 
         assetScraper._initialValue = mobiledocObject;
         assetScraper.findInMobiledoc(mobiledocObject);
 
-        assetScraper.AssetCache.load([
+        let assets = [
             {
                 remote: '__GHOST_URL__/content/images/2022/09/image-1.jpg',
                 newRemote: '__GHOST_URL__/content/images/2022/09/image-1.jpg',
@@ -368,17 +368,20 @@ describe('AssetScraper', function () {
                 newLocal: '/content/images/2022/09/image-3.jpg'
             },
             {
-                remote: 'https://example.com/wp-content/uploads/2022/09/image-4.jpg?fit=900%2C599&ssl=1',
-                newRemote: 'https://example.com/wp-content/uploads/2022/09/image-4.jpg?fit=900%2C599&ssl=1',
+                remote: 'https://i0.wp.com/example.com/wp-content/uploads/2021/12/sunset.jpg?resize=750%2C500',
+                newRemote: 'https://i0.wp.com/example.com/wp-content/uploads/2021/12/sunset.jpg?resize=750%2C500',
                 data: {
                     type: 'image'
                 },
                 head: {
-                    contentType: 'image/png'
+                    contentType: 'image/jpg'
                 },
-                newLocal: '/content/images/2022/09/image-4.jpg'
+                newLocal: '/content/images/example.com/wp-content/uploads/2021/12/sunset.jpg'
             }
-        ]);
+        ];
+
+        assetScraper._foundAssets = assets;
+        assetScraper.AssetCache.load(assets);
 
         let downloadTasks = assetScraper.updateReferences();
         let doIt = makeTaskRunner(downloadTasks, {renderer: 'silent', concurrent: false, topLevel: false});
@@ -391,7 +394,7 @@ describe('AssetScraper', function () {
         expect(updatedJSON.cards[0][1].src).toEqual('/content/images/2022/09/image-1.jpg');
         expect(updatedJSON.cards[2][1].html).toInclude('src="/content/images/2022/09/image-2.jpg"');
         expect(updatedJSON.cards[3][1].markdown).toInclude('(/content/images/2022/09/image-3.jpg)');
-        expect(updatedJSON.cards[3][1].markdown).toInclude('(/content/images/2022/09/image-4.jpg)');
+        expect(updatedJSON.cards[3][1].markdown).toInclude('(/content/images/example.com/wp-content/uploads/2021/12/sunset.jpg)');
     });
 
     test('Will read image file type data from a buffer', async function () {

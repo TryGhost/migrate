@@ -7,7 +7,7 @@ import {parseSrcset} from 'srcset';
 import {fileTypeFromBuffer} from 'file-type';
 import MarkdownIt from 'markdown-it';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
-import replaceString from 'replace-string';
+import replaceAll from 'string.prototype.replaceall';
 import {AssetCache} from './AssetCache.js';
 
 // Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/shared/config/overrides.json
@@ -916,7 +916,8 @@ class AssetScraper {
                     }
                 },
                 task: async () => {
-                    this._fixedValues = replaceString(this._fixedValues, item.remote, foundItem.newLocal);
+                    let trimmedRemote = item.remote.trim();
+                    this._fixedValues = replaceAll(this._fixedValues, trimmedRemote, foundItem.newLocal);
 
                     // Add an artificial delay here so tasks are shown properly
                     await new Promise(r => setTimeout(r, 2)); // eslint-disable-line no-promise-executor-return
