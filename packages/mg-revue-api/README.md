@@ -68,7 +68,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 A more complex migration command could look like this:
 
 ```sh
-migrate revue <pubName> <API token> --email test@example.com --addPrimaryTag News
+migrate revue <API token> --email test@example.com --addPrimaryTag News
 ```
 
 This will get all posts, apply the tag 'News', and all posts will be by author test@example.com
@@ -88,7 +88,7 @@ Follow the instructions for the top-level repo.
 To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
 
 ```sh
-yarn dev revue <pubName> <API token>
+yarn dev revue <API token>
 ```
 
 
