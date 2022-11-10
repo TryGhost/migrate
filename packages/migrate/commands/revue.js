@@ -1,7 +1,12 @@
 import {inspect} from 'node:util';
+import {join} from 'node:path';
+import {URL} from 'node:url';
+import fs from 'node:fs';
 import {ui} from '@tryghost/pretty-cli';
 import {GhostLogger} from '@tryghost/logging';
 import revue from '../sources/revue.js';
+
+const __dirname = new URL('.', import.meta.url).pathname;
 
 // Internal ID in case we need one.
 const id = 'revue';
@@ -78,9 +83,13 @@ const setup = (sywac) => {
 const run = async (argv) => {
     let context = {errors: []};
 
+    const startMigrationTime = Date.now();
+
     const logger = new GhostLogger({
         domain: argv.cacheName || 'revue-migration', // This can be unique per migration
-        mode: 'long'
+        mode: 'long',
+        transports: ['stdout', 'file'],
+        path: join(__dirname, '../logs')
     });
 
     if (argv.verbose) {
@@ -99,11 +108,22 @@ const run = async (argv) => {
         }
 
         if (argv.verbose && context.result) {
-            ui.log.info('Done', inspect(context.result.data, false, 2));
+            logger.info({message: 'Migration finished', duration: Date.now() - startMigrationTime});
+            // ui.log.info('Done', inspect(context.result.data, false, 2));
+            ui.log.info('Done');
         }
     } catch (error) {
-        ui.log.info('Done with errors', context.errors);
+        logger.info({message: 'Migration finished but with errors', error, duration: Date.now() - startMigrationTime});
     }
+
+    // TODO: Filter both of these to only show errors & warnings that have happened in this specific run of the tools
+    // const errorLogPath = join(logger.path, `${logger.domain}_${logger.env}.error.log`);
+    // const errorLogData = fs.readFileSync(errorLogPath, {encoding: 'utf8'});
+    // ui.log(errorLogData);
+
+    // const logPath = join(logger.path, `${logger.domain}_${logger.env}.log`);
+    // const logData = fs.readFileSync(logPath, {encoding: 'utf8'});
+    // ui.log(logData);
 };
 
 export default {
