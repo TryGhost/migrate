@@ -1,5 +1,6 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
+import {GhostLogger} from '@tryghost/logging';
 import revue from '../sources/revue.js';
 
 // Internal ID in case we need one.
@@ -67,11 +68,20 @@ const setup = (sywac) => {
         defaultValue: null,
         desc: 'Specify the full path where the final zip file will be saved to (Defaults to CWD)'
     });
+    sywac.string('--cacheName', {
+        defaultValue: null,
+        desc: 'Provide a unique name for the cache directory (defaults to a UUID)'
+    });
 };
 
 // What to do when this command is executed
 const run = async (argv) => {
     let context = {errors: []};
+
+    const logger = new GhostLogger({
+        domain: argv.cacheName || 'revue-migration', // This can be unique per migration
+        mode: 'long'
+    });
 
     if (argv.verbose) {
         ui.log.info(`${argv.info ? 'Fetching info' : 'Migrating'} from Revue site`);
@@ -79,7 +89,7 @@ const run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = revue.getTaskRunner(argv);
+        let migrate = revue.getTaskRunner(argv, logger);
 
         // Run the migration
         await migrate.run(context);

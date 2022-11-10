@@ -151,11 +151,13 @@ const postProcessor = (scrapedData, data) => {
     return scrapedData;
 };
 
-const initialize = (options) => {
+const initialize = (options, logger) => {
+    logger.info({message: 'Initialize migration'});
     return {
         title: 'Initializing Workspace',
         task: (ctx, task) => {
             ctx.options = options;
+            ctx.logger = logger;
             ctx.allowScrape = {
                 all: ctx.options.scrape.includes('all'),
                 images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),
@@ -165,8 +167,8 @@ const initialize = (options) => {
             };
 
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-            ctx.fileCache = new fsUtils.FileCache(`revue-${uuidv4()}`, {
-                tmpPath: options.tmpPath
+            ctx.fileCache = new fsUtils.FileCache(`revue-${ctx.options.cacheName || uuidv4()}`, {
+                tmpPath: ctx.options.tmpPath
             });
             ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
             ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
@@ -200,13 +202,14 @@ const getInfoTaskList = (options) => {
  * @param {String} url
  * @param {Object} options
  */
-const getFullTaskList = (options) => {
+const getFullTaskList = (options, logger) => {
     return [
-        initialize(options),
+        initialize(options, logger),
         {
             title: 'Fetch Content from Revue API',
             task: async (ctx) => {
                 // 1. Read all content from the API
+                ctx.logger.info({message: 'Get content from Revue API'});
                 try {
                     let tasks = await revueAPI.fetch.tasks(options, ctx);
 
@@ -221,6 +224,7 @@ const getFullTaskList = (options) => {
             title: 'Process Revue API JSON',
             task: async (ctx) => {
                 // 2. Convert Revue API JSON into a format that the migrate tools understand
+                ctx.logger.info({message: 'Progress HTML content from Revue API'});
                 try {
                     ctx.result = revueAPI.process.all(ctx);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'revue-processed-data.json');
@@ -235,18 +239,25 @@ const getFullTaskList = (options) => {
             skip: ctx => !ctx.allowScrape.web,
             task: (ctx) => {
                 // 3. Pass the results through the web scraper to get any missing data
+                ctx.logger.info({message: '[START] Scrape meta data from posts on the Revue website'});
                 let tasks = ctx.webScraper.hydrate(ctx);
                 return makeTaskRunner(tasks, options);
+            }
+        },
+        {
+            task: (ctx) => {
+                ctx.logger.info({message: '[FINISH] Scrape meta data from posts on the Revue website'});
             }
         },
         {
             title: 'Build Link Map',
             task: async (ctx) => {
                 // 4. Create a map of all known links for use later
+                ctx.logger.info({message: 'Build link map'});
                 try {
                     ctx.linkFixer.buildMap(ctx);
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to build link map', error});
                     throw error;
                 }
             }
@@ -255,10 +266,11 @@ const getFullTaskList = (options) => {
             title: 'Format data as Ghost JSON',
             task: (ctx) => {
                 // 5. Format the data as a valid Ghost JSON file
+                ctx.logger.info({message: 'Convert object to Ghost JSON'});
                 try {
                     ctx.result = toGhostJSON(ctx.result, ctx.options);
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to convert object to Ghost JSON', error});
                     throw error;
                 }
             }
@@ -266,10 +278,12 @@ const getFullTaskList = (options) => {
         {
             title: 'Fetch images via AssetScraper',
             skip: (ctx) => {
+                ctx.logger.info({message: '[SKIPPED] Fetch remote image, media & file assets'});
                 return [ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false);
             },
             task: async (ctx) => {
                 // 6. Format the data as a valid Ghost JSON file
+                ctx.logger.info({message: '[START] Fetch remote image, media & file assets'});
                 let tasks = ctx.assetScraper.fetch(ctx);
                 let assetScraperOptions = JSON.parse(JSON.stringify(options)); // Clone the options object
                 assetScraperOptions.concurrent = false;
@@ -277,9 +291,15 @@ const getFullTaskList = (options) => {
             }
         },
         {
+            task: (ctx) => {
+                ctx.logger.info({message: '[FINISH] Fetch remote image, media & file assets'});
+            }
+        },
+        {
             title: 'Update links in content via LinkFixer',
             task: async (ctx, task) => {
                 // 7. Process the content looking for known links, and update them to new links
+                ctx.logger.info({message: 'Fix internal links'});
                 let tasks = ctx.linkFixer.fix(ctx, task);
                 return makeTaskRunner(tasks, options);
             }
@@ -289,11 +309,12 @@ const getFullTaskList = (options) => {
             title: 'Convert HTML -> MobileDoc',
             task: (ctx) => {
                 // 8. Convert post HTML -> MobileDoc
+                ctx.logger.info({message: 'Convert HTML to Mobiledoc'});
                 try {
                     let tasks = mgHtmlMobiledoc.convert(ctx);
                     return makeTaskRunner(tasks, options);
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to convert HTML to Mobiledoc', error});
                     throw error;
                 }
             }
@@ -302,57 +323,79 @@ const getFullTaskList = (options) => {
             title: 'Write Ghost import JSON File',
             task: async (ctx) => {
                 // 9. Write a valid Ghost import zip
+                ctx.logger.info({message: '[START] Create Ghost JSON file'});
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
                     await ctx.fileCache.writeErrorJSONFile(ctx.errors);
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to create Ghost JSON file', error});
                     throw error;
                 }
             }
         },
         {
+            task: (ctx) => {
+                ctx.logger.info({message: '[FINISH] Create Ghost JSON file'});
+            }
+        },
+        {
             title: 'Write Ghost import zip',
-            skip: () => !options.zip,
+            skip: (ctx) => {
+                ctx.logger.info({message: '[SKIPPED] Write ZIP file'});
+                return !options.zip;
+            },
             task: async (ctx, task) => {
                 // 10. Write a valid Ghost import zip
+                ctx.logger.info({message: '[START] Write ZIP file'});
                 try {
                     let timer = Date.now();
                     const zipFinalPath = options.outputPath || process.cwd();
                     ctx.outputFile = await fsUtils.zip.write(zipFinalPath, ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to write ZIP file', error});
                     throw error;
                 }
+            }
+        },
+        {
+            task: (ctx) => {
+                ctx.logger.info({message: '[FINISH] Write ZIP file'});
             }
         },
         {
             title: 'Clearing cached files',
             enabled: () => !options.cache && options.zip,
             task: async (ctx) => {
+                ctx.logger.info({message: '[START] Clearing up temporary cached files'});
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to clear temporary cached files', error});
                     throw error;
                 }
+            }
+        },
+        {
+            task: (ctx) => {
+                ctx.logger.info({message: '[FINISH] Clearing up temporary cached files'});
             }
         }
     ];
 };
 
-const getTaskRunner = (options) => {
+const getTaskRunner = (options, logger) => {
     let tasks = [];
 
     if (options.info) {
-        tasks = getInfoTaskList(options);
+        tasks = getInfoTaskList(options, logger);
     } else {
-        tasks = getFullTaskList(options);
+        tasks = getFullTaskList(options, logger);
     }
 
     // Configure a new Listr task manager, we can use different renderers for different configs
-    return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
+    // return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
+    return makeTaskRunner(tasks, Object.assign({renderer: 'silent', topLevel: true}, options));
 };
 
 export default {
