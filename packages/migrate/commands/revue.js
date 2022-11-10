@@ -1,10 +1,10 @@
 import {inspect} from 'node:util';
 import {join} from 'node:path';
 import {URL} from 'node:url';
-import fs from 'node:fs';
 import {ui} from '@tryghost/pretty-cli';
 import {GhostLogger} from '@tryghost/logging';
 import revue from '../sources/revue.js';
+import {showLogs} from '../lib/utilties/cli-log-display.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
@@ -107,23 +107,32 @@ const run = async (argv) => {
             ui.log.info(`Fetched ${context.info.totals.posts} posts.`);
         }
 
+        logger.info({
+            message: 'Migration finished',
+            duration: Date.now() - startMigrationTime
+        });
+
         if (argv.verbose && context.result) {
-            logger.info({message: 'Migration finished', duration: Date.now() - startMigrationTime});
-            // ui.log.info('Done', inspect(context.result.data, false, 2));
-            ui.log.info('Done');
+            ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
-        logger.info({message: 'Migration finished but with errors', error, duration: Date.now() - startMigrationTime});
+        logger.info({
+            message: 'Migration finished but with errors',
+            error,
+            duration: Date.now() - startMigrationTime
+        });
     }
 
-    // TODO: Filter both of these to only show errors & warnings that have happened in this specific run of the tools
-    // const errorLogPath = join(logger.path, `${logger.domain}_${logger.env}.error.log`);
-    // const errorLogData = fs.readFileSync(errorLogPath, {encoding: 'utf8'});
-    // ui.log(errorLogData);
+    logger.info({
+        message: 'Migration finished',
+        duration: Date.now() - startMigrationTime
+    });
 
-    // const logPath = join(logger.path, `${logger.domain}_${logger.env}.log`);
-    // const logData = fs.readFileSync(logPath, {encoding: 'utf8'});
-    // ui.log(logData);
+    const errorLogPath = join(logger.path, `${logger.domain}_${logger.env}.error.log`);
+    showLogs(errorLogPath, startMigrationTime);
+
+    const logPath = join(logger.path, `${logger.domain}_${logger.env}.log`);
+    showLogs(logPath, startMigrationTime);
 };
 
 export default {

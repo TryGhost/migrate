@@ -230,7 +230,7 @@ const getFullTaskList = (options, logger) => {
 
                     return makeTaskRunner(tasks, options);
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to fetch content from Revue API', error});
                     throw error;
                 }
             }
@@ -253,7 +253,7 @@ const getFullTaskList = (options, logger) => {
                     ctx.result = revueAPI.process.all(ctx);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'revue-processed-data.json');
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to process HTML from Revue', error});
                     throw error;
                 }
             }
