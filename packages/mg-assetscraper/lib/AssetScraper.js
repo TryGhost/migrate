@@ -633,7 +633,7 @@ class AssetScraper {
      * @param {Object} [ctx]
      * @returns {Array} The list of tasks for Listr to run
      */
-    applyFileTypes(ctx = {}) {
+    applyFileTypes() {
         // TODO: Add the ability to rate limit
         let tasks = [];
 
@@ -718,7 +718,7 @@ class AssetScraper {
      * @param {Object} [ctx] The global context
      * @return {Object} The response from the HTTP client
      */
-    async downloadFile(src, ctx = {}) {
+    async downloadFile(src) {
         try {
             const response = await got(src, {
                 responseType: 'buffer',
