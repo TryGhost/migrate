@@ -266,11 +266,7 @@ const getFullTaskList = (options, logger) => {
         },
         {
             title: 'Fetch missing metadata via WebScraper',
-            skip: (ctx) => {
-                if (!ctx.allowScrape.web) {
-                    return true;
-                }
-            },
+            skip: ctx => !ctx.allowScrape.web,
             task: (ctx) => {
                 // 3. Pass the results through the web scraper to get any missing data
                 ctx.timings.webScraper = Date.now();
@@ -419,11 +415,7 @@ const getFullTaskList = (options, logger) => {
         },
         {
             title: 'Write Ghost import zip',
-            skip: () => {
-                if (!options.zip) {
-                    return true;
-                }
-            },
+            skip: () => !options.zip,
             task: async (ctx, task) => {
                 // 10. Write a valid Ghost import zip
                 ctx.timings.writeZip = Date.now();
@@ -439,7 +431,7 @@ const getFullTaskList = (options, logger) => {
             }
         },
         {
-            enable: ctx => ctx.timings.writeZip,
+            skip: () => !options.zip,
             task: (ctx) => {
                 ctx.logger.info({
                     message: 'Write ZIP file',
@@ -461,7 +453,7 @@ const getFullTaskList = (options, logger) => {
             }
         },
         {
-            enable: ctx => ctx.timings.clearCache,
+            enabled: () => !options.cache && options.zip,
             task: (ctx) => {
                 ctx.logger.info({
                     message: 'Clearing up temporary cached files',
