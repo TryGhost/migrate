@@ -1,0 +1,175 @@
+{
+  "subscribers": [
+    {
+      "id": 1234561,
+      "list_id": 98765,
+      "email": "herroooo@revue.com",
+      "first_name": "herroooo",
+      "last_name": "",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 1234562,
+      "list_id": 98765,
+      "email": "testing@revues.com",
+      "first_name": "testing",
+      "last_name": "",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 1234563,
+      "list_id": 98765,
+      "email": "maguirec086@comm.ca",
+      "first_name": "maguirec",
+      "last_name": "",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 1234564,
+      "list_id": 98765,
+      "email": "tcowenaldkuf@gmu.edu",
+      "first_name": "tcowenal",
+      "last_name": "dkuf",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 1234565,
+      "list_id": 98765,
+      "email": "Bob.Something@advisers.co.uk",
+      "first_name": "Bob",
+      "last_name": "Something",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 1234566,
+      "list_id": 98765,
+      "email": "ömil@gmail.com",
+      "first_name": "ömil",
+      "last_name": "",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 1234567,
+      "list_id": 98765,
+      "email": "christine_blackling@smallpond.com",
+      "first_name": "christine",
+      "last_name": "blackling",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 1234568,
+      "list_id": 98765,
+      "email": "jill@example.com",
+      "first_name": "jill",
+      "last_name": "",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 1234569,
+      "list_id": 98765,
+      "email": "harry_potter@gmail.com",
+      "first_name": "harry",
+      "last_name": "potter",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 12345610,
+      "list_id": 98765,
+      "email": "albert.a.dumfield@gov.mt",
+      "first_name": "albert",
+      "last_name": "dumfield",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 12345611,
+      "list_id": 98765,
+      "email": "johnlholiday@gmail.com",
+      "first_name": "john",
+      "last_name": "holiday",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 12345612,
+      "list_id": 98765,
+      "email": "edwinjeans@gmail.com",
+      "first_name": "edwin",
+      "last_name": "jeans",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 12345613,
+      "list_id": 98765,
+      "email": "someNews@gmail.com",
+      "first_name": "some",
+      "last_name": "News",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 12345614,
+      "list_id": 98765,
+      "email": "nottimferris@gmail.com",
+      "first_name": "tim",
+      "last_name": "ferris",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 12345615,
+      "list_id": 98765,
+      "email": "e271828@pacobell.net",
+      "first_name": "e271828",
+      "last_name": "",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 12345616,
+      "list_id": 98765,
+      "email": "kirstygouda@gmail.com",
+      "first_name": "kirsty",
+      "last_name": "gouda",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 12345617,
+      "list_id": 98765,
+      "email": "albus_dumbledore@gmail.com",
+      "first_name": "",
+      "last_name": "dumbledore",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 12345618,
+      "list_id": 98765,
+      "email": "patrickstarfish@gmail.com",
+      "first_name": "patrick",
+      "last_name": "star",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 12345619,
+      "list_id": 98765,
+      "email": "rgdigest@gmail.com",
+      "first_name": "rgdigest",
+      "last_name": "",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 12345620,
+      "list_id": 98765,
+      "email": "elpaper@gmail.com",
+      "first_name": "elpaper",
+      "last_name": "",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    },
+    {
+      "id": 12345621,
+      "list_id": 98765,
+      "email": "maïbes@gmail.com",
+      "first_name": "maïbes",
+      "last_name": "",
+      "last_changed": "2022-01-27T11:04:25.312Z"
+    }
+  ],
+  "totals": {
+    "subscribers": 21
+  }
+}
