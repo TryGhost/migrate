@@ -1,7 +1,9 @@
+import {join} from 'path';
 import {parse} from 'csv-parse';
 import {parse as parseSync} from 'csv-parse/sync';
 import fs from 'fs-extra';
 import {isDate} from 'date-fns';
+import errors from '@tryghost/errors';
 
 /**
  * Parse a CSV file and make available as JSON
@@ -79,8 +81,24 @@ const jsonToCSV = (data, fields = Object.keys(data[0])) => {
     return csv;
 };
 
+const writeCSV = async (data, filePath, fileName) => {
+    // Ensure the directory we want to wite to exists
+    fs.ensureDirSync(filePath);
+
+    const outputPath = join(filePath, fileName || `${Date.now()}.csv`);
+
+    try {
+        await fs.outputFile(outputPath, data);
+    } catch (error) {
+        throw new errors.InternalServerError({message: 'Could not create CSV file', error});
+    }
+
+    return outputPath;
+};
+
 export default {
     parseCSV,
     parseString,
-    jsonToCSV
+    jsonToCSV,
+    writeCSV
 };
