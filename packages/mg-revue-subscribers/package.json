@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-revue-subscribers",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-revue-subscribers",
   "author": "Ghost Foundation",
   "license": "MIT",
