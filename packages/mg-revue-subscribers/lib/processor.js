@@ -4,6 +4,7 @@ const processSubscriber = (subscriber, options) => {
     let member = {
         email: subscriber.email,
         name: [subscriber.first_name, subscriber.last_name].join(' ').trim(),
+        created_at: subscriber.last_changed,
         labels: []
     };
 

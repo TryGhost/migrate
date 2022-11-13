@@ -14,10 +14,12 @@ describe('Process', function () {
 
         expect(subscribers[0].email).toEqual('herroooo@revue.com');
         expect(subscribers[0].name).toEqual('herroooo');
+        expect(subscribers[0].created_at).toEqual('2022-01-27T11:04:25.312Z');
         expect(subscribers[0].labels).toBeArrayOfSize(0);
 
         expect(subscribers[4].email).toEqual('Bob.Something@advisers.co.uk');
         expect(subscribers[4].name).toEqual('Bob Something');
+        expect(subscribers[4].created_at).toEqual('2022-01-27T11:04:25.312Z');
         expect(subscribers[4].labels).toBeArrayOfSize(0);
     });
 
