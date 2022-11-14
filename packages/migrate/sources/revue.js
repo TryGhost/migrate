@@ -9,6 +9,7 @@ import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import prettyMilliseconds from 'pretty-ms';
 import {v4 as uuidv4} from 'uuid';
 import $ from 'cheerio';
+import {readFileSync} from 'node:fs';
 
 const scrapeConfig = {
     posts: {
@@ -419,13 +420,28 @@ const getFullTaskList = (options, logger) => {
             task: async (ctx, task) => {
                 // 10. Write a valid Ghost import zip
                 ctx.timings.writeZip = Date.now();
+                const isStorage = (options?.outputStorage && typeof options.outputStorage === 'object') ?? false;
+
                 try {
                     let timer = Date.now();
                     const zipFinalPath = options.outputPath || process.cwd();
+                    // zip the file and save it temporarily
                     ctx.outputFile = await fsUtils.zip.write(zipFinalPath, ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+
+                    if (isStorage) {
+                        const storage = options.outputStorage;
+
+                        // read the file buffer
+                        const fileBuffer = await readFileSync(ctx.outputFile.path);
+                        // Upload the file to the storage
+                        await storage.upload({body: fileBuffer, fileName: ctx.fileCache.defaultZipFileName});
+                        // now that the file is uploaded to the storage, delete the local zip file
+                        await fsUtils.zip.deleteFile(ctx.outputFile.path);
+                    }
+
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to write ZIP file', error});
+                    ctx.logger.error({message: 'Failed to write and upload ZIP file', error});
                     throw error;
                 }
             }
