@@ -387,7 +387,13 @@ class AssetScraper {
      * findInMarkdown('<img src="" />');
      */
     findInHTML(html) {
-        let $ = cheerio.load(html);
+        // The two options here prevent URLs from being decoded, so they remain exactly as they're supposed to be
+        // Without this, `image.jpg?w=768&amp;ssl=1` gets turned into `image.jpg?w=768&ssl=1`
+        // But we don't want this, we need them to be untouched
+        let $ = cheerio.load(html, {
+            xmlMode: true,
+            decodeEntities: false
+        });
 
         $('a[href]').each((i, el) => {
             let $link = $(el);
