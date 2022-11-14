@@ -53,12 +53,22 @@ const run = async (argv) => {
 
     const startMigrationTime = Date.now();
 
-    const logger = new GhostLogger({
-        domain: argv.cacheName || 'revue_subscriber_migration', // This can be unique per migration
-        mode: 'long',
-        transports: (argv.verbose) ? ['stdout', 'file'] : ['file'],
-        path: join(process.cwd(), '/logs')
-    });
+    let logger;
+
+    // If testing, mock the logger to keep it quiet
+    if (process.env.NODE_ENV === 'test') {
+        logger = {
+            warn: () => {},
+            error: () => {}
+        };
+    } else {
+        logger = new GhostLogger({
+            domain: argv.cacheName || 'revue_migration', // This can be unique per migration
+            mode: 'long',
+            transports: (argv.verbose) ? ['stdout', 'file'] : ['file'],
+            path: join(process.cwd(), '/logs')
+        });
+    }
 
     if (argv.verbose) {
         ui.log.info(`${argv.info ? 'Fetching info' : 'Migrating'} from Revue site`);

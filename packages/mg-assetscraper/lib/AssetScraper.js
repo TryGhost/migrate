@@ -84,6 +84,14 @@ class AssetScraper {
             baseDomain: null
         }, options);
 
+        // If testing, mock the logger to keep it quiet
+        if (process.env.NODE_ENV === 'test') {
+            logger = {
+                warn: () => {},
+                error: () => {}
+            };
+        }
+
         this.logger = logger || new GhostLogger({
             domain: this.fileCache.cacheKey, // This can be unique per migration
             mode: 'long',
