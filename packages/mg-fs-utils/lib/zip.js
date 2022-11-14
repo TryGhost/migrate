@@ -1,6 +1,6 @@
 import {join} from 'node:path';
 import AdmZip from 'adm-zip';
-import {ensureDirSync} from 'fs-extra';
+import {ensureDirSync, remove, ensureFileSync} from 'fs-extra';
 import zip from '@tryghost/zip';
 import errors from '@tryghost/errors';
 
@@ -44,7 +44,7 @@ const read = (zipPath, callback) => {
 };
 
 const write = async (zipPath, contentFolder, fileName) => {
-    // Ensure the directory we want to wite to exists
+    // Ensure the directory we want to write to exists
     ensureDirSync(zipPath);
 
     const outputPath = join(zipPath, fileName || `ghost-import-${Date.now()}.zip`);
@@ -52,8 +52,15 @@ const write = async (zipPath, contentFolder, fileName) => {
     return await zip.compress(contentFolder, outputPath);
 };
 
+const deleteFile = async (fileToDelete) => {
+    ensureFileSync(fileToDelete);
+
+    return await remove(fileToDelete);
+};
+
 export default {
     read,
     write,
-    _private
+    _private,
+    deleteFile
 };

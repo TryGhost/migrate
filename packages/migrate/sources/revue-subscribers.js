@@ -2,6 +2,7 @@ import revueSubscribers from '@tryghost/mg-revue-subscribers';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {v4 as uuidv4} from 'uuid';
+import {readFileSync} from 'node:fs';
 
 const initialize = (options, logger) => {
     logger.info({message: 'Initialize migration'});
@@ -85,6 +86,7 @@ const getFullTaskList = (options, logger) => {
             task: async (ctx, task) => {
                 // 3. Write a valid Ghost import zip
                 ctx.timings.writeCsv = Date.now();
+                const isStorage = (options?.outputStorage && typeof options.outputStorage === 'object') ?? false;
 
                 try {
                     const csvFinalPath = options.outputPath || process.cwd();
@@ -92,6 +94,18 @@ const getFullTaskList = (options, logger) => {
                     ctx.outputFile = {
                         path: await fsUtils.csv.writeCSV(csvData, csvFinalPath, `revue-subscribers-${ctx.options.cacheName || uuidv4()}.csv`)
                     };
+
+                    if (isStorage) {
+                        const storage = options.outputStorage;
+
+                        // read the file buffer
+                        const fileBuffer = await readFileSync(ctx.outputFile.path);
+                        // Upload the file to the storage
+                        await storage.upload({body: fileBuffer, fileName: ctx.fileCache.defaultZipFileName});
+                        // now that the file is uploaded to the storage, delete the local zip file
+                        await fsUtils.zip.deleteFile(ctx.outputFile.path);
+                    }
+
                     task.output = `Successfully written zip to ${ctx.outputFile.path}`;
                 } catch (error) {
                     ctx.logger.error({message: 'Failed to write ZIP file', error});
