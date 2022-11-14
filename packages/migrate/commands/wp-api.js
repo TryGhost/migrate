@@ -1,9 +1,11 @@
-import path from 'node:path';
+import {join, extname} from 'node:path';
 import {inspect} from 'node:util';
 import fs from 'fs-extra';
-import wpAPISource from '../sources/wp-api.js';
+import {GhostLogger} from '@tryghost/logging';
 import {ui} from '@tryghost/pretty-cli';
 import xml2json from 'xml2json';
+import wpAPISource from '../sources/wp-api.js';
+import {showLogs} from '../lib/utilties/cli-log-display.js';
 
 // Internal ID in case we need one.
 const id = 'wp-api';
@@ -106,6 +108,15 @@ const setup = (sywac) => {
 const run = async (argv) => {
     let context = {errors: []};
 
+    const startMigrationTime = Date.now();
+
+    const logger = new GhostLogger({
+        domain: argv.cacheName || 'revue_migration', // This can be unique per migration
+        mode: 'long',
+        transports: (argv.verbose) ? ['stdout', 'file'] : ['file'],
+        path: join(process.cwd(), '/logs')
+    });
+
     if (argv.auth) {
         let auth = argv.auth.split(':');
 
@@ -119,7 +130,7 @@ const run = async (argv) => {
     }
 
     if (argv.users) {
-        const usersFileExt = path.extname(argv.users).replace('.', '').toLowerCase();
+        const usersFileExt = extname(argv.users).replace('.', '').toLowerCase();
 
         if (usersFileExt === 'json') {
             context.usersJSON = await fs.readJSON(argv.users);
@@ -158,7 +169,7 @@ const run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = wpAPISource.getTaskRunner(argv.url, argv);
+        let migrate = wpAPISource.getTaskRunner(argv.url, argv, logger);
 
         // Run the migration
         await migrate.run(context);
@@ -168,12 +179,27 @@ const run = async (argv) => {
             ui.log.info(`Batch info: ${context.info.totals.posts} posts, ${context.info.totals.pages} pages, ${batches} batches.`);
         }
 
+        logger.info({
+            message: 'Migration finished',
+            duration: Date.now() - startMigrationTime
+        });
+
         if (argv.verbose) {
             ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
-        ui.log.info('Done with errors', context.errors);
+        logger.info({
+            message: 'Migration finished but with errors',
+            error,
+            duration: Date.now() - startMigrationTime
+        });
     }
+
+    const errorLogPath = join(logger.path, `${logger.domain}_${logger.env}.error.log`);
+    showLogs(errorLogPath, startMigrationTime);
+
+    const logPath = join(logger.path, `${logger.domain}_${logger.env}.log`);
+    showLogs(logPath, startMigrationTime);
 };
 
 export default {
