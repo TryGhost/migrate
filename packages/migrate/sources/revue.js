@@ -238,7 +238,7 @@ const getFullTaskList = (options, logger) => {
         {
             task: (ctx) => {
                 ctx.logger.info({
-                    message: 'Get content from Revue API',
+                    message: 'Fetch Content from Revue API',
                     duration: Date.now() - ctx.timings.fetchApiContent
                 });
             }
@@ -252,7 +252,7 @@ const getFullTaskList = (options, logger) => {
                     ctx.result = revueAPI.process.all(ctx);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'revue-processed-data.json');
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to process HTML from Revue', error});
+                    ctx.logger.error({message: 'Failed to Process Revue API JSON', error});
                     throw error;
                 }
             }
@@ -260,7 +260,7 @@ const getFullTaskList = (options, logger) => {
         {
             task: (ctx) => {
                 ctx.logger.info({
-                    message: 'Progress HTML content from Revue API',
+                    message: 'Process Revue API JSON',
                     duration: Date.now() - ctx.timings.processContent
                 });
             }
@@ -279,7 +279,7 @@ const getFullTaskList = (options, logger) => {
             skip: ctx => !ctx.allowScrape.web,
             task: (ctx) => {
                 ctx.logger.info({
-                    message: 'Scrape meta data from posts on the Revue website',
+                    message: 'Fetch missing metadata via WebScraper',
                     duration: Date.now() - ctx.timings.webScraper
                 });
             }
@@ -300,7 +300,7 @@ const getFullTaskList = (options, logger) => {
         {
             task: (ctx) => {
                 ctx.logger.info({
-                    message: 'Build link map',
+                    message: 'Build Link Map',
                     duration: Date.now() - ctx.timings.buildLinkMap
                 });
             }
@@ -313,7 +313,7 @@ const getFullTaskList = (options, logger) => {
                 try {
                     ctx.result = toGhostJSON(ctx.result, ctx.options);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to convert object to Ghost JSON', error});
+                    ctx.logger.error({message: 'Failed to format data as Ghost JSON', error});
                     throw error;
                 }
             }
@@ -321,13 +321,13 @@ const getFullTaskList = (options, logger) => {
         {
             task: (ctx) => {
                 ctx.logger.info({
-                    message: 'Convert object to Ghost JSON',
+                    message: 'Format data as Ghost JSON',
                     duration: Date.now() - ctx.timings.formatDataAsGhost
                 });
             }
         },
         {
-            title: 'Fetch images via AssetScraper',
+            title: 'Fetch assets via AssetScraper',
             skip: (ctx) => {
                 if ([ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false)) {
                     return true;
@@ -343,11 +343,10 @@ const getFullTaskList = (options, logger) => {
             }
         },
         {
-            // enable: ctx => ctx.timings.assetScraper,
             skip: ctx => [ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false),
             task: (ctx) => {
                 ctx.logger.info({
-                    message: 'Fetch remote image, media & file assets',
+                    message: 'Fetch assets via AssetScraper',
                     duration: Date.now() - ctx.timings.assetScraper
                 });
             }
@@ -364,7 +363,7 @@ const getFullTaskList = (options, logger) => {
         {
             task: (ctx) => {
                 ctx.logger.info({
-                    message: 'Fix internal links',
+                    message: 'Update links in content via LinkFixer',
                     duration: Date.now() - ctx.timings.linkFixer
                 });
             }
@@ -379,7 +378,7 @@ const getFullTaskList = (options, logger) => {
                     let tasks = mgHtmlMobiledoc.convert(ctx);
                     return makeTaskRunner(tasks, options);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to convert HTML to Mobiledoc', error});
+                    ctx.logger.error({message: 'Failed to convert HTML -> MobileDoc', error});
                     throw error;
                 }
             }
@@ -387,7 +386,7 @@ const getFullTaskList = (options, logger) => {
         {
             task: (ctx) => {
                 ctx.logger.info({
-                    message: 'Convert HTML to Mobiledoc',
+                    message: 'Convert HTML -> MobileDoc',
                     duration: Date.now() - ctx.timings.htmlToMobiledoc
                 });
             }
@@ -399,9 +398,8 @@ const getFullTaskList = (options, logger) => {
                 ctx.timings.writeJSON = Date.now();
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
-                    await ctx.fileCache.writeErrorJSONFile(ctx.errors);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to create Ghost JSON file', error});
+                    ctx.logger.error({message: 'Failed to write Ghost import JSON File', error});
                     throw error;
                 }
             }
@@ -409,7 +407,7 @@ const getFullTaskList = (options, logger) => {
         {
             task: (ctx) => {
                 ctx.logger.info({
-                    message: 'Create Ghost JSON file',
+                    message: 'Write Ghost import JSON File',
                     duration: Date.now() - ctx.timings.writeJSON
                 });
             }
@@ -450,7 +448,7 @@ const getFullTaskList = (options, logger) => {
             skip: () => !options.zip,
             task: (ctx) => {
                 ctx.logger.info({
-                    message: 'Write ZIP file',
+                    message: 'Write Ghost import zip',
                     duration: Date.now() - ctx.timings.writeZip
                 });
             }
@@ -472,7 +470,7 @@ const getFullTaskList = (options, logger) => {
             enabled: () => !options.cache && options.zip,
             task: (ctx) => {
                 ctx.logger.info({
-                    message: 'Clearing up temporary cached files',
+                    message: 'Clearing cached files',
                     duration: Date.now() - ctx.timings.clearCache
                 });
             }

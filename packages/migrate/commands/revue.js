@@ -120,11 +120,6 @@ const run = async (argv) => {
         });
     }
 
-    logger.info({
-        message: 'Migration finished',
-        duration: Date.now() - startMigrationTime
-    });
-
     const errorLogPath = join(logger.path, `${logger.domain}_${logger.env}.error.log`);
     showLogs(errorLogPath, startMigrationTime);
 
