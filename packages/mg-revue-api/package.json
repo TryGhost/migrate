@@ -25,6 +25,7 @@
     "jest-extended": "3.1.0"
   },
   "dependencies": {
+    "@tryghost/errors": "1.2.18",
     "@tryghost/string": "^0.2.0",
     "cheerio": "0.22.0",
     "got": "11.8.5",

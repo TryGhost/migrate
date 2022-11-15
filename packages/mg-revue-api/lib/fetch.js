@@ -1,4 +1,26 @@
 import got from 'got';
+import errors from '@tryghost/errors';
+
+const validateToken = async ({apitoken}) => {
+    const APIURL = 'https://www.getrevue.co/api/v2/';
+    const requestOptions = {
+        prefixUrl: APIURL,
+        headers: {
+            authorization: `Token ${apitoken}`
+        },
+        responseType: 'json'
+    };
+
+    try {
+        await got('lists', requestOptions);
+        return true;
+    } catch (error) {
+        throw new errors.BadRequestError({
+            message: 'API token not is not authorized or invalid',
+            error
+        });
+    }
+};
 
 const discover = async ({apitoken}) => {
     const APIURL = 'https://www.getrevue.co/api/v2/';
@@ -51,6 +73,7 @@ const tasks = async (options) => {
 };
 
 export default {
+    validateToken,
     discover,
     tasks
 };
