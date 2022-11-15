@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/migrate",
-  "version": "0.28.10",
+  "version": "0.28.11",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/migrate",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -44,8 +44,8 @@
     "@tryghost/mg-json": "^0.9.4",
     "@tryghost/mg-linkfixer": "^0.4.5",
     "@tryghost/mg-medium-export": "^0.13.3",
-    "@tryghost/mg-revue-api": "^0.4.1",
-    "@tryghost/mg-revue-subscribers": "^0.1.2",
+    "@tryghost/mg-revue-api": "^0.4.2",
+    "@tryghost/mg-revue-subscribers": "^0.1.3",
     "@tryghost/mg-squarespace-xml": "^0.2.4",
     "@tryghost/mg-substack": "^0.2.8",
     "@tryghost/mg-substack-members-csv": "^0.3.4",
