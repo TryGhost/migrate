@@ -91,8 +91,9 @@ const getFullTaskList = (options, logger) => {
                 try {
                     const csvFinalPath = options.outputPath || process.cwd();
                     const csvData = fsUtils.csv.jsonToCSV(ctx.result.subscribers);
+                    const fileName = `revue-subscribers-${ctx.options.cacheName || uuidv4()}.csv`;
                     ctx.outputFile = {
-                        path: await fsUtils.csv.writeCSV(csvData, csvFinalPath, `revue-subscribers-${ctx.options.cacheName || uuidv4()}.csv`)
+                        path: await fsUtils.csv.writeCSV(csvData, csvFinalPath, fileName)
                     };
 
                     if (isStorage) {
@@ -101,7 +102,7 @@ const getFullTaskList = (options, logger) => {
                         // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
                         // Upload the file to the storage
-                        await storage.upload({body: fileBuffer, fileName: ctx.fileCache.defaultZipFileName});
+                        await storage.upload({body: fileBuffer, fileName});
                         // now that the file is uploaded to the storage, delete the local zip file
                         await fsUtils.zip.deleteFile(ctx.outputFile.path);
                     }
