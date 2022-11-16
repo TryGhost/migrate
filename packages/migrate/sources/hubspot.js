@@ -38,7 +38,7 @@ const initialize = (options) => {
                 allowImages: ctx.allowScrape.images,
                 allowMedia: ctx.allowScrape.media,
                 allowFiles: ctx.allowScrape.files
-            });
+            }, ctx);
 
             ctx.linkFixer = new MgLinkFixer();
 

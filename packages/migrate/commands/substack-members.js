@@ -89,7 +89,10 @@ const parseCompGift = (val) => {
 
 // What to do when this command is executed
 const run = async (argv) => {
-    let context = {errors: []};
+    let context = {
+        errors: [],
+        warnings: []
+    };
 
     if (argv.subs) {
         argv.hasSubscribers = true;
@@ -132,6 +135,10 @@ const run = async (argv) => {
         context.result.skip.forEach((skipped) => {
             ui.log.warn(`Skipped import: ${skipped.info}`);
         });
+    }
+
+    if (context.warnings.length > 0) {
+        ui.log.warn(context.warnings);
     }
 };
 

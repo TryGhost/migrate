@@ -177,7 +177,7 @@ const initialize = (options, logger) => {
                 allowImages: ctx.allowScrape.images,
                 allowMedia: ctx.allowScrape.media,
                 allowFiles: ctx.allowScrape.files
-            }, ctx.logger);
+            }, ctx);
 
             ctx.linkFixer = new MgLinkFixer();
 

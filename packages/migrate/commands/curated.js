@@ -50,7 +50,10 @@ const setup = (sywac) => {
 
 // What to do when this command is executed
 const run = async (argv) => {
-    let context = {errors: []};
+    let context = {
+        errors: [],
+        warnings: []
+    };
 
     // Remove trailing slash from URL
     if (argv.url.endsWith('/')) {
@@ -73,6 +76,10 @@ const run = async (argv) => {
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);
+    }
+
+    if (context.warnings.length > 0) {
+        ui.log.warn(context.warnings);
     }
 };
 

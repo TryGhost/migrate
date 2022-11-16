@@ -538,7 +538,7 @@ describe('AssetScraper', function () {
         expect(sizeAllowed2).toBeTruthy();
         expect(sizeAllowed3).toBeTruthy();
 
-        expect(assetScraper.oversizedAssets()).toBeArrayOfSize(0);
+        expect(assetScraper.warnings).toBeArrayOfSize(0);
     });
 
     test('Will skip downloading large assets if a filesize is defined', function () {
@@ -554,7 +554,10 @@ describe('AssetScraper', function () {
         expect(sizeAllowed2).toBeFalsy();
         expect(sizeAllowed3).toBeTruthy();
 
-        expect(assetScraper.oversizedAssets()).toBeArrayOfSize(2);
+        expect(assetScraper.warnings).toBeArrayOfSize(2);
+
+        expect(assetScraper.warnings[0].slug).toEqual('new-media');
+        expect(assetScraper.warnings[1].slug).toEqual('new-media');
     });
 
     test('Will convert sizeLimit unit from 0.5MB to bytes', function () {
@@ -562,7 +565,7 @@ describe('AssetScraper', function () {
             sizeLimit: 0.5 // 0.5 MB
         });
 
-        expect(assetScraper.defaultOptions.sizeLimit).toEqual(524288);
+        expect(assetScraper.defaultOptions.sizeLimit).toEqual(500000);
     });
 
     test('Will convert sizeLimit unit from 1MB to bytes', function () {
@@ -570,7 +573,7 @@ describe('AssetScraper', function () {
             sizeLimit: 1 // 1 MB
         });
 
-        expect(assetScraper.defaultOptions.sizeLimit).toEqual(1048576);
+        expect(assetScraper.defaultOptions.sizeLimit).toEqual(1000000);
     });
 
     test('Will convert sizeLimit unit from 250MB to bytes', function () {
@@ -578,7 +581,7 @@ describe('AssetScraper', function () {
             sizeLimit: 250 // 250 MB
         });
 
-        expect(assetScraper.defaultOptions.sizeLimit).toEqual(262144000);
+        expect(assetScraper.defaultOptions.sizeLimit).toEqual(250000000);
     });
 });
 

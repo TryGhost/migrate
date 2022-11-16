@@ -6,6 +6,7 @@ import got from 'got';
 import {parseSrcset} from 'srcset';
 import {fileTypeFromBuffer} from 'file-type';
 import MarkdownIt from 'markdown-it';
+import prettyBytes from 'pretty-bytes';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import replaceAll from 'string.prototype.replaceall';
 import {GhostLogger} from '@tryghost/logging';
@@ -18,31 +19,6 @@ const knownImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'i
 const knownMediaTypes = ['video/mp4', 'video/webm', 'video/ogg', 'audio/mpeg', 'audio/mp3', 'audio/vnd.wav', 'audio/wave', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/x-m4a'];
 const knownFileTypes = ['application/pdf', 'application/json', 'application/ld+json', 'application/vnd.oasis.opendocument.presentation', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.text', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/rtf', 'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/xml', 'application/atom+xml'];
 const knownTypes = [...knownImageTypes, ...knownMediaTypes, ...knownFileTypes];
-
-const ScrapeError = ({src, code, statusCode, originalError = {}, property = null, context = null}) => {
-    let error = new errors.InternalServerError({message: `Unable to scrape URI ${src}`});
-
-    error.errorType = 'ScrapeError';
-    error.scraper = 'Asset';
-    error.src = src;
-    error.code = code;
-    if (property) {
-        error.property = property;
-    }
-    if (context) {
-        error.context = context;
-    }
-    if (statusCode) {
-        error.statusCode = statusCode;
-    }
-    if (originalError.body) {
-        // We really don't need the buffer for our error file
-        delete originalError.body;
-    }
-    error.originalError = originalError;
-
-    return error;
-};
 
 const isValidUrlString = (string) => {
     try {
@@ -71,9 +47,9 @@ class AssetScraper {
      * @param {Bool} options.allowMedia
      * @param {Bool} options.allowFiles
      * @param {String} options.baseDomain
-     * @param {Logging} logger @tryghost/logging instance
+     * @param {Object} ctx Task runner context
      */
-    constructor(fileCache, options, logger = false) {
+    constructor(fileCache, options, ctx = {}) {
         this.fileCache = fileCache;
         this.defaultOptions = Object.assign({
             optimize: true,
@@ -84,15 +60,17 @@ class AssetScraper {
             baseDomain: null
         }, options);
 
-        // If testing, mock the logger to keep it quiet
+        this.warnings = (ctx.warnings) ? ctx.warnings : [];
+
+        // If testing, mock the logging to keep it quiet
         if (process.env.NODE_ENV === 'test') {
-            logger = {
+            ctx.logging = {
                 warn: () => {},
                 error: () => {}
             };
         }
 
-        this.logger = logger || new GhostLogger({
+        this.logging = ctx.logging || new GhostLogger({
             domain: this.fileCache.cacheKey, // This can be unique per migration
             mode: 'long',
             transports: ['stdout', 'file'],
@@ -101,7 +79,7 @@ class AssetScraper {
 
         // Convert MB to bytes for file size comparison
         if (this.defaultOptions.sizeLimit) {
-            this.defaultOptions.sizeLimit = (this.defaultOptions.sizeLimit * 1048576);
+            this.defaultOptions.sizeLimit = (this.defaultOptions.sizeLimit * 1000000);
         }
 
         // Assets will be found in this value
@@ -109,9 +87,6 @@ class AssetScraper {
 
         // Assets found in `this._initialValue` will be stored here
         this._foundAssets = [];
-
-        // Assets that are too big will be pushed to this
-        this._oversizedAssetErrors = [];
 
         // Like `this._initialValue`, but will be updated with locally-stored asset paths
         this._fixedValues = null;
@@ -293,14 +268,6 @@ class AssetScraper {
     }
 
     /**
-     * Return the list of oversizes asset objects
-     * @returns {Array}
-     */
-    oversizedAssets() {
-        return this._oversizedAssetErrors;
-    }
-
-    /**
      * Add a domain to the blocked list
      * @param {String|Array} domain The domains to be blocked
      *
@@ -346,14 +313,15 @@ class AssetScraper {
      * @example
      * findInMarkdown('![]()');
      */
-    findInMarkdown(string) {
-        const markdownTokenLooper = (tokens) => {
+    findInMarkdown(string, postContext) {
+        const markdownTokenLooper = (tokens, postContext) => { // eslint-disable-line no-shadow
             tokens.forEach((token) => {
                 if (token.type === 'image' && token.attrs) {
                     token.attrs.forEach((item) => {
                         if (item[0] === 'src') {
                             this.addRawValue({
-                                remote: item[1]
+                                remote: item[1],
+                                postContext
                             });
                         }
                     });
@@ -361,16 +329,17 @@ class AssetScraper {
                     token.attrs.forEach((item) => {
                         if (item[0] === 'href') {
                             this.addRawValue({
-                                remote: item[1]
+                                remote: item[1],
+                                postContext
                             });
                         }
                     });
                 } else if (token.type === 'html_inline') {
-                    this.findInHTML(token.content);
+                    this.findInHTML(token.content, postContext);
                 }
 
                 if (token.children) {
-                    markdownTokenLooper(token.children);
+                    markdownTokenLooper(token.children, postContext);
                 }
             });
         };
@@ -381,7 +350,7 @@ class AssetScraper {
 
         try {
             const mdTokens = md.parse(string);
-            markdownTokenLooper(mdTokens);
+            markdownTokenLooper(mdTokens, postContext);
         } catch (error) {
             throw new errors.InternalServerError({message: 'Failed to parse Markdown string'});
         }
@@ -394,7 +363,7 @@ class AssetScraper {
      * @example
      * findInMarkdown('<img src="" />');
      */
-    findInHTML(html) {
+    findInHTML(html, postContext) {
         // The two options here prevent URLs from being decoded, so they remain exactly as they're supposed to be
         // Without this, `image.jpg?w=768&amp;ssl=1` gets turned into `image.jpg?w=768&ssl=1`
         // But we don't want this, we need them to be untouched
@@ -408,7 +377,8 @@ class AssetScraper {
             let href = $link.attr('href') || false;
 
             this.addRawValue({
-                remote: href
+                remote: href,
+                postContext
             });
         });
 
@@ -423,7 +393,8 @@ class AssetScraper {
             let src = $image.attr(type);
 
             this.addRawValue({
-                remote: src
+                remote: src,
+                postContext
             });
         });
 
@@ -434,7 +405,8 @@ class AssetScraper {
             if (srcsetParts) {
                 srcsetParts.forEach((item) => {
                     this.addRawValue({
-                        remote: item.url
+                        remote: item.url,
+                        postContext
                     });
                 });
             }
@@ -447,7 +419,8 @@ class AssetScraper {
                 let posterSrc = $video.attr('poster');
 
                 this.addRawValue({
-                    remote: posterSrc
+                    remote: posterSrc,
+                    postContext
                 });
             }
 
@@ -455,7 +428,8 @@ class AssetScraper {
                 let videoSrc = $video.attr('src');
 
                 this.addRawValue({
-                    remote: videoSrc
+                    remote: videoSrc,
+                    postContext
                 });
             }
         });
@@ -465,7 +439,8 @@ class AssetScraper {
                 let videoSrc = $(el).attr('src');
 
                 this.addRawValue({
-                    remote: videoSrc
+                    remote: videoSrc,
+                    postContext
                 });
             }
         });
@@ -475,7 +450,8 @@ class AssetScraper {
                 let audioSrc = $(el).attr('src');
 
                 this.addRawValue({
-                    remote: audioSrc
+                    remote: audioSrc,
+                    postContext
                 });
             }
         });
@@ -485,7 +461,8 @@ class AssetScraper {
                 let audioSrc = $(el).attr('src');
 
                 this.addRawValue({
-                    remote: audioSrc
+                    remote: audioSrc,
+                    postContext
                 });
             }
         });
@@ -498,7 +475,8 @@ class AssetScraper {
                 let src = match[1];
 
                 this.addRawValue({
-                    remote: src
+                    remote: src,
+                    postContext
                 });
             }
         });
@@ -511,7 +489,8 @@ class AssetScraper {
                 let src = match[1];
 
                 this.addRawValue({
-                    remote: src
+                    remote: src,
+                    postContext
                 });
             }
         });
@@ -525,30 +504,31 @@ class AssetScraper {
      * findInMarkdown('{""}');
      * findInMarkdown(mobiledocObject);
      */
-    findInMobiledoc(value) {
+    findInMobiledoc(value, postContext) {
         // Parse JSON if it's still a string
         const jsonData = (typeof value === 'string') ? JSON.parse(value) : value;
 
-        const processMobiledocImages = (object) => {
+        const processMobiledocImages = (object, postContext) => { // eslint-disable-line no-shadow
             for (let key in object) {
                 let objectValue = object[key];
                 if (typeof objectValue === 'object') {
-                    processMobiledocImages(objectValue);
+                    processMobiledocImages(objectValue, postContext);
                 } else {
                     if (this._simpleKeys.includes(key)) {
                         this.addRawValue({
-                            remote: objectValue
+                            remote: objectValue,
+                            postContext
                         });
                     } else if (object.markdown) {
-                        this.findInMarkdown(object.markdown);
+                        this.findInMarkdown(object.markdown, postContext);
                     } else if (object.html) {
-                        this.findInHTML(object.html);
+                        this.findInHTML(object.html, postContext);
                     }
                 }
             }
         };
 
-        processMobiledocImages(jsonData);
+        processMobiledocImages(jsonData, postContext);
     }
 
     /**
@@ -567,13 +547,19 @@ class AssetScraper {
             Object.keys(obj).forEach((key) => {
                 let value = obj[key];
 
+                const postContext = {
+                    title: obj.title || false,
+                    slug: obj.slug || false
+                };
+
                 // Settings gets special handling because it has key:value pairs
                 if (key === 'settings') {
                     value.forEach((item) => {
                         // If the key is a known pair, push it to the list
                         if (this._settingsKeys.includes(item.key)) {
                             this.addRawValue({
-                                remote: item.value
+                                remote: item.value,
+                                postContext
                             });
                         }
                     });
@@ -586,12 +572,13 @@ class AssetScraper {
                     // The value is a now a string, push it to the list
                     if (key && value && value.length > 0) {
                         if (key === 'mobiledoc') {
-                            this.findInMobiledoc(value);
+                            this.findInMobiledoc(value, postContext);
                         } else if (key === 'html') {
-                            this.findInHTML(value);
+                            this.findInHTML(value, postContext);
                         } else if (this._simpleKeys.includes(key)) {
                             this.addRawValue({
-                                remote: value
+                                remote: value,
+                                postContext
                             });
                         }
                     }
@@ -688,7 +675,7 @@ class AssetScraper {
                         newCache.skipReason = (error && error.code) ? error.code : 'Undefined error';
                         this.AssetCache.add(newCache);
 
-                        this.logger.debug({message: 'Failed to fetch asset', error});
+                        this.logging.debug({message: 'Failed to fetch asset', error});
                     }
                 }
             });
@@ -742,7 +729,7 @@ class AssetScraper {
 
             return response;
         } catch (error) {
-            this.logger.error({message: 'Failed to download asset', error});
+            this.logging.error({message: 'Failed to download asset', error});
         }
     }
 
@@ -763,7 +750,7 @@ class AssetScraper {
                 fileData
             };
         } catch (error) {
-            this.logger.error({message: 'Failed to get data from file buffer', error});
+            this.logging.error({message: 'Failed to get data from file buffer', error});
         }
     }
 
@@ -805,9 +792,15 @@ class AssetScraper {
     isWithinSizeLimit(obj) {
         if (this.defaultOptions.sizeLimit) {
             if (obj.head.contentLength > this.defaultOptions.sizeLimit) {
-                let sizeError = ScrapeError({src: obj.newRemote, code: 'Payload Too Large', statusCode: 413, property: obj, context: `File size is ${obj.head.contentLength} - Maximum specified is ${this.defaultOptions.sizeLimit}`});
-                this._oversizedAssetErrors.push(sizeError);
-                this.logger.warn({message: `File is larger than allowed ${obj.newRemote} (This bytes: ${obj.head.contentLength} / Max bytes: ${this.defaultOptions.sizeLimit})`});
+                this.warnings.push({
+                    message: `File is larger than allowed`,
+                    context: obj.newRemote,
+                    slug: obj.postContext?.slug || null,
+                    details: `This file size is ${prettyBytes(obj.head.contentLength)}, the maximum file size is ${prettyBytes(this.defaultOptions.sizeLimit)}`
+                });
+
+                this.logging.warn({message: `File is larger than allowed ${obj.newRemote} (This bytes: ${obj.head.contentLength} / Max bytes: ${this.defaultOptions.sizeLimit})`});
+
                 return false;
             }
         }
@@ -904,7 +897,7 @@ class AssetScraper {
                             this.AssetCache.add(item);
                         }
                     } catch (error) {
-                        this.logger.error({message: 'Failed to save image', error});
+                        this.logging.error({message: 'Failed to save image', error});
                     }
                 }
             });

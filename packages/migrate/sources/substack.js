@@ -189,7 +189,7 @@ const getTaskRunner = (pathToFile, options) => {
                     allowImages: ctx.allowScrape.images,
                     allowMedia: ctx.allowScrape.media,
                     allowFiles: ctx.allowScrape.files
-                });
+                }, ctx);
                 ctx.linkFixer = new MgLinkFixer();
 
                 task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;

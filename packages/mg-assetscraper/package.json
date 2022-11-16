@@ -36,6 +36,7 @@
     "got": "11.8.5",
     "listr": "0.14.3",
     "markdown-it": "13.0.1",
+    "pretty-bytes": "6.0.0",
     "srcset": "5.0.0",
     "string.prototype.replaceall": "1.0.7"
   }

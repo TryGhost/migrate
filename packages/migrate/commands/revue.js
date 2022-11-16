@@ -3,7 +3,6 @@ import {join} from 'node:path';
 import {ui} from '@tryghost/pretty-cli';
 import {GhostLogger} from '@tryghost/logging';
 import revue from '../sources/revue.js';
-import {showLogs} from '../lib/utilties/cli-log-display.js';
 
 // Internal ID in case we need one.
 const id = 'revue';
@@ -78,7 +77,10 @@ const setup = (sywac) => {
 
 // What to do when this command is executed
 const run = async (argv) => {
-    let context = {errors: []};
+    let context = {
+        errors: [],
+        warnings: []
+    };
 
     const startMigrationTime = Date.now();
 
@@ -94,7 +96,7 @@ const run = async (argv) => {
         logger = new GhostLogger({
             domain: argv.cacheName || 'revue_migration', // This can be unique per migration
             mode: 'long',
-            transports: (argv.verbose) ? ['stdout', 'file'] : ['file'],
+            transports: ['file'],
             path: join(process.cwd(), '/logs')
         });
     }
@@ -130,11 +132,9 @@ const run = async (argv) => {
         });
     }
 
-    const errorLogPath = join(logger.path, `${logger.domain}_${logger.env}.error.log`);
-    showLogs(errorLogPath, startMigrationTime);
-
-    const logPath = join(logger.path, `${logger.domain}_${logger.env}.log`);
-    showLogs(logPath, startMigrationTime);
+    if (context.warnings.length > 0) {
+        ui.log.warn(context.warnings);
+    }
 };
 
 export default {

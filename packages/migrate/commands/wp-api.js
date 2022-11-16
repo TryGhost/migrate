@@ -5,7 +5,6 @@ import {GhostLogger} from '@tryghost/logging';
 import {ui} from '@tryghost/pretty-cli';
 import xml2json from 'xml2json';
 import wpAPISource from '../sources/wp-api.js';
-import {showLogs} from '../lib/utilties/cli-log-display.js';
 
 // Internal ID in case we need one.
 const id = 'wp-api';
@@ -106,7 +105,10 @@ const setup = (sywac) => {
 
 // What to do when this command is executed
 const run = async (argv) => {
-    let context = {errors: []};
+    let context = {
+        errors: [],
+        warnings: []
+    };
 
     const startMigrationTime = Date.now();
 
@@ -205,11 +207,9 @@ const run = async (argv) => {
         });
     }
 
-    const errorLogPath = join(logger.path, `${logger.domain}_${logger.env}.error.log`);
-    showLogs(errorLogPath, startMigrationTime);
-
-    const logPath = join(logger.path, `${logger.domain}_${logger.env}.log`);
-    showLogs(logPath, startMigrationTime);
+    if (context.warnings.length > 0) {
+        ui.log.warn(context.warnings);
+    }
 };
 
 export default {

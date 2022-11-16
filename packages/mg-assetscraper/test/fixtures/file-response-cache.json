@@ -11,7 +11,11 @@
             "contentType": "image/png",
             "contentLength": 104857600
         },
-        "newLocal": "/content/images/2022/09/screenshot-40-54-21-02-09-2022.png"
+        "newLocal": "/content/images/2022/09/screenshot-40-54-21-02-09-2022.png",
+        "postContext": {
+          "title": "New Media",
+          "slug": "new-media"
+        }
     },
     {
         "remote": "__GHOST_URL__/content/images/2022/09/screenshot-40-54-21-02-09-2023.png",
@@ -25,7 +29,11 @@
             "contentType": "image/png",
             "contentLength": 10485760
         },
-        "newLocal": "/content/images/2022/09/screenshot-40-54-21-02-09-2023.png"
+        "newLocal": "/content/images/2022/09/screenshot-40-54-21-02-09-2023.png",
+        "postContext": {
+          "title": "New Media",
+          "slug": "new-media"
+        }
     },
     {
         "remote": "__GHOST_URL__/content/images/2022/09/screenshot-40-54-21-02-09-2024.png",
@@ -38,6 +46,10 @@
         "head": {
             "contentType": "image/png",
             "contentLength": 1048576
+        },
+        "postContext": {
+          "title": null,
+          "slug": null
         }
     },
     {
@@ -52,7 +64,11 @@
             "contentType": "video/mp4",
             "contentLength": 25061980
         },
-        "newLocal": "/content/media/audio/song.mp4"
+        "newLocal": "/content/media/audio/song.mp4",
+        "postContext": {
+          "title": null,
+          "slug": "new-media"
+        }
     },
     {
         "remote": "/docs/plan.mp4",
@@ -66,6 +82,10 @@
             "contentType": "application/pdf",
             "contentLength": 1785847
         },
-        "newLocal": "/content/media/docs/plan.mp4"
+        "newLocal": "/content/media/docs/plan.mp4",
+        "postContext": {
+          "title": "New Media",
+          "slug": null
+        }
     }
 ]

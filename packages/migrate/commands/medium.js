@@ -51,7 +51,10 @@ const setup = (sywac) => {
 
 // What to do when this command is executed
 const run = async (argv) => {
-    let context = {errors: []};
+    let context = {
+        errors: [],
+        warnings: []
+    };
 
     if (argv.verbose) {
         ui.log.info(`Migrating from export at ${argv.pathToZip}`);
@@ -69,6 +72,10 @@ const run = async (argv) => {
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);
+    }
+
+    if (context.warnings.length > 0) {
+        ui.log.warn(context.warnings);
     }
 };
 

@@ -94,7 +94,10 @@ const setup = (sywac) => {
 
 // What to do when this command is executed
 const run = async (argv) => {
-    let context = {errors: []};
+    let context = {
+        errors: [],
+        warnings: []
+    };
 
     // Remove trailing slash from URL
     if (argv.url.endsWith('/')) {
@@ -121,6 +124,10 @@ const run = async (argv) => {
 
     if (argv.verbose) {
         ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
+    }
+
+    if (context.warnings.length > 0) {
+        ui.log.warn(context.warnings);
     }
 };
 
