@@ -303,9 +303,11 @@ const getFullTaskList = (url, options, logger) => {
                 // 6. Format the data as a valid Ghost JSON file
                 ctx.timings.assetScraper = Date.now();
                 let tasks = ctx.assetScraper.fetch(ctx);
-                let assetScraperOptions = JSON.parse(JSON.stringify(options)); // Clone the options object
-                assetScraperOptions.concurrent = false;
-                return makeTaskRunner(tasks, assetScraperOptions);
+                return makeTaskRunner(tasks, {
+                    verbose: options.verbose,
+                    exitOnError: false,
+                    concurrent: false
+                });
             }
         },
         {
@@ -342,9 +344,11 @@ const getFullTaskList = (url, options, logger) => {
                 ctx.timings.htmlToMobiledoc = Date.now();
                 try {
                     let tasks = mgHtmlMobiledoc.convert(ctx);
-                    let convertOptions = JSON.parse(JSON.stringify(options)); // Clone the options object
-                    convertOptions.concurrent = false;
-                    return makeTaskRunner(tasks, convertOptions);
+                    return makeTaskRunner(tasks, {
+                        verbose: options.verbose,
+                        exitOnError: false,
+                        concurrent: false
+                    });
                 } catch (error) {
                     ctx.logger.error({message: 'Failed to convert HTML -> MobileDoc', error});
                     throw error;

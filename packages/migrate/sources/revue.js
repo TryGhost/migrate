@@ -337,9 +337,11 @@ const getFullTaskList = (options, logger) => {
                 // 6. Format the data as a valid Ghost JSON file
                 ctx.timings.assetScraper = Date.now();
                 let tasks = ctx.assetScraper.fetch(ctx);
-                let assetScraperOptions = JSON.parse(JSON.stringify(options)); // Clone the options object
-                assetScraperOptions.concurrent = false;
-                return makeTaskRunner(tasks, assetScraperOptions);
+                return makeTaskRunner(tasks, {
+                    verbose: options.verbose,
+                    exitOnError: false,
+                    concurrent: false
+                });
             }
         },
         {
