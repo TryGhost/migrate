@@ -395,6 +395,12 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         $(el).replaceWith('<hr>');
     });
 
+    // Unwrap WP gallery blocks
+    // Case: WP gallery blocks have figures in figures which trips up the HTML to mobiledoc conversion
+    $html('.wp-block-gallery').each((i, el) => {
+        $(el).replaceWith($(el).html());
+    });
+
     // Wrap inline styled tags in HTML card
     $html('div[style], p[style], a[style], span[style]').each((i, styled) => {
         let imgChildren = $(styled).children('img:not([data-gif])');
