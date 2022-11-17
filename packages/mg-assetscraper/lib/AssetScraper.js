@@ -74,7 +74,7 @@ class AssetScraper {
             domain: this.fileCache.cacheKey, // This can be unique per migration
             mode: 'long',
             transports: ['stdout', 'file'],
-            path: join(__dirname, '../../../packages/migrate/logs')
+            path: join(__dirname, '../../../logs')
         });
 
         // Convert MB to bytes for file size comparison

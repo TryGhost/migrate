@@ -1,8 +1,11 @@
 import {inspect} from 'node:util';
 import {join} from 'node:path';
+import {URL} from 'node:url';
 import {ui} from '@tryghost/pretty-cli';
 import {GhostLogger} from '@tryghost/logging';
 import revue from '../sources/revue.js';
+
+const __dirname = new URL('.', import.meta.url).pathname;
 
 // Internal ID in case we need one.
 const id = 'revue';
@@ -97,7 +100,7 @@ const run = async (argv) => {
             domain: argv.cacheName || 'revue_migration', // This can be unique per migration
             mode: 'long',
             transports: ['file'],
-            path: join(process.cwd(), '/logs')
+            path: join(__dirname, '../../../', '/logs')
         });
     }
 

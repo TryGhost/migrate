@@ -1,10 +1,13 @@
 import {join, extname} from 'node:path';
+import {URL} from 'node:url';
 import {inspect} from 'node:util';
 import fs from 'fs-extra';
 import {GhostLogger} from '@tryghost/logging';
 import {ui} from '@tryghost/pretty-cli';
 import xml2json from 'xml2json';
 import wpAPISource from '../sources/wp-api.js';
+
+const __dirname = new URL('.', import.meta.url).pathname;
 
 // Internal ID in case we need one.
 const id = 'wp-api';
@@ -122,10 +125,10 @@ const run = async (argv) => {
         };
     } else {
         logger = new GhostLogger({
-            domain: argv.cacheName || 'revue_migration', // This can be unique per migration
+            domain: argv.cacheName || 'wp_migration', // This can be unique per migration
             mode: 'long',
             transports: (argv.verbose) ? ['stdout', 'file'] : ['file'],
-            path: join(process.cwd(), '/logs')
+            path: join(__dirname, '../../../', '/logs')
         });
     }
 
