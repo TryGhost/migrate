@@ -132,6 +132,11 @@ const run = async (argv) => {
         });
     }
 
+    // Remove trailing slash from URL
+    if (argv.url.endsWith('/')) {
+        argv.url = argv.url.slice(0, -1);
+    }
+
     if (argv.auth) {
         let auth = argv.auth.split(':');
 
