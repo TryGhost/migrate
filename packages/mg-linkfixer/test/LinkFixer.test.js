@@ -38,21 +38,21 @@ const getPosts = async (options = {}) => {
     return ctx.result.data.posts;
 };
 
+let slugMonthlyPosts;
+let monthlyPosts;
+let slugDailyPosts;
+let dailyPosts;
+let datelessPosts;
+
+beforeAll(async () => {
+    slugMonthlyPosts = await getPosts({datedPermalinks: '/*/yyyy/mm/'});
+    monthlyPosts = await getPosts({datedPermalinks: '/yyyy/mm/'});
+    slugDailyPosts = await getPosts({datedPermalinks: '/*/yyyy/mm/dd/'});
+    dailyPosts = await getPosts({datedPermalinks: '/yyyy/mm/dd/'});
+    datelessPosts = await getPosts();
+});
+
 describe('LinkFixer', function () {
-    let slugMonthlyPosts;
-    let monthlyPosts;
-    let slugDailyPosts;
-    let dailyPosts;
-    let datelessPosts;
-
-    beforeAll(async () => {
-        slugMonthlyPosts = await getPosts({datedPermalinks: '/*/yyyy/mm/'});
-        monthlyPosts = await getPosts({datedPermalinks: '/yyyy/mm/'});
-        slugDailyPosts = await getPosts({datedPermalinks: '/*/yyyy/mm/dd/'});
-        dailyPosts = await getPosts({datedPermalinks: '/yyyy/mm/dd/'});
-        datelessPosts = await getPosts();
-    });
-
     test('Fixes links to posts', async function () {
         expect(datelessPosts).toBeArrayOfSize(7);
 
