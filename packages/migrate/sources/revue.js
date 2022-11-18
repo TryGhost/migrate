@@ -92,8 +92,18 @@ const scrapeConfig = {
                 }
                 return scrapeImages.length ? scrapeImages : null;
             }
+        },
+        visibility: {
+            // The Revue API does not contain anything related to access levels, so we must look for a HTML element
+            selector: '#premium-subscribe',
+            convert: (x) => {
+                if (x && x.trim().length > 0) {
+                    return 'paid';
+                } else {
+                    return 'public';
+                }
+            }
         }
-
     }
 };
 
