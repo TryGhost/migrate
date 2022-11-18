@@ -80,9 +80,9 @@ const setup = (sywac) => {
         desc: 'Change which value is used as the feature image'
     });
     sywac.enumeration('--datedPermalinks', {
-        choices: ['none', '/yyyy/mm/', '/yyyy/mm/dd/'],
+        choices: ['none', '/yyyy/mm/', '/yyyy/mm/dd/', '/*/yyyy/mm/', '/*/yyyy/mm/dd/'],
         defaultValue: 'none',
-        desc: 'Set the dated permalink structure (e.g. /yyyy/mm/dd/)'
+        desc: 'Set the dated permalink structure (e.g. /yyyy/mm/dd/) [See readme for details]'
     });
     sywac.string('--cpt', {
         defaultValue: null,

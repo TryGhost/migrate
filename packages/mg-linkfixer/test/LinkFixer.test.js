@@ -4,7 +4,9 @@ import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 
 import standardFixtures from './fixtures/ctx.json';
 import yyyymmFixtures from './fixtures/ctx-yyyy-mm.json';
+import slugYyyymmFixtures from './fixtures/ctx-slug-yyyy-mm.json';
 import yyyymmddFixtures from './fixtures/ctx-yyyy-mm-dd.json';
+import slugYyyymmddFixtures from './fixtures/ctx-slug-yyyy-mm-dd.json';
 
 const getPosts = async (options = {}) => {
     let ctx = null;
@@ -13,6 +15,10 @@ const getPosts = async (options = {}) => {
         ctx = yyyymmddFixtures;
     } else if (options.datedPermalinks === '/yyyy/mm/') {
         ctx = yyyymmFixtures;
+    } else if (options.datedPermalinks === '/*/yyyy/mm/') {
+        ctx = slugYyyymmFixtures;
+    } else if (options.datedPermalinks === '/*/yyyy/mm/dd/') {
+        ctx = slugYyyymmddFixtures;
     } else {
         ctx = standardFixtures;
     }
@@ -21,6 +27,7 @@ const getPosts = async (options = {}) => {
 
     ctx.linkFixer = new linkFixer();
     ctx.linkFixer.buildMap(ctx);
+
     ctx.result = toGhostJSON(ctx.result, ctx.options);
 
     let tasks = ctx.linkFixer.fix(ctx, []);
@@ -32,14 +39,18 @@ const getPosts = async (options = {}) => {
 };
 
 describe('LinkFixer', function () {
-    let datelessPosts;
+    let slugMonthlyPosts;
     let monthlyPosts;
+    let slugDailyPosts;
     let dailyPosts;
+    let datelessPosts;
 
     beforeAll(async () => {
-        datelessPosts = await getPosts();
+        slugMonthlyPosts = await getPosts({datedPermalinks: '/*/yyyy/mm/'});
         monthlyPosts = await getPosts({datedPermalinks: '/yyyy/mm/'});
+        slugDailyPosts = await getPosts({datedPermalinks: '/*/yyyy/mm/dd/'});
         dailyPosts = await getPosts({datedPermalinks: '/yyyy/mm/dd/'});
+        datelessPosts = await getPosts();
     });
 
     test('Fixes links to posts', async function () {
@@ -61,11 +72,25 @@ describe('LinkFixer', function () {
         expect(dailyPosts[3].html).toContain('<a href="/2020/06/27/lorem-ipsum/">Consectetur</a>');
     });
 
+    it('Fixes slug-yyyy-mm-dd dated links to posts', async function () {
+        expect(slugDailyPosts).toBeArrayOfSize(5);
+
+        expect(slugDailyPosts[3].html).not.toContain('<a href="https://example.com/articles/2020/06/27/lorem-ipsum/">Consectetur</a>');
+        expect(slugDailyPosts[3].html).toContain('<a href="/2020/06/27/lorem-ipsum/">Consectetur</a>');
+    });
+
     it('Fixes yyyy-mm dated links to posts', async function () {
         expect(monthlyPosts).toBeArrayOfSize(5);
 
         expect(monthlyPosts[3].html).not.toContain('<a href="https://example.com/2020/06/lorem-ipsum/">Consectetur</a>');
         expect(monthlyPosts[3].html).toContain('<a href="/2020/06/lorem-ipsum/">Consectetur</a>');
+    });
+
+    it('Fixes slug-yyyy-mm dated links to posts', async function () {
+        expect(slugMonthlyPosts).toBeArrayOfSize(5);
+
+        expect(slugMonthlyPosts[3].html).not.toContain('<a href="https://example.com/articles/2020/06/lorem-ipsum/">Consectetur</a>');
+        expect(slugMonthlyPosts[3].html).toContain('<a href="/2020/06/lorem-ipsum/">Consectetur</a>');
     });
 
     it('Fixes links to pages', async function () {

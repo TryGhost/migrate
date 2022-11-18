@@ -44,14 +44,24 @@ class LinkFixer {
 
         // @TODO: support for custom taxonomies
         ctx.result.posts.forEach(({url, data}) => {
+            const RegexSlugYYYYMMDD = new RegExp(`^${ctx.options.url}/[a-zA-Z0-9-]+/([0-9]{4}/[0-9]{2}/[0-9]{2})/([a-zA-Z0-9-_]*)(/)?`);
+            const isSlugYYYYMMDDDatedPermalink = url.match(RegexSlugYYYYMMDD);
+
             const RegexYYYYMMDD = new RegExp(`^${ctx.options.url}/([0-9]{4}/[0-9]{2}/[0-9]{2})/([a-zA-Z0-9-_]*)(/)?`);
             const isYYYYMMDDDatedPermalink = url.match(RegexYYYYMMDD);
+
+            const RegexSlugYYYYMM = new RegExp(`^${ctx.options.url}/[a-zA-Z0-9-]+/([0-9]{4}/[0-9]{2})/([a-zA-Z0-9-_]*)(/)?`);
+            const isSlugYYYYMMDatedPermalink = url.match(RegexSlugYYYYMM);
 
             const RegexYYYYMM = new RegExp(`^${ctx.options.url}/([0-9]{4}/[0-9]{2})/([a-zA-Z0-9-_]*)(/)?`);
             const isYYYYMMDatedPermalink = url.match(RegexYYYYMM);
 
             if (ctx.options.datedPermalinks === '/yyyy/mm/dd/' && isYYYYMMDDDatedPermalink) {
                 this.linkMap[url] = `/${url.replace(RegexYYYYMMDD, '$1/$2')}/`;
+            } else if (ctx.options.datedPermalinks === '/*/yyyy/mm/dd/' && isSlugYYYYMMDDDatedPermalink) {
+                this.linkMap[url] = `/${url.replace(RegexSlugYYYYMMDD, '$1/$2')}/`;
+            } else if (ctx.options.datedPermalinks === '/*/yyyy/mm/' && isSlugYYYYMMDatedPermalink) {
+                this.linkMap[url] = `/${url.replace(RegexSlugYYYYMM, '$1/$2')}/`;
             } else if (ctx.options.datedPermalinks === '/yyyy/mm/' && isYYYYMMDatedPermalink) {
                 this.linkMap[url] = `/${url.replace(RegexYYYYMM, '$1/$2')}/`;
             } else {

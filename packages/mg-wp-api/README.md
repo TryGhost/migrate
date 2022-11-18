@@ -74,9 +74,10 @@ It's possible to pass more options, in order to achieve a better migration file 
     - string - default: `null`
     - Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`
 - **`--datedPermalinks`** 
-    - Set the dated permalink structure
+    - Set the dated permalink structure. `/*/` matches any prefix, such as `/articles/2018/05/` or `/blog-posts/2018/05/`
     - string - default: `none` 
-    - Choices: `none`, `'/yyyy/mm/'`, `'/yyyy/mm/dd/'`  
+    - Choices: `none`, `'/yyyy/mm/'`, `'/yyyy/mm/dd/'`, `'/*/yyyy/mm/'`, `'/*/yyyy/mm/dd/'`
+    - NOTE: When using `/*/`, this is only to match existing links. Fixed links will not contain this.
 - **`--cpt`** 
     - A comma-separated list of custom post type slugs e.g. `resources,newsletters`
     - string - default: `null`
