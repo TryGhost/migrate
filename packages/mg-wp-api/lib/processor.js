@@ -238,6 +238,21 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         });
     }
 
+    // (Some) WordPress renders gifs a different way. They use an `img` tag with a `src` for a still image,
+    // and a `data-gif` attribute to reference the actual gif. We need `src` to be the actual gif.
+    $html('img[data-gif]').each((i, gif) => {
+        let gifSrc = $(gif).attr('data-gif');
+        $(gif).removeAttr('data-gif');
+        $(gif).attr('src', gifSrc);
+    });
+
+    // Likewise some images are lazy-loaded using JavaScript & `data-src` attributes
+    $html('img[data-src]').each((i, img) => {
+        let dataSrc = $(img).attr('data-src');
+        $(img).removeAttr('data-src');
+        $(img).attr('src', dataSrc);
+    });
+
     let libsynPodcasts = $html('iframe[src*="libsyn.com/embed/"]').map(async (i, el) => {
         if (!allowRemoteScraping) {
             return;
@@ -462,13 +477,6 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             $(el).before('<!--kg-card-begin: html-->');
             $(el).after('<!--kg-card-end: html-->');
         }
-    });
-
-    // (Some) WordPress renders gifs a different way. They use an `img` tag with a `src` for a still image,
-    // and a `data-gif` attribute to reference the actual gif. We need `src` to be the actual gif.
-    $html('img[data-gif]').each((i, gif) => {
-        let gifSrc = $(gif).attr('data-gif');
-        $(gif).attr('src', gifSrc);
     });
 
     $html('img').each((i, img) => {

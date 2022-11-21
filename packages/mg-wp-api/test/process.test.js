@@ -367,6 +367,22 @@ describe('Process WordPress HTML', function () {
 
         expect(processed).toEqual('<figure class="wp-block-image size-large"><img src="https://example.com/wp-content/uploads/2022/08/1.jpg" alt></figure><figure class="wp-block-image size-large"><img src="https://example.com/wp-content/uploads/2022/08/2.jpg"></figure><figure class="wp-block-image size-large"><img src="https://example.com/wp-content/uploads/2022/08/3.jpg" alt><figcaption class="wp-element-caption">My caption</figcaption></figure>');
     });
+
+    test('Can change image data-gif to src', async function () {
+        const html = '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-gif="https://example.com/wp-content/uploads/2022/08/3.gif" />';
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<img src="https://example.com/wp-content/uploads/2022/08/3.gif">');
+    });
+
+    test('Can change image data-src to src', async function () {
+        const html = '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="https://example.com/wp-content/uploads/2022/08/3.jpg" />';
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<img src="https://example.com/wp-content/uploads/2022/08/3.jpg">');
+    });
 });
 
 describe('Process shortcodes', function () {
