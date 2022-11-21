@@ -125,12 +125,19 @@ const processContent = (html, postUrl) => {
 </figure><!--kg-card-end: embed-->`;
         });
     } catch (err) {
-        console.log(postUrl); // eslint-disable-line no-console
         err.source = postUrl;
         throw err;
     }
 
     return html;
+};
+
+const processExcerpt = (description) => {
+    const $html = $.load(description, {
+        decodeEntities: false
+    });
+
+    return $html.text().trim();
 };
 
 /**
@@ -194,6 +201,9 @@ const processPost = (data, {addPrimaryTag, email, pubName, createAuthors}) => {
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
     post.data.html = processContent(data.html, post.url);
+
+    // The description has HTML in it, so process this to remove it and only return plain text
+    post.data.custom_excerpt = processExcerpt(data.description);
 
     return post;
 };
