@@ -122,4 +122,34 @@ describe('Process', function () {
 
         expect(post.data.authors).toBeArrayOfSize(0);
     });
+
+    it('Can handle descriptions', function () {
+        const ctx = {
+            result: fixture,
+            options: {
+                createAuthors: false
+            }
+        };
+        const response = processor.all(ctx);
+        const posts = response.posts;
+
+        const post = posts[0];
+
+        expect(post.data.custom_excerpt).toBeNull();
+    });
+
+    it('Can handle empty descriptions', function () {
+        const ctx = {
+            result: fixture,
+            options: {
+                createAuthors: false
+            }
+        };
+        const response = processor.all(ctx);
+        const posts = response.posts;
+
+        const post = posts[1];
+
+        expect(post.data.custom_excerpt).toEqual('Sed rutrum, est non scelerisque condimentum, nunc augue finibus erat, id lacinia nunc nulla in quam. Cras scelerisque diam et ante luctus, ac varius dolor posuere. Curabitur id velit in libero ullamcorper pellentesque quis a nunc.');
+    });
 });

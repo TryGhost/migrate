@@ -133,11 +133,21 @@ const processContent = (html, postUrl) => {
 };
 
 const processExcerpt = (description) => {
+    if (!description) {
+        return null;
+    }
+
     const $html = $.load(description, {
         decodeEntities: false
     });
 
-    return $html.text().trim();
+    const trimmedExcerpt = $html.text().trim();
+
+    if (trimmedExcerpt.length === 0) {
+        return null;
+    }
+
+    return trimmedExcerpt;
 };
 
 /**
