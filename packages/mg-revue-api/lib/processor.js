@@ -64,6 +64,10 @@ const processContent = (html, postUrl) => {
             $imgParent.before($figure);
         });
 
+        $html('p > blockquote').each((i, el) => {
+            $(el).parent('p').replaceWith(`<blockquote><p>${$(el).html()}</p></blockquote>`);
+        });
+
         // Link headings. Should be h3 tags in Ghost and have normalized links (removed UTM properties)
         $html('p > strong[style]').each((i, strong) => {
             strong.tagName = 'h3';
