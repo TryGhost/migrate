@@ -57,6 +57,11 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--addTag`**
     - string - default: `null`
     - Provide a tag name which should be added to every post in this migration
+- **`--datedPermalinks`** 
+    - Set the dated permalink structure. `/*/` matches any prefix, such as `/articles/2018/05/` or `/blog-posts/2018/05/`
+    - string - default: `none` 
+    - Choices: `none`, `'/yyyy/mm/'`, `'/yyyy/mm/dd/'`, `'/*/yyyy/mm/'`, `'/*/yyyy/mm/dd/'`
+    - NOTE: When using `/*/`, this is only to match existing links. Fixed links will not contain this.
 - **`--fallBackHTMLCard`**
     - bool - default: `false`
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
