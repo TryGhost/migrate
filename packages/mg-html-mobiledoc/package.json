@@ -25,7 +25,7 @@
     "jest-extended": "3.2.0"
   },
   "dependencies": {
-    "@tryghost/errors": "1.2.18",
+    "@tryghost/errors": "1.2.19",
     "@tryghost/html-to-mobiledoc": "1.8.23"
   }
 }
