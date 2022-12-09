@@ -96,8 +96,9 @@ const scrapeConfig = {
         visibility: {
             // The Revue API does not contain anything related to access levels, so we must look for a HTML element
             selector: '#already-member',
-            convert: (x) => {
-                if (x && x.trim().length > 0) {
+            how: 'html',
+            convert: (html) => {
+                if (html && html.trim().length > 0) {
                     return 'paid';
                 } else {
                     return 'public';
