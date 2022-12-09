@@ -163,7 +163,16 @@ const processExcerpt = (description) => {
         decodeEntities: false
     });
 
-    const trimmedExcerpt = $html.text().trim();
+    // Add spaces around HTML elements so words don't collide when we remove them
+    $html('*').each((i, el) => {
+        $(el).prepend(' ');
+        $(el).append(' ');
+    });
+
+    let trimmedExcerpt = $html.text().trim();
+
+    // Replace 2 or mor spaces with a single space
+    trimmedExcerpt = trimmedExcerpt.replace(/\s\s+/g, ' ');
 
     if (trimmedExcerpt.length === 0) {
         return null;
