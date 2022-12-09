@@ -95,16 +95,19 @@ const processContent = (html, postUrl, options) => {
         });
 
         // Replace any subscribe link on the same domain with a specific link
-        if (options.profileURL && options.subscribeLink) {
+        if (options.profileURL) {
             $html('a').each((i, anchor) => {
                 let href = $(anchor).attr('href');
-                // pubName
-                let linkRegex = new RegExp(`^(${options.profileURL})?(/members)(.*)`, 'gi');
 
-                let matches = href.replace(linkRegex, '$2');
+                let linkRegex = new RegExp(`^(${options.profileURL})/?([a-zA-Z0-9-]+)?(.*)?`, 'gmi');
+                let matches = linkRegex.exec(href);
 
-                if (matches === '/members') {
-                    $(anchor).attr('href', options.subscribeLink);
+                if (matches) {
+                    if (options.subscribeLink && matches[2] === 'members') {
+                        $(anchor).attr('href', options.subscribeLink);
+                    } else if (matches[2] === undefined) {
+                        $(anchor).attr('href', '/');
+                    }
                 }
             });
         }

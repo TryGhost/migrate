@@ -15,7 +15,7 @@ describe('Process', function () {
         const response = processor.all(ctx);
         const posts = response.posts;
 
-        expect(posts).toBeArrayOfSize(4);
+        expect(posts).toBeArrayOfSize(5);
 
         const post = posts[2];
 
@@ -153,7 +153,7 @@ describe('Process', function () {
         expect(post.data.custom_excerpt).toEqual('Sed rutrum, est non scelerisque condimentum, nunc augue finibus erat, id lacinia nunc nulla in quam. Cras scelerisque diam et ante luctus, ac varius dolor posuere. Curabitur id velit in libero ullamcorper pellentesque quis a nunc.');
     });
 
-    it('Can replaces members links with portal URL', function () {
+    it('Can replace members links with portal URL', function () {
         const ctx = {
             result: fixture,
             options: {
@@ -168,10 +168,10 @@ describe('Process', function () {
 
         const post = posts[3];
 
-        expect(post.data.html).toEqual('<h3><p>Lorem ipsum dolor sit amet</p></h3><p><a href="#/portal/signup">Members</a></p>');
+        expect(post.data.html).toEqual('<h3><p>Lorem ipsum dolor sit amet</p></h3><p><a href="#/portal/signup">Members</a></p><p><a href="#/portal/signup">Members again</a></p>');
     });
 
-    it('Can replaces members links with other URL', function () {
+    it('Can replace members links with other URL', function () {
         const ctx = {
             result: fixture,
             options: {
@@ -186,6 +186,21 @@ describe('Process', function () {
 
         const post = posts[3];
 
-        expect(post.data.html).toEqual('<h3><p>Lorem ipsum dolor sit amet</p></h3><p><a href="/join">Members</a></p>');
+        expect(post.data.html).toEqual('<h3><p>Lorem ipsum dolor sit amet</p></h3><p><a href="/join">Members</a></p><p><a href="/join">Members again</a></p>');
+    });
+
+    it('Can fix profile links', function () {
+        const ctx = {
+            result: fixture,
+            options: {
+                addPrimaryTag: 'Newsletter'
+            }
+        };
+        const response = processor.all(ctx);
+        const posts = response.posts;
+
+        const post = posts[4];
+
+        expect(post.data.html).toEqual('<h3><p>Lorem ipsum dolor sit amet</p></h3><p><a href="/">Profile</a></p><p><a href="/">Profile again</a></p><p><a href="https://www.getrevue.co/profile/samplenews/issues/weekly-newsletter-of-samplenews-issue-1-123456">Post</a></p>');
     });
 });

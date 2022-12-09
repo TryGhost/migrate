@@ -28,15 +28,23 @@
     },{
       "id": 123457,
       "title": "Weekly newsletter of Sample News - Issue #4",
-      "html": "<h3><p>Lorem ipsum dolor sit amet</p></h3><p><a href=\"https://www.getrevue.co/profile/samplenews/members/\">Members</a></p>",
+      "html": "<h3><p>Lorem ipsum dolor sit amet</p></h3><p><a href=\"https://www.getrevue.co/profile/samplenews/members/\">Members</a></p><p><a href=\"https://www.getrevue.co/profile/samplenews/members?utm_source=migrate\">Members again</a></p>",
       "sent_at": "2020-09-28T10:37:27.896Z",
       "description": null,
-      "url": "https://www.getrevue.co/profile/samplenews/issues/weekly-newsletter-of-samplenews-issue-4-123456",
+      "url": "https://www.getrevue.co/profile/samplenews/issues/weekly-newsletter-of-samplenews-issue-4-123457",
+      "active": false
+    },{
+      "id": 123458,
+      "title": "Weekly newsletter of Sample News - Issue #4",
+      "html": "<h3><p>Lorem ipsum dolor sit amet</p></h3><p><a href=\"https://www.getrevue.co/profile/samplenews/\">Profile</a></p><p><a href=\"https://www.getrevue.co/profile/samplenews?utm_source=migrate\">Profile again</a></p><p><a href=\"https://www.getrevue.co/profile/samplenews/issues/weekly-newsletter-of-samplenews-issue-1-123456\">Post</a></p>",
+      "sent_at": "2020-09-28T10:37:27.896Z",
+      "description": null,
+      "url": "https://www.getrevue.co/profile/samplenews/issues/weekly-newsletter-of-samplenews-issue-5-123458",
       "active": false
     }
   ],
   "totals": {
-    "posts": 4
+    "posts": 5
   },
   "users": {
     "url": "https://www.getrevue.co/profile/samplenews"
