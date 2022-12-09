@@ -386,8 +386,8 @@ class AssetScraper {
             let $image = $(el);
             let type = $image.attr('src') === undefined ? 'data-src' : 'src';
 
-            if ($image.attr('src').startsWith('data:')) {
-                type = 'data-src';
+            if ($image.attr('src') && $image.attr('src').startsWith('data:')) {
+                return false;
             }
 
             let src = $image.attr(type);

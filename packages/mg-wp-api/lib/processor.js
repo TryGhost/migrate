@@ -238,6 +238,45 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         });
     }
 
+    // Normalize image elements
+    $html('.wp-block-jetpack-tiled-gallery').each((i, gal) => {
+        $(gal).replaceWith($(gal).html());
+    });
+
+    $html('.tiled-gallery__gallery').each((i, gal) => {
+        $(gal).replaceWith($(gal).html());
+    });
+
+    $html('.tiled-gallery__row').each((i, gal) => {
+        $(gal).replaceWith($(gal).html());
+    });
+
+    $html('.tiled-gallery__col').each((i, gal) => {
+        $(gal).replaceWith($(gal).html());
+    });
+
+    $html('.tiled-gallery__item').each((i, gal) => {
+        $(gal).removeAttr('class');
+    });
+
+    $html('img').each((i, img) => {
+        $(img).removeAttr('decoding');
+        $(img).removeAttr('data-id');
+        $(img).removeAttr('data-link');
+        $(img).removeAttr('data-url');
+        $(img).removeAttr('data-amp-layout');
+
+        if ($(img).attr('data-width')) {
+            $(img).attr('width', $(img).attr('data-width'));
+            $(img).removeAttr('data-width');
+        }
+
+        if ($(img).attr('data-height')) {
+            $(img).attr('height', $(img).attr('data-height'));
+            $(img).removeAttr('data-height');
+        }
+    });
+
     // (Some) WordPress renders gifs a different way. They use an `img` tag with a `src` for a still image,
     // and a `data-gif` attribute to reference the actual gif. We need `src` to be the actual gif.
     $html('img[data-gif]').each((i, gif) => {
