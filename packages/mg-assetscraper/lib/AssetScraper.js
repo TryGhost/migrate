@@ -644,7 +644,7 @@ class AssetScraper {
             tasks.push({
                 title: `Checking file type: ${item.newRemote}`,
                 skip: () => {
-                    return cacheItem && cacheItem.checked;
+                    return cacheItem && (cacheItem.checked || cacheItem.skip);
                 },
                 task: async () => {
                     let newCache = item;
