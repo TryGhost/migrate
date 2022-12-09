@@ -15,7 +15,7 @@ describe('Process', function () {
         const response = processor.all(ctx);
         const posts = response.posts;
 
-        expect(posts).toBeArrayOfSize(3);
+        expect(posts).toBeArrayOfSize(4);
 
         const post = posts[2];
 
@@ -151,5 +151,41 @@ describe('Process', function () {
         const post = posts[1];
 
         expect(post.data.custom_excerpt).toEqual('Sed rutrum, est non scelerisque condimentum, nunc augue finibus erat, id lacinia nunc nulla in quam. Cras scelerisque diam et ante luctus, ac varius dolor posuere. Curabitur id velit in libero ullamcorper pellentesque quis a nunc.');
+    });
+
+    it('Can replaces members links with portal URL', function () {
+        const ctx = {
+            result: fixture,
+            options: {
+                addPrimaryTag: 'Newsletter',
+                email: 'person@example.com',
+                createAuthors: true,
+                subscribeLink: '#/portal/signup'
+            }
+        };
+        const response = processor.all(ctx);
+        const posts = response.posts;
+
+        const post = posts[3];
+
+        expect(post.data.html).toEqual('<h3><p>Lorem ipsum dolor sit amet</p></h3><p><a href="#/portal/signup">Members</a></p>');
+    });
+
+    it('Can replaces members links with other URL', function () {
+        const ctx = {
+            result: fixture,
+            options: {
+                addPrimaryTag: 'Newsletter',
+                email: 'person@example.com',
+                createAuthors: true,
+                subscribeLink: '/join'
+            }
+        };
+        const response = processor.all(ctx);
+        const posts = response.posts;
+
+        const post = posts[3];
+
+        expect(post.data.html).toEqual('<h3><p>Lorem ipsum dolor sit amet</p></h3><p><a href="/join">Members</a></p>');
     });
 });

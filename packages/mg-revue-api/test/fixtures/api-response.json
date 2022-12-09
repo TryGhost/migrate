@@ -25,10 +25,18 @@
       "description": "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vestibulum orci ut lacus malesuada vestibulum. Integer quis pulvinar arcu. Ut eleifend porta convallis. Etiam eros arcu, dapibus eleifend lectus vitae, blandit lobortis magna. </p>",
       "url": "https://www.getrevue.co/profile/samplenews/issues/weekly-newsletter-of-samplenews-issue-1-123456",
       "active": false
+    },{
+      "id": 123457,
+      "title": "Weekly newsletter of Sample News - Issue #4",
+      "html": "<h3><p>Lorem ipsum dolor sit amet</p></h3><p><a href=\"https://www.getrevue.co/profile/samplenews/members/\">Members</a></p>",
+      "sent_at": "2020-09-28T10:37:27.896Z",
+      "description": null,
+      "url": "https://www.getrevue.co/profile/samplenews/issues/weekly-newsletter-of-samplenews-issue-4-123456",
+      "active": false
     }
   ],
   "totals": {
-    "posts": 3
+    "posts": 4
   },
   "users": {
     "url": "https://www.getrevue.co/profile/samplenews"

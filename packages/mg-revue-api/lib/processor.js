@@ -25,7 +25,7 @@ const cleanUrl = (src) => {
     return url.format(parsed);
 };
 
-const processContent = (html, postUrl) => {
+const processContent = (html, postUrl, options) => {
     // Drafts can have empty post bodies
     if (!html) {
         return '';
@@ -93,6 +93,21 @@ const processContent = (html, postUrl) => {
             $parent.before('<!--kg-card-begin: html-->');
             $parent.after('<!--kg-card-end: html-->');
         });
+
+        // Replace any subscribe link on the same domain with a specific link
+        if (options.profileURL && options.subscribeLink) {
+            $html('a').each((i, anchor) => {
+                let href = $(anchor).attr('href');
+                // pubName
+                let linkRegex = new RegExp(`^(${options.profileURL})?(/members)(.*)`, 'gi');
+
+                let matches = href.replace(linkRegex, '$2');
+
+                if (matches === '/members') {
+                    $(anchor).attr('href', options.subscribeLink);
+                }
+            });
+        }
 
         // convert HTML back to a string
         html = $html.html();
@@ -168,7 +183,9 @@ const processExcerpt = (description) => {
  *   ]
  * }
  */
-const processPost = (data, {addPrimaryTag, email, pubName, createAuthors}) => {
+const processPost = (data, options) => {
+    const {addPrimaryTag, email, pubName, createAuthors} = options;
+
     const slugRegexp = new RegExp(`https:\\/\\/www\\.getrevue\\.co\\/profile\\/[a-zA-Z0-9-_]+\\/issues\\/(\\S*)-${data.id}`);
 
     const post = {
@@ -214,7 +231,7 @@ const processPost = (data, {addPrimaryTag, email, pubName, createAuthors}) => {
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
-    post.data.html = processContent(data.html, post.url);
+    post.data.html = processContent(data.html, post.url, options);
 
     // The description has HTML in it, so process this to remove it and only return plain text
     post.data.custom_excerpt = processExcerpt(data.description);
@@ -229,6 +246,7 @@ const processPosts = (posts, options) => {
 const all = ({result, options}) => {
     // We don't ask for the publication name, so we'll infer it from the user profile instead
     // It's only used for author information
+    options.profileURL = result.users.url;
     options.pubName = result.users.url.replace(/https:\/\/www\.getrevue\.co\/profile\/([a-zA-Z0-9-_]+)/, '$1');
 
     const output = {

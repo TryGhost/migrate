@@ -60,6 +60,10 @@ const setup = (sywac) => {
         defaultValue: 200,
         desc: 'Time in ms to wait after a URL is scraped'
     });
+    sywac.string('--subscribeLink', {
+        defaultValue: '#/portal/signup',
+        desc: 'Provide a path that existing "subscribe" anchors will link to e.g. "/join-us" or "#/portal/signup" (# characters need to be escaped with a \\)'
+    });
     sywac.boolean('--fallBackHTMLCard', {
         defaultValue: false,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
