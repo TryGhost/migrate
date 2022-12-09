@@ -14,7 +14,14 @@ import {readFileSync} from 'node:fs';
 const scrapeConfig = {
     posts: {
         meta_title: {
-            selector: 'title'
+            selector: 'title',
+            how: 'html',
+            convert: (title) => {
+                if (!title) {
+                    return;
+                }
+                return title.replace(' | Revue', '');
+            }
         },
         meta_description: {
             selector: 'meta[name="description"]',
@@ -93,12 +100,12 @@ const scrapeConfig = {
                 return scrapeImages.length ? scrapeImages : null;
             }
         },
+        // The Revue API does not contain anything related to access levels, so we must look for a HTML element
+        // It also sometimes returns a different template, so we must check for either
         visibility: {
-            // The Revue API does not contain anything related to access levels, so we must look for a HTML element
-            selector: '#already-member',
-            how: 'html',
-            convert: (html) => {
-                if (html && html.trim().length > 0) {
+            selector: '#already-member, .premium-issue-details',
+            convert: (x) => {
+                if (x && x.trim().length > 0) {
                     return 'paid';
                 } else {
                     return 'public';
@@ -283,7 +290,7 @@ const getFullTaskList = (options, logger) => {
                 // 3. Pass the results through the web scraper to get any missing data
                 ctx.timings.webScraper = Date.now();
                 let tasks = ctx.webScraper.hydrate(ctx);
-                return makeTaskRunner(tasks, options);
+                return makeTaskRunner(tasks, Object.assign(options, {concurrent: 1}));
             }
         },
         {

@@ -56,6 +56,10 @@ const setup = (sywac) => {
         defaultValue: false,
         desc: 'Show Revue API info only'
     });
+    sywac.number('--wait_after_scrape', {
+        defaultValue: 200,
+        desc: 'Time in ms to wait after a URL is scraped'
+    });
     sywac.boolean('--fallBackHTMLCard', {
         defaultValue: false,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
