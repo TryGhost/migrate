@@ -118,14 +118,14 @@ const processContent = (html, postUrl) => {
         // YouTube embeds `[embed <https://wwww.youtube.com/watch?v=id>]`
         html = html.replace(/\[embed https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]*)\]/gi, (m, id) => {
             return `<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card">
-<iframe src="https://www.youtube.com/embed/${id}?feature=oembed" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="" frameborder="0"></iframe>
+<iframe width="200" height="113" src="https://www.youtube.com/embed/${id}?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </figure><!--kg-card-end: embed-->`;
         });
 
         // YouTube embeds `[embed <https://youtu.be/id>]`
         html = html.replace(/\[embed https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]*)\]/gi, (m, id) => {
             return `<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card">
-<iframe src="https://www.youtube.com/embed/${id}?feature=oembed" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="" frameborder="0"></iframe>
+<iframe width="200" height="113" src="https://www.youtube.com/embed/${id}?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </figure><!--kg-card-end: embed-->`;
         });
     } catch (err) {

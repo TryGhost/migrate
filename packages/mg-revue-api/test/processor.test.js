@@ -76,10 +76,10 @@ describe('Process', function () {
         '</figure>\n' +
         '<p></p><p>Aenean finibus risus in sem finibus mattis. Maecenas at efficitur mauris, ac <strong>fermentum</strong> quam. <em>Interdum</em> et <strong><em>malesuada</em></strong> fames ac ante ipsum <a href="https://ghost.org?utm_source=active%20users&utm_medium=email&utm_campaign=feature%20launch" target="_blank">primis</a> in faucibus. Morbi mollis efficitur dolor ac auctor. Ut nunc nulla, tempor quis viverra ac, efficitur et arcu.</p><blockquote>Nam elementum, felis quis mollis venenatis, justo dolor pulvinar odio, sed vestibulum neque libero in nulla.</blockquote><p><br></p><ol><li>Mauris mauris urna, lacinia quis faucibus in</li><li>Malesuada a erat</li><li>Donec scelerisque arcu in pulvinar fermentum. Curabitur efficitur nunc ante, at mollis mauris tincidunt vel.</li></ol><p>Donec consequat hendrerit diam. Maecenas ornare tincidunt eros, id condimentum dui aliquet eu.&nbsp;</p><p></p>\n' +
         '<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card">\n' +
-        '<iframe src="https://www.youtube.com/embed/Xzp6YgssAiE?feature=oembed" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="" frameborder="0"></iframe>\n' +
+        '<iframe width="200" height="113" src="https://www.youtube.com/embed/Xzp6YgssAiE?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>\n' +
         '</figure><!--kg-card-end: embed-->\n' +
         '<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card">\n' +
-        '<iframe src="https://www.youtube.com/embed/Xzp6YgssAiE?feature=oembed" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="" frameborder="0"></iframe>\n' +
+        '<iframe width="200" height="113" src="https://www.youtube.com/embed/Xzp6YgssAiE?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>\n' +
         '</figure><!--kg-card-end: embed-->\n');
     });
 
