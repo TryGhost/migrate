@@ -1,7 +1,8 @@
 import {join, extname} from 'node:path';
 import {URL} from 'node:url';
 import {inspect} from 'node:util';
-import fs from 'fs-extra';
+import {readFileSync} from 'node:fs';
+import {readJSON} from 'fs-extra/esm';
 import {GhostLogger} from '@tryghost/logging';
 import {ui} from '@tryghost/pretty-cli';
 import xml2json from 'xml2json';
@@ -153,9 +154,9 @@ const run = async (argv) => {
         const usersFileExt = extname(argv.users).replace('.', '').toLowerCase();
 
         if (usersFileExt === 'json') {
-            context.usersJSON = await fs.readJSON(argv.users);
+            context.usersJSON = await readJSON(argv.users);
         } else if (usersFileExt === 'xml') {
-            const xmlData = fs.readFileSync(argv.users, 'utf8');
+            const xmlData = readFileSync(argv.users, 'utf8');
             const userXMLJSON = xml2json.toJson(xmlData, {
                 object: true
             });
