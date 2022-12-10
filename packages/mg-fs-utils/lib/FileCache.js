@@ -373,20 +373,6 @@ class FileCache {
         return options.outputPath;
     }
 
-    async writeMediaFile(data, options) {
-        return this.writeFile(data, options, 'media');
-    }
-
-    async writeFile(data, options, type = 'images') {
-        if (!options.storagePath || !options.outputPath) {
-            options = this.resolveFileName(options.filename, type);
-        }
-
-        await fs.outputFile(options.storagePath, data);
-
-        return options.outputPath;
-    }
-
     /**
     * Check if we've got this file already
     *
