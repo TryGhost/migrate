@@ -346,7 +346,7 @@ class FileCache {
      * @param {String} data - a valid binary image
      * @param {Object} options - a resolved file name
      */
-    async writeImageFile(data, options) {
+    async writeContentFile(data, options) {
         if (!options.storagePath || !options.outputPath) {
             options = this.resolveImageFileName(options.filename);
         }

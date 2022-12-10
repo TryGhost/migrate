@@ -8,7 +8,7 @@ const mockStoragePath = `/tmp/blah/${mockFile}`;
 const mockOutputPath = `/content/images/${mockFile}`;
 const mockOriginalPath = `/tmp/blah/test_o.jpg`;
 
-describe('writeImageFile', function () {
+describe('writeContentFile', function () {
     let outputFileStub;
     let transformStub;
 
@@ -34,7 +34,7 @@ describe('writeImageFile', function () {
     it('Writes one file if optimize is false', async function () {
         let fileCache = new FileCache('test');
 
-        let resultPath = await fileCache.writeImageFile('imagebuffer', {
+        let resultPath = await fileCache.writeContentFile('imagebuffer', {
             filename: mockFile,
             storagePath: mockStoragePath,
             outputPath: mockOutputPath,
@@ -50,7 +50,7 @@ describe('writeImageFile', function () {
     it('Writes two files if optimize is true', async function () {
         let fileCache = new FileCache('test');
 
-        let resultPath = await fileCache.writeImageFile('imagebuffer', {
+        let resultPath = await fileCache.writeContentFile('imagebuffer', {
             filename: mockFile,
             storagePath: mockStoragePath,
             outputPath: mockOutputPath,
@@ -69,7 +69,7 @@ describe('writeImageFile', function () {
     it('Writes one file if the extension is not supported for optimization', async function () {
         let fileCache = new FileCache('test');
 
-        let resultPath = await fileCache.writeImageFile('imagebuffer', {
+        let resultPath = await fileCache.writeContentFile('imagebuffer', {
             filename: 'blah.bmp',
             storagePath: '/tmp/blah.bmp',
             outputPath: '/content/images/blah.bmp',

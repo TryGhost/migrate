@@ -36,7 +36,7 @@ export default (zipPath, options) => {
             imageOptions.storagePath = imageOptions.storagePath.replace(issueBasePath, '');
 
             // Write the file
-            options.fileCache.writeImageFile(zipEntry.getData(), imageOptions);
+            options.fileCache.writeContentFile(zipEntry.getData(), imageOptions);
 
         // Skip if not matched above, and report skipped files if `--verbose`
         } else {

@@ -890,7 +890,7 @@ class AssetScraper {
                             imageOptions.storagePath = this.changeExtension(imageOptions.storagePath, newFile.fileData.ext);
                             imageOptions.outputPath = this.changeExtension(imageOptions.outputPath, newFile.fileData.ext);
 
-                            await this.fileCache.writeImageFile(newFile.response.body, imageOptions);
+                            await this.fileCache.writeContentFile(newFile.response.body, imageOptions);
 
                             item.newLocal = imageOptions.outputPath;
 
