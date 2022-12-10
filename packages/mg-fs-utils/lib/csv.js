@@ -1,7 +1,8 @@
 import {join} from 'path';
 import {parse} from 'csv-parse';
 import {parse as parseSync} from 'csv-parse/sync';
-import fs from 'fs-extra';
+import {createReadStream} from 'node:fs';
+import {outputFile, ensureDirSync} from 'fs-extra/esm';
 import {isDate} from 'date-fns';
 import errors from '@tryghost/errors';
 
@@ -14,7 +15,7 @@ const parseCSV = (filePath, options = {skip_lines_with_error: true, columns: tru
     const parser = parse(options);
     const data = [];
     return new Promise((resolve, reject) => {
-        const fileStream = fs.createReadStream(filePath);
+        const fileStream = createReadStream(filePath);
         fileStream
             .pipe(parser)
             .on('data', async (row) => {
@@ -83,12 +84,12 @@ const jsonToCSV = (data, fields = Object.keys(data[0])) => {
 
 const writeCSV = async (data, filePath, fileName) => {
     // Ensure the directory we want to wite to exists
-    fs.ensureDirSync(filePath);
+    ensureDirSync(filePath);
 
     const outputPath = join(filePath, fileName || `${Date.now()}.csv`);
 
     try {
-        await fs.outputFile(outputPath, data);
+        await outputFile(outputPath, data);
     } catch (error) {
         throw new errors.InternalServerError({message: 'Could not create CSV file', error});
     }
