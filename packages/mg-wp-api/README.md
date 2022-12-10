@@ -70,6 +70,9 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Change which value is used as the feature image
     - string - default: `featuredmedia` 
     - Choices: `featuredmedia`, `og:image`, `none`
+- **`--excerpt`**
+    - bool - default: `true`
+    - Use the excerpt value from WordPress API
 - **`--excerptSelector`**
     - string - default: `null`
     - Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`

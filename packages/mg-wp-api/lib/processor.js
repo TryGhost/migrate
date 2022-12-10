@@ -76,7 +76,7 @@ const processTerms = (wpTerms, fetchTags) => {
 
 // Sometimes, the custom excerpt can be part of the post content. If the flag with an selector for the
 // custom excerpt class is passed, we use this one to populate the custom excerpt and remove it from the post content
-const processExcerpt = (html, excerptSelector) => {
+const processExcerpt = (html, excerptSelector = false) => {
     if (!html) {
         return '';
     }
@@ -84,6 +84,20 @@ const processExcerpt = (html, excerptSelector) => {
     const $html = $.load(html, {
         decodeEntities: false
     });
+
+    if (!excerptSelector) {
+        $html('*').each((i, el) => {
+            $(el).prepend(' ');
+            $(el).append(' ');
+        });
+
+        let trimmedExcerpt = $html.text().trim();
+
+        // Replace 2 or mor spaces with a single space
+        trimmedExcerpt = trimmedExcerpt.replace(/\s\s+/g, ' ');
+
+        return trimmedExcerpt;
+    }
 
     // TODO: this should be possible by using a pseudo selector as a passed `excerptSelector`, e. g. `h2.excerpt:first-of-type`,
     // which is officially supported by the underlying css-select library, but not working.
@@ -568,7 +582,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
  * }
  */
 const processPost = async (wpPost, users, options = {}, errors, fileCache) => { // eslint-disable-line no-shadow
-    let {tags: fetchTags, addTag, excerptSelector} = options;
+    let {tags: fetchTags, addTag, excerptSelector, excerpt} = options;
 
     let slug = wpPost.slug;
     let titleText = $.load(wpPost.title.rendered).text();
@@ -661,14 +675,18 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
         }
     }
 
-    if (excerptSelector) {
+    if (excerpt && !excerptSelector) {
+        post.data.custom_excerpt = processExcerpt(wpPost.excerpt.rendered);
+    }
+
+    if (!excerpt && excerptSelector) {
         post.data.custom_excerpt = processExcerpt(post.data.html, excerptSelector);
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
     post.data.html = await processContent({
         html: post.data.html,
-        excerptSelector,
+        excerptSelector: (!excerpt && excerptSelector) ? excerptSelector : false,
         featureImageSrc: post.data.feature_image,
         fileCache,
         options

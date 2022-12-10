@@ -89,6 +89,10 @@ const setup = (sywac) => {
         defaultValue: null,
         desc: 'The slug(s) of custom post type(s), e.g. `resources,newsletters`'
     });
+    sywac.boolean('--excerpt', {
+        defaultValue: true,
+        desc: 'Use the excerpt value from WordPress API'
+    });
     sywac.string('--excerptSelector', {
         defaultValue: null,
         desc: 'Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`'

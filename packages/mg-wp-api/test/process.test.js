@@ -215,6 +215,32 @@ describe('Process WordPress REST API JSON', function () {
 
         expect(data.title).toEqual('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua');
     });
+
+    test('Can use excerpt selector & remove from content', async function () {
+        const users = [];
+        const options = {
+            excerptSelector: 'h2'
+        };
+        const post = await processor.processPost(singlePostFixture, users, options);
+
+        const data = post.data;
+
+        expect(data.custom_excerpt).toEqual('This is my strong headline thing.');
+        expect(data.html).not.toContain('<h2><strong>This is my strong headline thing.</strong></h2>');
+    });
+
+    test('Can use excerpt from WordPress API', async function () {
+        const users = [];
+        const options = {
+            excerptSelector: false,
+            excerpt: true
+        };
+        const post = await processor.processPost(singlePostFixture, users, options);
+
+        const data = post.data;
+
+        expect(data.custom_excerpt).toEqual('This is my strong headline thing. Here we have some excerpt content [&hellip;]');
+    });
 });
 
 describe('Process WordPress HTML', function () {
