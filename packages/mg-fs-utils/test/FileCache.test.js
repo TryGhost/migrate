@@ -1,5 +1,5 @@
 import {jest} from '@jest/globals';
-import fs from 'fs-extra';
+// import fs from 'fs-extra';
 import imageTransform from '@tryghost/image-transform';
 import {FileCache} from '../lib/FileCache.js';
 
@@ -8,17 +8,22 @@ const mockStoragePath = `/tmp/blah/${mockFile}`;
 const mockOutputPath = `/content/images/${mockFile}`;
 const mockOriginalPath = `/tmp/blah/test_o.jpg`;
 
+// jest.mock('../lib/FileCache.js', () => {
+//     return jest.fn().mockImplementation(() => {
+//         return {saveFile: () => {
+//             return true;
+//         }};
+//     });
+// });
+
 describe('writeContentFile', function () {
-    let outputFileStub;
     let transformStub;
 
     beforeEach(function () {
-        outputFileStub = jest.spyOn(fs, 'outputFile');
         transformStub = jest.spyOn(imageTransform, 'resizeFromBuffer').mockReturnValue('optimizedimagebuffer');
     });
 
     afterEach(function () {
-        outputFileStub.mockReset();
         transformStub.mockReset();
     });
 
@@ -33,6 +38,7 @@ describe('writeContentFile', function () {
 
     it('Writes one file if optimize is false', async function () {
         let fileCache = new FileCache('test');
+        let spy = jest.spyOn(fileCache, 'saveFile').mockImplementation(() => true);
 
         let resultPath = await fileCache.writeContentFile('imagebuffer', {
             filename: mockFile,
@@ -41,14 +47,17 @@ describe('writeContentFile', function () {
             optimize: false
         });
 
-        expect(outputFileStub).toHaveBeenCalledTimes(1);
+        expect(fileCache.saveFile).toHaveBeenCalledTimes(1);
         expect(transformStub).toHaveBeenCalledTimes(0);
 
         expect(resultPath).toEqual(mockOutputPath);
+
+        spy.mockRestore();
     });
 
     it('Writes two files if optimize is true', async function () {
         let fileCache = new FileCache('test');
+        let spy = jest.spyOn(fileCache, 'saveFile').mockImplementation(() => true);
 
         let resultPath = await fileCache.writeContentFile('imagebuffer', {
             filename: mockFile,
@@ -57,17 +66,20 @@ describe('writeContentFile', function () {
             optimize: true
         });
 
-        expect(outputFileStub).toHaveBeenCalledTimes(2);
+        expect(fileCache.saveFile).toHaveBeenCalledTimes(2);
         expect(transformStub).toHaveBeenCalledTimes(1);
 
-        expect(outputFileStub.mock.calls[1]).toEqual([mockStoragePath, 'optimizedimagebuffer']);
-        expect(outputFileStub.mock.calls[0]).toEqual([mockOriginalPath, 'imagebuffer']);
+        expect(fileCache.saveFile.mock.calls[1]).toEqual([mockStoragePath, 'optimizedimagebuffer']);
+        expect(fileCache.saveFile.mock.calls[0]).toEqual([mockOriginalPath, 'imagebuffer']);
 
         expect(resultPath).toEqual(mockOutputPath);
+
+        spy.mockRestore();
     });
 
     it('Writes one file if the extension is not supported for optimization', async function () {
         let fileCache = new FileCache('test');
+        let spy = jest.spyOn(fileCache, 'saveFile').mockImplementation(() => true);
 
         let resultPath = await fileCache.writeContentFile('imagebuffer', {
             filename: 'blah.bmp',
@@ -76,10 +88,12 @@ describe('writeContentFile', function () {
             optimize: true
         });
 
-        expect(outputFileStub).toHaveBeenCalledTimes(1);
+        expect(fileCache.saveFile).toHaveBeenCalledTimes(1);
         expect(transformStub).toHaveBeenCalledTimes(0);
 
         expect(resultPath).toEqual('/content/images/blah.bmp');
+
+        spy.mockRestore();
     });
 
     it('Correctly converts file sizes', async function () {
@@ -94,7 +108,9 @@ describe('writeContentFile', function () {
         const check3 = fileCache.convertMbToBytes(20);
         expect(check3).toEqual(20971520);
     });
+});
 
+describe('resolveFileName character handling', function () {
     it('Will not shortern the storage path is too long', async function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
@@ -121,9 +137,7 @@ describe('writeContentFile', function () {
         expect(fileName.storagePath).toInclude('/content/images/my-images/blah.jpg');
         expect(fileName.outputPath).toEqual('/content/images/my-images/blah.jpg');
     });
-});
 
-describe('resolveFileName character handling', function () {
     it('Will handle Russian characters', async function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/счастливые-маленькие-деревья.jpeg');

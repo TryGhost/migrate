@@ -2,7 +2,9 @@ import path from 'node:path';
 import os from 'node:os';
 import crypto from 'node:crypto';
 import _ from 'lodash';
-import fs from 'fs-extra';
+import {writeFileSync, readdirSync, rmdir, lstatSync, existsSync} from 'node:fs';
+import {writeFile} from 'node:fs/promises';
+import {outputJson, outputJsonSync, mkdirpSync, readJson, remove, outputFile} from 'fs-extra/esm';
 import imageTransform from '@tryghost/image-transform';
 import errors from '@tryghost/errors';
 import transliterate from 'transliteration';
@@ -62,15 +64,15 @@ class FileCache {
     get cacheDir() {
         if (!this._cacheDir) {
             this._cacheDir = path.join(this.tmpDirPath, basePath, this.cacheKey);
-            fs.mkdirpSync(path.join(this.tmpDir));
+            mkdirpSync(path.join(this.tmpDir));
 
             // don't create the content directory when migrating members
             if (this.options && this.options.contentDir) {
-                fs.mkdirpSync(path.join(this.imageDir));
-                fs.mkdirpSync(path.join(this.mediaDir));
-                fs.mkdirpSync(path.join(this.filesDir));
+                mkdirpSync(path.join(this.imageDir));
+                mkdirpSync(path.join(this.mediaDir));
+                mkdirpSync(path.join(this.filesDir));
             } else {
-                fs.mkdirpSync(path.join(this.zipDir));
+                mkdirpSync(path.join(this.zipDir));
             }
         }
         return this._cacheDir;
@@ -222,9 +224,9 @@ class FileCache {
         let filepath = path.join(this.tmpDir, fileNameWithExt);
 
         if (isJSON) {
-            await fs.outputJson(filepath, data, {spaces: 2});
+            await outputJson(filepath, data, {spaces: 2});
         } else {
-            await fs.writeFile(filepath, data);
+            await writeFile(filepath, data);
         }
 
         return filepath;
@@ -242,9 +244,9 @@ class FileCache {
         let filepath = path.join(this.tmpDir, fileNameWithExt);
 
         if (isJSON) {
-            fs.outputJsonSync(filepath, data, {spaces: 2});
+            outputJsonSync(filepath, data, {spaces: 2});
         } else {
-            fs.writeFileSync(filepath, data);
+            writeFileSync(filepath, data);
         }
 
         return filepath;
@@ -259,7 +261,7 @@ class FileCache {
         let fileNameWithExt = (filename.endsWith('.json')) ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
         let filepath = path.join(this.tmpDir, fileNameWithExt);
 
-        return await fs.readJson(filepath);
+        return await readJson(filepath);
     }
 
     /**
@@ -271,7 +273,7 @@ class FileCache {
         let fileNameWithExt = (filename.endsWith('.json')) ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
         let filepath = path.join(this.tmpDir, fileNameWithExt);
 
-        return fs.existsSync(filepath);
+        return existsSync(filepath);
     }
 
     /**
@@ -296,9 +298,9 @@ class FileCache {
         let filepath = path.join(basepath, filename);
 
         if (isJSON) {
-            await fs.outputJson(filepath, data, {spaces: 2});
+            await outputJson(filepath, data, {spaces: 2});
         } else {
-            await fs.writeFile(filepath, data);
+            await writeFile(filepath, data);
         }
 
         return filepath;
@@ -332,7 +334,7 @@ class FileCache {
 
         const fileData = csv.jsonToCSV(dedupedData);
 
-        await fs.writeFile(filePath, fileData);
+        await writeFile(filePath, fileData);
 
         return {
             data: dedupedData,
@@ -357,20 +359,30 @@ class FileCache {
         if (options.optimize && imageTransform.canTransformToFormat(fileExt)) {
             try {
                 const originalStoragePath = imageTransform.generateOriginalImageName(options.storagePath);
-                await fs.outputFile(originalStoragePath, data);
+                await this.saveFile(originalStoragePath, data);
                 const optimizedStoragePath = options.storagePath;
                 const optimizedData = await imageTransform.resizeFromBuffer(data, {width: 2000});
-                await fs.outputFile(optimizedStoragePath, optimizedData);
+                await this.saveFile(optimizedStoragePath, optimizedData);
             } catch (error) {
                 // Silently fail and only save the original image without manipulation
                 // TODO: Catch errors and push to ctx.errors
-                await fs.outputFile(options.storagePath, data);
+                await this.saveFile(options.storagePath, data);
             }
         } else {
-            await fs.outputFile(options.storagePath, data);
+            await this.saveFile(options.storagePath, data);
         }
 
         return options.outputPath;
+    }
+
+    /**
+     * Alias fs-extra's 'outputFile' so we can more easily mock it
+     *
+     * @param {String} string - absolute path to where file should be saved
+     * @param {String|Buffer|Uint8Array} data - the file data to be saved
+     */
+    async saveFile(storagePath, data) {
+        return outputFile(storagePath, data);
     }
 
     /**
@@ -389,7 +401,7 @@ class FileCache {
         }
 
         try {
-            return fs.existsSync(pathToCheck);
+            return existsSync(pathToCheck);
         } catch (error) {
             return false;
         }
@@ -403,7 +415,7 @@ class FileCache {
         let siteCachePath = path.join(this.cacheBaseDir, this.cacheKey);
 
         try {
-            await fs.remove(siteCachePath);
+            await remove(siteCachePath);
             return true;
         } catch (error) {
             throw new errors.NotFoundError({message: 'Unknown file type'});
@@ -416,7 +428,7 @@ class FileCache {
     async emptyCacheDir() {
         const directory = this.cacheBaseDir + '/';
 
-        fs.existsSync(directory, (err) => {
+        existsSync(directory, (err) => {
             if (err) {
                 throw err;
             }
@@ -424,18 +436,18 @@ class FileCache {
         });
 
         let itemsToDelete = [];
-        const dirContents = fs.readdirSync(directory).map((fileName) => {
+        const dirContents = readdirSync(directory).map((fileName) => {
             return path.join(directory, fileName);
         });
 
         dirContents.forEach((item) => {
-            if (fs.lstatSync(item).isDirectory()) {
+            if (lstatSync(item).isDirectory()) {
                 itemsToDelete.push(item);
             }
         });
 
         itemsToDelete.forEach((item) => {
-            fs.rmdir(item, {recursive: true}, (err) => {
+            rmdir(item, {recursive: true}, (err) => {
                 if (err) {
                     throw err;
                 }
