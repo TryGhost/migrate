@@ -29,7 +29,7 @@
     "@tryghost/errors": "1.2.19",
     "@tryghost/listr-smart-renderer": "^0.4.5",
     "@tryghost/logging": "2.3.5",
-    "@tryghost/string": "0.2.1",
+    "@tryghost/string": "0.2.2",
     "cheerio": "1.0.0-rc.12",
     "file-type": "18.0.0",
     "fs-extra": "10.1.0",
