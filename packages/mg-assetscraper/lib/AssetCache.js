@@ -1,5 +1,6 @@
 import path from 'node:path';
-import fs from 'fs-extra';
+import {readdir} from 'node:fs/promises';
+import {readJson, ensureDirSync} from 'fs-extra/esm';
 import {slugify} from '@tryghost/string';
 
 const remove = (array, iteratee) => {
@@ -20,7 +21,7 @@ class AssetCache {
         this._cache = [];
 
         // Ensure `/assets/` exists
-        fs.ensureDirSync(`${this.fileCache.tmpDir}/assets/`);
+        ensureDirSync(`${this.fileCache.tmpDir}/assets/`);
     }
 
     /**
@@ -110,11 +111,11 @@ class AssetCache {
         if (typeof data === 'object') {
             this._cache = data;
         } else {
-            const files = await fs.readdir(data);
+            const files = await readdir(data);
 
             for (const file of files) {
                 if (file.endsWith('.json')) {
-                    let theJson = await fs.readJson(path.join(data, file));
+                    let theJson = await readJson(path.join(data, file));
                     this._cache.push(theJson);
                 }
             }
