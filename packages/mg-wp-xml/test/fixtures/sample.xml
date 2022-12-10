@@ -48,7 +48,7 @@
     <item>
       <title>Basic Post</title>
       <link>/blog/basic-post.html</link>
-      <content:encoded><![CDATA[<p>We're not testing HTML output here. That happens in @tryghost/mg-wp-api</p>]]></content:encoded>
+      <content:encoded><![CDATA[<h2>My excerpt in content</h2><p>We're not testing HTML output here. That happens in @tryghost/mg-wp-api</p>]]></content:encoded>
       <excerpt:encoded><![CDATA[<p>We're not testing HTML output here. That happens in @tryghost/mg-wp-api</p>]]></excerpt:encoded>
       <wp:post_name>basic-post.html</wp:post_name>
       <wp:post_type>post</wp:post_type>

@@ -100,13 +100,14 @@ const preProcessContent = async ({html}) => { // eslint-disable-line no-shadow
 const processHTMLContent = async (args) => {
     return await MgWpAPI.process.processContent({
         html: args.html,
+        excerptSelector: args.excerptSelector,
         postUrl: args.postUrl,
         options: args.options
     });
 };
 
 const processPost = async ($post, users, options) => {
-    const {addTag, siteUrl} = options;
+    const {addTag, siteUrl, excerpt, excerptSelector} = options;
     const postType = $($post).children('wp\\:post_type').text();
     const featureImage = processFeatureImage($post, options.attachments);
     const authorSlug = slugify($($post).children('dc\\:creator').text());
@@ -140,12 +141,6 @@ const processPost = async ($post, users, options) => {
         }
     };
 
-    const excerptText = $($post).children('excerpt\\:encoded').text();
-
-    if (excerptText.length > 0) {
-        post.data.custom_excerpt = excerptText;
-    }
-
     post.data.html = await preProcessContent({
         html: $($post).children('content\\:encoded').text()
     });
@@ -155,8 +150,16 @@ const processPost = async ($post, users, options) => {
     });
     post.data.html = mdParser.render(post.data.html);
 
+    if (excerpt && !excerptSelector) {
+        const excerptText = $($post).children('excerpt\\:encoded').text();
+        post.data.custom_excerpt = MgWpAPI.process.processExcerpt(excerptText);
+    } else if (!excerpt && excerptSelector) {
+        post.data.custom_excerpt = MgWpAPI.process.processExcerpt(post.data.html, excerptSelector);
+    }
+
     post.data.html = await processHTMLContent({
         html: post.data.html,
+        excerptSelector: (!excerpt && excerptSelector) ? excerptSelector : false,
         postUrl: post.url,
         options: options
     });

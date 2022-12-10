@@ -62,6 +62,12 @@ It's possible to pass more options, in order to achieve a better migration file 
     - string - default: `none` 
     - Choices: `none`, `'/yyyy/mm/'`, `'/yyyy/mm/dd/'`, `'/*/yyyy/mm/'`, `'/*/yyyy/mm/dd/'`
     - NOTE: When using `/*/`, this is only to match existing links. Fixed links will not contain this.
+- **`--excerpt`**
+    - bool - default: `true`
+    - Use the excerpt value from WordPress API
+- **`--excerptSelector`**
+    - string - default: `null`
+    - Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`
 - **`--fallBackHTMLCard`**
     - bool - default: `false`
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails

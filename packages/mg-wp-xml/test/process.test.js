@@ -159,4 +159,45 @@ describe('Process', function () {
         expect(author.url).toEqual('migrator-added-author');
         expect(author.data.slug).toEqual('migrator-added-author');
     });
+
+    test('Can use excerpt selector and remove from content', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                excerpt: false,
+                excerptSelector: 'h2'
+            }
+        };
+        const input = await readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+
+        const post = processed.posts[1];
+
+        expect(post).toBeObject();
+
+        expect(post.data).toBeObject();
+        expect(post.data.custom_excerpt).toEqual('My excerpt in content');
+        expect(post.data.html).not.toContain('<h2>My excerpt in content</h2>');
+    });
+
+    test('Can use excerpt from WordPress XML', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                excerpt: true,
+                excerptSelector: false
+            }
+        };
+        const input = await readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+
+        const post = processed.posts[1];
+
+        expect(post).toBeObject();
+
+        expect(post.data).toBeObject();
+        expect(post.data.custom_excerpt).toEqual('We\'re not testing HTML output here. That happens in @tryghost/mg-wp-api');
+    });
 });

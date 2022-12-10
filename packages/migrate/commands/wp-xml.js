@@ -56,6 +56,14 @@ const setup = (sywac) => {
         defaultValue: false,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
+    sywac.boolean('--excerpt', {
+        defaultValue: true,
+        desc: 'Use the excerpt value from WordPress API'
+    });
+    sywac.string('--excerptSelector', {
+        defaultValue: null,
+        desc: 'Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`'
+    });
     sywac.string('--removeSelectors', {
         defaultValue: null,
         desc: 'Pass in a string of CSS selectors for elements that will be removed, e.g. \'.ads, script[src*="adnetwork.com"]\''
