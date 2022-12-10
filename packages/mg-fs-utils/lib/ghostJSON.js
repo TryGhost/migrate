@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import {readJson} from 'fs-extra/esm';
 
 /**
  * Read a JSON file containing Ghost JSON data
@@ -11,7 +11,7 @@ import fs from 'fs-extra';
  * @param {String} jsonPath - name of file to read
  */
 const read = async (jsonPath) => {
-    return await fs.readJson(jsonPath);
+    return await readJson(jsonPath);
 };
 
 export default {
