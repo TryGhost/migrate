@@ -32,7 +32,7 @@
     "@tryghost/string": "0.2.1",
     "cheerio": "1.0.0-rc.12",
     "file-type": "18.0.0",
-    "fs-extra": "10.1.0",
+    "fs-extra": "11.1.0",
     "got": "11.8.5",
     "listr": "0.14.3",
     "markdown-it": "13.0.1",
