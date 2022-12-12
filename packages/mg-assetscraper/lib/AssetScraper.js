@@ -167,6 +167,10 @@ class AssetScraper {
             return false;
         }
 
+        if (input.trim().includes(' ')) {
+            return false;
+        }
+
         return true;
     }
 
