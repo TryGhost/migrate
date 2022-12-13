@@ -151,6 +151,16 @@ const processShortcodes = async ({html}) => {
         return ' ';
     });
 
+    shortcodes.add('et_pb_text', async (attrs, content) => {
+        // CASE: Divi Blog Extras uses these shortcodes for settings with text wrapped in `@ET-DC@..==@`, which should be removed if found
+        // Else return the contents
+        if (/^@ET-DC@.*==@$/.exec(content)) {
+            return ' ';
+        } else {
+            return content;
+        }
+    });
+
     // We don't want to change these, but only retain what's inside.
     let toRemove = [
         {
@@ -179,6 +189,30 @@ const processShortcodes = async ({html}) => {
         },
         {
             name: 'vc_column_text',
+            callback: (attrs, content) => {
+                return `${content} `;
+            }
+        },
+        {
+            name: 'et_pb_code_builder_version',
+            callback: (attrs, content) => {
+                return `${content} `;
+            }
+        },
+        {
+            name: 'et_pb_section',
+            callback: (attrs, content) => {
+                return `${content} `;
+            }
+        },
+        {
+            name: 'et_pb_column',
+            callback: (attrs, content) => {
+                return `${content} `;
+            }
+        },
+        {
+            name: 'et_pb_row',
             callback: (attrs, content) => {
                 return `${content} `;
             }

@@ -461,4 +461,28 @@ describe('Process shortcodes', function () {
 
         expect(convertedHtml).toEqual('Hello   World  ');
     });
+
+    test('Can remove Divi section shortcodes', async function () {
+        let html = '<p>[et_pb_section]My text here[/et_pb_section]</p>';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        expect(convertedHtml).toEqual('<p>My text here </p>');
+    });
+
+    test('Can remove tested Divi shortcodes', async function () {
+        let html = '<p>[et_pb_section][et_pb_column][et_pb_row]Row 1[/et_pb_row][et_pb_row]Row 2[/et_pb_row][/et_pb_column][/et_pb_section]</p>';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        expect(convertedHtml).toEqual('<p>Row 1 Row 2   </p>');
+    });
+
+    test('Can handle Divi text shortcodes', async function () {
+        let html = '<p>[et_pb_text]@ET-DC@abcd1234==@[/et_pb_text][et_pb_text]Hello[/et_pb_text]</p>';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        expect(convertedHtml).toEqual('<p> Hello</p>');
+    });
 });
