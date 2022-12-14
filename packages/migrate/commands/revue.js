@@ -24,7 +24,6 @@ const setup = (sywac) => {
         defaultValue: null,
         desc: 'Revue API Token'
     });
-    sywac.string('--zipPath', {
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
