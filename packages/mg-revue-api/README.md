@@ -28,11 +28,14 @@ or
 To run a Ghost API migration, the required command is:
 
 ```sh
-migrate revue <API token>
+migrate revue --apiToken <API token>
 ```
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
+- **`--apiToken`**
+    - string - default: `null`
+    - Revue API Token
 - **`-V` `--verbose`**
     - bool - default: `false`
     - Show verbose output
@@ -68,7 +71,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 A more complex migration command could look like this:
 
 ```sh
-migrate revue <API token> --email test@example.com --addPrimaryTag News
+migrate revue --apiToken <API token> --email test@example.com --addPrimaryTag News
 ```
 
 This will get all posts, apply the tag 'News', and all posts will be by author test@example.com

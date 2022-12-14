@@ -13,16 +13,18 @@ const id = 'revue';
 const group = 'Sources:';
 
 // The command to run and any params
-const flags = 'revue <apitoken>';
+const flags = 'revue';
 
 // Description for the top level command
 const desc = 'Migrate from Revue using the API';
 
-// Descriptions for the individual params
-const paramsDesc = ['Revue API Token'];
-
 // Configure all the options
 const setup = (sywac) => {
+    sywac.string('--apiToken', {
+        defaultValue: null,
+        desc: 'Revue API Token'
+    });
+    sywac.string('--zipPath', {
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
@@ -153,7 +155,6 @@ export default {
     group,
     flags,
     desc,
-    paramsDesc,
     setup,
     run
 };

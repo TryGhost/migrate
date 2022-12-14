@@ -1,12 +1,12 @@
 import got from 'got';
 import errors from '@tryghost/errors';
 
-const validateToken = async ({apitoken}) => {
+const validateToken = async ({apiToken}) => {
     const APIURL = 'https://www.getrevue.co/api/v2/';
     const requestOptions = {
         prefixUrl: APIURL,
         headers: {
-            authorization: `Token ${apitoken}`
+            authorization: `Token ${apiToken}`
         },
         responseType: 'json'
     };
@@ -22,12 +22,12 @@ const validateToken = async ({apitoken}) => {
     }
 };
 
-const discover = async ({apitoken}) => {
+const discover = async ({apiToken}) => {
     const APIURL = 'https://www.getrevue.co/api/v2/';
     const requestOptions = {
         prefixUrl: APIURL,
         headers: {
-            authorization: `Token ${apitoken}`
+            authorization: `Token ${apiToken}`
         },
         responseType: 'json'
     };
