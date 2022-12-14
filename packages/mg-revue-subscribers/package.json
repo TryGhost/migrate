@@ -27,7 +27,7 @@
   "dependencies": {
     "@tryghost/errors": "1.2.19",
     "@tryghost/string": "^0.2.0",
-    "got": "11.8.5",
+    "got": "11.8.6",
     "uuid": "9.0.0"
   }
 }
