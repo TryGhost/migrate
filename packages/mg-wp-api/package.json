@@ -25,7 +25,7 @@
     "jest-extended": "3.2.0"
   },
   "dependencies": {
-    "@tryghost/errors": "1.2.19",
+    "@tryghost/errors": "1.2.20",
     "@tryghost/mg-webscraper": "^0.8.6",
     "@tryghost/string": "0.2.2",
     "cheerio": "0.22.0",
