@@ -28,7 +28,7 @@
     "@tryghost/errors": "1.2.19",
     "@tryghost/image-transform": "1.2.3",
     "@tryghost/zip": "1.1.31",
-    "adm-zip": "0.5.9",
+    "adm-zip": "0.5.10",
     "csv-parse": "5.3.3",
     "date-fns": "2.29.3",
     "fs-extra": "11.1.0",
