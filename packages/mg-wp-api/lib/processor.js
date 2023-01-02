@@ -4,6 +4,7 @@ import $ from 'cheerio';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import {slugify} from '@tryghost/string';
 import Muteferrika from 'muteferrika';
+import {htmlToText} from 'html-to-text';
 
 const stripHtml = (html) => {
     // Remove HTML tags, new line characters, and trim white-space
@@ -81,28 +82,29 @@ const processExcerpt = (html, excerptSelector = false) => {
         return '';
     }
 
-    const $html = $.load(html, {
-        decodeEntities: false
-    });
+    let excerptText;
 
-    if (!excerptSelector) {
-        $html('*').each((i, el) => {
-            $(el).prepend(' ');
-            $(el).append(' ');
+    // Set the text to convert to either be the supplied string or found text in the supplied HTML chunk
+    if (excerptSelector) {
+        // TODO: this should be possible by using a pseudo selector as a passed `excerptSelector`, e. g. `h2.excerpt:first-of-type`,
+        const $html = $.load(html, {
+            decodeEntities: false
         });
 
-        let trimmedExcerpt = $html.text().trim();
-
-        // Replace 2 or mor spaces with a single space
-        trimmedExcerpt = trimmedExcerpt.replace(/\s\s+/g, ' ');
-
-        return trimmedExcerpt;
+        excerptText = $html(excerptSelector).first().html();
+    } else {
+        excerptText = html;
     }
 
-    // TODO: this should be possible by using a pseudo selector as a passed `excerptSelector`, e. g. `h2.excerpt:first-of-type`,
+    // Clean up the given text to contain no HTML
+    let excerpt = htmlToText(excerptText);
+
+    // Combine lines & trim excess white space
+    excerpt = excerpt.split('\n').join(' ').trim();
+
     // which is officially supported by the underlying css-select library, but not working.
-    if ($html(excerptSelector).length > 0) {
-        return $html(excerptSelector).first().text();
+    if (excerpt.length > 0) {
+        return excerpt;
     } else {
         return null;
     }

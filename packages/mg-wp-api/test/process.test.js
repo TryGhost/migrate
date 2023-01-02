@@ -239,7 +239,7 @@ describe('Process WordPress REST API JSON', function () {
 
         const data = post.data;
 
-        expect(data.custom_excerpt).toEqual('This is my strong headline thing. Here we have some excerpt content [&hellip;]');
+        expect(data.custom_excerpt).toEqual('This is my strong headline thing. Here we have some excerpt content […]');
     });
 });
 
@@ -262,6 +262,12 @@ describe('Process excerpt text handling', function () {
     test('Removes excess spaces', function () {
         let processed = processor.processExcerpt('<p> Hello     world</p>');
         expect(processed).toEqual('Hello world');
+    });
+
+    test('Does not trim very long string', function () {
+        let theString = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum tempus ut massa at cursus. Donec at sapien felis. Pellentesque rutrum arcu velit, eu pulvinar lorem consectetur porta. Nulla elementum dapibus ornare. Fusce in imperdiet nisl. Nulla viverra dapibus sapien id consectetur. Duis pharetra tempor ante, vel bibendum felis blandit non. Duis ut sem ac ligula finibus mattis vitae eget turpis. Praesent a dictum diam, ut pretium arcu. Aenean venenatis, sapien et euismod tincidunt, ex massa venenatis ex, non pellentesque nibh augue ac dolor. In at commodo orci, ut viverra purus. Maecenas at leo rhoncus tellus aliquet porta eu ac libero. Maecenas sagittis quis enim sed bibendum. Praesent mi nunc, mattis eu mattis ut, porta rhoncus felis. Phasellus elit est, vehicula non elit sed, tempor elementum felis. Nullam imperdiet porttitor enim non ultrices. Pellentesque dignissim sem sed tempus lacinia. Proin gravida mollis justo sed convallis. Morbi mattis est tincidunt est pharetra pulvinar. Vivamus scelerisque gravida cursus. Pellentesque non lorem ultrices, eleifend enim sed, gravida erat. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque faucibus eget magna at facilisis. Praesent feugiat lacinia sem, eu blandit ipsum fermentum eu.';
+        let processed = processor.processExcerpt(`<p><p>${theString}</p></p>`);
+        expect(processed).toEqual(theString);
     });
 });
 
