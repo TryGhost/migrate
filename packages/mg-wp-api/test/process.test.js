@@ -243,6 +243,28 @@ describe('Process WordPress REST API JSON', function () {
     });
 });
 
+describe('Process excerpt text handling', function () {
+    test('Basic text', function () {
+        let processed = processor.processExcerpt('Hello');
+        expect(processed).toEqual('Hello');
+    });
+
+    test('Basic text in <p> tags', function () {
+        let processed = processor.processExcerpt('<p>Hello world</p>');
+        expect(processed).toEqual('Hello world');
+    });
+
+    test('Text with formatting tags', function () {
+        let processed = processor.processExcerpt('<p><p>Hello <b>world</b><br>\n\n\t\t\r\r <u>this</u>\r\n is my <span><em>excerpt</em></span></p></p>');
+        expect(processed).toEqual('Hello world this is my excerpt');
+    });
+
+    test('Removes excess spaces', function () {
+        let processed = processor.processExcerpt('<p> Hello     world</p>');
+        expect(processed).toEqual('Hello world');
+    });
+});
+
 describe('Process WordPress HTML', function () {
     test('Can process basic HTML', async function () {
         const html = `<p>This is an example page. It&#8217;s different from a blog post.</p><ul><li>Lorem</li><li>Ipsum</li></ul><p><strong>Dolor</strong> <a href="https://ghost.org" title="Try Ghost">sit</a> <em>amet</em>.</p>`;
