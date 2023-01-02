@@ -15,6 +15,7 @@ describe('Process', function () {
         let ctx = {
             options: {
                 drafts: true,
+                posts: true,
                 pages: true
             }
         };
@@ -61,6 +62,7 @@ describe('Process', function () {
         let ctx = {
             options: {
                 drafts: true,
+                posts: true,
                 pages: true
             }
         };
@@ -107,6 +109,7 @@ describe('Process', function () {
         let ctx = {
             options: {
                 drafts: true,
+                posts: true,
                 pages: true
             }
         };
@@ -140,5 +143,36 @@ describe('Process', function () {
         expect(author).toBeObject();
         expect(author.url).toEqual('migrator-added-author');
         expect(author.data.slug).toEqual('migrator-added-author');
+    });
+
+    test('Can only convert posts', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                posts: true,
+                pages: false
+            }
+        };
+        const input = await readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+
+        expect(processed.posts).toBeArrayOfSize(2);
+        expect(processed.posts[0].data.type).toEqual('post');
+        expect(processed.posts[1].data.type).toEqual('post');
+    });
+
+    test('Can only convert pages', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                posts: false,
+                pages: true
+            }
+        };
+        const input = await readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+
+        expect(processed.posts).toBeArrayOfSize(1);
+        expect(processed.posts[0].data.type).toEqual('page');
     });
 });

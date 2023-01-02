@@ -190,7 +190,7 @@ const processUsers = ($xml) => {
 };
 
 const all = async (input, {options}) => {
-    const {drafts, pages} = options;
+    const {drafts, posts, pages} = options;
     const output = {
         posts: [],
         users: []
@@ -220,8 +220,13 @@ const all = async (input, {options}) => {
         output.posts = output.posts.filter(post => post.data.status !== 'draft');
     }
 
+    if (!posts) {
+        // remove posts
+        output.posts = output.posts.filter(post => post.data.type !== 'post');
+    }
+
     if (!pages) {
-        // remove pages. absolute not supported by default and not tested!!
+        // remove pages
         output.posts = output.posts.filter(post => post.data.type !== 'page');
     }
 

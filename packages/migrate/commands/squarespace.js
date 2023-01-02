@@ -39,6 +39,10 @@ const setup = (sywac) => {
         defaultValue: true,
         desc: 'Import draft posts'
     });
+    sywac.boolean('--posts', {
+        defaultValue: true,
+        desc: 'Import Squarespace posts'
+    });
     sywac.boolean('--pages', {
         defaultValue: false,
         desc: 'Import Squarespace pages'

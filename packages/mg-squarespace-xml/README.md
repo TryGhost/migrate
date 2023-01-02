@@ -46,6 +46,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--drafts`**
     - bool - default: `true`
     - Import draft posts
+- **`--posts`**
+    - bool - default: `true`
+    - Import Squarespace posts
 - **`--pages`**
     - bool - default: `false`
     - Import Squarespace pages
