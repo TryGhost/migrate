@@ -1,8 +1,6 @@
 # Shortcodes
 
-This package wraps the excellent [universal-shortcodes](https://github.com/EvidentlyCube/universal-shortcodes), and adds utility functions to make adding support for shortcodes easier between different tools. It typecasts attribute values (string, int, float, bool) and handles encoded quotes (_pretty quotes_) that sometimes wrap attributes.
-
-Unhandled shortcodes are returned without modification.
+A barebones shortcode parser that handles edge cases.
 
 ## Install
 
@@ -20,7 +18,7 @@ or
 import Shortcodes from '@tryghost/mg-shortcodes';
 
 // Create a new instance
-const ShortcodeParser = new Shortcodes();
+const shortcodes = new Shortcodes();
 
 // Handle [link] shortcodes
 shortcodes.add('link', ({attrs, content}) => {
