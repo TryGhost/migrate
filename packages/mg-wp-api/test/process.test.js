@@ -487,7 +487,7 @@ describe('Process shortcodes', function () {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        expect(convertedHtml).toEqual('Hello   World  ');
+        expect(convertedHtml).toEqual('Hello  World ');
     });
 
     test('Can remove Divi section shortcodes', async function () {

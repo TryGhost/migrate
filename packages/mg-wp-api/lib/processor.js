@@ -2,8 +2,8 @@ import url from 'node:url';
 import _ from 'lodash';
 import $ from 'cheerio';
 import MgWebScraper from '@tryghost/mg-webscraper';
+import Shortcodes from '@tryghost/mg-shortcodes';
 import {slugify} from '@tryghost/string';
-import Muteferrika from 'muteferrika';
 import {htmlToText} from 'html-to-text';
 
 const stripHtml = (html) => {
@@ -111,9 +111,9 @@ const processExcerpt = (html, excerptSelector = false) => {
 };
 
 const processShortcodes = async ({html}) => {
-    const shortcodes = new Muteferrika();
+    const shortcodes = new Shortcodes();
 
-    shortcodes.add('vc_btn', async (attrs) => {
+    shortcodes.add('vc_btn', ({attrs}) => {
         let buttonHref = attrs.link;
 
         // Sometimes URLs have a `url:` prefix which we don't want
@@ -126,7 +126,7 @@ const processShortcodes = async ({html}) => {
         return `<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="${buttonHref}">${attrs.title}</a></div></div>`;
     });
 
-    shortcodes.add('caption', async (attrs, content) => {
+    shortcodes.add('caption', ({content}) => {
         const $html = $.load(content, {
             decodeEntities: false
         });
@@ -145,15 +145,15 @@ const processShortcodes = async ({html}) => {
         return $.html($figure);
     });
 
-    shortcodes.add('vc_separator', async () => {
+    shortcodes.add('vc_separator', () => {
         return '<hr>';
     });
 
-    shortcodes.add('gravityform', async () => {
-        return ' ';
+    shortcodes.add('gravityform', () => {
+        return '';
     });
 
-    shortcodes.add('et_pb_text', async (attrs, content) => {
+    shortcodes.add('et_pb_text', ({content}) => {
         // CASE: Divi Blog Extras uses these shortcodes for settings with text wrapped in `@ET-DC@..==@`, which should be removed if found
         // Else return the contents
         if (/^@ET-DC@.*==@$/.exec(content)) {
@@ -164,68 +164,17 @@ const processShortcodes = async ({html}) => {
     });
 
     // We don't want to change these, but only retain what's inside.
-    let toRemove = [
-        {
-            name: 'row',
-            callback: (attrs, content) => {
-                return `${content} `;
-            }
-        },
-        {
-            name: 'column',
-            callback: (attrs, content) => {
-                return `${content} `;
-            }
-        },
-        {
-            name: 'vc_row',
-            callback: (attrs, content) => {
-                return `${content} `;
-            }
-        },
-        {
-            name: 'vc_column',
-            callback: (attrs, content) => {
-                return `${content} `;
-            }
-        },
-        {
-            name: 'vc_column_text',
-            callback: (attrs, content) => {
-                return `${content} `;
-            }
-        },
-        {
-            name: 'et_pb_code_builder_version',
-            callback: (attrs, content) => {
-                return `${content} `;
-            }
-        },
-        {
-            name: 'et_pb_section',
-            callback: (attrs, content) => {
-                return `${content} `;
-            }
-        },
-        {
-            name: 'et_pb_column',
-            callback: (attrs, content) => {
-                return `${content} `;
-            }
-        },
-        {
-            name: 'et_pb_row',
-            callback: (attrs, content) => {
-                return `${content} `;
-            }
-        }
-    ];
+    shortcodes.unwrap('row');
+    shortcodes.unwrap('column');
+    shortcodes.unwrap('vc_row');
+    shortcodes.unwrap('vc_column');
+    shortcodes.unwrap('vc_column_text');
+    shortcodes.unwrap('et_pb_code_builder_version');
+    shortcodes.unwrap('et_pb_section');
+    shortcodes.unwrap('et_pb_column');
+    shortcodes.unwrap('et_pb_row');
 
-    shortcodes.addRange(toRemove);
-
-    const output = await shortcodes.render(html);
-
-    return output;
+    return shortcodes.parse(html);
 };
 
 /**
