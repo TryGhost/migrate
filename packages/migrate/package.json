@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/migrate",
-  "version": "0.29.3",
+  "version": "0.29.4",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/migrate",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -50,8 +50,8 @@
     "@tryghost/mg-substack": "^0.2.11",
     "@tryghost/mg-substack-members-csv": "^0.3.6",
     "@tryghost/mg-webscraper": "^0.8.7",
-    "@tryghost/mg-wp-api": "^0.8.8",
-    "@tryghost/mg-wp-xml": "^0.1.6",
+    "@tryghost/mg-wp-api": "^0.9.0",
+    "@tryghost/mg-wp-xml": "^0.2.0",
     "@tryghost/pretty-cli": "1.2.33",
     "@tryghost/string": "0.2.2",
     "cheerio": "0.22.0",
