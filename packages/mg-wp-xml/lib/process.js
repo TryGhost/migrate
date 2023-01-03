@@ -91,6 +91,13 @@ const preProcessContent = async ({html}) => { // eslint-disable-line no-shadow
 
     // 👀 If any XML-specific processing needs to be done, this is the place to do it.
 
+    // Remove empty link elements, typically HTML anchors
+    $html('a').each((i, el) => {
+        if ($(el).html().length === 0) {
+            $(el).remove();
+        }
+    });
+
     // convert HTML back to a string
     html = $html.html();
 
