@@ -15,7 +15,7 @@ class Shortcodes {
     }
 
     unwrapFromQuotes(string) {
-        const chars = ['’', '”', '“', '‘', '"'];
+        const chars = ['’', '”', '“', '‘', '"', '&quot;'];
         const quoteRegExp = new RegExp(`^(${chars.join('|')})|(${chars.join('|')})$`, 'gm');
         return string.replace(quoteRegExp, '');
     }
