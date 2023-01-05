@@ -513,4 +513,12 @@ describe('Process shortcodes', function () {
 
         expect(convertedHtml).toEqual('<p> Hello</p>');
     });
+
+    test('Can handle advanced_iframe shortcodes', async function () {
+        let html = '[advanced_iframe frameborder="0" height="200" scrolling="no" src="https://example.com?e=123456"]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        expect(convertedHtml).toEqual('<iframe src="https://example.com?e=123456" height="200" style="border:0; width: 100%;" loading="lazy"></iframe>');
+    });
 });

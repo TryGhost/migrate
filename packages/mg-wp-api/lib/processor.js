@@ -163,6 +163,10 @@ const processShortcodes = async ({html}) => {
         }
     });
 
+    shortcodes.add('advanced_iframe', ({attrs}) => {
+        return `<iframe src="${attrs.src}" height="${attrs.height}" style="border:0; width: 100%;" loading="lazy"></iframe>`;
+    });
+
     // We don't want to change these, but only retain what's inside.
     shortcodes.unwrap('row');
     shortcodes.unwrap('column');
