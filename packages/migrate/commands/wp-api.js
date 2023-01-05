@@ -85,6 +85,14 @@ const setup = (sywac) => {
         defaultValue: 'none',
         desc: 'Set the dated permalink structure (e.g. /yyyy/mm/dd/) [See readme for details]'
     });
+    sywac.string('--postsBefore', {
+        defaultValue: null,
+        desc: 'Only migrate posts before and including a given date e.g. \'March 20 2018\''
+    });
+    sywac.string('--postsAfter', {
+        defaultValue: null,
+        desc: 'Only migrate posts after and including a given date e.g. \'August 16 2021\''
+    });
     sywac.string('--cpt', {
         defaultValue: null,
         desc: 'The slug(s) of custom post type(s), e.g. `resources,newsletters`'
