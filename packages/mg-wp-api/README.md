@@ -81,6 +81,12 @@ It's possible to pass more options, in order to achieve a better migration file 
     - string - default: `none` 
     - Choices: `none`, `'/yyyy/mm/'`, `'/yyyy/mm/dd/'`, `'/*/yyyy/mm/'`, `'/*/yyyy/mm/dd/'`
     - NOTE: When using `/*/`, this is only to match existing links. Fixed links will not contain this.
+- **`--postsBefore`** 
+    - Only migrate posts before and including a given date e.g. 'March 20 2018'
+    - string - default: `null`
+- **`--postsAfter`** 
+    - Only migrate posts after and including a given date e.g. 'August 16 2022'
+    - string - default: `null`
 - **`--cpt`** 
     - A comma-separated list of custom post type slugs e.g. `resources,newsletters`
     - string - default: `null`

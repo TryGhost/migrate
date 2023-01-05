@@ -5,6 +5,7 @@ import MgWebScraper from '@tryghost/mg-webscraper';
 import Shortcodes from '@tryghost/mg-shortcodes';
 import {slugify} from '@tryghost/string';
 import {htmlToText} from 'html-to-text';
+import {formatISO, parseISO, isBefore, isAfter, add} from 'date-fns';
 
 const stripHtml = (html) => {
     // Remove HTML tags, new line characters, and trim white-space
@@ -685,6 +686,43 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
 };
 
 const processPosts = async (posts, users, options, errors, fileCache) => { // eslint-disable-line no-shadow
+    if (options.postsBefore && options.postsAfter) {
+        const startDate = parseISO(formatISO(new Date(options.postsAfter)));
+        const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
+            days: 1
+        });
+
+        posts = posts.filter((post) => {
+            if (isAfter(parseISO(post.date_gmt), startDate) && isBefore(parseISO(post.date_gmt), endDate)) {
+                return post;
+            } else {
+                return false;
+            }
+        });
+    } else if (options.postsAfter) {
+        const startDate = parseISO(formatISO(new Date(options.postsAfter)));
+
+        posts = posts.filter((post) => {
+            if (isAfter(parseISO(post.date_gmt), startDate)) {
+                return post;
+            } else {
+                return false;
+            }
+        });
+    } else if (options.postsBefore) {
+        const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
+            days: 1
+        });
+
+        posts = posts.filter((post) => {
+            if (isBefore(parseISO(post.date_gmt), endDate)) {
+                return post;
+            } else {
+                return false;
+            }
+        });
+    }
+
     return Promise.all(posts.map(post => processPost(post, users, options, errors, fileCache)));
 };
 

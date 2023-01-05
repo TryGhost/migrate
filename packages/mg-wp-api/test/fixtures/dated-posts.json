@@ -1,0 +1,38 @@
+[
+  {
+      "date_gmt": "2022-03-01T11:06:00",
+      "modified_gmt": "2022-03-01T11:07:00",
+      "type": "post",
+      "title": {
+          "rendered": "Lorem"
+      },
+      "content": {
+          "rendered": ""
+      },
+      "author": 11
+  },
+  {
+      "date_gmt": "2021-03-01T11:06:00",
+      "modified_gmt": "2021-03-01T11:07:00",
+      "type": "post",
+      "title": {
+          "rendered": "Ipsum"
+      },
+      "content": {
+          "rendered": ""
+      },
+      "author": 11
+  },
+  {
+      "date_gmt": "2020-03-01T11:06:00",
+      "modified_gmt": "2020-03-01T11:07:00",
+      "type": "post",
+      "title": {
+          "rendered": "Dolor"
+      },
+      "content": {
+          "rendered": ""
+      },
+      "author": 11
+  }
+]

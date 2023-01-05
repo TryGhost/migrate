@@ -9,6 +9,7 @@ import singleCptPostfixture from './fixtures/single-cpt-post.json';
 import singlePostWithDuplicateImagesfixture from './fixtures/single-post-with-duplicate-images.json';
 import singlePostWithHtmlInTitlefixture from './fixtures/single-post-with-html-in-title.json';
 import singlePostNoAuthorFixture from './fixtures/single-post-no-author.json';
+import datedPosts from './fixtures/dated-posts.json';
 
 describe('Process WordPress REST API JSON', function () {
     test('Can convert a single post', async function () {
@@ -240,6 +241,107 @@ describe('Process WordPress REST API JSON', function () {
         const data = post.data;
 
         expect(data.custom_excerpt).toEqual('This is my strong headline thing. Here we have some excerpt content […]');
+    });
+
+    test('Does not filter posts by date of options not present', async function () {
+        const users = [
+            {
+                data: {
+                    id: 11,
+                    name: 'Example User',
+                    slug: 'example'
+                }
+            }
+        ];
+
+        const options = {
+            tags: true,
+            addTag: null,
+            featureImage: 'featuredmedia',
+            url: 'https://mysite.com/bloob'
+        };
+
+        const posts = await processor.processPosts(datedPosts, users, options);
+
+        expect(posts).toBeArrayOfSize(3);
+    });
+
+    test('Can filter by postsBefore', async function () {
+        const users = [
+            {
+                data: {
+                    id: 11,
+                    name: 'Example User',
+                    slug: 'example'
+                }
+            }
+        ];
+
+        const options = {
+            tags: true,
+            addTag: null,
+            featureImage: 'featuredmedia',
+            url: 'https://mysite.com/bloob',
+            postsBefore: 'March 01 2021'
+        };
+
+        const posts = await processor.processPosts(datedPosts, users, options);
+
+        expect(posts).toBeArrayOfSize(2);
+        expect(posts[0].data.published_at).toEqual('2021-03-01T11:06:00');
+        expect(posts[1].data.published_at).toEqual('2020-03-01T11:06:00');
+    });
+
+    test('Can filter by postsAfter', async function () {
+        const users = [
+            {
+                data: {
+                    id: 11,
+                    name: 'Example User',
+                    slug: 'example'
+                }
+            }
+        ];
+
+        const options = {
+            tags: true,
+            addTag: null,
+            featureImage: 'featuredmedia',
+            url: 'https://mysite.com/bloob',
+            postsAfter: 'March 01 2021'
+        };
+
+        const posts = await processor.processPosts(datedPosts, users, options);
+
+        expect(posts).toBeArrayOfSize(2);
+        expect(posts[0].data.published_at).toEqual('2022-03-01T11:06:00');
+        expect(posts[1].data.published_at).toEqual('2021-03-01T11:06:00');
+    });
+
+    test('Can filter by postsBefore and postsAfter', async function () {
+        const users = [
+            {
+                data: {
+                    id: 11,
+                    name: 'Example User',
+                    slug: 'example'
+                }
+            }
+        ];
+
+        const options = {
+            tags: true,
+            addTag: null,
+            featureImage: 'featuredmedia',
+            url: 'https://mysite.com/bloob',
+            postsAfter: 'June 01 2020',
+            postsBefore: 'June 01 2021'
+        };
+
+        const posts = await processor.processPosts(datedPosts, users, options);
+
+        expect(posts).toBeArrayOfSize(1);
+        expect(posts[0].data.published_at).toEqual('2021-03-01T11:06:00');
     });
 });
 
