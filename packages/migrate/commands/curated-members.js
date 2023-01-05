@@ -27,7 +27,7 @@ const setup = (sywac) => {
         desc: 'Create a zip file (set to false to skip)'
     });
     sywac.number('-l, --limit', {
-        defaultValue: 5000,
+        defaultValue: 50000,
         desc: 'Define the batch limit for import files.'
     });
     sywac.string('--freeLabel', {
