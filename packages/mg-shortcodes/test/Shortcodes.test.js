@@ -265,6 +265,24 @@ describe('Shortcode attributes', function () {
 
         expect(parsed).toEqual('<a href="https://example.com/test-link">Case</a>');
     });
+
+    test('Handle empty key values', function () {
+        const shortcodes = new Shortcodes();
+
+        shortcodes.add('et_pb_button', ({attrs}) => {
+            expect(attrs.button_url).toEqual('');
+            expect(attrs.button_text).toEqual('Case');
+            expect(attrs.button_alt).toEqual('');
+
+            return `<a href="${attrs.button_url}" alt="${attrs.button_alt}">${attrs.button_text}</a>`;
+        });
+
+        const html = `[et_pb_button button_url="" button_text="Case" button_alt=]`;
+
+        let parsed = shortcodes.parse(html);
+
+        expect(parsed).toEqual('<a href="" alt="">Case</a>');
+    });
 });
 
 describe('Shortcode processing', function () {

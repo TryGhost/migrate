@@ -30,11 +30,11 @@ class Shortcodes {
         tagAttrMatches.forEach((item) => {
             let theKey;
             let theValue;
-            if (item[1] && item[2]) {
+            if (item[1] && item[2] !== 'undefined') {
                 // Quoted key="value" pairs
                 theKey = item[1];
                 theValue = this.typeCast(item[2]);
-            } else if (item[5] && item[6]) {
+            } else if (item[5] && item[6] !== 'undefined') {
                 // Unquoted key=value pairs
                 theKey = item[5];
                 theValue = this.typeCast(item[6]);
@@ -158,6 +158,7 @@ class Shortcodes {
         let knownShortcode = this.hasKnownShortcode(text);
 
         if (knownShortcode) {
+            // console.log({knownShortcode});
             const theCall = this.getCallback(knownShortcode.name);
             const attrs = this.parseAttributes(knownShortcode.match.groups.attrs);
             const content = knownShortcode.match.groups.content;
