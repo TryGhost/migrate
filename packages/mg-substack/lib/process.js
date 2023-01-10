@@ -155,7 +155,7 @@ const processContent = (post, siteUrl, options) => {
     });
 
     $html('ul, ol').each((i, list) => {
-        if ($(list).find('img, div, figure, blockquote').length) {
+        if ($(list).find('img, div, figure, blockquote, .button-wrapper').length) {
             $(list).before('<!--kg-card-begin: html-->');
             $(list).after('<!--kg-card-end: html-->');
         }
