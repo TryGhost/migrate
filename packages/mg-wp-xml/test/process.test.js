@@ -130,7 +130,7 @@ describe('Process', function () {
         const input = await readSync('sample.xml');
         const processed = await process.all(input, ctx);
 
-        const page = processed.posts[2];
+        const page = processed.posts[3];
 
         expect(page).toBeObject();
         expect(page.url).toEqual('https://example.com/services');
@@ -199,5 +199,89 @@ describe('Process', function () {
 
         expect(post.data).toBeObject();
         expect(post.data.custom_excerpt).toEqual('We\'re not testing HTML output here. That happens in @tryghost/mg-wp-api');
+    });
+
+    test('Does not filter posts by date of options not present', async function () {
+        let ctx = {
+            options: {
+                tags: true,
+                addTag: null,
+                featureImage: 'featuredmedia',
+                url: 'https://mysite.com/bloob',
+                pages: false,
+                drafts: true
+            }
+        };
+
+        const input = await readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+        const posts = processed.posts;
+
+        expect(posts).toBeArrayOfSize(3);
+    });
+
+    test('Can filter by postsBefore', async function () {
+        let ctx = {
+            options: {
+                tags: true,
+                addTag: null,
+                featureImage: 'featuredmedia',
+                url: 'https://mysite.com/bloob',
+                pages: false,
+                drafts: true,
+                postsBefore: 'May 01 2013'
+            }
+        };
+
+        const input = await readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+        const posts = processed.posts;
+
+        expect(posts).toBeArrayOfSize(1);
+        expect(posts[0].data.published_at).toEqual(new Date('2012-06-07T03:00:44.000Z'));
+    });
+
+    test('Can filter by postsAfter', async function () {
+        let ctx = {
+            options: {
+                tags: true,
+                addTag: null,
+                featureImage: 'featuredmedia',
+                url: 'https://mysite.com/bloob',
+                pages: false,
+                drafts: true,
+                postsAfter: 'May 01 2013'
+            }
+        };
+
+        const input = await readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+        const posts = processed.posts;
+
+        expect(posts).toBeArrayOfSize(2);
+        expect(posts[0].data.published_at).toEqual(new Date('2013-11-02T23:02:32.000Z'));
+        expect(posts[1].data.published_at).toEqual(new Date('2013-06-07T03:00:44.000Z'));
+    });
+
+    test('Can filter by postsBefore and postsAfter', async function () {
+        let ctx = {
+            options: {
+                tags: true,
+                addTag: null,
+                featureImage: 'featuredmedia',
+                url: 'https://mysite.com/bloob',
+                pages: false,
+                drafts: true,
+                postsBefore: 'May 01 2013',
+                postsAfter: 'May 01 2012'
+            }
+        };
+
+        const input = await readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+        const posts = processed.posts;
+
+        expect(posts).toBeArrayOfSize(1);
+        expect(posts[0].data.published_at).toEqual(new Date('2012-06-07T03:00:44.000Z'));
     });
 });

@@ -68,6 +68,28 @@
       </wp:postmeta>
     </item>
     <item>
+      <title>Another Post</title>
+      <link>/blog/another-post.html</link>
+      <content:encoded><![CDATA[<h2>My excerpt in content</h2><p>We're not testing HTML output here. That happens in @tryghost/mg-wp-api</p>]]></content:encoded>
+      <excerpt:encoded><![CDATA[<p>We're not testing HTML output here. That happens in @tryghost/mg-wp-api</p>]]></excerpt:encoded>
+      <wp:post_name>another-post.html</wp:post_name>
+      <wp:post_type>post</wp:post_type>
+      <wp:post_id>14</wp:post_id>
+      <wp:status>publish</wp:status>
+      <pubDate>Fri, 07 Jun 2012 03:00:44 +0000</pubDate>
+      <wp:post_date>2012-06-07 03:00:44</wp:post_date>
+      <wp:post_date_gmt>2012-06-07 03:00:44</wp:post_date_gmt>
+      <category domain="post_tag" nicename="has-images"><![CDATA[Has Images]]></category>
+      <category domain="post_tag" nicename="programming"><![CDATA[Programming]]></category>
+      <category domain="category" nicename="company-news"><![CDATA[Company News]]></category>
+      <dc:creator>hermione@example.com</dc:creator>
+      <wp:comment_status>open</wp:comment_status>
+      <wp:postmeta>
+        <wp:meta_key>_thumbnail_id</wp:meta_key>
+        <wp:meta_value><![CDATA[5]]></wp:meta_value>
+      </wp:postmeta>
+    </item>
+    <item>
       <wp:attachment_url>https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1268&q=80</wp:attachment_url>
       <link>https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1268&q=80</link>
       <title>miniature-green-pumpkin-on-white-table</title>
