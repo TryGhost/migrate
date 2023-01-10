@@ -29,6 +29,7 @@ const jsonTasks = {
         if (options.htmlCard) {
             title += ' [HTML Card]';
         }
+
         return {
             // @TODO don't duplicate this with medium
             title: title,
@@ -131,7 +132,8 @@ const getTaskRunner = (type, pathToJSON, options) => {
             task: async (ctx) => {
                 ctx.result = await fsUtils.ghostJSON.read(pathToJSON);
             }
-        }];
+        }
+    ];
 
     tasks.push(jsonTasks[type](options));
 

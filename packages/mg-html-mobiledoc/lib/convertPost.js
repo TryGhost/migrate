@@ -3,7 +3,7 @@ import errors from '@tryghost/errors';
 import {convertToHTMLCard} from './convertToHTMLCard.js';
 
 const convertPost = (post, htmlCard = false) => {
-    if (!post.html) {
+    if (!Object.hasOwn(post, 'html')) {
         throw new errors.InternalServerError({message: 'Post has no html field to convert'});
     }
 

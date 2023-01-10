@@ -1,6 +1,6 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
-import json from '../../lib/utilties/json.js';
+import getTaskRunner from '../../lib/utilties/json.js';
 
 const id = 'json-email';
 
@@ -35,7 +35,7 @@ const run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let utility = json.getTaskRunner('email', argv.pathToJSON, argv);
+        let utility = getTaskRunner('email', argv.pathToJSON, argv);
 
         // Run the migration
         await utility.run(context);

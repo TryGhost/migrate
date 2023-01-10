@@ -1,6 +1,6 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
-import json from '../../lib/utilties/json.js';
+import getTaskRunner from '../../lib/utilties/json.js';
 
 const id = 'json-html';
 
@@ -13,6 +13,10 @@ const setup = (sywac) => {
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
+    });
+    sywac.boolean('--fallBackHTMLCard', {
+        defaultValue: false,
+        desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
 };
 
@@ -31,7 +35,7 @@ const run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let utility = json.getTaskRunner('html', argv.pathToJSON, argv);
+        let utility = getTaskRunner('html', argv.pathToJSON, argv);
 
         // Run the migration
         await utility.run(context);
