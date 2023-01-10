@@ -52,6 +52,14 @@ const setup = (sywac) => {
         defaultValue: 'none',
         desc: 'Set the dated permalink structure (e.g. /yyyy/mm/dd/)'
     });
+    sywac.string('--postsBefore', {
+        defaultValue: null,
+        desc: 'Only migrate posts before and including a given date e.g. \'March 20 2018\''
+    });
+    sywac.string('--postsAfter', {
+        defaultValue: null,
+        desc: 'Only migrate posts after and including a given date e.g. \'August 16 2021\''
+    });
     sywac.boolean('--fallBackHTMLCard', {
         defaultValue: false,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'

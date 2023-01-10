@@ -5,6 +5,7 @@ import {parse} from 'date-fns';
 import errors from '@tryghost/errors';
 import MarkdownIt from 'markdown-it';
 import MgWpAPI from '@tryghost/mg-wp-api';
+import {formatISO, parseISO, isBefore, isAfter, add} from 'date-fns';
 
 const processUser = ($user) => {
     const authorSlug = slugify($($user).children('wp\\:author_login').text());
@@ -307,6 +308,43 @@ const all = async (input, {options}) => {
 
     options.attachments = await processAttachments($xml, options);
     output.posts = await processPosts($xml, output.users, options);
+
+    if (options.postsBefore && options.postsAfter) {
+        const startDate = parseISO(formatISO(new Date(options.postsAfter)));
+        const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
+            days: 1
+        });
+
+        output.posts = output.posts.filter((post) => {
+            if (isAfter(post.data.published_at, startDate) && isBefore(post.data.published_at, endDate)) {
+                return post;
+            } else {
+                return false;
+            }
+        });
+    } else if (options.postsAfter) {
+        const startDate = parseISO(formatISO(new Date(options.postsAfter)));
+
+        output.posts = output.posts.filter((post) => {
+            if (isAfter(post.data.published_at, startDate)) {
+                return post;
+            } else {
+                return false;
+            }
+        });
+    } else if (options.postsBefore) {
+        const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
+            days: 1
+        });
+
+        output.posts = output.posts.filter((post) => {
+            if (isBefore(post.data.published_at, endDate)) {
+                return post;
+            } else {
+                return false;
+            }
+        });
+    }
 
     if (!drafts) {
         // remove draft posts
