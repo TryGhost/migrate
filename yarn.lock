@@ -5033,17 +5033,17 @@ listr-verbose-renderer@^0.5.0:
     date-fns "^1.27.2"
     figures "^2.0.0"
 
-listr2@5.0.6:
-  version "5.0.6"
-  resolved "https://registry.yarnpkg.com/listr2/-/listr2-5.0.6.tgz#3c61153383869ffaad08a8908d63edfde481dff8"
-  integrity sha512-u60KxKBy1BR2uLJNTWNptzWQ1ob/gjMzIJPZffAENzpZqbMZ/5PrXXOomDcevIS/+IB7s1mmCEtSlT2qHWMqag==
+listr2@5.0.7:
+  version "5.0.7"
+  resolved "https://registry.yarnpkg.com/listr2/-/listr2-5.0.7.tgz#de69ccc4caf6bea7da03c74f7a2ffecf3904bd53"
+  integrity sha512-MD+qXHPmtivrHIDRwPYdfNkrzqDiuaKU/rfBcec3WMyMF3xylQj3jMq344OtvQxz7zaCFViRAeqlr2AFhPvXHw==
   dependencies:
     cli-truncate "^2.1.0"
     colorette "^2.0.19"
     log-update "^4.0.0"
     p-map "^4.0.0"
     rfdc "^1.3.0"
-    rxjs "^7.5.7"
+    rxjs "^7.8.0"
     through "^2.3.8"
     wrap-ansi "^7.0.0"
 
@@ -6468,7 +6468,7 @@ rxjs@^6.3.3:
   dependencies:
     tslib "^1.9.0"
 
-rxjs@^7.5.7:
+rxjs@^7.8.0:
   version "7.8.0"
   resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-7.8.0.tgz#90a938862a82888ff4c7359811a595e14e1e09a4"
   integrity sha512-F2+gxDshqmIub1KdvZkaEfGDwLNpPvk9Fs6LD/MyQxNgMds/WH9OdDDXOmxUZpME+iSK3rQCctkL0DYyytUqMg==
