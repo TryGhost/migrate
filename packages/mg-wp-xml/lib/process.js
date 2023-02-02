@@ -115,7 +115,7 @@ const processHTMLContent = async (args) => {
 };
 
 const processPost = async ($post, users, options) => {
-    const {addTag, siteUrl, excerpt, excerptSelector} = options;
+    const {addTag, url, excerpt, excerptSelector} = options;
     const postType = $($post).children('wp\\:post_type').text();
     const featureImage = processFeatureImage($post, options.attachments);
     const authorSlug = slugify($($post).children('dc\\:creator').text());
@@ -130,7 +130,7 @@ const processPost = async ($post, users, options) => {
 
     // This should result in an absolute URL addressable in a browser
     let postUrl = $($post).children('link').text();
-    let parsedPostUrl = new URL(postUrl, siteUrl);
+    let parsedPostUrl = new URL(postUrl, url);
     postUrl = parsedPostUrl.href;
 
     const post = {
@@ -300,7 +300,7 @@ const all = async (input, {options}) => {
     });
 
     // grab the URL of the site we're importing
-    options.siteUrl = $xml('channel > link').text();
+    options.url = $xml('channel > link').text();
 
     // process users first, as we're using this information
     // to populate the author data for posts

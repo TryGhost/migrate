@@ -17,6 +17,16 @@ describe('Process', function () {
         });
     });
 
+    test('Can get site URL from XML file', async function () {
+        let ctx = {
+            options: {}
+        };
+        const input = await readSync('sample.xml');
+        await process.all(input, ctx);
+
+        expect(ctx.options.url).toEqual('https://example.com');
+    });
+
     test('Can convert a single published post', async function () {
         let ctx = {
             options: {
