@@ -102,6 +102,9 @@ const preProcessContent = async ({html}) => { // eslint-disable-line no-shadow
     // convert HTML back to a string
     html = $html.html();
 
+    // Convert shortcodes here to that they don't accidently get wrapped in <p> tags by MarkdownIt
+    html = await MgWpAPI.process.processShortcodes({html});
+
     return html;
 };
 
