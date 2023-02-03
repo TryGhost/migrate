@@ -242,6 +242,12 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         });
     }
 
+    // Basic text cleanup
+    // @TODO: Expand on this
+    $html('[style="font-weight: 400;"], [style="font-weight:400;"], [style="font-weight: 400"], [style="font-weight:400"]').each((i, el) => {
+        $(el).removeAttr('style');
+    });
+
     // Normalize image elements
     $html('.wp-block-jetpack-tiled-gallery').each((i, gal) => {
         $(gal).replaceWith($(gal).html());
