@@ -168,6 +168,20 @@ const processShortcodes = async ({html}) => {
         return `<iframe src="${attrs.src}" height="${attrs.height}" style="border:0; width: 100%;" loading="lazy"></iframe>`;
     });
 
+    shortcodes.add('sourcecode', ({attrs, content}) => {
+        let captionString = (attrs?.title) ? `<figcaption>${attrs.title}</figcaption>` : '';
+        let classString = (attrs?.language) ? `language-${attrs.language}` : '';
+        let theContent = content.trim();
+        return `<figure><pre class="${classString}"><code>${theContent}</code></pre>${captionString}</figure>`;
+    });
+
+    shortcodes.add('code', ({attrs, content}) => {
+        let captionString = (attrs?.title) ? `<figcaption>${attrs.title}</figcaption>` : '';
+        let classString = (attrs?.language) ? `language-${attrs.language}` : '';
+        let theContent = content.trim();
+        return `<figure><pre class="${classString}"><code>${theContent}</code></pre>${captionString}</figure>`;
+    });
+
     // We don't want to change these, but only retain what's inside.
     shortcodes.unwrap('row');
     shortcodes.unwrap('column');

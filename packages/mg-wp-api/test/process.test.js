@@ -623,4 +623,52 @@ describe('Process shortcodes', function () {
 
         expect(convertedHtml).toEqual('<iframe src="https://example.com?e=123456" height="200" style="border:0; width: 100%;" loading="lazy"></iframe>');
     });
+
+    test('Can handle code shortcodes', async function () {
+        let html = `[code]
+
+const hello () => {
+  return new MyClass();
+}
+
+[/code]`;
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        expect(convertedHtml).toEqual('<figure><pre class=""><code>const hello () => {\n' +
+        '  return new MyClass();\n' +
+        '}</code></pre></figure>');
+    });
+
+    test('Can handle sourcecode shortcodes', async function () {
+        let html = `[sourcecode]
+
+const hello () => {
+  return new MyClass();
+}
+
+[/sourcecode]`;
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        expect(convertedHtml).toEqual('<figure><pre class=""><code>const hello () => {\n' +
+        '  return new MyClass();\n' +
+        '}</code></pre></figure>');
+    });
+
+    test('Can handle sourcecode shortcodes with language & title', async function () {
+        let html = `[sourcecode language="js" title="My method"]
+
+const hello () => {
+  return new MyClass();
+}
+
+[/sourcecode]`;
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        expect(convertedHtml).toEqual('<figure><pre class="language-js"><code>const hello () => {\n' +
+        '  return new MyClass();\n' +
+        '}</code></pre><figcaption>My method</figcaption></figure>');
+    });
 });
