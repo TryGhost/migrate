@@ -283,6 +283,17 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         $(gal).removeAttr('class');
     });
 
+    // Remove duplicates images in <noscript> tags that have the same src
+    $html('img + noscript img').each((i, el) => {
+        let noScriptImgSrc = $(el).attr('src');
+        let prevImg = $(el).parent('noscript').prev('img');
+        let prevImgSrc = prevImg.attr('data-src') || prevImg.attr('src');
+
+        if (noScriptImgSrc === prevImgSrc) {
+            $(el).parent('noscript').remove();
+        }
+    });
+
     $html('img').each((i, img) => {
         $(img).removeAttr('decoding');
         $(img).removeAttr('data-id');

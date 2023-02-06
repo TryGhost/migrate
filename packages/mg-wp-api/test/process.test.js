@@ -539,6 +539,22 @@ describe('Process WordPress HTML', function () {
 
         expect(processed).toEqual('<img src="https://example.com/wp-content/uploads/2022/08/3.jpg">');
     });
+
+    test('Can remove duplicate <noscript> images', async function () {
+        const html = `<div class="elementor-image"><img decoding="async" width="700" height="624" src="https://www.example.com.com/wp-content/uploads/2023/02/sample.png" class="attachment-medium_large size-medium_large wp-image-1234 lazyload" alt="" data-srcset="https://www.example.com.com/wp-content/uploads/2023/02/sample.png 700w, https://www.restlesscommunications.com/wp-content/uploads/2023/02/sample-300x267.png 300w" sizes="(max-width: 700px) 100vw, 700px" /><noscript><img decoding="async" width="700" height="624" src="https://www.example.com.com/wp-content/uploads/2023/02/sample.png" class="attachment-medium_large size-medium_large wp-image-1234 lazyload" alt="" srcset="https://www.example.com.com/wp-content/uploads/2023/02/sample.png 700w, https://www.restlesscommunications.com/wp-content/uploads/2023/02/sample-300x267.png 300w" sizes="(max-width: 700px) 100vw, 700px" /></noscript></div>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<div class="elementor-image"><img width="700" height="624" src="https://www.example.com.com/wp-content/uploads/2023/02/sample.png" class="attachment-medium_large size-medium_large wp-image-1234 lazyload" alt data-srcset="https://www.example.com.com/wp-content/uploads/2023/02/sample.png 700w, https://www.restlesscommunications.com/wp-content/uploads/2023/02/sample-300x267.png 300w"></div>');
+    });
+
+    test('Can remove duplicate <noscript> images with data-src', async function () {
+        const html = `<div class="elementor-image"><img decoding="async" width="700" height="624" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://www.example.com.com/wp-content/uploads/2023/02/sample.png" class="attachment-medium_large size-medium_large wp-image-1234 lazyload" alt="" data-srcset="https://www.example.com.com/wp-content/uploads/2023/02/sample.png 700w, https://www.restlesscommunications.com/wp-content/uploads/2023/02/sample-300x267.png 300w" sizes="(max-width: 700px) 100vw, 700px" /><noscript><img decoding="async" width="700" height="624" src="https://www.example.com.com/wp-content/uploads/2023/02/sample.png" class="attachment-medium_large size-medium_large wp-image-1234 lazyload" alt="" srcset="https://www.example.com.com/wp-content/uploads/2023/02/sample.png 700w, https://www.restlesscommunications.com/wp-content/uploads/2023/02/sample-300x267.png 300w" sizes="(max-width: 700px) 100vw, 700px" /></noscript></div>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<div class="elementor-image"><img width="700" height="624" src="https://www.example.com.com/wp-content/uploads/2023/02/sample.png" class="attachment-medium_large size-medium_large wp-image-1234 lazyload" alt data-srcset="https://www.example.com.com/wp-content/uploads/2023/02/sample.png 700w, https://www.restlesscommunications.com/wp-content/uploads/2023/02/sample-300x267.png 300w"></div>');
+    });
 });
 
 describe('Process shortcodes', function () {
