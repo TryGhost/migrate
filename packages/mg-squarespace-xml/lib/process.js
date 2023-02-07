@@ -97,7 +97,7 @@ const processTags = ($sqCategories, fetchTags) => {
     return categories.concat(tags);
 };
 
-const processPost = ($sqPost, users, {addTag, tags: fetchTags, siteUrl}) => {
+const processPost = ($sqPost, users, {addTag, tags: fetchTags, url}) => {
     const postType = $($sqPost).children('wp\\:post_type').text();
 
     // only grab posts and pages
@@ -115,7 +115,7 @@ const processPost = ($sqPost, users, {addTag, tags: fetchTags, siteUrl}) => {
         const postDate = parse($($sqPost).children('pubDate').text(), 'EEE, d MMM yyyy HH:mm:ss xx', new Date());
 
         const post = {
-            url: `${siteUrl}${$($sqPost).children('link').text()}`,
+            url: `${url}${$($sqPost).children('link').text()}`,
             data: {
                 slug: $($sqPost).children('wp\\:post_name').text().replace(/(\.html)/i, ''),
                 title: $($sqPost).children('title').text(),
@@ -207,7 +207,7 @@ const all = async (input, {options}) => {
     });
 
     // grab the URL of the site we're importing
-    options.siteUrl = $xml('channel > link').text();
+    options.url = $xml('channel > link').text();
 
     // process users first, as we're using this information
     // to populate the author data for posts
