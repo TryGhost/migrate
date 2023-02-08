@@ -1,6 +1,8 @@
 import $ from 'cheerio';
 import {slugify} from '@tryghost/string';
 import {parse} from 'date-fns';
+import SimpleDom from 'simple-dom';
+import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 import errors from '@tryghost/errors';
 
 const processUser = ($sqUser) => {
@@ -24,6 +26,24 @@ const processContent = (html) => {
     const $html = $.load(html, {
         decodeEntities: false,
         normalizeWhitespace: true
+    });
+
+    $html('.sqs-audio-embed').each((i, el) => {
+        let audioSrc = $(el).attr('data-url');
+        let audioTitle = $(el).attr('data-title');
+
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: audioSrc,
+                title: audioTitle
+            }
+        };
+
+        const buildCard = audioCard.render(cardOpts);
+        const cardHTML = buildCard.nodeValue;
+
+        $(el).replaceWith(cardHTML);
     });
 
     $html('.newsletter-form-wrapper').each((i, form) => {

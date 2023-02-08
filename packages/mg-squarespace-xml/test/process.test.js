@@ -185,4 +185,23 @@ describe('Process', function () {
         expect(processed.posts).toBeArrayOfSize(1);
         expect(processed.posts[0].data.type).toEqual('page');
     });
+
+    test('Can convert audio block to audio card', async function () {
+        let audioBlock = `<div class="sqs-audio-embed"
+            data-url="http://example.com/auio-file.mp3"
+            data-mime-type=""
+            data-title="My podcast"
+            data-author="TRXL"
+            data-show-download="false"
+            data-design-style="minimal"
+            data-duration-in-ms="3817000"
+            data-color-theme="dark"
+        ></div>`;
+
+        let processed = process.processContent(audioBlock);
+
+        expect(processed).toContain('<div class="kg-card kg-audio-card">');
+        expect(processed).toContain('<audio src="http://example.com/auio-file.mp3"');
+        expect(processed).not.toContain('<div class="sqs-audio-embed"');
+    });
 });
