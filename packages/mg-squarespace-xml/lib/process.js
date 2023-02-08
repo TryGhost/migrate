@@ -1,3 +1,4 @@
+import {extname} from 'path';
 import $ from 'cheerio';
 import {slugify} from '@tryghost/string';
 import {parse} from 'date-fns';
@@ -84,7 +85,13 @@ const processFeatureImage = ($sqPost) => {
     const $nextItem = $($sqPost).next().children('wp\\:attachment_url');
 
     if ($nextItem.length >= 1) {
-        return $nextItem.text();
+        let itemText = $nextItem.text();
+        let itemExt = extname(itemText);
+        let allowedExt = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico', '.webp'];
+
+        if (allowedExt.includes(itemExt) || itemText.includes('images.unsplash.com')) {
+            return $nextItem.text();
+        }
     }
 
     return;
