@@ -64,6 +64,10 @@ const setup = (sywac) => {
         defaultValue: false,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
+    sywac.array('--cpt', {
+        defaultValue: null,
+        desc: 'The slug(s) of custom post type(s), e.g. `resources,newsletters`'
+    });
     sywac.boolean('--excerpt', {
         defaultValue: true,
         desc: 'Use the excerpt value from WordPress API'

@@ -57,7 +57,7 @@ describe('Process', function () {
 
         const tags = data.tags;
 
-        expect(tags).toBeArrayOfSize(4);
+        expect(tags).toBeArrayOfSize(5);
         expect(tags[0].url).toEqual('/tag/company-news');
         expect(tags[0].data.slug).toEqual('company-news');
         expect(tags[0].data.name).toEqual('Company News');
@@ -70,6 +70,9 @@ describe('Process', function () {
         expect(tags[3].url).toEqual('migrator-added-tag');
         expect(tags[3].data.slug).toEqual('hash-wp');
         expect(tags[3].data.name).toEqual('#wp');
+        expect(tags[4].url).toEqual('migrator-added-tag-post');
+        expect(tags[4].data.slug).toEqual('hash-wp-post');
+        expect(tags[4].data.name).toEqual('#wp-post');
 
         const author = data.author;
 
@@ -110,7 +113,7 @@ describe('Process', function () {
 
         const tags = data.tags;
 
-        expect(tags).toBeArrayOfSize(3);
+        expect(tags).toBeArrayOfSize(4);
         expect(tags[0].url).toEqual('/tag/company-news');
         expect(tags[0].data.slug).toEqual('company-news');
         expect(tags[0].data.name).toEqual('Company News');
@@ -120,6 +123,9 @@ describe('Process', function () {
         expect(tags[2].url).toEqual('migrator-added-tag');
         expect(tags[2].data.slug).toEqual('hash-wp');
         expect(tags[2].data.name).toEqual('#wp');
+        expect(tags[3].url).toEqual('migrator-added-tag-post');
+        expect(tags[3].data.slug).toEqual('hash-wp-post');
+        expect(tags[3].data.name).toEqual('#wp-post');
 
         const author = data.author;
 
@@ -158,16 +164,66 @@ describe('Process', function () {
 
         const tags = data.tags;
 
-        expect(tags).toBeArrayOfSize(1);
+        expect(tags).toBeArrayOfSize(2);
         expect(tags[0].url).toEqual('migrator-added-tag');
         expect(tags[0].data.slug).toEqual('hash-wp');
         expect(tags[0].data.name).toEqual('#wp');
+        expect(tags[1].url).toEqual('migrator-added-tag-page');
+        expect(tags[1].data.slug).toEqual('hash-wp-page');
+        expect(tags[1].data.name).toEqual('#wp-page');
 
         const author = data.author;
 
         expect(author).toBeObject();
         expect(author.url).toEqual('migrator-added-author');
         expect(author.data.slug).toEqual('migrator-added-author');
+    });
+
+    test('Can convert a custom post type', async function () {
+        let ctx = {
+            options: {
+                drafts: false,
+                pages: false,
+                cpt: ['customcpt']
+            }
+        };
+        const input = await readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+
+        const post = processed.posts[2];
+
+        expect(post).toBeObject();
+        expect(post.url).toEqual('https://example.com/mycpt/amazing-article');
+
+        const data = post.data;
+
+        expect(data).toBeObject();
+        expect(data.slug).toEqual('amazing-article');
+        expect(data.title).toEqual('My CPT Post');
+        expect(data.status).toEqual('published');
+        expect(data.published_at).toEqual(new Date('2012-06-07T03:00:44.000Z'));
+        expect(data.feature_image).toBeFalsy();
+        expect(data.type).toEqual('post');
+        // We're not testing `data.html` output here. That happens in @tryghost/mg-wp-api
+
+        const tags = data.tags;
+
+        expect(tags).toBeArrayOfSize(3);
+        expect(tags[0].url).toEqual('/tag/has-images');
+        expect(tags[0].data.slug).toEqual('has-images');
+        expect(tags[0].data.name).toEqual('Has Images');
+        expect(tags[1].url).toEqual('migrator-added-tag');
+        expect(tags[1].data.slug).toEqual('hash-wp');
+        expect(tags[1].data.name).toEqual('#wp');
+        expect(tags[2].url).toEqual('migrator-added-tag-customcpt');
+        expect(tags[2].data.slug).toEqual('hash-wp-customcpt');
+        expect(tags[2].data.name).toEqual('#wp-customcpt');
+
+        const author = data.author;
+
+        expect(author).toBeObject();
+        expect(author.url).toEqual('hermione-example-com');
+        expect(author.data.slug).toEqual('hermione-example-com');
     });
 
     test('Can use excerpt selector and remove from content', async function () {

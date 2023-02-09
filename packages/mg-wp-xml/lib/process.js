@@ -119,7 +119,8 @@ const processHTMLContent = async (args) => {
 
 const processPost = async ($post, users, options) => {
     const {addTag, url, excerpt, excerptSelector} = options;
-    const postType = $($post).children('wp\\:post_type').text();
+    const postTypeVal = $($post).children('wp\\:post_type').text();
+    const postType = (postTypeVal === 'page') ? 'page' : 'post';
     const featureImage = processFeatureImage($post, options.attachments);
     const authorSlug = slugify($($post).children('dc\\:creator').text());
     let postSlug = $($post).children('link').text();
@@ -199,6 +200,14 @@ const processPost = async ($post, users, options) => {
         }
     });
 
+    post.data.tags.push({
+        url: `migrator-added-tag-${postTypeVal}`,
+        data: {
+            slug: `hash-wp-${postTypeVal}`,
+            name: `#wp-${postTypeVal}`
+        }
+    });
+
     if (!post.data.author) {
         if ($($post).children('dc\\:creator').length >= 1) {
             post.data.author = {
@@ -226,7 +235,13 @@ const processPosts = async ($xml, users, options) => {
     let posts = $xml('item').map(async (i, post) => {
         const postType = $(post).children('wp\\:post_type').text();
 
-        if (['post', 'page'].includes(postType)) {
+        let allowedTypes = ['post', 'page'];
+
+        if (options.cpt) {
+            allowedTypes = allowedTypes.concat(options.cpt);
+        }
+
+        if (allowedTypes.includes(postType)) {
             postsOutput.push(await processPost(post, users, options));
         }
     }).get();

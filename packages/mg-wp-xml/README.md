@@ -68,6 +68,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--postsAfter`** 
     - Only migrate posts after and including a given date e.g. 'August 16 2022'
     - string - default: `null`
+- **`--cpt`** 
+    - A comma-separated list of custom post type slugs e.g. `resources,newsletters`
+    - array - default: `null`
 - **`--excerpt`**
     - bool - default: `true`
     - Use the excerpt value from WordPress API
