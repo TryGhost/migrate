@@ -117,9 +117,7 @@ const tasks = async (url, ctx) => {
     }
 
     if (cpt) {
-        const CPTs = cpt.split(',');
-
-        CPTs.forEach((cptSlug) => {
+        cpt.forEach((cptSlug) => {
             buildTasks(ctx.fileCache, theTasks, api, `${cptSlug}`, limit, isAuthRequest);
         });
     }

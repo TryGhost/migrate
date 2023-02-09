@@ -93,7 +93,7 @@ const setup = (sywac) => {
         defaultValue: null,
         desc: 'Only migrate posts after and including a given date e.g. \'August 16 2021\''
     });
-    sywac.string('--cpt', {
+    sywac.array('--cpt', {
         defaultValue: null,
         desc: 'The slug(s) of custom post type(s), e.g. `resources,newsletters`'
     });

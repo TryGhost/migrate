@@ -113,7 +113,7 @@ describe('Process WordPress REST API JSON', function () {
 
     test('Can convert a custom post type', async function () {
         const users = [];
-        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: 'mycpt'};
+        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: ['mycpt']};
         const post = await processor.processPost(singleCptPostfixture, users, options);
 
         const data = post.data;
@@ -129,7 +129,7 @@ describe('Process WordPress REST API JSON', function () {
 
     test('Can add a #wp-post tag when also converting a custom post type', async function () {
         const users = [];
-        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: 'mycpt'};
+        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: ['mycpt']};
         const post = await processor.processPost(singlePostFixture, users, options);
 
         const data = post.data;

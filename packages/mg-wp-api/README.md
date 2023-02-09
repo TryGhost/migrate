@@ -89,7 +89,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - string - default: `null`
 - **`--cpt`** 
     - A comma-separated list of custom post type slugs e.g. `resources,newsletters`
-    - string - default: `null`
+    - array - default: `null`
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
     - bool - default: `false`
