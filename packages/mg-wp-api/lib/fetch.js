@@ -17,9 +17,7 @@ const discover = async (url, {apiUser, usersJSON, limit, cpt}) => {
     };
 
     if (cpt) {
-        const CPTs = cpt.split(',');
-
-        await Promise.all(CPTs.map(async (cptSlug) => {
+        await Promise.all(cpt.map(async (cptSlug) => {
             site[cptSlug] = site.registerRoute('wp/v2', `/${cptSlug}/(?P<id>)`);
 
             let cptInfo = await site[cptSlug]().perPage(limit);
