@@ -11,7 +11,7 @@
     "**/node_modules/**"
   ],
   "scripts": {
-    "dev": "migrate",
+    "dev": "NODE_ENV=development migrate",
     "migrate": "migrate",
     "presetup": "yarn",
     "setup": "lerna bootstrap",

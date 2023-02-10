@@ -9,10 +9,7 @@ import MarkdownIt from 'markdown-it';
 import prettyBytes from 'pretty-bytes';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import replaceAll from 'fast-replaceall';
-import {GhostLogger} from '@tryghost/logging';
 import {AssetCache} from './AssetCache.js';
-
-const __dirname = new URL('.', import.meta.url).pathname;
 
 // Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/shared/config/overrides.json
 const knownImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/webp'];
@@ -62,20 +59,7 @@ class AssetScraper {
 
         this.warnings = (ctx.warnings) ? ctx.warnings : [];
 
-        // If testing, mock the logging to keep it quiet
-        if (process.env.NODE_ENV === 'test') {
-            ctx.logging = {
-                warn: () => {},
-                error: () => {}
-            };
-        }
-
-        this.logging = ctx.logging || new GhostLogger({
-            domain: this.fileCache.cacheKey, // This can be unique per migration
-            mode: 'long',
-            transports: ['stdout', 'file'],
-            path: join(__dirname, '../../../logs')
-        });
+        this.logger = ctx.logger;
 
         // Convert MB to bytes for file size comparison
         if (this.defaultOptions.sizeLimit) {
@@ -679,7 +663,7 @@ class AssetScraper {
                         newCache.skipReason = (error && error.code) ? error.code : 'Undefined error';
                         this.AssetCache.add(newCache);
 
-                        this.logging.debug({message: 'Failed to fetch asset', error});
+                        this.logger.debug({message: 'Failed to fetch asset', error});
                     }
                 }
             });
@@ -733,7 +717,7 @@ class AssetScraper {
 
             return response;
         } catch (error) {
-            this.logging.error({message: 'Failed to download asset', error});
+            this.logger.error({message: 'Failed to download asset', error});
         }
     }
 
@@ -754,7 +738,7 @@ class AssetScraper {
                 fileData
             };
         } catch (error) {
-            this.logging.error({message: 'Failed to get data from file buffer', error});
+            this.logger.error({message: 'Failed to get data from file buffer', error});
         }
     }
 
@@ -803,7 +787,7 @@ class AssetScraper {
                     details: `This file size is ${prettyBytes(obj.head.contentLength)}, the maximum file size is ${prettyBytes(this.defaultOptions.sizeLimit)}`
                 });
 
-                this.logging.warn({message: `File is larger than allowed ${obj.newRemote} (This bytes: ${obj.head.contentLength} / Max bytes: ${this.defaultOptions.sizeLimit})`});
+                this.logger.warn({message: `File is larger than allowed ${obj.newRemote} (This bytes: ${obj.head.contentLength} / Max bytes: ${this.defaultOptions.sizeLimit})`});
 
                 return false;
             }
@@ -901,7 +885,7 @@ class AssetScraper {
                             this.AssetCache.add(item);
                         }
                     } catch (error) {
-                        this.logging.error({message: 'Failed to save image', error});
+                        this.logger.error({message: 'Failed to save image', error});
                     }
                 }
             });

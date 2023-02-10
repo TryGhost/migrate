@@ -1,14 +1,15 @@
-import {join, extname} from 'node:path';
-import {URL} from 'node:url';
+import {extname} from 'node:path';
 import {inspect} from 'node:util';
 import {readFileSync} from 'node:fs';
 import {readJSON} from 'fs-extra/esm';
-import {GhostLogger} from '@tryghost/logging';
 import {ui} from '@tryghost/pretty-cli';
 import xml2json from 'xml2json';
 import wpAPISource from '../sources/wp-api.js';
+import {GhostLogger} from '@tryghost/logging';
+import logConfig from '../../../loggingrc.js';
+import {showLogs} from '../lib/utilties/cli-log-display.js';
 
-const __dirname = new URL('.', import.meta.url).pathname;
+const logger = new GhostLogger(logConfig);
 
 // Internal ID in case we need one.
 const id = 'wp-api';
@@ -128,23 +129,6 @@ const run = async (argv) => {
 
     const startMigrationTime = Date.now();
 
-    let logger;
-
-    // If testing, mock the logger to keep it quiet
-    if (process.env.NODE_ENV === 'test') {
-        logger = {
-            warn: () => {},
-            error: () => {}
-        };
-    } else {
-        logger = new GhostLogger({
-            domain: argv.cacheName || 'wp_migration', // This can be unique per migration
-            mode: 'long',
-            transports: (argv.verbose) ? ['stdout', 'file'] : ['file'],
-            path: join(__dirname, '../../../', '/logs')
-        });
-    }
-
     // Remove trailing slash from URL
     if (argv.url.endsWith('/')) {
         argv.url = argv.url.slice(0, -1);
@@ -227,6 +211,8 @@ const run = async (argv) => {
             duration: Date.now() - startMigrationTime
         });
     }
+
+    showLogs(`${logger.path}/${logger.domain}_${logger.env}.log`, startMigrationTime);
 
     if (context.warnings.length > 0) {
         ui.log.warn(context.warnings);

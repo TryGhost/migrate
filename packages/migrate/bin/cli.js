@@ -2,10 +2,10 @@
 import {Api, styles} from '@tryghost/pretty-cli';
 
 import {URL} from 'node:url';
-import fs from 'node:fs';
+import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
 const __dirname = new URL('.', import.meta.url).pathname;
-const packageJSON = JSON.parse(fs.readFileSync(join(__dirname, '../package.json'), 'utf-8'));
+const packageJSON = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8'));
 
 import cacheCommands from '../commands/cache.js';
 import curatedMembersCommands from '../commands/curated-members.js';
