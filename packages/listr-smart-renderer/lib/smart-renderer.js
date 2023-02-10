@@ -26,7 +26,7 @@ const fullRenderer = (tasks, options, level = 0) => {
 
     for (const task of tasks) {
         if (!task.title) {
-            task.title = chalk.dim('[silent task]');
+            continue;
         }
 
         if (!task.isEnabled()) {
@@ -62,7 +62,7 @@ const summaryRenderer = (tasks, options, level = 0) => {
 
     tasks.forEach((task, index) => {
         if (!task.title) {
-            task.title = chalk.dim('[silent task]');
+            task.title = chalk.dim('[no title]');
         }
 
         if (task.hasFailed()) {
@@ -102,7 +102,7 @@ const summaryRenderer = (tasks, options, level = 0) => {
         }
     });
 
-    output.push(indentString(`Total: ${tasks.length}. Complete: ${states.complete.length}, Failed: ${states.failed.length}, Skipped: ${states.skipped.length}, Disabled: ${states.disabled.length}`, level));
+    output.push(indentString(`Total: ${tasks.length}. Complete: ${states.complete.length}, Failed: ${(states.failed.length) ? chalk.red(states.failed.length) : 0}, Skipped: ${states.skipped.length}, Disabled: ${states.disabled.length}`, level));
 
     return output.join('\n');
 };

@@ -188,6 +188,7 @@ const getFullTaskList = (url, options, logger) => {
             task: async (ctx) => {
                 // 1. Read all content from the API
                 ctx.timings.fetchApiContent = Date.now();
+
                 try {
                     let tasks = await wpAPI.fetch.tasks(url, ctx);
 

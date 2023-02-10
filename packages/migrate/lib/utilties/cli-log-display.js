@@ -23,3 +23,6 @@ const showLogs = (logFilePath, startTime) => {
 export {
     showLogs
 };
+
+// showLogs(`${logger.path}/${logger.domain}_${logger.env}.log`, startMigrationTime);
+// In the `if` on line 12, console.log(lineData); to get all logs

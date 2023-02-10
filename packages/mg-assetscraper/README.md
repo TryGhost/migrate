@@ -13,7 +13,9 @@ or
 
 ```js
 // Default
-const assetScraper = new AssetScraper(fileCache);
+const assetScraper = new AssetScraper(fileCache, {}, {
+    logger: myLogger
+});
 
 // Later on, create the Listr tasks
 const tasks = ctx.imageScraper.fetch(ctx);
@@ -35,6 +37,8 @@ const assetScraper = new AssetScraper(fileCache, {
     sizeLimit: 2, // 2 MB
     allowMedia: false,
     baseDomain: 'https://example.com' // Set this domain to be added to relative asset links
+}, {
+    logger: myLogger
 });
 
 // Don't scrape assets from this URL

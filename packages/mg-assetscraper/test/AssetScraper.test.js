@@ -543,7 +543,13 @@ describe('AssetScraper', function () {
 
     test('Will skip downloading large assets if a filesize is defined', function () {
         const assetScraper = new AssetScraper(mockFileCache, {
-            sizeLimit: 2 // 2 MB
+            sizeLimit: 2 // 2 MB,
+        }, {
+            logger: {
+                warn: () => {},
+                error: () => {},
+                debug: () => {}
+            }
         });
 
         const sizeAllowed1 = assetScraper.isWithinSizeLimit(cachedJSON[0]);
