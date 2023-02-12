@@ -8,7 +8,7 @@ import {fileTypeFromBuffer} from 'file-type';
 import MarkdownIt from 'markdown-it';
 import prettyBytes from 'pretty-bytes';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
-import replaceAll from 'string.prototype.replaceall';
+import replaceAll from 'fast-replaceall';
 import {GhostLogger} from '@tryghost/logging';
 import {AssetCache} from './AssetCache.js';
 
@@ -1014,9 +1014,9 @@ class AssetScraper {
         tasks.push({
             title: 'Fixing asset references',
             task: async () => {
-                const downloadTasks = this.updateReferences();
+                const updateRefTasks = this.updateReferences();
                 // NOTE: This should always run one task at a time, otherwise some replacements could fail
-                return makeTaskRunner(downloadTasks, {concurrent: false, topLevel: false});
+                return makeTaskRunner(updateRefTasks, {concurrent: false, topLevel: false});
             }
         });
 
