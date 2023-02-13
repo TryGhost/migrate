@@ -213,10 +213,6 @@ const run = async (argv) => {
     }
 
     showLogs(`${logger.path}/${logger.domain}_${logger.env}.log`, startMigrationTime);
-
-    if (context.warnings.length > 0) {
-        ui.log.warn(context.warnings);
-    }
 };
 
 export default {
