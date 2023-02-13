@@ -44,8 +44,11 @@ class LinkFixer {
 
         // @TODO: support for custom taxonomies
         ctx.result.posts.forEach(({url, data}) => {
+            // Parse the current post URL, so we can use its domain as a fallback
+            const postURLDomain = new URL(url);
+
             // We need to handle the domain with http: and https:, so build part of the regexp pattern that accounts for both
-            const siteURL = new URL(ctx.options.url);
+            const siteURL = new URL(ctx.options.url || postURLDomain.origin);
 
             siteURL.protocol = 'http:';
             const siteURLHttp = siteURL.toString().replace(/\/$/, ''); // Trim trailing slashes
