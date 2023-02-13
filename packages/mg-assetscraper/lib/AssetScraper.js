@@ -1,6 +1,5 @@
 import {URL} from 'node:url';
 import {join, dirname, basename, extname} from 'node:path';
-import errors from '@tryghost/errors';
 import cheerio from 'cheerio';
 import got from 'got';
 import {parseSrcset} from 'srcset';

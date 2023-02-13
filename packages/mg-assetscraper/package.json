@@ -26,7 +26,6 @@
     "listr": "0.14.3"
   },
   "dependencies": {
-    "@tryghost/errors": "1.2.20",
     "@tryghost/listr-smart-renderer": "^0.4.7",
     "@tryghost/logging": "2.4.0",
     "@tryghost/string": "0.2.2",
