@@ -154,12 +154,13 @@ const skipScrape = (post) => {
  * @param {String} pathToFile
  * @param {Object} options
  */
-const getTaskRunner = (pathToFile, options) => {
+const getTaskRunner = (pathToFile, options, logger) => {
     let runnerTasks = [
         {
             title: 'Initializing',
             task: (ctx, task) => {
                 ctx.options = options;
+                ctx.logger = logger;
                 ctx.allowScrape = {
                     all: ctx.options.scrape.includes('all'),
                     images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),
@@ -192,6 +193,21 @@ const getTaskRunner = (pathToFile, options) => {
                 }, ctx);
                 ctx.linkFixer = new MgLinkFixer();
 
+                ctx.timings = {
+                    readContent: false,
+                    processContent: false,
+                    webScraper: false,
+                    applyFromWebScraper: false,
+                    buildLinkMap: false,
+                    formatDataAsGhost: false,
+                    assetScraper: false,
+                    linkFixer: false,
+                    htmlToMobiledoc: false,
+                    writeJSON: false,
+                    writeZip: false,
+                    clearCache: false
+                };
+
                 task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
             }
         },
@@ -199,6 +215,7 @@ const getTaskRunner = (pathToFile, options) => {
             title: 'Read csv file',
             task: async (ctx) => {
                 // 1. Read the csv file
+                ctx.timings.readContent = Date.now();
                 try {
                     ctx.result = await zipIngest.ingest(ctx);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'zip-export-mapped.json');
@@ -209,10 +226,19 @@ const getTaskRunner = (pathToFile, options) => {
             }
         },
         {
+            task: (ctx) => {
+                ctx.logger.info({
+                    message: 'Read csv file',
+                    duration: Date.now() - ctx.timings.readContent
+                });
+            }
+        },
+        {
             title: 'Fetch missing data via WebScraper',
             skip: ctx => !ctx.allowScrape.web,
             task: (ctx) => {
                 // 2. Pass the results through the web scraper to get any missing data
+                ctx.timings.webScraper = Date.now();
                 let tasks = ctx.webScraper.get(ctx); // eslint-disable-line no-shadow
 
                 let webScraperOptions = options;
@@ -221,9 +247,19 @@ const getTaskRunner = (pathToFile, options) => {
             }
         },
         {
+            skip: ctx => !ctx.allowScrape.web,
+            task: (ctx) => {
+                ctx.logger.info({
+                    message: 'Fetch missing data via WebScraper',
+                    duration: Date.now() - ctx.timings.webScraper
+                });
+            }
+        },
+        {
             title: 'Process content',
             task: async (ctx) => {
                 // 3. Pass the results through the processor to change the HTML structure
+                ctx.timings.processContent = Date.now();
                 try {
                     ctx.result = await zipIngest.process(ctx.result, ctx);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'csv-export-data.json');
@@ -234,10 +270,19 @@ const getTaskRunner = (pathToFile, options) => {
             }
         },
         {
+            task: (ctx) => {
+                ctx.logger.info({
+                    message: 'Process content',
+                    duration: Date.now() - ctx.timings.processContent
+                });
+            }
+        },
+        {
             title: 'Apply missing data from WebScraper',
             skip: ctx => !ctx.allowScrape.web,
             task: (ctx) => {
                 // 4. Pass the results through the web scraper to apply any missing data
+                ctx.timings.applyFromWebScraper = Date.now();
                 let tasks = ctx.webScraper.apply(ctx); // eslint-disable-line no-shadow
                 let webScraperOptions = options;
                 webScraperOptions.concurrent = 1;
@@ -245,9 +290,19 @@ const getTaskRunner = (pathToFile, options) => {
             }
         },
         {
+            skip: ctx => !ctx.allowScrape.web,
+            task: (ctx) => {
+                ctx.logger.info({
+                    message: 'Apply missing data from WebScraper',
+                    duration: Date.now() - ctx.timings.applyFromWebScraper
+                });
+            }
+        },
+        {
             title: 'Build Link Map',
             task: async (ctx) => {
                 // 5. Create a map of all known links for use later
+                ctx.timings.buildLinkMap = Date.now();
                 try {
                     ctx.linkFixer.buildMap(ctx);
                 } catch (error) {
@@ -257,9 +312,18 @@ const getTaskRunner = (pathToFile, options) => {
             }
         },
         {
+            task: (ctx) => {
+                ctx.logger.info({
+                    message: 'Build Link Map',
+                    duration: Date.now() - ctx.timings.buildLinkMap
+                });
+            }
+        },
+        {
             title: 'Format data as Ghost JSON',
             task: (ctx) => {
                 // 6. Format the data as a valid Ghost JSON file
+                ctx.timings.formatDataAsGhost = Date.now();
                 try {
                     ctx.result = toGhostJSON(ctx.result, ctx.options);
                 } catch (error) {
@@ -269,12 +333,21 @@ const getTaskRunner = (pathToFile, options) => {
             }
         },
         {
+            task: (ctx) => {
+                ctx.logger.info({
+                    message: 'Format data as Ghost JSON',
+                    duration: Date.now() - ctx.timings.formatDataAsGhost
+                });
+            }
+        },
+        {
             title: 'Fetch images via AssetScraper',
             skip: (ctx) => {
                 return [ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false);
             },
             task: async (ctx) => {
                 // 7. Format the data as a valid Ghost JSON file
+                ctx.timings.assetScraper = Date.now();
                 let tasks = ctx.assetScraper.fetch(ctx);
                 return makeTaskRunner(tasks, {
                     verbose: options.verbose,
@@ -284,11 +357,31 @@ const getTaskRunner = (pathToFile, options) => {
             }
         },
         {
+            skip: (ctx) => {
+                return [ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false);
+            },
+            task: (ctx) => {
+                ctx.logger.info({
+                    message: 'Fetch images via AssetScraper',
+                    duration: Date.now() - ctx.timings.assetScraper
+                });
+            }
+        },
+        {
             title: 'Update links in content via LinkFixer',
             task: async (ctx, task) => {
                 // 8. Process the content looking for known links, and update them to new links
+                ctx.timings.linkFixer = Date.now();
                 let tasks = ctx.linkFixer.fix(ctx, task); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
+            }
+        },
+        {
+            task: (ctx) => {
+                ctx.logger.info({
+                    message: 'Update links in content via LinkFixer',
+                    duration: Date.now() - ctx.timings.linkFixer
+                });
             }
         },
         {
@@ -296,6 +389,7 @@ const getTaskRunner = (pathToFile, options) => {
             title: 'Convert HTML -> MobileDoc',
             task: (ctx) => {
                 // 9. Convert post HTML -> MobileDoc
+                ctx.timings.htmlToMobiledoc = Date.now();
                 try {
                     let tasks = mgHtmlMobiledoc.convert(ctx); // eslint-disable-line no-shadow
                     return makeTaskRunner(tasks, options);
@@ -306,9 +400,18 @@ const getTaskRunner = (pathToFile, options) => {
             }
         },
         {
+            task: (ctx) => {
+                ctx.logger.info({
+                    message: 'Convert HTML -> MobileDoc',
+                    duration: Date.now() - ctx.timings.htmlToMobiledoc
+                });
+            }
+        },
+        {
             title: 'Write Ghost import JSON File',
             task: async (ctx) => {
                 // 10. Write a valid Ghost import zip
+                ctx.timings.writeJSON = Date.now();
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
                     await ctx.fileCache.writeErrorJSONFile(ctx.errors);
@@ -319,10 +422,19 @@ const getTaskRunner = (pathToFile, options) => {
             }
         },
         {
+            task: (ctx) => {
+                ctx.logger.info({
+                    message: 'Write Ghost import JSON File',
+                    duration: Date.now() - ctx.timings.writeJSON
+                });
+            }
+        },
+        {
             title: 'Write Ghost import zip',
             skip: () => !options.zip,
             task: async (ctx, task) => {
                 // 11. Write a valid Ghost import zip
+                ctx.timings.writeZip = Date.now();
                 try {
                     let timer = Date.now();
                     ctx.outputFile = await fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
@@ -334,15 +446,34 @@ const getTaskRunner = (pathToFile, options) => {
             }
         },
         {
+            skip: () => !options.zip,
+            task: (ctx) => {
+                ctx.logger.info({
+                    message: 'Write Ghost import zip',
+                    duration: Date.now() - ctx.timings.writeZip
+                });
+            }
+        },
+        {
             title: 'Clearing cached files',
             enabled: () => !options.cache && options.zip,
             task: async (ctx) => {
+                ctx.timings.clearCache = Date.now();
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
                 }
+            }
+        },
+        {
+            enabled: () => !options.cache && options.zip,
+            task: (ctx) => {
+                ctx.logger.info({
+                    message: 'Clearing cached files',
+                    duration: Date.now() - ctx.timings.clearCache
+                });
             }
         }
     ];
