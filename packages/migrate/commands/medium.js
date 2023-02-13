@@ -1,6 +1,11 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import medium from '../sources/medium.js';
+import {GhostLogger} from '@tryghost/logging';
+import logConfig from '../../../loggingrc.js';
+import {showLogs} from '../lib/utilties/cli-log-display.js';
+
+const logger = new GhostLogger(logConfig);
 
 // Internal ID in case we need one.
 const id = 'medium';
@@ -56,27 +61,36 @@ const run = async (argv) => {
         warnings: []
     };
 
+    const startMigrationTime = Date.now();
+
     if (argv.verbose) {
         ui.log.info(`Migrating from export at ${argv.pathToZip}`);
     }
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = medium.getTaskRunner(argv.pathToZip, argv);
+        let migrate = medium.getTaskRunner(argv.pathToZip, argv, logger);
 
         // Run the migration
         await migrate.run(context);
+
+        logger.info({
+            message: 'Migration finished',
+            duration: Date.now() - startMigrationTime
+        });
 
         if (argv.verbose) {
             ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
-        ui.log.info('Done with errors', context.errors);
+        logger.info({
+            message: 'Migration finished but with errors',
+            error,
+            duration: Date.now() - startMigrationTime
+        });
     }
 
-    if (context.warnings.length > 0) {
-        ui.log.warn(context.warnings);
-    }
+    showLogs(`${logger.path}/${logger.domain}_${logger.env}.log`, startMigrationTime);
 };
 
 export default {
