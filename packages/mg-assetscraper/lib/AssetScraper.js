@@ -340,7 +340,8 @@ class AssetScraper {
             const mdTokens = md.parse(string);
             markdownTokenLooper(mdTokens, postContext);
         } catch (error) {
-            throw new errors.InternalServerError({message: 'Failed to parse Markdown string'});
+            this.logger.error({message: 'Failed to parse Markdown string', markdown: string});
+            throw error;
         }
     }
 
@@ -663,7 +664,7 @@ class AssetScraper {
                         newCache.skipReason = (error && error.code) ? error.code : 'Undefined error';
                         this.AssetCache.add(newCache);
 
-                        this.logger.debug({message: 'Failed to fetch asset', error});
+                        this.logger.debug({message: `Failed to fetch asset ${item.remote}`, src: item.remote, error});
                     }
                 }
             });
@@ -717,7 +718,7 @@ class AssetScraper {
 
             return response;
         } catch (error) {
-            this.logger.error({message: 'Failed to download asset', error});
+            this.logger.error({message: `Failed to download asset ${src}`, src, error});
         }
     }
 
@@ -738,7 +739,7 @@ class AssetScraper {
                 fileData
             };
         } catch (error) {
-            this.logger.error({message: 'Failed to get data from file buffer', error});
+            this.logger.error({message: `Failed to get data from file buffer ${src}`, src, error});
         }
     }
 
@@ -885,7 +886,8 @@ class AssetScraper {
                             this.AssetCache.add(item);
                         }
                     } catch (error) {
-                        this.logger.error({message: 'Failed to save image', error});
+                        this.logger.error({message: `Failed to save image ${src}`, src, error});
+                        throw error;
                     }
                 }
             });
