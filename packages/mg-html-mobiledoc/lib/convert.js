@@ -1,4 +1,3 @@
-import {ConvertError} from './ConvertError.js';
 import {convertPost} from './convertPost.js';
 
 const convert = (ctx, htmlCard) => {
@@ -30,28 +29,26 @@ const convert = (ctx, htmlCard) => {
                         try {
                             convertPost(post, true);
                         } catch (err) {
-                            let convertError = ConvertError(
-                                {
-                                    message: `Unable to convert post HTMLCard "${post.title}"`,
-                                    src: post.slug,
-                                    reference: post.title,
-                                    originalError: err
-                                });
-
-                            ctx.errors.push(convertError);
-                            throw convertError;
-                        }
-                    } else {
-                        let convertError = ConvertError(
-                            {
-                                message: `Unable to convert post to Mobiledoc "${post.title}"`,
+                            ctx.logger.warn({
+                                message: `Unable to convert post HTMLCard "${post.title}"`,
                                 src: post.slug,
                                 reference: post.title,
-                                originalError: error
+                                originalError: err,
+                                html: post.html
                             });
 
-                        ctx.errors.push(convertError);
-                        throw convertError;
+                            throw err;
+                        }
+                    } else {
+                        ctx.logger.warn({
+                            message: `Unable to convert post to Mobiledoc "${post.title}"`,
+                            src: post.slug,
+                            reference: post.title,
+                            originalError: error,
+                            html: post.html
+                        });
+
+                        throw error;
                     }
                 }
             }
