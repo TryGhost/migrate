@@ -25,10 +25,10 @@ or
 To run a Jekyll migration, the required command is:
 
 ```sh
-migrate jekyll <path to zip file>
+migrate jekyll --pathToZip /path/to/site.zip
 ```
 
-The `<path to zip file>` value should be the location of a zip file that has a structure like:
+The zip should have a structure like:
 
 ```
 _posts/
@@ -40,6 +40,9 @@ _drafts/
 ```
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
+- **`--pathToZip`** (required)
+    - Path to a jekyll export zip
+    - string - default: `null`
 - **`-V` `--verbose`**
     - bool - default: `false`
     - Show verbose output
@@ -77,7 +80,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 A more complex migration command could look like this:
 
 ```sh
-migrate jekyll <path to zip file> --email example.com
+migrate jekyll --pathToZip /path/to/site.zip --email example.com
 ```
 
 This will process all posts from the zip file, and all authors will have an email address ending in 'example.com'
@@ -97,7 +100,7 @@ Follow the instructions for the top-level repo.
 To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
 
 ```sh
-yarn dev jekyll <path to zip file>
+yarn dev jekyll --pathToZip /path/to/site.zip
 ```
 
 

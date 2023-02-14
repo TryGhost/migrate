@@ -8,16 +8,18 @@ const id = 'jekyll';
 const group = 'Sources:';
 
 // The command to run and any params
-const flags = 'jekyll <pathToZip>';
+const flags = 'jekyll';
 
 // Description for the top level command
 const desc = 'Migrate from Jekyll using an export zip';
 
-// Descriptions for the individual params
-const paramsDesc = ['Path to a jekyll export zip'];
-
 // Configure all the options
 const setup = (sywac) => {
+    sywac.string('--pathToZip', {
+        defaultValue: null,
+        desc: 'Path to a jekyll export zip',
+        required: true
+    });
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
@@ -102,7 +104,6 @@ export default {
     group,
     flags,
     desc,
-    paramsDesc,
     setup,
     run
 };
