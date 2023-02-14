@@ -8,16 +8,18 @@ const id = 'squarespace';
 const group = 'Sources:';
 
 // The command to run and any params
-const flags = 'squarespace <pathToFile>';
+const flags = 'squarespace';
 
 // Description for the top level command
 const desc = 'Migrate from a Squarespace XML';
 
-// Descriptions for the individual params
-const paramsDesc = ['Path to a xml file'];
-
 // Configure all the options
 const setup = (sywac) => {
+    sywac.string('--pathToFile', {
+        defaultValue: null,
+        desc: 'Path to xml file',
+        required: true
+    });
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
@@ -104,7 +106,6 @@ export default {
     group,
     flags,
     desc,
-    paramsDesc,
     setup,
     run
 };
