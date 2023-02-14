@@ -12,7 +12,6 @@ Each tool has its own detailed documentation:
 - [Letterdrop](https://github.com/TryGhost/migrate/tree/main/packages/mg-letterdrop)
 - [Medium](https://github.com/TryGhost/migrate/tree/main/packages/mg-medium-export)
 - [Revue](https://github.com/TryGhost/migrate/tree/main/packages/mg-revue-api)
-- [Revue Subscribers](https://github.com/TryGhost/migrate/tree/main/packages/mg-revue-subscribers)
 - [Squarespace](https://github.com/TryGhost/migrate/tree/main/packages/mg-squarespace-xml)
 - [Substack](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack)
 - [Substack members](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack-members-csv)
