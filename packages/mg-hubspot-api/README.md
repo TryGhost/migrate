@@ -26,11 +26,17 @@ or
 To run a Ghost API migration, the required command is:
 
 ```sh
-migrate hubspot [url] <hapikey>
+migrate hubspot --url https://example.com --hapikey 1234abcd
 ```
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
+- **`--url`** (required)
+    - URL of the blog you want to migrate
+    - string - default: `null`
+- **`--hapikey`** (required)
+    - Hubspot API Key (hapikey)
+    - string - default: `null`
 - **`-V` `--verbose`**
     - bool - default: `false`
     - Show verbose output
@@ -66,7 +72,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 A more complex migration command could look like this:
 
 ```sh
-migrate hubspot [url] <hapikey> --email example.com --batch 2 --limit 50 
+migrate hubspot --url https://example.com --hapikey 1234abcd --email example.com --batch 2 --limit 50 
 ```
 
 This will get 100 posts in 2 batches of 50, and all authors will have an email address ending in 'example.com'
@@ -86,7 +92,7 @@ Follow the instructions for the top-level repo.
 To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
 
 ```sh
-yarn dev hubspot [url] <hapikey>
+yarn dev hubspot --url https://example.com --hapikey 1234abcd
 ```
 
 

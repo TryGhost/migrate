@@ -8,16 +8,23 @@ const id = 'hubspot';
 const group = 'Sources:';
 
 // The command to run and any params
-const flags = 'hubspot [url] <hapikey>';
+const flags = 'hubspot';
 
 // Description for the top level command
 const desc = 'Migrate from Hubspot using the API';
 
-// Descriptions for the individual params
-const paramsDesc = ['URL of the blog you want to migrate', 'Hubspot API Key (hapikey)'];
-
 // Configure all the options
 const setup = (sywac) => {
+    sywac.string('--url', {
+        defaultValue: null,
+        desc: 'URL of the blog you want to migrate',
+        required: true
+    });
+    sywac.string('--hapikey', {
+        defaultValue: null,
+        desc: 'Hubspot API Key (hapikey)',
+        required: true
+    });
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
@@ -105,7 +112,6 @@ export default {
     group,
     flags,
     desc,
-    paramsDesc,
     setup,
     run
 };
