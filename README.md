@@ -9,6 +9,7 @@ Each tool has its own detailed documentation:
 - [Curated members](https://github.com/TryGhost/migrate/tree/main/packages/mg-curated-members-csv)
 - [HubSpot](https://github.com/TryGhost/migrate/tree/main/packages/mg-hubspot-api)
 - [Jekyll](https://github.com/TryGhost/migrate/tree/main/packages/mg-jekyll-export)
+- [Letterdrop](https://github.com/TryGhost/migrate/tree/main/packages/mg-letterdrop)
 - [Medium](https://github.com/TryGhost/migrate/tree/main/packages/mg-medium-export)
 - [Revue](https://github.com/TryGhost/migrate/tree/main/packages/mg-revue-api)
 - [Revue Subscribers](https://github.com/TryGhost/migrate/tree/main/packages/mg-revue-subscribers)

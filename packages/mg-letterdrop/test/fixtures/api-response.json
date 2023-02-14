@@ -1,0 +1,61 @@
+{
+  "posts": [
+    {
+      "id": "1234cb8b4f83360067f27ae0",
+      "title": "Lorem ipsum",
+      "subtitle": "Lorem ipsum dolor sit amet consectetur adipiscing elit",
+      "body": "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eu risus metus. Etiam aliquet leo eget urna gravida, ac accumsan diam rutrum. Curabitur facilisis, nulla non lacinia dictum, urna sapien tincidunt diam, non elementum ante elit quis justo.</p><ul><li>Praesent vehicula libero nunc, in scelerisque nisl mattis facilisis</li><li>Praesent ornare velit vitae arcu tincidunt vulputate</li><li>Phasellus a nibh a tellus accumsan varius</li></ul><h2>Praesent felis augue, auctor aliquet dui ut</h2><p>Sollicitudin varius est. <a href=\"https://example.com/c/dolor-simet\">Aenean</a> tincidunt eu tellus sit amet hendrerit.</p>",
+      "author": {
+        "name": "John Smith",
+        "avatar": "https://example.com/john-smith.jpg"
+      },
+      "tags": [
+        "Lorem",
+        "Ipsum"
+      ],
+      "coverImage": "https://example.com/lorem-ipsum-cover.webp",
+      "slug": "lorem-ipsum",
+      "url": "https://example.com/p/lorem-ipsum",
+      "thumbnail": "",
+      "metaTitle": "Meta title lorem ipsum dolor sit amet consectetur adipiscing elit",
+      "metaDescription": "Meta description lorem ipsum dolor sit amet consectetur adipiscing elit",
+      "publishedOn": "2023-02-03T09:49:30.272Z",
+      "updated": "2023-02-03T09:49:30.207Z",
+      "publication": "exmaple-site",
+      "readTime": 6,
+      "wordCount": 1163,
+      "destination": null,
+      "customFields": []
+    },
+    {
+      "id": "5678924fc74d180067044008",
+      "title": "Dolor simet",
+      "subtitle": "Etiam eu risus metus etiam aliquet leo eget urna gravida ac accumsan diam rutrum",
+      "body": "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eu risus metus. Etiam aliquet leo eget urna gravida, ac accumsan diam rutrum. Curabitur facilisis, nulla non lacinia dictum, urna sapien tincidunt diam, non elementum ante elit quis justo.</p><ul><li>Praesent vehicula libero nunc, in scelerisque nisl mattis facilisis</li><li>Praesent ornare velit vitae arcu tincidunt vulputate</li><li>Phasellus a nibh a tellus accumsan varius</li></ul><h2>Praesent felis augue, auctor aliquet dui ut</h2><p>Sollicitudin varius est. <a href=\"https://example.com/c/lorem-ipsum\">Aenean</a> tincidunt eu tellus sit amet hendrerit.</p>",
+      "author": {
+        "name": "John Smith",
+        "avatar": "https://example.com/john-smith.jpg"
+      },
+      "tags": [
+        "Lorem",
+        "Dolor Simet"
+      ],
+      "coverImage": "https://example.com/dolor-simet-cover.webp",
+      "slug": "dolor-simet",
+      "url": "https://example.com/p/dolor-simet",
+      "thumbnail": "",
+      "metaTitle": "Meta title lorem ipsum dolor sit amet consectetur adipiscing elit",
+      "metaDescription": "Meta description lorem ipsum dolor sit amet consectetur adipiscing elit",
+      "publishedOn": "2023-01-21T07:50:17.162Z",
+      "updated": "2023-01-23T07:30:37.665Z",
+      "publication": "exmaple-site",
+      "readTime": 6,
+      "wordCount": 1036,
+      "destination": null,
+      "customFields": []
+    }
+  ],
+  "totals": {
+    "posts": 2
+  }
+}
