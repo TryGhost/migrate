@@ -148,7 +148,7 @@ const getTaskRunner = (pathToZip, options, logger) => {
                     ctx.result = mediumIngest(pathToZip, options);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'medium-export-data.json');
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to read Medium ZIP file', error});
                     throw error;
                 }
             }
@@ -188,7 +188,7 @@ const getTaskRunner = (pathToZip, options, logger) => {
                 try {
                     ctx.linkFixer.buildMap(ctx);
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to build link map', error});
                     throw error;
                 }
             }
@@ -209,7 +209,7 @@ const getTaskRunner = (pathToZip, options, logger) => {
                 try {
                     ctx.result = toGhostJSON(ctx.result, ctx.options);
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to format data as Ghost JSON', error});
                     throw error;
                 }
             }
@@ -276,7 +276,7 @@ const getTaskRunner = (pathToZip, options, logger) => {
                     let tasks = mgHtmlMobiledoc.convert(ctx); // eslint-disable-line no-shadow
                     return makeTaskRunner(tasks, options);
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to convert HTML to Mobiledoc', error});
                     throw error;
                 }
             }
@@ -298,7 +298,7 @@ const getTaskRunner = (pathToZip, options, logger) => {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
                     await ctx.fileCache.writeErrorJSONFile(ctx.errors);
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to write Ghost import JSON file', error});
                     throw error;
                 }
             }
@@ -322,7 +322,7 @@ const getTaskRunner = (pathToZip, options, logger) => {
                     ctx.outputFile = await fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to write Ghost import ZIP file', error});
                     throw error;
                 }
             }
@@ -344,7 +344,7 @@ const getTaskRunner = (pathToZip, options, logger) => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to clear cache', error});
                     throw error;
                 }
             }
