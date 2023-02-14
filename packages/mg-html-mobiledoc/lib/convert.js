@@ -1,6 +1,7 @@
 import {convertPost} from './convertPost.js';
 
 const convert = (ctx, htmlCard) => {
+    const {logger} = ctx;
     let {options} = ctx;
     let res = ctx.result;
     let posts = res.posts;
@@ -23,13 +24,13 @@ const convert = (ctx, htmlCard) => {
                 await new Promise(r => setTimeout(r, 10)); // eslint-disable-line no-promise-executor-return
 
                 try {
-                    convertPost(post, htmlCard);
+                    convertPost(post, htmlCard, logger);
                 } catch (error) {
                     if (options.fallBackHTMLCard) {
                         try {
-                            convertPost(post, true);
+                            convertPost(post, true, logger);
                         } catch (err) {
-                            ctx.logger.warn({
+                            logger.warn({
                                 message: `Unable to convert post HTMLCard "${post.title}"`,
                                 src: post.slug,
                                 reference: post.title,
@@ -40,7 +41,7 @@ const convert = (ctx, htmlCard) => {
                             throw err;
                         }
                     } else {
-                        ctx.logger.warn({
+                        logger.warn({
                             message: `Unable to convert post to Mobiledoc "${post.title}"`,
                             src: post.slug,
                             reference: post.title,

@@ -1,5 +1,11 @@
 import {convertPost} from '../lib/convertPost.js';
 
+let fakeLogger = {
+    warn: () => {},
+    error: () => {},
+    debug: () => {}
+};
+
 describe('Convert', function () {
     test('Can convert to a HTML card', function () {
         let post = {
@@ -7,7 +13,7 @@ describe('Convert', function () {
         };
         const htmlCard = true;
 
-        convertPost(post, htmlCard);
+        convertPost(post, htmlCard, fakeLogger);
 
         const mobiledoc = JSON.parse(post.mobiledoc);
 
