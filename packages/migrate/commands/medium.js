@@ -4,6 +4,7 @@ import medium from '../sources/medium.js';
 import {GhostLogger} from '@tryghost/logging';
 import logConfig from '../../../loggingrc.js';
 import {showLogs} from '../lib/utilties/cli-log-display.js';
+import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
 
 const logger = new GhostLogger(logConfig);
 
@@ -19,53 +20,81 @@ const flags = 'medium';
 const desc = 'Migrate from Medium using an export zip';
 
 // Configure all the options
-const setup = (sywac) => {
-    sywac.string('--pathToZip', {
+const options = [
+    {
+        type: 'string',
+        flags: '--pathToZip',
         defaultValue: null,
         desc: 'Path to a medium export zip',
         required: true
-    });
-    sywac.boolean('-V --verbose', {
+    },
+    {
+        type: 'boolean',
+        flags: '-V --verbose',
         defaultValue: false,
         desc: 'Show verbose output'
-    });
-    sywac.boolean('--zip', {
+    },
+    {
+        type: 'boolean',
+        flags: '--zip',
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
-    });
-    sywac.array('-s --scrape', {
+    },
+    {
+        type: 'array',
+        flags: '-s --scrape',
         choices: ['all', 'img', 'web', 'media', 'files', 'none'],
-        defaultValue: 'all',
+        defaultValue: ['all'],
         desc: 'Configure scraping tasks'
-    });
-    sywac.number('--sizeLimit', {
+    },
+    {
+        type: 'number',
+        flags: '--sizeLimit',
         defaultValue: false,
         desc: 'Assets larger than this size (defined in MB) will be ignored'
-    });
-    sywac.string('-e --email', {
+    },
+    {
+        type: 'string',
+        flags: '-e --email',
         defaultValue: false,
         desc: 'Provide an email domain for users e.g. mycompany.com'
-    });
-    sywac.boolean('--fallBackHTMLCard', {
+    },
+    {
+        type: 'boolean',
+        flags: '--fallBackHTMLCard',
         defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
-    });
-    sywac.boolean('--cache', {
+    },
+    {
+        type: 'boolean',
+        flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
-    });
-    sywac.string('--tmpPath', {
+    },
+    {
+        type: 'string',
+        flags: '--tmpPath',
         defaultValue: null,
         desc: 'Specify the full path where the temporary files will be stored (Defaults a hidden tmp dir)'
-    });
-    sywac.string('--outputPath', {
+    },
+    {
+        type: 'string',
+        flags: '--outputPath',
         defaultValue: null,
         desc: 'Specify the full path where the final zip file will be saved to (Defaults to CWD)'
-    });
-    sywac.string('--cacheName', {
+    },
+    {
+        type: 'string',
+        flags: '--cacheName',
         defaultValue: null,
         desc: 'Provide a unique name for the cache directory (defaults to a UUID)'
-    });
+    }
+];
+
+const defaults = convertOptionsToDefaults(options);
+
+const setup = (sywac) => {
+    convertOptionsToSywac(options, sywac);
 };
 
 // What to do when this command is executed
@@ -113,5 +142,6 @@ export default {
     flags,
     desc,
     setup,
-    run
+    run,
+    defaults
 };
