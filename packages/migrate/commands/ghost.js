@@ -79,6 +79,18 @@ const setup = (sywac) => {
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
     });
+    sywac.string('--tmpPath', {
+        defaultValue: null,
+        desc: 'Specify the full path where the temporary files will be stored (Defaults a hidden tmp dir)'
+    });
+    sywac.string('--outputPath', {
+        defaultValue: null,
+        desc: 'Specify the full path where the final zip file will be saved to (Defaults to CWD)'
+    });
+    sywac.string('--cacheName', {
+        defaultValue: null,
+        desc: 'Provide a unique name for the cache directory (defaults to a UUID)'
+    });
 };
 
 // What to do when this command is executed

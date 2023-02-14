@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import ghostAPI from '@tryghost/mg-ghost-api';
 import {toGhostJSON} from '@tryghost/mg-json';
 import MgAssetScraper from '@tryghost/mg-assetscraper';
@@ -252,12 +253,28 @@ const getFullTaskList = (options, logger) => {
             task: async (ctx, task) => {
                 // 8. Write a valid Ghost import zip
                 ctx.timings.writeZip = Date.now();
+                const isStorage = (options?.outputStorage && typeof options.outputStorage === 'object') ?? false;
+
                 try {
                     let timer = Date.now();
-                    ctx.outputFile = await fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+                    const zipFinalPath = options.outputPath || process.cwd();
+                    // zip the file and save it temporarily
+                    ctx.outputFile = await fsUtils.zip.write(zipFinalPath, ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+
+                    if (isStorage) {
+                        const storage = options.outputStorage;
+
+                        // read the file buffer
+                        const fileBuffer = await readFileSync(ctx.outputFile.path);
+                        // Upload the file to the storage
+                        await storage.upload({body: fileBuffer, fileName: `gh-ghost-${ctx.options.cacheName}.zip`});
+                        // now that the file is uploaded to the storage, delete the local zip file
+                        await fsUtils.zip.deleteFile(ctx.outputFile.path);
+                    }
+
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to write Ghost import ZIP file', error});
+                    ctx.logger.error({message: 'Failed to write and upload ZIP file', error});
                     throw error;
                 }
             }
