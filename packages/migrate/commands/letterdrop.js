@@ -19,6 +19,7 @@ const flags = 'letterdrop';
 // Description for the top level command
 const desc = 'Migrate from Letterdrop using the API';
 
+// Configure all the options
 const options = [
     {
         type: 'string',
@@ -121,12 +122,11 @@ const options = [
     }
 ];
 
+// Build an object of defaults to be exported - Not used here, but needs to be provided
 const defaults = convertOptionsToDefaults(options);
 
-// Configure all the options
-const setup = (sywac) => {
-    convertOptionsToSywac(options, sywac);
-};
+// Convert `options` into a list of Sywac types
+const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
 const run = async (argv) => {

@@ -91,11 +91,11 @@ const options = [
     }
 ];
 
+// Build an object of defaults to be exported - Not used here, but needs to be provided
 const defaults = convertOptionsToDefaults(options);
 
-const setup = (sywac) => {
-    convertOptionsToSywac(options, sywac);
-};
+// Convert `options` into a list of Sywac types
+const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
 const run = async (argv) => {
