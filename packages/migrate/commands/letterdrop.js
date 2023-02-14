@@ -19,7 +19,7 @@ const flags = 'letterdrop';
 // Description for the top level command
 const desc = 'Migrate from Letterdrop using the API';
 
-let options = [
+const options = [
     {
         type: 'string',
         flags: '--apiToken',
