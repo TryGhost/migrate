@@ -4,6 +4,7 @@ import ghost from '../sources/ghost.js';
 import {GhostLogger} from '@tryghost/logging';
 import logConfig from '../../../loggingrc.js';
 import {showLogs} from '../lib/utilties/cli-log-display.js';
+import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
 
 const logger = new GhostLogger(logConfig);
 
@@ -19,78 +20,118 @@ const flags = 'ghost';
 const desc = 'Migrate from Ghost using the Admin API';
 
 // Configure all the options
-const setup = (sywac) => {
-    sywac.string('--url', {
+const options = [
+    {
+        type: 'string',
+        flags: '--url',
         defaultValue: null,
         desc: 'Ghost API URL',
         required: true
-    });
-    sywac.string('--apikey', {
+    },
+    {
+        type: 'string',
+        flags: '--apikey',
         defaultValue: null,
         desc: 'Ghost API key',
         required: true
-    });
-    sywac.boolean('-V --verbose', {
+    },
+    {
+        type: 'boolean',
+        flags: '-V --verbose',
         defaultValue: false,
         desc: 'Show verbose output'
-    });
-    sywac.boolean('--zip', {
+    },
+    {
+        type: 'boolean',
+        flags: '--zip',
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
-    });
-    sywac.array('-s --scrape', {
+    },
+    {
+        type: 'array',
+        flags: '-s --scrape',
         choices: ['all', 'img', 'web', 'media', 'files', 'none'],
         defaultValue: 'all',
         desc: 'Configure scraping tasks'
-    });
-    sywac.number('--sizeLimit', {
+    },
+    {
+        type: 'number',
+        flags: '--sizeLimit',
         defaultValue: false,
         desc: 'Assets larger than this size (defined in MB) will be ignored'
-    });
-    sywac.boolean('-I, --info', {
+    },
+    {
+        type: 'boolean',
+        flags: '-I, --info',
         defaultValue: false,
         desc: 'Show initialization info only'
-    });
-    sywac.number('-b, --batch', {
+    },
+    {
+        type: 'number',
+        flags: '-b, --batch',
         defaultValue: 0,
         desc: 'Batch number to run (defaults to running all)'
-    });
-    sywac.number('-l, --limit', {
+    },
+    {
+        type: 'number',
+        flags: '-l, --limit',
         defaultValue: 15,
         desc: 'Number of items fetched in a batch i.e. batch size'
-    });
-    sywac.string('--postFilter', {
+    },
+    {
+        type: 'string',
+        flags: '--postFilter',
         defaultValue: null,
         desc: 'A string of post filters, as defined in the Ghost Admin API'
-    });
-    sywac.boolean('--posts', {
+    },
+    {
+        type: 'boolean',
+        flags: '--posts',
         defaultValue: true,
         desc: 'Fetch posts (set to false to disable)'
-    });
-    sywac.string('--pageFilter', {
+    },
+    {
+        type: 'string',
+        flags: '--pageFilter',
         defaultValue: null,
         desc: 'A string of page filters, as defined in the Ghost Admin API'
-    });
-    sywac.boolean('--pages', {
+    },
+    {
+        type: 'boolean',
+        flags: '--pages',
         defaultValue: true,
         desc: 'Fetch pages (set to false to disable)'
-    });
-    sywac.boolean('--cache', {
+    },
+    {
+        type: 'boolean',
+        flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
-    });
-    sywac.string('--tmpPath', {
+    },
+    {
+        type: 'string',
+        flags: '--tmpPath',
         defaultValue: null,
         desc: 'Specify the full path where the temporary files will be stored (Defaults a hidden tmp dir)'
-    });
-    sywac.string('--outputPath', {
+    },
+    {
+        type: 'string',
+        flags: '--outputPath',
         defaultValue: null,
         desc: 'Specify the full path where the final zip file will be saved to (Defaults to CWD)'
-    });
-    sywac.string('--cacheName', {
+    },
+    {
+        type: 'string',
+        flags: '--cacheName',
         defaultValue: null,
         desc: 'Provide a unique name for the cache directory (defaults to a UUID)'
-    });
+    }
+];
+
+const defaults = convertOptionsToDefaults(options);
+
+const setup = (sywac) => {
+    convertOptionsToSywac(options, sywac);
 };
 
 // What to do when this command is executed
@@ -147,5 +188,6 @@ export default {
     flags,
     desc,
     setup,
-    run
+    run,
+    defaults
 };
