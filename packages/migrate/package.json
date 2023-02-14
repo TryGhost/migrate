@@ -44,8 +44,6 @@
     "@tryghost/mg-json": "^0.9.8",
     "@tryghost/mg-linkfixer": "^0.4.8",
     "@tryghost/mg-medium-export": "^0.13.7",
-    "@tryghost/mg-revue-api": "^0.4.6",
-    "@tryghost/mg-revue-subscribers": "^0.1.7",
     "@tryghost/mg-squarespace-xml": "^0.2.8",
     "@tryghost/mg-substack": "^0.2.12",
     "@tryghost/mg-substack-members-csv": "^0.3.7",
