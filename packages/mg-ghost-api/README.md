@@ -25,11 +25,17 @@ or
 To run a Ghost API migration, the required command is:
 
 ```sh
-migrate ghost <apiurl> <apikey>
+migrate ghost --url https://example.com --apikey 1234abcd
 ```
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
+- **`--url`** (required)
+    - Ghost API URL
+    - string - default: `null`  
+- **`--apikey`** (required)
+    - Ghost API key
+    - string - default: `null`  
 - **`-V` `--verbose`**
     - bool - default: `false`
     - Show verbose output
@@ -71,7 +77,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 A more complex migration command could look like this:
 
 ```sh
-migrate ghost <apiurl> <apikey> --batch 5 --limit 10 --postFilter 'tag:[news, press]' --pages false --verbose
+migrate ghost --url https://example.com --apikey 1234abcd --batch 5 --limit 10 --postFilter 'tag:[news, press]' --pages false --verbose
 ```
 
 This will get the first 50 posts with the tag `news` or `press`, in 5 batches of 10 posts, exclude pages, and show all available output in the console.
@@ -93,7 +99,7 @@ Follow the instructions for the top-level repo.
 To run a local development copy, `cd` into this directory, and replace `migrate` with `yarn dev`, like so:
 
 ```sh
-yarn dev ghost <apiurl> <apikey>
+yarn dev ghost --url https://example.com --apikey 1234abcd
 ```
 
 

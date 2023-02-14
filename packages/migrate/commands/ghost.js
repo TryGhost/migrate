@@ -13,16 +13,23 @@ const id = 'ghost';
 const group = 'Sources:';
 
 // The command to run and any params
-const flags = 'ghost <url> <apikey>';
+const flags = 'ghost';
 
 // Description for the top level command
 const desc = 'Migrate from Ghost using the Admin API';
 
-// Descriptions for the individual params
-const paramsDesc = ['Ghost API URL ', 'Ghost API key'];
-
 // Configure all the options
 const setup = (sywac) => {
+    sywac.string('--url', {
+        defaultValue: null,
+        desc: 'Ghost API URL',
+        required: true
+    });
+    sywac.string('--apikey', {
+        defaultValue: null,
+        desc: 'Ghost API key',
+        required: true
+    });
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
@@ -127,7 +134,6 @@ export default {
     group,
     flags,
     desc,
-    paramsDesc,
     setup,
     run
 };

@@ -13,19 +13,23 @@ const id = 'substack';
 const group = 'Sources:';
 
 // The command to run and any params
-const flags = 'substack <pathToZip> <url>';
+const flags = 'substack';
 
 // Description for the top level command
 const desc = 'Migrate from a Substack ZIP file';
 
-// Descriptions for the individual params
-const paramsDesc = [
-    'Path to a zip file',
-    'Provide a URL (without trailing slash) to the hosted source site, so we can scrape data'
-];
-
 // Configure all the options
 const setup = (sywac) => {
+    sywac.string('--pathToZip', {
+        defaultValue: null,
+        desc: 'Path to a zip file',
+        required: true
+    });
+    sywac.string('--url', {
+        defaultValue: null,
+        desc: 'Site URL',
+        required: true
+    });
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
@@ -150,7 +154,6 @@ export default {
     group,
     flags,
     desc,
-    paramsDesc,
     setup,
     run
 };

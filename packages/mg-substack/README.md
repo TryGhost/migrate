@@ -25,23 +25,29 @@ or
 To run basic Substack migration, the required command is this:
 
 ```sh
-migrate substack <pathToZip> <susbtackURL>
+migrate substack --pathToZip /path/to/my-export.zip --url https://example.com
 ```
 
 A more complex command for a Substack migration looks like this:
 
 ```sh
-migrate substack <pathToZip> <susbtackURL> --email 'person@example.com' --drafts false
+migrate substack --pathToZip /path/to/my-export.zip --url https://example.com --email 'person@example.com' --drafts false
 ```
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
+- **`--pathToZip`** (required)
+    - Path to a zip file
+    - string - default: `null`
+- **`--url`** (required)
+    - Site URL
+    - string - default: `null`  
 - **`-V` `--verbose`** 
     - Show verbose output
     - bool - default: `false`
 - **`--zip`** 
     - Create a zip file
-    - bool - default: `true`            
+    - bool - default: `true`
 - **`-s` `--scrape`** 
     - Configure scraping tasks
     - string - default: `all` 

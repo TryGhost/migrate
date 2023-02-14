@@ -25,17 +25,20 @@ or
 To run an absolute basic WordPress migration, the required command is this:
 
 ```sh
-migrate wp-api <url>
+migrate wp-api --url https://example.com
 ```
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
+- **`--url`** (required)
+    - Path to a WordPress site
+    - string - default: `false`
 - **`-V` `--verbose`** 
     - Show verbose output
-    - bool - default: `false`        
+    - bool - default: `false`
 - **`--zip`** 
     - Create a zip file
-    - bool - default: `true`            
+    - bool - default: `true`
 - **`-s` `--scrape`** 
     - Configure scraping tasks
     - string - default: `all` 

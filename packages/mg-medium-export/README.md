@@ -25,13 +25,16 @@ or
 To run a Medium migration, the required command is:
 
 ```sh
-migrate medium <path to zip file>
+migrate medium --pathToZip /path/to/my-export.zip
 ```
 
 **Note:** The zip path can be to a singular zip file or a folder of zip files
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
+- **`--pathToZip`** (required)
+    - Path to a zip file
+    - string - default: `null`
 - **`-V` `--verbose`**
     - bool - default: `false`
     - Show verbose output
@@ -58,7 +61,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 A more complex migration command could look like this:
 
 ```sh
-migrate medium <path to zip file> --email example.com
+migrate medium --pathToZip /path/to/my-export.zip --email example.com
 ```
 
 This will process all posts from the zip file, and all authors will have an email address ending in 'example.com'
@@ -78,7 +81,7 @@ Follow the instructions for the top-level repo.
 To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
 
 ```sh
-yarn dev medium <path to zip file>
+yarn dev medium --pathToZip /path/to/my-export.zip
 ```
 
 

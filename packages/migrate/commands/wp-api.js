@@ -17,16 +17,18 @@ const id = 'wp-api';
 const group = 'Sources:';
 
 // The command to run and any params
-const flags = 'wp-api <url>';
+const flags = 'wp-api';
 
 // Description for the top level command
 const desc = 'Migrate from WordPress using JSON API';
 
-// Descriptions for the individual params
-const paramsDesc = ['Path to a WordPress site, without trailing slash'];
-
 // Configure all the options
 const setup = (sywac) => {
+    sywac.string('--url', {
+        defaultValue: null,
+        desc: 'Path to a WordPress site',
+        required: true
+    });
     sywac.boolean('-V --verbose', {
         defaultValue: false,
         desc: 'Show verbose output'
@@ -220,7 +222,6 @@ export default {
     group,
     flags,
     desc,
-    paramsDesc,
     setup,
     run
 };
