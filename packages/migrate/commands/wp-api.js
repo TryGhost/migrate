@@ -67,7 +67,7 @@ const setup = (sywac) => {
         desc: 'Provide a JSON file with users'
     });
     sywac.boolean('--fallBackHTMLCard', {
-        defaultValue: false,
+        defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
     sywac.boolean('--tags', {

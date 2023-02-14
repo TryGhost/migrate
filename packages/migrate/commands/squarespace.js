@@ -58,7 +58,7 @@ const setup = (sywac) => {
         desc: 'Provide a tag name which should be added to every post in this migration'
     });
     sywac.boolean('--fallBackHTMLCard', {
-        defaultValue: false,
+        defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
     sywac.boolean('--cache', {

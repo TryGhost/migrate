@@ -81,7 +81,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - string - default: `null`
     - Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`
 - **`--fallBackHTMLCard`**
-    - bool - default: `false`
+    - bool - default: `true`
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
 - **`--removeSelectors`** 
     - `Pass in a string of CSS selectors for elements that will be removed, e.g. '.ads, script[src*="adnetwork.com"]'`

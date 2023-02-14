@@ -92,7 +92,7 @@ const setup = (sywac) => {
         desc: 'Time in ms to wait after a URL is scraped'
     });
     sywac.boolean('--fallBackHTMLCard', {
-        defaultValue: false,
+        defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
     sywac.boolean('--cache', {

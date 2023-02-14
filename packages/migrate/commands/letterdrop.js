@@ -68,7 +68,7 @@ const setup = (sywac) => {
         desc: 'Provide the button text for above subscribe links'
     });
     sywac.boolean('--fallBackHTMLCard', {
-        defaultValue: false,
+        defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
     sywac.boolean('--cache', {

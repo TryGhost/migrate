@@ -63,7 +63,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - number - default: `100`
     - Number of items fetched in a batch i.e. batch size
 - **`--fallBackHTMLCard`**
-    - bool - default: `false`
+    - bool - default: `true`
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
 - **`--cache`** 
     - Persist local cache after migration is complete (Only if `--zip` is `true`)

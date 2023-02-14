@@ -87,7 +87,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - string - default: `null`
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
-    - bool - default: `false`      
+    - bool - default: `true`      
 - **`--cache`** 
     - Persist local cache after migration is complete (Only if `--zip` is `true`)
     - bool - default: `true`

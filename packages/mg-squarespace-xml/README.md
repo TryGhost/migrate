@@ -62,7 +62,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - string - default: `null`
     - Provide a tag name which should be added to every post in this migration
 - **`--fallBackHTMLCard`**
-    - bool - default: `false`
+    - bool - default: `true`
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
 - **`--cache`** 
     - Persist local cache after migration is complete (Only if `--zip` is `true`)

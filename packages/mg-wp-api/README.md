@@ -95,7 +95,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - array - default: `null`
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
-    - bool - default: `false`
+    - bool - default: `true`
 - **`--removeSelectors`** 
     - `Pass in a string of CSS selectors for elements that will be removed, e.g. '.ads, script[src*="adnetwork.com"]'`
     - string - default: `null`

@@ -55,7 +55,7 @@ const setup = (sywac) => {
         desc: 'Set the dated permalink structure (e.g. /yyyy/mm/dd/)'
     });
     sywac.boolean('--fallBackHTMLCard', {
-        defaultValue: false,
+        defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
     sywac.boolean('--cache', {

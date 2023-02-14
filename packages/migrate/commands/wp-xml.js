@@ -63,7 +63,7 @@ const setup = (sywac) => {
         desc: 'Only migrate posts after and including a given date e.g. \'August 16 2021\''
     });
     sywac.boolean('--fallBackHTMLCard', {
-        defaultValue: false,
+        defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
     sywac.array('--cpt', {

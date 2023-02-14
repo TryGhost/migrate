@@ -41,7 +41,7 @@ const setup = (sywac) => {
         desc: 'Provide a tag to be applied to every post'
     });
     sywac.boolean('--fallBackHTMLCard', {
-        defaultValue: false,
+        defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
     sywac.boolean('--cache', {

@@ -71,7 +71,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - string - default: `none` 
     - Choices: `none`, `'/yyyy/mm/'`, `'/yyyy/mm/dd/'`  
 - **`--fallBackHTMLCard`**
-    - bool - default: `false`
+    - bool - default: `true`
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
 - **`--cache`** 
     - Persist local cache after migration is complete (Only if `--zip` is `true`)

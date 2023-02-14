@@ -15,7 +15,7 @@ const setup = (sywac) => {
         desc: 'Show verbose output'
     });
     sywac.boolean('--fallBackHTMLCard', {
-        defaultValue: false,
+        defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
 };

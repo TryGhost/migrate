@@ -47,7 +47,7 @@ const setup = (sywac) => {
         desc: 'Provide an email domain for users e.g. mycompany.com'
     });
     sywac.boolean('--fallBackHTMLCard', {
-        defaultValue: false,
+        defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
     sywac.boolean('--cache', {

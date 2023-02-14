@@ -59,7 +59,7 @@ const setup = (sywac) => {
         desc: 'Number of items fetched in a batch i.e. batch size'
     });
     sywac.boolean('--fallBackHTMLCard', {
-        defaultValue: false,
+        defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
     });
     sywac.boolean('--cache', {
