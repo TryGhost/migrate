@@ -52,6 +52,12 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--sizeLimit`**
     - number - default: `false`
     - Media files larger than this size (defined in MB [i.e. `5`]) will be flagged as oversize
+- **`--subscribeLink`** 
+    - Provide a path that existing `/subscribe` anchors will link to e.g. `/join-us` or `#/portal/signup` (`#` characters need to be escaped with a `\`)
+    - string - default: `#/portal/signup`
+- **`--subscribeText`** 
+    - Provide the button text for above subscribe links
+    - string - default: `Subscribe`
 - **`--addPrimaryTag`**
     - string - default: `null`
     - Provide a tag name which should be added to every post as primary tag

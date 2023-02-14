@@ -50,6 +50,10 @@ const processContent = (html, postUrl, options) => {
         }
     });
 
+    $html('iframe[name="letterdrop-subscribe-input"]').each((i, el) => {
+        $(el).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${options.subscribeText}</a></div>`);
+    });
+
     // convert HTML back to a string
     html = $html.html();
 

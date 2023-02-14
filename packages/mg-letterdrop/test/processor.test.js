@@ -60,4 +60,24 @@ describe('Process', function () {
         expect(authors[0].data.slug).toEqual('john-smith');
         expect(authors[0].data.name).toEqual('John Smith');
     });
+
+    test('Converts signup iframes to Portal links', function () {
+        const ctx = {
+            result: fixture,
+            options: {
+                url: 'https://example.com',
+                addPrimaryTag: 'Newsletter',
+                email: 'person@example.com',
+                createAuthors: true,
+                subscribeLink: '#/portal/signup',
+                subscribeText: 'Subscribe'
+            }
+        };
+        const response = processor.all(ctx);
+        const posts = response.posts;
+
+        const post = posts[1];
+
+        expect(post.data.html).toEqual('<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div><div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>');
+    });
 });
