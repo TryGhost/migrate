@@ -27,11 +27,14 @@ or
 To run a WordPress migration, the required command is:
 
 ```sh
-migrate wp-xml <path to xml file>
+migrate wp-xml --pathToFile /path/to/file.xml
 ```
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
+- **`--pathToFile`** (required)
+    - Path to XML file
+    - string - default: `null`
 - **`-V` `--verbose`**
     - bool - default: `false`
     - Show verbose output
@@ -90,7 +93,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 A more complex migration command could look like this:
 
 ```sh
-migrate wp-xml <path to xml file> --pages false --addTag News
+migrate wp-xml --pathToFile /path/to/file.xml --pages false --addTag News
 ```
 
 
@@ -108,7 +111,7 @@ Follow the instructions for the top-level repo.
 To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
 
 ```sh
-yarn dev wp-xml <path to xml file>
+yarn dev wp-xml --pathToFile /path/to/file.xml
 ```
 
 
