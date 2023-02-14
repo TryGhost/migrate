@@ -39,13 +39,13 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--url`**
     - string - default: `null`
     - URL to live site
-- **`-V` `--verbose`**
+- **`--verbose`**
     - bool - default: `false`
     - Show verbose output
 - **`--zip`**
     - bool - default: `true`
     - Create a zip file
-- **`-s` `--scrape`** 
+- **`--scrape`** 
     - Configure scraping tasks
     - string - default: `all` 
     - Choices: `all`, `img`, `web`, `media`, `files`, `none`
@@ -64,7 +64,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--createAuthors`**
     - bool - default: `true`
     - Create authors based on data from Letterdrop
-- **`-I` `--info`**
+- **`--info`**
     - bool - default: `false`
     - Show initalisation info only
 - **`--fallBackHTMLCard`**

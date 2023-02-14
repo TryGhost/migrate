@@ -4,6 +4,7 @@ import letterdrop from '../sources/letterdrop.js';
 import {GhostLogger} from '@tryghost/logging';
 import logConfig from '../../../loggingrc.js';
 import {showLogs} from '../lib/utilties/cli-log-display.js';
+import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
 
 const logger = new GhostLogger(logConfig);
 
@@ -18,75 +19,113 @@ const flags = 'letterdrop';
 // Description for the top level command
 const desc = 'Migrate from Letterdrop using the API';
 
-// Configure all the options
-const setup = (sywac) => {
-    sywac.string('--apiToken', {
+let options = [
+    {
+        type: 'string',
+        flags: '--apiToken',
         defaultValue: null,
         desc: 'Letterdrop API Token',
         required: true
-    });
-    sywac.string('--url', {
+    },
+    {
+        type: 'string',
+        flags: '--url',
         defaultValue: null,
         desc: 'URL to live site',
         required: true
-    });
-    sywac.boolean('-V --verbose', {
+    },
+    {
+        type: 'boolean',
+        flags: '-V --verbose',
         defaultValue: false,
         desc: 'Show verbose output'
-    });
-    sywac.boolean('-z, --zip', {
+    },
+    {
+        type: 'boolean',
+        flags: '--zip',
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
-    });
-    sywac.array('-s --scrape', {
+    },
+    {
+        type: 'array',
+        flags: '--scrape',
         choices: ['all', 'img', 'web', 'media', 'files', 'none'],
-        defaultValue: 'all',
+        defaultValue: ['all'],
         desc: 'Configure scraping tasks'
-    });
-    sywac.number('--sizeLimit', {
+    },
+    {
+        type: 'number',
+        flags: '--sizeLimit',
         defaultValue: false,
         desc: 'Assets larger than this size (defined in MB) will be ignored'
-    });
-    sywac.string('--addPrimaryTag', {
+    },
+    {
+        type: 'string',
+        flags: '--addPrimaryTag',
         defaultValue: null,
         desc: 'Provide a tag name which should be added to every post as primary tag'
-    });
-    sywac.boolean('-I, --info', {
+    },
+    {
+        type: 'boolean',
+        flags: '--info',
         defaultValue: false,
         desc: 'Show Letterdrop API info only'
-    });
-    sywac.number('--wait_after_scrape', {
+    },
+    {
+        type: 'number',
+        flags: '--wait_after_scrape',
         defaultValue: 200,
         desc: 'Time in ms to wait after a URL is scraped'
-    });
-    sywac.string('--subscribeLink', {
+    },
+    {
+        type: 'string',
+        flags: '--subscribeLink',
         defaultValue: '#/portal/signup',
         desc: 'Provide a path that existing "subscribe" anchors will link to e.g. "/join-us" or "#/portal/signup" (# characters need to be escaped with a \\)'
-    });
-    sywac.string('--subscribeText', {
+    },
+    {
+        type: 'string',
+        flags: '--subscribeText',
         defaultValue: 'Subscribe',
         desc: 'Provide the button text for above subscribe links'
-    });
-    sywac.boolean('--fallBackHTMLCard', {
+    },
+    {
+        type: 'boolean',
+        flags: '--fallBackHTMLCard',
         defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
-    });
-    sywac.boolean('--cache', {
+    },
+    {
+        type: 'boolean',
+        flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
-    });
-    sywac.string('--tmpPath', {
+    },
+    {
+        type: 'string',
+        flags: '--tmpPath',
         defaultValue: null,
         desc: 'Specify the full path where the temporary files will be stored (Defaults a hidden tmp dir)'
-    });
-    sywac.string('--outputPath', {
+    },
+    {
+        type: 'string',
+        flags: '--outputPath',
         defaultValue: null,
         desc: 'Specify the full path where the final zip file will be saved to (Defaults to CWD)'
-    });
-    sywac.string('--cacheName', {
+    },
+    {
+        type: 'string',
+        flags: '--cacheName',
         defaultValue: null,
         desc: 'Provide a unique name for the cache directory (defaults to a UUID)'
-    });
+    }
+];
+
+const defaults = convertOptionsToDefaults(options);
+
+// Configure all the options
+const setup = (sywac) => {
+    convertOptionsToSywac(options, sywac);
 };
 
 // What to do when this command is executed
@@ -143,5 +182,6 @@ export default {
     flags,
     desc,
     setup,
-    run
+    run,
+    defaults
 };
