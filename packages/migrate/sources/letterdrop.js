@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import letterdropAPI from '@tryghost/mg-letterdrop';
 import {toGhostJSON} from '@tryghost/mg-json';
 import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
@@ -6,7 +7,6 @@ import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import prettyMilliseconds from 'pretty-ms';
-import {readFileSync} from 'node:fs';
 
 const initialize = (options, logger) => {
     logger.info({message: 'Initialize migration'});
