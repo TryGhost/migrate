@@ -31,7 +31,7 @@
     "@tryghost/string": "0.2.2",
     "cheerio": "0.22.0",
     "date-fns": "2.29.3",
-    "html-to-text": "9.0.3",
+    "html-to-text": "9.0.4",
     "wpapi": "^1.2.1"
   }
 }
