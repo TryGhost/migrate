@@ -33,9 +33,9 @@ Basic usage is `migrate [source] source-info`:
 
 E.g.
 
-`migrate medium path/to/export.zip`
+`migrate medium --pathToZip /path/to/export.zip`
 
-`migrate wp-api https://mywpsite.com`
+`migrate wp-api --url https://mywpsite.com`
 
 Each source comes with optional flags to customise the migration:
 
@@ -50,10 +50,6 @@ This is a mono repository, managed with [lerna](https://lernajs.io/).
 2. `yarn setup` is mapped to `lerna bootstrap`
    - installs all external dependencies
    - links all internal dependencies
-
-To add a new package to the repo:
-   - install [slimer](https://github.com/TryGhost/slimer)
-   - run `slimer new <package name>`
 
 
 ## Run
