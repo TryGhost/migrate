@@ -6,6 +6,9 @@ import errors from '@tryghost/errors';
 import SimpleDom from 'simple-dom';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 import {decode} from 'html-entities';
+import {_base as debugFactory} from '@tryghost/debug';
+
+const debug = debugFactory('migrate:substack:process');
 
 const getFiles = async (filePath) => {
     let filenames = await fs.readdir(filePath);
@@ -49,6 +52,7 @@ const processContent = (post, siteUrl, options) => {
 
     // If there's no HTML, exit & return an empty string to avoid errors
     if (!html) {
+        debug(`Post ${post.data.slug} has no HTML content`);
         return '';
     }
 
@@ -93,6 +97,7 @@ const processContent = (post, siteUrl, options) => {
 
     // If we have a podcast URL, embed an audio card at the start of the document
     if (substackPodcastURL) {
+        debug(`Post ${post.data.slug} has podcast episode`);
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
             payload: {

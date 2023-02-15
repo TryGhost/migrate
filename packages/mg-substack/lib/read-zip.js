@@ -1,4 +1,7 @@
 import fsUtils from '@tryghost/mg-fs-utils';
+import {_base as debugFactory} from '@tryghost/debug';
+
+const debug = debugFactory('migrate:substack:read-zip');
 
 export default (zipPath) => {
     let content = {
@@ -15,13 +18,15 @@ export default (zipPath) => {
     fsUtils.zip.read(zipPath, (entryName, zipEntry) => {
         // Catch all HTML files inside `profile/`
         if (/^posts\/.*\.html$/.test(entryName)) {
+            debug(`Found post HTML file ${entryName}`);
             content.posts.push({
                 name: entryName.replace('posts/', ''),
                 html: zipEntry.getData().toString('utf8')
             });
 
-        // Skip if not matched above, and report skipped files if `--verbose`
+        // Skip if not matched above
         } else if (entryName === 'posts.csv') {
+            debug(`Found posts CSV file ${entryName}`);
             content.csv = zipEntry.getData().toString('utf8');
         }
     });
