@@ -1,5 +1,6 @@
 import {ui} from '@tryghost/pretty-cli';
 import fsUtils from '@tryghost/mg-fs-utils';
+import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
 
 // Internal ID in case we need one.
 const id = 'clear-cache';
@@ -13,12 +14,20 @@ const flags = 'clear-cache';
 const desc = 'Clear local migration cache';
 
 // Configure all the options
-const setup = (sywac) => {
-    sywac.boolean('-V --verbose', {
+const options = [
+    {
+        type: 'boolean',
+        flags: '-V --verbose',
         defaultValue: Boolean(process?.env?.DEBUG),
         desc: 'Show verbose output'
-    });
-};
+    }
+];
+
+// Build an object of defaults to be exported - Not used here, but needs to be provided
+const defaults = convertOptionsToDefaults(options);
+
+// Convert `options` into a list of Sywac types
+const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
 const run = async (argv) => {
@@ -48,5 +57,6 @@ export default {
     flags,
     desc,
     setup,
-    run
+    run,
+    defaults
 };
