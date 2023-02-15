@@ -1,6 +1,7 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import jekyll from '../sources/jekyll.js';
+import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
 
 // Internal ID in case we need one.
 const id = 'jekyll';
@@ -14,55 +15,83 @@ const flags = 'jekyll';
 const desc = 'Migrate from Jekyll using an export zip';
 
 // Configure all the options
-const setup = (sywac) => {
-    sywac.string('--pathToZip', {
+const options = [
+    {
+        type: 'string',
+        flags: '--pathToZip',
         defaultValue: null,
         desc: 'Path to a jekyll export zip',
         required: true
-    });
-    sywac.boolean('-V --verbose', {
+    },
+    {
+        type: 'boolean',
+        flags: '-V --verbose',
         defaultValue: Boolean(process?.env?.DEBUG),
         desc: 'Show verbose output'
-    });
-    sywac.boolean('--zip', {
+    },
+    {
+        type: 'boolean',
+        flags: '--zip',
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
-    });
-    sywac.array('-s --scrape', {
+    },
+    {
+        type: 'array',
+        flags: '-s --scrape',
         choices: ['all', 'img', 'web', 'media', 'files', 'none'],
         defaultValue: 'all',
         desc: 'Configure scraping tasks'
-    });
-    sywac.number('--sizeLimit', {
+    },
+    {
+        type: 'number',
+        flags: '--sizeLimit',
         defaultValue: false,
         desc: 'Assets larger than this size (defined in MB) will be ignored'
-    });
-    sywac.string('-u --url', {
+    },
+    {
+        type: 'string',
+        flags: '-u --url',
         defaultValue: false,
         desc: 'Provide a URL (without trailing slash) to the hosted source site'
-    });
-    sywac.string('-e --email', {
+    },
+    {
+        type: 'string',
+        flags: '-e --email',
         defaultValue: false,
         desc: 'Provide an email domain for users e.g. mycompany.com'
-    });
-    sywac.string('--addTags', {
+    },
+    {
+        type: 'string',
+        flags: '--addTags',
         defaultValue: null,
         desc: 'Provide one or more tag names which should be added to every post in this migration'
-    });
-    sywac.enumeration('--datedPermalinks', {
+    },
+    {
+        type: 'enumeration',
+        flags: '--datedPermalinks',
         choices: ['none', '/yyyy/mm/', '/yyyy/mm/dd/'],
         defaultValue: 'none',
         desc: 'Set the dated permalink structure (e.g. /yyyy/mm/dd/)'
-    });
-    sywac.boolean('--fallBackHTMLCard', {
+    },
+    {
+        type: 'boolean',
+        flags: '--fallBackHTMLCard',
         defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
-    });
-    sywac.boolean('--cache', {
+    },
+    {
+        type: 'boolean',
+        flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
-    });
-};
+    }
+];
+
+// Build an object of defaults to be exported - Not used here, but needs to be provided
+const defaults = convertOptionsToDefaults(options);
+
+// Convert `options` into a list of Sywac types
+const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
 const run = async (argv) => {
@@ -105,5 +134,6 @@ export default {
     flags,
     desc,
     setup,
-    run
+    run,
+    defaults
 };
