@@ -1,6 +1,7 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import curated from '../sources/curated.js';
+import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
 
 // Internal ID in case we need one.
 const id = 'curated';
@@ -14,41 +15,63 @@ const flags = 'curated';
 const desc = 'Migrate from Curated using an export zip';
 
 // Configure all the options
-const setup = (sywac) => {
-    sywac.string('--pathToZip', {
+const options = [
+    {
+        type: 'string',
+        flags: '--pathToZip',
         defaultValue: null,
         desc: 'Path to a curated export zip',
         required: true
-    });
-    sywac.boolean('-V --verbose', {
+    },
+    {
+        type: 'boolean',
+        flags: '-V --verbose',
         defaultValue: Boolean(process?.env?.DEBUG),
         desc: 'Show verbose output'
-    });
-    sywac.boolean('--zip', {
+    },
+    {
+        type: 'boolean',
+        flags: '--zip',
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
-    });
-    sywac.string('-e --email', {
+    },
+    {
+        type: 'string',
+        flags: '-e --email',
         defaultValue: false,
         desc: 'Provide an email address for posts to attributed to e.g. john@example.com'
-    });
-    sywac.string('-n --name', {
+    },
+    {
+        type: 'string',
+        flags: '-n --name',
         defaultValue: false,
         desc: 'Provide a name for posts to attributed to e.g. John'
-    });
-    sywac.string('-t --tag', {
+    },
+    {
+        type: 'string',
+        flags: '-t --tag',
         defaultValue: false,
         desc: 'Provide a tag to be applied to every post'
-    });
-    sywac.boolean('--fallBackHTMLCard', {
+    },
+    {
+        type: 'boolean',
+        flags: '--fallBackHTMLCard',
         defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
-    });
-    sywac.boolean('--cache', {
+    },
+    {
+        type: 'boolean',
+        flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
-    });
-};
+    }
+];
+
+// Build an object of defaults to be exported - Not used here, but needs to be provided
+const defaults = convertOptionsToDefaults(options);
+
+// Convert `options` into a list of Sywac types
+const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
 const run = async (argv) => {
@@ -91,5 +114,6 @@ export default {
     flags,
     desc,
     setup,
-    run
+    run,
+    defaults
 };
