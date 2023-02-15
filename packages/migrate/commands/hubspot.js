@@ -1,6 +1,7 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import hubspot from '../sources/hubspot.js';
+import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
 
 // Internal ID in case we need one.
 const id = 'hubspot';
@@ -14,59 +15,89 @@ const flags = 'hubspot';
 const desc = 'Migrate from Hubspot using the API';
 
 // Configure all the options
-const setup = (sywac) => {
-    sywac.string('--url', {
+const options = [
+    {
+        type: 'string',
+        flags: '--url',
         defaultValue: null,
         desc: 'URL of the blog you want to migrate',
         required: true
-    });
-    sywac.string('--hapikey', {
+    },
+    {
+        type: 'string',
+        flags: '--hapikey',
         defaultValue: null,
         desc: 'Hubspot API Key (hapikey)',
         required: true
-    });
-    sywac.boolean('-V --verbose', {
+    },
+    {
+        type: 'boolean',
+        flags: '-V --verbose',
         defaultValue: Boolean(process?.env?.DEBUG),
         desc: 'Show verbose output'
-    });
-    sywac.boolean('-z, --zip', {
+    },
+    {
+        type: 'boolean',
+        flags: '-z, --zip',
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
-    });
-    sywac.array('-s --scrape', {
+    },
+    {
+        type: 'array',
+        flags: '-s --scrape',
         choices: ['all', 'img', 'web', 'media', 'files', 'none'],
-        defaultValue: 'all',
+        defaultValue: ['all'],
         desc: 'Configure scraping tasks'
-    });
-    sywac.number('--sizeLimit', {
+    },
+    {
+        type: 'number',
+        flags: '--sizeLimit',
         defaultValue: false,
         desc: 'Assets larger than this size (defined in MB) will be ignored'
-    });
-    sywac.string('-e --email', {
+    },
+    {
+        type: 'string',
+        flags: '-e --email',
         defaultValue: false,
         desc: 'Provide an email domain for users e.g. mycompany.com'
-    });
-    sywac.boolean('-I, --info', {
+    },
+    {
+        type: 'boolean',
+        flags: '-I, --info',
         defaultValue: false,
         desc: 'Show hubspot blog info only'
-    });
-    sywac.number('-b, --batch', {
+    },
+    {
+        type: 'number',
+        flags: '-b, --batch',
         defaultValue: 0,
         desc: 'Batch number to run (defaults to running all)'
-    });
-    sywac.number('-l, --limit', {
+    },
+    {
+        type: 'number',
+        flags: '-l, --limit',
         defaultValue: 100,
         desc: 'Number of items fetched in a batch i.e. batch size'
-    });
-    sywac.boolean('--fallBackHTMLCard', {
+    },
+    {
+        type: 'boolean',
+        flags: '--fallBackHTMLCard',
         defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
-    });
-    sywac.boolean('--cache', {
+    },
+    {
+        type: 'boolean',
+        flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
-    });
-};
+    }
+];
+
+// Build an object of defaults to be exported - Not used here, but needs to be provided
+const defaults = convertOptionsToDefaults(options);
+
+// Convert `options` into a list of Sywac types
+const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
 const run = async (argv) => {
@@ -113,5 +144,6 @@ export default {
     flags,
     desc,
     setup,
-    run
+    run,
+    defaults
 };
