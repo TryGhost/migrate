@@ -31,7 +31,7 @@ const options = [
     {
         type: 'boolean',
         flags: '-V --verbose',
-        defaultValue: false,
+        defaultValue: Boolean(process?.env?.DEBUG),
         desc: 'Show verbose output'
     },
     {

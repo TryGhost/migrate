@@ -30,7 +30,7 @@ const setup = (sywac) => {
         required: true
     });
     sywac.boolean('-V --verbose', {
-        defaultValue: false,
+        defaultValue: Boolean(process?.env?.DEBUG),
         desc: 'Show verbose output'
     });
     sywac.boolean('--zip', {

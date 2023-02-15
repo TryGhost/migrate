@@ -11,7 +11,7 @@ const flags = 'json-html-card <pathToJSON>';
 // Configure all the options
 const setup = (sywac) => {
     sywac.boolean('-V --verbose', {
-        defaultValue: false,
+        defaultValue: Boolean(process?.env?.DEBUG),
         desc: 'Show verbose output'
     });
 };

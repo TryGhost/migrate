@@ -15,7 +15,7 @@ const desc = 'Clear local migration cache';
 // Configure all the options
 const setup = (sywac) => {
     sywac.boolean('-V --verbose', {
-        defaultValue: false,
+        defaultValue: Boolean(process?.env?.DEBUG),
         desc: 'Show verbose output'
     });
 };
