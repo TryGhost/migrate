@@ -12,7 +12,7 @@ describe('Options to Sywac', function () {
             },
             {
                 type: 'boolean',
-                flags: '-Z --zip',
+                flags: '-Z, --zip',
                 defaultValue: true,
                 desc: 'Create a zip file (set to false to skip)'
             },

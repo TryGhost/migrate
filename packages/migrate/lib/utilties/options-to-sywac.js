@@ -8,7 +8,7 @@ const convertOptionsToDefaults = (options = []) => {
     let defaults = {};
 
     options.forEach((option) => {
-        let flags = option.flags.split(' ').map((item) => {
+        let flags = option.flags.split(/[\s,]+/).map((item) => {
             return item.trim().replace(/^-+/, '');
         });
 
