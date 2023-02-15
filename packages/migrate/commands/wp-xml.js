@@ -1,6 +1,7 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import wpXml from '../sources/wp-xml.js';
+import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
 
 // Internal ID in case we need one.
 const id = 'wp-xml';
@@ -14,79 +15,119 @@ const flags = 'wp-xml';
 const desc = 'Migrate from a WordPress XML';
 
 // Configure all the options
-const setup = (sywac) => {
-    sywac.string('--pathToFile', {
+const options = [
+    {
+        type: 'string',
+        flags: '--pathToFile',
         defaultValue: null,
         desc: 'Path to XML file',
         required: true
-    });
-    sywac.boolean('-V --verbose', {
+    },
+    {
+        type: 'boolean',
+        flags: '-V --verbose',
         defaultValue: Boolean(process?.env?.DEBUG),
         desc: 'Show verbose output'
-    });
-    sywac.boolean('--zip', {
+    },
+    {
+        type: 'boolean',
+        flags: '--zip',
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
-    });
-    sywac.array('-s --scrape', {
+    },
+    {
+        type: 'array',
+        flags: '-s --scrape',
         choices: ['all', 'img', 'web', 'media', 'files', 'none'],
-        defaultValue: 'all',
+        defaultValue: ['all'],
         desc: 'Configure scraping tasks'
-    });
-    sywac.number('--sizeLimit', {
+    },
+    {
+        type: 'number',
+        flags: '--sizeLimit',
         defaultValue: false,
         desc: 'Assets larger than this size (defined in MB) will be ignored'
-    });
-    sywac.boolean('--drafts', {
+    },
+    {
+        type: 'boolean',
+        flags: '--drafts',
         defaultValue: true,
         desc: 'Import draft posts'
-    });
-    sywac.boolean('--pages', {
+    },
+    {
+        type: 'boolean',
+        flags: '--pages',
         defaultValue: true,
         desc: 'Import pages'
-    });
-    sywac.string('--addTag', {
+    },
+    {
+        type: 'string',
+        flags: '--addTag',
         defaultValue: null,
         desc: 'Provide a tag name which should be added to every post in this migration'
-    });
-    sywac.enumeration('--datedPermalinks', {
+    },
+    {
+        type: 'enumeration',
+        flags: '--datedPermalinks',
         choices: ['none', '/yyyy/mm/', '/yyyy/mm/dd/'],
         defaultValue: 'none',
         desc: 'Set the dated permalink structure (e.g. /yyyy/mm/dd/)'
-    });
-    sywac.string('--postsBefore', {
+    },
+    {
+        type: 'string',
+        flags: '--postsBefore',
         defaultValue: null,
         desc: 'Only migrate posts before and including a given date e.g. \'March 20 2018\''
-    });
-    sywac.string('--postsAfter', {
+    },
+    {
+        type: 'string',
+        flags: '--postsAfter',
         defaultValue: null,
         desc: 'Only migrate posts after and including a given date e.g. \'August 16 2021\''
-    });
-    sywac.boolean('--fallBackHTMLCard', {
+    },
+    {
+        type: 'boolean',
+        flags: '--fallBackHTMLCard',
         defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
-    });
-    sywac.array('--cpt', {
+    },
+    {
+        type: 'array',
+        flags: '--cpt',
         defaultValue: null,
         desc: 'The slug(s) of custom post type(s), e.g. `resources,newsletters`'
-    });
-    sywac.boolean('--excerpt', {
+    },
+    {
+        type: 'boolean',
+        flags: '--excerpt',
         defaultValue: true,
         desc: 'Use the excerpt value from WordPress API'
-    });
-    sywac.string('--excerptSelector', {
+    },
+    {
+        type: 'string',
+        flags: '--excerptSelector',
         defaultValue: null,
         desc: 'Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`'
-    });
-    sywac.string('--removeSelectors', {
+    },
+    {
+        type: 'string',
+        flags: '--removeSelectors',
         defaultValue: null,
         desc: 'Pass in a string of CSS selectors for elements that will be removed, e.g. \'.ads, script[src*="adnetwork.com"]\''
-    });
-    sywac.boolean('--cache', {
+    },
+    {
+        type: 'boolean',
+        flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
-    });
-};
+    }
+];
+
+// Build an object of defaults to be exported - Not used here, but needs to be provided
+const defaults = convertOptionsToDefaults(options);
+
+// Convert `options` into a list of Sywac types
+const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
 const run = async (argv) => {
@@ -124,5 +165,6 @@ export default {
     flags,
     desc,
     setup,
-    run
+    run,
+    defaults
 };
