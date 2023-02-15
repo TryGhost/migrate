@@ -1,6 +1,7 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import squarespace from '../sources/squarespace.js';
+import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
 
 // Internal ID in case we need one.
 const id = 'squarespace';
@@ -14,58 +15,88 @@ const flags = 'squarespace';
 const desc = 'Migrate from a Squarespace XML';
 
 // Configure all the options
-const setup = (sywac) => {
-    sywac.string('--pathToFile', {
+const options = [
+    {
+        type: 'string',
+        flags: '--pathToFile',
         defaultValue: null,
         desc: 'Path to xml file',
         required: true
-    });
-    sywac.boolean('-V --verbose', {
+    },
+    {
+        type: 'boolean',
+        flags: '-V --verbose',
         defaultValue: Boolean(process?.env?.DEBUG),
         desc: 'Show verbose output'
-    });
-    sywac.boolean('--zip', {
+    },
+    {
+        type: 'boolean',
+        flags: '--zip',
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
-    });
-    sywac.array('-s --scrape', {
+    },
+    {
+        type: 'array',
+        flags: '-s --scrape',
         choices: ['all', 'img', 'web', 'media', 'files', 'none'],
-        defaultValue: 'all',
+        defaultValue: ['all'],
         desc: 'Configure scraping tasks'
-    });
-    sywac.number('--sizeLimit', {
+    },
+    {
+        type: 'number',
+        flags: '--sizeLimit',
         defaultValue: false,
         desc: 'Assets larger than this size (defined in MB) will be ignored'
-    });
-    sywac.boolean('--drafts', {
+    },
+    {
+        type: 'boolean',
+        flags: '--drafts',
         defaultValue: true,
         desc: 'Import draft posts'
-    });
-    sywac.boolean('--posts', {
+    },
+    {
+        type: 'boolean',
+        flags: '--posts',
         defaultValue: true,
         desc: 'Import Squarespace posts'
-    });
-    sywac.boolean('--pages', {
+    },
+    {
+        type: 'boolean',
+        flags: '--pages',
         defaultValue: false,
         desc: 'Import Squarespace pages'
-    });
-    sywac.boolean('--tags', {
+    },
+    {
+        type: 'boolean',
+        flags: '--tags',
         defaultValue: true,
         desc: 'Set to false if you don\'t want to import WordPress tags, only categories'
-    });
-    sywac.string('--addTag', {
+    },
+    {
+        type: 'string',
+        flags: '--addTag',
         defaultValue: null,
         desc: 'Provide a tag name which should be added to every post in this migration'
-    });
-    sywac.boolean('--fallBackHTMLCard', {
+    },
+    {
+        type: 'boolean',
+        flags: '--fallBackHTMLCard',
         defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
-    });
-    sywac.boolean('--cache', {
+    },
+    {
+        type: 'boolean',
+        flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
-    });
-};
+    }
+];
+
+// Build an object of defaults to be exported - Not used here, but needs to be provided
+const defaults = convertOptionsToDefaults(options);
+
+// Convert `options` into a list of Sywac types
+const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
 const run = async (argv) => {
@@ -107,5 +138,6 @@ export default {
     flags,
     desc,
     setup,
-    run
+    run,
+    defaults
 };
