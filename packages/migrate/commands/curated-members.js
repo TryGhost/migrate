@@ -1,6 +1,7 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import curatedMembers from '../sources/curated-members.js';
+import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
 
 // Internal ID in case we need one.
 const id = 'curated-members';
@@ -14,33 +15,51 @@ const flags = 'curated-members';
 const desc = 'Migrate from Curated subscribers CSV';
 
 // Configure all the options
-const setup = (sywac) => {
-    sywac.string('--pathToFile', {
+const options = [
+    {
+        type: 'string',
+        flags: '--pathToFile',
         defaultValue: null,
         desc: 'Path to the signups CSV file',
         required: true
-    });
-    sywac.boolean('-V --verbose', {
+    },
+    {
+        type: 'boolean',
+        flags: '-V --verbose',
         defaultValue: Boolean(process?.env?.DEBUG),
         desc: 'Show verbose output'
-    });
-    sywac.boolean('--zip', {
+    },
+    {
+        type: 'boolean',
+        flags: '--zip',
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
-    });
-    sywac.number('-l, --limit', {
+    },
+    {
+        type: 'number',
+        flags: '-l, --limit',
         defaultValue: 50000,
         desc: 'Define the batch limit for import files.'
-    });
-    sywac.string('--freeLabel', {
+    },
+    {
+        type: 'string',
+        flags: '--freeLabel',
         defaultValue: 'curated-free',
         desc: 'Provide a label for Curated free subscribers'
-    });
-    sywac.boolean('--cache', {
+    },
+    {
+        type: 'boolean',
+        flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
-    });
-};
+    }
+];
+
+// Build an object of defaults to be exported - Not used here, but needs to be provided
+const defaults = convertOptionsToDefaults(options);
+
+// Convert `options` into a list of Sywac types
+const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
 const run = async (argv) => {
@@ -96,5 +115,6 @@ export default {
     flags,
     desc,
     setup,
-    run
+    run,
+    defaults
 };
