@@ -1,9 +1,13 @@
 import $ from 'cheerio';
 import {slugify} from '@tryghost/string';
+import {_base as debugFactory} from '@tryghost/debug';
+
+const debug = debugFactory('migrate:letterdrop:processor');
 
 const processContent = (html, postUrl, options) => {
     // Drafts can have empty post bodies
     if (!html) {
+        debug(`Post ${postUrl} has no HTML content`);
         return '';
     }
 
@@ -82,24 +86,28 @@ const processPost = (data, options) => {
     };
 
     if (addPrimaryTag) {
-        post.data.tags.push({
+        let tagObject = {
             url: `/tag/${slugify(addPrimaryTag)}`,
             data: {
                 slug: slugify(addPrimaryTag),
                 name: addPrimaryTag
             }
-        });
+        };
+        post.data.tags.push(tagObject);
+        debug(`Adding supplied primary tag to ${data.slug} post object`, tagObject);
     }
 
     data.tags.forEach((tag) => {
         let tagSlug = slugify(tag);
-        post.data.tags.push({
+        let tagObject = {
             url: `migrator-added-tag-${tagSlug}`,
             data: {
                 slug: tagSlug,
                 name: tag
             }
-        });
+        };
+        post.data.tags.push(tagObject);
+        debug(`Adding tag to ${data.slug} post object`, tagObject);
     });
 
     post.data.tags.push({
@@ -109,17 +117,20 @@ const processPost = (data, options) => {
             name: '#letterdrop'
         }
     });
+    debug(`Adding #letterdrop tag to ${data.slug} post object`);
 
     if (data?.author?.name) {
         let authorSlug = slugify(data.author.name);
-        post.data.authors.push({
+        let authorObject = {
             url: `/author/${authorSlug}`,
             data: {
                 email: `${authorSlug}@example.com`,
                 slug: authorSlug,
                 name: data.author.name
             }
-        });
+        };
+        post.data.authors.push(authorObject);
+        debug(`Adding author to ${data.slug} post object`, authorObject);
     }
 
     // Some HTML content needs to be modified so that our parser plugins can interpret it

@@ -1,4 +1,7 @@
 import got from 'got';
+import {_base as debugFactory} from '@tryghost/debug';
+
+const debug = debugFactory('migrate:letterdrop:fetch');
 
 const discover = async ({apiToken}) => {
     const APIURL = 'https://app.letterdrop.com/api/v1/';
@@ -19,6 +22,7 @@ const discover = async ({apiToken}) => {
     let results = [];
 
     do {
+        debug(`Fetch posts ${requestOptions.form.offset}:${(requestOptions.form.limit + requestOptions.form.offset)} posts from Letterdrop API`);
         response = await got('posts', requestOptions);
         requestOptions.form.offset = (requestOptions.form.offset + 20);
         results = results.concat(response.body.data);
@@ -34,6 +38,7 @@ const cachedFetch = async (fileCache, options) => {
     let filename = `letterdrop_api.json`;
 
     if (fileCache.hasFile(filename, 'tmp')) {
+        debug(`Has cached Letterdrop API data`);
         return await fileCache.readTmpJSONFile(filename);
     }
 

@@ -1092,7 +1092,7 @@
   dependencies:
     long-timeout "^0.1.1"
 
-"@tryghost/debug@^0.1.21":
+"@tryghost/debug@0.1.21", "@tryghost/debug@^0.1.21":
   version "0.1.21"
   resolved "https://registry.yarnpkg.com/@tryghost/debug/-/debug-0.1.21.tgz#eb2c529f2883f0bd0867c03feddb6b5057469031"
   integrity sha512-EC9AduW4M8X4godQp6QqHFYn2qZgADtEbsjwvMQb8RVY0F1QTla1aqEopoSSd5WZnL5R7JrTwQsMdN9rO2ae7A==
