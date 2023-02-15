@@ -209,7 +209,7 @@ const run = async (argv) => {
         ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
     }
 
-    showLogs(`${logger.path}/${logger.domain}_${logger.env}.log`, startMigrationTime);
+    showLogs(logger, startMigrationTime);
 };
 
 export default {

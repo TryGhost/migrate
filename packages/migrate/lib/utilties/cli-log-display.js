@@ -1,8 +1,11 @@
-import fs from 'node:fs';
+import {join} from 'node:path';
+import {readFileSync} from 'node:fs';
 import {ui} from '@tryghost/pretty-cli';
 
-const showLogs = (logFilePath, startTime) => {
-    const logData = fs.readFileSync(logFilePath, {encoding: 'utf8'});
+const showLogs = (logger, startTime) => {
+    let logFilePath = join(logger.path, `${logger.domain}_${logger.env}.log`);
+
+    const logData = readFileSync(logFilePath, {encoding: 'utf8'});
     const lines = logData.split('\n');
 
     lines.forEach((line) => {
@@ -24,5 +27,5 @@ export {
     showLogs
 };
 
-// showLogs(`${logger.path}/${logger.domain}_${logger.env}.log`, startMigrationTime);
+// showLogs(logger, startMigrationTime);
 // In the `if` on line 12, console.log(lineData); to get all logs

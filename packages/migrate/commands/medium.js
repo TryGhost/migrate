@@ -133,7 +133,7 @@ const run = async (argv) => {
         });
     }
 
-    showLogs(`${logger.path}/${logger.domain}_${logger.env}.log`, startMigrationTime);
+    showLogs(logger, startMigrationTime);
 };
 
 export default {
