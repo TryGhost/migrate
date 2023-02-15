@@ -2,6 +2,9 @@ import {formatISO, parseISO, isBefore, isAfter, add} from 'date-fns';
 import _ from 'lodash';
 import errors from '@tryghost/errors';
 import {slugify} from '@tryghost/string';
+import {_base as debugFactory} from '@tryghost/debug';
+
+const debug = debugFactory('migrate:substack:mapper');
 
 const mapConfig = (data, {url, email, useMetaAuthor}) => {
     const slug = data.post_id.replace(/^(?:\d{1,10}\.)(\S*)/gm, '$1');
@@ -112,10 +115,12 @@ export default async (input, options) => {
     input = input.meta;
 
     if (!options.drafts) {
+        debug(`Ignoring drafts`);
         input = input.filter(data => data.is_published.toLowerCase() === `true`);
     }
 
     if (!options.threads) {
+        debug(`Ignoring threads`);
         input = input.filter(data => data.type.toLowerCase() !== `thread`);
     }
 
@@ -124,6 +129,7 @@ export default async (input, options) => {
         const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
             days: 1
         });
+        debug(`Getting posts between ${startDate} and ${endDate}`);
 
         await input.forEach((data) => {
             if (isAfter(parseISO(data.post_date), startDate) && isBefore(parseISO(data.post_date), endDate)) {
@@ -132,6 +138,7 @@ export default async (input, options) => {
         });
     } else if (options.postsAfter) {
         const startDate = parseISO(formatISO(new Date(options.postsAfter)));
+        debug(`Getting posts after ${startDate}`);
 
         await input.forEach((data) => {
             if (isAfter(parseISO(data.post_date), startDate)) {
@@ -142,6 +149,7 @@ export default async (input, options) => {
         const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
             days: 1
         });
+        debug(`Getting posts until ${endDate}`);
 
         await input.forEach((data) => {
             if (isBefore(parseISO(data.post_date), endDate)) {
@@ -149,6 +157,7 @@ export default async (input, options) => {
             }
         });
     } else {
+        debug(`Getting all posts`);
         await input.forEach((data) => {
             output.posts.push(mapConfig(data, options));
         });
