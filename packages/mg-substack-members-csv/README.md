@@ -31,7 +31,7 @@ migrate substack-members --pathToFile /path/to/emails.csv
 To convert paid subscriptions, add `--subs` with a second file path:
 
 ```sh
-migrate substack-members --pathToFile /path/to/emails.csv --subs path/to/members.csv
+migrate substack-members --pathToFile /path/to/emails.csv --subs /path/to/members.csv
 ```
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:

@@ -6,11 +6,11 @@ export default async (ctx) => {
     const {options} = ctx;
     let subscribers = [];
 
-    // grab the main file "signups"
+    // Grab the main file "signups"
     let parsed = await parseCSV(options.pathToFile);
 
     if (options.hasSubscribers) {
-        // grap the "subscribers" file if option is passed
+        // Grab the "subscribers" file if option is passed
         subscribers = await parseCSV(options.subs);
     }
 

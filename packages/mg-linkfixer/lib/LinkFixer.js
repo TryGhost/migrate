@@ -1,4 +1,4 @@
-import path from 'node:path';
+import {join} from 'node:path';
 import _ from 'lodash';
 import cheerio from 'cheerio';
 
@@ -28,7 +28,7 @@ class LinkFixer {
     cleanURL(url) {
         try {
             const urlParts = new URL(url);
-            const cleanedURL = path.join(urlParts.host, urlParts.pathname);
+            const cleanedURL = join(urlParts.host, urlParts.pathname);
 
             return cleanedURL;
         } catch (error) {

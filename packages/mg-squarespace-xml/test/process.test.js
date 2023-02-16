@@ -1,13 +1,13 @@
 import {URL} from 'node:url';
-import path from 'node:path';
-import fs from 'node:fs';
+import {join} from 'node:path';
+import {readFileSync} from 'node:fs';
 import process from '../lib/process.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
 const readSync = (name) => {
-    let fixtureFileName = path.join(__dirname, './', 'fixtures', name);
-    return fs.readFileSync(fixtureFileName, {encoding: 'utf8'});
+    let fixtureFileName = join(__dirname, './', 'fixtures', name);
+    return readFileSync(fixtureFileName, {encoding: 'utf8'});
 };
 
 describe('Process', function () {

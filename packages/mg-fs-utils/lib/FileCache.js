@@ -1,6 +1,6 @@
-import path from 'node:path';
-import os from 'node:os';
-import crypto from 'node:crypto';
+import {join, parse, extname, basename, dirname} from 'node:path';
+import {tmpdir} from 'node:os';
+import {createHash} from 'node:crypto';
 import _ from 'lodash';
 import {writeFileSync, readdirSync, rmdir, lstatSync, existsSync} from 'node:fs';
 import {writeFile} from 'node:fs/promises';
@@ -21,8 +21,8 @@ class FileCache {
         this.options = Object.assign({contentDir: true}, options);
 
         // Remove any extension, handles removing TLDs as well if the name is based on a URL
-        let ext = path.extname(cacheName);
-        this.cacheName = path.basename(cacheName, ext);
+        let ext = extname(cacheName);
+        this.cacheName = basename(cacheName, ext);
 
         if (options.batchName) {
             this.batchName = options.batchName;
@@ -31,17 +31,17 @@ class FileCache {
 
     // This will be the path specified by `--tmpPath` if set. If not, it'll use a hidden tmp dir
     get tmpDirPath() {
-        return this.tmpPath || os.tmpdir();
+        return this.tmpPath || tmpdir();
     }
 
     get cacheBaseDir() {
-        return path.join(this.tmpDirPath, basePath);
+        return join(this.tmpDirPath, basePath);
     }
 
     get cacheKey() {
         if (!this._cacheKey) {
             // Unique hash based on full zip path + the original filename
-            this._cacheKey = `${crypto.createHash('md5').update(this.originalName).digest('hex')}-${this.cacheName}`;
+            this._cacheKey = `${createHash('md5').update(this.originalName).digest('hex')}-${this.cacheName}`;
         }
         return this._cacheKey;
     }
@@ -63,27 +63,27 @@ class FileCache {
      */
     get cacheDir() {
         if (!this._cacheDir) {
-            this._cacheDir = path.join(this.tmpDirPath, basePath, this.cacheKey);
-            mkdirpSync(path.join(this.tmpDir));
+            this._cacheDir = join(this.tmpDirPath, basePath, this.cacheKey);
+            mkdirpSync(join(this.tmpDir));
 
             // don't create the content directory when migrating members
             if (this.options && this.options.contentDir) {
-                mkdirpSync(path.join(this.imageDir));
-                mkdirpSync(path.join(this.mediaDir));
-                mkdirpSync(path.join(this.filesDir));
+                mkdirpSync(join(this.imageDir));
+                mkdirpSync(join(this.mediaDir));
+                mkdirpSync(join(this.filesDir));
             } else {
-                mkdirpSync(path.join(this.zipDir));
+                mkdirpSync(join(this.zipDir));
             }
         }
         return this._cacheDir;
     }
 
     get tmpDir() {
-        return path.join(this.cacheDir, 'tmp');
+        return join(this.cacheDir, 'tmp');
     }
 
     get zipDir() {
-        return path.join(this.cacheDir, 'zip');
+        return join(this.cacheDir, 'zip');
     }
 
     get jsonDir() {
@@ -91,27 +91,27 @@ class FileCache {
     }
 
     get imagePath() {
-        return path.join('content', 'images');
+        return join('content', 'images');
     }
 
     get imageDir() {
-        return path.join(this.zipDir, this.imagePath);
+        return join(this.zipDir, this.imagePath);
     }
 
     get mediaPath() {
-        return path.join('content', 'media');
+        return join('content', 'media');
     }
 
     get mediaDir() {
-        return path.join(this.zipDir, this.mediaPath);
+        return join(this.zipDir, this.mediaPath);
     }
 
     get filesPath() {
-        return path.join('content', 'files');
+        return join('content', 'files');
     }
 
     get filesDir() {
-        return path.join(this.zipDir, this.filesPath);
+        return join(this.zipDir, this.filesPath);
     }
 
     get defaultCacheFileName() {
@@ -142,7 +142,7 @@ class FileCache {
     }
 
     sanitizeFileName(src) {
-        let fileNameNoExt = path.parse(src).name;
+        let fileNameNoExt = parse(src).name;
 
         let safeFileNameNoExt = transliterate.slugify(fileNameNoExt);
 
@@ -158,7 +158,7 @@ class FileCache {
     }
 
     resolveFileName(filename, type = 'images') {
-        let ext = path.extname(filename);
+        let ext = extname(filename);
 
         let typeDir = null;
         let typePath = null;
@@ -189,11 +189,11 @@ class FileCache {
 
         // CASE: Some image URLs are very long and can cause various issues with storage.
         // If the filepath is more than 200 characters, slice the last 200 and use that
-        let theBasename = path.basename(filename);
+        let theBasename = basename(filename);
         let filePath = filename.replace(theBasename, '');
         if (filePath.length > 200) {
             let shorter = filePath.slice(-200);
-            filename = path.join('/', shorter, theBasename);
+            filename = join('/', shorter, theBasename);
         }
 
         // @TODO: use content type on request to infer this, rather than assuming jpeg?
@@ -207,8 +207,8 @@ class FileCache {
 
         return {
             filename: filename,
-            storagePath: path.join(typeDir, filename),
-            outputPath: path.join('/', typePath, filename)
+            storagePath: join(typeDir, filename),
+            outputPath: join('/', typePath, filename)
         };
     }
 
@@ -221,7 +221,7 @@ class FileCache {
      */
     async writeTmpFile(data, filename, isJSON = true) {
         let fileNameWithExt = (filename.endsWith('.json')) ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
-        let filepath = path.join(this.tmpDir, fileNameWithExt);
+        let filepath = join(this.tmpDir, fileNameWithExt);
 
         if (isJSON) {
             await outputJson(filepath, data, {spaces: 2});
@@ -241,7 +241,7 @@ class FileCache {
      */
     writeTmpFileSync(data, filename, isJSON = true) {
         let fileNameWithExt = (filename.endsWith('.json')) ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
-        let filepath = path.join(this.tmpDir, fileNameWithExt);
+        let filepath = join(this.tmpDir, fileNameWithExt);
 
         if (isJSON) {
             outputJsonSync(filepath, data, {spaces: 2});
@@ -259,7 +259,7 @@ class FileCache {
      */
     async readTmpJSONFile(filename) {
         let fileNameWithExt = (filename.endsWith('.json')) ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
-        let filepath = path.join(this.tmpDir, fileNameWithExt);
+        let filepath = join(this.tmpDir, fileNameWithExt);
 
         return await readJson(filepath);
     }
@@ -271,7 +271,7 @@ class FileCache {
      */
     hasTmpJSONFile(filename) {
         let fileNameWithExt = (filename.endsWith('.json')) ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
-        let filepath = path.join(this.tmpDir, fileNameWithExt);
+        let filepath = join(this.tmpDir, fileNameWithExt);
 
         return existsSync(filepath);
     }
@@ -294,8 +294,8 @@ class FileCache {
 
         // Then also write it as "the" JSON file in the zip folder
         filename = options.filename || `ghost-import.json`;
-        let basepath = options.path ? path.dirname(options.path) : this.zipDir;
-        let filepath = path.join(basepath, filename);
+        let basepath = options.path ? dirname(options.path) : this.zipDir;
+        let filepath = join(basepath, filename);
 
         if (isJSON) {
             await outputJson(filepath, data, {spaces: 2});
@@ -326,7 +326,7 @@ class FileCache {
      */
     async writeReportCSVFile(report, options = {}) {
         const fileName = options.filename || false;
-        const filePath = path.join(this.cacheDir, `report-${fileName}.csv`);
+        const filePath = join(this.cacheDir, `report-${fileName}.csv`);
 
         const dedupedData = _.uniqBy(report.data, (e) => {
             return e.src;
@@ -353,7 +353,7 @@ class FileCache {
             options = this.resolveImageFileName(options.filename);
         }
 
-        const fileExt = path.extname(options.filename).substr(1);
+        const fileExt = extname(options.filename).substr(1);
 
         // CASE: image manipulator is incapable of transforming file (e.g. .bmp)
         if (options.optimize && imageTransform.canTransformToFormat(fileExt)) {
@@ -397,7 +397,7 @@ class FileCache {
         if (type && !_.includes(['tmp', 'json', 'image', 'zip'], type)) {
             throw new errors.NotFoundError({message: 'Unknown file type'});
         } else if (type) {
-            pathToCheck = path.join(this[`${type}Dir`], filename);
+            pathToCheck = join(this[`${type}Dir`], filename);
         }
 
         try {
@@ -412,7 +412,7 @@ class FileCache {
             return false;
         }
 
-        let siteCachePath = path.join(this.cacheBaseDir, this.cacheKey);
+        let siteCachePath = join(this.cacheBaseDir, this.cacheKey);
 
         try {
             await remove(siteCachePath);
@@ -437,7 +437,7 @@ class FileCache {
 
         let itemsToDelete = [];
         const dirContents = readdirSync(directory).map((fileName) => {
-            return path.join(directory, fileName);
+            return join(directory, fileName);
         });
 
         dirContents.forEach((item) => {

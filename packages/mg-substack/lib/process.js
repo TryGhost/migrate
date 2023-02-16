@@ -1,5 +1,5 @@
 import {promises as fs} from 'node:fs';
-import path from 'node:path';
+import {join} from 'node:path';
 import url from 'node:url';
 import $ from 'cheerio';
 import errors from '@tryghost/errors';
@@ -25,7 +25,7 @@ const readFiles = async (files, postsDir) => {
     for (const file of files) {
         const substackId = file.replace(/\.html/, '');
 
-        postContent[substackId] = await readContent(path.join(postsDir, file));
+        postContent[substackId] = await readContent(join(postsDir, file));
     }
 
     return postContent;

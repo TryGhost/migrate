@@ -1,11 +1,11 @@
-import path from 'node:path';
+import {join} from 'node:path';
 import cheerio from 'cheerio';
 
 const processTextItem = (item, ctx, content) => {
     let itemHtmlChunks = [];
 
     if (item.image_original_filename) {
-        const imagePath = path.join('/', ctx.fileCache.imagePath, `${content.number}`, item.image_original_filename);
+        const imagePath = join('/', ctx.fileCache.imagePath, `${content.number}`, item.image_original_filename);
 
         if (item.url) {
             itemHtmlChunks.push(`<!--kg-card-begin: html--><a class="kg-card kg-image-card" href="${item.url}"><img class="kg-image" src="${imagePath}" alt="${item.title}" /></a><!--kg-card-end: html-->`);
@@ -27,7 +27,7 @@ const processLinkItem = (item, ctx, content) => {
     let itemHtmlChunks = [];
 
     if (item.image_original_filename) {
-        const imagePath = path.join('/', ctx.fileCache.imagePath, `${content.number}`, item.image_original_filename);
+        const imagePath = join('/', ctx.fileCache.imagePath, `${content.number}`, item.image_original_filename);
 
         if (item.url) {
             itemHtmlChunks.push(`<!--kg-card-begin: html--><a class="kg-card kg-image-card" href="${item.url}"><img class="kg-image" src="${imagePath}" alt="${item.title}" /></a><!--kg-card-end: html-->`);

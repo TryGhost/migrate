@@ -1,4 +1,4 @@
-import path from 'node:path';
+import {join} from 'node:path';
 import {readdir} from 'node:fs/promises';
 import {readJson, ensureDirSync} from 'fs-extra/esm';
 import {slugify} from '@tryghost/string';
@@ -115,7 +115,7 @@ class AssetCache {
 
             for (const file of files) {
                 if (file.endsWith('.json')) {
-                    let theJson = await readJson(path.join(data, file));
+                    let theJson = await readJson(join(data, file));
                     this._cache.push(theJson);
                 }
             }

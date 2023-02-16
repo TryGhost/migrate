@@ -1,7 +1,7 @@
 import {URL} from 'node:url';
-import fs from 'node:fs';
-import path from 'node:path';
-import childProcess from 'node:child_process';
+import {unlink, readdirSync, readFileSync} from 'node:fs';
+import {resolve, join} from 'node:path';
+import {execSync} from 'node:child_process';
 import csv from '@tryghost/mg-fs-utils/lib/csv';
 import processZip from '../index.js';
 import map from '../lib/mapper.js';
@@ -9,20 +9,20 @@ import process, {processContent} from '../lib/process.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
-const inputPath = path.join(__dirname, '/fixtures/');
-const inputZipPath = path.join(__dirname, '/fixtures/posts.zip');
-const inputCSVPath = path.join(__dirname, '/fixtures/posts.csv');
-const inputPostsPath = path.join(__dirname, '/fixtures/posts');
+const inputPath = join(__dirname, '/fixtures/');
+const inputZipPath = join(__dirname, '/fixtures/posts.zip');
+const inputCSVPath = join(__dirname, '/fixtures/posts.csv');
+const inputPostsPath = join(__dirname, '/fixtures/posts');
 
 describe('Process Substack ZIP file', function () {
     beforeAll(function () {
-        childProcess.execSync(`zip -r ${inputZipPath} *`, {
+        execSync(`zip -r ${inputZipPath} *`, {
             cwd: inputPath
         });
     });
 
     afterAll(function () {
-        fs.unlink(inputZipPath, (err) => {
+        unlink(inputZipPath, (err) => {
             if (err) {
                 throw err;
             }
@@ -62,7 +62,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
     let postDataFromFixtures = null;
 
     beforeEach(function () {
-        const inputCSVString = fs.readFileSync(inputCSVPath, {encoding: 'utf8'});
+        const inputCSVString = readFileSync(inputCSVPath, {encoding: 'utf8'});
         const inputCSV = csv.parseString(inputCSVString);
 
         let input = {
@@ -70,8 +70,8 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
             posts: []
         };
 
-        fs.readdirSync(inputPostsPath).forEach((file) => {
-            let theHtml = fs.readFileSync(path.resolve(inputPostsPath, file), {encoding: 'utf8'});
+        readdirSync(inputPostsPath).forEach((file) => {
+            let theHtml = readFileSync(resolve(inputPostsPath, file), {encoding: 'utf8'});
 
             input.posts.push({
                 name: file,
