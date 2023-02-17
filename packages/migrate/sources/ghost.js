@@ -22,7 +22,10 @@ const initialize = (options, logger) => {
             };
 
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-            ctx.fileCache = new fsUtils.FileCache(options.url, {batchName: options.batch});
+            ctx.fileCache = new fsUtils.FileCache(`ghost-${ctx.options.cacheName || ctx.options.url}`, {
+                tmpPath: ctx.options.tmpPath,
+                batchName: options.batch
+            });
             ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
                 sizeLimit: ctx.options.sizeLimit,
                 allowImages: ctx.allowScrape.images,
