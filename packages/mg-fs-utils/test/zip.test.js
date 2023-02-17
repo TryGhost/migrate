@@ -1,7 +1,7 @@
 import {jest} from '@jest/globals';
 import zip from '../lib/zip.js';
 
-describe('Read Zip', function () {
+describe('Zip', function () {
     let fakeEntries = [];
 
     beforeAll(function () {
