@@ -152,10 +152,9 @@ const skipScrape = (post) => {
  *
  * Wiring of the steps to migrate from medium.
  *
- * @param {String} pathToFile
  * @param {Object} options
  */
-const getTaskRunner = (pathToFile, options, logger) => {
+const getTaskRunner = (options, logger) => {
     let runnerTasks = [
         {
             title: 'Initializing',
@@ -184,7 +183,9 @@ const getTaskRunner = (pathToFile, options, logger) => {
                 }
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-                ctx.fileCache = new fsUtils.FileCache(pathToFile);
+                ctx.fileCache = new fsUtils.FileCache(`substack-${ctx.options.cacheName || options.pathToFile}`, {
+                    tmpPath: ctx.options.tmpPath
+                });
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor, skipScrape);
                 ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
                     sizeLimit: ctx.options.sizeLimit,

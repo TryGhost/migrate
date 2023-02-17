@@ -3,6 +3,16 @@ import {_base as debugFactory} from '@tryghost/debug';
 
 const debug = debugFactory('migrate:substack:read-zip');
 
+const contentStats = async (zipPath) => {
+    const entries = await fsUtils.readZipEntries(zipPath);
+
+    const posts = entries.filter(value => /posts\/.*\.html/.test(value)).length;
+
+    return {
+        posts: posts
+    };
+};
+
 export default (zipPath) => {
     let content = {
         csv: null,
@@ -32,4 +42,8 @@ export default (zipPath) => {
     });
 
     return content;
+};
+
+export {
+    contentStats
 };

@@ -1,4 +1,4 @@
-import readZip from './lib/read-zip.js';
+import readZip, {contentStats} from './lib/read-zip.js';
 import fsUtils from '@tryghost/mg-fs-utils';
 import map from './lib/mapper.js';
 import process from './lib/process.js';
@@ -24,4 +24,8 @@ const ingest = async (ctx) => {
 export default {
     ingest,
     process
+};
+
+export {
+    contentStats
 };
