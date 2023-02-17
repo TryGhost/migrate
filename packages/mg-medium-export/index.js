@@ -1,4 +1,4 @@
-import readZip from './lib/read-zip.js';
+import readZip, {contentStats} from './lib/read-zip.js';
 import process from './lib/process.js';
 
 export default (pathToZip, options) => {
@@ -6,4 +6,8 @@ export default (pathToZip, options) => {
     let output = process(input);
 
     return output;
+};
+
+export {
+    contentStats
 };

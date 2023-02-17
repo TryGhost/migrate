@@ -3,6 +3,17 @@ import {join} from 'node:path';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {ui} from '@tryghost/pretty-cli';
 
+const contentStats = async (zipPath) => {
+    const entries = await fsUtils.readZipEntries(zipPath);
+    const posts = entries.filter(value => /^posts\/.*\.html$/.test(value)).length;
+    const users = entries.filter(value => /^profile\/profile\.html/.test(value)).length;
+
+    return {
+        posts: posts,
+        users: users
+    };
+};
+
 const readMediumZip = ({content, zipPath, options, skippedFileCount}) => {
     fsUtils.zip.read(zipPath, (entryName, zipEntry) => {
         // Catch all HTML files inside `profile/`
@@ -64,4 +75,8 @@ export default (zipPath, options) => {
     ui.log.info('Skipped files: ' + skippedFileCount);
 
     return content;
+};
+
+export {
+    contentStats
 };
