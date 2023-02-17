@@ -42,7 +42,7 @@ const options = [
     },
     {
         type: 'array',
-        flags: '-s --scrape',
+        flags: '--scrape',
         choices: ['all', 'img', 'web', 'media', 'files', 'none'],
         defaultValue: ['all'],
         desc: 'Configure scraping tasks'
@@ -112,7 +112,7 @@ const run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = medium.getTaskRunner(argv.pathToZip, argv, logger);
+        let migrate = medium.getTaskRunner(argv, logger);
 
         // Run the migration
         await migrate.run(context);

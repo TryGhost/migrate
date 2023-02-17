@@ -95,10 +95,9 @@ const postProcessor = (scrapedData) => {
  *
  * Wiring of the steps to migrate from medium.
  *
- * @param {String} pathToZip
  * @param {Object} options
  */
-const getTaskRunner = (pathToZip, options, logger) => {
+const getTaskRunner = (options, logger) => {
     let runnerTasks = [
         {
             title: 'Initializing Workspace',
@@ -114,7 +113,7 @@ const getTaskRunner = (pathToZip, options, logger) => {
                 };
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-                ctx.fileCache = new fsUtils.FileCache(`lettedrop-${ctx.options.cacheName || pathToZip}`, {
+                ctx.fileCache = new fsUtils.FileCache(`medium-${ctx.options.cacheName || options.pathToZip}`, {
                     tmpPath: ctx.options.tmpPath
                 });
 
@@ -149,7 +148,7 @@ const getTaskRunner = (pathToZip, options, logger) => {
                 // 1. Read the zip file
                 ctx.timings.readContent = Date.now();
                 try {
-                    ctx.result = mediumIngest(pathToZip, options);
+                    ctx.result = mediumIngest(options.pathToZip, options);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'medium-export-data.json');
                 } catch (error) {
                     ctx.logger.error({message: 'Failed to read Medium ZIP file', error});
@@ -229,7 +228,9 @@ const getTaskRunner = (pathToZip, options, logger) => {
         {
             title: 'Fetch images via AssetScraper',
             skip: (ctx) => {
-                return ![ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].some(() => true);
+                if ([ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false)) {
+                    return true;
+                }
             },
             task: async (ctx) => {
                 // 5. Format the data as a valid Ghost JSON file
@@ -244,7 +245,9 @@ const getTaskRunner = (pathToZip, options, logger) => {
         },
         {
             skip: (ctx) => {
-                return ![ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].some(() => true);
+                if ([ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false)) {
+                    return true;
+                }
             },
             task: (ctx) => {
                 ctx.logger.info({
