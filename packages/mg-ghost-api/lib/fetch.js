@@ -1,9 +1,30 @@
 import ghostAPI from '@tryghost/admin-api';
 
+const contentStats = async (options) => {
+    const requestOptions = {
+        url: options.url,
+        version: 'v2.0',
+        key: options.apikey
+    };
+
+    const site = new ghostAPI(requestOptions);
+
+    // Request the smallest amount of data possible
+    const posts = await site.posts.browse({limit: 1, fields: 'title'});
+    const pages = await site.pages.browse({limit: 1, fields: 'title'});
+    const users = await site.users.browse({limit: 1, fields: 'name'});
+
+    return {
+        posts: posts.meta.pagination.total,
+        pages: pages.meta.pagination.total,
+        users: users.meta.pagination.total
+    };
+};
+
 const discover = async (options) => {
     const requestOptions = {
         url: options.url,
-        version: 'v2',
+        version: 'v2.0',
         key: options.apikey
     };
 
@@ -114,6 +135,7 @@ const tasks = async (options, ctx) => {
 };
 
 export default {
+    contentStats,
     discover,
     tasks
 };
