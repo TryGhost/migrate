@@ -1,7 +1,9 @@
 import {lstatSync, readdirSync} from 'node:fs';
 import {join} from 'node:path';
 import fsUtils from '@tryghost/mg-fs-utils';
-import {ui} from '@tryghost/pretty-cli';
+import {_base as debugFactory} from '@tryghost/debug';
+
+const debug = debugFactory('migrate:medium:lib:read-zip');
 
 const contentStats = async (zipPath) => {
     const entries = await fsUtils.readZipEntries(zipPath);
@@ -30,7 +32,7 @@ const readMediumZip = ({content, zipPath, options, skippedFileCount}) => {
         // Skip if not matched above, and report skipped files if `--verbose`
         } else if (/.html$/.test(entryName)) {
             if (options.verbose) {
-                ui.log.info('Skipped: ' + entryName);
+                debug(`Skipped: ${entryName}`);
             }
             skippedFileCount += 1;
         }
@@ -72,7 +74,7 @@ export default (zipPath, options) => {
         skippedFileCount = zipContent.skippedFileCount;
     }
 
-    ui.log.info('Skipped files: ' + skippedFileCount);
+    debug(`Skipped files: ${skippedFileCount}`);
 
     return content;
 };

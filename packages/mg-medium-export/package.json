@@ -26,6 +26,7 @@
     "jest-extended": "3.2.3"
   },
   "dependencies": {
+    "@tryghost/debug": "0.1.21",
     "@tryghost/mg-fs-utils": "^0.11.7",
     "@tryghost/string": "^0.2.0",
     "cheerio": "0.22.0",
