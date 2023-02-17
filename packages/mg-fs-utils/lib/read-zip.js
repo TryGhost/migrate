@@ -13,7 +13,11 @@ const readZipEntries = async (zipPath = null) => {
     const zipEntries = await zip.entries();
 
     for (const entry of Object.values(zipEntries)) {
-        if (!entry.isDirectory) {
+        if ((entry.name.match(/^__MACOSX/) || entry.name.match(/\.DS_Store$/))) {
+            continue;
+        }
+
+        if (entry && !entry.isDirectory) {
             files.push(entry.name);
         }
     }
