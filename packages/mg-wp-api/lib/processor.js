@@ -227,12 +227,14 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         if (firstElement.tagName === 'img' || $(firstElement).find('img').length) {
             let theElementItself = (firstElement.tagName === 'img') ? firstElement : $(firstElement).find('img');
 
-            // Ensure the feature image and first image both are HTTPS with no size attributes
-            let imgSrcNoSize = $(theElementItself).attr('src').replace('http://', 'https://').replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
-            let featureImageSrcNoSize = featureImageSrc.replace('http://', 'https://').replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
+            if ($(theElementItself).attr('src')) {
+                // Ensure the feature image and first image both are HTTPS with no size attributes
+                let imgSrcNoSize = $(theElementItself).attr('src').replace('http://', 'https://').replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
+                let featureImageSrcNoSize = featureImageSrc.replace('http://', 'https://').replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
 
-            if (featureImageSrcNoSize === imgSrcNoSize) {
-                $(firstElement).remove();
+                if (featureImageSrcNoSize === imgSrcNoSize) {
+                    $(firstElement).remove();
+                }
             }
         }
     }
