@@ -111,7 +111,7 @@ const run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = jekyll.getTaskRunner(argv.pathToZip, argv);
+        let migrate = jekyll.getTaskRunner(argv);
 
         // Run the migration
         await migrate.run(context);

@@ -65,10 +65,9 @@ const postProcessor = (scrapedData, data, options) => {
  *
  * Wiring of the steps to migrate from Jekyll.
  *
- * @param {String} pathToZip
  * @param {Object} options
  */
-const getTaskRunner = (pathToZip, options) => {
+const getTaskRunner = (options) => {
     let runnerTasks = [
         {
             title: 'Initialising Workspace',
@@ -83,7 +82,7 @@ const getTaskRunner = (pathToZip, options) => {
                 };
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-                ctx.fileCache = new fsUtils.FileCache(pathToZip);
+                ctx.fileCache = new fsUtils.FileCache(options.pathToZip);
                 ctx.jekyllScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
                 ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
                     sizeLimit: ctx.options.sizeLimit,
@@ -102,7 +101,7 @@ const getTaskRunner = (pathToZip, options) => {
             task: async (ctx) => {
                 // 1. Read the zip file
                 try {
-                    ctx.result = jekyllIngest(pathToZip, options);
+                    ctx.result = jekyllIngest(options.pathToZip, options);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'jekyll-export-data.json');
                 } catch (error) {
                     ctx.errors.push(error);
