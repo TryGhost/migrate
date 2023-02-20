@@ -105,7 +105,7 @@ const postProcessor = (scrapedData, data, options) => {
     return scrapedData;
 };
 
-const initialize = (url, options, logger) => {
+const initialize = (options, logger) => {
     logger.info({message: 'Initialize migration'});
     return {
         title: 'Initializing Workspace',
@@ -121,7 +121,7 @@ const initialize = (url, options, logger) => {
             };
 
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-            ctx.fileCache = new fsUtils.FileCache(url, {batchName: options.batch});
+            ctx.fileCache = new fsUtils.FileCache(options.url, {batchName: options.batch});
             ctx.wpScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
             ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
                 sizeLimit: ctx.options.sizeLimit,
@@ -155,14 +155,14 @@ const initialize = (url, options, logger) => {
     };
 };
 
-const getInfoTaskList = (url, options) => {
+const getInfoTaskList = (options) => {
     return [
-        initialize(url, options),
+        initialize(options),
         {
             title: 'Fetch Content Info from WP API',
             task: async (ctx) => {
                 try {
-                    ctx.info = await wpAPI.fetch.discover(url, ctx);
+                    ctx.info = await wpAPI.fetch.discover(options.url, ctx);
                 } catch (error) {
                     ctx.logger.error({message: 'Failed to fetch content from WP API', error});
                     throw error;
@@ -180,9 +180,9 @@ const getInfoTaskList = (url, options) => {
  * @param {String} pathToZip
  * @param {Object} options
  */
-const getFullTaskList = (url, options, logger) => {
+const getFullTaskList = (options, logger) => {
     return [
-        initialize(url, options, logger),
+        initialize(options, logger),
         {
             title: 'Fetch Content from WP API',
             task: async (ctx) => {
@@ -190,7 +190,7 @@ const getFullTaskList = (url, options, logger) => {
                 ctx.timings.fetchApiContent = Date.now();
 
                 try {
-                    let tasks = await wpAPI.fetch.tasks(url, ctx);
+                    let tasks = await wpAPI.fetch.tasks(options.url, ctx);
 
                     if (options.batch !== 0) {
                         let batchIndex = options.batch - 1;
@@ -436,13 +436,13 @@ const getFullTaskList = (url, options, logger) => {
     ];
 };
 
-const getTaskRunner = (url, options, logger) => {
+const getTaskRunner = (options, logger) => {
     let tasks = [];
 
     if (options.info) {
-        tasks = getInfoTaskList(url, options, logger);
+        tasks = getInfoTaskList(options, logger);
     } else {
-        tasks = getFullTaskList(url, options, logger);
+        tasks = getFullTaskList(options, logger);
     }
 
     // Configure a new Listr task manager, we can use different renderers for different configs

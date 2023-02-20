@@ -188,7 +188,7 @@ const run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = wpAPISource.getTaskRunner(argv.url, argv, logger);
+        let migrate = wpAPISource.getTaskRunner(argv, logger);
 
         // Run the migration
         await migrate.run(context);
