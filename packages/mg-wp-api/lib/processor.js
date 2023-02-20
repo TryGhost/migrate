@@ -423,6 +423,11 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     $html('blockquote.instagram-media').each((i, el) => {
         let src = $(el).find('a').attr('href');
+
+        if (!src) {
+            src = $(el).attr('data-instgrm-permalink');
+        }
+
         let parsed = url.parse(src);
 
         if (parsed.search) {
