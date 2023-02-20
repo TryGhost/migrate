@@ -140,7 +140,7 @@ const run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = substackMembers.getTaskRunner(argv.pathToFile, argv);
+        let migrate = substackMembers.getTaskRunner(argv);
 
         // Run the migration
         await migrate.run(context);
