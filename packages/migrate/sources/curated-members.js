@@ -18,10 +18,9 @@ const MEMBERS_IMPORT_FIELDS = [
  *
  * Wiring of the steps to migrate subscribers from Curated.
  *
- * @param {String} pathToFile
  * @param {Object} options
  */
-const getTaskRunner = (pathToFile, options) => {
+const getTaskRunner = (options) => {
     let tasks = [
         {
             title: 'Initializing',
@@ -29,7 +28,7 @@ const getTaskRunner = (pathToFile, options) => {
                 ctx.options = options;
 
                 // 0. Prep a file cache for the work we are about to do.
-                ctx.fileCache = new fsUtils.FileCache(pathToFile, {contentDir: false});
+                ctx.fileCache = new fsUtils.FileCache(options.pathToFile, {contentDir: false});
 
                 task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
             }
