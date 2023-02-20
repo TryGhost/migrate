@@ -10,10 +10,9 @@ import prettyMilliseconds from 'pretty-ms';
  *
  * Wiring of the steps to migrate from curated.
  *
- * @param {String} pathToZip
  * @param {Object} options
  */
-const getTaskRunner = (pathToZip, options) => {
+const getTaskRunner = (options) => {
     let tasks = [
         {
             title: 'Initializing Workspace',
@@ -21,7 +20,7 @@ const getTaskRunner = (pathToZip, options) => {
                 ctx.options = options;
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-                ctx.fileCache = new fsUtils.FileCache(pathToZip);
+                ctx.fileCache = new fsUtils.FileCache(options.pathToZip);
 
                 task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
             }
@@ -31,7 +30,7 @@ const getTaskRunner = (pathToZip, options) => {
             task: async (ctx) => {
                 // 1. Read the zip file and process posts
                 try {
-                    ctx.result = curatedIngest(pathToZip, ctx);
+                    ctx.result = curatedIngest(options.pathToZip, ctx);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'curated-export-data.json');
                 } catch (error) {
                     ctx.errors.push(error);
