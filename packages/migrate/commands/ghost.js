@@ -2,7 +2,7 @@ import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import ghost from '../sources/ghost.js';
 import {GhostLogger} from '@tryghost/logging';
-import logConfig from '../../../loggingrc.js';
+import logConfig from '../loggingrc.js';
 import {showLogs} from '../lib/utilties/cli-log-display.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
 

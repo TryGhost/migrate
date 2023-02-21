@@ -183,7 +183,7 @@ const getTaskRunner = (options, logger) => {
                 }
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-                ctx.fileCache = new fsUtils.FileCache(`substack-${ctx.options.cacheName || options.pathToFile}`, {
+                ctx.fileCache = new fsUtils.FileCache(`substack-${options.cacheName || options.pathToZip}`, {
                     tmpPath: ctx.options.tmpPath
                 });
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor, skipScrape);
