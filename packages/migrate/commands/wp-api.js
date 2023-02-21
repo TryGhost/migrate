@@ -6,7 +6,7 @@ import {ui} from '@tryghost/pretty-cli';
 import xml2json from 'xml2json';
 import wpAPISource from '../sources/wp-api.js';
 import {GhostLogger} from '@tryghost/logging';
-import logConfig from '../loggingrc.js';
+import logConfig from '../lib/loggingrc.js';
 import {showLogs} from '../lib/utilties/cli-log-display.js';
 
 const logger = new GhostLogger(logConfig);

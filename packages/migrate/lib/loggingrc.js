@@ -3,7 +3,7 @@ import {URL} from 'node:url';
 import {existsSync, mkdirSync} from 'node:fs';
 
 const __dirname = new URL('.', import.meta.url).pathname;
-const logPath = join(__dirname, './logs');
+const logPath = join(__dirname, '../', './logs');
 
 let logOpts;
 
