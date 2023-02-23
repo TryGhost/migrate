@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/migrate",
-  "version": "0.30.2",
+  "version": "0.30.3",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/migrate",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -33,7 +33,7 @@
   "dependencies": {
     "@tryghost/listr-smart-renderer": "^0.5.0",
     "@tryghost/logging": "2.4.0",
-    "@tryghost/mg-assetscraper": "^0.3.0",
+    "@tryghost/mg-assetscraper": "^0.3.1",
     "@tryghost/mg-curated-export": "^0.3.0",
     "@tryghost/mg-curated-members-csv": "^0.4.0",
     "@tryghost/mg-fs-utils": "^0.12.0",
@@ -45,8 +45,8 @@
     "@tryghost/mg-letterdrop": "0.2.0",
     "@tryghost/mg-linkfixer": "^0.5.0",
     "@tryghost/mg-medium-export": "^0.14.0",
-    "@tryghost/mg-squarespace-xml": "^0.3.0",
-    "@tryghost/mg-substack": "^0.3.0",
+    "@tryghost/mg-squarespace-xml": "^0.3.1",
+    "@tryghost/mg-substack": "^0.3.1",
     "@tryghost/mg-substack-members-csv": "^0.4.0",
     "@tryghost/mg-webscraper": "^0.9.0",
     "@tryghost/mg-wp-api": "^0.10.0",
