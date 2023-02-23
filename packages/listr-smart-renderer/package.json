@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "jest": "29.4.3",
-    "jest-extended": "3.2.3"
+    "jest-extended": "3.2.4"
   },
   "dependencies": {
     "chalk": "5.2.0",

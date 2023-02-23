@@ -23,7 +23,7 @@
     "@tryghost/listr-smart-renderer": "^0.5.0",
     "eslint": "8.34.0",
     "jest": "29.4.3",
-    "jest-extended": "3.2.3",
+    "jest-extended": "3.2.4",
     "listr": "0.14.3"
   },
   "dependencies": {
