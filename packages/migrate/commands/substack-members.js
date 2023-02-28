@@ -2,7 +2,12 @@ import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import {parse, addYears} from 'date-fns';
 import substackMembers from '../sources/substack-members.js';
+import {GhostLogger} from '@tryghost/logging';
+import logConfig from '../lib/loggingrc.js';
+import {showLogs} from '../lib/utilties/cli-log-display.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
+
+const logger = new GhostLogger(logConfig);
 
 // Internal ID in case we need one.
 const id = 'substack-members';
@@ -91,6 +96,24 @@ const options = [
         flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
+    },
+    {
+        type: 'string',
+        flags: '--tmpPath',
+        defaultValue: null,
+        desc: 'Specify the full path where the temporary files will be stored (Defaults a hidden tmp dir)'
+    },
+    {
+        type: 'string',
+        flags: '--outputPath',
+        defaultValue: null,
+        desc: 'Specify the full path where the final zip file will be saved to (Defaults to CWD)'
+    },
+    {
+        type: 'string',
+        flags: '--cacheName',
+        defaultValue: null,
+        desc: 'Provide a unique name for the cache directory (defaults to a UUID)'
     }
 ];
 
@@ -127,6 +150,8 @@ const run = async (argv) => {
         warnings: []
     };
 
+    const startMigrationTime = Date.now();
+
     if (argv.subs) {
         argv.hasSubscribers = true;
     }
@@ -140,7 +165,7 @@ const run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = substackMembers.getTaskRunner(argv);
+        let migrate = substackMembers.getTaskRunner(argv, logger);
 
         // Run the migration
         await migrate.run(context);
@@ -170,9 +195,7 @@ const run = async (argv) => {
         });
     }
 
-    if (context.warnings.length > 0) {
-        ui.log.warn(context.warnings);
-    }
+    showLogs(logger, startMigrationTime);
 };
 
 export default {

@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import fsUtils from '@tryghost/mg-fs-utils';
 import csvIngest from '@tryghost/mg-substack-members-csv';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
@@ -21,15 +22,19 @@ const MEMBERS_IMPORT_FIELDS = [
  *
  * @param {Object} options
  */
-const getTaskRunner = (options) => {
+const getTaskRunner = (options, logger) => {
     let tasks = [
         {
             title: 'Initializing',
             task: (ctx, task) => {
                 ctx.options = options;
+                ctx.logger = logger;
 
                 // 0. Prep a file cache for the work we are about to do.
-                ctx.fileCache = new fsUtils.FileCache(options.pathToFile, {contentDir: false});
+                ctx.fileCache = new fsUtils.FileCache(`substack-members-${options.cacheName || options.pathToFile}`, {
+                    tmpPath: ctx.options.tmpPath,
+                    contentDir: false
+                });
 
                 task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
             }
@@ -42,7 +47,7 @@ const getTaskRunner = (options) => {
                     ctx.result = await csvIngest(ctx);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'csv-members-data.json', true);
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to read CSV file', error});
                     throw error;
                 }
             }
@@ -86,7 +91,7 @@ const getTaskRunner = (options) => {
                         await ctx.fileCache.writeErrorJSONFile(ctx.logs, {filename: `gh-members-updated-${Date.now()}.logs.json`});
                     }
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to batch files', error});
                     throw error;
                 }
             }
@@ -95,12 +100,29 @@ const getTaskRunner = (options) => {
             title: 'Write zip file',
             skip: () => !options.zip,
             task: async (ctx, task) => {
+                const isStorage = (options?.outputStorage && typeof options.outputStorage === 'object') ?? false;
+
                 try {
                     let timer = Date.now();
-                    ctx.outputFile = await fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, `gh-members-${ctx.fileCache.cacheName}-${Date.now()}.zip`);
+                    const zipFinalPath = options.outputPath || process.cwd();
+
+                    // zip the file and save it temporarily
+                    ctx.outputFile = await fsUtils.zip.write(zipFinalPath, ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+
+                    if (isStorage) {
+                        const storage = options.outputStorage;
+
+                        // read the file buffer
+                        const fileBuffer = await readFileSync(ctx.outputFile.path);
+                        // Upload the file to the storage
+                        await storage.upload({body: fileBuffer, fileName: `gh-substack-members-${ctx.options.cacheName}.zip`});
+                        // now that the file is uploaded to the storage, delete the local zip file
+                        await fsUtils.zip.deleteFile(ctx.outputFile.path);
+                    }
+
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to write and upload ZIP file', error});
                     throw error;
                 }
             }
@@ -112,7 +134,7 @@ const getTaskRunner = (options) => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to clear cache', error});
                     throw error;
                 }
             }
