@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-shortcodes",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-shortcodes",
   "author": "Ghost Foundation",
   "license": "MIT",
