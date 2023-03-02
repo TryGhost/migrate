@@ -1,0 +1,36 @@
+{
+    "uid": "Entry:0969db64-b8d7-11ed-afa1-0242ac120001",
+    "title": "Example post title",
+    "dek": {
+        "html": "My subtitle"
+    },
+    "createdAt": "2019-09-27T00:40:19.000Z",
+    "url": "https://example.com/2019/9/26/12345678/my-article",
+    "wordCount": 233,
+    "updatedAt": "2019-09-27T00:48:48.000Z",
+    "author": {
+        "fullOrUserName": "Author Name"
+    },
+    "authorProfile": {
+        "name": "Author Name"
+    },
+    "contributors": [],
+    "communityGroups": [],
+    "body": {
+        "components": [
+            {
+                "__typename": "EntryBodyParagraph",
+                "placement": {
+                    "id": "abc123",
+                    "alignment": null
+                },
+                "contents": {
+                    "html": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In semper ligula tellus, eget euismod purus posuere sed."
+                },
+                "dropcap": false,
+                "endmark": false,
+                "lead": false
+            }
+        ]
+    }
+}
