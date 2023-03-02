@@ -5,6 +5,7 @@ A collection of tools for migrating to Ghost.
 Each tool has its own detailed documentation:
 
 - [Ghost](https://github.com/TryGhost/migrate/tree/main/packages/mg-ghost-api)
+- [Chorus](https://github.com/TryGhost/migrate/tree/main/packages/mg-chorus)
 - [Curated](https://github.com/TryGhost/migrate/tree/main/packages/mg-curated-export)
 - [Curated members](https://github.com/TryGhost/migrate/tree/main/packages/mg-curated-members-csv)
 - [HubSpot](https://github.com/TryGhost/migrate/tree/main/packages/mg-hubspot-api)
