@@ -31,7 +31,8 @@ describe('Process', function () {
         let ctx = {
             options: {
                 drafts: true,
-                pages: true
+                pages: true,
+                posts: true
             }
         };
         const input = await readSync('sample.xml');
@@ -87,7 +88,8 @@ describe('Process', function () {
         let ctx = {
             options: {
                 drafts: true,
-                pages: true
+                pages: true,
+                posts: true
             }
         };
         const input = await readSync('sample.xml');
@@ -140,7 +142,8 @@ describe('Process', function () {
         let ctx = {
             options: {
                 drafts: true,
-                pages: true
+                pages: true,
+                posts: true
             }
         };
         const input = await readSync('sample.xml');
@@ -184,6 +187,7 @@ describe('Process', function () {
             options: {
                 drafts: false,
                 pages: false,
+                posts: true,
                 cpt: ['customcpt']
             }
         };
@@ -231,6 +235,7 @@ describe('Process', function () {
             options: {
                 drafts: true,
                 pages: true,
+                posts: true,
                 excerpt: false,
                 excerptSelector: 'h2'
             }
@@ -252,6 +257,7 @@ describe('Process', function () {
             options: {
                 drafts: true,
                 pages: true,
+                posts: true,
                 excerpt: true,
                 excerptSelector: false
             }
@@ -275,6 +281,7 @@ describe('Process', function () {
                 featureImage: 'featuredmedia',
                 url: 'https://mysite.com/bloob',
                 pages: false,
+                posts: true,
                 drafts: true
             }
         };
@@ -294,6 +301,7 @@ describe('Process', function () {
                 featureImage: 'featuredmedia',
                 url: 'https://mysite.com/bloob',
                 pages: false,
+                posts: true,
                 drafts: true,
                 postsBefore: 'May 01 2013'
             }
@@ -315,6 +323,7 @@ describe('Process', function () {
                 featureImage: 'featuredmedia',
                 url: 'https://mysite.com/bloob',
                 pages: false,
+                posts: true,
                 drafts: true,
                 postsAfter: 'May 01 2013'
             }
@@ -337,6 +346,7 @@ describe('Process', function () {
                 featureImage: 'featuredmedia',
                 url: 'https://mysite.com/bloob',
                 pages: false,
+                posts: true,
                 drafts: true,
                 postsBefore: 'May 01 2013',
                 postsAfter: 'May 01 2012'
@@ -349,5 +359,57 @@ describe('Process', function () {
 
         expect(posts).toBeArrayOfSize(1);
         expect(posts[0].data.published_at).toEqual(new Date('2012-06-07T03:00:44.000Z'));
+    });
+
+    test('Can get posts only', async function () {
+        let ctx = {
+            options: {
+                url: 'https://mysite.com/bloob',
+                pages: false,
+                posts: true,
+                drafts: true
+            }
+        };
+
+        const input = await readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+        const posts = processed.posts;
+
+        expect(posts).toBeArrayOfSize(3);
+    });
+
+    test('Can get pages only', async function () {
+        let ctx = {
+            options: {
+                url: 'https://mysite.com/bloob',
+                pages: true,
+                posts: false,
+                drafts: true
+            }
+        };
+
+        const input = await readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+        const posts = processed.posts;
+
+        expect(posts).toBeArrayOfSize(1);
+    });
+
+    test('Can get CPT only', async function () {
+        let ctx = {
+            options: {
+                url: 'https://mysite.com/bloob',
+                pages: false,
+                posts: false,
+                cpt: ['customcpt'],
+                drafts: true
+            }
+        };
+
+        const input = await readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+        const posts = processed.posts;
+
+        expect(posts).toBeArrayOfSize(1);
     });
 });

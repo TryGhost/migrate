@@ -54,6 +54,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--pages`**
     - bool - default: `true`
     - Import WordPress pages
+- **`--posts`**
+    - bool - default: `true`
+    - Import WordPress posts
 - **`--tags`**
     - bool - default: `true`
     - Set to false if you don't want to import WordPress tags, only categories

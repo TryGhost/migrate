@@ -139,6 +139,7 @@ const processPost = async ($post, users, options) => {
 
     const post = {
         url: postUrl,
+        wpPostType: postTypeVal,
         data: {
             slug: $($post).children('wp\\:post_name').text().replace(/(\.html)/i, ''),
             title: $($post).children('title').text(),
@@ -301,7 +302,7 @@ const processUsers = ($xml) => {
 };
 
 const all = async (input, {options}) => {
-    const {drafts, pages} = options;
+    const {drafts, pages, posts} = options;
     const output = {
         posts: [],
         users: []
@@ -370,8 +371,13 @@ const all = async (input, {options}) => {
     }
 
     if (!pages) {
-        // remove pages. absolute not supported by default and not tested!!
-        output.posts = output.posts.filter(post => post.data.type !== 'page');
+        // remove pages
+        output.posts = output.posts.filter(post => post.wpPostType !== 'page');
+    }
+
+    if (!posts) {
+        // remove posts
+        output.posts = output.posts.filter(post => post.wpPostType !== 'post');
     }
 
     return output;

@@ -61,6 +61,12 @@ const options = [
         desc: 'Import pages'
     },
     {
+        type: 'boolean',
+        flags: '--posts',
+        defaultValue: true,
+        desc: 'Import posts'
+    },
+    {
         type: 'string',
         flags: '--addTag',
         defaultValue: null,
