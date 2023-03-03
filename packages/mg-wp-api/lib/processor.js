@@ -746,8 +746,6 @@ const processPosts = async (posts, users, options, errors, fileCache) => { // es
                 debug(`No post found for ${urlObj.url}`);
             }
         });
-
-        process.exit(1);
     }
 
     if (options.postsBefore && options.postsAfter) {
