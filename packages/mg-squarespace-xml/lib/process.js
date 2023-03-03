@@ -6,6 +6,11 @@ import SimpleDom from 'simple-dom';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 import errors from '@tryghost/errors';
 
+const htmlTotextTrimmed = (html, max) => {
+    let noHtml = html.replace(/<[^>]+>/g, ' ').replace(/\r?\n|\r/g, ' ').replace(/ {2,}/, ' ').trim();
+    return noHtml && noHtml.length > max ? noHtml.slice(0,max).split(' ').slice(0, -1).join(' ') : noHtml;
+};
+
 const processUser = ($sqUser) => {
     const authorSlug = slugify($($sqUser).children('wp\\:author_login').text());
 
@@ -141,11 +146,13 @@ const processPost = ($sqPost, users, {addTag, tags: fetchTags, url}) => {
         // WP XML only provides a published date, we let's use that all dates Ghost expects
         const postDate = parse($($sqPost).children('pubDate').text(), 'EEE, d MMM yyyy HH:mm:ss xx', new Date());
 
+        const postTitle = ($($sqPost).children('title').text().length > 0) ? $($sqPost).children('title').text() : false;
+
         const post = {
             url: `${url}${$($sqPost).children('link').text()}`,
             data: {
                 slug: $($sqPost).children('wp\\:post_name').text().replace(/(\.html)/i, ''),
-                title: $($sqPost).children('title').text(),
+                title: postTitle,
                 status: $($sqPost).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
                 published_at: postDate,
                 created_at: postDate,
@@ -163,14 +170,22 @@ const processPost = ($sqPost, users, {addTag, tags: fetchTags, url}) => {
             post.data.tags = processTags($($sqPost).children('category'), fetchTags);
         }
 
-        post.data.tags.push({
-            url: 'migrator-added-tag', data: {name: '#sqs'}
-        });
-
         if (addTag) {
             post.data.tags.push({
-                url: 'migrator-added-tag-2', data: {slug: addTag, name: addTag}
+                url: 'migrator-added-tag', data: {slug: addTag, name: addTag}
             });
+        }
+
+        post.data.tags.push({
+            url: 'migrator-added-tag-sqs', data: {name: '#sqs'}
+        });
+
+        if (!postTitle) {
+            post.data.tags.push({
+                url: 'migrator-added-tag-no-title', data: {name: '#no-title'}
+            });
+
+            post.data.title = htmlTotextTrimmed(post.data.html, 50);
         }
 
         if (!post.data.author) {

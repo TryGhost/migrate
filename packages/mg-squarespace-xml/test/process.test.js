@@ -56,7 +56,7 @@ describe('Process', function () {
         expect(tags[0].url).toEqual('/tag/company-news');
         expect(tags[0].data.slug).toEqual('company-news');
         expect(tags[0].data.name).toEqual('Company News');
-        expect(tags[1].url).toEqual('migrator-added-tag');
+        expect(tags[1].url).toEqual('migrator-added-tag-sqs');
         expect(tags[1].data.name).toEqual('#sqs');
 
         const author = data.author;
@@ -103,7 +103,7 @@ describe('Process', function () {
         expect(tags[0].url).toEqual('/tag/company-news');
         expect(tags[0].data.slug).toEqual('company-news');
         expect(tags[0].data.name).toEqual('Company News');
-        expect(tags[1].url).toEqual('migrator-added-tag');
+        expect(tags[1].url).toEqual('migrator-added-tag-sqs');
         expect(tags[1].data.name).toEqual('#sqs');
 
         const author = data.author;
@@ -145,7 +145,7 @@ describe('Process', function () {
         const tags = data.tags;
 
         expect(tags).toBeArrayOfSize(1);
-        expect(tags[0].url).toEqual('migrator-added-tag');
+        expect(tags[0].url).toEqual('migrator-added-tag-sqs');
         expect(tags[0].data.name).toEqual('#sqs');
 
         const author = data.author;
@@ -182,7 +182,7 @@ describe('Process', function () {
         const input = await readSync('sample.xml');
         const processed = await process.all(input, ctx);
 
-        expect(processed.posts).toBeArrayOfSize(1);
+        expect(processed.posts).toBeArrayOfSize(2);
         expect(processed.posts[0].data.type).toEqual('page');
     });
 
@@ -203,5 +203,30 @@ describe('Process', function () {
         expect(processed).toContain('<div class="kg-card kg-audio-card">');
         expect(processed).toContain('<audio src="http://example.com/auio-file.mp3"');
         expect(processed).not.toContain('<div class="sqs-audio-embed"');
+    });
+
+    test('Can handle posts with no title', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                posts: false,
+                pages: true
+            }
+        };
+        const input = await readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+
+        const post = processed.posts[1];
+        const data = post.data;
+
+        expect(data.title).toEqual('Our Services Sed ut perspiciatis unde omnis iste');
+
+        const tags = data.tags;
+
+        expect(tags).toBeArrayOfSize(2);
+        expect(tags[0].url).toEqual('migrator-added-tag-sqs');
+        expect(tags[0].data.name).toEqual('#sqs');
+        expect(tags[1].url).toEqual('migrator-added-tag-no-title');
+        expect(tags[1].data.name).toEqual('#no-title');
     });
 });
