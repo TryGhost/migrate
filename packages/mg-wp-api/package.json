@@ -25,7 +25,9 @@
     "jest-extended": "3.2.4"
   },
   "dependencies": {
+    "@tryghost/debug": "0.1.22",
     "@tryghost/errors": "1.2.20",
+    "@tryghost/mg-fs-utils": "0.12.1",
     "@tryghost/mg-shortcodes": "^0.2.1",
     "@tryghost/mg-webscraper": "^0.9.1",
     "@tryghost/string": "0.2.2",

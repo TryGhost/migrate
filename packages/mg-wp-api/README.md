@@ -39,6 +39,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--zip`** 
     - Create a zip file
     - bool - default: `true`
+- **`--onlyURLs`**
+    - Path to a CSV file of post URLs that will be the only migrated posts
+    - string - default: `null`
 - **`-s` `--scrape`** 
     - Configure scraping tasks
     - string - default: `all` 
@@ -109,16 +112,31 @@ It's possible to pass more options, in order to achieve a better migration file 
 A more realistic command for a WordPress migration looks like this:
 
 ```sh
-migrate wp-api https://example.com --auth person:pa55w0rd --addTag 'From old site' --limit 10 --batch 5
+migrate wp-api --url https://example.com --auth person:pa55w0rd --addTag 'From old site' --limit 10 --batch 5
 ```
 
 This will fetch the newest 50 posts, in 5 batches of 10, collect real author data including email addresses), and add the tag 'From old site'.
 
 ```sh
-migrate wp-api https://example.com --scrape img web
+migrate wp-api --url https://example.com --scrape img web
 ```
 
 This will fetch all posts, and only scrape image & web meta data
+
+### Only get a specific set of posts:
+
+```sh
+migrate wp-api --url https://example.com --onlyURLs /path/to/urls.csv
+```
+
+The CSV should look like this:
+
+```csv
+url
+https://example.com/2023/03/02/my-article
+https://example.com/2023/03/01/another-article
+```
+
 
 ## Develop
 

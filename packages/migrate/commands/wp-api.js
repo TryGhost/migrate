@@ -37,6 +37,10 @@ const setup = (sywac) => {
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
     });
+    sywac.string('--onlyURLs', {
+        defaultValue: null,
+        desc: 'Path to a CSV file of post URLs that will be the only migrated posts'
+    });
     sywac.array('-s --scrape', {
         choices: ['all', 'img', 'web', 'media', 'files', 'none'],
         defaultValue: 'all',

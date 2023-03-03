@@ -1,11 +1,16 @@
 import url from 'node:url';
+import {readFileSync} from 'node:fs';
 import _ from 'lodash';
 import $ from 'cheerio';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import Shortcodes from '@tryghost/mg-shortcodes';
 import {slugify} from '@tryghost/string';
+import MgFsUtils from '@tryghost/mg-fs-utils';
 import {htmlToText} from 'html-to-text';
 import {formatISO, parseISO, isBefore, isAfter, add} from 'date-fns';
+import {_base as debugFactory} from '@tryghost/debug';
+
+const debug = debugFactory('migrate:wp-api:fetch');
 
 const stripHtml = (html) => {
     // Remove HTML tags, new line characters, and trim white-space
@@ -724,6 +729,27 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
 };
 
 const processPosts = async (posts, users, options, errors, fileCache) => { // eslint-disable-line no-shadow
+    if (options.onlyURLs) {
+        const onlyURLsContent = readFileSync(options.onlyURLs, {encoding: 'utf8'});
+        const onlyURLsObj = MgFsUtils.csv.parseString(onlyURLsContent);
+
+        // Filter…
+        let foundPosts = [];
+        onlyURLsObj.forEach((urlObj) => {
+            let foundPost = _.find(posts, {
+                link: urlObj.url
+            });
+
+            if (foundPost) {
+                foundPosts.push(foundPost);
+            } else {
+                debug(`No post found for ${urlObj.url}`);
+            }
+        });
+
+        process.exit(1);
+    }
+
     if (options.postsBefore && options.postsAfter) {
         const startDate = parseISO(formatISO(new Date(options.postsAfter)));
         const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
