@@ -93,6 +93,18 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--outputSingleCSV',
+        defaultValue: false,
+        desc: 'Choose where to export a single CSV or one for each type. If true, `--limit` is ignored'
+    },
+    {
+        type: 'boolean',
+        flags: '--writeCSV',
+        defaultValue: false,
+        desc: 'Create a final CSV file'
+    },
+    {
+        type: 'boolean',
         flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
