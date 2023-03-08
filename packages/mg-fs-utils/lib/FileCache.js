@@ -149,6 +149,10 @@ class FileCache {
         return src.replace(fileNameNoExt, safeFileNameNoExt);
     }
 
+    ensureJsonExtension({filename, isJSON = true}) {
+        return (isJSON && !filename.endsWith('.json')) ? `${filename}.json` : filename; // Ensure the `.json` extension is only added if needed
+    }
+
     resolveImageFileName(filename) {
         return this.resolveFileName(filename, 'images');
     }
@@ -220,7 +224,7 @@ class FileCache {
      * @param {Boolean} isJSON - defaults to write a JSON file
      */
     async writeTmpFile(data, filename, isJSON = true) {
-        let fileNameWithExt = (filename.endsWith('.json')) ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
+        let fileNameWithExt = this.ensureJsonExtension({filename, isJSON});
         let filepath = join(this.tmpDir, fileNameWithExt);
 
         if (isJSON) {
@@ -240,7 +244,7 @@ class FileCache {
      * @param {Boolean} isJSON - defaults to write a JSON file
      */
     writeTmpFileSync(data, filename, isJSON = true) {
-        let fileNameWithExt = (filename.endsWith('.json')) ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
+        let fileNameWithExt = this.ensureJsonExtension({filename, isJSON});
         let filepath = join(this.tmpDir, fileNameWithExt);
 
         if (isJSON) {
