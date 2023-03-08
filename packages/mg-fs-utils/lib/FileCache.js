@@ -390,6 +390,15 @@ class FileCache {
     }
 
     /**
+     * Alias fs-extra's 'remove' so we can more easily mock it
+     *
+     * @param {String} string - absolute path to where file should be deleted
+     */
+    async deleteFileOrDir(storagePath) {
+        return remove(storagePath);
+    }
+
+    /**
     * Check if we've got this file already
     *
     * @param {String} filename
