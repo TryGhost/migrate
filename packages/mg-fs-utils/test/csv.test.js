@@ -120,3 +120,20 @@ describe('Format JSON to CSV', function () {
         expect(resultArray).toBeArrayOfSize(22);
     });
 });
+
+describe('hasKeys', function () {
+    test('Returns true when CSV contains required columns', async function () {
+        const pathToFile = path.join(__dirname, '/fixtures/example.csv');
+        const result = await csv.hasKeys(pathToFile, ['Username', 'Identifier', 'One-time password', 'Recovery code', 'First name', 'Last name', 'Department', 'Location']);
+
+        expect(result).toEqual(true);
+    });
+
+    test('Returns false when CSV is missing a required column', async function () {
+        const pathToFile = path.join(__dirname, '/fixtures/example.csv');
+        const result = await csv.hasKeys(pathToFile, ['stripe_key']);
+
+        expect(result).toEqual(false);
+    });
+});
+

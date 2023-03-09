@@ -97,9 +97,26 @@ const writeCSV = async (data, filePath, fileName) => {
     return outputPath;
 };
 
+/**
+ * Check if a CSV has the required keys
+ * @param {string} filePath Path to CSV file
+ * @param {array} theKeys Array of keys the CSV must include
+ * @returns {boolean}
+ */
+const hasKeys = async (filePath, theKeys = []) => {
+    let parsed = await parseCSV(filePath);
+    let firstRow = parsed[0];
+    let colKeys = Object.keys(firstRow);
+
+    let hasRequiredKeys = theKeys.every(v => colKeys.includes(v));
+
+    return hasRequiredKeys;
+};
+
 export default {
     parseCSV,
     parseString,
     jsonToCSV,
-    writeCSV
+    writeCSV,
+    hasKeys
 };
