@@ -124,16 +124,32 @@ describe('Format JSON to CSV', function () {
 describe('hasKeys', function () {
     test('Returns true when CSV contains required columns', async function () {
         const pathToFile = path.join(__dirname, '/fixtures/example.csv');
-        const result = await csv.hasKeys(pathToFile, ['Username', 'Identifier', 'One-time password', 'Recovery code', 'First name', 'Last name', 'Department', 'Location']);
+        const csvIsValid = await csv.hasKeys({
+            filePath: pathToFile,
+            required: ['Username', 'Identifier', 'One-time password', 'Recovery code', 'First name', 'Last name', 'Department', 'Location']
+        });
 
-        expect(result).toEqual(true);
+        expect(csvIsValid).toEqual(true);
     });
 
     test('Returns false when CSV is missing a required column', async function () {
         const pathToFile = path.join(__dirname, '/fixtures/example.csv');
-        const result = await csv.hasKeys(pathToFile, ['stripe_key']);
+        const csvIsValid = await csv.hasKeys({
+            filePath: pathToFile,
+            required: ['stripe_key']
+        });
 
-        expect(result).toEqual(false);
+        expect(csvIsValid).toEqual(false);
+    });
+
+    test('Returns false when CSV is contains a specific column', async function () {
+        const pathToFile = path.join(__dirname, '/fixtures/example.csv');
+        const csvIsValid = await csv.hasKeys({
+            filePath: pathToFile,
+            blocked: ['Username']
+        });
+
+        expect(csvIsValid).toEqual(false);
     });
 });
 

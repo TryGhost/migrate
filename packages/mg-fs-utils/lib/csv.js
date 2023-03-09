@@ -99,18 +99,21 @@ const writeCSV = async (data, filePath, fileName) => {
 
 /**
  * Check if a CSV has the required keys
- * @param {string} filePath Path to CSV file
- * @param {array} theKeys Array of keys the CSV must include
+ * @param {object} data
+ * @param {string} data.filePath Path to CSV file
+ * @param {array} data.required Array of keys the CSV must include
+ * @param {array} data.blocked Array of keys the CSV must include
  * @returns {boolean}
  */
-const hasKeys = async (filePath, theKeys = []) => {
-    let parsed = await parseCSV(filePath);
-    let firstRow = parsed[0];
-    let colKeys = Object.keys(firstRow);
+const hasKeys = async ({filePath, required = [], blocked = []}) => {
+    const parsed = await parseCSV(filePath);
+    const firstRow = parsed[0];
+    const colKeys = Object.keys(firstRow);
 
-    let hasRequiredKeys = theKeys.every(v => colKeys.includes(v));
+    const hasRequiredKeys = required.every(v => colKeys.includes(v));
+    const hasBlockedKeys = colKeys.some(r => blocked.includes(r));
 
-    return hasRequiredKeys;
+    return hasRequiredKeys && !hasBlockedKeys;
 };
 
 export default {
