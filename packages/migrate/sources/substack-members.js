@@ -133,7 +133,7 @@ const getTaskRunner = (options, logger) => {
                         // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
                         // Upload the file to the storage
-                        ctx.outputFile = await storage.upload({body: fileBuffer, fileName: `gh-substack-members-${ctx.options.cacheName}.zip`});
+                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-substack-members-${ctx.options.cacheName}.zip`});
                         // now that the file is uploaded to the storage, delete the local zip file
                         await fsUtils.zip.deleteFile(ctx.outputFile.path);
                     }
@@ -171,7 +171,7 @@ const getTaskRunner = (options, logger) => {
                         // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
                         // Upload the file to the storage
-                        ctx.outputFile = await storage.upload({body: fileBuffer, fileName: `gh-substack-members-${ctx.options.cacheName}.csv`});
+                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-substack-members-${ctx.options.cacheName}.csv`});
                         // now that the file is uploaded to the storage, delete the local zip file
                         await ctx.fileCache.deleteFileOrDir(ctx.outputFile.path);
                     }
