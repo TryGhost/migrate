@@ -1,5 +1,4 @@
 import {jest} from '@jest/globals';
-// import fs from 'fs-extra';
 import imageTransform from '@tryghost/image-transform';
 import {FileCache} from '../lib/FileCache.js';
 
@@ -8,13 +7,12 @@ const mockStoragePath = `/tmp/blah/${mockFile}`;
 const mockOutputPath = `/content/images/${mockFile}`;
 const mockOriginalPath = `/tmp/blah/test_o.jpg`;
 
-// jest.mock('../lib/FileCache.js', () => {
-//     return jest.fn().mockImplementation(() => {
-//         return {saveFile: () => {
-//             return true;
-//         }};
-//     });
-// });
+describe('FileCache', function () {
+    it('Can set cache name from path in constructor', function () {
+        let fileCache = new FileCache('/this/is/a/long/file/path/for/1234-current_migration_file.zip');
+        expect(fileCache.cacheName).toEqual('1234-current-migration-file');
+    });
+});
 
 describe('writeContentFile', function () {
     let transformStub;

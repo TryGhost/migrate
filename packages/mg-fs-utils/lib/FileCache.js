@@ -9,6 +9,7 @@ import imageTransform from '@tryghost/image-transform';
 import errors from '@tryghost/errors';
 import transliterate from 'transliteration';
 import csv from './csv.js';
+import {cacheNameFromPath} from './utils.js';
 
 const basePath = 'mg';
 const knownImageExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico', 'webp'];
@@ -21,8 +22,7 @@ class FileCache {
         this.options = Object.assign({contentDir: true}, options);
 
         // Remove any extension, handles removing TLDs as well if the name is based on a URL
-        let ext = extname(cacheName);
-        this.cacheName = basename(cacheName, ext);
+        this.cacheName = cacheNameFromPath(cacheName);
 
         if (options.batchName) {
             this.batchName = options.batchName;
