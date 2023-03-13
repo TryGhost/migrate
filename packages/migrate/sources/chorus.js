@@ -233,13 +233,14 @@ const getFullTaskList = (options, logger) => {
 
                     if (isStorage) {
                         const storage = options.outputStorage;
+                        const localFilePath = ctx.outputFile.path;
 
                         // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
                         // Upload the file to the storage
-                        await storage.upload({body: fileBuffer, fileName: `gh-chorus-${ctx.options.cacheName}.zip`});
+                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-chorus-${ctx.options.cacheName}.zip`});
                         // now that the file is uploaded to the storage, delete the local zip file
-                        await fsUtils.zip.deleteFile(ctx.outputFile.path);
+                        await fsUtils.zip.deleteFile(localFilePath);
                     }
 
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
