@@ -33,7 +33,8 @@ const getTaskRunner = (options, logger) => {
                 ctx.allMembers = [];
 
                 // 0. Prep a file cache for the work we are about to do.
-                ctx.fileCache = new fsUtils.FileCache(`substack-members-${options.cacheName || options.pathToFile}`, {
+                ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(options.pathToFile);
+                ctx.fileCache = new fsUtils.FileCache(`substack-members-${ctx.options.cacheName}`, {
                     tmpPath: ctx.options.tmpPath,
                     contentDir: false
                 });
@@ -133,7 +134,7 @@ const getTaskRunner = (options, logger) => {
                         // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
                         // Upload the file to the storage
-                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-substack-members-${ctx.options.cacheName}.zip`});
+                        await storage.upload({body: fileBuffer, fileName: `gh-substack-members-${ctx.options.cacheName}.zip`});
                         // now that the file is uploaded to the storage, delete the local zip file
                         await fsUtils.zip.deleteFile(ctx.outputFile.path);
                     }
@@ -171,7 +172,7 @@ const getTaskRunner = (options, logger) => {
                         // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
                         // Upload the file to the storage
-                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-substack-members-${ctx.options.cacheName}.csv`});
+                        await storage.upload({body: fileBuffer, fileName: `gh-substack-members-${ctx.options.cacheName}.csv`});
                         // now that the file is uploaded to the storage, delete the local zip file
                         await ctx.fileCache.deleteFileOrDir(ctx.outputFile.path);
                     }

@@ -24,7 +24,8 @@ const initialize = (options, logger) => {
             };
 
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-            ctx.fileCache = new fsUtils.FileCache(`lettedrop-${ctx.options.cacheName || ctx.options.url}`, {
+            ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(ctx.options.url);
+            ctx.fileCache = new fsUtils.FileCache(`lettedrop-${ctx.options.cacheName}`, {
                 tmpPath: ctx.options.tmpPath
             });
             ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
@@ -260,7 +261,7 @@ const getFullTaskList = (options, logger) => {
                         // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
                         // Upload the file to the storage
-                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-letterdrop-${ctx.options.cacheName}.zip`});
+                        await storage.upload({body: fileBuffer, fileName: `gh-letterdrop-${ctx.options.cacheName}.zip`});
                         // now that the file is uploaded to the storage, delete the local zip file
                         await fsUtils.zip.deleteFile(ctx.outputFile.path);
                     }
