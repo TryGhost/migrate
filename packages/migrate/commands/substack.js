@@ -67,6 +67,12 @@ const options = [
         desc: 'Provide an email for users e.g. john@mycompany.com to create a general user w/ slug `john` and provided email'
     },
     {
+        type: 'string',
+        flags: '--addTag',
+        defaultValue: null,
+        desc: 'Provide a tag slug which should be added to every post in this migration'
+    },
+    {
         type: 'boolean',
         flags: '--drafts',
         defaultValue: true,

@@ -6,7 +6,7 @@ import {_base as debugFactory} from '@tryghost/debug';
 
 const debug = debugFactory('migrate:substack:mapper');
 
-const mapConfig = (data, {url, email, useMetaAuthor}) => {
+const mapConfig = (data, {url, email, useMetaAuthor, addTag}) => {
     const slug = data.post_id.replace(/^(?:\d{1,10}\.)(\S*)/gm, '$1');
 
     // Get an ISO 8601 date - https://date-fns.org/docs/formatISO
@@ -30,22 +30,38 @@ const mapConfig = (data, {url, email, useMetaAuthor}) => {
             html: data.html || null,
             status: data.is_published.toLowerCase() === `true` ? 'published' : 'draft',
             visibility: data.audience === 'only_paid' ? 'paid' : data.audience === 'only_free' ? 'members' : 'public',
-            tags: [
-                {
-                    url: 'migrator-added-tag',
-                    data: {
-                        name: '#substack'
-                    }
-                },
-                {
-                    url: `${url}/tag/${typeSlug}`,
-                    data: {
-                        name: _.startCase(typeSlug)
-                    }
-                }
-            ]
+            tags: []
         }
     };
+
+    let typeSlugSlugify = slugify(typeSlug);
+    mappedData.data.tags.push({
+        url: `${url}/tag/${typeSlugSlugify}`,
+        data: {
+            slug: typeSlugSlugify,
+            name: _.startCase(typeSlug)
+        }
+    });
+
+    if (addTag) {
+        let trimmedTag = addTag.trim();
+        let trimmedTagSlug = slugify(trimmedTag);
+        mappedData.data.tags.push({
+            url: `${url}/tag/${trimmedTagSlug}`,
+            data: {
+                slug: trimmedTagSlug,
+                name: trimmedTag
+            }
+        });
+    }
+
+    mappedData.data.tags.push({
+        url: `migrator-added-tag`,
+        data: {
+            slug: `hash-substack`,
+            name: `#substack`
+        }
+    });
 
     // Add an internal tag based on the type of post
     mappedData.data.tags.push({

@@ -58,6 +58,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`-e` `--email`** 
     - Provide an email domain for users e.g. `person@example.com` (Is ignored if `--useMetaAuthor` is provided)
     - bool/string - default: `false`
+- **`--addTag`**
+    - string - default: `null`
+    - Provide a tag name which should be added to every post in this migration (Wrap in single quotes if tag name has spaces `'Like This'`)
 - **`--drafts`** 
     - Import draft posts
     - bool - default: `true`

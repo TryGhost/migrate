@@ -120,12 +120,12 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         expect(data.tags).toBeArrayOfSize(4);
 
         const tag1 = data.tags[0];
-        expect(tag1.url).toEqual('migrator-added-tag');
-        expect(tag1.data.name).toEqual('#substack');
+        expect(tag1.url).toEqual('https://example.substack.com/tag/newsletter');
+        expect(tag1.data.name).toEqual('Newsletter');
 
         const tag2 = data.tags[1];
-        expect(tag2.url).toEqual('https://example.substack.com/tag/newsletter');
-        expect(tag2.data.name).toEqual('Newsletter');
+        expect(tag2.url).toEqual('migrator-added-tag');
+        expect(tag2.data.name).toEqual('#substack');
 
         const tag3 = data.tags[2];
         expect(tag3.url).toEqual('migrator-added-tag-substack-type-newsletter');
@@ -158,12 +158,12 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         expect(data.tags).toBeArrayOfSize(4);
 
         const tag1 = data.tags[0];
-        expect(tag1.url).toEqual('migrator-added-tag');
-        expect(tag1.data.name).toEqual('#substack');
+        expect(tag1.url).toEqual('https://example.substack.com/tag/podcast');
+        expect(tag1.data.name).toEqual('Podcast');
 
         const tag2 = data.tags[1];
-        expect(tag2.url).toEqual('https://example.substack.com/tag/podcast');
-        expect(tag2.data.name).toEqual('Podcast');
+        expect(tag2.url).toEqual('migrator-added-tag');
+        expect(tag2.data.name).toEqual('#substack');
 
         const tag3 = data.tags[2];
         expect(tag3.url).toEqual('migrator-added-tag-substack-type-podcast');
@@ -189,7 +189,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const post = processed.posts[2];
 
         expect(post.data.status).toEqual('draft');
-        expect(post.data.tags[1].data.name).toEqual('Newsletter');
+        expect(post.data.tags[0].data.name).toEqual('Newsletter');
     });
 
     test('Can migrate posts before a given date', async function () {
@@ -250,6 +250,33 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const mapped = await map(postDataFromFixtures, ctx.options);
 
         expect(mapped.posts).toBeArrayOfSize(4);
+    });
+
+    test('Can optionally add custom tag', async function () {
+        const ctx = {
+            options: {
+                url: 'https://example.substack.com',
+                addTag: 'Hello World'
+            }
+        };
+        const mapped = await map(postDataFromFixtures, ctx.options);
+
+        const post = mapped.posts[0];
+
+        const tag1 = post.data.tags[0];
+        expect(tag1.url).toEqual('https://example.substack.com/tag/newsletter');
+        expect(tag1.data.name).toEqual('Newsletter');
+        expect(tag1.data.slug).toEqual('newsletter');
+
+        const tag2 = post.data.tags[1];
+        expect(tag2.url).toEqual('https://example.substack.com/tag/hello-world');
+        expect(tag2.data.name).toEqual('Hello World');
+        expect(tag2.data.slug).toEqual('hello-world');
+
+        const tag3 = post.data.tags[2];
+        expect(tag3.url).toEqual('migrator-added-tag');
+        expect(tag3.data.name).toEqual('#substack');
+        expect(tag3.data.slug).toEqual('hash-substack');
     });
 });
 
