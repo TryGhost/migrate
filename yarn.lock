@@ -1081,10 +1081,10 @@
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-2.0.0.tgz#f544a148d3ab35801c1f633a7441fd87c2e484bf"
   integrity sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==
 
-"@tryghost/admin-api@1.13.2":
-  version "1.13.2"
-  resolved "https://registry.yarnpkg.com/@tryghost/admin-api/-/admin-api-1.13.2.tgz#acb6d9bc02f43ee6ad376055f954286fe23d0f84"
-  integrity sha512-H7zTOeoP7hSBca5QvhB0OcjjvsJHRc0uPB/kKMt09mzgf1BAAIo6L0S9QKVbMp5D7ko1a7MtnFlBOKIGO43c6g==
+"@tryghost/admin-api@1.13.3":
+  version "1.13.3"
+  resolved "https://registry.yarnpkg.com/@tryghost/admin-api/-/admin-api-1.13.3.tgz#7199c907ff53dfb969d3f54f2f15ce2554945889"
+  integrity sha512-saqBRW+iilYL4KC8XAIlWixyXrMqBdFz9Zt+gfgMZTF+4SgA/c/X1QkJFPe6difrv98FSWc8kwjgPHISsR3sbA==
   dependencies:
     axios "^0.27.0"
     form-data "^4.0.0"
@@ -1291,14 +1291,14 @@
     caller "^1.0.1"
     find-root "^1.1.0"
 
-"@tryghost/string@0.2.2", "@tryghost/string@^0.2.0":
+"@tryghost/string@0.2.2":
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.2.2.tgz#e5792c340bb5d434574ce9e0aa4d06c89a928373"
   integrity sha512-N9s7fNlb8o+MZqVzYHyRfnsIesXspc2crZO3mWcn3IKx4+c/zuBnGb+16xXtEsI4IABaPpu93IeQWnlSKO1+og==
   dependencies:
     unidecode "^0.1.8"
 
-"@tryghost/string@0.2.3":
+"@tryghost/string@0.2.3", "@tryghost/string@^0.2.0":
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.2.3.tgz#59e89c47128f166ff959ea9f377e01c08c86703b"
   integrity sha512-e/L5xi+AzIzk91W8YXQ9AecG66BBCbFovJkhNnJE+KjAU5XJ5ypr0Qy5QJGlR9y+wABWCxxMxEVImzygXx4J3A==
