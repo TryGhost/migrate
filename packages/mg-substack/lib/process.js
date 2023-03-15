@@ -4,10 +4,13 @@ import url from 'node:url';
 import $ from 'cheerio';
 import errors from '@tryghost/errors';
 import SimpleDom from 'simple-dom';
+import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 import {decode} from 'html-entities';
+import {parseSrcset} from 'srcset';
 import {_base as debugFactory} from '@tryghost/debug';
 
+const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 const debug = debugFactory('migrate:substack:process');
 
 const getFiles = async (filePath) => {
@@ -153,6 +156,31 @@ const processContent = (post, siteUrl, options) => {
         }
 
         $(div).replaceWith($(div).find('figure'));
+    });
+
+    $html('.image-link').each((i, anchor) => {
+        const parsedSrcset = parseSrcset($(anchor).find('img[srcset]').attr('srcset'));
+        let lastParsedUrl = parsedSrcset[0].url;
+        const imgAlt = $(anchor).find('img[alt]').attr('alt') || '';
+        const linkHref = $(anchor).attr('href');
+
+        // Remove the width from the image URL
+        lastParsedUrl = lastParsedUrl.replace(/w_[0-9]{2,4},c_limit,/, '');
+
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: lastParsedUrl,
+                alt: imgAlt
+            }
+        };
+
+        // If the anchor links to the image itself
+        if (lastParsedUrl.split('/https')[1] !== linkHref.split('/https')[1]) {
+            cardOpts.payload.href = linkHref;
+        }
+
+        $(anchor).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
     $html('a > style').each((i, style) => {
