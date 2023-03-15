@@ -409,13 +409,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        expect(processed.data.html).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption">\n' +
-        '                        <a target="_blank" href="https://example.com">\n' +
-        '                            <img src="https://example.com/photo_1200x800.jpeg" alt="A nice photo" class="kg-image">\n' +
-        '                            \n' +
-        '                        </a>\n' +
-        '                        <figcaption class="image-caption">This is a <a href="https://example.com/page">really</a> nice photo</figcaption>\n' +
-        '                    </figure>\n' +
+        expect(processed.data.html).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption"><a href="https://example.com"><img src="https://example.com/photo_1200x800.jpeg" class="kg-image" alt="A nice photo" loading="lazy"></a><figcaption>This is a <a href="https://example.com/page">really</a> nice photo</figcaption></figure>\n' +
         '                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>');
     });
 

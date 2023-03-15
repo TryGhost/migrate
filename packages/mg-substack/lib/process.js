@@ -159,23 +159,22 @@ const processContent = (post, siteUrl, options) => {
     });
 
     $html('.captioned-image-container').each((i, div) => {
-        const hasCaption = $(div).find('figcaption').length;
+        const imgAlt = $(div).find('img[alt]').attr('alt') || '';
+        const linkHref = $(div).find('a.image-link').attr('href') || false;
+        const imgCaption = $(div).find('figcaption').html() || false;
+        const imageSrc = largestSrc($(div).find('img'));
 
-        $(div).find('a').removeAttr('class');
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: imageSrc,
+                alt: imgAlt,
+                caption: imgCaption,
+                href: linkHref
+            }
+        };
 
-        $(div).find('img').removeAttr('data-attrs');
-        $(div).find('img').removeAttr('srcset');
-        $(div).find('img').removeAttr('width');
-        $(div).find('img').removeAttr('height');
-        $(div).find('img').addClass('kg-image');
-
-        $(div).find('figure').addClass('kg-card kg-image-card');
-
-        if (hasCaption) {
-            $(div).find('figure').addClass('kg-card-hascaption');
-        }
-
-        $(div).replaceWith($(div).find('figure'));
+        $(div).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
     $html('.image-link').each((i, anchor) => {
@@ -192,8 +191,8 @@ const processContent = (post, siteUrl, options) => {
         };
 
         // If the anchor links to the image itself
-        const spplitRegexp = /public\/images\/|public%2Fimages%2F/;
-        if (imageSrc.split(spplitRegexp)[1] !== linkHref.split(spplitRegexp)[1]) {
+        const splitRegexp = /public\/images\/|public%2Fimages%2F/;
+        if (imageSrc.split(splitRegexp)[1] !== linkHref.split(splitRegexp)[1]) {
             cardOpts.payload.href = linkHref;
         }
 
