@@ -47,6 +47,26 @@ const getUnsizedImageName = (str) => {
     }
 };
 
+const largestSrc = ($imageElem) => {
+    const src = $imageElem.attr('src');
+    const srcset = $imageElem.attr('srcset') || false;
+
+    let srcToUse = src;
+
+    if (srcset) {
+        const parsedSrcset = parseSrcset(srcset);
+
+        if (parsedSrcset && parsedSrcset.length > 0) {
+            srcToUse = parsedSrcset[0].url;
+        }
+    }
+
+    // Remove the width from the image URL
+    srcToUse = srcToUse.replace(/w_[0-9]{2,4},c_limit,/, '');
+
+    return srcToUse;
+};
+
 const processContent = (post, siteUrl, options) => {
     const {substackPodcastURL, metaData} = post;
     const responseData = metaData?.responseData || {};
@@ -159,24 +179,21 @@ const processContent = (post, siteUrl, options) => {
     });
 
     $html('.image-link').each((i, anchor) => {
-        const parsedSrcset = parseSrcset($(anchor).find('img[srcset]').attr('srcset'));
-        let lastParsedUrl = parsedSrcset[0].url;
         const imgAlt = $(anchor).find('img[alt]').attr('alt') || '';
         const linkHref = $(anchor).attr('href');
-
-        // Remove the width from the image URL
-        lastParsedUrl = lastParsedUrl.replace(/w_[0-9]{2,4},c_limit,/, '');
+        const imageSrc = largestSrc($(anchor).find('img'));
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
             payload: {
-                src: lastParsedUrl,
+                src: imageSrc,
                 alt: imgAlt
             }
         };
 
         // If the anchor links to the image itself
-        if (lastParsedUrl.split('/https')[1] !== linkHref.split('/https')[1]) {
+        const spplitRegexp = /public\/images\/|public%2Fimages%2F/;
+        if (imageSrc.split(spplitRegexp)[1] !== linkHref.split(spplitRegexp)[1]) {
             cardOpts.payload.href = linkHref;
         }
 
