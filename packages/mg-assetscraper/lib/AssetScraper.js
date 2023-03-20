@@ -336,7 +336,7 @@ class AssetScraper {
         });
 
         try {
-            const mdTokens = md.parse(string);
+            const mdTokens = md.parse(string, {});
             markdownTokenLooper(mdTokens, postContext);
         } catch (error) {
             this.logger.error({message: 'Failed to parse Markdown string', markdown: string});
@@ -878,9 +878,15 @@ class AssetScraper {
                             imageOptions.storagePath = this.changeExtension(imageOptions.storagePath, newFile.fileData.ext);
                             imageOptions.outputPath = this.changeExtension(imageOptions.outputPath, newFile.fileData.ext);
 
-                            await this.fileCache.writeContentFile(newFile.response.body, imageOptions);
+                            // Trim the file name length to 200 characters
+                            let theExt = extname(imageOptions.outputPath);
+                            let base = basename(imageOptions.outputPath, theExt);
 
-                            item.newLocal = imageOptions.outputPath;
+                            imageOptions.storagePath = imageOptions.storagePath.replace(base, base.substring(0, 200));
+                            imageOptions.outputPath = imageOptions.outputPath.replace(base, base.substring(0, 200));
+
+                            let newLocal = await this.fileCache.writeContentFile(newFile.response.body, imageOptions);
+                            item.newLocal = newLocal;
 
                             this.AssetCache.add(item);
                         }
