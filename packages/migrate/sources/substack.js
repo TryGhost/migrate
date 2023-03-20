@@ -141,15 +141,15 @@ const postProcessor = (scrapedData, data, options) => {
         scrapedData.authors = usersArray;
     }
 
-    if (scrapedData.og_image.includes('2Ftwitter%2Fsubscribe-card.jpg')) {
+    if (scrapedData?.og_image?.includes('2Ftwitter%2Fsubscribe-card.jpg')) {
         scrapedData.og_image = '';
     }
 
-    if (scrapedData.twitter_image.includes('2Ftwitter%2Fsubscribe-card.jpg')) {
+    if (scrapedData?.twitter_image?.includes('2Ftwitter%2Fsubscribe-card.jpg')) {
         scrapedData.twitter_image = '';
     }
 
-    if (scrapedData.feature_image.includes('2Ftwitter%2Fsubscribe-card.jpg')) {
+    if (scrapedData?.feature_image?.includes('2Ftwitter%2Fsubscribe-card.jpg')) {
         scrapedData.feature_image = '';
     }
 
