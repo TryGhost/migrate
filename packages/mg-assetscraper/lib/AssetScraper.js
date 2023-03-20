@@ -6,7 +6,7 @@ import {parseSrcset} from 'srcset';
 import {fileTypeFromBuffer} from 'file-type';
 import MarkdownIt from 'markdown-it';
 import prettyBytes from 'pretty-bytes';
-import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
+import SmartRenderer from '@tryghost/listr-smart-renderer';
 import replaceAll from 'fast-replaceall';
 import {AssetCache} from './AssetCache.js';
 
@@ -619,7 +619,6 @@ class AssetScraper {
 
     /**
      * Create tasks to find out what the file type if for all given assets
-     * @param {Object} [ctx]
      * @returns {Array} The list of tasks for Listr to run
      */
     applyFileTypes() {
@@ -892,7 +891,6 @@ class AssetScraper {
                         }
                     } catch (error) {
                         this.logger.error({message: `Failed to save image ${src}`, src, error});
-                        throw error;
                     }
                 }
             });
@@ -980,10 +978,13 @@ class AssetScraper {
          */
         tasks.push({
             title: 'Finding file types',
-            task: async (ctx) => { // eslint-disable-line no-shadow
-                let fileTypeTasks = this.applyFileTypes(ctx);
+            task: async (ctx, task) => { // eslint-disable-line no-shadow
+                const fileTypeTasks = this.applyFileTypes();
 
-                return makeTaskRunner(fileTypeTasks, {concurrent: 5, topLevel: false});
+                return task.newListr(fileTypeTasks, {
+                    renderer: (ctx.options.verbose) ? 'verbose' : SmartRenderer,
+                    concurrent: 5
+                });
             }
         });
 
@@ -992,10 +993,13 @@ class AssetScraper {
          */
         tasks.push({
             title: 'Downloading files',
-            task: async (ctx) => { // eslint-disable-line no-shadow
+            task: async (ctx, task) => { // eslint-disable-line no-shadow
                 let downloadTasks = this.downloadFiles(ctx);
 
-                return makeTaskRunner(downloadTasks, {concurrent: 5, topLevel: false});
+                return task.newListr(downloadTasks, {
+                    renderer: (ctx.options.verbose) ? 'verbose' : SmartRenderer,
+                    concurrent: 5
+                });
             }
         });
 
@@ -1004,10 +1008,13 @@ class AssetScraper {
          */
         tasks.push({
             title: 'Fixing asset references',
-            task: async () => {
+            task: async (ctx, task) => { // eslint-disable-line no-shadow
                 const updateRefTasks = this.updateReferences();
                 // NOTE: This should always run one task at a time, otherwise some replacements could fail
-                return makeTaskRunner(updateRefTasks, {concurrent: false, topLevel: false});
+                return task.newListr(updateRefTasks, {
+                    renderer: (ctx.options.verbose) ? 'verbose' : SmartRenderer,
+                    concurrent: 1
+                });
             }
         });
 
