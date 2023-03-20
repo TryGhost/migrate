@@ -177,7 +177,7 @@ class WebScraper {
 
                         post.metaData = {responseUrl, responseData};
                     } catch (error) {
-                        ctx.errors.push(error);
+                        ctx.logger.error({message: 'Error fetching metadata', err: error});
                         throw error;
                     }
                 }
@@ -217,7 +217,7 @@ class WebScraper {
                             task.title = responseUrl;
                         }
                     } catch (error) {
-                        ctx.errors.push(error);
+                        ctx.logger.error({message: 'Error applying metadata', err: error});
                         throw error;
                     }
                 }
@@ -256,7 +256,7 @@ class WebScraper {
                             task.title = responseUrl;
                         }
                     } catch (error) {
-                        ctx.errors.push(error);
+                        ctx.logger.error({message: 'Error hydrating metadata', err: error});
                         throw error;
                     }
                 }
