@@ -120,6 +120,10 @@ const setup = (sywac) => {
         defaultValue: false,
         desc: 'Trust self-signed certificates (such as for local installs)'
     });
+    sywac.string('--tmpPath', {
+        defaultValue: null,
+        desc: 'Specify the full path where the temporary files will be stored (Defaults a hidden tmp dir)'
+    });
     sywac.boolean('--cache', {
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'

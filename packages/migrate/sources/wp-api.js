@@ -121,7 +121,10 @@ const initialize = (options, logger) => {
             };
 
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-            ctx.fileCache = new fsUtils.FileCache(options.url, {batchName: options.batch});
+            ctx.fileCache = new fsUtils.FileCache(options.url, {
+                tmpPath: options.tmpPath,
+                batchName: options.batch
+            });
             ctx.wpScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
             ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
                 sizeLimit: ctx.options.sizeLimit,
