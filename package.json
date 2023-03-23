@@ -12,6 +12,7 @@
   ],
   "scripts": {
     "dev": "NODE_ENV=development migrate",
+    "dev:morememory": "NODE_OPTIONS=\"--max-old-space-size=8192\" NODE_ENV=development migrate",
     "dev:debug": "DEBUG_COLORS=true DEBUG=@tryghost*,migrate:* NODE_ENV=development migrate",
     "migrate": "migrate",
     "presetup": "yarn",
