@@ -108,6 +108,7 @@ class WebScraper {
         try {
             const reqOpts = {
                 url: url,
+                timeout: 10000,
                 headers: {
                     'user-agent': 'Crawler/1.0'
                 }
