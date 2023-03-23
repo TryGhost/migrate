@@ -435,6 +435,10 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             src = $(el).attr('data-instgrm-permalink');
         }
 
+        if (!src) {
+            return;
+        }
+
         let parsed = url.parse(src);
 
         if (parsed.search) {
