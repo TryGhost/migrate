@@ -837,15 +837,11 @@ class AssetScraper {
                 return false;
             }
 
-            if (!item.head.contentLength || item.head.contentLength === 0) {
-                return false;
-            }
-
             if (!this.isAllowedMime(item.head.contentType)) {
                 return false;
             }
 
-            if (!this.isWithinSizeLimit(item)) {
+            if (item.head.contentLength && !this.isWithinSizeLimit(item)) {
                 return false;
             }
 
@@ -883,6 +879,21 @@ class AssetScraper {
 
                             imageOptions.storagePath = imageOptions.storagePath.replace(base, base.substring(0, 200));
                             imageOptions.outputPath = imageOptions.outputPath.replace(base, base.substring(0, 200));
+
+                            // Skip saving if file size is larger than allowed
+                            let bufferSize = newFile.response.body.toString().length;
+                            if (bufferSize > this.defaultOptions.sizeLimit) {
+                                this.warnings.push({
+                                    message: `File is larger than allowed`,
+                                    context: src,
+                                    slug: item.postContext?.slug || null,
+                                    details: `This file size is ${prettyBytes(bufferSize)}, the maximum file size is ${prettyBytes(this.defaultOptions.sizeLimit)}`
+                                });
+
+                                this.logger.warn({message: `File is larger than allowed ${src} (This bytes: ${bufferSize} / Max bytes: ${this.defaultOptions.sizeLimit})`});
+
+                                return false;
+                            }
 
                             let newLocal = await this.fileCache.writeContentFile(newFile.response.body, imageOptions);
                             item.newLocal = newLocal;
