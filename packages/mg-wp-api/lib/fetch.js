@@ -61,7 +61,7 @@ const cachedFetch = async (fileCache, api, type, limit, page, isAuthRequest) => 
     return response;
 };
 
-const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest) => {
+const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest, logger) => {
     for (let page = 1; page <= api.batches[type]; page++) {
         tasks.push({
             title: `Fetching ${type}, page ${page} of ${api.batches[type]}`,
@@ -73,9 +73,9 @@ const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest) => {
                     let resultType = (type !== 'users') ? 'posts' : type;
 
                     ctx.result[resultType] = ctx.result[resultType].concat(response);
-                } catch (error) {
-                    ctx.errors.push(error);
-                    throw error;
+                } catch (err) {
+                    logger.error({message: `Failed to fetch ${type}, page ${page} of ${api.batches[type]}`, err});
+                    throw err;
                 }
             }
         });
@@ -83,6 +83,7 @@ const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest) => {
 };
 
 const tasks = async (url, ctx) => {
+    const {logger} = ctx;
     const {apiUser} = ctx || {};
     const {limit} = ctx.options;
     const {cpt} = ctx.options;
@@ -106,17 +107,17 @@ const tasks = async (url, ctx) => {
         users: []
     };
 
-    buildTasks(ctx.fileCache, theTasks, api, 'posts', limit, isAuthRequest);
-    buildTasks(ctx.fileCache, theTasks, api, 'pages', limit, isAuthRequest);
+    buildTasks(ctx.fileCache, theTasks, api, 'posts', limit, isAuthRequest, logger);
+    buildTasks(ctx.fileCache, theTasks, api, 'pages', limit, isAuthRequest, logger);
 
     // If users were already supplied, don't fetch them
     if (!usersJSON) {
-        buildTasks(ctx.fileCache, theTasks, api, 'users', limit, isAuthRequest);
+        buildTasks(ctx.fileCache, theTasks, api, 'users', limit, isAuthRequest, logger);
     }
 
     if (cpt) {
         cpt.forEach((cptSlug) => {
-            buildTasks(ctx.fileCache, theTasks, api, `${cptSlug}`, limit, isAuthRequest);
+            buildTasks(ctx.fileCache, theTasks, api, `${cptSlug}`, limit, isAuthRequest, logger);
         });
     }
 
