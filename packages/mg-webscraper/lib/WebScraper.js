@@ -177,9 +177,9 @@ class WebScraper {
                         let responseData = response.responseData || {};
 
                         post.metaData = {responseUrl, responseData};
-                    } catch (error) {
-                        ctx.logger.error({message: 'Error fetching metadata', err: error});
-                        throw error;
+                    } catch (err) {
+                        ctx.logger.error({message: `Error fetching metadata ${url}`, err});
+                        throw err;
                     }
                 }
             };
@@ -217,9 +217,9 @@ class WebScraper {
                             post.url = responseUrl;
                             task.title = responseUrl;
                         }
-                    } catch (error) {
-                        ctx.logger.error({message: 'Error applying metadata', err: error});
-                        throw error;
+                    } catch (err) {
+                        ctx.logger.error({message: `Error applying metadata for ${url}`, err});
+                        throw err;
                     }
                 }
             };
@@ -256,9 +256,9 @@ class WebScraper {
                             post.url = responseUrl;
                             task.title = responseUrl;
                         }
-                    } catch (error) {
-                        ctx.logger.error({message: 'Error hydrating metadata', err: error});
-                        throw error;
+                    } catch (err) {
+                        ctx.logger.error({message: `Error hydrating metadata for ${url}`, err});
+                        throw err;
                     }
                 }
             };
