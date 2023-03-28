@@ -1,44 +1,31 @@
-export default (json) => {
+export default (json, ctx = null) => {
     json.posts.forEach((item, index) => {
         let input = item.data;
 
-        // String length data from https://github.com/TryGhost/Ghost/blob/main/core/server/data/schema/schema.js
-        // @TODO: log some sort of warning for things like this?
+        // String length data from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/server/data/schema/schema.js
+        let properties = {
+            slug: 191,
+            custom_excerpt: 300,
+            og_title: 300,
+            og_description: 500,
+            twitter_title: 300,
+            twitter_description: 500,
+            meta_title: 300,
+            meta_description: 500,
+            email_subject: 300,
+            feature_image_alt: 125
+        };
 
-        if (input.custom_excerpt && input.custom_excerpt.length > 300) {
-            input.custom_excerpt = input.custom_excerpt.substring(0, 300);
-        }
+        for (const [propKey, propValue] of Object.entries(properties)) {
+            if (input[propKey] && input[propKey].length > propValue) {
+                let truncated = input[propKey].substring(0, propValue);
 
-        if (input.og_title && input.og_title.length > 300) {
-            input.og_title = input.og_title.substring(0, 300);
-        }
+                if (ctx && ctx.logger) {
+                    ctx.logger.warn({message: `${propKey} "${input[propKey]}" is longer than ${propValue} characters, truncating to "${truncated}"`});
+                }
 
-        if (input.og_description && input.og_description.length > 500) {
-            input.og_description = input.og_description.substring(0, 500);
-        }
-
-        if (input.twitter_title && input.twitter_title.length > 300) {
-            input.twitter_title = input.twitter_title.substring(0, 300);
-        }
-
-        if (input.twitter_description && input.twitter_description.length > 500) {
-            input.twitter_description = input.twitter_description.substring(0, 500);
-        }
-
-        if (input.meta_title && input.meta_title.length > 300) {
-            input.meta_title = input.meta_title.substring(0, 300);
-        }
-
-        if (input.meta_description && input.meta_description.length > 500) {
-            input.meta_description = input.meta_description.substring(0, 500);
-        }
-
-        if (input.email_subject && input.email_subject.length > 300) {
-            input.email_subject = input.email_subject.substring(0, 300);
-        }
-
-        if (input.feature_image_alt && input.feature_image_alt.length > 125) {
-            input.feature_image_alt = input.feature_image_alt.substring(0, 125);
+                input[propKey] = truncated;
+            }
         }
 
         json.posts[index].data = input;
