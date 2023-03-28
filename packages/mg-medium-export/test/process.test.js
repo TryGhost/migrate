@@ -42,10 +42,10 @@ expect.extend({
 });
 
 describe('Process', function () {
-    it('Can process a basic medium post', function () {
+    it('Can process a basic medium post', async function () {
         const fixture = readSync('basic-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
-        const post = processPost(fakeName, fixture);
+        const post = await processPost(fakeName, fixture);
 
         expect(post).toBeMediumMetaObject();
 
@@ -85,10 +85,10 @@ describe('Process', function () {
         expect(post.data.tags[2].data.name).toEqual('#medium');
     });
 
-    it('Can process a draft medium post', function () {
+    it('Can process a draft medium post', async function () {
         const fixture = readSync('draft-post.html');
         const fakeName = 'draft_blog-post-title-ababab121212.html';
-        const post = processPost(fakeName, fixture);
+        const post = await processPost(fakeName, fixture);
 
         expect(post).toBeMediumMetaObject();
 
@@ -110,10 +110,10 @@ describe('Process', function () {
         expect(post.data.author).not.toBeDefined();
     });
 
-    it('Can do advanced content processing on medium posts', function () {
+    it('Can do advanced content processing on medium posts', async function () {
         const fixture = readSync('advanced-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
-        const post = processPost(fakeName, fixture);
+        const post = await processPost(fakeName, fixture);
 
         expect(post).toBeMediumMetaObject();
 
@@ -144,10 +144,10 @@ describe('Process', function () {
         expect(post.data.tags[3].data.name).toEqual('#auto-feature-image');
     });
 
-    it('Can process blockquotes', function () {
+    it('Can process blockquotes', async function () {
         const fixture = readSync('quote-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
-        const post = processPost(fakeName, fixture);
+        const post = await processPost(fakeName, fixture);
 
         expect(post).toBeMediumMetaObject();
 

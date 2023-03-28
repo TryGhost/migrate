@@ -2,6 +2,7 @@ import $ from 'cheerio';
 import {formatISO} from 'date-fns';
 import string from '@tryghost/string';
 import processContent from './process-content.js';
+import axios from 'axios';
 
 const sectionTags = ['aside', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'img'];
 
@@ -121,7 +122,56 @@ const processFeatureImage = (html, post) => {
     return $html.html().trim();
 };
 
-export default (name, html, globalUser) => {
+const getHtmlFromUrl = async (urlString) => {
+    try {
+        const {status, data, headers} = await axios.get(urlString);
+
+        if (status >= 300 && status < 400 && headers.location) {
+            // If the response status code is a redirect, follow it recursively.
+            const newURL = `https://medium.com${headers.location}`;
+            return getHtmlFromUrl(newURL);
+        }
+
+        if (status !== 200) {
+            return '';
+        }
+
+        return data;
+    } catch (error) {
+        return '';
+    }
+};
+
+const getTagsFromHtmlFromUrl = async (url) => {
+    const html = await getHtmlFromUrl(url);
+
+    const $htmlContent = $.load(html, {
+        decodeEntities: false
+    });
+
+    const links = $htmlContent('a[href^="/tag/"]');
+
+    const tags = links
+        .map((el, index) => {
+            const href = $(index).attr('href');
+            const tagName = $(index).text();
+            const tagMatch = href.match(/^\/tag\/([^?]+)/);
+            const tagSlug = tagMatch ? tagMatch[1] : '';
+
+            return {
+                url: '/tag/' + tagSlug,
+                data: {
+                    name: tagName,
+                    slug: tagSlug
+                }
+            };
+        })
+        .get();
+
+    return tags;
+};
+
+export default async (name, html, globalUser) => {
     const $post = $.load(html, {
         decodeEntities: false
     });
@@ -143,7 +193,7 @@ export default (name, html, globalUser) => {
     if ($post('.p-tags a').length) {
         post.data.tags = processTags($post('.p-tags a'));
     } else {
-        post.data.tags = [];
+        post.data.tags = await getTagsFromHtmlFromUrl(post.url);
     }
 
     post.data.tags.push({

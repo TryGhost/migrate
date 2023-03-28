@@ -149,7 +149,7 @@ const getTaskRunner = (options, logger) => {
                 // 1. Read the zip file
                 ctx.timings.readContent = Date.now();
                 try {
-                    ctx.result = mediumIngest(options.pathToZip, options);
+                    ctx.result = await mediumIngest(options.pathToZip, options);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'medium-export-data.json');
                 } catch (error) {
                     ctx.logger.error({message: 'Failed to read Medium ZIP file', error});
