@@ -211,7 +211,7 @@ const getTaskRunner = (options, logger) => {
                 // 4. Format the data as a valid Ghost JSON file
                 ctx.timings.formatDataAsGhost = Date.now();
                 try {
-                    ctx.result = toGhostJSON(ctx.result, ctx.options);
+                    ctx.result = toGhostJSON(ctx.result, ctx.options, ctx);
                 } catch (error) {
                     ctx.logger.error({message: 'Failed to format data as Ghost JSON', error});
                     throw error;
