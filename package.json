@@ -24,7 +24,7 @@
     "ship": "lerna publish"
   },
   "devDependencies": {
-    "@tryghost/errors": "1.2.20",
+    "@tryghost/errors": "1.2.22",
     "eslint": "8.36.0",
     "eslint-plugin-ghost": "2.16.0",
     "jest": "29.5.0",
