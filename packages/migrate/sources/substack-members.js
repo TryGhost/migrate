@@ -35,7 +35,8 @@ const getTaskRunner = (options, logger) => {
                 // 0. Prep a file cache for the work we are about to do.
                 ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(options.pathToFile);
                 ctx.fileCache = new fsUtils.FileCache(`substack-members-${ctx.options.cacheName}`, {
-                    tmpPath: ctx.options.tmpPath
+                    tmpPath: ctx.options.tmpPath,
+                    contentDir: false
                 });
 
                 task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
