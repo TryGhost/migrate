@@ -26,9 +26,9 @@
     "jest-extended": "3.2.4"
   },
   "dependencies": {
-    "@tryghost/errors": "^1.2.14",
-    "@tryghost/mg-fs-utils": "^0.12.8",
-    "@tryghost/string": "^0.2.0",
+    "@tryghost/errors": "1.2.14",
+    "@tryghost/mg-fs-utils": "0.12.8",
+    "@tryghost/string": "0.2.0",
     "cheerio": "0.22.0",
     "front-matter": "4.0.2",
     "markdown-it": "13.0.1"

@@ -28,7 +28,7 @@
     "@tryghost/debug": "0.1.21",
     "@tryghost/errors": "1.2.20",
     "@tryghost/kg-default-cards": "6.0.5",
-    "@tryghost/mg-fs-utils": "^0.12.8",
+    "@tryghost/mg-fs-utils": "0.12.8",
     "@tryghost/string": "0.2.2",
     "date-fns": "2.29.3",
     "html-entities": "2.3.3",

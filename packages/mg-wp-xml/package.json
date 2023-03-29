@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@tryghost/errors": "1.2.20",
-    "@tryghost/mg-wp-api": "^0.10.8",
+    "@tryghost/mg-wp-api": "0.10.8",
     "cheerio": "0.22.0",
     "date-fns": "2.29.3",
     "markdown-it": "13.0.1"

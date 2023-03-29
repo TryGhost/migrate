@@ -27,13 +27,13 @@
   "dependencies": {
     "@tryghost/debug": "0.1.22",
     "@tryghost/errors": "1.2.20",
-    "@tryghost/mg-fs-utils": "^0.12.8",
-    "@tryghost/mg-shortcodes": "^0.2.3",
-    "@tryghost/mg-webscraper": "^0.9.4",
+    "@tryghost/mg-fs-utils": "0.12.8",
+    "@tryghost/mg-shortcodes": "0.2.3",
+    "@tryghost/mg-webscraper": "0.9.4",
     "@tryghost/string": "0.2.2",
     "cheerio": "0.22.0",
     "date-fns": "2.29.3",
     "html-to-text": "9.0.5",
-    "wpapi": "^1.2.1"
+    "wpapi": "1.2.1"
   }
 }
