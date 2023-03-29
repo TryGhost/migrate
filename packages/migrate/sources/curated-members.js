@@ -28,7 +28,7 @@ const getTaskRunner = (options) => {
                 ctx.options = options;
 
                 // 0. Prep a file cache for the work we are about to do.
-                ctx.fileCache = new fsUtils.FileCache(options.pathToFile, {contentDir: false});
+                ctx.fileCache = new fsUtils.FileCache(options.pathToFile);
 
                 task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
             }
