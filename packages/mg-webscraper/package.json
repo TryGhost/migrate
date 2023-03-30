@@ -25,10 +25,10 @@
     "jest-extended": "3.2.4"
   },
   "dependencies": {
-    "@tryghost/errors": "1.2.20",
-    "@tryghost/string": "0.2.2",
+    "@tryghost/errors": "1.2.22",
+    "@tryghost/string": "0.2.4",
     "lodash": "4.17.21",
-    "omit-empty": "^1.0.0",
+    "omit-empty": "1.0.0",
     "scrape-it": "5.3.2"
   }
 }

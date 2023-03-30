@@ -4,12 +4,12 @@ import processPostRelations from './process-post-relations.js';
 import validate from './validate.js';
 import reorderTags from './reorder-tags.js';
 
-export default (input, options = {}) => {
+export default (input, options = {}, ctx) => {
     // Construct a basic Ghost JSON template
     let output = baseTemplate();
 
     // Validate data and potentially alter if needed
-    input = validate(input);
+    input = validate(input, ctx);
 
     // Reorder tags so #internal-tags appear last
     input = reorderTags(input);

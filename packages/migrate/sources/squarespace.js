@@ -71,12 +71,13 @@ const skipScrape = (post) => {
  * @param {String} pathToFile
  * @param {Object} options
  */
-const getTaskRunner = (options) => {
+const getTaskRunner = (options, logger) => {
     let runnerTasks = [
         {
             title: 'Initializing',
             task: (ctx, task) => {
                 ctx.options = options;
+                ctx.logger = logger;
                 ctx.allowScrape = {
                     all: ctx.options.scrape.includes('all'),
                     images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),
@@ -139,7 +140,7 @@ const getTaskRunner = (options) => {
             task: (ctx) => {
                 // 4. Format the data as a valid Ghost JSON file
                 try {
-                    ctx.result = toGhostJSON(ctx.result, ctx.options);
+                    ctx.result = toGhostJSON(ctx.result, ctx.options, ctx, ctx);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;

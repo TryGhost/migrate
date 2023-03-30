@@ -71,12 +71,13 @@ const processContent = (post, siteUrl, options) => {
     const {substackPodcastURL, metaData} = post;
     const responseData = metaData?.responseData || {};
 
-    let html = post.data.html;
+    let html = post.data?.html;
 
     // If there's no HTML, exit & return an empty string to avoid errors
     if (!html) {
         debug(`Post ${post.data.slug} has no HTML content`);
-        return '';
+        post.data.html = '';
+        return post;
     }
 
     // As there is HTML, pass it to Cheerio inside a `<body>` tag so we have a global wrapper to target later on

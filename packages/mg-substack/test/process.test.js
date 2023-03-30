@@ -281,6 +281,18 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
 });
 
 describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
+    test('Returns post object if no HTML present', async function () {
+        const post = {
+            data: {}
+        };
+        const url = 'https://example.com';
+        const options = {};
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).toEqual('');
+    });
+
     test('Can transform subscribe links with custom defined URL', async function () {
         const post = {
             data: {

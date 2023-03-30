@@ -148,7 +148,7 @@ const getTaskRunner = (options) => {
             task: (ctx) => {
                 // 4. Format the data as a valid Ghost JSON file
                 try {
-                    ctx.result = toGhostJSON(ctx.result, ctx.options);
+                    ctx.result = toGhostJSON(ctx.result, ctx.options, ctx);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;
