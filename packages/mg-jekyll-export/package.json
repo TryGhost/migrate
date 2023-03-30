@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-jekyll-export",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "tbc",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-jekyll-export",
   "author": "Ghost Foundation",
@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@tryghost/errors": "1.2.22",
-    "@tryghost/mg-fs-utils": "0.12.8",
+    "@tryghost/mg-fs-utils": "^0.12.9",
     "@tryghost/string": "0.2.4",
     "cheerio": "0.22.0",
     "front-matter": "4.0.2",
