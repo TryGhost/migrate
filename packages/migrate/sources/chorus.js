@@ -47,7 +47,7 @@ const initialize = (options, logger) => {
 
             // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
             ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(ctx.options.url);
-            ctx.fileCache = new fsUtils.FileCache(`lettedrop-${ctx.options.cacheName}`, {
+            ctx.fileCache = new fsUtils.FileCache(`chorus-${ctx.options.cacheName}`, {
                 tmpPath: ctx.options.tmpPath
             });
             ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig);
