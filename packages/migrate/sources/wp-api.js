@@ -107,6 +107,7 @@ const postProcessor = (scrapedData, data, options) => {
 
 const initialize = (options, logger) => {
     logger.info({message: 'Initialize migration'});
+
     return {
         title: 'Initializing Workspace',
         task: (ctx, task) => {
