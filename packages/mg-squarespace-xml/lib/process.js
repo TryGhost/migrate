@@ -129,7 +129,8 @@ const processTags = ($sqCategories, fetchTags) => {
     return categories.concat(tags);
 };
 
-const processPost = ($sqPost, users, {addTag, tags: fetchTags, url}) => {
+const processPost = ($sqPost, users, options) => {
+    const {addTag, tags: fetchTags, url} = options;
     const postType = $($sqPost).children('wp\\:post_type').text();
 
     // only grab posts and pages
@@ -137,6 +138,8 @@ const processPost = ($sqPost, users, {addTag, tags: fetchTags, url}) => {
         const featureImage = processFeatureImage($sqPost);
         const authorSlug = slugify($($sqPost).children('dc\\:creator').text());
         let postSlug = $($sqPost).children('link').text();
+        postSlug = postSlug.replace(/(\.html)/i, '');
+        postSlug = postSlug.split('/').pop();
 
         if (!postSlug || postSlug.indexOf('null') >= 0) {
             // drafts can have a post slug/link of `/null`
@@ -151,7 +154,7 @@ const processPost = ($sqPost, users, {addTag, tags: fetchTags, url}) => {
         const post = {
             url: `${url}${$($sqPost).children('link').text()}`,
             data: {
-                slug: $($sqPost).children('wp\\:post_name').text().replace(/(\.html)/i, ''),
+                slug: postSlug,
                 title: postTitle,
                 status: $($sqPost).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
                 published_at: postDate,

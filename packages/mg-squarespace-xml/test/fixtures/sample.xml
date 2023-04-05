@@ -153,5 +153,15 @@
       <wp:post_id>135</wp:post_id>
       <wp:status>publish</wp:status>
     </item>
+    <item>
+      <link>/blog2023/04/05/my-dated-post.html</link>
+      <title />
+      <pubDate>Wed, 05 Apr 2023 14:42:38 +0000</pubDate>
+      <content:encoded><![CDATA[<p>My content.</p>]]></content:encoded>
+      <wp:post_name>blog2023/04/05/my-dated-post</wp:post_name>
+      <wp:post_type>post</wp:post_type>
+      <wp:post_id>146</wp:post_id>
+      <wp:status>publish</wp:status>
+    </item>
   </channel>
 </rss>

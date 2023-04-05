@@ -166,9 +166,10 @@ describe('Process', function () {
         const input = await readSync('sample.xml');
         const processed = await process.all(input, ctx);
 
-        expect(processed.posts).toBeArrayOfSize(2);
+        expect(processed.posts).toBeArrayOfSize(3);
         expect(processed.posts[0].data.type).toEqual('post');
         expect(processed.posts[1].data.type).toEqual('post');
+        expect(processed.posts[2].data.type).toEqual('post');
     });
 
     test('Can only convert pages', async function () {
@@ -228,5 +229,22 @@ describe('Process', function () {
         expect(tags[0].data.name).toEqual('#sqs');
         expect(tags[1].url).toEqual('migrator-added-tag-no-title');
         expect(tags[1].data.name).toEqual('#no-title');
+    });
+
+    test('Will clean up post slugs', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                posts: true,
+                pages: false
+            }
+        };
+        const input = await readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+
+        const post = processed.posts[2];
+        const data = post.data;
+
+        expect(data.slug).toEqual('my-dated-post');
     });
 });
