@@ -115,7 +115,7 @@ class WebScraper {
             };
             let {data} = await scrapeIt(reqOpts, config);
 
-            return {responseData: data};
+            return {requestURL: url, responseData: data};
         } catch (error) {
             if (error.errorType === 'ScrapeError') {
                 throw error;
