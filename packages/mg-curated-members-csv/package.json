@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-curated-members-csv",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-curated-members-csv",
   "author": "Ghost Foundation",
   "license": "MIT",
