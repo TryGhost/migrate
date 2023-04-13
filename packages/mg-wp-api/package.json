@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@tryghost/debug": "0.1.24",
-    "@tryghost/errors": "1.2.22",
+    "@tryghost/errors": "1.2.24",
     "@tryghost/mg-fs-utils": "^0.12.9",
     "@tryghost/mg-shortcodes": "0.2.3",
     "@tryghost/mg-webscraper": "^0.9.5",
