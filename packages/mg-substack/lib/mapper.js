@@ -15,6 +15,8 @@ const mapConfig = (data, {url, email, useMetaAuthor, addTag}) => {
     const typeSlug = slugify(data.type);
     const visibilitySlug = slugify(data.audience);
 
+    const contentType = (typeSlug === 'page') ? 'page' : 'post';
+
     const mappedData = {
         url: `${url}/p/${slug}`,
         substackId: data.post_id,
@@ -26,7 +28,7 @@ const mapConfig = (data, {url, email, useMetaAuthor, addTag}) => {
             created_at: data.post_date || dateNow,
             title: data.title || slug,
             custom_excerpt: data.subtitle,
-            type: 'post',
+            type: contentType,
             html: data.html || null,
             status: data.is_published.toLowerCase() === `true` ? 'published' : 'draft',
             visibility: data.audience === 'only_paid' ? 'paid' : data.audience === 'only_free' ? 'members' : 'public',
@@ -133,6 +135,11 @@ export default async (input, options) => {
     if (!options.drafts) {
         debug(`Ignoring drafts`);
         input = input.filter(data => data.is_published.toLowerCase() === `true`);
+    }
+
+    if (!options.pages) {
+        debug(`Ignoring pages`);
+        input = input.filter(data => data.type.toLowerCase() !== `page`);
     }
 
     if (!options.threads) {

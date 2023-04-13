@@ -80,9 +80,15 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--pages',
+        defaultValue: true,
+        desc: 'Import pages'
+    },
+    {
+        type: 'boolean',
         flags: '--threads',
         defaultValue: false,
-        desc: 'Import thread posts'
+        desc: 'Import threads'
     },
     {
         type: 'boolean',

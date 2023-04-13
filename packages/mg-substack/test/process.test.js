@@ -34,27 +34,37 @@ describe('Process Substack ZIP file', function () {
             options: {
                 pathToZip: inputZipPath,
                 drafts: true,
+                pages: true,
                 url: 'https://example.substack.com',
                 email: 'exampleuser@email.com'
             }
         });
 
-        expect(processed.posts).toBeArrayOfSize(3);
+        expect(processed.posts).toBeArrayOfSize(4);
 
         expect(processed.posts[0].url).toEqual('https://example.substack.com/p/plain-text');
         expect(processed.posts[0].substackId).toEqual('123401.plain-text');
         expect(processed.posts[0].substackPodcastURL).toEqual(false);
         expect(processed.posts[0].data.slug).toEqual('plain-text');
+        expect(processed.posts[0].data.type).toEqual('post');
 
         expect(processed.posts[1].url).toEqual('https://example.substack.com/p/podcast');
         expect(processed.posts[1].substackId).toEqual('123402.podcast');
         expect(processed.posts[1].substackPodcastURL).toEqual('https://example.com/my-audio/file.mp3');
         expect(processed.posts[1].data.slug).toEqual('podcast');
+        expect(processed.posts[1].data.type).toEqual('post');
 
         expect(processed.posts[2].url).toEqual('https://example.substack.com/p/draft-text');
         expect(processed.posts[2].substackId).toEqual('123404.draft-text');
         expect(processed.posts[2].substackPodcastURL).toEqual(false);
         expect(processed.posts[2].data.slug).toEqual('draft-text');
+        expect(processed.posts[2].data.type).toEqual('post');
+
+        expect(processed.posts[3].url).toEqual('https://example.substack.com/p/about-us');
+        expect(processed.posts[3].substackId).toEqual('123404.about-us');
+        expect(processed.posts[3].substackPodcastURL).toEqual(false);
+        expect(processed.posts[3].data.slug).toEqual('about-us');
+        expect(processed.posts[3].data.type).toEqual('page');
     });
 });
 
@@ -86,6 +96,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 drafts: true,
+                pages: false,
                 url: 'https://example.substack.com',
                 email: 'exampleuser@email.com'
             }
@@ -145,6 +156,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 drafts: true,
+                pages: false,
                 url: 'https://example.substack.com'
             }
         };
@@ -178,6 +190,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 drafts: true,
+                pages: false,
                 url: 'https://example.substack.com',
                 email: 'exampleuser@email.com'
             }
@@ -196,6 +209,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 drafts: true,
+                pages: false,
                 url: 'https://example.substack.com',
                 email: 'exampleuser@email.com',
                 postsBefore: 'January 20, 2021'
@@ -211,6 +225,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 drafts: true,
+                pages: false,
                 url: 'https://example.substack.com',
                 email: 'exampleuser@email.com',
                 postsAfter: 'January 20, 2019',
@@ -227,6 +242,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 drafts: true,
+                pages: false,
                 url: 'https://example.substack.com',
                 email: 'exampleuser@email.com',
                 postsAfter: 'August 12, 2022'
@@ -242,6 +258,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 drafts: true,
+                pages: false,
                 threads: true,
                 url: 'https://example.substack.com',
                 email: 'exampleuser@email.com'
@@ -256,7 +273,8 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 url: 'https://example.substack.com',
-                addTag: 'Hello World'
+                addTag: 'Hello World',
+                pages: false
             }
         };
         const mapped = await map(postDataFromFixtures, ctx.options);
@@ -277,6 +295,18 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         expect(tag3.url).toEqual('migrator-added-tag');
         expect(tag3.data.name).toEqual('#substack');
         expect(tag3.data.slug).toEqual('hash-substack');
+    });
+
+    test('Can migrate pages', async function () {
+        const ctx = {
+            options: {
+                url: 'https://example.substack.com',
+                pages: true
+            }
+        };
+        const mapped = await map(postDataFromFixtures, ctx.options);
+
+        console.log(mapped);
     });
 });
 

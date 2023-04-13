@@ -64,8 +64,11 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--drafts`** 
     - Import draft posts
     - bool - default: `true`
+- **`--pages`** 
+    - Import pages
+    - bool - default: `true`
 - **`--threads`** 
-    - Import thread posts
+    - Import threads
     - bool - default: `false`
 - **`--subscribeLink`** 
     - Provide a path that existing `/subscribe` anchors will link to e.g. `/join-us` or `#/portal/signup` (`#` characters need to be escaped with a `\`)
