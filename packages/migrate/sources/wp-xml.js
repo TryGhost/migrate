@@ -79,12 +79,15 @@ const skipScrape = (post) => {
  * @param {String} pathToFile
  * @param {Object} options
  */
-const getTaskRunner = (options) => {
+const getTaskRunner = (options, logger) => {
+    logger.info({message: 'Initialize migration'});
+
     let runnerTasks = [
         {
             title: 'Initializing',
             task: (ctx, task) => {
                 ctx.options = options;
+                ctx.logger = logger;
                 ctx.allowScrape = {
                     all: ctx.options.scrape.includes('all'),
                     images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),

@@ -66,17 +66,22 @@ describe('Process', function () {
 
         const authors = data.authors;
 
-        expect(authors).toBeArrayOfSize(2);
+        expect(authors).toBeArrayOfSize(3);
 
-        expect(authors[0].url).toEqual('/author/author-name');
-        expect(authors[0].data.email).toEqual('author-name@example.com');
-        expect(authors[0].data.slug).toEqual('author-name');
-        expect(authors[0].data.name).toEqual('Author Name');
+        expect(authors[0].url).toEqual('/author/main-author-name');
+        expect(authors[0].data.email).toEqual('main-author-name@example.com');
+        expect(authors[0].data.slug).toEqual('main-author-name');
+        expect(authors[0].data.name).toEqual('Main Author Name');
 
-        expect(authors[1].url).toEqual('/author/contributors-name');
-        expect(authors[1].data.email).toEqual('contributors-name@example.com');
-        expect(authors[1].data.slug).toEqual('contributors-name');
-        expect(authors[1].data.name).toEqual('Contributors Name');
+        expect(authors[1].url).toEqual('/author/author-name');
+        expect(authors[1].data.email).toEqual('author-name@example.com');
+        expect(authors[1].data.slug).toEqual('author-name');
+        expect(authors[1].data.name).toEqual('Author Name');
+
+        expect(authors[2].url).toEqual('/author/contributors-name');
+        expect(authors[2].data.email).toEqual('contributors-name@example.com');
+        expect(authors[2].data.slug).toEqual('contributors-name');
+        expect(authors[2].data.name).toEqual('Contributors Name');
     });
 
     test('Can convert JSON to HTML', function () {

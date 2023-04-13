@@ -15,7 +15,6 @@ const mockConfig = {
     }
 };
 const mockResponse = {
-    responseUrl: mockUrl,
     responseData: {
         meta_title: 'title',
         meta_description: 'desc'
