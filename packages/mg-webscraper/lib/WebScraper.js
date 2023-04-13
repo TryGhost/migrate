@@ -113,12 +113,9 @@ class WebScraper {
                     'user-agent': 'Crawler/1.0'
                 }
             };
-            let {data, response} = await scrapeIt(reqOpts,config);
-            let {responseUrl, statusCode} = response;
-            if (statusCode > 399) {
-                throw ScrapeError({url, code: 'HTTPERROR', statusCode});
-            }
-            return {responseUrl, responseData: data};
+            let {data} = await scrapeIt(reqOpts, config);
+
+            return {responseData: data};
         } catch (error) {
             if (error.errorType === 'ScrapeError') {
                 throw error;
@@ -172,11 +169,8 @@ class WebScraper {
                 task: async (ctx) => { // eslint-disable-line no-shadow
                     try {
                         let response = await this.scrapeUrl(url, this.config.posts, filename, ctx.options.wait_after_scrape);
-
-                        let responseUrl = response.responseUrl || false;
                         let responseData = response.responseData || {};
-
-                        post.metaData = {responseUrl, responseData};
+                        post.metaData = {responseData};
                     } catch (err) {
                         ctx.logger.error({message: `Error fetching metadata ${url}`, err});
                         throw err;
@@ -206,17 +200,11 @@ class WebScraper {
                 skip: () => {
                     return this.skipFn ? this.skipFn(post) : false;
                 },
-                task: async (ctx, task) => { // eslint-disable-line no-shadow
+                task: async (ctx) => { // eslint-disable-line no-shadow
                     try {
-                        let {responseUrl, responseData} = post.metaData;
+                        let {responseData} = post.metaData;
 
                         this.processScrapedData(responseData, data, ctx.options);
-
-                        if (responseUrl !== url) {
-                            post.originalUrl = url;
-                            post.url = responseUrl;
-                            task.title = responseUrl;
-                        }
                     } catch (err) {
                         ctx.logger.error({message: `Error applying metadata for ${url}`, err});
                         throw err;
@@ -246,16 +234,10 @@ class WebScraper {
                 skip: () => {
                     return this.skipFn ? this.skipFn(post) : false;
                 },
-                task: async (ctx, task) => { // eslint-disable-line no-shadow
+                task: async (ctx) => { // eslint-disable-line no-shadow
                     try {
-                        let {responseUrl, responseData} = await this.scrapeUrl(url, this.config.posts, filename, ctx.options.wait_after_scrape);
+                        let {responseData} = await this.scrapeUrl(url, this.config.posts, filename, ctx.options.wait_after_scrape);
                         this.processScrapedData(responseData, data, ctx.options);
-
-                        if (responseUrl !== url) {
-                            post.originalUrl = url;
-                            post.url = responseUrl;
-                            task.title = responseUrl;
-                        }
                     } catch (err) {
                         ctx.logger.error({message: `Error hydrating metadata for ${url}`, err});
                         throw err;
