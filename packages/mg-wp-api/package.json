@@ -30,7 +30,7 @@
     "@tryghost/mg-fs-utils": "^0.12.9",
     "@tryghost/mg-shortcodes": "0.2.3",
     "@tryghost/mg-webscraper": "^0.9.5",
-    "@tryghost/string": "0.2.4",
+    "@tryghost/string": "0.2.5",
     "cheerio": "0.22.0",
     "date-fns": "2.29.3",
     "html-to-text": "9.0.5",
