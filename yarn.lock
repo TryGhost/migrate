@@ -1686,10 +1686,10 @@
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-2.0.0.tgz#f544a148d3ab35801c1f633a7441fd87c2e484bf"
   integrity sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==
 
-"@tryghost/admin-api@1.13.4":
-  version "1.13.4"
-  resolved "https://registry.yarnpkg.com/@tryghost/admin-api/-/admin-api-1.13.4.tgz#8a0a174db49d530b45169dab24f97ab15414f3c3"
-  integrity sha512-ibcn/TwetaDtIfj7tz3gnhiH9bPrItDtIrbHdYknwF6mjxL9mQ1bLYSkZ0f+y8za9MjHjdX7Opqdi1SgUWpM5w==
+"@tryghost/admin-api@1.13.5":
+  version "1.13.5"
+  resolved "https://registry.yarnpkg.com/@tryghost/admin-api/-/admin-api-1.13.5.tgz#464374f0b780873a1c93cf2ddbfad4e02407cd43"
+  integrity sha512-GbmpduZ8HQjtDbvMBc0hHvSpBw6q09RhfxbH2dVkgHV0fKUGFk3eM13l5SrZ73WLiXfcG4u7t/6hSDGd5xwrPg==
   dependencies:
     axios "^0.27.0"
     form-data "^4.0.0"
