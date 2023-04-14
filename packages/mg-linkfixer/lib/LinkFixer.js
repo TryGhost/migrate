@@ -87,6 +87,13 @@ class LinkFixer {
                     this.linkMap[tagUrl] = `/tag/${tagData.slug}/`;
                 });
             }
+
+            if (data.authors) {
+                data.authors.forEach((author) => {
+                    this.linkMap[author.url] = `/author/${author.data.slug}/`;
+                });
+            }
+
             if (data.author) {
                 this.linkMap[data.author.url] = `/author/${data.author.data.slug}/`;
             }

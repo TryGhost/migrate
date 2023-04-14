@@ -62,8 +62,8 @@ class WebScraper {
             let newItem = makeMetaObject(item);
             let matchedItem = findMatchIn(existing, newItem);
 
-            // if we find a match, copy data properties across
-            if (matchedItem) {
+            // if we find a match, and the existing data isn't an array, copy data properties across
+            if (matchedItem && !Array.isArray(existing)) {
                 _.each(newItem.data, (datum, key) => {
                     matchedItem.data[key] = datum;
                 });
