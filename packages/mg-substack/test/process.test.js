@@ -306,7 +306,10 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         };
         const mapped = await map(postDataFromFixtures, ctx.options);
 
-        console.log(mapped);
+        expect(mapped.posts).toBeArrayOfSize(3);
+        expect(mapped.posts[0].data.type).toEqual('post');
+        expect(mapped.posts[1].data.type).toEqual('post');
+        expect(mapped.posts[2].data.type).toEqual('page');
     });
 });
 
