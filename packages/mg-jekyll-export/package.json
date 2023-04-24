@@ -21,7 +21,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.38.0",
+    "eslint": "8.39.0",
     "jest": "29.5.0",
     "jest-extended": "3.2.4"
   },
