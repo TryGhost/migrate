@@ -611,7 +611,9 @@ class AssetScraper {
             });
 
             stream.on('error', (error) => {
-                req.destroy();
+                if (req) {
+                    req.destroy();
+                }
                 reject(error);
             });
         });
