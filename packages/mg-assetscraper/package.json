@@ -31,7 +31,7 @@
     "@tryghost/string": "0.2.5",
     "cheerio": "1.0.0-rc.12",
     "fast-replaceall": "1.0.2",
-    "file-type": "18.2.1",
+    "file-type": "18.3.0",
     "fs-extra": "11.1.1",
     "got": "11.8.6",
     "listr": "0.14.3",
