@@ -488,7 +488,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         '                </ul>');
     });
 
-    test('Can process footnotes in text content', async function () {
+    test('Can process footnotes in text content in old style', async function () {
         const post = {
             data: {
                 html: `<p>Lorem ipsum</p>
@@ -541,12 +541,62 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         '                \n' +
         '                <!--kg-card-begin: html--><div class="footnotes"><hr><ol><li id="footnote-1">\n' +
         '                        <p>Lorem ipsum</p>\n' +
-        '                        <p>Dolor simet <a href="#footnote-anchor-1" title="Jump back to footnote NaN in the text.">&#x21A9;</a></p>\n' +
+        '                        <p>Dolor simet <a href="#footnote-anchor-1" title="Jump back to footnote 1 in the text.">&#x21A9;</a></p>\n' +
         '                    </li><li id="footnote-2">\n' +
-        '                        <p>Consectetur adipiscing <a href="#footnote-anchor-2" title="Jump back to footnote NaN in the text.">&#x21A9;</a></p>\n' +
+        '                        <p>Consectetur adipiscing <a href="#footnote-anchor-2" title="Jump back to footnote 2 in the text.">&#x21A9;</a></p>\n' +
         '                    </li><li id="footnote-3">\n' +
-        '                        <p>Elit elementum venenatis <a href="#footnote-anchor-3" title="Jump back to footnote NaN in the text.">&#x21A9;</a></p>\n' +
+        '                        <p>Elit elementum venenatis <a href="#footnote-anchor-3" title="Jump back to footnote 3 in the text.">&#x21A9;</a></p>\n' +
         '                    </li></ol></div><!--kg-card-end: html-->');
+    });
+
+    test('Can process footnotes in text contentin new style', async function () {
+        const post = {
+            data: {
+                html: `<p>Lorem ipsum</p>
+                <p>Lorem ipsum<a class="footnote-anchor" id="footnote-anchor-1" href="#footnote-1">1</a>.</p>
+                    <p>Dolor simet</p>
+                    <p>Dolor simet <a class="footnote-anchor" id="footnote-anchor-2" href="#footnote-2">2</a>.</p>
+                    <p>Hello world</p>
+                    <p>Hello world. This<a class="footnote-anchor" id="footnote-anchor-3" href="#footnote-3">3</a> is new</p>
+            <div class="footnote"><a id="footnote-1" href="#footnote-anchor-1" class="footnote-number" contenteditable="false">2</a>
+                <div class="footnote-content">
+                    <p>Note content</p>
+                    <p>Two lines</p>
+                </div>
+            </div>
+            <div class="footnote"><a id="footnote-2" href="#footnote-anchor-2" class="footnote-number" contenteditable="false">3</a>
+                <div class="footnote-content">
+                    <p>More notes</p>
+                </div>
+            </div>
+            <div class="footnote"><a id="footnote-3" href="#footnote-anchor-3" class="footnote-number" contenteditable="false">4</a>
+                <div class="footnote-content">
+                    <p><a href="https://ghost.org">Link</a> in this one</p>
+                </div>
+            </div>`
+            }
+        };
+        const url = 'https://example.com';
+        const options = {};
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).toEqual('<p>Lorem ipsum</p>\n' +
+        '                <!--kg-card-begin: html--><p>Lorem ipsum<a class="footnote-anchor" id="footnote-anchor-1" href="#footnote-1">1</a>.</p><!--kg-card-end: html-->\n' +
+        '                    <p>Dolor simet</p>\n' +
+        '                    <!--kg-card-begin: html--><p>Dolor simet <a class="footnote-anchor" id="footnote-anchor-2" href="#footnote-2">2</a>.</p><!--kg-card-end: html-->\n' +
+        '                    <p>Hello world</p>\n' +
+        '                    <!--kg-card-begin: html--><p>Hello world. This<a class="footnote-anchor" id="footnote-anchor-3" href="#footnote-3">3</a> is new</p><!--kg-card-end: html-->\n' +
+        '            \n' +
+        '            \n' +
+        '            <!--kg-card-begin: html--><div class="footnotes"><hr><ol><li id="footnote-1">\n' +
+        '                    <p>Note content</p>\n' +
+        '                    <p>Two lines <a href="#footnote-anchor-1" title="Jump back to footnote 1 in the text.">&#x21A9;</a></p>\n' +
+        '                </li><li id="footnote-2">\n' +
+        '                    <p>More notes <a href="#footnote-anchor-2" title="Jump back to footnote 2 in the text.">&#x21A9;</a></p>\n' +
+        '                </li><li id="footnote-3">\n' +
+        '                    <p><a href="https://ghost.org">Link</a> in this one <a href="#footnote-anchor-3" title="Jump back to footnote 3 in the text.">&#x21A9;</a></p>\n' +
+        '                </li></ol></div><!--kg-card-end: html-->');
     });
 
     test('Can process embedded posts', async function () {

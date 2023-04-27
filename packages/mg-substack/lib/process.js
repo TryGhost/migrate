@@ -282,8 +282,15 @@ const processContent = (post, siteUrl, options) => {
     let footnotesCount = 0;
     $html('.footnote').each((i, el) => {
         let footnoteBodyAnchor = $(el).find('a').attr('href');
-        let footnoteID = $(el).attr('id');
-        let footnoteNumber = parseInt(footnoteID);
+
+        let footnoteID = null;
+        if ($(el).attr('id')) {
+            footnoteID = $(el).attr('id');
+        } else {
+            footnoteID = $(el).find('a').attr('id');
+        }
+
+        let footnoteNumber = footnoteID.replace('footnote-', '');
         let footnoteContent = $(el).find('.footnote-content');
 
         footnoteContent.find('p').last().append(` <a href="${footnoteBodyAnchor}" title="Jump back to footnote ${footnoteNumber} in the text.">↩</a>`);
