@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@tryghost/errors": "1.2.24",
-    "@tryghost/kg-default-cards": "9.0.0",
+    "@tryghost/kg-default-cards": "9.0.1",
     "cheerio": "0.22.0",
     "date-fns": "2.29.3",
     "simple-dom": "1.4.0"
