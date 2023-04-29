@@ -52,7 +52,7 @@
     "@tryghost/mg-webscraper": "^0.9.6",
     "@tryghost/mg-wp-api": "^0.10.10",
     "@tryghost/mg-wp-xml": "^0.3.10",
-    "@tryghost/pretty-cli": "1.2.36",
+    "@tryghost/pretty-cli": "1.2.37",
     "@tryghost/string": "0.2.5",
     "cheerio": "0.22.0",
     "fs-extra": "11.1.1",
