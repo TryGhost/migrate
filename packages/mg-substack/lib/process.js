@@ -367,6 +367,32 @@ const processContent = (post, siteUrl, options) => {
         $bookmark.after('<!--kg-card-end: html-->');
     });
 
+    $html('div.instagram').each((i, el) => {
+        let src = $(el).find('a.instagram-image').attr('href');
+
+        if (!src) {
+            return;
+        }
+
+        let parsed = url.parse(src);
+
+        if (parsed.search) {
+            // remove possible query params
+            parsed.search = null;
+        }
+        src = url.format(parsed, {search: false});
+
+        let $iframe = $('<iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;"></iframe>');
+        let $script = $('<script async="" src="//www.instagram.com/embed.js"></script>');
+        let $figure = $('<figure class="instagram"></figure>');
+
+        $iframe.attr('src', `${src}embed/captioned/`);
+        $figure.append($iframe);
+        $figure.append($script);
+
+        $(el).replaceWith($figure);
+    });
+
     // convert HTML back to a string
     html = $html('body').html();
 
