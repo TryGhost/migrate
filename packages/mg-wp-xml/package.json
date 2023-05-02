@@ -27,7 +27,7 @@
     "@tryghost/errors": "1.2.24",
     "@tryghost/mg-wp-api": "^0.10.10",
     "cheerio": "0.22.0",
-    "date-fns": "2.29.3",
+    "date-fns": "2.30.0",
     "markdown-it": "13.0.1"
   }
 }

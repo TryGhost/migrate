@@ -32,7 +32,7 @@
     "@tryghost/mg-webscraper": "^0.9.6",
     "@tryghost/string": "0.2.5",
     "cheerio": "0.22.0",
-    "date-fns": "2.29.3",
+    "date-fns": "2.30.0",
     "html-to-text": "9.0.5",
     "wpapi": "1.2.2"
   }
