@@ -27,7 +27,7 @@
   "dependencies": {
     "@tryghost/errors": "1.2.24",
     "cheerio": "0.22.0",
-    "date-fns": "2.29.3",
+    "date-fns": "2.30.0",
     "html-to-text": "9.0.5",
     "hubspot-api": "2.15.3"
   }

@@ -30,7 +30,7 @@
     "@tryghost/kg-default-cards": "9.0.1",
     "@tryghost/mg-fs-utils": "^0.12.10",
     "@tryghost/string": "0.2.5",
-    "date-fns": "2.29.3",
+    "date-fns": "2.30.0",
     "html-entities": "2.3.3",
     "lodash": "4.17.21",
     "simple-dom": "1.4.0",

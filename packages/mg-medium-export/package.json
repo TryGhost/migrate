@@ -30,6 +30,6 @@
     "@tryghost/mg-fs-utils": "^0.12.10",
     "@tryghost/string": "0.2.5",
     "cheerio": "0.22.0",
-    "date-fns": "2.29.3"
+    "date-fns": "2.30.0"
   }
 }
