@@ -2923,10 +2923,10 @@ color@^4.2.3:
     color-convert "^2.0.1"
     color-string "^1.9.0"
 
-colorette@^2.0.19:
-  version "2.0.19"
-  resolved "https://registry.yarnpkg.com/colorette/-/colorette-2.0.19.tgz#cdf044f47ad41a0f4b56b3a0d5b4e6e1a2d5a798"
-  integrity sha512-3tlv/dIP7FWvj3BsbHrGLJ6l/oKh1O3TcgBqMn+yyCagOxc23fyzDS6HypQbgxWbkpDnf52p1LuR4eWDQ/K9WQ==
+colorette@^2.0.20:
+  version "2.0.20"
+  resolved "https://registry.yarnpkg.com/colorette/-/colorette-2.0.20.tgz#9eb793e6833067f7235902fcd3b09917a000a95a"
+  integrity sha512-IfEDxwoWIjkeXL1eXcDiow4UbKjhLdq6/EuSVR9GMN7KVH3r9gQ83e73hsz1Nd1T3ijd5xv1wcWRYO+D6kCI2w==
 
 colors@1.4.0, colors@^1.1.2:
   version "1.4.0"
@@ -5382,13 +5382,13 @@ listr-verbose-renderer@^0.5.0:
     date-fns "^1.27.2"
     figures "^2.0.0"
 
-listr2@6.3.1:
-  version "6.3.1"
-  resolved "https://registry.yarnpkg.com/listr2/-/listr2-6.3.1.tgz#35e123ec57834f7538da19f5482d36e62176aa33"
-  integrity sha512-FOTLAjWKYpfONygQ4DQiOFxQRD+YV9fzW7MKcHBSa9E6QD4POnrEkfGMNy4ND0KiUDO/mQcHzxmuZKlbrkOpiw==
+listr2@6.4.1:
+  version "6.4.1"
+  resolved "https://registry.yarnpkg.com/listr2/-/listr2-6.4.1.tgz#29544c7462efb5470feedf9f6bcd808ae673cc86"
+  integrity sha512-o1hCsddKFjzExZKeIhORCDNONRNVmtq/4lSGT+X1DuVIeuJztfPC+C+6ocsGMDDSjxv6YNsU6ZQUSji2f7+klQ==
   dependencies:
     cli-truncate "^3.1.0"
-    colorette "^2.0.19"
+    colorette "^2.0.20"
     eventemitter3 "^5.0.0"
     log-update "^5.0.1"
     rfdc "^1.3.0"
