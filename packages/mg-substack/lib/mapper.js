@@ -6,7 +6,8 @@ import {_base as debugFactory} from '@tryghost/debug';
 
 const debug = debugFactory('migrate:substack:mapper');
 
-const mapConfig = (data, {url, email, useMetaAuthor, addTag}) => {
+const mapConfig = (data, options) => {
+    const {url, email, useMetaAuthor, addTag, addPlatformTag, addTypeTag, addAccessTag} = options;
     const slug = data.post_id.replace(/^(?:\d{1,10}\.)(\S*)/gm, '$1');
 
     // Get an ISO 8601 date - https://date-fns.org/docs/formatISO
@@ -57,31 +58,37 @@ const mapConfig = (data, {url, email, useMetaAuthor, addTag}) => {
         });
     }
 
-    mappedData.data.tags.push({
-        url: `migrator-added-tag`,
-        data: {
-            slug: `hash-substack`,
-            name: `#substack`
-        }
-    });
+    if (addPlatformTag) {
+        mappedData.data.tags.push({
+            url: `migrator-added-tag`,
+            data: {
+                slug: `hash-substack`,
+                name: `#substack`
+            }
+        });
+    }
 
     // Add an internal tag based on the type of post
-    mappedData.data.tags.push({
-        url: `migrator-added-tag-substack-type-${typeSlug}`,
-        data: {
-            slug: `hash-substack-type-${typeSlug}`,
-            name: `#substack-type-${typeSlug}`
-        }
-    });
+    if (addTypeTag) {
+        mappedData.data.tags.push({
+            url: `migrator-added-tag-substack-type-${typeSlug}`,
+            data: {
+                slug: `hash-substack-type-${typeSlug}`,
+                name: `#substack-type-${typeSlug}`
+            }
+        });
+    }
 
     // Add tags based on post visibility
-    mappedData.data.tags.push({
-        url: `migrator-added-tag-substack-access-${visibilitySlug}`,
-        data: {
-            slug: `hash-substack-access-${visibilitySlug}`,
-            name: `#substack-access-${visibilitySlug}`
-        }
-    });
+    if (addAccessTag) {
+        mappedData.data.tags.push({
+            url: `migrator-added-tag-substack-access-${visibilitySlug}`,
+            data: {
+                slug: `hash-substack-access-${visibilitySlug}`,
+                name: `#substack-access-${visibilitySlug}`
+            }
+        });
+    }
 
     if (email && !useMetaAuthor) {
         const authorSlug = email.replace(/(^[\w_-]*)(@[\w_-]*\.\w*(?:\.\w{0,2})?)/, '$1');

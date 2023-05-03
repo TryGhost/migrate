@@ -98,7 +98,10 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
                 drafts: true,
                 pages: false,
                 url: 'https://example.substack.com',
-                email: 'exampleuser@email.com'
+                email: 'exampleuser@email.com',
+                addPlatformTag: true,
+                addTypeTag: true,
+                addAccessTag: true
             }
         };
         const mapped = await map(postDataFromFixtures, ctx.options);
@@ -157,7 +160,10 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
             options: {
                 drafts: true,
                 pages: false,
-                url: 'https://example.substack.com'
+                url: 'https://example.substack.com',
+                addPlatformTag: true,
+                addTypeTag: true,
+                addAccessTag: true
             }
         };
         const mapped = await map(postDataFromFixtures, ctx.options);
@@ -274,7 +280,10 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
             options: {
                 url: 'https://example.substack.com',
                 addTag: 'Hello World',
-                pages: false
+                pages: false,
+                addPlatformTag: true,
+                addTypeTag: true,
+                addAccessTag: true
             }
         };
         const mapped = await map(postDataFromFixtures, ctx.options);
@@ -295,6 +304,116 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         expect(tag3.url).toEqual('migrator-added-tag');
         expect(tag3.data.name).toEqual('#substack');
         expect(tag3.data.slug).toEqual('hash-substack');
+    });
+
+    test('Can skip platform tag', async function () {
+        const ctx = {
+            options: {
+                url: 'https://example.substack.com',
+                pages: false,
+                addPlatformTag: false,
+                addTypeTag: true,
+                addAccessTag: true
+            }
+        };
+        const mapped = await map(postDataFromFixtures, ctx.options);
+
+        const post = mapped.posts[0];
+
+        const tag1 = post.data.tags[0];
+        expect(tag1.url).toEqual('https://example.substack.com/tag/newsletter');
+        expect(tag1.data.name).toEqual('Newsletter');
+        expect(tag1.data.slug).toEqual('newsletter');
+
+        const tag2 = post.data.tags[1];
+        expect(tag2.url).toEqual('migrator-added-tag-substack-type-newsletter');
+        expect(tag2.data.name).toEqual('#substack-type-newsletter');
+        expect(tag2.data.slug).toEqual('hash-substack-type-newsletter');
+
+        const tag3 = post.data.tags[2];
+        expect(tag3.url).toEqual('migrator-added-tag-substack-access-everyone');
+        expect(tag3.data.name).toEqual('#substack-access-everyone');
+        expect(tag3.data.slug).toEqual('hash-substack-access-everyone');
+    });
+
+    test('Can skip type tag', async function () {
+        const ctx = {
+            options: {
+                url: 'https://example.substack.com',
+                pages: false,
+                addPlatformTag: true,
+                addTypeTag: false,
+                addAccessTag: true
+            }
+        };
+        const mapped = await map(postDataFromFixtures, ctx.options);
+
+        const post = mapped.posts[0];
+
+        const tag1 = post.data.tags[0];
+        expect(tag1.url).toEqual('https://example.substack.com/tag/newsletter');
+        expect(tag1.data.name).toEqual('Newsletter');
+        expect(tag1.data.slug).toEqual('newsletter');
+
+        const tag2 = post.data.tags[1];
+        expect(tag2.url).toEqual('migrator-added-tag');
+        expect(tag2.data.name).toEqual('#substack');
+        expect(tag2.data.slug).toEqual('hash-substack');
+
+        const tag3 = post.data.tags[2];
+        expect(tag3.url).toEqual('migrator-added-tag-substack-access-everyone');
+        expect(tag3.data.name).toEqual('#substack-access-everyone');
+        expect(tag3.data.slug).toEqual('hash-substack-access-everyone');
+    });
+
+    test('Can skip access tag', async function () {
+        const ctx = {
+            options: {
+                url: 'https://example.substack.com',
+                pages: false,
+                addPlatformTag: true,
+                addTypeTag: true,
+                addAccessTag: false
+            }
+        };
+        const mapped = await map(postDataFromFixtures, ctx.options);
+
+        const post = mapped.posts[0];
+
+        const tag1 = post.data.tags[0];
+        expect(tag1.url).toEqual('https://example.substack.com/tag/newsletter');
+        expect(tag1.data.name).toEqual('Newsletter');
+        expect(tag1.data.slug).toEqual('newsletter');
+
+        const tag2 = post.data.tags[1];
+        expect(tag2.url).toEqual('migrator-added-tag');
+        expect(tag2.data.name).toEqual('#substack');
+        expect(tag2.data.slug).toEqual('hash-substack');
+
+        const tag3 = post.data.tags[2];
+        expect(tag3.url).toEqual('migrator-added-tag-substack-type-newsletter');
+        expect(tag3.data.name).toEqual('#substack-type-newsletter');
+        expect(tag3.data.slug).toEqual('hash-substack-type-newsletter');
+    });
+
+    test('Can skip all platform, type & access tags', async function () {
+        const ctx = {
+            options: {
+                url: 'https://example.substack.com',
+                pages: false,
+                addPlatformTag: false,
+                addTypeTag: false,
+                addAccessTag: false
+            }
+        };
+        const mapped = await map(postDataFromFixtures, ctx.options);
+
+        const post = mapped.posts[0];
+
+        const tag1 = post.data.tags[0];
+        expect(tag1.url).toEqual('https://example.substack.com/tag/newsletter');
+        expect(tag1.data.name).toEqual('Newsletter');
+        expect(tag1.data.slug).toEqual('newsletter');
     });
 
     test('Can migrate pages', async function () {

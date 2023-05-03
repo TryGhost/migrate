@@ -61,6 +61,15 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--addTag`**
     - string - default: `null`
     - Provide a tag name which should be added to every post in this migration (Wrap in single quotes if tag name has spaces `'Like This'`)
+- **`--addPlatformTag`** 
+    - Add #substack tag to migrated content
+    - bool - default: `true`
+- **`--addTypeTag`** 
+    - Add #substack-{type} tag to migrated content (post, podcast, etc)
+    - bool - default: `true`
+- **`--addAccessTag`** 
+    - Add #substack-{access} tag to migrated content (public, paid, etc)
+    - bool - default: `true`
 - **`--drafts`** 
     - Import draft posts
     - bool - default: `true`

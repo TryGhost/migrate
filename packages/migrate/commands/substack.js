@@ -74,6 +74,24 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--addPlatformTag',
+        defaultValue: true,
+        desc: 'Add #substack tag to migrated content'
+    },
+    {
+        type: 'boolean',
+        flags: '--addTypeTag',
+        defaultValue: true,
+        desc: 'Add #substack-{type} tag to migrated content (post, podcast, etc)'
+    },
+    {
+        type: 'boolean',
+        flags: '--addAccessTag',
+        defaultValue: true,
+        desc: 'Add #substack-{access} tag to migrated content (public, paid, etc)'
+    },
+    {
+        type: 'boolean',
         flags: '--drafts',
         defaultValue: true,
         desc: 'Import draft posts'
