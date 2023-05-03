@@ -17,6 +17,17 @@ const stripHtml = (html) => {
     return html.replace(/<[^>]+>/g, '').replace(/\r?\n|\r/g, ' ').trim();
 };
 
+const wpCDNToLocal = (imgUrl) => {
+    imgUrl = imgUrl.replace(/i[0-9]+.wp.com\//, '');
+
+    const newUrl = new URL(imgUrl);
+    newUrl.searchParams.delete('resize');
+
+    const updatedUrl = `${newUrl.origin}${newUrl.pathname}`;
+
+    return updatedUrl;
+};
+
 const largerSrc = (imageSrc) => {
     if (!imageSrc) {
         return imageSrc;
@@ -291,13 +302,17 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     });
 
     // Remove duplicates images in <noscript> tags that have the same src
-    $html('img + noscript img').each((i, el) => {
-        let noScriptImgSrc = $(el).attr('src');
-        let prevImg = $(el).parent('noscript').prev('img');
-        let prevImgSrc = prevImg.attr('data-src') || prevImg.attr('src');
+    $html('noscript').each((i, el) => {
+        if (el.prev.name === 'img') {
+            const prevImgSrc = el.prev.attribs['data-src'] ?? el.prev.attribs.src;
+            const noScriptImgSrc = $(el).find('img').attr('src');
 
-        if (noScriptImgSrc === prevImgSrc) {
-            $(el).parent('noscript').remove();
+            const updatedPrevImgSrc = wpCDNToLocal(prevImgSrc);
+            const updatedNoScriptImgSrc = wpCDNToLocal(noScriptImgSrc);
+
+            if (updatedPrevImgSrc === updatedNoScriptImgSrc) {
+                $(el).remove();
+            }
         }
     });
 
@@ -836,6 +851,7 @@ const all = async (ctx) => {
 };
 
 export default {
+    wpCDNToLocal,
     processAuthor,
     processTerm,
     processTerms,
