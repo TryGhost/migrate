@@ -18,6 +18,10 @@ const stripHtml = (html) => {
 };
 
 const wpCDNToLocal = (imgUrl) => {
+    if (!imgUrl) {
+        return imgUrl;
+    }
+
     imgUrl = imgUrl.replace(/i[0-9]+.wp.com\//, '');
 
     const newUrl = new URL(imgUrl);
@@ -332,6 +336,9 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             $(img).attr('height', $(img).attr('data-height'));
             $(img).removeAttr('data-height');
         }
+
+        const nonCDNSrc = wpCDNToLocal($(img).attr('src'));
+        $(img).attr('src', nonCDNSrc);
     });
 
     // (Some) WordPress renders gifs a different way. They use an `img` tag with a `src` for a still image,
@@ -663,7 +670,7 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
     if (options.featureImage === 'featuredmedia' && wpPost.featured_media && wpPost._embedded['wp:featuredmedia'] && !post.data.feature_image) {
         const wpImage = wpPost._embedded['wp:featuredmedia'][0];
         try {
-            post.data.feature_image = wpImage.source_url;
+            post.data.feature_image = wpCDNToLocal(wpImage.source_url);
             post.data.feature_image_alt = wpImage.alt_text || null;
             post.data.feature_image_caption = (wpImage.caption) ? stripHtml(wpImage.caption.rendered) : null;
         } catch (error) {

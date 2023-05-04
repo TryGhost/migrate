@@ -37,7 +37,10 @@ const scrapeConfig = {
         },
         og_image: {
             selector: 'meta[property="og:image"]',
-            attr: 'content'
+            attr: 'content',
+            convert: (x) => {
+                return wpAPI.process.wpCDNToLocal(x);
+            }
         },
         og_title: {
             selector: 'meta[property="og:title"]',
@@ -55,7 +58,10 @@ const scrapeConfig = {
         },
         twitter_image: {
             selector: 'meta[name="twitter:image"], meta[name="twitter:image:src"]',
-            attr: 'content'
+            attr: 'content',
+            convert: (x) => {
+                return wpAPI.process.wpCDNToLocal(x);
+            }
         },
         twitter_title: {
             selector: 'meta[name="twitter:title"]',
