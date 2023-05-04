@@ -22,6 +22,10 @@ const wpCDNToLocal = (imgUrl) => {
         return imgUrl;
     }
 
+    if (!imgUrl.match(/i[0-9]+.wp.com/g)) {
+        return imgUrl;
+    }
+
     imgUrl = imgUrl.replace(/i[0-9]+.wp.com\//, '');
 
     const newUrl = new URL(imgUrl);

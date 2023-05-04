@@ -699,8 +699,8 @@ const hello () => {
 
 describe('wpCDNToLocal', function () {
     test('Does not amend non-CDN URLs', function () {
-        const updated = processor.wpCDNToLocal('http://test.com/image.jpg');
-        expect(updated).toEqual('http://test.com/image.jpg');
+        const updated = processor.wpCDNToLocal('http://test.com/image.jpg?this-should=stay&and=this');
+        expect(updated).toEqual('http://test.com/image.jpg?this-should=stay&and=this');
     });
 
     test('Updated simple CDN URL', function () {
