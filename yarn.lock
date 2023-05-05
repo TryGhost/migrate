@@ -1743,7 +1743,7 @@
     lodash "^4.17.21"
     uuid "^9.0.0"
 
-"@tryghost/errors@^1.2.1", "@tryghost/errors@^1.2.25":
+"@tryghost/errors@1.2.25", "@tryghost/errors@^1.2.1", "@tryghost/errors@^1.2.25":
   version "1.2.25"
   resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-1.2.25.tgz#9e1b715624dfd7dbde59a9fc196ebcb00d9c7553"
   integrity sha512-fVZgnFu3QsEUVPyl+uFLK6X6JSN3m7l1pMl713SmhNrkFNFM3nG1sVeNiTg/Ru4N5qIJBBIefwrfRH80Ccy3oQ==

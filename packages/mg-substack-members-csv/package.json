@@ -25,6 +25,7 @@
     "jest-extended": "3.2.4"
   },
   "dependencies": {
+    "@tryghost/errors": "1.2.25",
     "bluebird": "3.7.2",
     "csv-parser": "3.0.0",
     "date-fns": "2.30.0",
