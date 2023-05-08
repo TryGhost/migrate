@@ -315,8 +315,8 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             const prevImgSrc = el.prev.attribs['data-src'] ?? el.prev.attribs.src;
             const noScriptImgSrc = $(el).find('img').attr('src');
 
-            const updatedPrevImgSrc = wpCDNToLocal(prevImgSrc);
-            const updatedNoScriptImgSrc = wpCDNToLocal(noScriptImgSrc);
+            const updatedPrevImgSrc = largerSrc(wpCDNToLocal(prevImgSrc));
+            const updatedNoScriptImgSrc = largerSrc(wpCDNToLocal(noScriptImgSrc));
 
             if (updatedPrevImgSrc === updatedNoScriptImgSrc) {
                 $(el).remove();
