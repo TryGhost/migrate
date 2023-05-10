@@ -28,7 +28,7 @@
   "dependencies": {
     "@tryghost/errors": "1.2.24",
     "@tryghost/mg-fs-utils": "^0.12.11",
-    "@tryghost/string": "0.2.5",
+    "@tryghost/string": "0.2.6",
     "cheerio": "0.22.0",
     "front-matter": "4.0.2",
     "markdown-it": "13.0.1"
