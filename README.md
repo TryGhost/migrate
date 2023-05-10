@@ -11,6 +11,7 @@ Each tool has its own detailed documentation:
 - [HubSpot](https://github.com/TryGhost/migrate/tree/main/packages/mg-hubspot-api)
 - [Jekyll](https://github.com/TryGhost/migrate/tree/main/packages/mg-jekyll-export)
 - [Letterdrop](https://github.com/TryGhost/migrate/tree/main/packages/mg-letterdrop)
+- [Libsyn](https://github.com/TryGhost/migrate/tree/main/packages/mg-libsyn)
 - [Medium](https://github.com/TryGhost/migrate/tree/main/packages/mg-medium-export)
 - [Squarespace](https://github.com/TryGhost/migrate/tree/main/packages/mg-squarespace-xml)
 - [Substack](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack)
