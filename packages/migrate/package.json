@@ -44,6 +44,7 @@
     "@tryghost/mg-jekyll-export": "^0.3.11",
     "@tryghost/mg-json": "^0.10.7",
     "@tryghost/mg-letterdrop": "^0.2.6",
+    "@tryghost/mg-libsyn": "^0.0.1",
     "@tryghost/mg-linkfixer": "^0.5.6",
     "@tryghost/mg-medium-export": "^0.14.11",
     "@tryghost/mg-squarespace-xml": "^0.3.9",

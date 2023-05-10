@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+    xmlns:atom="http://www.w3.org/2005/Atom"
+    xmlns:cc="http://web.resource.org/cc/"
+    xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
+    xmlns:media="http://search.yahoo.com/mrss/"
+    xmlns:content="http://purl.org/rss/1.0/modules/content/"
+    xmlns:podcast="https://podcastindex.org/namespace/1.0"
+    xmlns:googleplay="http://www.google.com/schemas/play-podcasts/1.0"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:libsyn="http://libsyn.com/libsyn-rss-spec">
+    <channel>
+        <atom:link href="https://example.com/rss/?include-libsyn-metadata=true" rel="self" type="application/rss+xml"/>
+        <title>Example Show</title>
+        <pubDate>Mon, 10 Aug 2020 07:00:00 +0000</pubDate>
+        <lastBuildDate>Tue, 02 May 2023 08:50:14 +0000</lastBuildDate>
+        <generator>Libsyn WebEngine 2.0</generator>
+        <link>http://example.com/</link>
+        <language>en</language>
+        <copyright><![CDATA[2023 Example Co.]]></copyright>
+        <docs>http://example.com/</docs>
+        <managingEditor>person@example.com (person@example.com)</managingEditor>
+        <itunes:summary><![CDATA[Podcast summary]]></itunes:summary>
+        <image>
+            <url>https://ssl-static.libsyn.com/p/assets/1/9/0/c/abcd123434a5734c/cover.jpg</url>
+            <title>Example Show</title>
+            <link><![CDATA[http://example.com/]]></link>
+        </image>
+        <itunes:author>Example User</itunes:author>
+        <itunes:keywords>show,keywords</itunes:keywords>
+        <itunes:category text="Business">
+            <itunes:category text="Careers"/>
+        </itunes:category>
+        <itunes:category text="Education">
+            <itunes:category text="Self-Improvement"/>
+        </itunes:category>
+        <itunes:image href="https://ssl-static.libsyn.com/p/assets/1/9/0/c/abcd123434a5734c/cover.jpg" />
+        <itunes:explicit>false</itunes:explicit>
+        <itunes:owner>
+            <itunes:name><![CDATA[Example User]]></itunes:name>
+            <itunes:email>person@example.com</itunes:email>
+        </itunes:owner>
+        <description><![CDATA[Podcast description]]></description>
+        <itunes:type>episodic</itunes:type>
+        <podcast:locked owner="person@example.com">no</podcast:locked>
+        <item>
+            <title>Lorem Ipsum</title>
+            <itunes:title>Lorem Ipsum</itunes:title>
+            <pubDate>Mon, 10 Aug 2020 07:00:00 +0000</pubDate>
+            <guid isPermaLink="false"><![CDATA[abcd1234-f43c-407f-b3d7-01245e0e890f]]></guid>
+            <link><![CDATA[https://traffic.libsyn.com/secure/exampleshow/lorem-ipsum.mp3]]></link>
+            <itunes:image href="https://ssl-static.libsyn.com/p/assets/1/9/0/c/abcd123434a5734c/cover.jpg" />
+            <description><![CDATA[<p><span style="font-weight: 400;">Description</p> <p> </p>]]></description>
+            <content:encoded><![CDATA[<p>Description</p> <p> </p>]]></content:encoded>
+            <enclosure length="7134740" type="audio/mpeg" url="https://traffic.libsyn.com/secure/exampleshow/lorem-ipsum.mp3?dest-id=123456" />
+            <itunes:duration>24:51</itunes:duration>
+            <itunes:explicit>false</itunes:explicit>
+            <libsyn:itemId>12345678</libsyn:itemId>
+            <itunes:keywords>exmaple,keywords</itunes:keywords>
+            <itunes:subtitle><![CDATA[The show subtitle]]></itunes:subtitle>
+            <itunes:season>3</itunes:season>
+            <itunes:episode>5</itunes:episode>
+            <itunes:episodeType>full</itunes:episodeType>
+        </item>
+        <item>
+            <title>Dolor Simet</title>
+            <itunes:title>Simet</itunes:title>
+            <pubDate>Mon, 13 Jul 2020 07:00:00 +0000</pubDate>
+            <guid isPermaLink="false"><![CDATA[abcd1234-07cb-40fb-8726-8e48d8368d94]]></guid>
+            <link><![CDATA[https://traffic.libsyn.com/secure/exampleshow/Dolor-Simet_-_S3Ep04.mp3]]></link>
+            <itunes:image href="https://ssl-static.libsyn.com/p/assets/1/9/0/c/abcd123434a5734c/cover.jpg" />
+            <description><![CDATA[<p><span style="font-weight: 400;">Description</p> <p> </p>]]></description>
+            <content:encoded><![CDATA[<p>Description</p> <p> </p>]]></content:encoded>
+            <enclosure length="10027870" type="audio/mpeg" url="https://traffic.libsyn.com/secure/exampleshow/Dolor-Simet_-_S3Ep04.mp3?dest-id=123456" />
+            <itunes:duration>06:51</itunes:duration>
+            <itunes:explicit>false</itunes:explicit>
+            <libsyn:itemId>12345679</libsyn:itemId>
+            <itunes:keywords>exmaple,keywords</itunes:keywords>
+            <itunes:subtitle><![CDATA[The show subtitle]]></itunes:subtitle>
+            <itunes:season>3</itunes:season>
+            <itunes:episode>4</itunes:episode>
+            <itunes:episodeType>full</itunes:episodeType>
+        </item>
+    </channel>
+</rss>
