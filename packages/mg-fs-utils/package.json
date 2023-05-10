@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@tryghost/errors": "1.2.24",
-    "@tryghost/image-transform": "1.2.6",
+    "@tryghost/image-transform": "1.2.7",
     "@tryghost/string": "0.2.5",
     "@tryghost/zip": "1.1.35",
     "adm-zip": "0.5.10",
