@@ -1,0 +1,36 @@
+{
+  "name": "@tryghost/mg-libsyn",
+  "version": "0.0.1",
+  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-libsyn",
+  "author": "Ghost Foundation",
+  "license": "MIT",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "echo \"Implement me!\"",
+    "test": "node --experimental-vm-modules $(yarn bin jest)",
+    "lint": "eslint . --ext .js --cache",
+    "posttest": "yarn lint"
+  },
+  "files": [
+    "index.js",
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "eslint": "8.39.0",
+    "jest": "29.5.0",
+    "jest-extended": "3.2.4"
+  },
+  "dependencies": {
+    "@tryghost/errors": "1.2.24",
+    "@tryghost/kg-default-cards": "9.0.1",
+    "@tryghost/string": "0.2.5",
+    "cheerio": "0.22.0",
+    "node-fetch": "^3.3.1",
+    "simple-dom": "1.4.0",
+    "xml2json": "0.12.0"
+  }
+}

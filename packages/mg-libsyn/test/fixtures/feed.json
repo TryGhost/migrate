@@ -1,0 +1,126 @@
+{
+    "rss": {
+      "version": "2.0",
+      "xmlns:atom": "http://www.w3.org/2005/Atom",
+      "xmlns:cc": "http://web.resource.org/cc/",
+      "xmlns:itunes": "http://www.itunes.com/dtds/podcast-1.0.dtd",
+      "xmlns:media": "http://search.yahoo.com/mrss/",
+      "xmlns:content": "http://purl.org/rss/1.0/modules/content/",
+      "xmlns:podcast": "https://podcastindex.org/namespace/1.0",
+      "xmlns:googleplay": "http://www.google.com/schemas/play-podcasts/1.0",
+      "xmlns:rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+      "xmlns:libsyn": "http://libsyn.com/libsyn-rss-spec",
+      "channel": {
+        "atom:link": {
+          "href": "https://example.com/rss/?include-libsyn-metadata=true",
+          "rel": "self",
+          "type": "application/rss+xml"
+        },
+        "title": "Example Show",
+        "pubDate": "Mon, 10 Aug 2020 07:00:00 +0000",
+        "lastBuildDate": "Tue, 02 May 2023 08:50:14 +0000",
+        "generator": "Libsyn WebEngine 2.0",
+        "link": "http://example.com/",
+        "language": "en",
+        "copyright": "2023 Example Co.",
+        "docs": "http://example.com/",
+        "managingEditor": "person@example.com (person@example.com)",
+        "itunes:summary": "Podcast summary",
+        "image": {
+          "url": "https://ssl-static.libsyn.com/p/assets/1/9/0/c/abcd123434a5734c/cover.jpg",
+          "title": "Example Show",
+          "link": "http://example.com/"
+        },
+        "itunes:author": "Example User",
+        "itunes:keywords": "show,keywords",
+        "itunes:category": [
+          {
+            "text": "Business",
+            "$t": "",
+            "itunes:category": {
+              "text": "Careers"
+            }
+          },
+          {
+            "text": "Education",
+            "$t": "",
+            "itunes:category": {
+              "text": "Self-Improvement"
+            }
+          }
+        ],
+        "itunes:image": {
+          "href": "https://ssl-static.libsyn.com/p/assets/1/9/0/c/abcd123434a5734c/cover.jpg"
+        },
+        "itunes:explicit": "false",
+        "itunes:owner": {
+          "itunes:name": "Example User",
+          "itunes:email": "person@example.com"
+        },
+        "description": "Podcast description",
+        "itunes:type": "episodic",
+        "podcast:locked": {
+          "owner": "person@example.com",
+          "$t": "no"
+        },
+        "item": [
+          {
+            "title": "Lorem Ipsum",
+            "itunes:title": "Lorem Ipsum",
+            "pubDate": "Mon, 10 Aug 2020 07:00:00 +0000",
+            "guid": {
+              "isPermaLink": "false",
+              "$t": "abcd1234-f43c-407f-b3d7-01245e0e890f"
+            },
+            "link": "https://traffic.libsyn.com/secure/exampleshow/lorem-ipsum.mp3",
+            "itunes:image": {
+              "href": "https://ssl-static.libsyn.com/p/assets/1/9/0/c/abcd123434a5734c/cover.jpg"
+            },
+            "description": "<p><span style=\"font-weight: 400;\">Description</p> <p> </p>",
+            "content:encoded": "<p>Description</p> <p> </p>",
+            "enclosure": {
+              "length": "7134740",
+              "type": "audio/mpeg",
+              "url": "https://traffic.libsyn.com/secure/exampleshow/lorem-ipsum.mp3?dest-id=123456"
+            },
+            "itunes:duration": "24:51",
+            "itunes:explicit": "false",
+            "libsyn:itemId": "12345678",
+            "itunes:keywords": "exmaple,keywords",
+            "itunes:subtitle": "The show subtitle",
+            "itunes:season": "3",
+            "itunes:episode": "5",
+            "itunes:episodeType": "full"
+          },
+          {
+            "title": "Dolor Simet",
+            "itunes:title": "Simet",
+            "pubDate": "Mon, 13 Jul 2020 07:00:00 +0000",
+            "guid": {
+              "isPermaLink": "false",
+              "$t": "abcd1234-07cb-40fb-8726-8e48d8368d94"
+            },
+            "link": "https://traffic.libsyn.com/secure/exampleshow/Dolor-Simet_-_S3Ep04.mp3",
+            "itunes:image": {
+              "href": "https://ssl-static.libsyn.com/p/assets/1/9/0/c/abcd123434a5734c/cover.jpg"
+            },
+            "description": "<p><span style=\"font-weight: 400;\">Description</p> <p> </p>",
+            "content:encoded": "<p>Description</p> <p> </p>",
+            "enclosure": {
+              "length": "10027870",
+              "type": "audio/mpeg",
+              "url": "https://traffic.libsyn.com/secure/exampleshow/Dolor-Simet_-_S3Ep04.mp3?dest-id=123456"
+            },
+            "itunes:duration": "06:51",
+            "itunes:explicit": "false",
+            "libsyn:itemId": "12345679",
+            "itunes:keywords": "exmaple,keywords",
+            "itunes:subtitle": "The show subtitle",
+            "itunes:season": "3",
+            "itunes:episode": "4",
+            "itunes:episodeType": "full"
+          }
+        ]
+      }
+    }
+  }
