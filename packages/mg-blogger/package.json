@@ -1,0 +1,35 @@
+{
+  "name": "@tryghost/mg-blogger",
+  "version": "0.0.1",
+  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-blogger",
+  "author": "Ghost Foundation",
+  "license": "MIT",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "echo \"Implement me!\"",
+    "test": "node --experimental-vm-modules $(yarn bin jest)",
+    "lint": "eslint . --ext .js --cache",
+    "posttest": "yarn lint"
+  },
+  "files": [
+    "index.js",
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "jest": "29.5.0",
+    "jest-extended": "3.2.4"
+  },
+  "dependencies": {
+    "@tryghost/errors": "1.2.22",
+    "@tryghost/kg-default-cards": "9.0.1",
+    "autop": "1.0.1",
+    "cheerio": "0.22.0",
+    "node-fetch": "^3.3.1",
+    "sanitize-html": "2.10.0",
+    "simple-dom": "1.4.0"
+  }
+}

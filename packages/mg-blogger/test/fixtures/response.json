@@ -1,0 +1,63 @@
+[
+    {
+      "kind": "blogger#post",
+      "id": "1234563682306064159",
+      "blog": {
+        "id": "12345678"
+      },
+      "published": "2017-06-20T00:32:00-04:00",
+      "updated": "2017-06-20T00:32:57-04:00",
+      "url": "http://example.blogspot.com/2017/06/lorem.html",
+      "title": "Lorem",
+      "content": "Lorem content",
+      "author": {
+        "id": "19203947420298040620",
+        "displayName": "Important Author &amp; Co."
+      },
+      "labels": [
+        "books",
+        "This & That",
+        "Good &amp; Bad"
+      ]
+    },
+    {
+      "kind": "blogger#post",
+      "id": "2345676562043355500",
+      "blog": {
+        "id": "12345678"
+      },
+      "published": "2017-06-05T23:14:00-04:00",
+      "updated": "2017-06-05T23:14:16-04:00",
+      "url": "http://example.blogspot.com/2017/06/ipsum.html",
+      "title": "Ipsum",
+      "content": "Ipsum content",
+      "author": {
+        "id": "19203947420298040620",
+        "displayName": "Important Author"
+      },
+      "labels": [
+        "books",
+        "Summer 2017"
+      ]
+    },
+    {
+      "kind": "blogger#post",
+      "id": "3456784740969377563",
+      "blog": {
+        "id": "12345678"
+      },
+      "published": "2017-05-21T20:03:00-04:00",
+      "updated": "2017-05-21T20:03:43-04:00",
+      "url": "http://example.blogspot.com/2017/05/dolor.html",
+      "title": "Dolor",
+      "content": "<div class=\"separator\" style=\"clear: both; text-align: center;\">\n<a href=\"https://3.bp.blogspot.com/-dQmeqRna7MA/V56ZIKQmPJI/AAAAAAAAJeU/1234_abcd3YT3BmCduGnz2tE4xrlp_c1gCLcB/s1600/photo.jpg\" imageanchor=\"1\" style=\"margin-left: 1em; margin-right: 1em;\"><img border=\"0\" height=\"640\" src=\"https://3.bp.blogspot.com/-dQmeqRna7MA/V56ZIKQmPJI/AAAAAAAAJeU/1234_abcd3YT3BmCduGnz2tE4xrlp_c1gCLcB/s640/photo.jpg\" width=\"464\" /></a></div>\n<br />\n<br />\n<div style=\"color: #232d32; font-family: Lato, sans-serif; font-size: 16px; line-height: 1.5; white-space: pre-line;\">\nLorem ipsum dolor sit amet, consectetur adipiscing elit</div>\n<div style=\"color: #232d32; font-family: Lato, sans-serif; font-size: 16px; line-height: 1.5; white-space: pre-line;\">\nAliquam non elit nec diam laoreet ultricies non vel risus. Morbi porta semper sem, et elementum justo efficitur vitae\n<br /></div>\n<div style=\"color: #232d32; font-family: Lato, sans-serif; font-size: 16px; line-height: 1.5; white-space: pre-line;\">\nUt euismod, nunc non fermentum efficitur, erat lacus condimentum libero, vel feugiat turpis leo vel ipsum. In hac habitasse platea dictumst&nbsp;</div>\n<div style=\"color: #232d32; font-family: Lato, sans-serif; font-size: 16px; line-height: 1.5; white-space: pre-line;\">\n<br /></div>\n<div style=\"color: #232d32; font-family: Lato, sans-serif; font-size: 16px; line-height: 1.5; white-space: pre-line;\">\nAenean quis diam at tortor vestibulum ultricies at sit amet purus</div>\n",
+      "author": {
+        "id": "19203947420298040620",
+        "displayName": "Important Author"
+      },
+      "labels": [
+        "books",
+        "Spring 2017"
+      ]
+    }
+]
