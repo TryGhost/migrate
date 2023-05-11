@@ -7,6 +7,7 @@ import {join} from 'node:path';
 const __dirname = new URL('.', import.meta.url).pathname;
 const packageJSON = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8'));
 
+import bloggerCommands from '../commands/blogger.js';
 import cacheCommands from '../commands/cache.js';
 import chorusCommands from '../commands/chorus.js';
 import curatedMembersCommands from '../commands/curated-members.js';
@@ -39,6 +40,7 @@ const prettyCLI = Api.get()
 
 prettyCLI.preface('Command line utilities for migrating content to Ghost.');
 
+prettyCLI.command(bloggerCommands);
 prettyCLI.command(cacheCommands);
 prettyCLI.command(chorusCommands);
 prettyCLI.command(curatedMembersCommands);
