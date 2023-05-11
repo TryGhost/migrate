@@ -57,9 +57,6 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--sizeLimit`**
     - number - default: `false`
     - Media files larger than this size (defined in MB [i.e. `5`]) will be flagged as oversize
-- **`--trustSelfSignedCert`** 
-    - Trust self-signed certificates (such as for local installs)
-    - bool - default: `false`
 - **`--cache`** 
     - Persist local cache after migration is complete (Only if `--zip` is `true`)
     - bool - default: `true`
@@ -71,7 +68,7 @@ A more complex migration command could look like this:
 migrate libsyn --url https://example.com --useEmbed false --scrape none  --useFeedCategories false --useItemKeywords false
 ```
 
-This will use the Libsyn `<iframe>` embed, not use categories or keyword as tags, and not scrape or save any remote files such as images, audio files, or links PDFs.
+This will use the Libsyn `<iframe>` embed, not use categories or keyword as tags, and not scrape or save any remote files such as images, audio files, or linked PDFs.
 
 
 ## Develop
