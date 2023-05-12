@@ -5,7 +5,9 @@ import processContent from './process-content.js';
 
 const sectionTags = ['aside', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'img'];
 
-const processMeta = (name, $post) => {
+const processMeta = (name, $post, options) => {
+    const mediumAsCanonical = options?.mediumAsCanonical ?? false;
+
     let urlInfo;
 
     // Get an ISO 8601 date - https://date-fns.org/docs/formatISO
@@ -31,6 +33,11 @@ const processMeta = (name, $post) => {
         post.data.created_at = $post('.dt-published').attr('datetime') || dateNow;
         post.data.published_at = $post('.dt-published').attr('datetime') || dateNow;
         post.data.updated_at = $post('.dt-published').attr('datetime') || dateNow;
+    }
+
+    if (mediumAsCanonical) {
+        const canonicalUrl = $post('.p-canonical').attr('href');
+        post.data.canonical_url = canonicalUrl;
     }
 
     // $('img').map(async (i, el) => {
@@ -121,12 +128,12 @@ const processFeatureImage = (html, post) => {
     return $html.html().trim();
 };
 
-export default (name, html, globalUser) => {
+export default ({name, html, globalUser, options}) => {
     const $post = $.load(html, {
         decodeEntities: false
     });
 
-    const post = processMeta(name, $post);
+    const post = processMeta(name, $post, options);
 
     // Process content
     post.data.html = processContent($post('.e-content'), post);

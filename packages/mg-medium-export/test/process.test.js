@@ -45,7 +45,7 @@ describe('Process', function () {
     it('Can process a basic medium post', function () {
         const fixture = readSync('basic-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
-        const post = processPost(fakeName, fixture);
+        const post = processPost({name: fakeName, html: fixture});
 
         expect(post).toBeMediumMetaObject();
 
@@ -88,7 +88,7 @@ describe('Process', function () {
     it('Can process a draft medium post', function () {
         const fixture = readSync('draft-post.html');
         const fakeName = 'draft_blog-post-title-ababab121212.html';
-        const post = processPost(fakeName, fixture);
+        const post = processPost({name: fakeName, html: fixture});
 
         expect(post).toBeMediumMetaObject();
 
@@ -113,7 +113,7 @@ describe('Process', function () {
     it('Can do advanced content processing on medium posts', function () {
         const fixture = readSync('advanced-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
-        const post = processPost(fakeName, fixture);
+        const post = processPost({name: fakeName, html: fixture});
 
         expect(post).toBeMediumMetaObject();
 
@@ -147,7 +147,7 @@ describe('Process', function () {
     it('Can process blockquotes', function () {
         const fixture = readSync('quote-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
-        const post = processPost(fakeName, fixture);
+        const post = processPost({name: fakeName, html: fixture});
 
         expect(post).toBeMediumMetaObject();
 
@@ -155,5 +155,15 @@ describe('Process', function () {
 
         expect(html).toContain('<blockquote><p>“Lorem Ipsum”&nbsp;<a href="https://example/com" rel="noopener" target="_blank">Example</a></p></blockquote>');
         expect(html).toContain('<blockquote><p>Lorem Ipsum</p></blockquote>');
+    });
+
+    it('Can use Medium as canonical link', function () {
+        const fixture = readSync('basic-post.html');
+        const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
+        const post = processPost({name: fakeName, html: fixture, options: {
+            mediumAsCanonical: true
+        }});
+
+        expect(post.data.canonical_url).toEqual('https://medium.com/@JoeBloggs/testpost-efefef12121212');
     });
 });

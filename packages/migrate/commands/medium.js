@@ -61,6 +61,12 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--mediumAsCanonical',
+        defaultValue: false,
+        desc: 'Use medium article as canonical URL'
+    },
+    {
+        type: 'boolean',
         flags: '--fallBackHTMLCard',
         defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'

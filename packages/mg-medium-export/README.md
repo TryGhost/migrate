@@ -51,6 +51,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`-e` `--email`**
     - string - default: `false`
     - Provide an email domain for users e.g. example.com
+- **`--mediumAsCanonical`**
+    - bool - default: `false`
+    - Use medium article as canonical URL
 - **`--fallBackHTMLCard`**
     - bool - default: `true`
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
