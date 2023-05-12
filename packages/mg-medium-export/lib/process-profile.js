@@ -21,7 +21,7 @@ const mediumToGhost = {
     twitter: 'twitter'
 };
 
-export default (html) => {
+export default ({html}) => {
     let $ = cheerio.load(html);
     let profile = {
         url: $('.u-url').attr('href'),

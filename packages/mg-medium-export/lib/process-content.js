@@ -7,7 +7,7 @@ const equivalentTitles = (title1, title2) => {
     return title1 === title2;
 };
 
-export default (content, post) => {
+export default ({content, post}) => {
     let $content = $(content);
 
     // Medium usually has an hr divider at the very beginning of the content

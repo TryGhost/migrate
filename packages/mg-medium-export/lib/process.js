@@ -5,7 +5,7 @@ export default (input, options) => {
     let output = {};
 
     if (input.profile || input.profiles) {
-        output.users = [processProfile(input.profile || input.profiles)];
+        output.users = [processProfile({html: input.profile || input.profiles})];
     }
 
     let globalUser = output.users && output.users.length === 1 ? output.users[0] : null;

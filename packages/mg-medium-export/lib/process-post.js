@@ -5,7 +5,7 @@ import processContent from './process-content.js';
 
 const sectionTags = ['aside', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'img'];
 
-const processMeta = (name, $post, options) => {
+const processMeta = ({name, $post, options}) => {
     const mediumAsCanonical = options?.mediumAsCanonical ?? false;
 
     let urlInfo;
@@ -55,7 +55,7 @@ const processMeta = (name, $post, options) => {
     return post;
 };
 
-const processAuthor = ($author) => {
+const processAuthor = ({$author}) => {
     return {
         url: $author.attr('href'),
         data: {
@@ -68,7 +68,7 @@ const processAuthor = ($author) => {
     };
 };
 
-const processTags = ($tags) => {
+const processTags = ({$tags}) => {
     const tags = [];
     $tags.each((i, tag) => {
         let $tag = $(tag);
@@ -83,7 +83,7 @@ const processTags = ($tags) => {
     return tags;
 };
 
-const processFeatureImage = (html, post) => {
+const processFeatureImage = ({html, post}) => {
     const $html = $.load(html, {
         decodeEntities: false
     });
@@ -133,14 +133,14 @@ export default ({name, html, globalUser, options}) => {
         decodeEntities: false
     });
 
-    const post = processMeta(name, $post, options);
+    const post = processMeta({name, $post, options});
 
     // Process content
-    post.data.html = processContent($post('.e-content'), post);
+    post.data.html = processContent({content: $post('.e-content'), post});
 
     // Process author
     if ($post('.p-author').length) {
-        post.data.author = processAuthor($post('.p-author'));
+        post.data.author = processAuthor({$author: $post('.p-author')});
         // @TODO check if this is the global user and use that?
     } else if (globalUser) {
         post.data.author = globalUser;
@@ -148,7 +148,7 @@ export default ({name, html, globalUser, options}) => {
 
     // Process tags
     if ($post('.p-tags a').length) {
-        post.data.tags = processTags($post('.p-tags a'));
+        post.data.tags = processTags({$tags: $post('.p-tags a')});
     } else {
         post.data.tags = [];
     }
@@ -159,7 +159,7 @@ export default ({name, html, globalUser, options}) => {
 
     // Grab the featured image
     // Do this last so that we can add tags to indicate feature image style
-    post.data.html = processFeatureImage(post.data.html, post);
+    post.data.html = processFeatureImage({html: post.data.html, post});
 
     return post;
 };
