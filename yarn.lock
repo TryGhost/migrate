@@ -6378,10 +6378,10 @@ listr-verbose-renderer@^0.5.0:
     date-fns "^1.27.2"
     figures "^2.0.0"
 
-listr2@6.4.2:
-  version "6.4.2"
-  resolved "https://registry.yarnpkg.com/listr2/-/listr2-6.4.2.tgz#8ee2ee09de031b4a84e501a98561619962834636"
-  integrity sha512-v55SFIDP7SiPEYFeIFGbKW44B4NPpqGEklbAc1EKacMxIqFVXpDlc93e/Q6hE3IgIGRu5870rh5yJc+ESwGUpQ==
+listr2@6.5.0:
+  version "6.5.0"
+  resolved "https://registry.yarnpkg.com/listr2/-/listr2-6.5.0.tgz#91e9e4b5e36aabf92c08f6f3f9a766db42ff965c"
+  integrity sha512-eqoKu2VsiZS6rr+2tCjVbWNKdWD6g8qRCKWLJKbT+R1LwLWZaWggcNvvZgezMTecf8XVz5WLLwo4UFnEdNsvXA==
   dependencies:
     cli-truncate "^3.1.0"
     colorette "^2.0.20"
