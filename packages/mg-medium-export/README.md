@@ -54,6 +54,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--mediumAsCanonical`**
     - bool - default: `false`
     - Use medium article as canonical URL
+- **`--removeResponses`**
+    - bool - default: `true`
+    - Remove response posts such as comments from the output
 - **`--fallBackHTMLCard`**
     - bool - default: `true`
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails

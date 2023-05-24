@@ -67,6 +67,12 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--removeResponses',
+        defaultValue: true,
+        desc: 'Remove response posts such as comments from the output'
+    },
+    {
+        type: 'boolean',
         flags: '--fallBackHTMLCard',
         defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
