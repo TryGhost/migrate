@@ -58,6 +58,13 @@ const processContent = (html, postUrl, options) => {
         $(el).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${options.subscribeText}</a></div>`);
     });
 
+    $html('blockquote').each((i, el) => {
+        const classes = $(el).attr('class') ?? null;
+        if (!classes) {
+            $(el).replaceWith(`<blockquote><p>${$(el).html()}</p></blockquote>`);
+        }
+    });
+
     // convert HTML back to a string
     html = $html.html();
 
