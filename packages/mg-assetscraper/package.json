@@ -33,7 +33,7 @@
     "fast-replaceall": "1.0.2",
     "file-type": "18.4.0",
     "fs-extra": "11.1.1",
-    "got": "11.8.6",
+    "got": "12.6.1",
     "listr": "0.14.3",
     "markdown-it": "13.0.1",
     "pretty-bytes": "6.1.0",
