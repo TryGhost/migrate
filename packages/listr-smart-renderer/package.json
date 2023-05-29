@@ -37,6 +37,6 @@
     "listr2": "6.6.0",
     "log-symbols": "5.1.0",
     "log-update": "5.0.1",
-    "strip-ansi": "7.0.1"
+    "strip-ansi": "7.1.0"
   }
 }
