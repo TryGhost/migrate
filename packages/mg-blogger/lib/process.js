@@ -27,7 +27,8 @@ const slugFromURL = (url) => {
 const increaseImageSize = (src) => {
     // Increases the image size and removes special flags
     // https://developers.google.com/photos/library/guides/access-media-items
-    let updatedSrc = src.replace(/s[0-9]{2,5}(-[a-z0-9#,*]{1,4})?/g, 's2000');
+    let updatedSrc = src.replace(/\/s[0-9]{2,5}(-[a-z0-9#,*]{1,4})?/g, '/s2000');
+    updatedSrc = updatedSrc.replace(/\/w[0-9]{2,5}-h[0-9]{2,5}(-[a-z0-9#,*]{1,4})?/g, '/w2000-h2000');
     return updatedSrc;
 };
 
@@ -53,6 +54,8 @@ const processHTMLContent = async (args) => {
         const largerSrc = increaseImageSize(imgSrc);
 
         $(el).attr('src', largerSrc);
+        $(el).removeAttr('width');
+        $(el).removeAttr('height');
     });
 
     $html('.tr-caption-container').each((i, el) => {
