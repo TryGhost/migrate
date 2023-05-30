@@ -68,6 +68,12 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--firstImageAsFeatured',
+        defaultValue: true,
+        desc: 'Use the first image as the post\'s feature_image'
+    },
+    {
+        type: 'boolean',
         flags: '--fallBackHTMLCard',
         defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'

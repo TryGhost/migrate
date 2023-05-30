@@ -93,56 +93,76 @@ describe('Process JSON', function () {
 
 describe('Process HTML', function () {
     test('Can increase image sizes', async function () {
-        const processed = await process.processHTMLContent({html: '<img src="http://1.bp.blogspot.com/_-abcdNGLDs4/abcdNoxb7NI/AAAAAAAAAaU/PA-oWpq0Iug/s1600-h/photo.jpg">'});
+        const processed = await process.processHTMLContent({postData: {}, options: {}, html: '<img src="http://1.bp.blogspot.com/_-abcdNGLDs4/abcdNoxb7NI/AAAAAAAAAaU/PA-oWpq0Iug/s1600-h/photo.jpg">'});
 
-        expect(processed).toEqual('<img src="http://1.bp.blogspot.com/_-abcdNGLDs4/abcdNoxb7NI/AAAAAAAAAaU/PA-oWpq0Iug/s2000/photo.jpg">');
+        expect(processed.html).toEqual('<img src="http://1.bp.blogspot.com/_-abcdNGLDs4/abcdNoxb7NI/AAAAAAAAAaU/PA-oWpq0Iug/s2000/photo.jpg">');
     });
 
     test('Can change divs to paragraphs', async function () {
-        const processed = await process.processHTMLContent({html: '<div style="color: #232d32; font-family: Lato, sans-serif; font-size: 16px; line-height: 1.5; white-space: pre-line;">\nLorem ipsum dolor sit amet, consectetur adipiscing elit</div>'});
+        const processed = await process.processHTMLContent({postData: {}, options: {}, html: '<div style="color: #232d32; font-family: Lato, sans-serif; font-size: 16px; line-height: 1.5; white-space: pre-line;">\nLorem ipsum dolor sit amet, consectetur adipiscing elit</div>'});
 
-        expect(processed).toEqual('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit</p>');
+        expect(processed.html).toEqual('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit</p>');
     });
 
     test('Remove empty divs with no attributes', async function () {
-        const processed = await process.processHTMLContent({html: '<div></div><div>  </div><div class="hello"></div><div class="hello">   </div>'});
+        const processed = await process.processHTMLContent({postData: {}, options: {}, html: '<div></div><div>  </div><div class="hello"></div><div class="hello">   </div>'});
 
-        expect(processed).toEqual('<div class="hello"></div>\n<div class="hello">   </div>');
+        expect(processed.html).toEqual('<div class="hello"></div>\n<div class="hello">   </div>');
     });
 
     test('Can remove anchors that link to direct child image', async function () {
-        const processed = await process.processHTMLContent({html: '<a href="https://3.bp.blogspot.com/my-image.jpg"><img src="https://3.bp.blogspot.com/my-image.jpg"></a>'});
+        const processed = await process.processHTMLContent({postData: {}, options: {}, html: '<a href="https://3.bp.blogspot.com/my-image.jpg"><img src="https://3.bp.blogspot.com/my-image.jpg"></a>'});
 
-        expect(processed).toEqual('<img src="https://3.bp.blogspot.com/my-image.jpg">');
+        expect(processed.html).toEqual('<img src="https://3.bp.blogspot.com/my-image.jpg">');
     });
 
     test('Can remove the first element if a <hr>', async function () {
-        const processed = await process.processHTMLContent({html: '<hr><hr><hr><p>My text</p>'});
+        const processed = await process.processHTMLContent({postData: {}, options: {}, html: '<hr><p>My text</p>'});
 
-        expect(processed).toEqual('<p>My text</p>');
+        expect(processed.html).toEqual('<p>My text</p>');
+    });
+
+    test('Can remove the first elements if multiple <hr>', async function () {
+        const processed = await process.processHTMLContent({postData: {}, options: {}, html: '<hr><hr><hr><p>My text</p>'});
+
+        expect(processed.html).toEqual('<p>My text</p>');
     });
 
     test('Can convert to unordered list', async function () {
-        const processed = await process.processHTMLContent({html: `<div>My text</div><li>Lorem</li><li>Ipsum</li><li>Dolor</li><div><br /></div><div>My other text</div><div><br /></div>`});
+        const processed = await process.processHTMLContent({postData: {}, options: {}, html: `<div>My text</div><li>Lorem</li><li>Ipsum</li><li>Dolor</li><div><br /></div><div>My other text</div><div><br /></div>`});
 
-        expect(processed).toEqual('<p>My text</p>\n<ul><li>Lorem</li><li>Ipsum</li><li>Dolor</li></ul>\n\n\n\n<p>My other text</p>');
+        expect(processed.html).toEqual('<p>My text</p>\n<ul><li>Lorem</li><li>Ipsum</li><li>Dolor</li></ul>\n\n\n\n<p>My other text</p>');
     });
 
     test('Can unwrap linked image tables', async function () {
-        const processed = await process.processHTMLContent({html: '<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto;"><tbody><tr><td style="text-align: center;"><a href="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s1280/image.png" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" data-original-height="640" data-original-width="1280" src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s320/image.png" width="320" /></a></td></tr><tr><td class="tr-caption" style="text-align: center;">Image caption</td></tr></tbody></table>'});
+        const processed = await process.processHTMLContent({postData: {}, options: {}, html: '<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto;"><tbody><tr><td style="text-align: center;"><a href="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s1280/image.png" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" data-original-height="640" data-original-width="1280" src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s320/image.png" width="320" /></a></td></tr><tr><td class="tr-caption" style="text-align: center;">Image caption</td></tr></tbody></table>'});
 
-        expect(processed).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s2000/image.png" class="kg-image" alt loading="lazy"><figcaption>Image caption</figcaption></figure>');
+        expect(processed.html).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s2000/image.png" class="kg-image" alt loading="lazy"><figcaption>Image caption</figcaption></figure>');
     });
 
     test('Can unwrap unlinked image tables', async function () {
-        const processed = await process.processHTMLContent({html: '<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto; text-align: center;"><tbody><tr><td style="text-align: center;"><img border="0" data-original-height="572" data-original-width="1000" height="227" src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s320/image.png" style="margin-left: auto; margin-right: auto;" width="400" /></td></tr><tr><td class="tr-caption" style="text-align: center;"><div style="text-align: center;">Image caption</div></td></tr></tbody></table>'});
+        const processed = await process.processHTMLContent({postData: {}, options: {}, html: '<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto; text-align: center;"><tbody><tr><td style="text-align: center;"><img border="0" data-original-height="572" data-original-width="1000" height="227" src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s320/image.png" style="margin-left: auto; margin-right: auto;" width="400" /></td></tr><tr><td class="tr-caption" style="text-align: center;"><div style="text-align: center;">Image caption</div></td></tr></tbody></table>'});
 
-        expect(processed).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s2000/image.png" class="kg-image" alt loading="lazy"><figcaption>Image caption</figcaption></figure>');
+        expect(processed.html).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s2000/image.png" class="kg-image" alt loading="lazy"><figcaption>Image caption</figcaption></figure>');
     });
 
     test('Can unwrap image tables & maintain links', async function () {
-        const processed = await process.processHTMLContent({html: '<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto;"><tbody><tr><td style="text-align: center;"><a href="https://ghost.org" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" data-original-height="640" data-original-width="1280" src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s320/image.png" width="320" /></a></td></tr><tr><td class="tr-caption" style="text-align: center;">Image caption</td></tr></tbody></table>'});
+        const processed = await process.processHTMLContent({postData: {}, options: {}, html: '<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto;"><tbody><tr><td style="text-align: center;"><a href="https://ghost.org" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" data-original-height="640" data-original-width="1280" src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s320/image.png" width="320" /></a></td></tr><tr><td class="tr-caption" style="text-align: center;">Image caption</td></tr></tbody></table>'});
 
-        expect(processed).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption"><a href="https://ghost.org"><img src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s2000/image.png" class="kg-image" alt loading="lazy"></a><figcaption>Image caption</figcaption></figure>');
+        expect(processed.html).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption"><a href="https://ghost.org"><img src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s2000/image.png" class="kg-image" alt loading="lazy"></a><figcaption>Image caption</figcaption></figure>');
+    });
+
+    test('Can use first image as featured image (type 1)', async function () {
+        const processed = await process.processHTMLContent({postData: {}, options: {firstImageAsFeatured: true}, html: `<p style="text-align: center;">&nbsp;</p><div class="separator" style="clear: both; text-align: center;"><a href="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s1000/image.png" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="720" data-original-width="1280" height="301" src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s320/image.png" width="481" /></a></div><br /><p></p><h3 style="text-align: left;"><b>My headline</b></h3>`});
+
+        expect(processed.feature_image).toEqual('https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s2000/image.png');
+        expect(processed.html).toEqual('<h3>My headline</h3>');
+    });
+
+    test('Can use first image as featured image (type 2)', async function () {
+        const processed = await process.processHTMLContent({postData: {}, options: {firstImageAsFeatured: true}, html: `<p style="text-align: center;"><br /></p><div class="separator" style="clear: both; text-align: center;"><a href="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s1000/image.png" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="900" data-original-width="1200" height="382" src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s320/image.png" width="509" /></a></div><p></p><h2 style="text-align: left;">Headline</h2>`});
+
+        expect(processed.feature_image).toEqual('https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s2000/image.png');
+        expect(processed.html).toEqual('<h2>Headline</h2>');
     });
 });

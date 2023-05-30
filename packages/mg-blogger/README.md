@@ -55,6 +55,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--addTag`**
     - string - default: `null`
     - Provide a tag slug which should be added to every post in this migration
+- **`--firstImageAsFeatured`** 
+    - Use the first image as the post's feature_image
+    - bool - default: `true`
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
     - bool - default: `true`

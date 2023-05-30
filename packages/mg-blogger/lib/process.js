@@ -1,3 +1,4 @@
+import {basename} from 'node:path';
 import $ from 'cheerio';
 import autop from 'autop';
 import sanitizeHtml from 'sanitize-html';
@@ -7,6 +8,10 @@ import SimpleDom from 'simple-dom';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
+
+$.prototype.unwrap = function () {
+    this.replaceWith(this.html());
+};
 
 const cleanExcerpt = (htmlContent) => {
     // Convert to text only
@@ -28,7 +33,9 @@ const increaseImageSize = (src) => {
     // Increases the image size and removes special flags
     // https://developers.google.com/photos/library/guides/access-media-items
     let updatedSrc = src.replace(/\/s[0-9]{2,5}(-[a-z0-9#,*]{1,4})?/g, '/s2000');
+    updatedSrc = updatedSrc.replace(/=s[0-9]{2,5}(-[a-z0-9#,*]{1,4})?/g, '=s2000');
     updatedSrc = updatedSrc.replace(/\/w[0-9]{2,5}-h[0-9]{2,5}(-[a-z0-9#,*]{1,4})?/g, '/w2000-h2000');
+    updatedSrc = updatedSrc.replace(/=w[0-9]{2,5}-h[0-9]{2,5}(-[a-z0-9#,*]{1,4})?/g, '=w2000-h2000');
     return updatedSrc;
 };
 
@@ -38,8 +45,45 @@ const getAllAttributes = function (el) {
     );
 };
 
+const handleFirstImage = (args) => {
+    let {postData, html} = args;
+
+    const $html = $.load(html);
+    const firstContentElement = $html('*').first();
+
+    if (firstContentElement[0].name === 'img') {
+        $(firstContentElement).remove();
+        postData.feature_image = $(firstContentElement).attr('src');
+    } else if ($(firstContentElement).text().trim() === '') {
+        const firstContentElementImgSrc = $(firstContentElement).find('img').attr('src');
+        const firstContentElementImgBasename = firstContentElementImgSrc ? basename(firstContentElementImgSrc) : null;
+        const firstContentElementAHref = $(firstContentElement).find('a').attr('href');
+        const firstContentElementAHrefBasename = firstContentElementAHref ? basename(firstContentElementAHref) : null;
+
+        if (firstContentElementImgBasename === firstContentElementAHrefBasename) {
+            $(firstContentElement).remove();
+            postData.feature_image = firstContentElementImgSrc;
+        } else if (firstContentElementImgSrc && !firstContentElementAHref) {
+            $(firstContentElement).remove();
+            postData.feature_image = firstContentElementImgSrc;
+        } else {
+            const firstContentElementImgBasenameNoSize = firstContentElementImgBasename.replace(/(.*)((-=|-|=)w[0-9]{2,5}-h[0-9]{2,5}|(-=|-|=)s[0-9]{2,5})/, '$1');
+            const firstContentElementAHrefBasenameNoSize = firstContentElementAHrefBasename.replace(/(.*)((-=|-|=)w[0-9]{2,5}-h[0-9]{2,5}|(-=|-|=)s[0-9]{2,5})/, '$1');
+
+            if (firstContentElementImgBasenameNoSize === firstContentElementAHrefBasenameNoSize) {
+                $(firstContentElement).remove();
+                postData.feature_image = firstContentElementImgSrc;
+            }
+        }
+    }
+
+    postData.html = $html.html().trim();
+
+    return postData;
+};
+
 const processHTMLContent = async (args) => {
-    let {html} = args;
+    let {postData, html, options} = args;
 
     html = autop(html);
 
@@ -143,14 +187,37 @@ const processHTMLContent = async (args) => {
         $(el).replaceWith(`<p>${$(el).html().trim()}</p>`);
     });
 
+    $html('h1, h2, h3, h4, h5, h6').each((i, el) => {
+        const attrs = getAllAttributes(el);
+
+        const styleIndex = attrs.findIndex(e => e.name === 'style');
+        if (styleIndex > -1) {
+            if (attrs[styleIndex].value === 'text-align: left;') {
+                $(el).removeAttr(`style`);
+            }
+        }
+    });
+
+    $html('h3 b').each((i, el) => {
+        $(el).unwrap();
+    });
+
     $html('div, p').each((i, el) => {
         const attrs = getAllAttributes(el);
         const children = $(el).children();
 
         if ($(el).html().trim() === '' && attrs.length === 0) {
             $(el).remove();
+        } else if ($(el).html() === '&#xA0;') {
+            $(el).remove();
         } else if (attrs.length === 0 && children.length === 1 && children[0].name === 'img') {
             $(el).replaceWith($(el).html().trim());
+        }
+    });
+
+    $html('p').each((i, el) => {
+        if ($(el).html().trim() === '' || $(el).html() === '&#xA0;') {
+            $(el).remove();
         }
     });
 
@@ -163,6 +230,11 @@ const processHTMLContent = async (args) => {
         }
     });
 
+    $html('iframe[src*="youtube.com"]').each((i, el) => {
+        $(el).attr('width', 160);
+        $(el).attr('height', 90);
+    });
+
     // Convert back to plain HTML
     html = $html.html();
 
@@ -172,7 +244,16 @@ const processHTMLContent = async (args) => {
     // Remove first element(s) if <hr>
     html = html.replace(/^(<hr\/?> ?)+/gm, '').trim();
 
-    return html;
+    postData.html = html;
+
+    if (options?.firstImageAsFeatured) {
+        postData = handleFirstImage({
+            postData,
+            html
+        });
+    }
+
+    return postData;
 };
 
 const processPost = async (postData, options) => {
@@ -192,8 +273,10 @@ const processPost = async (postData, options) => {
         }
     };
 
-    post.data.html = await processHTMLContent({
-        html: postData.content
+    post.data = await processHTMLContent({
+        postData: post.data,
+        html: postData.content,
+        options
     });
 
     if (postData.author) {
