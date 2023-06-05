@@ -139,7 +139,11 @@ const processShortcodes = async ({html}) => {
     const shortcodes = new Shortcodes();
 
     shortcodes.add('vc_btn', ({attrs}) => {
-        let buttonHref = attrs.link;
+        let buttonHref = attrs?.link ?? false;
+
+        if (!buttonHref) {
+            return;
+        }
 
         // Sometimes URLs have a `url:` prefix which we don't want
         if (buttonHref.startsWith('url:')) {
