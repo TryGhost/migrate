@@ -155,6 +155,23 @@ const processShortcodes = async ({html}) => {
         return `<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="${buttonHref}">${attrs.title}</a></div></div>`;
     });
 
+    shortcodes.add('vc_cta', ({attrs}) => {
+        let buttonHref = attrs?.btn_link ?? false;
+
+        if (!buttonHref) {
+            return;
+        }
+
+        // Sometimes URLs have a `url:` prefix which we don't want
+        if (buttonHref.startsWith('url:')) {
+            buttonHref = buttonHref.slice(4);
+        }
+
+        buttonHref = decodeURIComponent(buttonHref);
+
+        return `<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="${buttonHref}">${attrs.btn_title}</a></div></div>`;
+    });
+
     shortcodes.add('caption', ({content}) => {
         const $html = $.load(content, {
             decodeEntities: false
@@ -210,12 +227,29 @@ const processShortcodes = async ({html}) => {
         return `<figure><pre class="${classString}"><code>${theContent}</code></pre>${captionString}</figure>`;
     });
 
+    shortcodes.add('vc_custom_heading', ({attrs}) => {
+        if (attrs?.font_container.includes('tag:h1')) {
+            return `<h1>${attrs.text}</h1>`;
+        } else if (attrs?.font_container.includes('tag:h2')) {
+            return `<h2>${attrs.text}</h2>`;
+        } else if (attrs?.font_container.includes('tag:h3')) {
+            return `<h3>${attrs.text}</h3>`;
+        }
+    });
+
+    shortcodes.add('vc_empty_space', () => {
+        return `<br></br>`;
+    });
+
     // We don't want to change these, but only retain what's inside.
     shortcodes.unwrap('row');
     shortcodes.unwrap('column');
     shortcodes.unwrap('vc_row');
+    shortcodes.unwrap('vc_row_inner');
     shortcodes.unwrap('vc_column');
+    shortcodes.unwrap('vc_column_inner');
     shortcodes.unwrap('vc_column_text');
+    shortcodes.unwrap('vc_basic_grid');
     shortcodes.unwrap('et_pb_code_builder_version');
     shortcodes.unwrap('et_pb_section');
     shortcodes.unwrap('et_pb_column');
