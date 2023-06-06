@@ -25,7 +25,7 @@
     "jest-extended": "3.2.4"
   },
   "dependencies": {
-    "@tryghost/errors": "1.2.24",
+    "@tryghost/errors": "1.2.25",
     "@tryghost/image-transform": "1.2.7",
     "@tryghost/string": "0.2.6",
     "@tryghost/zip": "1.1.35",
