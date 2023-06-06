@@ -48,8 +48,12 @@ const getUnsizedImageName = (str) => {
 };
 
 const largestSrc = ($imageElem) => {
-    const src = $imageElem.attr('src');
-    const srcset = $imageElem.attr('srcset') || false;
+    const src = $imageElem.attr('src') ?? false;
+    const srcset = $imageElem.attr('srcset') ?? false;
+
+    if (!src || !src.length) {
+        return '';
+    }
 
     let srcToUse = src;
 
