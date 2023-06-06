@@ -159,7 +159,8 @@ const processPost = async ($post, users, options) => {
     });
 
     const mdParser = new MarkdownIt({
-        html: true
+        html: true,
+        breaks: true
     });
     post.data.html = mdParser.render(post.data.html);
 
