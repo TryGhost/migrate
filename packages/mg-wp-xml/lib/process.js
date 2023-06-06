@@ -6,6 +6,8 @@ import errors from '@tryghost/errors';
 import MarkdownIt from 'markdown-it';
 import MgWpAPI from '@tryghost/mg-wp-api';
 import {formatISO, parseISO, isBefore, isAfter, add} from 'date-fns';
+import encoding from 'encoding';
+import {isSerialized, unserialize} from 'php-serialize';
 
 const processUser = ($user) => {
     const authorSlug = slugify($($user).children('wp\\:author_login').text());
@@ -18,6 +20,26 @@ const processUser = ($user) => {
             email: $($user).children('wp\\:author_email').text()
         }
     };
+};
+
+const processWPMeta = async ($post) => {
+    let metaData = {};
+
+    let postMeta = $($post).children('wp\\:postmeta').map(async (i, meta) => {
+        let key = $(meta).children('wp\\:meta_key').text();
+        let value = $(meta).children('wp\\:meta_value').text();
+
+        let encoded = encoding.convert(value, 'WINDOWS-1252').toString();
+        if (isSerialized(encoded)) {
+            value = unserialize(value);
+        }
+
+        metaData[key] = value;
+    }).get();
+
+    await Promise.all(postMeta);
+
+    return metaData;
 };
 
 // The feature images is not "connected" to the post, other than it's located
@@ -136,6 +158,9 @@ const processPost = async ($post, users, options) => {
     let postUrl = $($post).children('link').text();
     let parsedPostUrl = new URL(postUrl, url);
     postUrl = parsedPostUrl.href;
+
+    // If you need <wp:postmeta> data, access it here
+    // const postMeta = await processWPMeta($post);
 
     const post = {
         url: postUrl,
@@ -399,5 +424,6 @@ export default {
 };
 
 export {
+    processWPMeta,
     processHTMLContent
 };
