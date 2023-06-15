@@ -81,7 +81,7 @@ const processMember = (sMember, options) => {
         member.info = `possible group membership: ${member.email}`;
     }
 
-    if (member.email.match(/@deletion-request.substack.com$/ig)) {
+    if (member?.email?.match(/@deletion-request.substack.com$/ig)) {
         member.type = 'skip';
         member.info = `deletion request - skipping: ${member.email}`;
     }
