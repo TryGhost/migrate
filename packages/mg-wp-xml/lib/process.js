@@ -6,7 +6,6 @@ import errors from '@tryghost/errors';
 import MarkdownIt from 'markdown-it';
 import MgWpAPI from '@tryghost/mg-wp-api';
 import {formatISO, parseISO, isBefore, isAfter, add} from 'date-fns';
-import encoding from 'encoding';
 import {isSerialized, unserialize} from 'php-serialize';
 
 const processUser = ($user) => {
@@ -29,8 +28,7 @@ const processWPMeta = async ($post) => {
         let key = $(meta).children('wp\\:meta_key').text();
         let value = $(meta).children('wp\\:meta_value').text();
 
-        let encoded = encoding.convert(value, 'WINDOWS-1252').toString();
-        if (isSerialized(encoded)) {
+        if (isSerialized(value)) {
             value = unserialize(value);
         }
 
