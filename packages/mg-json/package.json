@@ -27,7 +27,7 @@
   "dependencies": {
     "@tryghost/string": "0.2.7",
     "bson-objectid": "2.0.4",
-    "html-entities": "2.3.5",
+    "html-entities": "2.3.6",
     "lodash": "4.17.21"
   }
 }
