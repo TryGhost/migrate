@@ -29,7 +29,7 @@
     "autop": "1.0.1",
     "cheerio": "0.22.0",
     "node-fetch": "^3.3.1",
-    "sanitize-html": "2.10.0",
+    "sanitize-html": "2.11.0",
     "simple-dom": "1.4.0"
   }
 }
