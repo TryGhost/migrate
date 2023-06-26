@@ -31,7 +31,7 @@
     "@tryghost/mg-fs-utils": "^0.12.13",
     "@tryghost/string": "0.2.7",
     "date-fns": "2.30.0",
-    "html-entities": "2.3.6",
+    "html-entities": "2.4.0",
     "lodash": "4.17.21",
     "simple-dom": "1.4.0",
     "srcset": "5.0.0"
