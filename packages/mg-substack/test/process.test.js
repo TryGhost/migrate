@@ -778,12 +778,8 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const post = {
             data: {
                 html: `<p></p><img src="https://example.com/content/file_1200x800.jpg" /><p>My content</p>`,
-                title: 'My Image Post'
-            },
-            metaData: {
-                responseData: {
-                    og_image: 'https://example.com/content/file_1024x768.jpg'
-                }
+                title: 'My Image Post',
+                og_image: 'https://example.com/content/file_1024x768.jpg'
             }
         };
         const url = 'https://example.com';

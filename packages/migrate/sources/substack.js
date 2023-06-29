@@ -189,14 +189,6 @@ const getTaskRunner = (options, logger) => {
                     web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
                 };
 
-                // If enabled, set the `og:image` as the feature image
-                if (options.useMetaImage) {
-                    scrapeConfig.posts.feature_image = {
-                        selector: 'meta[property="og:image"]',
-                        attr: 'content'
-                    };
-                }
-
                 // Delete the authors meta field if the option is not enabled (this data is fetched regardless of options passed)
                 if (!options.useMetaAuthor) {
                     delete scrapeConfig.posts.authors;

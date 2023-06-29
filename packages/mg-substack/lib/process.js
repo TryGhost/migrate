@@ -34,6 +34,10 @@ const readFiles = async (files, postsDir) => {
     return postContent;
 };
 
+const largeImageUrl = (src) => {
+    return src.replace(/w_[0-9]{2,5},h_[0-9]{2,5}/, 'w_2000,h_2000');
+};
+
 const getUnsizedImageName = (str) => {
     const noSizeRegex = /(.*)(_[0-9]{1,4}x[0-9]{1,4}.[a-z]{2,4})/gmi;
     let srcParts = str.split(/\/|%2F/);
@@ -72,8 +76,8 @@ const largestSrc = ($imageElem) => {
 };
 
 const processContent = (post, siteUrl, options) => {
-    const {substackPodcastURL, metaData} = post;
-    const responseData = metaData?.responseData || {};
+    const {substackPodcastURL} = post;
+    const {useMetaImage} = options;
 
     let html = post.data?.html;
 
@@ -99,7 +103,11 @@ const processContent = (post, siteUrl, options) => {
     });
 
     // We use the `'og:image` as the feature image. If the first item in the content is an image and is the same as the `og:image`, remove it
-    if (responseData?.og_image) {
+    if (post.data?.og_image) {
+        if (useMetaImage) {
+            post.data.feature_image = largeImageUrl(post.data.og_image);
+        }
+
         let firstElement = $html('body *').first();
 
         if (firstElement.tagName === 'img' || ($(firstElement).get(0) && $(firstElement).get(0).name === 'img') || $(firstElement).find('img').length) {
@@ -109,7 +117,7 @@ const processContent = (post, siteUrl, options) => {
             if (firstImgSrc.length > 0) {
                 let unsizedFirstSrc = getUnsizedImageName(firstImgSrc);
 
-                let ogImgSrc = responseData.og_image;
+                let ogImgSrc = post.data.og_image;
                 let unsizedOgSrc = getUnsizedImageName(ogImgSrc);
 
                 if (unsizedFirstSrc === unsizedOgSrc) {
