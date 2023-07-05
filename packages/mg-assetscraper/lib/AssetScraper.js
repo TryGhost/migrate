@@ -4,6 +4,7 @@ import cheerio from 'cheerio';
 import got from 'got';
 import {parseSrcset} from 'srcset';
 import {fileTypeFromBuffer} from 'file-type';
+import mime from 'mime-types';
 import MarkdownIt from 'markdown-it';
 import prettyBytes from 'pretty-bytes';
 import SmartRenderer from '@tryghost/listr-smart-renderer';
@@ -589,7 +590,7 @@ class AssetScraper {
     getRemoteHeaders(src) {
         return new Promise((resolve, reject) => {
             const stream = got.stream(src, {
-                timeout: 3000,
+                timeout: 10000,
                 retry: 0 // Not needed as we're requesting headers that either exist or don't
             });
 
@@ -601,9 +602,18 @@ class AssetScraper {
                 req.abort();
 
                 if (res.headers) {
+                    let theHeaders = res.headers;
+                    if (theHeaders['content-type'] === 'application/octet-stream') {
+                        const disposition = theHeaders['content-disposition'];
+                        const parts = disposition.split('.');
+                        const extension = parts.pop();
+                        let newType = mime.lookup(extension);
+                        theHeaders['content-type'] = newType;
+                    }
+
                     resolve({
                         status: res.statusCode,
-                        headers: res.headers
+                        headers: theHeaders
                     });
                 } else {
                     reject('Failed to fetch file data');
@@ -751,7 +761,7 @@ class AssetScraper {
      * @example
      * isAllowedMime('application/pdf');
      */
-    isAllowedMime(mime) {
+    isAllowedMime(mimeType) {
         let allowedMimes = [];
 
         if (this.defaultOptions.allowImages) {
@@ -766,7 +776,7 @@ class AssetScraper {
             allowedMimes.push(...knownFileTypes);
         }
 
-        if (allowedMimes.includes(mime)) {
+        if (allowedMimes.includes(mimeType)) {
             return true;
         } else {
             return false;
@@ -809,12 +819,12 @@ class AssetScraper {
      * determineSaveLocation('application/x-shockwave-flash');
      * => false
      */
-    determineSaveLocation(mime) {
-        if (knownImageTypes.includes(mime)) {
+    determineSaveLocation(mimeType) {
+        if (knownImageTypes.includes(mimeType)) {
             return 'images';
-        } else if (knownMediaTypes.includes(mime)) {
+        } else if (knownMediaTypes.includes(mimeType)) {
             return 'media';
-        } else if (knownFileTypes.includes(mime)) {
+        } else if (knownFileTypes.includes(mimeType)) {
             return 'files';
         }
 
