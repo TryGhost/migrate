@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/migrate",
-  "version": "0.31.0",
+  "version": "0.31.1",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/migrate",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -33,7 +33,7 @@
   "dependencies": {
     "@tryghost/listr-smart-renderer": "^0.5.8",
     "@tryghost/logging": "2.4.5",
-    "@tryghost/mg-assetscraper": "^0.4.0",
+    "@tryghost/mg-assetscraper": "^0.4.1",
     "@tryghost/mg-blogger": "^0.1.2",
     "@tryghost/mg-chorus": "^0.1.9",
     "@tryghost/mg-curated-export": "^0.3.14",
