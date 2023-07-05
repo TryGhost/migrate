@@ -3,8 +3,7 @@ import {join, dirname, basename, extname} from 'node:path';
 import cheerio from 'cheerio';
 import got from 'got';
 import {parseSrcset} from 'srcset';
-import {fileTypeFromBuffer} from 'file-type';
-import mime from 'mime-types';
+import {fileTypeFromBuffer, fileTypeFromStream} from 'file-type';
 import MarkdownIt from 'markdown-it';
 import prettyBytes from 'pretty-bytes';
 import SmartRenderer from '@tryghost/listr-smart-renderer';
@@ -598,17 +597,15 @@ class AssetScraper {
 
             stream.on('request', _req => req = _req);
 
-            stream.on('response', (res) => {
+            stream.on('response', async (res) => {
+                let fileType = await fileTypeFromStream(stream);
+
                 req.abort();
 
                 if (res.headers) {
                     let theHeaders = res.headers;
-                    if (theHeaders['content-type'] === 'application/octet-stream') {
-                        const disposition = theHeaders['content-disposition'];
-                        const parts = disposition.split('.');
-                        const extension = parts.pop();
-                        let newType = mime.lookup(extension);
-                        theHeaders['content-type'] = newType;
+                    if (fileType && fileType.mime) {
+                        theHeaders['content-type'] = fileType.mime;
                     }
 
                     resolve({
