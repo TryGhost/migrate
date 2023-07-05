@@ -1,9 +1,13 @@
+import {ui} from '@tryghost/pretty-cli';
 import {Options} from "./Options.js";
 import {StripeAPI} from "./StripeAPI.js";
 import {StripeConnector} from "./StripeConnector.js";
-import {ui} from '@tryghost/pretty-cli';
-import SubscriptionImporter from "./importers/SubscriptionImporter.js";
-import CouponImporter from "./importers/CouponImporter.js";
+import {getCouponImporter} from "./importers/CouponImporter.js";
+import {getPriceImporter} from "./importers/PriceImporter.js";
+import {getSubscriptionImporter} from "./importers/SubscriptionImporter.js";
+import {ImportStats} from './importers/ImportStats.js';
+import ora from 'ora';
+import Logger from './logger.js';
 
 class StripeCSVCommand {
     id = 'stripe-csv';
@@ -25,30 +29,52 @@ class StripeCSVCommand {
     }
 
     async run(argv: any) {
-        // Try to connect to Stripe
-        ui.log.info(`Run`);
-
         const options = new Options(argv);
+        Logger.init({verbose: options.verbose});
+        Logger.shared.info(`Running in dry run mode: ${options.dryRun ? 'yes' : 'no'}`);
 
-        // Step 1: Connect to Stripe
-        const stripe = new StripeConnector();
-        await stripe.connect();
+        try {
+            // Step 1: Connect to Stripe
+            Logger.shared.startSpinner('Connecting to Stripe');
+            const stripe = new StripeConnector();
 
-        // Step 2: Validate connection
-        await StripeAPI.shared.validate();
+            await stripe.connect();
 
-        const couponImporter = new CouponImporter(options.coupons);
-        const subscriptionImporter = new SubscriptionImporter(
-            options.subscriptions,
-            {
-                couponImporter
-            }
-        );
+            Logger.shared.processSpinner('Validating connection');
+            const {accountName, mode} = await StripeAPI.shared.validate();
+            Logger.shared.succeed(`Connected to Stripe account: ${accountName} in ${mode} mode`);
 
-        await subscriptionImporter.importAll({
-            dryRun: true,
-            stripe: StripeAPI.shared
-        });
+            // Step 2: Import data
+            Logger.shared.startSpinner('Importing data');
+            const stats = new ImportStats()
+            stats.addListener(() => {
+                Logger.shared.processSpinner(stats.toString());
+            });
+
+            const couponImporter = getCouponImporter(options.coupons);
+            const priceImporter = getPriceImporter(options.prices);
+            const subscriptionImporter = getSubscriptionImporter({
+                filePath: options.subscriptions,
+                importers: {
+                    coupons: couponImporter,
+                    prices: priceImporter
+                }
+            });
+
+            await subscriptionImporter.importAll({
+                dryRun: options.dryRun,
+                stripe: StripeAPI.shared,
+                stats,
+                verbose: options.verbose
+            });
+            Logger.shared.succeed(`Successfully imported all subscriptions`);
+
+            stats.print();
+
+        } catch (e) {
+            Logger.shared.fail(e);
+            process.exit(1);
+        }
     }
 }
 

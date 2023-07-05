@@ -1,122 +1,58 @@
-import { parse } from 'csv-parse';
-import fs from 'fs';
-import {StripeAPI} from '../StripeAPI.js';
 import DryRunIdGenerator from '../DryRunIdGenerator.js';
-import {ui} from '@tryghost/pretty-cli';
+import {Data} from '../decoders/Data.js';
+import {ImportContext, OnDemandImporter} from './OnDemandImporter.js';
 
-class CouponCSVLine {
+class CSVLine {
     id: string;
+    duration: 'forever' | 'once' | 'repeating';
+    durationInMonths: number | null;
+    percentOff: number | null;
+    amountOff: number | null;
 
-    constructor(data: any) {
-        if (!data.id || typeof data.id !== 'string') {
-            throw new Error('Missing or invalid id');
-        }
-        this.id = data.id;
+    constructor(data: Data) {
+        this.id = data.field('id').string;
+        this.duration = data.field('duration').enum(['forever', 'once', 'repeating']);
+        this.durationInMonths = data.field('duration in months').nullable?.integer ?? null;
+        this.percentOff = data.field('percent off').nullable?.float ?? null;
+        this.amountOff = data.field('amount off').nullable?.integer ?? null;
+    }
+
+    static decode(data: Data): CSVLine {
+        return new CSVLine(data);
     }
 }
 
-/**
- * Context we need to have when importing a coupon, for error logging and data handling.
- */
-type CouponImportContext = {
-    stripe: StripeAPI,
-    dryRun: boolean
+async function importLine(line: CSVLine, context: ImportContext): Promise<string> {
+    // Importing should try to be idempotent, so first search if we already imported this subscription in this account.
+    // We can do this because we store the old id in the metadata importOldId field
+    const existingCoupon = await context.stripe.client.coupons.retrieve(line.id);
+    if (existingCoupon) {
+        context.stats.trackReused('coupon');
+        return existingCoupon.id;
+    }
+
+    if (context.dryRun) {
+        context.stats.trackImported('coupon');
+        return DryRunIdGenerator.getNext();
+    }
+
+    const coupon = await context.stripe.client.coupons.create({
+        id: line.id,
+        duration: line.duration,
+        duration_in_months: line.durationInMonths ?? undefined,
+        percent_off: line.percentOff ?? undefined,
+        amount_off: line.amountOff ?? undefined
+    });
+    context.stats.trackImported('coupon');
+
+    return coupon.id;
 }
 
-/**
- * The CouponImporter only imports on demand, this avoids the need to import all (unused) coupon data. The SubscriptionImporter will ask the CouponImporter to create a coupon if it doesn't exist yet.
- */
-export default class CouponImporter {
-    filePath: string;
-    didReadAll: boolean = false;
-
-    /**
-     * This map keeps track of all the imported coupons, and maps the old coupon id to the new coupon id.
-     */
-    importedCoupons: Map<string, string> = new Map();
-
-    /**
-     * Data read from the CSV file that is not yet used. Mapped by the old coupon id.
-     */
-    couponCache: Map<string, CouponCSVLine> = new Map();
-
-    constructor(filePath: string) {
-        this.filePath = filePath;
-    }
-
-    didImport(oldCouponId: string): boolean {
-        return this.importedCoupons.has(oldCouponId);
-    }
-
-    async importIfNeeded(oldCouponId: string, context: CouponImportContext): Promise<string> {
-        if (this.didImport(oldCouponId)) {
-            return this.importedCoupons.get(oldCouponId)!;
-        }
-
-        const id = await this.import(oldCouponId, context);
-        this.importedCoupons.set(oldCouponId, id);
-        return id;
-    }
-
-    private async import(oldCouponId: string, context: CouponImportContext): Promise<string> {
-        await this.readAllIfNeeded();
-        const line = this.couponCache.get(oldCouponId);
-        if (line === undefined) {
-            throw new Error(`Coupon with ID ${oldCouponId} does not exist`);
-        }
-
-        ui.log.info(`Importing coupon ${oldCouponId}`);
-
-        if (context.dryRun) {
-            return DryRunIdGenerator.getNext();
-        }
-
-        throw new Error('Not implemented: cannot create coupon in Stripe yet');
-    }
-
-    assertInitialized(): void {
-        if (!this.didReadAll) {
-            throw new Error('CouponImporter not initialized');
-        }
-    }
-
-    async readAllIfNeeded(): Promise<void> {
-        if (this.didReadAll) {
-            return Promise.resolve();
-        }
-        return await this.readAll();
-    }
-
-    /**
-     * If ever needed, we could rewrite this to not read all lines at once to minimize memory usage.
-     */
-    async readAll(): Promise<void> {
-        if (this.didReadAll) {
-            return Promise.resolve();
-        }
-        this.didReadAll = true;
-
-        // Initialize the parser
-        return new Promise((resolve, reject) => {
-            const parser = parse({
-                columns: (header: string[]) => {
-                    return header.map((column: string) => column.toLowerCase())
-                }
-            });
-            const fileStream = fs.createReadStream(this.filePath);
-            fileStream.pipe(parser);
-
-            (async () => {
-                // Iterate through each records
-                for await (const record of parser) {
-                    try {
-                        const parsed = new CouponCSVLine(record);
-                        this.couponCache.set(parsed.id, parsed);
-                    } catch (e) {
-                        throw new Error(`Invalid coupon in row ${parser.info.records}: ${e}`);
-                    }
-                }
-            })().then(resolve).catch(reject);
-        });
-    }
-}
+export const getCouponImporter = (filePath: string) => {
+    return new OnDemandImporter({
+        itemName: 'coupon',
+        filePath,
+        decoder: CSVLine,
+        importLine
+    });
+};

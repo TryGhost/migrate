@@ -13,7 +13,7 @@ export class StripeConnector {
     async connect() {
         const connected = await this.connectViaStripeCli();
         if (connected) {
-            ui.log.info(`Using ${this.mode} api key from Stripe CLI (stripe login)`);
+            //ui.log.info(`Using ${this.mode} api key from Stripe CLI (stripe login)`);
             StripeAPI.shared = connected;
             return;
         }
