@@ -12,13 +12,6 @@ export class Options {
         },
         {
             type: 'file',
-            flags: '--products',
-            mustExist: true,
-            required: true,
-            desc: 'Path pointing to a CSV file containing the products exported from your old Stripe account'
-        },
-        {
-            type: 'file',
             flags: '--prices',
             mustExist: true,
             required: true,
@@ -31,18 +24,31 @@ export class Options {
             required: true,
             desc: 'Path pointing to a CSV file containing the subscriptions exported from your old Stripe account'
         },
+        {
+            type: 'boolean',
+            flags: '--dry-run',
+            defaultValue: false,
+            desc: 'Run the import without actually creating any subscriptions'
+        },
+        {
+            type: 'boolean',
+            flags: '--verbose -v',
+            defaultValue: false,
+            desc: 'Print verbose output'
+        }
     ];
 
     coupons: string
-    products: string
     prices: string
     subscriptions: string
+    dryRun: boolean
+    verbose: boolean
 
     constructor(argv: any) {
-        console.log(argv);
         this.coupons = argv.coupons;
-        this.products = argv.products;
         this.prices = argv.prices;
         this.subscriptions = argv.subscriptions;
+        this.dryRun = argv['dry-run'];
+        this.verbose = argv.verbose;
     }
 }

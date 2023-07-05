@@ -1,101 +1,107 @@
-import { parse } from 'csv-parse';
-import fs from 'fs';
-import {StripeAPI} from '../StripeAPI.js';
+import {Data} from '../decoders/Data.js';
+import {ImportContext, OnDemandImporter} from './OnDemandImporter.js';
+import {FullImporter} from './FullImporter.js';
 import DryRunIdGenerator from '../DryRunIdGenerator.js';
-import CouponImporter from './CouponImporter.js';
-import {ui} from '@tryghost/pretty-cli';
+import {dateToUnix} from '../helpers.js';
+import Logger from '../logger.js';
+import {ImportError} from './ImportError.js';
 
-class SubscriptionCSVLine {
+class CSVLine {
     id: string;
+    customerId: string;
     coupon: string | null;
+    priceId: string;
+    status: string;
+    trialEnd: Date | null;
+    currentPeriodEnd: Date;
 
-    constructor(data: any) {
-        if (!data.id || typeof data.id !== 'string') {
-            throw new Error('Missing or invalid id ' + JSON.stringify(data));
-        }
-        this.id = data.id;
+    constructor(data: Data) {
+        this.id = data.field('id').string;
+        this.customerId = data.field('customer id').string;
+        this.coupon = data.optionalField('coupon')?.nullable?.string ?? null;
+        this.priceId = data.field('plan').string;
+        this.status = data.field('status').string;
+        this.trialEnd = data.field('trial end (utc)')?.nullable?.date ?? null;
+        this.currentPeriodEnd = data.field('current period end (utc)').date;
+    }
 
-        if (data.coupon && typeof data.coupon !== 'string') {
-            throw new Error('Invalid coupon');
-        }
-
-        this.coupon = data.coupon ? data.coupon : null;
+    static decode(data: Data): CSVLine {
+        return new CSVLine(data);
     }
 }
 
-/**
- * Context we need to have when importing a coupon, for error logging and data handling.
- */
-type SubscriptionImportContext = {
-    stripe: StripeAPI,
-    dryRun: boolean
-}
-
-/**
- * The CouponImporter only imports on demand, this avoids the need to import all (unused) coupon data. The SubscriptionImporter will ask the CouponImporter to create a coupon if it doesn't exist yet.
- */
-export default class SubscriptionImporter {
-    filePath: string;
-    couponImporter: CouponImporter;
-
-    constructor(filePath: string, importers: {couponImporter: CouponImporter}) {
-        this.filePath = filePath;
-        this.couponImporter = importers.couponImporter;
+export const getSubscriptionImporter = ({filePath, importers}: {
+    filePath: string,
+    importers: {
+        coupons: OnDemandImporter,
+        prices: OnDemandImporter
     }
-
-    async import(parsed: SubscriptionCSVLine, context: SubscriptionImportContext): Promise<string> {
-        let newCouponId;
-
-        if (parsed.coupon) {
-            newCouponId = await this.couponImporter.importIfNeeded(parsed.coupon, context);
+}) => {
+    async function importLine(line: CSVLine, context: ImportContext): Promise<string> {
+        if (line.status === 'canceled') {
+            Logger.shared.info(`Skipping canceled subscription ${line.id}`);
+            return '';
         }
 
-        ui.log.info(`Importing subscription ${parsed.id}`);
+        let newCouponId: string | null = null;
+        if (line.coupon) {
+            newCouponId = await importers.coupons.importIfNeeded(line.coupon, context);
+        }
+
+        const newPriceId = await importers.prices.importIfNeeded(line.priceId, context);
+
+        // Importing should try to be idempotent, so first search if we already imported this subscription in this account.
+        // We can do this because we store the old id in the metadata importOldId field
+        const existingSubscription = await context.stripe.client.subscriptions.search({
+            limit: 1,
+            query: `metadata['importOldId']:'${line.id}'`
+        })
+
+        if (existingSubscription.data.length > 0) {
+            Logger.shared.info(`Reusing existing subscription ${existingSubscription.data[0].id} for ${line.id}`);
+            context.stats.trackReused('subscription');
+            return existingSubscription.data[0].id;
+        }
+
+        // Check if the customer exists (for proper error handling, we could move this to the dry run if it is too slow)
+        const customer = await context.stripe.client.customers.retrieve(line.customerId);
+        if (customer.deleted) {
+            throw new Error(`Customer ${line.customerId} has been permanently deleted and cannot be used for a new subscription`)
+        }
 
         if (context.dryRun) {
-            return DryRunIdGenerator.getNext();
+            const newSubscriptionId = DryRunIdGenerator.getNext();
+            Logger.shared.ok(`Created subscription ${newSubscriptionId} for ${line.id}`);
+            context.stats.trackImported('subscription');
+            return newSubscriptionId;
         }
 
-        throw new Error('Not implemented: cannot create subscription in Stripe yet');
-    }
-
-    /**
-     * If ever needed, we could rewrite this to not read all lines at once to minimize memory usage.
-     */
-    async importAll(context: SubscriptionImportContext): Promise<void> {
-        const errors: Error[] = [];
-
-        // Initialize the parser
-        return new Promise((resolve, reject) => {
-            const parser = parse({
-                columns: (header: string[]) => {
-                    return header.map((column: string) => column.toLowerCase())
+        // Create the subscription
+        const subscription = await context.stripe.client.subscriptions.create({
+            customer: line.customerId,
+            items: [
+                {
+                    price: newPriceId
                 }
-            });
-            const fileStream = fs.createReadStream(this.filePath);
-
-            // Pipe fileStream through the parser
-            fileStream.pipe(parser);
-
-            (async () => {
-                // Iterate through each records
-                for await (const record of parser) {
-                    try {
-                        const parsed = new SubscriptionCSVLine(record);
-                        await this.import(parsed, context)
-                    } catch (e) {
-                        errors.push(
-                            new Error(`Invalid subscription in ${this.filePath} at line ${parser.info.records + 1}: ${e}`)
-                        );
-                    }
-                }
-                if (errors.length > 0) {
-                    if (errors.length === 1) {
-                        throw errors[0];
-                    }
-                    throw new Error(`Failed to import ${errors.length} subscriptions: \n\t${errors.join('\n\t')}`);
-                }
-            })().then(resolve).catch(reject);
+            ],
+            billing_cycle_anchor: dateToUnix(line.currentPeriodEnd),
+            cancel_at_period_end: false,
+            coupon: newCouponId ?? undefined,
+            trial_end: dateToUnix(line.trialEnd),
+            metadata: {
+                importOldId: line.id
+            }
         });
+        Logger.shared.ok(`Created subscription ${subscription.id} for ${line.id}`);
+        context.stats.trackImported('subscription');
+        return subscription.id;
     }
-}
+
+
+    return new FullImporter({
+        itemName: 'subscription',
+        filePath,
+        decoder: CSVLine,
+        importLine
+    });
+};
