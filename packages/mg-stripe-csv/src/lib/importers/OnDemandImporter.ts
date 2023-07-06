@@ -6,7 +6,7 @@ import {Decoder} from '../decoders/Decoder.js';
 import {ErrorGroup} from './ErrorGroup.js';
 import {ImportError} from './ImportError.js';
 import {ImportStats} from './ImportStats.js';
-import Logger from '../logger.js';
+import Logger from '../Logger.js';
 
 /**
  * Context we need to have when importing a coupon, for error logging and data handling.
