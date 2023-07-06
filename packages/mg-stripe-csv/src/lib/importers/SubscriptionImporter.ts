@@ -3,7 +3,7 @@ import {ImportContext, OnDemandImporter} from './OnDemandImporter.js';
 import {FullImporter} from './FullImporter.js';
 import DryRunIdGenerator from '../DryRunIdGenerator.js';
 import {dateToUnix} from '../helpers.js';
-import Logger from '../logger.js';
+import Logger from '../Logger.js';
 import {ImportError} from './ImportError.js';
 
 class CSVLine {

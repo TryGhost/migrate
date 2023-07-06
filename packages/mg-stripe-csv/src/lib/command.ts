@@ -7,7 +7,9 @@ import {getPriceImporter} from "./importers/PriceImporter.js";
 import {getSubscriptionImporter} from "./importers/SubscriptionImporter.js";
 import {ImportStats} from './importers/ImportStats.js';
 import ora from 'ora';
-import Logger from './logger.js';
+import Logger from './Logger.js';
+import { confirm } from '@inquirer/prompts';
+import chalk from 'chalk';
 
 class StripeCSVCommand {
     id = 'stripe-csv';
@@ -34,15 +36,36 @@ class StripeCSVCommand {
         Logger.shared.info(`Running in dry run mode: ${options.dryRun ? 'yes' : 'no'}`);
 
         try {
+
             // Step 1: Connect to Stripe
-            Logger.shared.startSpinner('Connecting to Stripe');
-            const stripe = new StripeConnector();
+            const connector = new StripeConnector();
+            const fromAccount = await connector.askForAccount('Which Stripe account do you want to migrate from?');
 
-            await stripe.connect();
+            Logger.shared.startSpinner('Validating connection');
+            const {accountName, mode} = await fromAccount.validate();
+            Logger.shared.succeed(`Migrating from Stripe account: ${chalk.blue(accountName)} in ${mode} mode\n`);
 
-            Logger.shared.processSpinner('Validating connection');
-            const {accountName, mode} = await StripeAPI.shared.validate();
-            Logger.shared.succeed(`Connected to Stripe account: ${accountName} in ${mode} mode`);
+            const toAccount = await connector.askForAccount('Which Stripe account do you want to migrate to?');
+
+            Logger.shared.startSpinner('Validating connection');
+            const {accountName: accountNameTo, mode: modeTo} = await toAccount.validate();
+            Logger.shared.succeed(`Migrating to Stripe account: ${chalk.blue(accountNameTo)} in ${modeTo} mode\n`);
+
+            if (toAccount.id === fromAccount.id) {
+                Logger.shared.fail('You cannot migrate to the same account');
+                process.exit(1);
+            }
+
+            // Confirm
+            const confirmMigration = await confirm({
+                message: 'Migrate from ' + chalk.blue(accountName) + ' to ' + chalk.blue(accountNameTo) + '?',
+                default: false
+            });
+
+            if (!confirmMigration) {
+                Logger.shared.fail('Migration cancelled');
+                process.exit(1);
+            }
 
             // Step 2: Import data
             Logger.shared.startSpinner('Importing data');
@@ -63,7 +86,7 @@ class StripeCSVCommand {
 
             await subscriptionImporter.importAll({
                 dryRun: options.dryRun,
-                stripe: StripeAPI.shared,
+                stripe: fromAccount,
                 stats,
                 verbose: options.verbose
             });

@@ -1,6 +1,6 @@
 import DryRunIdGenerator from '../DryRunIdGenerator.js';
 import {Data} from '../decoders/Data.js';
-import Logger from '../logger.js';
+import Logger from '../Logger.js';
 import {ImportContext, LineData, OnDemandImporter} from './OnDemandImporter.js';
 
 class CSVLine {

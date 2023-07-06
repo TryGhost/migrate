@@ -1,5 +1,4 @@
-import {ui} from '@tryghost/pretty-cli';
-import Logger from '../logger.js';
+import Logger from '../Logger.js';
 
 export class ImportStats {
     readPerType: Map<string, number> = new Map();

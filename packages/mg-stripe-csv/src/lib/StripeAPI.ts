@@ -1,11 +1,9 @@
 import {Stripe} from 'stripe';
-import {ui} from '@tryghost/pretty-cli';
 
 export class StripeAPI {
-    static shared: StripeAPI;
-
     client: Stripe
     mode: 'live' | 'test'
+    id!: string
 
     constructor({apiKey}: {apiKey: string}) {
         this.client = new Stripe(apiKey, {
@@ -18,6 +16,8 @@ export class StripeAPI {
         try {
             const account = await this.client.accounts.retrieve();
             //ui.log.ok(`Connected to Stripe account: ${account.settings?.dashboard.display_name} - ${this.mode} mode`);
+
+            this.id = account.id;
 
             return {
                 accountName: account.settings?.dashboard.display_name ?? 'Unknown',
