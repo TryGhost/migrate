@@ -1,16 +1,10 @@
 import Logger from '../Logger.js';
 
 export class ImportStats {
-    readPerType: Map<string, number> = new Map();
     importedPerType: Map<string, number> = new Map();
     reusedPerType: Map<string, number> = new Map();
 
     listeners: (() => void)[] = []
-
-    trackRead(type: string) {
-        this.readPerType.set(type, (this.readPerType.get(type) || 0) + 1);
-        this.callListeners();
-    }
 
     trackImported(type: string) {
         this.importedPerType.set(type, (this.importedPerType.get(type) || 0) + 1);
@@ -22,22 +16,24 @@ export class ImportStats {
         this.callListeners();
     }
 
-    get total() {
+    get totalImported() {
         return Array.from(this.importedPerType.values()).reduce((sum, count) => sum + count, 0);
     }
 
+    get totalReused() {
+        return Array.from(this.reusedPerType.values()).reduce((sum, count) => sum + count, 0);
+    }
+
     print() {
-        Logger.shared.info(`Imported ${this.total} items:`);
+        Logger.shared.info(`Imported ${this.totalImported} items:`);
         for (const [type, count] of this.importedPerType.entries()) {
             const reused = this.reusedPerType.get(type) || 0;
-            const read = this.readPerType.get(type) || 0;
-            const skipped = read - count - reused;
-            Logger.shared.info(`  ${type}: ${count} imported, ${reused} reused, ${skipped} skipped`);
+            Logger.shared.info(`  ${type}: ${count} imported, ${reused} reused`);
         }
     }
 
     toString() {
-        return `Imported ${this.total} items`;
+        return `Imported ${this.totalImported} items, reused ${this.totalReused}`;
     }
 
     addListener(listener: () => void) {

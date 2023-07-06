@@ -1,18 +1,61 @@
 import {ui} from '@tryghost/pretty-cli';
 import ora, {Ora} from 'ora';
 
-export default class Logger {
-    static shared: Logger;
-
-    spinner: Ora | null = null;
-    verbose: boolean;
-
-    constructor({verbose}: {verbose?: boolean}) {
-        this.verbose = verbose ?? false;
+class VerboseLogger {
+    logger: Logger
+    level: 0 | 1 | 2 = 0;
+    get verboseLevel() {
+        return this.logger.verboseLevel;
     }
 
-    static init({verbose}: {verbose?: boolean}) {
-        Logger.shared = new Logger({verbose});
+    constructor({logger, level}: {logger: Logger, level?: 0 | 1 | 2}) {
+        this.logger = logger;
+        this.level = level ?? 0;
+    }
+
+    get activated() {
+        return this.verboseLevel >= this.level;
+    }
+
+    info(message: string) {
+        if (!this.activated) {
+            return;
+        }
+        this.logger.info(message);
+    }
+
+    ok(message: string, level = 0) {
+        if (!this.activated) {
+            return;
+        }
+        this.logger.ok(message);
+    }
+
+    error(message: string, level = 0) {
+        if (!this.activated) {
+            return;
+        }
+        this.logger.error(message);
+    }
+}
+
+export default class Logger {
+    static shared: Logger;
+    static v: VerboseLogger
+    static vv: VerboseLogger
+
+    spinner: Ora | null = null;
+    verboseLevel: 0 | 1 | 2 = 0;
+
+    constructor({verboseLevel}: {verboseLevel?: 0 | 1 | 2}) {
+        this.verboseLevel = verboseLevel ?? 0;
+    }
+
+    static init({verboseLevel}: {verboseLevel?: 0 | 1 | 2}) {
+        const logger = new Logger({verboseLevel});
+        Logger.shared = logger;
+        Logger.v = new VerboseLogger({logger, level: 1});
+        Logger.vv = new VerboseLogger({logger, level: 2});
     }
 
     startSpinner(text: string) {
@@ -51,10 +94,7 @@ export default class Logger {
         }
     }
 
-    info(message: string) {
-        if (!this.verbose) {
-            return;
-        }
+    info(message: string, level = 2) {
         if (this.spinner) {
             this.spinner.clear()
         }
@@ -66,7 +106,7 @@ export default class Logger {
         }
     }
 
-    ok(message: string) {
+    ok(message: string, level = 0) {
         if (this.spinner) {
             this.spinner.clear()
         }
@@ -78,7 +118,7 @@ export default class Logger {
         }
     }
 
-    error(message: string) {
+    error(message: string, level = 0) {
         if (this.spinner) {
             this.spinner.clear()
         }

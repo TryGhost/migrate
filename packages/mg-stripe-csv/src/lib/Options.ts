@@ -4,51 +4,31 @@ export class Options {
      */
     static definitions = [
         {
-            type: 'file',
-            flags: '--coupons',
-            mustExist: true,
-            required: true,
-            desc: 'Path pointing to a CSV file containing the coupons exported from your old Stripe account'
-        },
-        {
-            type: 'file',
-            flags: '--prices',
-            mustExist: true,
-            required: true,
-            desc: 'Path pointing to a CSV file containing the prices exported from your old Stripe account'
-        },
-        {
-            type: 'file',
-            flags: '--subscriptions',
-            mustExist: true,
-            required: true,
-            desc: 'Path pointing to a CSV file containing the subscriptions exported from your old Stripe account'
-        },
-        {
             type: 'boolean',
             flags: '--dry-run',
             defaultValue: false,
             desc: 'Run the import without actually creating any subscriptions'
         },
         {
-            type: 'boolean',
+            type: 'number',
             flags: '--verbose -v',
             defaultValue: false,
             desc: 'Print verbose output'
+        },
+        {
+            type: 'boolean',
+            // Somehow -vv is not working in sywac
+            flags: '--very-verbose',
+            defaultValue: false,
+            desc: 'Print very verbose output'
         }
     ];
 
-    coupons: string
-    prices: string
-    subscriptions: string
     dryRun: boolean
-    verbose: boolean
+    verboseLevel: 0 | 1 | 2
 
     constructor(argv: any) {
-        this.coupons = argv.coupons;
-        this.prices = argv.prices;
-        this.subscriptions = argv.subscriptions;
         this.dryRun = argv['dry-run'];
-        this.verbose = argv.verbose;
+        this.verboseLevel = argv['very-verbose'] ? 2 : argv.verbose ? 1 : 0;
     }
 }

@@ -1,15 +1,12 @@
-import {ui} from '@tryghost/pretty-cli';
-import {Options} from "./Options.js";
-import {StripeAPI} from "./StripeAPI.js";
-import {StripeConnector} from "./StripeConnector.js";
-import {getCouponImporter} from "./importers/CouponImporter.js";
-import {getPriceImporter} from "./importers/PriceImporter.js";
-import {getSubscriptionImporter} from "./importers/SubscriptionImporter.js";
-import {ImportStats} from './importers/ImportStats.js';
-import ora from 'ora';
-import Logger from './Logger.js';
-import { confirm } from '@inquirer/prompts';
+import {confirm} from '@inquirer/prompts';
 import chalk from 'chalk';
+import Logger from './Logger.js';
+import {Options} from "./Options.js";
+import {StripeConnector} from "./StripeConnector.js";
+import {ImportStats} from './importers/ImportStats.js';
+import {createProductImporter} from './importers/createProductImporter.js';
+import {createPriceImporter} from './importers/createPriceImporter.js';
+import {createSubscriptionImporter} from './importers/createSubscriptionImporter.js';
 
 class StripeCSVCommand {
     id = 'stripe-csv';
@@ -32,7 +29,7 @@ class StripeCSVCommand {
 
     async run(argv: any) {
         const options = new Options(argv);
-        Logger.init({verbose: options.verbose});
+        Logger.init({verboseLevel: options.verboseLevel});
         Logger.shared.info(`Running in dry run mode: ${options.dryRun ? 'yes' : 'no'}`);
 
         try {
@@ -74,7 +71,29 @@ class StripeCSVCommand {
                 Logger.shared.processSpinner(stats.toString());
             });
 
-            const couponImporter = getCouponImporter(options.coupons);
+            const productImporter = createProductImporter({
+                stats,
+                oldStripe: fromAccount,
+                newStripe: toAccount,
+            })
+
+            const priceImporter = createPriceImporter({
+                stats,
+                oldStripe: fromAccount,
+                newStripe: toAccount,
+                productImporter,
+            })
+
+            const subscriptionImporter = createSubscriptionImporter({
+                stats,
+                oldStripe: fromAccount,
+                newStripe: toAccount,
+                priceImporter
+            })
+            await subscriptionImporter.recreateAll();
+            Logger.shared.succeed(`Successfully imported all subscriptions`);
+
+            /*const couponImporter = getCouponImporter(options.coupons);
             const priceImporter = getPriceImporter(options.prices);
             const subscriptionImporter = getSubscriptionImporter({
                 filePath: options.subscriptions,
@@ -89,8 +108,7 @@ class StripeCSVCommand {
                 stripe: fromAccount,
                 stats,
                 verbose: options.verbose
-            });
-            Logger.shared.succeed(`Successfully imported all subscriptions`);
+            });*/
 
             stats.print();
 
