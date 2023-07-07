@@ -41,8 +41,8 @@ class VerboseLogger {
 
 export default class Logger {
     static shared: Logger;
-    static v: VerboseLogger
-    static vv: VerboseLogger
+    static v: Logger | null;
+    static vv: Logger | null;
 
     spinner: Ora | null = null;
     verboseLevel: 0 | 1 | 2 = 0;
@@ -51,11 +51,11 @@ export default class Logger {
         this.verboseLevel = verboseLevel ?? 0;
     }
 
-    static init({verboseLevel}: {verboseLevel?: 0 | 1 | 2}) {
+    static init({verboseLevel}: {verboseLevel: 0 | 1 | 2}) {
         const logger = new Logger({verboseLevel});
         Logger.shared = logger;
-        Logger.v = new VerboseLogger({logger, level: 1});
-        Logger.vv = new VerboseLogger({logger, level: 2});
+        Logger.v = verboseLevel >= 1 ? logger : null;
+        Logger.vv = verboseLevel >= 2 ? logger : null;
     }
 
     startSpinner(text: string) {

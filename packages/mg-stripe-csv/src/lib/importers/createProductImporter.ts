@@ -2,8 +2,10 @@ import Stripe from "stripe"
 import { Importer } from "./Importer.js"
 import {StripeAPI} from "../StripeAPI.js"
 import {ImportStats} from "./ImportStats.js";
+import {ifDryRunJustReturnFakeId} from "../helpers.js";
 
 export function createProductImporter({oldStripe, newStripe, stats}: {
+    dryRun: boolean,
     oldStripe: StripeAPI,
     newStripe: StripeAPI,
     stats: ImportStats
@@ -27,14 +29,16 @@ export function createProductImporter({oldStripe, newStripe, stats}: {
         },
 
         async recreate(oldProduct: Stripe.Product) {
-            const product = await newStripe.client.products.create({
-                name: oldProduct.name,
-                description: oldProduct.description ?? undefined,
-                metadata: {
-                    importOldId: oldProduct.id
-                }
+            return await ifDryRunJustReturnFakeId(async () => {
+                const product = await newStripe.client.products.create({
+                    name: oldProduct.name,
+                    description: oldProduct.description ?? undefined,
+                    metadata: {
+                        importOldId: oldProduct.id
+                    }
+                });
+                return product.id
             });
-            return product.id
         }
     };
 

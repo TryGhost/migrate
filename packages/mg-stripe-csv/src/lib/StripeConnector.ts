@@ -13,12 +13,14 @@ class AvailableStripeAccount {
     mode: 'live' | 'test';
     name: string;
     apiKey: string;
+    namespace?: string;
 
-    constructor(data: {name: string, apiKey: string, id: string, mode: 'live' | 'test'}) {
+    constructor(data: {name: string, apiKey: string, id: string, mode: 'live' | 'test', namespace?: string}) {
         this.name = data.name;
         this.apiKey = data.apiKey;
         this.id = data.id;
         this.mode = data.mode;
+        this.namespace = data.namespace;
     }
 
     toString() {
@@ -32,14 +34,25 @@ export class StripeConnector {
      */
     mode: 'live' | 'test' = 'test';
 
-    async askForAccount(message: string) {
+    constructor(mode: 'live' | 'test' = 'test') {
+        this.mode = mode;
+    }
+
+    async askForAccount(message: string, tryApiKey?: string) {
+        if (tryApiKey) {
+            const stripe = new StripeAPI({
+                apiKey: tryApiKey
+            });
+            return stripe;
+        }
+
         // First list all connected accounts via Stripe CLI
         Logger.shared.startSpinner('Listing connected accounts...');
         const accounts = await this.getStripeCliConnectedAccounts();
         Logger.shared.stopSpinner();
 
         // Show a selectino list
-        const account = await select<AvailableStripeAccount | null | 'cli'>({
+        const account = await select<AvailableStripeAccount | null | 'cli' | 'clear'>({
             message,
             choices: [
                 {
@@ -53,7 +66,14 @@ export class StripeConnector {
                 ...accounts.map(account => ({
                     name: account.toString(),
                     value: account
-                }))
+                })),
+                ...(accounts.length > 0 ? [
+                    {
+                        name: 'Clear saved accounts',
+                        value: 'clear' as const,
+                        description: 'Clears the saved accounts from the Stripe CLI'
+                    }
+                ] : []),
             ]
         })
 
@@ -64,9 +84,18 @@ export class StripeConnector {
             apiKey = await input({
                 message: 'Enter your Stripe API key',
             });
+        } else if (account === 'clear') {
+            Logger.shared.startSpinner('Clearing accounts...');
+            for (const account of accounts) {
+                if (account.namespace && account.namespace.startsWith('ghost-migrate-')) {
+                    await this.logout(account.namespace)
+                }
+            }
+            Logger.shared.stopSpinner();
+            return this.askForAccount(message);
         } else if (account === 'cli') {
             // Prompts
-            const account = await this.loginWithCli('ghost-migrate');
+            const account = await this.loginWithCli('ghost-migrate-' + (accounts.length + 1));
             apiKey = account.apiKey;
         } else {
             apiKey = account.apiKey;
@@ -96,7 +125,8 @@ export class StripeConnector {
         const accounts: AvailableStripeAccount[] = []
         const searchKey = this.mode === 'live' ? 'live_mode_api_key' : 'test_mode_api_key';
 
-        for (const scope of Object.values(parsed)) {
+        for (const projectName of Object.keys(parsed)) {
+            const scope = parsed[projectName];
             if (!scope[searchKey] || !scope.display_name) {
                 continue;
             }
@@ -105,7 +135,8 @@ export class StripeConnector {
                     name: scope.display_name,
                     apiKey: scope[searchKey],
                     id: scope.account_id,
-                    mode: this.mode
+                    mode: this.mode,
+                    namespace: projectName
                 })
             )
         }
@@ -141,10 +172,21 @@ export class StripeConnector {
     /**
      * Try to get the api key via the Stripe CLI
      */
+    async logout(projectName = 'default'): Promise<void> {
+        let output;
+        try {
+            output = await exec(`stripe logout --project-name ${projectName}`);
+        } catch (err: any) {
+            throw new Error('Failed to logout with Stripe CLI: ' + err.message);
+        }
+    }
+
+    /**
+     * Try to get the api key via the Stripe CLI
+     */
     async connectViaStripeCli(projectName = 'default') {
         let output;
         try {
-            projectName = 'migrate-to';
             output = await exec(`stripe config --list --project-name ${projectName}`);
         } catch (err) {
             console.error('Failed to fetch Stripe secret token, do you need to connect Stripe CLI?', err);

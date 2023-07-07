@@ -21,14 +21,44 @@ export class Options {
             flags: '--very-verbose',
             defaultValue: false,
             desc: 'Print very verbose output'
-        }
+        },
+        {
+            type: 'string',
+            flags: '--old-api-key',
+            defaultValue: false,
+            desc: 'The Stripe API key of the old account (optional)'
+        },
+        {
+            type: 'string',
+            flags: '--new-api-key',
+            defaultValue: false,
+            desc: 'The Stripe API key of the new account (optional)'
+        },
+        {
+            type: 'boolean',
+            flags: '--test',
+            defaultValue: false,
+            desc: 'Connect to the Stripe Test API when using Stripe CLI as authentication method'
+        },
     ];
 
     dryRun: boolean
     verboseLevel: 0 | 1 | 2
+    oldApiKey?: string
+    newApiKey?: string
+    test: boolean
+
+    static shared: Options
 
     constructor(argv: any) {
         this.dryRun = argv['dry-run'];
         this.verboseLevel = argv['very-verbose'] ? 2 : argv.verbose ? 1 : 0;
+        this.oldApiKey = argv['old-api-key'] ?? undefined;
+        this.newApiKey = argv['new-api-key'] ?? undefined;
+        this.test = argv.test ?? false;
+    }
+
+    static init(argv: any) {
+        Options.shared = new Options(argv);
     }
 }

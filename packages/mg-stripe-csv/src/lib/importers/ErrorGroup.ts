@@ -23,6 +23,6 @@ export class ErrorGroup extends Error {
             return this.errors[0].toString();
         }
 
-        return 'Multiple: \n' + this.errors.slice(0, MAX_PRINTED_ERRORS).map(e => e.toString()).join('\n\n') + (this.errors.length > MAX_PRINTED_ERRORS ? '\n\n and ' + (this.errors.length - 1) + ' more' : '');
+        return 'Multiple importing errors: \n' + this.errors.slice(0, MAX_PRINTED_ERRORS).map(e => e.toString()).join('\n\n') + (this.errors.length > MAX_PRINTED_ERRORS ? '\n\n and ' + (this.errors.length - 1) + ' more' : '');
     }
 }

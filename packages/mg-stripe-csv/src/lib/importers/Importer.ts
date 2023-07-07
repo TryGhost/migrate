@@ -1,4 +1,6 @@
 import Logger from "../Logger.js"
+import {ErrorGroup} from "./ErrorGroup.js"
+import {ImportError} from "./ImportError.js"
 import {ImportStats} from "./ImportStats.js"
 
 export type ImportProvider<T> = {
@@ -25,7 +27,7 @@ export class Queue {
     waitingTasks = 0;
     queue: (() => Promise<void>)[] = []
 
-    listeners: (() => void)[] = []
+    listeners: ((error?: Error) => void)[] = []
 
     addListener(listener: () => void) {
         this.listeners.push(listener)
@@ -35,9 +37,13 @@ export class Queue {
         this.listeners = this.listeners.filter(l => l !== listener)
     }
 
-    callListeners() {
+    callListeners(error?: Error) {
         for (const listener of this.listeners) {
-            listener()
+            listener(error)
+            if (error) {
+                // Prevent propagating the error to other listeners
+                error = undefined
+            }
         }
     }
 
@@ -57,7 +63,9 @@ export class Queue {
         const task = this.queue.shift()
         if (task) {
             this.runningTasks++
-            task().finally(() => {
+            task().catch(e => {
+                this.callListeners(e)
+            }).then(() => {
                 this.runningTasks--
 
                 // Run next
@@ -70,14 +78,20 @@ export class Queue {
     }
 
     async waitUntilFinished() {
-        return new Promise<void>(resolve => {
-            const listener = () => {
+        return new Promise<void>((resolve, reject) => {
+            const listener = (error?: Error) => {
+                if (error) {
+                    this.removeListener(listener)
+                    reject(error)
+                    return;
+                }
                 if (this.runningTasks === 0) {
                     this.removeListener(listener)
                     resolve()
                 }
             }
             this.addListener(listener)
+            listener();
         });
     }
 }
@@ -98,14 +112,26 @@ export class Importer<T extends {id: string}> {
      * Loop through all the available items in the old account, and recreate them in the new account.
      */
     async recreateAll(): Promise<void> {
+        const groupErrors = true;
+
         // Loop through all items in the provider and import them
         const queue = new Queue();
+        const errorGroup = new ErrorGroup();
         for await (const item of this.provider.getAll()) {
             queue.add(async () => {
-                await this.recreate(item);
+                try {
+                    await this.recreate(item);
+                } catch (e: any) {
+                    if (!groupErrors) {
+                        throw e
+                    }
+                    Logger.shared.error(e.toString())
+                    errorGroup.add(e)
+                }
             });
         }
         await queue.waitUntilFinished()
+        errorGroup.throwIfNotEmpty()
     }
 
     async recreateByObjectOrId(idOrItem: string | T) {
@@ -120,7 +146,7 @@ export class Importer<T extends {id: string}> {
         // Check if already imported
         const alreadyRecreatedId = this.recreatedMap.get(id);
         if (alreadyRecreatedId) {
-            Logger.vv.info(`Skipped ${this.objectName} ${id}, because already recreated as ${alreadyRecreatedId} in this run`);
+            Logger.vv?.info(`Skipped ${this.objectName} ${id}, because already recreated as ${alreadyRecreatedId} in this run`);
             return alreadyRecreatedId
         }
 
@@ -130,25 +156,36 @@ export class Importer<T extends {id: string}> {
 
     async recreate(item: T): Promise<string> {
         // Check if already imported
+        // We need to repeat this because sometimes the item is passed directly to this method, without going through recreateByID()
         const alreadyRecreatedId = this.recreatedMap.get(item.id);
         if (alreadyRecreatedId) {
-            Logger.vv.info(`Skipped ${this.objectName} ${item.id}, because already recreated as ${alreadyRecreatedId} in this run`);
+            Logger.vv?.info(`Skipped ${this.objectName} ${item.id}, because already recreated as ${alreadyRecreatedId} in this run`);
             return alreadyRecreatedId
         }
 
         // To make sure the operation is idempotent, we first check if the item was already recreated in a previous run.
         const reuse = await this.provider.findExisting(item.id);
         if (reuse) {
-            Logger.vv.info(`Skipped ${this.objectName} ${item.id} because already recreated as ${reuse} in a previous run`);
+            Logger.vv?.info(`Skipped ${this.objectName} ${item.id} because already recreated as ${reuse} in a previous run`);
             this.stats.trackReused(this.objectName)
             return reuse;
         }
 
         // Import
-        Logger.vv.info(`Recreating ${this.objectName} ${item.id}...`);
-        const newID = await this.provider.recreate(item);
+        Logger.vv?.info(`Recreating ${this.objectName} ${item.id}...`);
+
+        let newID: string;
+        try {
+            newID = await this.provider.recreate(item);
+        } catch (e: any) {
+            throw new ImportError({
+                message: 'Failed to recreate ' + this.objectName + ' ' + item.id,
+                cause: e,
+            })
+        }
+
         this.recreatedMap.set(item.id, newID);
-        Logger.v.ok(`Recreated ${this.objectName} ${item.id} as ${newID} in new account`);
+        Logger.v?.ok(`Recreated ${this.objectName} ${item.id} as ${newID} in new account`);
         this.stats.trackImported(this.objectName)
         return newID;
     }

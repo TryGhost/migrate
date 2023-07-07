@@ -2,13 +2,16 @@ import Stripe from "stripe"
 import { Importer } from "./Importer.js"
 import {StripeAPI} from "../StripeAPI.js"
 import {ImportStats} from "./ImportStats.js";
-import {dateToUnix, getObjectId} from "../helpers.js";
+import {dateToUnix, getObjectId, ifDryRunJustReturnFakeId} from "../helpers.js";
+import Logger from "../Logger.js";
 
-export function createSubscriptionImporter({oldStripe, newStripe, stats, priceImporter}: {
+export function createSubscriptionImporter({oldStripe, newStripe, stats, priceImporter, couponImporter}: {
+    dryRun: boolean,
     oldStripe: StripeAPI,
     newStripe: StripeAPI,
     stats: ImportStats,
-    priceImporter: Importer<Stripe.Price>
+    priceImporter: Importer<Stripe.Price>,
+    couponImporter: Importer<Stripe.Coupon>,
 }) {
     const provider = {
         async getByID(oldId: string): Promise<Stripe.Subscription> {
@@ -21,7 +24,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
 
         async findExisting(oldId: string) {
             const existing = await newStripe.client.subscriptions.search({
-                query: `metadata['importOldId']:'${oldId}'`,
+                query: `metadata['importOldId']:'${oldId}' AND status:"active"`,
             })
             if (existing.data.length > 0) {
                 return existing.data[0].id
@@ -39,6 +42,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             }
 
             // Get customer
+            Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)}`)
             const customer = await newStripe.client.customers.retrieve(getObjectId(oldSubscription.customer));
             if (customer.deleted) {
                 throw new Error(`Customer ${getObjectId(oldSubscription.customer)} has been permanently deleted and cannot be used for a new subscription`)
@@ -50,6 +54,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 throw new Error(`Subscription ${oldSubscription.id} has no payment method`)
             }
 
+            Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} payment methods`)
             const paymentMethods = await newStripe.client.customers.listPaymentMethods(getObjectId(oldSubscription.customer))
             let foundPaymentMethod: Stripe.PaymentMethod | undefined;
             for (const paymentMethod of paymentMethods.data) {
@@ -65,20 +70,27 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 throw new Error(`Could not find new payment method for subscription ${oldSubscription.id} and original payment method ${oldPaymentMethod.id}`)
             }
 
+            Logger.vv?.info(`Getting coupon if needed`)
+            const coupon = oldSubscription.discount?.coupon ? (await couponImporter.recreate(oldSubscription.discount?.coupon)) : undefined
+
             // Create the subscription
-            const subscription = await newStripe.client.subscriptions.create({
-                customer: getObjectId(oldSubscription.customer),
-                default_payment_method: foundPaymentMethod.id,
-                items,
-                billing_cycle_anchor: oldSubscription.current_period_end,
-                cancel_at_period_end: false,
-                coupon: undefined,
-                trial_end: oldSubscription.trial_end ?? undefined,
-                metadata: {
-                    importOldId: oldSubscription.id
-                }
+            Logger.vv?.info(`Creating subscription`)
+
+            return await ifDryRunJustReturnFakeId(async () => {
+                const subscription = await newStripe.client.subscriptions.create({
+                    customer: getObjectId(oldSubscription.customer),
+                    default_payment_method: foundPaymentMethod!.id,
+                    items,
+                    billing_cycle_anchor: oldSubscription.current_period_end,
+                    cancel_at_period_end: false,
+                    coupon,
+                    trial_end: oldSubscription.trial_end ?? undefined,
+                    metadata: {
+                        importOldId: oldSubscription.id
+                    }
+                });
+                return subscription.id
             });
-            return subscription.id
         }
     };
 
