@@ -18,7 +18,7 @@ export function getObjectId(data: string | {id: string}): string {
 
 export async function ifDryRunJustReturnFakeId(live: () => Promise<string>, logData?: any): Promise<string> {
     if (logData) {
-        Logger.vv?.info(logData)
+        Logger.debug?.info(logData)
     }
     if (Options.shared.dryRun) {
         return DryRunIdGenerator.getNext()

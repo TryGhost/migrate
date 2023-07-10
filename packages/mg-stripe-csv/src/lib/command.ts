@@ -31,7 +31,7 @@ class StripeCSVCommand {
     async run(argv: any) {
         Options.init(argv);
         const options = Options.shared;
-        Logger.init({verboseLevel: options.verboseLevel});
+        Logger.init({verboseLevel: options.verboseLevel, debug: options.debug});
         if (options.dryRun) {
             Logger.shared.info(`Running in dry run mode`);
         }

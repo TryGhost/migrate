@@ -45,6 +45,12 @@ export class Options {
             flags: '--pause',
             defaultValue: false,
             desc: 'Pause collection of old subscriptions in the old account after they have been recreated in the new account'
+        },
+        {
+            type: 'boolean',
+            flags: '--debug',
+            defaultValue: false,
+            desc: 'Print debug output'
         }
     ];
 
@@ -54,6 +60,7 @@ export class Options {
     newApiKey?: string
     test: boolean
     pause: boolean
+    debug: boolean
 
     static shared: Options
 
@@ -64,6 +71,7 @@ export class Options {
         this.newApiKey = argv['to'] ?? undefined;
         this.test = argv.test ?? false;
         this.pause = argv.pause ?? false;
+        this.debug = argv.debug ?? false;
     }
 
     static init(argv: any) {
