@@ -1,6 +1,5 @@
 {
   "name": "@tryghost/mg-stripe-csv",
-  "version": "0.0.1",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-stripe-csv",
   "author": "Ghost Foundation",
   "license": "MIT",
