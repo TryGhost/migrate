@@ -1,8 +1,8 @@
 import {confirm} from '@inquirer/prompts';
 import chalk from 'chalk';
 import Logger from './Logger.js';
-import {Options} from "./Options.js";
-import {StripeConnector} from "./StripeConnector.js";
+import {Options} from './Options.js';
+import {StripeConnector} from './StripeConnector.js';
 import {ImportStats} from './importers/ImportStats.js';
 import {createProductImporter} from './importers/createProductImporter.js';
 import {createPriceImporter} from './importers/createPriceImporter.js';
@@ -12,14 +12,13 @@ import {createCouponImporter} from './importers/createCouponImporter.js';
 class StripeCSVCommand {
     id = 'stripe-csv';
     group = 'Sources:';
-    flags = "stripe-csv"
+    flags = 'stripe-csv';
     desc = 'Migrate your Stripe subscriptions to a different Stripe account';
 
     constructor() {
         // FIX `this` binding in the `run` method
-        this.run = this.run.bind(this)
-        this.setup = this.setup.bind(this)
-
+        this.run = this.run.bind(this);
+        this.setup = this.setup.bind(this);
     }
 
     async setup(sywac: any) {
@@ -35,10 +34,9 @@ class StripeCSVCommand {
         if (options.dryRun) {
             Logger.shared.info(`Running in dry run mode`);
         }
-        const stats = new ImportStats()
+        const stats = new ImportStats();
 
         try {
-
             // Step 1: Connect to Stripe
             const connector = new StripeConnector(options.test ? 'test' : 'live');
             const fromAccount = await connector.askForAccount('Which Stripe account do you want to migrate from?', options.oldApiKey);
@@ -47,7 +45,7 @@ class StripeCSVCommand {
             const {accountName, mode} = await fromAccount.validate();
             Logger.shared.succeed(`Migrating from: ${chalk.cyan(accountName)} in ${mode} mode\n`);
 
-            const toAccount = await connector.askForAccount('Which Stripe account do you want to migrate to?', options.newApiKey, [fromAccount.id]);
+            const toAccount = await connector.askForAccount('Which Stripe account do you want to migrate to?', options.newApiKey);
 
             Logger.shared.startSpinner('Validating connection');
             const {accountName: accountNameTo, mode: modeTo} = await toAccount.validate();
@@ -79,27 +77,27 @@ class StripeCSVCommand {
                 dryRun: options.dryRun,
                 stats,
                 oldStripe: fromAccount,
-                newStripe: toAccount,
+                newStripe: toAccount
             };
 
             const productImporter = createProductImporter({
                 ...sharedOptions
-            })
+            });
 
             const priceImporter = createPriceImporter({
                 ...sharedOptions,
-                productImporter,
-            })
+                productImporter
+            });
 
             const couponImporter = createCouponImporter({
                 ...sharedOptions
-            })
+            });
 
             const subscriptionImporter = createSubscriptionImporter({
                 ...sharedOptions,
                 priceImporter,
                 couponImporter
-            })
+            });
             const warnings = await subscriptionImporter.recreateAll();
             if (warnings) {
                 Logger.shared.succeed(`Successfully imported ${stats.importedPerType.get('subscription') ?? 0} subscriptions with ${warnings.length} warning${warnings.length > 1 ? 's' : ''}:`);
@@ -109,7 +107,6 @@ class StripeCSVCommand {
             }
 
             stats.print();
-
         } catch (e) {
             Logger.shared.fail(e);
 

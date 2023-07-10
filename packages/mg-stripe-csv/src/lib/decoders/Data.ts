@@ -1,4 +1,4 @@
-import {DecodeError} from "./DecodeError.js";
+import {DecodeError} from './DecodeError.js';
 
 export class Data {
     data: any;
@@ -6,7 +6,7 @@ export class Data {
     /**
      * Path to indicate where in the data the error occurred.
      */
-    path: string[] = []
+    path: string[] = [];
 
     constructor(data: any, path: string[] = []) {
         this.data = data;

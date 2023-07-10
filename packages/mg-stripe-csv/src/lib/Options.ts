@@ -60,22 +60,22 @@ export class Options {
         }
     ];
 
-    dryRun: boolean
-    verboseLevel: 0 | 1 | 2
-    oldApiKey?: string
-    newApiKey?: string
-    test: boolean
-    pause: boolean
-    debug: boolean
-    testClock?: string
+    dryRun: boolean;
+    verboseLevel: 0 | 1 | 2;
+    oldApiKey?: string;
+    newApiKey?: string;
+    test: boolean;
+    pause: boolean;
+    debug: boolean;
+    testClock?: string;
 
-    static shared: Options
+    static shared: Options;
 
     constructor(argv: any) {
         this.dryRun = argv['dry-run'];
         this.verboseLevel = argv['very-verbose'] ? 2 : argv.verbose ? 1 : 0;
-        this.oldApiKey = argv['from'] ?? undefined;
-        this.newApiKey = argv['to'] ?? undefined;
+        this.oldApiKey = argv.from ?? undefined;
+        this.newApiKey = argv.to ?? undefined;
         this.test = argv.test ?? false;
         this.pause = argv.pause ?? false;
         this.debug = argv.debug ?? false;

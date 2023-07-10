@@ -1,4 +1,4 @@
-import {ImportError} from "./ImportError.js";
+import {ImportError} from './ImportError.js';
 
 const MAX_PRINTED_ERRORS = 5;
 
@@ -33,7 +33,7 @@ export class ErrorGroup extends Error {
     }
 
     get isEmpty() {
-        return this.length === 0
+        return this.length === 0;
     }
 
     get isFatal() {

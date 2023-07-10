@@ -17,7 +17,7 @@ export class StripeConnector {
         this.mode = mode;
     }
 
-    async askForAccount(message: string, tryApiKey?: string, excludeIds: string[] = []): Promise<StripeAPI> {
+    async askForAccount(message: string, tryApiKey?: string): Promise<StripeAPI> {
         if (tryApiKey) {
             const stripe = new StripeAPI({
                 apiKey: tryApiKey
@@ -38,17 +38,17 @@ export class StripeConnector {
                     value: 'open'
                 }
             ]
-        })
+        });
 
         let apiKey: string;
 
         if (account === 'enter') {
             // Prompts
             apiKey = await input({
-                message: 'Enter your Stripe API key',
+                message: 'Enter your Stripe API key'
             });
         } else {
-            const url = 'https://dashboard.stripe.com/apikeys'
+            const url = 'https://dashboard.stripe.com/apikeys';
             Logger.shared.info('Opening ' + url + ' in your browser...');
             await exec(`open ${url}`);
             return this.askForAccount(message);

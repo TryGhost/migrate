@@ -1,4 +1,4 @@
-import {ImportError} from "./ImportError.js";
+import {ImportError} from './ImportError.js';
 
 export class ImportWarning extends ImportError {
     get isFatal() {

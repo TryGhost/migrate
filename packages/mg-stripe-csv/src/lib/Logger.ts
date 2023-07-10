@@ -72,47 +72,47 @@ export default class Logger {
 
     info(message: string) {
         if (this.spinner) {
-            this.spinner.clear()
+            this.spinner.clear();
         }
 
         ui.log.info(message);
 
         if (this.spinner) {
-            this.spinner.render()
+            this.spinner.render();
         }
     }
 
     ok(message: string) {
         if (this.spinner) {
-            this.spinner.clear()
+            this.spinner.clear();
         }
 
         ui.log.ok(message);
 
         if (this.spinner) {
-            this.spinner.render()
+            this.spinner.render();
         }
     }
 
     warn(message: string) {
         if (this.spinner) {
-            this.spinner.clear()
+            this.spinner.clear();
         }
 
         ui.log.warn(message);
 
         if (this.spinner) {
-            this.spinner.render()
+            this.spinner.render();
         }
     }
 
     error(message: string) {
         if (this.spinner) {
-            this.spinner.clear()
+            this.spinner.clear();
         }
         ui.log.error(message);
         if (this.spinner) {
-            this.spinner.render()
+            this.spinner.render();
         }
     }
 }

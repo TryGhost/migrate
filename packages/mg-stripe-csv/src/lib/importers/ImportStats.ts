@@ -4,7 +4,7 @@ export class ImportStats {
     importedPerType: Map<string, number> = new Map();
     reusedPerType: Map<string, number> = new Map();
 
-    listeners: (() => void)[] = []
+    listeners: (() => void)[] = [];
 
     trackImported(type: string) {
         this.importedPerType.set(type, (this.importedPerType.get(type) || 0) + 1);

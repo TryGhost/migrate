@@ -1,9 +1,9 @@
-import Logger from "../Logger.js"
-import {isWarning} from "../helpers.js"
-import {ErrorGroup} from "./ErrorGroup.js"
-import {ImportError} from "./ImportError.js"
-import {ImportStats} from "./ImportStats.js"
-import {ImportWarning} from "./ImportWarning.js"
+import Logger from '../Logger.js';
+import {isWarning} from '../helpers.js';
+import {ErrorGroup} from './ErrorGroup.js';
+import {ImportError} from './ImportError.js';
+import {ImportStats} from './ImportStats.js';
+import {ImportWarning} from './ImportWarning.js';
 
 export type ImportProvider<T> = {
     /**
@@ -27,24 +27,24 @@ export class Queue {
     runningTasks = 0;
     maxRunningTasks = 4;
     waitingTasks = 0;
-    queue: (() => Promise<void>)[] = []
+    queue: (() => Promise<void>)[] = [];
 
-    listeners: ((error?: Error) => void)[] = []
+    listeners: ((error?: Error) => void)[] = [];
 
     addListener(listener: () => void) {
-        this.listeners.push(listener)
+        this.listeners.push(listener);
     }
 
     removeListener(listener: () => void) {
-        this.listeners = this.listeners.filter(l => l !== listener)
+        this.listeners = this.listeners.filter(l => l !== listener);
     }
 
     callListeners(error?: Error) {
         for (const listener of this.listeners) {
-            listener(error)
+            listener(error);
             if (error) {
                 // Prevent propagating the error to other listeners
-                error = undefined
+                error = undefined;
             }
         }
     }
@@ -53,29 +53,29 @@ export class Queue {
      * Queue a task and returns immediately. If the queue is full, it will block until a task is finished and a slot is available.
      */
     async add(task: () => Promise<void>) {
-        this.queue.push(task)
-        this.runNext()
+        this.queue.push(task);
+        this.runNext();
     }
 
     runNext() {
         if (this.runningTasks >= this.maxRunningTasks) {
-            return
+            return;
         }
 
-        const task = this.queue.shift()
+        const task = this.queue.shift();
         if (task) {
-            this.runningTasks++
-            task().catch(e => {
-                this.callListeners(e)
+            this.runningTasks += 1;
+            task().catch((e) => {
+                this.callListeners(e);
             }).then(() => {
-                this.runningTasks--
+                this.runningTasks -= 1;
 
                 // Run next
-                this.runNext()
+                this.runNext();
             });
         } else {
             // Call listeners
-            this.callListeners()
+            this.callListeners();
         }
     }
 
@@ -83,16 +83,16 @@ export class Queue {
         return new Promise<void>((resolve, reject) => {
             const listener = (error?: Error) => {
                 if (error) {
-                    this.removeListener(listener)
-                    reject(error)
+                    this.removeListener(listener);
+                    reject(error);
                     return;
                 }
                 if (this.runningTasks === 0) {
-                    this.removeListener(listener)
-                    resolve()
+                    this.removeListener(listener);
+                    resolve();
                 }
-            }
-            this.addListener(listener)
+            };
+            this.addListener(listener);
             listener();
         });
     }
@@ -100,7 +100,7 @@ export class Queue {
 
 export class Importer<T extends {id: string}> {
     objectName: string;
-    stats: ImportStats
+    stats: ImportStats;
     provider: ImportProvider<T>;
     recreatedMap: Map<string, string> = new Map();
 
@@ -127,31 +127,31 @@ export class Importer<T extends {id: string}> {
                 } catch (e: any) {
                     if (!groupErrors) {
                         if (isWarning(e)) {
-                            errorGroup.add(e)
-                            return
+                            errorGroup.add(e);
+                            return;
                         }
-                        throw e
+                        throw e;
                     }
                     if (isWarning(e)) {
-                        Logger.shared.warn(e.toString())
+                        Logger.shared.warn(e.toString());
                     } else {
-                        Logger.shared.error(e.toString())
+                        Logger.shared.error(e.toString());
                     }
-                    errorGroup.add(e)
+                    errorGroup.add(e);
                 }
             });
         }
-        await queue.waitUntilFinished()
-        errorGroup.throwIfNotEmpty()
+        await queue.waitUntilFinished();
+        errorGroup.throwIfNotEmpty();
 
-        return errorGroup.isEmpty ? undefined : errorGroup
+        return errorGroup.isEmpty ? undefined : errorGroup;
     }
 
     async recreateByObjectOrId(idOrItem: string | T) {
         if (typeof idOrItem === 'string') {
-            return await this.recreateByID(idOrItem)
+            return await this.recreateByID(idOrItem);
         } else {
-            return await this.recreate(idOrItem)
+            return await this.recreate(idOrItem);
         }
     }
 
@@ -160,7 +160,7 @@ export class Importer<T extends {id: string}> {
         const alreadyRecreatedId = this.recreatedMap.get(id);
         if (alreadyRecreatedId) {
             Logger.vv?.info(`Skipped ${this.objectName} ${id}, because already recreated as ${alreadyRecreatedId} in this run`);
-            return alreadyRecreatedId
+            return alreadyRecreatedId;
         }
 
         const item = await this.provider.getByID(id);
@@ -173,14 +173,14 @@ export class Importer<T extends {id: string}> {
         const alreadyRecreatedId = this.recreatedMap.get(item.id);
         if (alreadyRecreatedId) {
             Logger.vv?.info(`Skipped ${this.objectName} ${item.id}, because already recreated as ${alreadyRecreatedId} in this run`);
-            return alreadyRecreatedId
+            return alreadyRecreatedId;
         }
 
         // To make sure the operation is idempotent, we first check if the item was already recreated in a previous run.
         const reuse = await this.provider.findExisting(item.id);
         if (reuse) {
             Logger.vv?.info(`Skipped ${this.objectName} ${item.id} because already recreated as ${reuse} in a previous run`);
-            this.stats.trackReused(this.objectName)
+            this.stats.trackReused(this.objectName);
             return reuse;
         }
 
@@ -194,18 +194,18 @@ export class Importer<T extends {id: string}> {
             if (e instanceof ImportWarning) {
                 throw new ImportWarning({
                     message: 'Failed to recreate ' + this.objectName + ' ' + item.id,
-                    cause: e,
-                })
+                    cause: e
+                });
             }
             throw new ImportError({
                 message: 'Failed to recreate ' + this.objectName + ' ' + item.id,
-                cause: e,
-            })
+                cause: e
+            });
         }
 
         this.recreatedMap.set(item.id, newID);
         Logger.v?.ok(`Recreated ${this.objectName} ${item.id} as ${newID} in new account`);
-        this.stats.trackImported(this.objectName)
+        this.stats.trackImported(this.objectName);
         return newID;
     }
 }
