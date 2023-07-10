@@ -4,6 +4,7 @@ import {StripeAPI} from "../StripeAPI.js"
 import {ImportStats} from "./ImportStats.js";
 import {dateToUnix, getObjectId, ifDryRunJustReturnFakeId} from "../helpers.js";
 import Logger from "../Logger.js";
+import {Options} from "../Options.js";
 
 export function createSubscriptionImporter({oldStripe, newStripe, stats, priceImporter, couponImporter}: {
     dryRun: boolean,
@@ -76,20 +77,40 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             // Create the subscription
             Logger.vv?.info(`Creating subscription`)
 
+            const data: Stripe.SubscriptionCreateParams = {
+                description: oldSubscription.description ?? undefined,
+                customer: getObjectId(oldSubscription.customer),
+                default_payment_method: foundPaymentMethod!.id,
+                items,
+                billing_cycle_anchor: oldSubscription.current_period_end,
+                backdate_start_date: oldSubscription.start_date,
+                proration_behavior: 'none', // Don't charge for backdated time
+                cancel_at_period_end: oldSubscription.cancel_at_period_end,
+                coupon,
+                trial_end: oldSubscription.trial_end ?? undefined,
+                metadata: {
+                    oldCreatedAt: oldSubscription.created,
+                    importOldId: oldSubscription.id
+                }
+            };
+
             return await ifDryRunJustReturnFakeId(async () => {
-                const subscription = await newStripe.client.subscriptions.create({
-                    customer: getObjectId(oldSubscription.customer),
-                    default_payment_method: foundPaymentMethod!.id,
-                    items,
-                    billing_cycle_anchor: oldSubscription.current_period_end,
-                    cancel_at_period_end: false,
-                    coupon,
-                    trial_end: oldSubscription.trial_end ?? undefined,
-                    metadata: {
-                        importOldId: oldSubscription.id
-                    }
-                });
+                const subscription = await newStripe.client.subscriptions.create(data);
+
+                if (Options.shared.pause) {
+                    // Pause old subscription
+                    Logger.vv?.info(`Pausing old ${oldSubscription.id}`)
+                    await oldStripe.client.subscriptions.update(oldSubscription.id, {
+                        pause_collection: {
+                            behavior: 'keep_as_draft',
+                        }
+                    });
+                }
+
                 return subscription.id
+            }, {
+                oldSubscription,
+                newSubscription: data
             });
         }
     };

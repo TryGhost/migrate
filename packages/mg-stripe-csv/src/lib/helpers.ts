@@ -1,4 +1,5 @@
 import DryRunIdGenerator from "./DryRunIdGenerator.js";
+import Logger from "./Logger.js";
 import {Options} from "./Options.js";
 
 export function dateToUnix(date?: Date | null) {
@@ -15,7 +16,10 @@ export function getObjectId(data: string | {id: string}): string {
     return data.id
 }
 
-export async function ifDryRunJustReturnFakeId(live: () => Promise<string>): Promise<string> {
+export async function ifDryRunJustReturnFakeId(live: () => Promise<string>, logData?: any): Promise<string> {
+    if (logData) {
+        Logger.vv?.info(logData)
+    }
     if (Options.shared.dryRun) {
         return DryRunIdGenerator.getNext()
     }

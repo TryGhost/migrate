@@ -24,13 +24,13 @@ export class Options {
         },
         {
             type: 'string',
-            flags: '--old-api-key',
+            flags: '--from',
             defaultValue: false,
             desc: 'The Stripe API key of the old account (optional)'
         },
         {
             type: 'string',
-            flags: '--new-api-key',
+            flags: '--to',
             defaultValue: false,
             desc: 'The Stripe API key of the new account (optional)'
         },
@@ -40,6 +40,12 @@ export class Options {
             defaultValue: false,
             desc: 'Connect to the Stripe Test API when using Stripe CLI as authentication method'
         },
+        {
+            type: 'boolean',
+            flags: '--pause',
+            defaultValue: false,
+            desc: 'Pause collection of old subscriptions in the old account after they have been recreated in the new account'
+        }
     ];
 
     dryRun: boolean
@@ -47,15 +53,17 @@ export class Options {
     oldApiKey?: string
     newApiKey?: string
     test: boolean
+    pause: boolean
 
     static shared: Options
 
     constructor(argv: any) {
         this.dryRun = argv['dry-run'];
         this.verboseLevel = argv['very-verbose'] ? 2 : argv.verbose ? 1 : 0;
-        this.oldApiKey = argv['old-api-key'] ?? undefined;
-        this.newApiKey = argv['new-api-key'] ?? undefined;
+        this.oldApiKey = argv['from'] ?? undefined;
+        this.newApiKey = argv['to'] ?? undefined;
         this.test = argv.test ?? false;
+        this.pause = argv.pause ?? false;
     }
 
     static init(argv: any) {
