@@ -21,7 +21,7 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js && lerna run lint",
     "lint": "lerna run lint",
     "preship": "yarn test",
-    "ship": "lerna publish"
+    "ship": "lerna publish --no-private"
   },
   "devDependencies": {
     "@tryghost/errors": "1.2.25",
