@@ -38,7 +38,7 @@ export class StripeConnector {
         this.mode = mode;
     }
 
-    async askForAccount(message: string, tryApiKey?: string) {
+    async askForAccount(message: string, tryApiKey?: string, excludeIds: string[] = []): Promise<StripeAPI> {
         if (tryApiKey) {
             const stripe = new StripeAPI({
                 apiKey: tryApiKey
@@ -51,10 +51,19 @@ export class StripeConnector {
         const accounts = await this.getStripeCliConnectedAccounts();
         Logger.shared.stopSpinner();
 
+        const filteredAccounts = accounts.filter(account => !excludeIds.includes(account.id));
+
         // Show a selectino list
         const account = await select<AvailableStripeAccount | null | 'cli' | 'clear'>({
             message,
             choices: [
+                ...filteredAccounts.map(account => ({
+                    name: account.toString(),
+                    value: account
+                })),
+                ...(filteredAccounts.length > 0 ? [
+                    new Separator()
+                ] : []),
                 {
                     name: 'Enter API key manually',
                     value: null
@@ -63,11 +72,7 @@ export class StripeConnector {
                     name: 'Login with Stripe CLI',
                     value: 'cli' as const
                 },
-                ...accounts.map(account => ({
-                    name: account.toString(),
-                    value: account
-                })),
-                ...(accounts.length > 0 ? [
+                ...(filteredAccounts.length > 0 ? [
                     {
                         name: 'Clear saved accounts',
                         value: 'clear' as const,

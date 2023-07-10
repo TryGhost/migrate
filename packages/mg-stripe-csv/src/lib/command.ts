@@ -35,6 +35,7 @@ class StripeCSVCommand {
         if (options.dryRun) {
             Logger.shared.info(`Running in dry run mode`);
         }
+        const stats = new ImportStats()
 
         try {
 
@@ -44,13 +45,13 @@ class StripeCSVCommand {
 
             Logger.shared.startSpinner('Validating connection');
             const {accountName, mode} = await fromAccount.validate();
-            Logger.shared.succeed(`Migrating from: ${chalk.blue(accountName)} in ${mode} mode\n`);
+            Logger.shared.succeed(`Migrating from: ${chalk.cyan(accountName)} in ${mode} mode\n`);
 
-            const toAccount = await connector.askForAccount('Which Stripe account do you want to migrate to?', options.newApiKey);
+            const toAccount = await connector.askForAccount('Which Stripe account do you want to migrate to?', options.newApiKey, [fromAccount.id]);
 
             Logger.shared.startSpinner('Validating connection');
             const {accountName: accountNameTo, mode: modeTo} = await toAccount.validate();
-            Logger.shared.succeed(`Migrating to: ${chalk.blue(accountNameTo)} in ${modeTo} mode\n`);
+            Logger.shared.succeed(`Migrating to: ${chalk.cyan(accountNameTo)} in ${modeTo} mode\n`);
 
             if (toAccount.id === fromAccount.id) {
                 Logger.shared.fail('You cannot migrate to the same account');
@@ -59,7 +60,7 @@ class StripeCSVCommand {
 
             // Confirm
             const confirmMigration = await confirm({
-                message: 'Migrate from ' + chalk.blue(accountName) + ' to ' + chalk.blue(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : ''),
+                message: 'Migrate from ' + chalk.red(accountName) + ' to ' + chalk.green(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : ''),
                 default: false
             });
 
@@ -70,7 +71,6 @@ class StripeCSVCommand {
 
             // Step 2: Import data
             Logger.shared.startSpinner('Importing data');
-            const stats = new ImportStats()
             stats.addListener(() => {
                 Logger.shared.processSpinner(stats.toString());
             });
@@ -107,6 +107,10 @@ class StripeCSVCommand {
 
         } catch (e) {
             Logger.shared.fail(e);
+
+            if (stats.totalImported || stats.totalReused) {
+                stats.print();
+            }
             process.exit(1);
         }
     }
