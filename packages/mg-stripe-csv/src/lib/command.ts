@@ -100,8 +100,13 @@ class StripeCSVCommand {
                 priceImporter,
                 couponImporter
             })
-            await subscriptionImporter.recreateAll();
-            Logger.shared.succeed(`Successfully imported all subscriptions`);
+            const warnings = await subscriptionImporter.recreateAll();
+            if (warnings) {
+                Logger.shared.succeed(`Successfully imported ${stats.importedPerType.get('subscription') ?? 0} subscriptions with ${warnings.length} warning${warnings.length > 1 ? 's' : ''}:`);
+                Logger.shared.warn(warnings.toString());
+            } else {
+                Logger.shared.succeed(`Successfully imported all subscriptions`);
+            }
 
             stats.print();
 

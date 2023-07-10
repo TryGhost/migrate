@@ -5,6 +5,8 @@ import {ImportStats} from "./ImportStats.js";
 import {dateToUnix, getObjectId, ifDryRunJustReturnFakeId} from "../helpers.js";
 import Logger from "../Logger.js";
 import {Options} from "../Options.js";
+import {ImportError} from "./ImportError.js";
+import {ImportWarning} from "./ImportWarning.js";
 
 export function createSubscriptionImporter({oldStripe, newStripe, stats, priceImporter, couponImporter}: {
     dryRun: boolean,
@@ -37,6 +39,12 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
         },
 
         async recreate(oldSubscription: Stripe.Subscription) {
+            if (!['active', 'past_due', 'trialing'].includes(oldSubscription.status)) {
+                throw new ImportWarning({
+                    message: `Subscription ${oldSubscription.id} has a status of ${oldSubscription.status} and will not be recreated`
+                })
+            }
+
             const items: Stripe.SubscriptionCreateParams.Item[] = [];
 
             for (const item of oldSubscription.items.data) {
@@ -106,7 +114,8 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 metadata: {
                     oldCreatedAt: oldSubscription.created,
                     importOldId: oldSubscription.id
-                }
+                },
+                payment_behavior: 'error_if_incomplete', // Make sure we throw an error if we can't charge the customer
             };
 
             return await ifDryRunJustReturnFakeId(async () => {

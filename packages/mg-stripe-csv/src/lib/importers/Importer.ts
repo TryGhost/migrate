@@ -1,7 +1,9 @@
 import Logger from "../Logger.js"
+import {isWarning} from "../helpers.js"
 import {ErrorGroup} from "./ErrorGroup.js"
 import {ImportError} from "./ImportError.js"
 import {ImportStats} from "./ImportStats.js"
+import {ImportWarning} from "./ImportWarning.js"
 
 export type ImportProvider<T> = {
     /**
@@ -110,9 +112,10 @@ export class Importer<T extends {id: string}> {
 
     /**
      * Loop through all the available items in the old account, and recreate them in the new account.
+     * @returns An ErrorGroup if there were only warnings
      */
-    async recreateAll(): Promise<void> {
-        const groupErrors = true;
+    async recreateAll(): Promise<ErrorGroup|undefined> {
+        const groupErrors = false;
 
         // Loop through all items in the provider and import them
         const queue = new Queue();
@@ -123,15 +126,25 @@ export class Importer<T extends {id: string}> {
                     await this.recreate(item);
                 } catch (e: any) {
                     if (!groupErrors) {
+                        if (isWarning(e)) {
+                            errorGroup.add(e)
+                            return
+                        }
                         throw e
                     }
-                    Logger.shared.error(e.toString())
+                    if (isWarning(e)) {
+                        Logger.shared.warn(e.toString())
+                    } else {
+                        Logger.shared.error(e.toString())
+                    }
                     errorGroup.add(e)
                 }
             });
         }
         await queue.waitUntilFinished()
         errorGroup.throwIfNotEmpty()
+
+        return errorGroup.isEmpty ? undefined : errorGroup
     }
 
     async recreateByObjectOrId(idOrItem: string | T) {
@@ -178,6 +191,12 @@ export class Importer<T extends {id: string}> {
         try {
             newID = await this.provider.recreate(item);
         } catch (e: any) {
+            if (e instanceof ImportWarning) {
+                throw new ImportWarning({
+                    message: 'Failed to recreate ' + this.objectName + ' ' + item.id,
+                    cause: e,
+                })
+            }
             throw new ImportError({
                 message: 'Failed to recreate ' + this.objectName + ' ' + item.id,
                 cause: e,

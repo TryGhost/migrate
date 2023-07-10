@@ -12,4 +12,8 @@ export class ImportError extends Error {
         }
         return base;
     }
+
+    get isFatal() {
+        return true;
+    }
 }

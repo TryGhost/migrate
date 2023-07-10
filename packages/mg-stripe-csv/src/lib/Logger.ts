@@ -1,44 +1,6 @@
 import {ui} from '@tryghost/pretty-cli';
 import ora, {Ora} from 'ora';
 
-class VerboseLogger {
-    logger: Logger
-    level: 0 | 1 | 2 = 0;
-    get verboseLevel() {
-        return this.logger.verboseLevel;
-    }
-
-    constructor({logger, level}: {logger: Logger, level?: 0 | 1 | 2}) {
-        this.logger = logger;
-        this.level = level ?? 0;
-    }
-
-    get activated() {
-        return this.verboseLevel >= this.level;
-    }
-
-    info(message: string) {
-        if (!this.activated) {
-            return;
-        }
-        this.logger.info(message);
-    }
-
-    ok(message: string, level = 0) {
-        if (!this.activated) {
-            return;
-        }
-        this.logger.ok(message);
-    }
-
-    error(message: string, level = 0) {
-        if (!this.activated) {
-            return;
-        }
-        this.logger.error(message);
-    }
-}
-
 export default class Logger {
     static shared: Logger;
 
@@ -108,7 +70,7 @@ export default class Logger {
         }
     }
 
-    info(message: string, level = 2) {
+    info(message: string) {
         if (this.spinner) {
             this.spinner.clear()
         }
@@ -120,7 +82,7 @@ export default class Logger {
         }
     }
 
-    ok(message: string, level = 0) {
+    ok(message: string) {
         if (this.spinner) {
             this.spinner.clear()
         }
@@ -132,7 +94,19 @@ export default class Logger {
         }
     }
 
-    error(message: string, level = 0) {
+    warn(message: string) {
+        if (this.spinner) {
+            this.spinner.clear()
+        }
+
+        ui.log.warn(message);
+
+        if (this.spinner) {
+            this.spinner.render()
+        }
+    }
+
+    error(message: string) {
         if (this.spinner) {
             this.spinner.clear()
         }

@@ -5,6 +5,7 @@
   "author": "Ghost Foundation",
   "license": "MIT",
   "type": "module",
+  "private": true,
   "bin": {
     "stripe-csv": "./cli.js"
   },

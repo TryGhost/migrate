@@ -1,6 +1,8 @@
 import DryRunIdGenerator from "./DryRunIdGenerator.js";
 import Logger from "./Logger.js";
 import {Options} from "./Options.js";
+import {ErrorGroup} from "./importers/ErrorGroup.js";
+import {ImportWarning} from "./importers/ImportWarning.js";
 
 export function dateToUnix(date?: Date | null) {
     if (!date) {
@@ -24,4 +26,11 @@ export async function ifDryRunJustReturnFakeId(live: () => Promise<string>, logD
         return DryRunIdGenerator.getNext()
     }
     return await live()
+}
+
+export function isWarning(error: any): error is ImportWarning|ErrorGroup {
+    if (error instanceof ErrorGroup) {
+        return !error.isFatal
+    }
+    return error instanceof ImportWarning
 }
