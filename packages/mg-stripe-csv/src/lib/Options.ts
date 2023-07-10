@@ -51,6 +51,12 @@ export class Options {
             flags: '--debug',
             defaultValue: false,
             desc: 'Print debug output'
+        },
+        {
+            type: 'string',
+            flags: '--test-clock',
+            defaultValue: null,
+            desc: 'Import subscriptions associated with a test clock'
         }
     ];
 
@@ -61,6 +67,7 @@ export class Options {
     test: boolean
     pause: boolean
     debug: boolean
+    testClock?: string
 
     static shared: Options
 
@@ -72,6 +79,7 @@ export class Options {
         this.test = argv.test ?? false;
         this.pause = argv.pause ?? false;
         this.debug = argv.debug ?? false;
+        this.testClock = argv['test-clock'] ?? undefined;
     }
 
     static init(argv: any) {
