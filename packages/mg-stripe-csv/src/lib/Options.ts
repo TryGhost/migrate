@@ -57,6 +57,12 @@ export class Options {
             flags: '--test-clock',
             defaultValue: null,
             desc: 'Import subscriptions associated with a test clock'
+        },
+        {
+            type: 'boolean',
+            flags: '--revert',
+            defaultValue: false,
+            desc: 'Revert the migration'
         }
     ];
 
@@ -68,6 +74,7 @@ export class Options {
     pause: boolean;
     debug: boolean;
     testClock?: string;
+    revert: boolean;
 
     static shared: Options;
 
@@ -80,6 +87,7 @@ export class Options {
         this.pause = argv.pause ?? false;
         this.debug = argv.debug ?? false;
         this.testClock = argv['test-clock'] ?? undefined;
+        this.revert = argv.revert ?? false;
     }
 
     static init(argv: any) {

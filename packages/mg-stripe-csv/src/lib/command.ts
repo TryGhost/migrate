@@ -58,7 +58,7 @@ class StripeCSVCommand {
 
             // Confirm
             const confirmMigration = await confirm({
-                message: 'Migrate from ' + chalk.red(accountName) + ' to ' + chalk.green(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : ''),
+                message: options.revert ? ('Revert migration from ' + chalk.green(accountName) + ' to ' + chalk.red(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : '')) : ('Migrate from ' + chalk.red(accountName) + ' to ' + chalk.green(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : '')),
                 default: false
             });
 
@@ -68,7 +68,7 @@ class StripeCSVCommand {
             }
 
             // Step 2: Import data
-            Logger.shared.startSpinner('Importing data');
+            Logger.shared.startSpinner(options.revert ? 'Reverting migration' : 'Importing data');
             stats.addListener(() => {
                 Logger.shared.processSpinner(stats.toString());
             });
@@ -98,12 +98,12 @@ class StripeCSVCommand {
                 priceImporter,
                 couponImporter
             });
-            const warnings = await subscriptionImporter.recreateAll();
+            const warnings = options.revert ? (await subscriptionImporter.revertAll()) : (await subscriptionImporter.recreateAll());
             if (warnings) {
-                Logger.shared.succeed(`Successfully imported ${stats.importedPerType.get('subscription') ?? 0} subscriptions with ${warnings.length} warning${warnings.length > 1 ? 's' : ''}:`);
+                Logger.shared.succeed(`Successfully ${options.revert ? 'reverted' : 'imported'} ${stats.importedPerType.get('subscription') ?? 0} subscriptions with ${warnings.length} warning${warnings.length > 1 ? 's' : ''}:`);
                 Logger.shared.warn(warnings.toString());
             } else {
-                Logger.shared.succeed(`Successfully imported all subscriptions`);
+                Logger.shared.succeed(`Successfully ${options.revert ? 'reverted' : 'imported'} all subscriptions`);
             }
 
             stats.print();
