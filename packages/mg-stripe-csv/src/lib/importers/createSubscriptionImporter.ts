@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import Logger from '../Logger.js';
 import {Options} from '../Options.js';
 import {StripeAPI} from '../StripeAPI.js';
-import {getObjectId, ifDryRunJustReturnFakeId} from '../helpers.js';
+import {getObjectId, ifDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 import {ImportStats} from './ImportStats.js';
 import {ImportWarning} from './ImportWarning.js';
 import {Importer} from './Importer.js';
@@ -33,7 +33,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 query: `metadata['importOldId']:'${oldId}' AND status:"active"`
             });
             if (existing.data.length > 0) {
-                return existing.data[0].id;
+                return existing.data[0];
             }
         },
 
@@ -96,6 +96,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             Logger.vv?.info(`Creating subscription`);
 
             const needsCharge = oldSubscription.status === 'past_due';
+            const now = new Date().getTime() / 1000;
 
             const data: Stripe.SubscriptionCreateParams = {
                 description: oldSubscription.description ?? undefined,
@@ -108,7 +109,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 proration_behavior: needsCharge ? 'create_prorations' : 'none', // Don't charge for backdated time
                 cancel_at_period_end: oldSubscription.cancel_at_period_end,
                 coupon,
-                trial_end: oldSubscription.trial_end ?? undefined,
+                trial_end: oldSubscription.trial_end && oldSubscription.trial_end > now ? oldSubscription.trial_end : undefined, // Stripe returns trial end in the past, but doesn't allow it to be in the past when creating a subscription
                 cancel_at: oldSubscription.cancel_at ?? undefined,
                 metadata: {
                     oldCreatedAt: oldSubscription.created,
@@ -135,6 +136,32 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 oldSubscription,
                 newSubscription: data
             });
+        },
+
+        async revert(oldSubscription: Stripe.Subscription, newSubscription: Stripe.Subscription) {
+            await ifDryRun(async () => {
+                await newStripe.client.subscriptions.del(getObjectId(newSubscription));
+
+                if (Options.shared.pause) {
+                    // Resume old subscription
+                    Logger.vv?.info(`Resuming old ${oldSubscription.id}`);
+                    await oldStripe.client.subscriptions.update(oldSubscription.id, {
+                        pause_collection: ''
+                    });
+
+                    // TODO! resume draft invoices created!
+                }
+            });
+
+            // Delete price if not yet deleted
+            for (const item of oldSubscription.items.data) {
+                await priceImporter.revert(item.price);
+            }
+
+            // Delete coupon if not yet deleted
+            if (oldSubscription.discount?.coupon) {
+                await couponImporter.revert(oldSubscription.discount?.coupon);
+            }
         }
     };
 

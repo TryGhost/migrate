@@ -15,12 +15,13 @@ export type ImportProvider<T> = {
     /**
      * Find the newID for a given oldID, in case the oldID was already imported previously in another run.
      */
-    findExisting(oldId: string): Promise<string|undefined>
+    findExisting(oldId: string): Promise<T|undefined>
 
     /**
      * Recreate an existing item in the new account.
      */
     recreate(oldItem: T): Promise<string>
+    revert(oldItem: T, newItem: T): Promise<void>
 }
 
 export class Queue {
@@ -103,6 +104,7 @@ export class Importer<T extends {id: string}> {
     stats: ImportStats;
     provider: ImportProvider<T>;
     recreatedMap: Map<string, string> = new Map();
+    revertedSet: Set<string> = new Set();
 
     constructor(options: {objectName: string, provider: ImportProvider<T>, stats: ImportStats}) {
         this.objectName = options.objectName;
@@ -147,6 +149,39 @@ export class Importer<T extends {id: string}> {
         return errorGroup.isEmpty ? undefined : errorGroup;
     }
 
+    async revertAll() {
+        const groupErrors = false;
+
+        // Loop through all items in the provider and import them
+        const queue = new Queue();
+        const errorGroup = new ErrorGroup();
+        for await (const item of this.provider.getAll()) {
+            queue.add(async () => {
+                try {
+                    await this.revert(item);
+                } catch (e: any) {
+                    if (!groupErrors) {
+                        if (isWarning(e)) {
+                            errorGroup.add(e);
+                            return;
+                        }
+                        throw e;
+                    }
+                    if (isWarning(e)) {
+                        Logger.shared.warn(e.toString());
+                    } else {
+                        Logger.shared.error(e.toString());
+                    }
+                    errorGroup.add(e);
+                }
+            });
+        }
+        await queue.waitUntilFinished();
+        errorGroup.throwIfNotEmpty();
+
+        return errorGroup.isEmpty ? undefined : errorGroup;
+    }
+
     async recreateByObjectOrId(idOrItem: string | T) {
         if (typeof idOrItem === 'string') {
             return await this.recreateByID(idOrItem);
@@ -167,6 +202,26 @@ export class Importer<T extends {id: string}> {
         return await this.recreate(item);
     }
 
+    async revertByObjectOrId(idOrItem: string | T) {
+        if (typeof idOrItem === 'string') {
+            return await this.revertByID(idOrItem);
+        } else {
+            return await this.revert(idOrItem);
+        }
+    }
+
+    async revertByID(id: string): Promise<void> {
+        // Check if already imported
+        const alreadReverted = this.revertedSet.has(id);
+        if (alreadReverted) {
+            Logger.vv?.info(`Skipped reverting ${id}, because already reverted in this run`);
+            return;
+        }
+
+        const item = await this.provider.getByID(id);
+        return await this.revert(item);
+    }
+
     async recreate(item: T): Promise<string> {
         // Check if already imported
         // We need to repeat this because sometimes the item is passed directly to this method, without going through recreateByID()
@@ -179,9 +234,9 @@ export class Importer<T extends {id: string}> {
         // To make sure the operation is idempotent, we first check if the item was already recreated in a previous run.
         const reuse = await this.provider.findExisting(item.id);
         if (reuse) {
-            Logger.vv?.info(`Skipped ${this.objectName} ${item.id} because already recreated as ${reuse} in a previous run`);
+            Logger.vv?.info(`Skipped ${this.objectName} ${item.id} because already recreated as ${reuse.id} in a previous run`);
             this.stats.trackReused(this.objectName);
-            return reuse;
+            return reuse.id;
         }
 
         // Import
@@ -207,5 +262,42 @@ export class Importer<T extends {id: string}> {
         Logger.v?.ok(`Recreated ${this.objectName} ${item.id} as ${newID} in new account`);
         this.stats.trackImported(this.objectName);
         return newID;
+    }
+
+    async revert(item: T): Promise<void> {
+        // Check if already reverted
+        const alreadyReverted = this.revertedSet.has(item.id);
+        if (alreadyReverted) {
+            Logger.vv?.info(`Skipped reverting ${this.objectName} ${item.id}, because already reverted in this run`);
+            return;
+        }
+
+        const newItem = await this.provider.findExisting(item.id);
+        if (!newItem) {
+            // Not yet created
+            Logger.vv?.info(`Skipped reverting ${this.objectName} ${item.id} because not yet recreated in new account`);
+            return;
+        }
+
+        // Import
+        Logger.vv?.info(`Removing ${newItem.id} (${item.id} in old account)`);
+
+        try {
+            await this.provider.revert(item, newItem);
+        } catch (e: any) {
+            if (e instanceof ImportWarning) {
+                throw new ImportWarning({
+                    message: 'Failed to revert ' + this.objectName + ' ' + item.id,
+                    cause: e
+                });
+            }
+            throw new ImportError({
+                message: 'Failed to revert ' + this.objectName + ' ' + item.id,
+                cause: e
+            });
+        }
+
+        this.revertedSet.add(item.id);
+        Logger.v?.ok(`Removed ${newItem.id}`);
     }
 }

@@ -18,6 +18,16 @@ export function getObjectId(data: string | {id: string}): string {
     return data.id;
 }
 
+export async function ifDryRun(live: () => Promise<void>, logData?: any): Promise<void> {
+    if (logData) {
+        Logger.debug?.info(logData);
+    }
+    if (Options.shared.dryRun) {
+        return;
+    }
+    return await live();
+}
+
 export async function ifDryRunJustReturnFakeId(live: () => Promise<string>, logData?: any): Promise<string> {
     if (logData) {
         Logger.debug?.info(logData);

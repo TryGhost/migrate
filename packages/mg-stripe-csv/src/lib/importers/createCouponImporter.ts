@@ -3,7 +3,7 @@ import {Importer} from './Importer.js';
 import {StripeAPI} from '../StripeAPI.js';
 import {ImportStats} from './ImportStats.js';
 import Logger from '../Logger.js';
-import {ifDryRunJustReturnFakeId} from '../helpers.js';
+import {ifDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 
 export function createCouponImporter({oldStripe, newStripe, stats}: {
     dryRun: boolean,
@@ -23,7 +23,7 @@ export function createCouponImporter({oldStripe, newStripe, stats}: {
         async findExisting(oldId: string) {
             try {
                 const existing = await newStripe.client.coupons.retrieve(oldId);
-                return existing.id;
+                return existing;
             } catch (e: any) {
                 Logger.v?.info(`Coupon ${oldId} not found in new Stripe: ${e.message}`);
                 return;
@@ -47,6 +47,13 @@ export function createCouponImporter({oldStripe, newStripe, stats}: {
                     applies_to: oldCoupon.applies_to ?? undefined
                 });
                 return coupon.id;
+            });
+        },
+
+        async revert(_: Stripe.Coupon, newCoupon: Stripe.Coupon) {
+            // Delete the new coupon
+            await ifDryRun(async () => {
+                await newStripe.client.coupons.del(newCoupon.id);
             });
         }
     };

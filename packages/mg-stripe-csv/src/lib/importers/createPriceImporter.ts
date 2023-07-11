@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import {Importer} from './Importer.js';
 import {StripeAPI} from '../StripeAPI.js';
 import {ImportStats} from './ImportStats.js';
-import {ifDryRunJustReturnFakeId} from '../helpers.js';
+import {ifDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 
 export function createPriceImporter({oldStripe, newStripe, stats, productImporter}: {
     dryRun: boolean,
@@ -25,7 +25,7 @@ export function createPriceImporter({oldStripe, newStripe, stats, productImporte
                 query: `metadata['importOldId']:'${oldId}'`
             });
             if (existing.data.length > 0) {
-                return existing.data[0].id;
+                return existing.data[0];
             }
         },
 
@@ -48,6 +48,11 @@ export function createPriceImporter({oldStripe, newStripe, stats, productImporte
                 });
                 return price.id;
             });
+        },
+
+        async revert(oldPrice: Stripe.Price, newPrice: Stripe.Price) {
+            // Deleting product will also delete price
+            await productImporter.revertByObjectOrId(oldPrice.product as Stripe.Product | string);
         }
     };
 

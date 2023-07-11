@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import {Importer} from './Importer.js';
 import {StripeAPI} from '../StripeAPI.js';
 import {ImportStats} from './ImportStats.js';
-import {ifDryRunJustReturnFakeId} from '../helpers.js';
+import {getObjectId, ifDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 
 export function createProductImporter({oldStripe, newStripe, stats}: {
     dryRun: boolean,
@@ -24,7 +24,7 @@ export function createProductImporter({oldStripe, newStripe, stats}: {
                 query: `metadata['importOldId']:'${oldId}'`
             });
             if (existing.data.length > 0) {
-                return existing.data[0].id;
+                return existing.data[0];
             }
         },
 
@@ -38,6 +38,28 @@ export function createProductImporter({oldStripe, newStripe, stats}: {
                     }
                 });
                 return product.id;
+            });
+        },
+
+        async revert(_: Stripe.Product, newProduct: Stripe.Product) {
+            // Deleting product will also delete prices
+            const prices = await newStripe.client.prices.list({
+                product: getObjectId(newProduct),
+                limit: 100
+            });
+            return await ifDryRun(async () => {
+                for (const price of prices.data) {
+                    await newStripe.client.prices.update(price.id, {
+                        active: false
+                    });
+                }
+                if (prices.data.length === 0) {
+                    await newStripe.client.products.del(getObjectId(newProduct));
+                } else {
+                    await newStripe.client.products.update(getObjectId(newProduct), {
+                        active: false
+                    });
+                }
             });
         }
     };
