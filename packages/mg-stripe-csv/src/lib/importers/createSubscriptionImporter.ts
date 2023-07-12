@@ -13,7 +13,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
     newStripe: StripeAPI,
     stats: ImportStats,
     priceImporter: Importer<Stripe.Price>,
-    couponImporter: Importer<Stripe.Coupon>,
+    couponImporter: Importer<Stripe.Coupon>
 }) {
     const provider = {
         async getByID(oldId: string): Promise<Stripe.Subscription> {
@@ -68,10 +68,15 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             if (!oldPaymentMethod) {
                 // Use customer's default payment method
                 if (!customer.default_source) {
-                    throw new Error(`Customer ${getObjectId(oldSubscription.customer)} does not have a default payment method and the subscription ${oldSubscription.id} does not have a default payment method`);
+                    if (!customer.invoice_settings.default_payment_method) {
+                        throw new Error(`Customer ${getObjectId(oldSubscription.customer)} does not have a default payment method and the subscription ${oldSubscription.id} does not have a default payment method`);
+                    }
+                    Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} default payment method`);
+                    foundPaymentMethodId = getObjectId(customer.invoice_settings.default_payment_method);
+                } else {
+                    Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} default payment method source`);
+                    foundSourceId = getObjectId(customer.default_source);
                 }
-                Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} default payment method`);
-                foundSourceId = getObjectId(customer.default_source);
             } else {
                 Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} payment methods`);
                 const paymentMethods = await newStripe.client.customers.listPaymentMethods(getObjectId(oldSubscription.customer));
@@ -104,12 +109,12 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 default_payment_method: foundPaymentMethodId,
                 default_source: foundSourceId,
                 items,
-                billing_cycle_anchor: oldSubscription.trial_end ? undefined : oldSubscription.current_period_end,
+                billing_cycle_anchor: oldSubscription.trial_end || oldSubscription.current_period_end <= (now + 10) ? undefined : oldSubscription.current_period_end,
                 backdate_start_date: needsCharge ? oldSubscription.current_period_start : oldSubscription.start_date,
                 proration_behavior: needsCharge ? 'create_prorations' : 'none', // Don't charge for backdated time
                 cancel_at_period_end: oldSubscription.cancel_at_period_end,
                 coupon,
-                trial_end: oldSubscription.trial_end && oldSubscription.trial_end > now ? oldSubscription.trial_end : undefined, // Stripe returns trial end in the past, but doesn't allow it to be in the past when creating a subscription
+                trial_end: oldSubscription.trial_end && oldSubscription.trial_end > (now + 10) ? oldSubscription.trial_end : undefined, // Stripe returns trial end in the past, but doesn't allow it to be in the past when creating a subscription
                 cancel_at: oldSubscription.cancel_at ?? undefined,
                 metadata: {
                     oldCreatedAt: oldSubscription.created,

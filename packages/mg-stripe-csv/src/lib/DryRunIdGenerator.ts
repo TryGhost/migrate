@@ -1,9 +1,9 @@
 class DryRunIdGenerator {
     counter = 0;
 
-    getNext() {
+    getNext(prefix = 'fake_') {
         this.counter += 1;
-        return 'fake_' + this.counter;
+        return prefix + this.counter;
     }
 }
 

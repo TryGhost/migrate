@@ -75,6 +75,7 @@ export class Options {
     debug: boolean;
     testClock?: string;
     revert: boolean;
+    forceRecreate: boolean;
 
     static shared: Options;
 
@@ -88,6 +89,7 @@ export class Options {
         this.debug = argv.debug ?? false;
         this.testClock = argv['test-clock'] ?? undefined;
         this.revert = argv.revert ?? false;
+        this.forceRecreate = argv['force-recreate'] ?? false;
     }
 
     static init(argv: any) {
