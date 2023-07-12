@@ -1,4 +1,5 @@
 import Logger from '../Logger.js';
+import {Options} from '../Options.js';
 import {isWarning} from '../helpers.js';
 import {ErrorGroup} from './ErrorGroup.js';
 import {ImportError} from './ImportError.js';
@@ -232,11 +233,13 @@ export class Importer<T extends {id: string}> {
         }
 
         // To make sure the operation is idempotent, we first check if the item was already recreated in a previous run.
-        const reuse = await this.provider.findExisting(item.id);
-        if (reuse) {
-            Logger.vv?.info(`Skipped ${this.objectName} ${item.id} because already recreated as ${reuse.id} in a previous run`);
-            this.stats.trackReused(this.objectName);
-            return reuse.id;
+        if (!Options.shared.forceRecreate) {
+            const reuse = await this.provider.findExisting(item.id);
+            if (reuse) {
+                Logger.vv?.info(`Skipped ${this.objectName} ${item.id} because already recreated as ${reuse.id} in a previous run`);
+                this.stats.trackReused(this.objectName);
+                return reuse.id;
+            }
         }
 
         // Import
