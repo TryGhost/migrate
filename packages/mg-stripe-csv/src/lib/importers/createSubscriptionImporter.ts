@@ -100,7 +100,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             // Create the subscription
             Logger.vv?.info(`Creating subscription`);
 
-            const needsCharge = oldSubscription.status === 'past_due';
+            const needsCharge = oldSubscription.status === 'past_due' && false;
             const now = new Date().getTime() / 1000;
 
             // Minimum billing_cycle_anchor is one hour in the future, to prevent immediate billing of the created subscription
@@ -127,8 +127,69 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 payment_behavior: 'error_if_incomplete' // Make sure we throw an error if we can't charge the customer
             };
 
+            // Duplicate any open invoices from the old subscription
+            const invoices = await oldStripe.client.invoices.list({
+                subscription: oldSubscription.id,
+                status: 'open'
+            });
+
             return await ifDryRunJustReturnFakeId(async () => {
                 const subscription = await newStripe.client.subscriptions.create(data);
+
+                for (const oldInvoice of invoices.data) {
+                    Logger.vv?.info(`Duplicating invoice ${oldInvoice.id} from old subscription ${oldSubscription.id} to new subscription ${subscription.id}`);
+                    const invoice = await newStripe.client.invoices.create({
+                        customer: getObjectId(oldSubscription.customer),
+                        subscription: subscription.id,
+                        auto_advance: false,
+                        metadata: {
+                            importOldId: oldInvoice.id
+                        }
+                    });
+
+                    for (const item of oldInvoice.lines.data) {
+                        Logger.vv?.info(`Duplicating invoice item ${item.id} from old invoice ${oldInvoice.id} to new invoice ${invoice.id}`);
+
+                        const newPriceId = item.price ? await priceImporter.recreate(item.price) : undefined;
+
+                        // Note: we cannot use the price here again, because we cannot assign a recurring price to an invoice item
+                        const d = {
+                            customer: getObjectId(oldSubscription.customer),
+                            invoice: invoice.id,
+                            //subscription: subscription.id,
+                            //price: newPriceId,
+                            //quantity: item.quantity ?? undefined,
+                            amount: item.amount,
+                            discountable: item.discountable,
+                            period: {
+                                start: item.period?.start,
+                                end: item.period?.end
+                            },
+                            description: item.description ?? (item.price?.product as Stripe.Product).name,
+                            currency: item.currency,
+                            metadata: {
+                                importOldId: item.id
+                            }
+                        };
+                        await newStripe.client.invoiceItems.create(d);
+                    }
+
+                    // Advance the invoice
+                    Logger.vv?.info(`Finalizing invoice ${invoice.id}`);
+                    await newStripe.client.invoices.finalizeInvoice(invoice.id, {
+                        auto_advance: true
+                    });
+
+                    // Force immediate payment
+                    Logger.vv?.info(`Paying invoice ${invoice.id}`);
+
+                    try {
+                        await newStripe.client.invoices.pay(invoice.id);
+                    } catch (e) {
+                        // Faield charge
+                        // Not an issue: subscription will be overdue
+                    }
+                }
 
                 if (Options.shared.pause) {
                     // Pause old subscription
