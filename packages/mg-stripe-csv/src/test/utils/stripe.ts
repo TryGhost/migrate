@@ -47,6 +47,36 @@ export async function createValidCustomer(stripe: Stripe) {
     return customer;
 }
 
+export async function createDeclinedCustomer(stripe: Stripe) {
+    let customer = await stripe.customers.create({
+        name: 'Declined Customer',
+        email: ''
+    });
+
+    const paymentMethod = await stripe.paymentMethods.create({
+        type: 'card',
+        card: {
+            number: '4000000000000341',
+            exp_month: 4,
+            exp_year: 2028,
+            cvc: '314'
+        }
+    });
+
+    await stripe.paymentMethods.attach(paymentMethod.id, {
+        customer: customer.id
+    });
+
+    // Set as default payment method
+    customer = await stripe.customers.update(customer.id, {
+        invoice_settings: {
+            default_payment_method: paymentMethod.id
+        }
+    });
+
+    return customer;
+}
+
 /**
  * Build an in memory product that doesn't exist in Stripe
  */

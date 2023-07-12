@@ -103,18 +103,22 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             const needsCharge = oldSubscription.status === 'past_due';
             const now = new Date().getTime() / 1000;
 
+            // Minimum billing_cycle_anchor is one hour in the future, to prevent immediate billing of the created subscription
+            const minimumBillingCycleAnchor = Math.ceil(now) + 3600;
+            const isTrial = oldSubscription.trial_end && oldSubscription.trial_end > (now + 10);
+
             const data: Stripe.SubscriptionCreateParams = {
                 description: oldSubscription.description ?? undefined,
                 customer: getObjectId(oldSubscription.customer),
                 default_payment_method: foundPaymentMethodId,
                 default_source: foundSourceId,
                 items,
-                billing_cycle_anchor: oldSubscription.trial_end || oldSubscription.current_period_end <= (now + 10) ? undefined : oldSubscription.current_period_end,
+                billing_cycle_anchor: isTrial ? undefined : Math.max(minimumBillingCycleAnchor, oldSubscription.current_period_end),
                 backdate_start_date: needsCharge ? oldSubscription.current_period_start : oldSubscription.start_date,
                 proration_behavior: needsCharge ? 'create_prorations' : 'none', // Don't charge for backdated time
                 cancel_at_period_end: oldSubscription.cancel_at_period_end,
                 coupon,
-                trial_end: oldSubscription.trial_end && oldSubscription.trial_end > (now + 10) ? oldSubscription.trial_end : undefined, // Stripe returns trial end in the past, but doesn't allow it to be in the past when creating a subscription
+                trial_end: isTrial ? oldSubscription.trial_end! : undefined, // Stripe returns trial end in the past, but doesn't allow it to be in the past when creating a subscription
                 cancel_at: oldSubscription.cancel_at ?? undefined,
                 metadata: {
                     oldCreatedAt: oldSubscription.created,
