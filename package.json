@@ -17,8 +17,8 @@
     "migrate": "migrate",
     "presetup": "yarn",
     "setup": "lerna bootstrap",
-    "test:only": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js && lerna run lint",
+    "test:only": "lerna run test",
+    "test": "lerna run test,lint",
     "lint": "lerna run lint",
     "preship": "yarn test",
     "ship": "lerna publish --no-private"
