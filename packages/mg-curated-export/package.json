@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "dev": "echo \"Implement me!\"",
-    "test": "node --experimental-vm-modules $(yarn bin jest)",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "lint": "eslint . --ext .js --cache",
     "posttest": "yarn lint"
   },
