@@ -200,3 +200,121 @@ export function buildSubscription(overrides: Partial<Omit<Stripe.Subscription, '
         }
     };
 }
+
+export function buildInvoiceItem(data: {price: Stripe.Price, period: Stripe.InvoiceLineItem.Period}): Stripe.InvoiceLineItem {
+    const invoiceItem: Stripe.InvoiceLineItem = {
+        id: DryRunIdGenerator.getNext('ii_'),
+        amount: data.price.unit_amount!,
+        currency: 'usd',
+        description: null,
+        discountable: false,
+        discounts: null,
+        livemode: false,
+        metadata: {},
+        period: data.period,
+        plan: null,
+        price: data.price,
+        proration: false,
+        quantity: 1,
+        subscription: null,
+        object: 'line_item',
+        amount_excluding_tax: null,
+        discount_amounts: null,
+        proration_details: null,
+        type: 'subscription',
+        unit_amount_excluding_tax: null
+    };
+    return invoiceItem;
+}
+
+export function buildInvoice(overrides: Partial<Omit<Stripe.Invoice, 'lines' | 'customer'>> & {lines: {price: Stripe.Price, period: Stripe.InvoiceLineItem.Period}[], customer: string, subscription: string}): Stripe.Invoice {
+    const id = DryRunIdGenerator.getNext('in_');
+    return {
+        id,
+        object: 'invoice',
+        account_country: null,
+        account_name: null,
+        account_tax_ids: null,
+        amount_due: 0,
+        amount_paid: 0,
+        amount_remaining: 0,
+        amount_shipping: 0,
+        application: null,
+        application_fee_amount: null,
+        attempt_count: 0,
+        attempted: false,
+        automatic_tax: {
+            enabled: false,
+            status: null
+        },
+        billing_reason: null,
+        charge: null,
+        collection_method: 'charge_automatically',
+        created: 0,
+        currency: '',
+        custom_fields: null,
+        customer_address: null,
+        customer_email: null,
+        customer_name: null,
+        customer_phone: null,
+        customer_shipping: null,
+        customer_tax_exempt: null,
+        default_payment_method: null,
+        default_source: null,
+        default_tax_rates: [],
+        description: null,
+        discount: null,
+        discounts: null,
+        due_date: null,
+        effective_at: null,
+        ending_balance: null,
+        footer: null,
+        from_invoice: null,
+        last_finalization_error: null,
+        latest_revision: null,
+        livemode: false,
+        metadata: null,
+        next_payment_attempt: null,
+        number: null,
+        on_behalf_of: null,
+        paid: false,
+        paid_out_of_band: false,
+        payment_intent: null,
+        payment_settings: {} as any,
+        period_end: 0,
+        period_start: 0,
+        post_payment_credit_notes_amount: 0,
+        pre_payment_credit_notes_amount: 0,
+        quote: null,
+        receipt_number: null,
+        rendering_options: null,
+        shipping_cost: null,
+        shipping_details: null,
+        starting_balance: 0,
+        statement_descriptor: null,
+        status: 'open',
+        status_transitions: {} as any,
+        subtotal: 0,
+        subtotal_excluding_tax: null,
+        tax: null,
+        test_clock: null,
+        total: 0,
+        total_discount_amounts: null,
+        total_excluding_tax: null,
+        total_tax_amounts: [],
+        transfer_data: null,
+        webhooks_delivered_at: null,
+        ...overrides,
+        lines: {
+            object: 'list',
+            data: [
+                buildInvoiceItem({
+                    price: overrides.lines[0].price,
+                    period: overrides.lines[0].period
+                })
+            ],
+            has_more: false,
+            url: ''
+        }
+    };
+}
