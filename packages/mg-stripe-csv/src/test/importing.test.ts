@@ -103,6 +103,12 @@ describe('test', () => {
         assert.equal(newSubscription.items.data.length, 1);
         assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
+
+        // Did not charge yet
+        const newInvoices = await stripe.client.invoices.list({
+            subscription: newSubscription.id
+        });
+        assert.equal(newInvoices.data.length, 0);
     });
 
     it('Trial subscriptions', async () => {
@@ -141,6 +147,17 @@ describe('test', () => {
         assert.equal(newSubscription.items.data.length, 1);
         assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
+
+        // Did not charge yet
+        const newInvoices = await stripe.client.invoices.list({
+            subscription: newSubscription.id
+        });
+        assert.equal(newInvoices.data.length, 1);
+        assert.equal(newInvoices.data[0].status, 'paid');
+        assert.equal(newInvoices.data[0].amount_due, 0);
+        assert.equal(newInvoices.data[0].amount_paid, 0);
+        assert.equal(newInvoices.data[0].lines.data[0].period.end, oldSubscription.current_period_end);
+        assert.equal(newInvoices.data[0].lines.data[0].period.start, oldSubscription.start_date);
     });
 
     it('Subsciption that renews today', async () => {
@@ -183,9 +200,15 @@ describe('test', () => {
         assert.equal(newSubscription.items.data.length, 1);
         assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
+
+        // Did not charge yet
+        const newInvoices = await stripe.client.invoices.list({
+            subscription: newSubscription.id
+        });
+        assert.equal(newInvoices.data.length, 0);
     });
 
-    it('Subsciption that renews today and will be declined', async () => {
+    it('Subsciption that renews today and will be declined delays charge', async () => {
         const oldProduct: Stripe.Product = buildProduct({});
 
         const oldPrice: Stripe.Price = buildPrice({
@@ -225,6 +248,12 @@ describe('test', () => {
         assert.equal(newSubscription.items.data.length, 1);
         assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
+
+        // Did not charge yet
+        const newInvoices = await stripe.client.invoices.list({
+            subscription: newSubscription.id
+        });
+        assert.equal(newInvoices.data.length, 0);
     });
 
     it('Past Due Subscription', async () => {
