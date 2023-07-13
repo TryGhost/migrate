@@ -73,6 +73,43 @@ export async function createDeclinedCustomer<T extends boolean>(stripe: Stripe, 
     });
 }
 
+export function buildDiscount(overrides: Partial<Omit<Stripe.Discount, 'coupon'>> & {coupon: Stripe.Coupon}): Stripe.Discount {
+    return {
+        id: DryRunIdGenerator.getNext('di_'),
+        object: 'discount',
+        customer: null,
+        end: null,
+        invoice: null,
+        invoice_item: null,
+        promotion_code: null,
+        start: 0,
+        checkout_session: null,
+        subscription: null,
+        ...overrides
+    };
+}
+
+export function buildCoupon(overrides: Partial<Stripe.Coupon>): Stripe.Coupon {
+    return {
+        id: DryRunIdGenerator.getUnique('coupon_'), // needs to be unique
+        object: 'coupon',
+        amount_off: null,
+        created: 0,
+        currency: null,
+        duration: 'once',
+        duration_in_months: null,
+        livemode: false,
+        max_redemptions: null,
+        metadata: {},
+        name: 'Test Coupon',
+        percent_off: 10,
+        redeem_by: null,
+        times_redeemed: 0,
+        valid: true,
+        ...overrides
+    };
+}
+
 /**
  * Build an in memory product that doesn't exist in Stripe
  */

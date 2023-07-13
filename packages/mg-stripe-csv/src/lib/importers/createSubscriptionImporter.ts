@@ -150,17 +150,12 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                     for (const item of oldInvoice.lines.data) {
                         Logger.vv?.info(`Duplicating invoice item ${item.id} from old invoice ${oldInvoice.id} to new invoice ${invoice.id}`);
 
-                        const newPriceId = item.price ? await priceImporter.recreate(item.price) : undefined;
-
                         // Note: we cannot use the price here again, because we cannot assign a recurring price to an invoice item
                         const d = {
                             customer: getObjectId(oldSubscription.customer),
                             invoice: invoice.id,
-                            //subscription: subscription.id,
-                            //price: newPriceId,
-                            //quantity: item.quantity ?? undefined,
                             amount: item.amount,
-                            discountable: item.discountable,
+                            discountable: subscription.discount ? true : item.discountable,
                             period: {
                                 start: item.period?.start,
                                 end: item.period?.end
