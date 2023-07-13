@@ -56,6 +56,8 @@ class AssetScraper {
             baseDomain: null
         }, options);
 
+        this.ctx = ctx;
+
         this.warnings = (ctx.warnings) ? ctx.warnings : [];
 
         this.logger = ctx.logger;
@@ -946,8 +948,18 @@ class AssetScraper {
                     let trimmedRemote = item.remote.trim();
                     this._fixedValues = replaceAll(this._fixedValues, trimmedRemote, foundItem.newLocal);
 
+                    if (this?.ctx?.options?.assetAltReplace) {
+                        this._fixedValues = this._fixedValues.replaceAll(trimmedRemote, foundItem.newLocal);
+                    } else {
+                        this._fixedValues = replaceAll(this._fixedValues, trimmedRemote, foundItem.newLocal);
+                    }
+
                     // Add an artificial delay here so tasks are shown properly
-                    await new Promise(r => setTimeout(r, 2)); // eslint-disable-line no-promise-executor-return
+                    if (this?.ctx?.options?.assetDelay) {
+                        await new Promise(r => setTimeout(r, 200)); // eslint-disable-line no-promise-executor-return
+                    } else {
+                        await new Promise(r => setTimeout(r, 2)); // eslint-disable-line no-promise-executor-return
+                    }
                 }
             });
         });
