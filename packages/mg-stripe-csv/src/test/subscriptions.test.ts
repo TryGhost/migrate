@@ -5,7 +5,7 @@ import {createCouponImporter} from '../lib/importers/createCouponImporter.js';
 import {createPriceImporter} from '../lib/importers/createPriceImporter.js';
 import {createProductImporter} from '../lib/importers/createProductImporter.js';
 import {createSubscriptionImporter} from '../lib/importers/createSubscriptionImporter.js';
-import {advanceClock, buildInvoice, buildPrice, buildProduct, buildSubscription, createDeclinedCustomer, createValidCustomer, getStripeTestAPIKey} from './utils/stripe.js';
+import {advanceClock, buildCoupon, buildDiscount, buildInvoice, buildPrice, buildProduct, buildSubscription, createDeclinedCustomer, createValidCustomer, getStripeTestAPIKey} from './utils/stripe.js';
 import {Options} from '../lib/Options.js';
 import assert from 'assert/strict';
 import sinon from 'sinon';
@@ -583,5 +583,155 @@ describe('Recreating subscriptions', () => {
         await assert.rejects(subscriptionImporter.recreate(oldSubscription), (thrown) => {
             return isWarning(thrown) && !!thrown.toString().match(/has a status of unpaid/);
         });
+    });
+
+    it('Subscription with a coupon that has already been applied 2/3 times will only apply it for one last time', async () => {
+        const {customer, clock} = await createValidCustomer(stripe.client, {testClock: true});
+        const now = Math.floor(new Date().getTime() / 1000);
+        const currentPeriodEnd = now + 15 * 24 * 60 * 60;
+        const currentPeriodStart = currentPeriodEnd - 31 * 24 * 60 * 60;
+        const startDate = currentPeriodStart - 31 * 24 * 60 * 60;
+
+        const coupon = buildCoupon({
+            duration: 'repeating',
+            duration_in_months: 3,
+            percent_off: 10
+        });
+
+        const oldProduct = buildProduct({});
+        const oldPrice = buildPrice({
+            product: oldProduct,
+            recurring: {
+                interval: 'month'
+            }
+        });
+
+        const oldSubscription = buildSubscription({
+            status: 'active',
+            customer: customer.id,
+            items: [
+                {
+                    price: oldPrice
+                }
+            ],
+            current_period_end: currentPeriodEnd,
+            current_period_start: currentPeriodStart,
+            start_date: startDate,
+            discount: buildDiscount({
+                coupon
+            })
+        });
+
+        const newSubscriptionId = await subscriptionImporter.recreate(oldSubscription);
+        const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
+
+        // Do some basic assertions
+        assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
+        assert.equal(newSubscription.status, 'active');
+
+        // Advance time until the end of the coupon (3 months after start date)
+        await advanceClock({
+            clock,
+            stripe: stripe.client,
+            time: startDate + 3 * 31 * 24 * 60 * 60 + 60 * 60 * 2
+        });
+
+        // Check we generated two incoices: one with the discount and one without
+        const newInvoices = await stripe.client.invoices.list({
+            subscription: newSubscription.id
+        });
+        // Sort invoices by date
+        newInvoices.data.sort((a, b) => {
+            return a.created - b.created;
+        });
+
+        assert.equal(newInvoices.data.length, 2);
+
+        // Check the first invoice has the discount
+        const firstInvoice = newInvoices.data[0];
+        assert.ok(firstInvoice.discount?.coupon.id);
+        assert.equal(firstInvoice.amount_paid, 90);
+        assert.equal(firstInvoice.amount_due, 90);
+
+        // Check the second invoice does not have the discount
+        const secondInvoice = newInvoices.data[1];
+        assert.equal(secondInvoice.discount, null);
+        assert.equal(secondInvoice.amount_paid, 100);
+        assert.equal(secondInvoice.amount_due, 100);
+    });
+
+    it('Subscription with a coupon that has already been applied 2/2 times will not apply it again', async () => {
+        const {customer, clock} = await createValidCustomer(stripe.client, {testClock: true});
+        const now = Math.floor(new Date().getTime() / 1000);
+        const currentPeriodEnd = now + 15 * 24 * 60 * 60;
+        const currentPeriodStart = currentPeriodEnd - 31 * 24 * 60 * 60;
+        const startDate = currentPeriodStart - 31 * 24 * 60 * 60;
+
+        const coupon = buildCoupon({
+            duration: 'repeating',
+            duration_in_months: 2,
+            percent_off: 10
+        });
+
+        const oldProduct = buildProduct({});
+        const oldPrice = buildPrice({
+            product: oldProduct,
+            recurring: {
+                interval: 'month'
+            }
+        });
+
+        const oldSubscription = buildSubscription({
+            status: 'active',
+            customer: customer.id,
+            items: [
+                {
+                    price: oldPrice
+                }
+            ],
+            current_period_end: currentPeriodEnd,
+            current_period_start: currentPeriodStart,
+            start_date: startDate,
+            discount: buildDiscount({
+                coupon
+            })
+        });
+
+        const newSubscriptionId = await subscriptionImporter.recreate(oldSubscription);
+        const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
+
+        // Do some basic assertions
+        assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
+        assert.equal(newSubscription.status, 'active');
+
+        // Advance time until the end of the coupon (3 months after start date)
+        await advanceClock({
+            clock,
+            stripe: stripe.client,
+            time: startDate + 3 * 31 * 24 * 60 * 60 + 60 * 60 * 2
+        });
+
+        // Check we generated two incoices: one with the discount and one without
+        const newInvoices = await stripe.client.invoices.list({
+            subscription: newSubscription.id
+        });
+        // Sort invoices by date
+        newInvoices.data.sort((a, b) => {
+            return a.created - b.created;
+        });
+
+        assert.equal(newInvoices.data.length, 2);
+
+        // Check the first invoice does not have the discount
+        const firstInvoice = newInvoices.data[0];
+        assert.equal(firstInvoice.discount, null);
+        assert.equal(firstInvoice.amount_paid, 100);
+        assert.equal(firstInvoice.amount_due, 100);
+
+        // Check the second invoice does not have the discount
+        const secondInvoice = newInvoices.data[1];
+        assert.equal(secondInvoice.discount, null);
+        assert.equal(secondInvoice.amount_paid, 100);
+        assert.equal(secondInvoice.amount_due, 100);
     });
 });
