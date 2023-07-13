@@ -155,7 +155,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                             customer: getObjectId(oldSubscription.customer),
                             invoice: invoice.id,
                             amount: item.amount,
-                            discountable: subscription.discount ? true : item.discountable,
+                            discountable: item.discountable,
                             period: {
                                 start: item.period?.start,
                                 end: item.period?.end
