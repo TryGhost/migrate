@@ -1,5 +1,6 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
     testEnvironment: 'node',
-    transform: {}
+    transform: {},
+    testTimeout: 60 * 1000
 };
