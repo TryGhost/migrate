@@ -5,7 +5,7 @@ import {createCouponImporter} from '../lib/importers/createCouponImporter.js';
 import {createPriceImporter} from '../lib/importers/createPriceImporter.js';
 import {createProductImporter} from '../lib/importers/createProductImporter.js';
 import {createSubscriptionImporter} from '../lib/importers/createSubscriptionImporter.js';
-import {buildInvoice, buildPrice, buildProduct, buildSubscription, createDeclinedCustomer, createValidCustomer, getStripeTestAPIKey} from './utils/stripe.js';
+import {advanceClock, buildInvoice, buildPrice, buildProduct, buildSubscription, createDeclinedCustomer, createValidCustomer, getStripeTestAPIKey} from './utils/stripe.js';
 import {Options} from '../lib/Options.js';
 import assert from 'assert/strict';
 import sinon from 'sinon';
@@ -21,8 +21,11 @@ describe('test', () => {
     let currentInvoices: Stripe.Invoice[];
 
     beforeAll(async () => {
-        validCustomer = await createValidCustomer(stripe.client);
-        declinedCustomer = await createDeclinedCustomer(stripe.client);
+        const {customer: vc} = await createValidCustomer(stripe.client, {testClock: false});
+        const {customer: dc} = await createDeclinedCustomer(stripe.client, {testClock: false});
+
+        validCustomer = vc;
+        declinedCustomer = dc;
     });
 
     beforeEach(async () => {
@@ -257,7 +260,12 @@ describe('test', () => {
     });
 
     it('Past Due Subscription', async () => {
+        const {customer, clock} = await createDeclinedCustomer(stripe.client, {testClock: true});
         const oldProduct: Stripe.Product = buildProduct({});
+
+        const now = Math.floor(new Date().getTime() / 1000);
+        const currentPeriodEnd = now + 15 * 24 * 60 * 60;
+        const currentPeriodStart = currentPeriodEnd - 31 * 24 * 60 * 60;
 
         const oldPrice: Stripe.Price = buildPrice({
             product: oldProduct,
@@ -265,27 +273,28 @@ describe('test', () => {
                 interval: 'month'
             }
         });
-        const now = Math.floor(new Date().getTime() / 1000);
 
         const oldSubscription: Stripe.Subscription = buildSubscription({
             status: 'past_due',
-            customer: declinedCustomer.id,
+            customer: customer.id,
             items: [
                 {
                     price: oldPrice
                 }
-            ]
+            ],
+            current_period_end: currentPeriodEnd,
+            current_period_start: currentPeriodStart
         });
 
         const invoice: Stripe.Invoice = buildInvoice({
-            customer: declinedCustomer.id,
+            customer: customer.id,
             subscription: oldSubscription.id,
             lines: [
                 {
                     price: oldPrice,
                     period: {
-                        start: now - 15 * 24 * 60 * 60,
-                        end: now + 15 * 24 * 60 * 60
+                        start: currentPeriodStart,
+                        end: currentPeriodEnd
                     }
                 }
             ]
@@ -304,9 +313,9 @@ describe('test', () => {
         assert.equal(newSubscription.current_period_end, oldSubscription.current_period_end);
         assert.equal(newSubscription.trial_end, oldSubscription.trial_end);
         assert.equal(newSubscription.cancel_at_period_end, oldSubscription.cancel_at_period_end);
-        assert.equal(newSubscription.customer, declinedCustomer.id);
+        assert.equal(newSubscription.customer, customer.id);
         assert.equal(newSubscription.description, oldSubscription.description);
-        assert.equal(newSubscription.default_payment_method, declinedCustomer.invoice_settings.default_payment_method);
+        assert.equal(newSubscription.default_payment_method, customer.invoice_settings.default_payment_method);
         assert.equal(newSubscription.items.data.length, 1);
         assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
@@ -319,14 +328,32 @@ describe('test', () => {
         assert.equal(newInvoices.data[0].status, 'open');
         assert.equal(newInvoices.data[0].attempt_count, 1);
         assert.equal(newInvoices.data[0].amount_due, 100);
-        assert.equal(newInvoices.data[0].customer, declinedCustomer.id);
+        assert.equal(newInvoices.data[0].customer, customer.id);
 
         // Check upcoming invoice
         const upcomingInvoice = await stripe.client.invoices.retrieveUpcoming({
-            customer: declinedCustomer.id,
+            customer: customer.id,
             subscription: newSubscription.id
         });
         assert.equal(upcomingInvoice.amount_due, 100);
         assert.equal(upcomingInvoice.lines.data[0].period.start, oldSubscription.current_period_end);
+
+        // Advance time until current period end
+        await advanceClock({
+            clock,
+            stripe: stripe.client,
+            time: oldSubscription.current_period_end + 10
+        });
+
+        // Should be canceled now (depends on account settings!)
+        // If this fails the test, check if your stripe account is setup to cancel subscriptions if they fail too many times
+        const newSubscriptionAfterDue = await stripe.client.subscriptions.retrieve(newSubscriptionId);
+        assert.equal(newSubscriptionAfterDue.status, 'canceled');
+
+        // Check no other invoices were created
+        const newInvoicesAfterDue = await stripe.client.invoices.list({
+            subscription: newSubscription.id
+        });
+        assert.equal(newInvoicesAfterDue.data.length, 1);
     });
 });

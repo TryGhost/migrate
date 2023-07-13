@@ -2,13 +2,6 @@ import 'dotenv/config';
 import Stripe from 'stripe';
 import DryRunIdGenerator from '../../lib/DryRunIdGenerator.js';
 
-/**
- * Clear all stripe data of a given account
- */
-function clearStripe() {
-
-}
-
 export function getStripeTestAPIKey() {
     if (!process.env.STRIPE_API_KEY) {
         throw new Error('Missing env variable STRIPE_API_KEY. Please create .env file in the root of the project and add STRIPE_API_KEY=xxx');
@@ -17,46 +10,41 @@ export function getStripeTestAPIKey() {
     return process.env.STRIPE_API_KEY;
 }
 
-export async function createValidCustomer(stripe: Stripe) {
-    let customer = await stripe.customers.create({
-        name: 'Valid Customer',
-        email: ''
+export async function advanceClock({clock, stripe, time}: {clock: string, stripe: Stripe, time: number}) {
+    // Advance time until current period end
+    let c = await stripe.testHelpers.testClocks.advance(clock!, {
+        frozen_time: time
     });
 
-    const paymentMethod = await stripe.paymentMethods.create({
-        type: 'card',
-        card: {
-            number: '4242424242424242',
-            exp_month: 4,
-            exp_year: 2028,
-            cvc: '314'
-        }
-    });
-
-    await stripe.paymentMethods.attach(paymentMethod.id, {
-        customer: customer.id
-    });
-
-    // Set as default payment method
-    customer = await stripe.customers.update(customer.id, {
-        invoice_settings: {
-            default_payment_method: paymentMethod.id
-        }
-    });
-
-    return customer;
+    // Poll clock until testClock is settled
+    while (c.status === 'advancing') {
+        await new Promise((resolve) => {
+            setTimeout(resolve, 1000);
+        });
+        c = await stripe.testHelpers.testClocks.retrieve(clock!);
+    }
 }
 
-export async function createDeclinedCustomer(stripe: Stripe) {
+export async function createValidCustomer<T extends boolean>(stripe: Stripe, options: {cardNumber?: string, name?: string, testClock?: T} = {}): Promise<{customer: Stripe.Customer, clock: T extends true ? string : undefined}> {
+    let clockId: string | null = null;
+    if (options.testClock) {
+        const clock = await stripe.testHelpers.testClocks.create({
+            frozen_time: Math.floor(Date.now() / 1000),
+            name: 'E2E tests'
+        });
+        clockId = clock.id;
+    }
+
     let customer = await stripe.customers.create({
-        name: 'Declined Customer',
-        email: ''
+        name: options.name ?? 'Valid Customer',
+        email: '',
+        test_clock: clockId ?? undefined
     });
 
     const paymentMethod = await stripe.paymentMethods.create({
         type: 'card',
         card: {
-            number: '4000000000000341',
+            number: options.cardNumber ?? '4242424242424242',
             exp_month: 4,
             exp_year: 2028,
             cvc: '314'
@@ -74,7 +62,15 @@ export async function createDeclinedCustomer(stripe: Stripe) {
         }
     });
 
-    return customer;
+    return {customer, clock: clockId as any};
+}
+
+export async function createDeclinedCustomer<T extends boolean>(stripe: Stripe, options: {testClock?: T} = {}): Promise<{customer: Stripe.Customer, clock: T extends true ? string : undefined}> {
+    return createValidCustomer(stripe, {
+        cardNumber: '4000000000000341',
+        name: 'Declined Customer',
+        testClock: options.testClock
+    });
 }
 
 /**
