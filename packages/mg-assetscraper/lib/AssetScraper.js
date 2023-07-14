@@ -600,12 +600,17 @@ class AssetScraper {
             stream.on('request', _req => req = _req);
 
             stream.on('response', async (res) => {
-                let fileType = await fileTypeFromStream(stream);
+                let fileType;
+
+                if (res.headers['content-type'] && !res.headers['content-type'].includes('text/html')) {
+                    fileType = await fileTypeFromStream(stream);
+                }
 
                 req.abort();
 
                 if (res.headers) {
                     let theHeaders = res.headers;
+
                     if (fileType && fileType.mime) {
                         theHeaders['content-type'] = fileType.mime;
                     }
