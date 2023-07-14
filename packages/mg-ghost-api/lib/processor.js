@@ -37,6 +37,12 @@ const processPost = (ghPost) => {
         delete post.data.tags;
     }
 
+    delete post.data.tiers;
+    delete post.data.post_revisions;
+    delete post.data.count;
+    delete post.data.primary_author;
+    delete post.data.primary_tag;
+
     return post;
 };
 

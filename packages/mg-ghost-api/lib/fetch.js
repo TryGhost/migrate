@@ -59,12 +59,14 @@ const cachedFetch = async (fileCache, api, type, options, page) => {
     let response = null;
 
     const postParams = {
+        formats: 'html',
         limit: options.limit,
         page: page,
         filter: options.postFilter || null
     };
 
     const pageParams = {
+        formats: 'html',
         limit: options.limit,
         page: page,
         filter: options.pageFilter || null
@@ -76,12 +78,12 @@ const cachedFetch = async (fileCache, api, type, options, page) => {
     };
 
     if (type === 'posts') {
-        response = await api.site.posts.browse(postParams);
+        response = await api.site.posts.browse(postParams, {source: 'html'});
         response.forEach((item) => {
             item.type = 'post';
         });
     } else if (type === 'pages') {
-        response = await api.site.pages.browse(pageParams);
+        response = await api.site.pages.browse(pageParams, {source: 'html'});
         response.forEach((item) => {
             item.type = 'page';
         });
