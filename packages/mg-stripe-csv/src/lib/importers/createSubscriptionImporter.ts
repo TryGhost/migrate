@@ -65,7 +65,19 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
 
             // Get customer
             Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)}`);
-            const customer = await newStripe.client.customers.retrieve(getObjectId(oldSubscription.customer));
+
+            let customer: Stripe.Customer | Stripe.DeletedCustomer;
+            try {
+                customer = await newStripe.client.customers.retrieve(getObjectId(oldSubscription.customer));
+            } catch (err: any) {
+                if (err.message && err.message.includes('No such customer')) {
+                    throw new ImportError({
+                        message: `Customer ${getObjectId(oldSubscription.customer)} does not exist and cannot be used for a new subscription. Check if you copied over your customers from the old Stripe account to the new account before running this command.`
+                    });
+                }
+                throw err;
+            }
+
             if (customer.deleted) {
                 throw new ImportError({
                     message: `Customer ${getObjectId(oldSubscription.customer)} has been permanently deleted and cannot be used for a new subscription`
@@ -111,7 +123,6 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             // Create the subscription
             Logger.vv?.info(`Creating subscription`);
 
-            const needsCharge = oldSubscription.status === 'past_due' && false;
             const now = new Date().getTime() / 1000;
 
             // Minimum billing_cycle_anchor is one hour in the future, to prevent immediate billing of the created subscription
@@ -125,8 +136,8 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 default_source: foundSourceId,
                 items,
                 billing_cycle_anchor: isTrial ? undefined : Math.max(minimumBillingCycleAnchor, oldSubscription.current_period_end),
-                backdate_start_date: needsCharge ? oldSubscription.current_period_start : oldSubscription.start_date,
-                proration_behavior: needsCharge ? 'create_prorations' : 'none', // Don't charge for backdated time
+                backdate_start_date: oldSubscription.start_date,
+                proration_behavior: 'none', // Don't charge for backdated time
                 cancel_at_period_end: oldSubscription.cancel_at ? undefined : oldSubscription.cancel_at_period_end, // Can't set cancel_at and cancel_at_period_end at the same time (even if they make sense)
                 coupon,
                 trial_end: isTrial ? oldSubscription.trial_end! : undefined, // Stripe returns trial end in the past, but doesn't allow it to be in the past when creating a subscription
@@ -186,15 +197,15 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                         auto_advance: true
                     });
 
-                    // Force immediate payment
-                    Logger.vv?.info(`Paying invoice ${invoice.id}`);
-
-                    try {
-                        await newStripe.client.invoices.pay(invoice.id);
-                    } catch (e) {
-                        // Faield charge
-                        // Not an issue: subscription will be overdue
-                    }
+                    // Force immediate payment (we generally don't want this, so commented out for now)
+                    // Logger.vv?.info(`Paying invoice ${invoice.id}`);
+                    //
+                    // try {
+                    //     await newStripe.client.invoices.pay(invoice.id);
+                    // } catch (e) {
+                    //     // Faield charge
+                    //     // Not an issue: subscription will be overdue
+                    // }
                 }
 
                 if (Options.shared.pause) {
@@ -217,6 +228,8 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
         async revert(oldSubscription: Stripe.Subscription, newSubscription: Stripe.Subscription) {
             await ifDryRun(async () => {
                 await newStripe.client.subscriptions.del(getObjectId(newSubscription));
+
+                // TODO: delete invoices
 
                 if (Options.shared.pause) {
                     // Resume old subscription

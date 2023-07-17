@@ -1,4 +1,5 @@
 import Logger from '../Logger.js';
+import {Options} from '../Options.js';
 
 export class ImportStats {
     importedPerType: Map<string, number> = new Map();
@@ -25,15 +26,25 @@ export class ImportStats {
     }
 
     print() {
-        Logger.shared.info(`Imported ${this.totalImported} items:`);
+        const isDryRun = Options.shared.dryRun;
+        if (this.importedPerType.size === 0) {
+            Logger.shared.info('No items imported');
+            return;
+        }
+
+        Logger.shared.info(`${isDryRun ? 'Would have recreated' : 'Recreated'} ${this.totalImported} items:`);
         for (const [type, count] of this.importedPerType.entries()) {
             const reused = this.reusedPerType.get(type) || 0;
-            Logger.shared.info(`  ${type}: ${count} imported, ${reused} reused`);
+            Logger.shared.info(`- ${type}s: ${count} recreated, ${reused} reused`);
         }
     }
 
     toString() {
-        return `Imported ${this.totalImported} items, reused ${this.totalReused}`;
+        const isDryRun = Options.shared.dryRun;
+        if (this.importedPerType.size === 0) {
+            return 'No items recreated';
+        }
+        return `${isDryRun ? 'Would have recreated' : 'Recreated'} ${this.totalImported} items, reused ${this.totalReused}`;
     }
 
     addListener(listener: () => void) {
