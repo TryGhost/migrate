@@ -876,4 +876,76 @@ describe('Recreating subscriptions', () => {
         assert.equal(secondInvoice.amount_paid, 100);
         assert.equal(secondInvoice.amount_due, 100);
     });
+
+    it('Subscription that has been cancelled at a manual future date', async () => {
+        const {customer, clock} = await createValidCustomer(stripe.client, {testClock: true});
+        const now = Math.floor(new Date().getTime() / 1000);
+
+        const currentPeriodEnd = now + 15 * 24 * 60 * 60;
+        const currentPeriodStart = currentPeriodEnd - 31 * 24 * 60 * 60;
+        const startDate = currentPeriodStart - 31 * 24 * 60 * 60;
+        const cancelAt = currentPeriodEnd + (31 + 15) * 24 * 60 * 60;
+
+        const oldProduct = buildProduct({});
+        const oldPrice = buildPrice({
+            product: oldProduct,
+            recurring: {
+                interval: 'month'
+            },
+            unit_amount: 15 * 100
+        });
+
+        const oldSubscription = buildSubscription({
+            status: 'active',
+            customer: customer.id,
+            items: [
+                {
+                    price: oldPrice
+                }
+            ],
+            current_period_end: currentPeriodEnd,
+            current_period_start: currentPeriodStart,
+            start_date: startDate,
+            cancel_at: cancelAt
+        });
+
+        const newSubscriptionId = await subscriptionImporter.recreate(oldSubscription);
+        const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
+
+        // Do some basic assertions
+        assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
+        assert.equal(newSubscription.status, 'active');
+
+        // Advance time until the cancelAt date + 2 hours
+        await advanceClock({
+            clock,
+            stripe: stripe.client,
+            time: cancelAt + 60 * 60 * 2
+        });
+
+        const newSubscriptionAfterCancel = await stripe.client.subscriptions.retrieve(newSubscriptionId);
+        assert.equal(newSubscriptionAfterCancel.status, 'canceled');
+
+        // Check we generated two incoice
+        const newInvoices = await stripe.client.invoices.list({
+            subscription: newSubscription.id
+        });
+        // Sort invoices by date
+        newInvoices.data.sort((a, b) => {
+            return a.created - b.created;
+        });
+
+        assert.equal(newInvoices.data.length, 2);
+
+        const firstInvoice = newInvoices.data[0];
+        assert.equal(firstInvoice.discount, null);
+        assert.equal(firstInvoice.amount_paid, 15 * 100);
+        assert.equal(firstInvoice.amount_due, 15 * 100);
+
+        // Only charged partially
+        const secondInvoice = newInvoices.data[1];
+        assert.equal(secondInvoice.discount, null);
+        assert.equal(secondInvoice.amount_paid, 750);
+        assert.equal(secondInvoice.amount_due, 750);
+    });
 });

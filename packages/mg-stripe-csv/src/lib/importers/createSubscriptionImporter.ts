@@ -6,6 +6,7 @@ import {getObjectId, ifDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 import {ImportStats} from './ImportStats.js';
 import {ImportWarning} from './ImportWarning.js';
 import {Importer} from './Importer.js';
+import {ImportError} from './ImportError.js';
 
 export function createSubscriptionImporter({oldStripe, newStripe, stats, priceImporter, couponImporter}: {
     dryRun: boolean,
@@ -44,13 +45,21 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 });
             }
 
+            // Do checks of supporte features we definitly don't support
+            if (oldSubscription.collection_method === 'send_invoice') {
+                throw new ImportWarning({
+                    message: `Subscription ${oldSubscription.id} uses collection_method: send_invoice which is not supported`
+                });
+            }
+
             const items: Stripe.SubscriptionCreateParams.Item[] = [];
 
             for (const item of oldSubscription.items.data) {
                 const newPriceId = await priceImporter.recreate(item.price);
                 items.push({
                     price: newPriceId,
-                    quantity: item.quantity
+                    quantity: item.quantity,
+                    metadata: item.metadata
                 });
             }
 
@@ -58,7 +67,9 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)}`);
             const customer = await newStripe.client.customers.retrieve(getObjectId(oldSubscription.customer));
             if (customer.deleted) {
-                throw new Error(`Customer ${getObjectId(oldSubscription.customer)} has been permanently deleted and cannot be used for a new subscription`);
+                throw new ImportError({
+                    message: `Customer ${getObjectId(oldSubscription.customer)} has been permanently deleted and cannot be used for a new subscription`
+                });
             }
 
             let oldPaymentMethod = oldSubscription.default_payment_method as Stripe.PaymentMethod | null;
@@ -116,7 +127,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 billing_cycle_anchor: isTrial ? undefined : Math.max(minimumBillingCycleAnchor, oldSubscription.current_period_end),
                 backdate_start_date: needsCharge ? oldSubscription.current_period_start : oldSubscription.start_date,
                 proration_behavior: needsCharge ? 'create_prorations' : 'none', // Don't charge for backdated time
-                cancel_at_period_end: oldSubscription.cancel_at_period_end,
+                cancel_at_period_end: oldSubscription.cancel_at ? undefined : oldSubscription.cancel_at_period_end, // Can't set cancel_at and cancel_at_period_end at the same time (even if they make sense)
                 coupon,
                 trial_end: isTrial ? oldSubscription.trial_end! : undefined, // Stripe returns trial end in the past, but doesn't allow it to be in the past when creating a subscription
                 cancel_at: oldSubscription.cancel_at ?? undefined,
