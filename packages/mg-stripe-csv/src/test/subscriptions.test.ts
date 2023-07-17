@@ -543,7 +543,7 @@ describe('Recreating subscriptions', () => {
 
         // Do some basic assertions
         assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
-        assert.equal(newSubscription.status, 'past_due');
+        assert.equal(newSubscription.status, 'active');
         assert.equal(newSubscription.start_date, oldSubscription.start_date);
         assert.equal(newSubscription.current_period_end, oldSubscription.current_period_end);
         assert.equal(newSubscription.trial_end, oldSubscription.trial_end);
@@ -554,6 +554,20 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.items.data.length, 1);
         assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
+
+        // Wait 1 hour for the payment retry
+        // Advance time until current period end
+        await advanceClock({
+            clock,
+            stripe: stripe.client,
+            time: now + 3600 + 60
+        });
+        const newSubscriptionAfterRetry = await stripe.client.subscriptions.retrieve(newSubscriptionId);
+        assert.equal(newSubscriptionAfterRetry.status, 'past_due');
+        assert.equal(newSubscriptionAfterRetry.start_date, oldSubscription.start_date);
+        assert.equal(newSubscriptionAfterRetry.current_period_end, oldSubscription.current_period_end);
+        assert.equal(newSubscriptionAfterRetry.trial_end, oldSubscription.trial_end);
+        assert.equal(newSubscriptionAfterRetry.cancel_at_period_end, oldSubscription.cancel_at_period_end);
 
         // Check created invoices from the subscription
         const newInvoices = await stripe.client.invoices.list({
