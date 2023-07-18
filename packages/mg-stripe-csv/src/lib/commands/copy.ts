@@ -19,7 +19,7 @@ export async function copy(options: Options) {
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName, mode} = await fromAccount.validate();
-        Logger.shared.succeed(`Migrating from: ${chalk.cyan(accountName)} in ${mode} mode\n`);
+        Logger.shared.succeed(`Migrating from: ${chalk.cyan(accountName)} in ${mode} mode`);
 
         const toAccount = await connector.askForAccount('Which Stripe account do you want to migrate to?', options.newApiKey);
 
@@ -86,9 +86,7 @@ export async function copy(options: Options) {
     } catch (e) {
         Logger.shared.fail(e);
 
-        if (stats.totalImported || stats.totalReused) {
-            stats.print();
-        }
+        stats.print();
         process.exit(1);
     }
 }

@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import {Importer} from './Importer.js';
 import {StripeAPI} from '../StripeAPI.js';
 import {ImportStats} from './ImportStats.js';
-import {ifDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
+import {ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 
 export function createPriceImporter({oldStripe, newStripe, stats, productImporter}: {
     dryRun: boolean,
@@ -11,6 +11,7 @@ export function createPriceImporter({oldStripe, newStripe, stats, productImporte
     stats: ImportStats,
     productImporter: Importer<Stripe.Product>
 }) {
+    let cachedPrices: {[key: string]: Stripe.Price} | null = null;
     const provider = {
         async getByID(oldId: string): Promise<Stripe.Price> {
             return oldStripe.client.prices.retrieve(oldId, {expand: ['data.product']});
@@ -21,12 +22,21 @@ export function createPriceImporter({oldStripe, newStripe, stats, productImporte
         },
 
         async findExisting(oldItem: Stripe.Price) {
-            const existing = await newStripe.client.prices.search({
-                query: `metadata['importOldId']:'${oldItem.id}'`
-            });
-            if (existing.data.length > 0) {
-                return existing.data[0];
+            if (cachedPrices) {
+                return cachedPrices[oldItem.id];
             }
+            cachedPrices = {};
+
+            for await (const price of newStripe.client.prices.list({
+                limit: 100,
+                active: true
+            })) {
+                if (price.metadata.importOldId) {
+                    cachedPrices[price.metadata.importOldId] = price;
+                }
+            }
+
+            return cachedPrices[oldItem.id];
         },
 
         async recreate(oldPrice: Stripe.Price) {
@@ -51,6 +61,10 @@ export function createPriceImporter({oldStripe, newStripe, stats, productImporte
         },
 
         async revert(oldPrice: Stripe.Price, newPrice: Stripe.Price) {
+            await newStripe.client.prices.update(newPrice.id, {
+                active: false
+            });
+
             // Deleting product will also delete price
             await productImporter.revertByObjectOrId(oldPrice.product as Stripe.Product | string);
         }

@@ -18,7 +18,7 @@ export function getObjectId(data: string | {id: string}): string {
     return data.id;
 }
 
-export async function ifDryRun(live: () => Promise<void>, logData?: any): Promise<void> {
+export async function ifNotDryRun(live: () => Promise<void>, logData?: any): Promise<void> {
     if (logData) {
         Logger.debug?.info(logData);
     }

@@ -3,7 +3,7 @@ import {Importer} from './Importer.js';
 import {StripeAPI} from '../StripeAPI.js';
 import {ImportStats} from './ImportStats.js';
 import Logger from '../Logger.js';
-import {ifDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
+import {ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 
 export function createCouponImporter({oldStripe, newStripe, stats}: {
     dryRun: boolean,
@@ -52,7 +52,7 @@ export function createCouponImporter({oldStripe, newStripe, stats}: {
 
         async revert(_: Stripe.Coupon, newCoupon: Stripe.Coupon) {
             // Delete the new coupon
-            await ifDryRun(async () => {
+            await ifNotDryRun(async () => {
                 await newStripe.client.coupons.del(newCoupon.id);
             });
         }

@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import Logger from '../Logger.js';
 import {Options} from '../Options.js';
 import {StripeAPI} from '../StripeAPI.js';
-import {getObjectId, ifDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
+import {getObjectId, ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 import {ImportStats} from './ImportStats.js';
 import {ImportWarning} from './ImportWarning.js';
 import {Importer} from './Importer.js';
@@ -258,7 +258,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
         },
 
         async revert(oldSubscription: Stripe.Subscription, newSubscription: Stripe.Subscription) {
-            await ifDryRun(async () => {
+            await ifNotDryRun(async () => {
                 await newStripe.client.subscriptions.del(getObjectId(newSubscription));
 
                 // Unpause old subscription
@@ -284,7 +284,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 return;
             }
 
-            await ifDryRun(async () => {
+            await ifNotDryRun(async () => {
                 // Unpause new subscription
                 Logger.vv?.info(`Finalizing ${newSubscription.id}`);
                 await finalizeDraftInvoices(newStripe, newSubscription);

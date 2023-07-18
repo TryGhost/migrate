@@ -28,7 +28,7 @@ export type ImportProvider<T> = {
 
 export class Queue {
     runningTasks = 0;
-    maxRunningTasks = 4;
+    maxRunningTasks = 1; // todo: concurrency issues!
     waitingTasks = 0;
     queue: (() => Promise<void>)[] = [];
 
@@ -288,6 +288,7 @@ export class Importer<T extends {id: string}> {
 
         this.revertedSet.add(item.id);
         Logger.v?.ok(`Removed ${newItem.id}`);
+        this.stats.trackReverted(this.objectName);
     }
 
     async confirm(item: T): Promise<void> {
@@ -330,5 +331,6 @@ export class Importer<T extends {id: string}> {
 
         this.confirmedSet.add(item.id);
         Logger.v?.ok(`Confirmed ${newItem.id}`);
+        this.stats.trackConfirmed(this.objectName);
     }
 }

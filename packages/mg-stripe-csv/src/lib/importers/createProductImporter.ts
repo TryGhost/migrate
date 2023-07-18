@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import {Importer} from './Importer.js';
 import {StripeAPI} from '../StripeAPI.js';
 import {ImportStats} from './ImportStats.js';
-import {getObjectId, ifDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
+import {getObjectId, ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 
 export function createProductImporter({oldStripe, newStripe, stats}: {
     dryRun: boolean,
@@ -10,6 +10,7 @@ export function createProductImporter({oldStripe, newStripe, stats}: {
     newStripe: StripeAPI,
     stats: ImportStats
 }) {
+    let cachedProducts: {[key: string]: Stripe.Product} | null = null;
     const provider = {
         async getByID(oldId: string): Promise<Stripe.Product> {
             return oldStripe.client.products.retrieve(oldId);
@@ -20,12 +21,21 @@ export function createProductImporter({oldStripe, newStripe, stats}: {
         },
 
         async findExisting(oldItem: Stripe.Product) {
-            const existing = await newStripe.client.products.search({
-                query: `metadata['importOldId']:'${oldItem.id}'`
-            });
-            if (existing.data.length > 0) {
-                return existing.data[0];
+            if (cachedProducts) {
+                return cachedProducts[oldItem.id];
             }
+            cachedProducts = {};
+
+            for await (const product of newStripe.client.products.list({
+                limit: 100,
+                active: true
+            })) {
+                if (product.metadata.importOldId) {
+                    cachedProducts[product.metadata.importOldId] = product;
+                }
+            }
+
+            return cachedProducts[oldItem.id];
         },
 
         async recreate(oldProduct: Stripe.Product) {
@@ -47,11 +57,14 @@ export function createProductImporter({oldStripe, newStripe, stats}: {
                 product: getObjectId(newProduct),
                 limit: 100
             });
-            return await ifDryRun(async () => {
+            return await ifNotDryRun(async () => {
                 for (const price of prices.data) {
-                    await newStripe.client.prices.update(price.id, {
-                        active: false
-                    });
+                    if (price.active) {
+                        await newStripe.client.prices.update(price.id, {
+                            active: false
+                        });
+                        stats.trackReverted('price');
+                    }
                 }
                 if (prices.data.length === 0) {
                     await newStripe.client.products.del(getObjectId(newProduct));
