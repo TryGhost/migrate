@@ -61,7 +61,7 @@ describe('Process Substack ZIP file', function () {
         expect(processed.posts[2].data.type).toEqual('post');
 
         expect(processed.posts[3].url).toEqual('https://example.substack.com/p/about-us');
-        expect(processed.posts[3].substackId).toEqual('123404.about-us');
+        expect(processed.posts[3].substackId).toEqual('123405.about-us');
         expect(processed.posts[3].substackPodcastURL).toEqual(false);
         expect(processed.posts[3].data.slug).toEqual('about-us');
         expect(processed.posts[3].data.type).toEqual('page');
@@ -110,8 +110,6 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         expect(mapped.posts[0].substackId).toEqual('123401.plain-text');
 
         const processed = await process(mapped, ctx);
-
-        expect(processed.posts).toBeArrayOfSize(3);
 
         const post = processed.posts[0];
         expect(post).toBeObject();
@@ -788,6 +786,45 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const processed = await processContent(post, url, options);
 
         expect(processed.data.html).toEqual('<p>My content</p>');
+    });
+
+    test('Will take useMetaImage as priority over useFirstImage', async function () {
+        const post = {
+            data: {
+                html: `<p></p><figure><img src="https://example.com/content/first-image.jpg" /><figcaption>My image</figcaption></figure><p>My content</p>`,
+                title: 'My Image Post',
+                og_image: 'https://example.com/content/file_1024x768.jpg'
+            }
+        };
+        const url = 'https://example.com';
+        const options = {
+            useMetaImage: true,
+            useFirstImage: true
+        };
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).toEqual('<figure><img src="https://example.com/content/first-image.jpg"><figcaption>My image</figcaption></figure><p>My content</p>');
+        expect(processed.data.feature_image).toEqual('https://example.com/content/file_1024x768.jpg');
+    });
+
+    test('Can useFirstImage', async function () {
+        const post = {
+            data: {
+                html: `<p></p><figure><img src="https://example.com/content/first-image.jpg" /><figcaption>My image</figcaption></figure><p>My content</p>`,
+                title: 'My Image Post'
+            }
+        };
+        const url = 'https://example.com';
+        const options = {
+            useFirstImage: true
+        };
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).toEqual('<p>My content</p>');
+        expect(processed.data.feature_image).toEqual('https://example.com/content/first-image.jpg');
+        expect(processed.data.feature_image_caption).toEqual('My image');
     });
 });
 

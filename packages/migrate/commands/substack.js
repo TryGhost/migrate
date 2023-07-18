@@ -116,6 +116,12 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--useFirstImage',
+        defaultValue: true,
+        desc: 'Use the first image in content as the feature image (useMetaImage takes priority)'
+    },
+    {
+        type: 'boolean',
         flags: '--useMetaAuthor',
         defaultValue: true,
         desc: 'Use the author field from ld+json (useful for posts with multiple authors)'

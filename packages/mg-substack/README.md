@@ -91,6 +91,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--useMetaImage`** 
     - Use `og:image` value as the feature image
     - bool - default: `true`  
+- **`--useFirstImage`** 
+    - Use the first image in content as the feature image (useMetaImage takes priority)
+    - bool - default: `true`  
 - **`--useMetaAuthor`** 
     - Use the author field from `ld+json` (useful for posts with multiple authors)
     - bool - default: `true`  

@@ -77,7 +77,7 @@ const largestSrc = ($imageElem) => {
 
 const processContent = (post, siteUrl, options) => {
     const {substackPodcastURL} = post;
-    const {useMetaImage} = options;
+    const {useMetaImage, useFirstImage} = options;
 
     let html = post.data?.html;
 
@@ -121,6 +121,29 @@ const processContent = (post, siteUrl, options) => {
                 let unsizedOgSrc = getUnsizedImageName(ogImgSrc);
 
                 if (unsizedFirstSrc === unsizedOgSrc) {
+                    if ($(firstElement).find('figcaption').length) {
+                        post.data.feature_image_caption = $(firstElement).find('figcaption').html();
+                    }
+
+                    $(firstElement).remove();
+                }
+            }
+        }
+    }
+
+    if (useFirstImage && !post.data.feature_image) {
+        let firstElement = $html('body *').first();
+
+        if (firstElement.tagName === 'img' || ($(firstElement).get(0) && $(firstElement).get(0).name === 'img') || $(firstElement).find('img').length) {
+            let theElementItself = (firstElement.tagName === 'img' || $(firstElement).get(0).name === 'img') ? firstElement : $(firstElement).find('img');
+            let firstImgSrc = $(theElementItself).attr('src');
+
+            if (firstImgSrc.length > 0) {
+                let unsizedFirstSrc = largeImageUrl(firstImgSrc);
+
+                if (unsizedFirstSrc) {
+                    post.data.feature_image = unsizedFirstSrc;
+
                     if ($(firstElement).find('figcaption').length) {
                         post.data.feature_image_caption = $(firstElement).find('figcaption').html();
                     }
