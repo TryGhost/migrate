@@ -8,6 +8,9 @@ import {createProductImporter} from './importers/createProductImporter.js';
 import {createPriceImporter} from './importers/createPriceImporter.js';
 import {createSubscriptionImporter} from './importers/createSubscriptionImporter.js';
 import {createCouponImporter} from './importers/createCouponImporter.js';
+import {confirm as confirmCommand} from './commands/confirm.js';
+import {revert as revertCommand} from './commands/revert.js';
+import {copy as copyCommand} from './commands/copy.js';
 
 class StripeCSVCommand {
     id = 'stripe-csv';
@@ -16,8 +19,7 @@ class StripeCSVCommand {
     desc = 'Migrate your Stripe subscriptions to a different Stripe account';
 
     constructor() {
-        // FIX `this` binding in the `run` method
-        this.run = this.run.bind(this);
+        // FIX `this` binding (sywac)
         this.setup = this.setup.bind(this);
     }
 
@@ -25,96 +27,42 @@ class StripeCSVCommand {
         for (const option of Options.definitions) {
             sywac.option(option);
         }
-    }
 
-    async run(argv: any) {
-        Options.init(argv);
-        const options = Options.shared;
-        Logger.init({verboseLevel: options.verboseLevel, debug: options.debug});
-        if (options.dryRun) {
-            Logger.shared.info(`Running in dry run mode`);
-        }
-        const stats = new ImportStats();
+        sywac.command({
+            id: 'copy',
+            flags: 'copy',
+            desc: 'Copy subscriptions from one Stripe account to another. Pausing subscriptions in the old account and the newly created subscriptions. Before running this, make sure no new subscriptions can be created in the old Stripe account. This command can be run multiple times (already migrated subscriptions will be skipped).',
+            run: async (argv: any) => {
+                const options = Options.init(argv);
+                Logger.init({verboseLevel: options.verboseLevel, debug: options.debug});
 
-        try {
-            // Step 1: Connect to Stripe
-            const connector = new StripeConnector(options.test ? 'test' : 'live');
-            const fromAccount = await connector.askForAccount('Which Stripe account do you want to migrate from?', options.oldApiKey);
-
-            Logger.shared.startSpinner('Validating connection');
-            const {accountName, mode} = await fromAccount.validate();
-            Logger.shared.succeed(`Migrating from: ${chalk.cyan(accountName)} in ${mode} mode\n`);
-
-            const toAccount = await connector.askForAccount('Which Stripe account do you want to migrate to?', options.newApiKey);
-
-            Logger.shared.startSpinner('Validating connection');
-            const {accountName: accountNameTo, mode: modeTo} = await toAccount.validate();
-            Logger.shared.succeed(`Migrating to: ${chalk.cyan(accountNameTo)} in ${modeTo} mode\n`);
-
-            if (toAccount.id === fromAccount.id) {
-                Logger.shared.fail('You cannot migrate to the same account');
-                process.exit(1);
+                await copyCommand(options);
             }
+        });
 
-            // Confirm
-            const confirmMigration = await confirm({
-                message: options.revert ? ('Revert migration from ' + chalk.green(accountName) + ' to ' + chalk.red(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : '')) : ('Migrate from ' + chalk.red(accountName) + ' to ' + chalk.green(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : '')),
-                default: false
-            });
+        sywac.command({
+            id: 'confirm',
+            flags: 'confirm',
+            desc: 'Confirm copy by unpausing the subscriptions created in the new Stripe account. If some old subscriptions were cancelled during the copy, it will also cancel them in the newly created subscription.',
+            run: async (argv: any) => {
+                const options = Options.init(argv);
+                Logger.init({verboseLevel: options.verboseLevel, debug: options.debug});
 
-            if (!confirmMigration) {
-                Logger.shared.fail('Migration cancelled');
-                process.exit(1);
+                await confirmCommand(options);
             }
+        });
 
-            // Step 2: Import data
-            Logger.shared.startSpinner(options.revert ? 'Reverting migration' : 'Importing data');
-            stats.addListener(() => {
-                Logger.shared.processSpinner(stats.toString());
-            });
+        sywac.command({
+            id: 'revert',
+            flags: 'revert',
+            desc: 'Unpause the subscriptions created in the old Stripe account and revert all changes made to the new Stripe account.',
+            run: async (argv: any) => {
+                const options = Options.init(argv);
+                Logger.init({verboseLevel: options.verboseLevel, debug: options.debug});
 
-            const sharedOptions = {
-                dryRun: options.dryRun,
-                stats,
-                oldStripe: fromAccount,
-                newStripe: toAccount
-            };
-
-            const productImporter = createProductImporter({
-                ...sharedOptions
-            });
-
-            const priceImporter = createPriceImporter({
-                ...sharedOptions,
-                productImporter
-            });
-
-            const couponImporter = createCouponImporter({
-                ...sharedOptions
-            });
-
-            const subscriptionImporter = createSubscriptionImporter({
-                ...sharedOptions,
-                priceImporter,
-                couponImporter
-            });
-            const warnings = options.revert ? (await subscriptionImporter.revertAll()) : (await subscriptionImporter.recreateAll());
-            if (warnings) {
-                Logger.shared.succeed(`Successfully ${options.revert ? 'reverted' : 'imported'} ${stats.importedPerType.get('subscription') ?? 0} subscriptions with ${warnings.length} warning${warnings.length > 1 ? 's' : ''}:`);
-                Logger.shared.warn(warnings.toString());
-            } else {
-                Logger.shared.succeed(`Successfully ${options.revert ? 'reverted' : 'imported'} all subscriptions`);
+                await revertCommand(options);
             }
-
-            stats.print();
-        } catch (e) {
-            Logger.shared.fail(e);
-
-            if (stats.totalImported || stats.totalReused) {
-                stats.print();
-            }
-            process.exit(1);
-        }
+        });
     }
 }
 

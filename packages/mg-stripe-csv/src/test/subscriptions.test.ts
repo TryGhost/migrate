@@ -40,7 +40,9 @@ describe('Recreating subscriptions', () => {
         };
 
         Options.init({
-            'force-recreate': true
+            'force-recreate': true,
+            'very-verbose': true,
+            delay: 1
         });
 
         const productImporter = createProductImporter({
@@ -70,9 +72,14 @@ describe('Recreating subscriptions', () => {
                 url: ''
             }) as Stripe.ApiListPromise<Stripe.Invoice>;
         });
+
+        sinon.stub(sharedOptions.oldStripe.client.subscriptions, 'update').callsFake(() => {
+            return Promise.resolve({} as Stripe.Response<Stripe.Subscription>);
+        });
     });
 
     it('Monthly subscription', async () => {
+        const {customer, clock} = await createValidCustomer(stripe.client, {testClock: true});
         const oldProduct = buildProduct({});
 
         const now = Math.floor(new Date().getTime() / 1000);
@@ -87,7 +94,7 @@ describe('Recreating subscriptions', () => {
         });
 
         const oldSubscription = buildSubscription({
-            customer: validCustomer.id,
+            customer: customer.id,
             items: [
                 {
                     price: oldPrice
@@ -97,7 +104,7 @@ describe('Recreating subscriptions', () => {
             current_period_end: currentPeriodEnd
         });
 
-        const newSubscriptionId = await subscriptionImporter.recreate(oldSubscription);
+        const newSubscriptionId = await subscriptionImporter.recreateAndConfirm(oldSubscription);
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
@@ -107,9 +114,9 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.current_period_end, oldSubscription.current_period_end);
         assert.equal(newSubscription.trial_end, null);
         assert.equal(newSubscription.cancel_at_period_end, oldSubscription.cancel_at_period_end);
-        assert.equal(newSubscription.customer, validCustomer.id);
+        assert.equal(newSubscription.customer, customer.id);
         assert.equal(newSubscription.description, oldSubscription.description);
-        assert.equal(newSubscription.default_payment_method, validCustomer.invoice_settings.default_payment_method);
+        assert.equal(newSubscription.default_payment_method, customer.invoice_settings.default_payment_method);
         assert.equal(newSubscription.items.data.length, 1);
         assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
@@ -122,13 +129,49 @@ describe('Recreating subscriptions', () => {
 
         // Check upcoming invoice
         const upcomingInvoice = await stripe.client.invoices.retrieveUpcoming({
-            customer: validCustomer.id,
+            customer: customer.id,
             subscription: newSubscription.id
         });
         assert.equal(upcomingInvoice.amount_due, 100);
         assert.equal(upcomingInvoice.lines.data[0].period.start, oldSubscription.current_period_end);
         assert.ok(upcomingInvoice.lines.data[0].period.end >= oldSubscription.current_period_end + 27 * 24 * 60 * 60);
         assert.ok(upcomingInvoice.lines.data[0].period.end <= oldSubscription.current_period_end + 32 * 24 * 60 * 60);
+
+        // Now wait for the period to end
+        await advanceClock({
+            clock,
+            stripe: stripe.client,
+            time: currentPeriodEnd + 60 * 60
+        });
+
+        // Check one draft invoice has been created
+        const newInvoicesAfter = await stripe.client.invoices.list({
+            subscription: newSubscription.id
+        });
+        assert.equal(newInvoicesAfter.data.length, 1);
+        assert.equal(newInvoicesAfter.data[0].amount_due, 100);
+        assert.equal(newInvoicesAfter.data[0].status, 'paid');
+        assert.equal(newInvoicesAfter.data[0].amount_paid, 100);
+
+        // Now confirm
+        await subscriptionImporter.confirm(oldSubscription);
+
+        // Wait one hour
+        await advanceClock({
+            clock,
+            stripe: stripe.client,
+            time: currentPeriodEnd + 60 * 60 * 2
+        });
+
+        // Check no difference
+        const newInvoicesAfterConfirm = await stripe.client.invoices.list({
+            subscription: newSubscription.id
+        });
+
+        assert.equal(newInvoicesAfterConfirm.data.length, 1);
+        assert.equal(newInvoicesAfterConfirm.data[0].amount_due, 100);
+        assert.equal(newInvoicesAfterConfirm.data[0].status, 'paid');
+        assert.equal(newInvoicesAfterConfirm.data[0].amount_paid, 100);
     });
 
     it('Yearly subscription', async () => {
@@ -158,7 +201,7 @@ describe('Recreating subscriptions', () => {
             current_period_end: currentPeriodEnd
         });
 
-        const newSubscriptionId = await subscriptionImporter.recreate(oldSubscription);
+        const newSubscriptionId = await subscriptionImporter.recreateAndConfirm(oldSubscription);
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
@@ -218,7 +261,7 @@ describe('Recreating subscriptions', () => {
             trial_end: currentPeriodEnd
         });
 
-        const newSubscriptionId = await subscriptionImporter.recreate(oldSubscription);
+        const newSubscriptionId = await subscriptionImporter.recreateAndConfirm(oldSubscription);
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
@@ -277,7 +320,7 @@ describe('Recreating subscriptions', () => {
             trial_end: trialEnd
         });
 
-        const newSubscriptionId = await subscriptionImporter.recreate(oldSubscription);
+        const newSubscriptionId = await subscriptionImporter.recreateAndConfirm(oldSubscription);
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
@@ -365,7 +408,7 @@ describe('Recreating subscriptions', () => {
             trial_end: trialEnd
         });
 
-        const newSubscriptionId = await subscriptionImporter.recreate(oldSubscription);
+        const newSubscriptionId = await subscriptionImporter.recreateAndConfirm(oldSubscription);
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
@@ -414,7 +457,7 @@ describe('Recreating subscriptions', () => {
             current_period_end: currentPeriodEnd
         });
 
-        const newSubscriptionId = await subscriptionImporter.recreate(oldSubscription);
+        const newSubscriptionId = await subscriptionImporter.recreateAndConfirm(oldSubscription);
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
@@ -466,7 +509,7 @@ describe('Recreating subscriptions', () => {
             current_period_end: currentPeriodEnd
         });
 
-        const newSubscriptionId = await subscriptionImporter.recreate(oldSubscription);
+        const newSubscriptionId = await subscriptionImporter.recreateAndConfirm(oldSubscription);
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
@@ -538,7 +581,7 @@ describe('Recreating subscriptions', () => {
         // Return these invoices when we ask Stripe
         currentInvoices = [invoice];
 
-        const newSubscriptionId = await subscriptionImporter.recreate(oldSubscription);
+        const newSubscriptionId = await subscriptionImporter.recreateAndConfirm(oldSubscription);
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
@@ -634,7 +677,7 @@ describe('Recreating subscriptions', () => {
             cancel_at_period_end: true
         });
 
-        const newSubscriptionId = await subscriptionImporter.recreate(oldSubscription);
+        const newSubscriptionId = await subscriptionImporter.recreateAndConfirm(oldSubscription);
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
@@ -706,7 +749,7 @@ describe('Recreating subscriptions', () => {
             current_period_start: currentPeriodStart
         });
 
-        await assert.rejects(subscriptionImporter.recreate(oldSubscription), (thrown) => {
+        await assert.rejects(subscriptionImporter.recreateAndConfirm(oldSubscription), (thrown) => {
             return isWarning(thrown) && !!thrown.toString().match(/has a status of canceled/);
         });
     });
@@ -736,7 +779,7 @@ describe('Recreating subscriptions', () => {
             current_period_start: currentPeriodStart
         });
 
-        await assert.rejects(subscriptionImporter.recreate(oldSubscription), (thrown) => {
+        await assert.rejects(subscriptionImporter.recreateAndConfirm(oldSubscription), (thrown) => {
             return isWarning(thrown) && !!thrown.toString().match(/has a status of unpaid/);
         });
     });
@@ -778,7 +821,7 @@ describe('Recreating subscriptions', () => {
             })
         });
 
-        const newSubscriptionId = await subscriptionImporter.recreate(oldSubscription);
+        const newSubscriptionId = await subscriptionImporter.recreateAndConfirm(oldSubscription);
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
@@ -853,7 +896,7 @@ describe('Recreating subscriptions', () => {
             })
         });
 
-        const newSubscriptionId = await subscriptionImporter.recreate(oldSubscription);
+        const newSubscriptionId = await subscriptionImporter.recreateAndConfirm(oldSubscription);
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
@@ -923,7 +966,7 @@ describe('Recreating subscriptions', () => {
             cancel_at: cancelAt
         });
 
-        const newSubscriptionId = await subscriptionImporter.recreate(oldSubscription);
+        const newSubscriptionId = await subscriptionImporter.recreateAndConfirm(oldSubscription);
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions

@@ -1,9 +1,10 @@
 class DryRunIdGenerator {
     counter = 0;
+    timer = Date.now();
 
     getNext(prefix = 'fake_') {
         this.counter += 1;
-        return prefix + this.counter;
+        return prefix + this.timer + '-' + this.counter;
     }
 
     getUnique(prefix = 'fake_') {

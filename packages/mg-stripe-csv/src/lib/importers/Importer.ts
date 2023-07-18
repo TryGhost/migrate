@@ -16,13 +16,14 @@ export type ImportProvider<T> = {
     /**
      * Find the newID for a given oldID, in case the oldID was already imported previously in another run.
      */
-    findExisting(oldId: string): Promise<T|undefined>
+    findExisting(oldItem: T): Promise<T|undefined>
 
     /**
      * Recreate an existing item in the new account.
      */
     recreate(oldItem: T): Promise<string>
     revert(oldItem: T, newItem: T): Promise<void>
+    confirm?(oldItem: T, newItem: T): Promise<void>
 }
 
 export class Queue {
@@ -104,8 +105,10 @@ export class Importer<T extends {id: string}> {
     objectName: string;
     stats: ImportStats;
     provider: ImportProvider<T>;
+
     recreatedMap: Map<string, string> = new Map();
     revertedSet: Set<string> = new Set();
+    confirmedSet: Set<string> = new Set();
 
     constructor(options: {objectName: string, provider: ImportProvider<T>, stats: ImportStats}) {
         this.objectName = options.objectName;
@@ -113,22 +116,16 @@ export class Importer<T extends {id: string}> {
         this.stats = options.stats;
     }
 
-    /**
-     * Loop through all the available items in the old account, and recreate them in the new account.
-     * @returns An ErrorGroup if there were only warnings
-     */
-    async recreateAll(): Promise<ErrorGroup|undefined> {
-        const groupErrors = false;
-
+    private async runInQueue(provider: ImportProvider<T>, method: 'recreate' | 'revert' | 'confirm', options: {groupErrors: boolean} = {groupErrors: false}): Promise<ErrorGroup|undefined> {
         // Loop through all items in the provider and import them
         const queue = new Queue();
         const errorGroup = new ErrorGroup();
         for await (const item of this.provider.getAll()) {
             queue.add(async () => {
                 try {
-                    await this.recreate(item);
+                    await this[method](item);
                 } catch (e: any) {
-                    if (!groupErrors) {
+                    if (!options.groupErrors) {
                         if (isWarning(e)) {
                             errorGroup.add(e);
                             return;
@@ -150,37 +147,20 @@ export class Importer<T extends {id: string}> {
         return errorGroup.isEmpty ? undefined : errorGroup;
     }
 
+    /**
+     * Loop through all the available items in the old account, and recreate them in the new account.
+     * @returns An ErrorGroup if there were only warnings
+     */
+    async recreateAll(): Promise<ErrorGroup|undefined> {
+        return this.runInQueue(this.provider, 'recreate', {groupErrors: true});
+    }
+
     async revertAll() {
-        const groupErrors = false;
+        return this.runInQueue(this.provider, 'revert', {groupErrors: true});
+    }
 
-        // Loop through all items in the provider and import them
-        const queue = new Queue();
-        const errorGroup = new ErrorGroup();
-        for await (const item of this.provider.getAll()) {
-            queue.add(async () => {
-                try {
-                    await this.revert(item);
-                } catch (e: any) {
-                    if (!groupErrors) {
-                        if (isWarning(e)) {
-                            errorGroup.add(e);
-                            return;
-                        }
-                        throw e;
-                    }
-                    if (isWarning(e)) {
-                        Logger.shared.warn(e.toString());
-                    } else {
-                        Logger.shared.error(e.toString());
-                    }
-                    errorGroup.add(e);
-                }
-            });
-        }
-        await queue.waitUntilFinished();
-        errorGroup.throwIfNotEmpty();
-
-        return errorGroup.isEmpty ? undefined : errorGroup;
+    async confirmAll() {
+        return this.runInQueue(this.provider, 'confirm', {groupErrors: true});
     }
 
     async recreateByObjectOrId(idOrItem: string | T) {
@@ -223,6 +203,12 @@ export class Importer<T extends {id: string}> {
         return await this.revert(item);
     }
 
+    async recreateAndConfirm(item: T): Promise<string> {
+        const id = await this.recreate(item);
+        await this.confirm(item);
+        return id;
+    }
+
     async recreate(item: T): Promise<string> {
         // Check if already imported
         // We need to repeat this because sometimes the item is passed directly to this method, without going through recreateByID()
@@ -233,14 +219,14 @@ export class Importer<T extends {id: string}> {
         }
 
         // To make sure the operation is idempotent, we first check if the item was already recreated in a previous run.
-        if (!Options.shared.forceRecreate) {
-            const reuse = await this.provider.findExisting(item.id);
-            if (reuse) {
-                Logger.vv?.info(`Skipped ${this.objectName} ${item.id} because already recreated as ${reuse.id} in a previous run`);
-                this.stats.trackReused(this.objectName);
-                return reuse.id;
-            }
+        //if (!Options.shared.forceRecreate) {
+        const reuse = await this.provider.findExisting(item);
+        if (reuse) {
+            Logger.vv?.info(`Skipped ${this.objectName} ${item.id} because already recreated as ${reuse.id} in a previous run`);
+            this.stats.trackReused(this.objectName);
+            return reuse.id;
         }
+        //}
 
         // Import
         Logger.vv?.info(`Recreating ${this.objectName} ${item.id}...`);
@@ -275,7 +261,7 @@ export class Importer<T extends {id: string}> {
             return;
         }
 
-        const newItem = await this.provider.findExisting(item.id);
+        const newItem = await this.provider.findExisting(item);
         if (!newItem) {
             // Not yet created
             Logger.vv?.info(`Skipped reverting ${this.objectName} ${item.id} because not yet recreated in new account`);
@@ -302,5 +288,47 @@ export class Importer<T extends {id: string}> {
 
         this.revertedSet.add(item.id);
         Logger.v?.ok(`Removed ${newItem.id}`);
+    }
+
+    async confirm(item: T): Promise<void> {
+        if (!this.provider.confirm) {
+            return;
+        }
+
+        // Check if already reverted
+        const alreadyConfirmed = this.confirmedSet.has(item.id);
+        if (alreadyConfirmed) {
+            Logger.vv?.info(`Skipped confirming ${item.id}, because already confirmed in this run`);
+            return;
+        }
+
+        const newItem = await this.provider.findExisting(item);
+        if (!newItem) {
+            // Not yet created
+            Logger.vv?.info(`Skipped confirming ${item.id} because not yet recreated in new account`);
+            this.stats.addWarning('Could not confirm ' + this.objectName + ' ' + item.id + ' because not yet recreated in new account: did you disable creating in the old account?');
+            return;
+        }
+
+        // Import
+        Logger.vv?.info(`Confirming ${newItem.id} (${item.id} in old account)`);
+
+        try {
+            await this.provider.confirm(item, newItem);
+        } catch (e: any) {
+            if (e instanceof ImportWarning) {
+                throw new ImportWarning({
+                    message: 'Failed to confirm ' + this.objectName + ' ' + item.id,
+                    cause: e
+                });
+            }
+            throw new ImportError({
+                message: 'Failed to confirm ' + this.objectName + ' ' + item.id,
+                cause: e
+            });
+        }
+
+        this.confirmedSet.add(item.id);
+        Logger.v?.ok(`Confirmed ${newItem.id}`);
     }
 }
