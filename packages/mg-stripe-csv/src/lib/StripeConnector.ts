@@ -8,15 +8,6 @@ import {StripeAPI} from './StripeAPI.js';
 const exec = util.promisify(exexSyc);
 
 export class StripeConnector {
-    /**
-     * Which mode to connect to when using the Stripe CLI
-     */
-    mode: 'live' | 'test' = 'test';
-
-    constructor(mode: 'live' | 'test' = 'test') {
-        this.mode = mode;
-    }
-
     async askForAccount(message: string, tryApiKey?: string): Promise<StripeAPI> {
         if (tryApiKey) {
             const stripe = new StripeAPI({

@@ -36,12 +36,6 @@ export class Options {
         },
         {
             type: 'boolean',
-            flags: '--test',
-            defaultValue: false,
-            desc: 'Connect to the Stripe Test API when using Stripe CLI as authentication method'
-        },
-        {
-            type: 'boolean',
             flags: '--pause',
             defaultValue: false,
             desc: 'Pause collection of old subscriptions in the old account after they have been recreated in the new account'
@@ -59,10 +53,10 @@ export class Options {
             desc: 'Import subscriptions associated with a test clock'
         },
         {
-            type: 'boolean',
-            flags: '--revert',
-            defaultValue: false,
-            desc: 'Revert the migration'
+            type: 'number',
+            flags: '--delay',
+            defaultValue: 12,
+            desc: 'Period in hours in which newly created subscriptions won\'t create any charges (subscriptions that expire in this period will be delayed a bit). Within this period you should be able to confirm the migration or revert it. Defaults to 12.'
         }
     ];
 
@@ -70,12 +64,11 @@ export class Options {
     verboseLevel: 0 | 1 | 2;
     oldApiKey?: string;
     newApiKey?: string;
-    test: boolean;
     pause: boolean;
     debug: boolean;
     testClock?: string;
-    revert: boolean;
     forceRecreate: boolean;
+    pausePeriod: number;
 
     static shared: Options;
 
@@ -84,15 +77,15 @@ export class Options {
         this.verboseLevel = argv['very-verbose'] ? 2 : argv.verbose ? 1 : 0;
         this.oldApiKey = argv.from ?? undefined;
         this.newApiKey = argv.to ?? undefined;
-        this.test = argv.test ?? false;
         this.pause = argv.pause ?? false;
         this.debug = argv.debug ?? false;
         this.testClock = argv['test-clock'] ?? undefined;
-        this.revert = argv.revert ?? false;
         this.forceRecreate = argv['force-recreate'] ?? false;
+        this.pausePeriod = argv.delay ?? 12;
     }
 
     static init(argv: any) {
         Options.shared = new Options(argv);
+        return Options.shared;
     }
 }

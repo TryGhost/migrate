@@ -20,9 +20,9 @@ export function createPriceImporter({oldStripe, newStripe, stats, productImporte
             return oldStripe.client.prices.list({limit: 100, expand: ['data.product']});
         },
 
-        async findExisting(oldId: string) {
+        async findExisting(oldItem: Stripe.Price) {
             const existing = await newStripe.client.prices.search({
-                query: `metadata['importOldId']:'${oldId}'`
+                query: `metadata['importOldId']:'${oldItem.id}'`
             });
             if (existing.data.length > 0) {
                 return existing.data[0];

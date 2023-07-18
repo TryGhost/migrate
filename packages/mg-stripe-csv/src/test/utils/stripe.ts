@@ -124,7 +124,7 @@ export function buildProduct(overrides: Partial<Stripe.Product>): Stripe.Product
         images: [],
         livemode: false,
         metadata: {},
-        name: 'Monthly Subscription',
+        name: expect.getState().currentTestName ?? 'Monthly Subscription',
         package_dimensions: null,
         shippable: null,
         tax_code: null,

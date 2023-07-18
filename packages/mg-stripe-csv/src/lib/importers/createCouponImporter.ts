@@ -20,12 +20,12 @@ export function createCouponImporter({oldStripe, newStripe, stats}: {
             return oldStripe.client.coupons.list({limit: 100});
         },
 
-        async findExisting(oldId: string) {
+        async findExisting(oldItem: Stripe.Coupon) {
             try {
-                const existing = await newStripe.client.coupons.retrieve(oldId);
+                const existing = await newStripe.client.coupons.retrieve(oldItem.id);
                 return existing;
             } catch (e: any) {
-                Logger.v?.info(`Coupon ${oldId} not found in new Stripe: ${e.message}`);
+                Logger.v?.info(`Coupon ${oldItem.id} not found in new Stripe: ${e.message}`);
                 return;
             }
         },

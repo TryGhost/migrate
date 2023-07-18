@@ -8,6 +8,29 @@ import {ImportWarning} from './ImportWarning.js';
 import {Importer} from './Importer.js';
 import {ImportError} from './ImportError.js';
 
+async function resumeSubscription(stripe: StripeAPI, subscription: Stripe.Subscription) {
+    // Resume subscription
+    stripe.client.subscriptions.update(subscription.id, {
+        pause_collection: ''
+    });
+
+    // Resume draft invoices created
+    await finalizeDraftInvoices(stripe, subscription);
+}
+
+async function finalizeDraftInvoices(stripe: StripeAPI, subscription: Stripe.Subscription) {
+    // Resume draft invoices created
+    const invoices = await stripe.client.invoices.list({
+        subscription: subscription.id,
+        status: 'draft'
+    });
+    for (const invoice of invoices.data) {
+        await stripe.client.invoices.finalizeInvoice(invoice.id, {
+            auto_advance: true
+        });
+    }
+}
+
 export function createSubscriptionImporter({oldStripe, newStripe, stats, priceImporter, couponImporter}: {
     dryRun: boolean,
     oldStripe: StripeAPI,
@@ -29,12 +52,19 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             });
         },
 
-        async findExisting(oldId: string) {
-            const existing = await newStripe.client.subscriptions.search({
-                query: `metadata['importOldId']:'${oldId}' AND status:"active"`
+        async findExisting(oldSubscription: Stripe.Subscription) {
+            // Note: we don't use search here, because that is not read-write consistent + slower
+            const existing = await newStripe.client.subscriptions.list({
+                customer: getObjectId(oldSubscription.customer),
+                limit: 100,
+                expand: ['data.default_payment_method']
             });
-            if (existing.data.length > 0) {
-                return existing.data[0];
+
+            // Return the first with metadata['importOldId'] === oldSubscription.id
+            for (const subscription of existing.data) {
+                if (subscription.metadata.importOldId === oldSubscription.id) {
+                    return subscription;
+                }
             }
         },
 
@@ -120,13 +150,11 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             Logger.vv?.info(`Getting coupon if needed`);
             const coupon = oldSubscription.discount?.coupon ? (await couponImporter.recreate(oldSubscription.discount?.coupon)) : undefined;
 
-            // Create the subscription
-            Logger.vv?.info(`Creating subscription`);
-
             const now = new Date().getTime() / 1000;
 
             // Minimum billing_cycle_anchor is one hour in the future, to prevent immediate billing of the created subscription
-            const minimumBillingCycleAnchor = Math.ceil(now) + 3600;
+            const minimumFirstCharge = 3600 * Math.max(0.5, Options.shared.pausePeriod); // Wait x hours
+            const minimumBillingCycleAnchor = Math.ceil(now) + minimumFirstCharge;
             const isTrial = oldSubscription.trial_end && oldSubscription.trial_end > (now + 10);
 
             const data: Stripe.SubscriptionCreateParams = {
@@ -144,7 +172,11 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 cancel_at: oldSubscription.cancel_at ?? undefined,
                 metadata: {
                     oldCreatedAt: oldSubscription.created,
-                    importOldId: oldSubscription.id
+                    importOldId: oldSubscription.id,
+                    ghost_original_start_date: oldSubscription.start_date,
+                    ghost_original_current_period_start: oldSubscription.current_period_start,
+                    ghost_original_current_period_end: oldSubscription.current_period_end,
+                    ghost_original_trial_end: oldSubscription.trial_end
                 },
                 payment_behavior: 'error_if_incomplete' // Make sure we throw an error if we can't charge the customer
             };
@@ -156,6 +188,16 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             });
 
             return await ifDryRunJustReturnFakeId(async () => {
+                // Pause old subscription
+                Logger.vv?.info(`Pausing old ${oldSubscription.id}`);
+                await oldStripe.client.subscriptions.update(oldSubscription.id, {
+                    pause_collection: {
+                        behavior: 'keep_as_draft'
+                    }
+                });
+
+                // Create the subscription
+                Logger.vv?.info(`Creating subscription`);
                 const subscription = await newStripe.client.subscriptions.create(data);
 
                 for (const oldInvoice of invoices.data) {
@@ -192,10 +234,10 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                     }
 
                     // Advance the invoice
-                    Logger.vv?.info(`Finalizing invoice ${invoice.id}`);
-                    await newStripe.client.invoices.finalizeInvoice(invoice.id, {
-                        auto_advance: true
-                    });
+                    // Logger.vv?.info(`Finalizing invoice ${invoice.id}`);
+                    // await newStripe.client.invoices.finalizeInvoice(invoice.id, {
+                    //     auto_advance: false
+                    // });
 
                     // Force immediate payment (we generally don't want this, so commented out for now)
                     // Logger.vv?.info(`Paying invoice ${invoice.id}`);
@@ -206,16 +248,6 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                     //     // Faield charge
                     //     // Not an issue: subscription will be overdue
                     // }
-                }
-
-                if (Options.shared.pause) {
-                    // Pause old subscription
-                    Logger.vv?.info(`Pausing old ${oldSubscription.id}`);
-                    await oldStripe.client.subscriptions.update(oldSubscription.id, {
-                        pause_collection: {
-                            behavior: 'keep_as_draft'
-                        }
-                    });
                 }
 
                 return subscription.id;
@@ -229,17 +261,9 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             await ifDryRun(async () => {
                 await newStripe.client.subscriptions.del(getObjectId(newSubscription));
 
-                // TODO: delete invoices
-
-                if (Options.shared.pause) {
-                    // Resume old subscription
-                    Logger.vv?.info(`Resuming old ${oldSubscription.id}`);
-                    await oldStripe.client.subscriptions.update(oldSubscription.id, {
-                        pause_collection: ''
-                    });
-
-                    // TODO! resume draft invoices created!
-                }
+                // Unpause old subscription
+                Logger.vv?.info(`Resuming old ${oldSubscription.id}`);
+                await resumeSubscription(oldStripe, oldSubscription);
             });
 
             // Delete price if not yet deleted
@@ -251,6 +275,20 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             if (oldSubscription.discount?.coupon) {
                 await couponImporter.revert(oldSubscription.discount?.coupon);
             }
+        },
+
+        async confirm(oldSubscription: Stripe.Subscription, newSubscription: Stripe.Subscription) {
+            if (oldSubscription.status === 'canceled') {
+                Logger.vv?.info(`Old subscription was ${oldSubscription.id} canceled, not confirming the new subscription`);
+                stats.addWarning(`Old subscription was ${oldSubscription.id} canceled, not confirming the new subscription`);
+                return;
+            }
+
+            await ifDryRun(async () => {
+                // Unpause new subscription
+                Logger.vv?.info(`Finalizing ${newSubscription.id}`);
+                await finalizeDraftInvoices(newStripe, newSubscription);
+            });
         }
     };
 

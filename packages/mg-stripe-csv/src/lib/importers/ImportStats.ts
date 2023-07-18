@@ -4,6 +4,7 @@ import {Options} from '../Options.js';
 export class ImportStats {
     importedPerType: Map<string, number> = new Map();
     reusedPerType: Map<string, number> = new Map();
+    warnings: string[] = [];
 
     listeners: (() => void)[] = [];
 
@@ -55,5 +56,9 @@ export class ImportStats {
         for (const listener of this.listeners) {
             listener();
         }
+    }
+
+    addWarning(warning: string) {
+        this.warnings.push(warning);
     }
 }

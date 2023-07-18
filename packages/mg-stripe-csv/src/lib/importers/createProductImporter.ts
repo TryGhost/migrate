@@ -19,9 +19,9 @@ export function createProductImporter({oldStripe, newStripe, stats}: {
             return oldStripe.client.products.list({limit: 100});
         },
 
-        async findExisting(oldId: string) {
+        async findExisting(oldItem: Stripe.Product) {
             const existing = await newStripe.client.products.search({
-                query: `metadata['importOldId']:'${oldId}'`
+                query: `metadata['importOldId']:'${oldItem.id}'`
             });
             if (existing.data.length > 0) {
                 return existing.data[0];
