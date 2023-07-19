@@ -178,7 +178,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             const now = new Date().getTime() / 1000;
 
             // Minimum billing_cycle_anchor is one hour in the future, to prevent immediate billing of the created subscription
-            const minimumFirstCharge = 3600 * Math.max(0.5, Options.shared.pausePeriod); // Wait x hours
+            const minimumFirstCharge = 3600 * Math.max(0.5, Options.shared.delay); // Wait x hours
             const minimumBillingCycleAnchor = Math.ceil(now) + minimumFirstCharge;
             const isTrial = oldSubscription.trial_end && oldSubscription.trial_end > (now + 10);
 

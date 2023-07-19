@@ -55,7 +55,7 @@ export class Options {
     debug: boolean;
     testClock?: string;
     forceRecreate: boolean;
-    pausePeriod: number;
+    delay: number;
 
     static shared: Options;
 
@@ -67,7 +67,7 @@ export class Options {
         this.debug = argv.debug ?? false;
         this.testClock = argv['test-clock'] ?? undefined;
         this.forceRecreate = argv['force-recreate'] ?? false;
-        this.pausePeriod = argv.delay ?? 12;
+        this.delay = argv.delay ?? 12;
     }
 
     static init(argv: any) {

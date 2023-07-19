@@ -12,17 +12,24 @@ import {confirm} from '@inquirer/prompts';
 export async function copy(options: Options) {
     const stats = new ImportStats();
 
-    Logger.shared.info('The "copy" command will migrate Stripe products, prices, coupons, invoices and subscriptions from an old to a new Stripe account.');
+    Logger.shared.info(`The ${chalk.cyan('copy')} command will migrate Stripe products, prices, coupons, invoices and subscriptions from an old to a new Stripe account.`);
     Logger.shared.info('------------------------------------------------------------------------------');
     Logger.shared.info('Before proceeding, be sure to have:');
     Logger.shared.info('1) Disabled new subscriptions on the old site');
     Logger.shared.info('2) Migrated Stripe customers, using the Stripe dashboard:');
     Logger.shared.info('https://stripe.com/docs/payments/account/data-migrations/pan-copy-self-serve');
     Logger.shared.info('------------------------------------------------------------------------------');
-    Logger.shared.info('We recommend running a dry run first, by passing the `--dry-run` option.');
+    Logger.shared.info(`We recommend running a dry run first, by passing the ${chalk.cyan('--dry-run')} option.`);
     Logger.shared.info('The dry run will not create any data object in the new account, nor update anything in the old account.');
     Logger.shared.info('------------------------------------------------------------------------------');
-    Logger.shared.info('When you are ready to perform the copy, be sure to check the `--delay` option. This option will pause payment collection by a number of hours, so that no payments are made during the migration (defaults to 12).');
+    Logger.shared.info(`When you are ready to perform the copy, be sure to check the ${chalk.cyan('--delay')} option. This option will pause payment collection by a number of hours, so that no payments are made during the migration (defaults to 12).`);
+    Logger.shared.info('------------------------------------------------------------------------------');
+
+    if (options.dryRun) {
+        Logger.shared.succeed(`${chalk.green('Running copy in DRY RUN mode. No Stripe data will be created or updated.')}`);
+    } else {
+        Logger.shared.succeed(`${chalk.green(`Running copy in LIVE mode. Payment collection will be paused for ${options.delay} hours (see --delay option).`)}`);
+    }
 
     try {
         // Step 1: Connect to Stripe
