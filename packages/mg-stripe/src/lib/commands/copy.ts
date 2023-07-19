@@ -22,43 +22,42 @@ export async function copy(options: Options) {
     Logger.shared.info(`We recommend running a dry run first, by passing the ${chalk.cyan('--dry-run')} option.`);
     Logger.shared.info('The dry run will not create any data object in the new account, nor update anything in the old account.');
     Logger.shared.info('------------------------------------------------------------------------------');
-    Logger.shared.info(`When you are ready to perform the copy, be sure to check the ${chalk.cyan('--delay')} option. This option will pause payment collection by a number of hours, so that no payments are made during the migration (defaults to 12).`);
-    Logger.shared.info('------------------------------------------------------------------------------');
 
+    Logger.shared.startSpinner('');
     if (options.dryRun) {
-        Logger.shared.succeed(`${chalk.green('Running copy in DRY RUN mode. No Stripe data will be created or updated.')}`);
+        Logger.shared.succeed(`Starting copy in ${chalk.green('DRY RUN')} mode. No Stripe data will be created or updated.`);
     } else {
-        Logger.shared.succeed(`${chalk.green(`Running copy in LIVE mode. Payment collection will be paused for ${options.delay} hours (see --delay option).`)}`);
+        Logger.shared.succeed(`Starting copy in ${chalk.green('LIVE')} mode.`);
     }
 
     try {
         // Step 1: Connect to Stripe
         const connector = new StripeConnector();
-        const fromAccount = await connector.askForAccount('Which Stripe account do you want to migrate from?', options.oldApiKey);
+        const fromAccount = await connector.askForAccount('From which Stripe account do you want to copy?', options.oldApiKey);
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName, mode} = await fromAccount.validate();
-        Logger.shared.succeed(`Migrating from: ${chalk.cyan(accountName)} in ${mode} mode`);
+        Logger.shared.succeed(`Copying from ${chalk.cyan(accountName)} (${mode} account)`);
 
-        const toAccount = await connector.askForAccount('Which Stripe account do you want to migrate to?', options.newApiKey);
+        const toAccount = await connector.askForAccount('To which Stripe account do you want to copy?', options.newApiKey);
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName: accountNameTo, mode: modeTo} = await toAccount.validate();
-        Logger.shared.succeed(`Migrating to: ${chalk.cyan(accountNameTo)} in ${modeTo} mode\n`);
+        Logger.shared.succeed(`Copying to ${chalk.cyan(accountNameTo)} (${modeTo} account)\n`);
 
         if (toAccount.id === fromAccount.id) {
-            Logger.shared.fail('You cannot migrate to the same account');
+            Logger.shared.fail('You cannot copy data to the same account');
             process.exit(1);
         }
 
         // Confirm
         const confirmMigration = await confirm({
-            message: 'Migrate from ' + chalk.red(accountName) + ' to ' + chalk.green(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : ''),
+            message: 'Copy from ' + chalk.red(accountName) + ' to ' + chalk.green(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : ''),
             default: false
         });
 
         if (!confirmMigration) {
-            Logger.shared.fail('Migration cancelled');
+            Logger.shared.fail('Copy cancelled');
             process.exit(1);
         }
 

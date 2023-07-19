@@ -19,13 +19,13 @@ export async function revert(options: Options) {
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName, mode} = await fromAccount.validate();
-        Logger.shared.succeed(`From: ${chalk.cyan(accountName)} in ${mode} mode`);
+        Logger.shared.succeed(`From ${chalk.cyan(accountName)} (${mode} account)`);
 
         const toAccount = await connector.askForAccount('Which Stripe account did you migrate to?', options.newApiKey);
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName: accountNameTo, mode: modeTo} = await toAccount.validate();
-        Logger.shared.succeed(`To: ${chalk.cyan(accountNameTo)} in ${modeTo} mode\n`);
+        Logger.shared.succeed(`To ${chalk.cyan(accountNameTo)} (${modeTo} account)\n`);
 
         if (toAccount.id === fromAccount.id) {
             Logger.shared.fail('You cannot migrate to the same account');
