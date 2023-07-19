@@ -60,9 +60,9 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 expand: ['data.default_payment_method']
             });
 
-            // Return the first with metadata['importOldId'] === oldSubscription.id
+            // Return the first with metadata['ghost_migrate_id'] === oldSubscription.id
             for (const subscription of existing.data) {
-                if (subscription.metadata.importOldId === oldSubscription.id) {
+                if (subscription.metadata.ghost_migrate_id === oldSubscription.id) {
                     return subscription;
                 }
             }
@@ -171,12 +171,12 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 trial_end: isTrial ? oldSubscription.trial_end! : undefined, // Stripe returns trial end in the past, but doesn't allow it to be in the past when creating a subscription
                 cancel_at: oldSubscription.cancel_at ?? undefined,
                 metadata: {
-                    oldCreatedAt: oldSubscription.created,
-                    importOldId: oldSubscription.id,
-                    ghost_original_start_date: oldSubscription.start_date,
-                    ghost_original_current_period_start: oldSubscription.current_period_start,
-                    ghost_original_current_period_end: oldSubscription.current_period_end,
-                    ghost_original_trial_end: oldSubscription.trial_end
+                    ghost_migrate_created: oldSubscription.created,
+                    ghost_migrate_id: oldSubscription.id,
+                    ghost_migrate_start_date: oldSubscription.start_date,
+                    ghost_migrate_current_period_start: oldSubscription.current_period_start,
+                    ghost_migrate_current_period_end: oldSubscription.current_period_end,
+                    ghost_migrate_trial_end: oldSubscription.trial_end
                 },
                 payment_behavior: 'error_if_incomplete' // Make sure we throw an error if we can't charge the customer
             };
@@ -207,7 +207,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                         subscription: subscription.id,
                         auto_advance: false,
                         metadata: {
-                            importOldId: oldInvoice.id
+                            ghost_migrate_id: oldInvoice.id
                         }
                     });
 
@@ -227,7 +227,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                             description: item.description ?? (item.price?.product as Stripe.Product).name,
                             currency: item.currency,
                             metadata: {
-                                importOldId: item.id
+                                ghost_migrate_id: item.id
                             }
                         };
                         await newStripe.client.invoiceItems.create(d);
