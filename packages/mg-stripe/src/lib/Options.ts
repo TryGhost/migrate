@@ -7,25 +7,25 @@ export class Options {
             type: 'boolean',
             flags: '--dry-run',
             defaultValue: false,
-            desc: 'Run the import without actually creating any subscriptions'
+            desc: 'Dry run a copy, without actually creating any data object in the new account (optional)'
         },
         {
             type: 'string',
             flags: '--from',
             defaultValue: false,
-            desc: 'The Stripe API key of the old account (optional)'
+            desc: 'The Stripe API secret key of the old account (optional)'
         },
         {
             type: 'string',
             flags: '--to',
             defaultValue: false,
-            desc: 'The Stripe API key of the new account (optional)'
+            desc: 'The Stripe API secret key of the new account (optional)'
         },
         {
             type: 'number',
             flags: '--delay',
             defaultValue: 12,
-            desc: 'Period in hours in which newly created subscriptions won\'t create any charges (subscriptions that expire in this period will be delayed a bit). Within this period you should be able to confirm the migration or revert it. Defaults to 12.'
+            desc: 'Period (in hours, starting now) during which payment collection is paused. This period should be large enough to perform the entire migration. Estimated time to migrate 10,000 members is 1 hour (optional, defaults to 12)'
         },
         {
             type: 'boolean',

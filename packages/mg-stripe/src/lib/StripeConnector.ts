@@ -16,16 +16,16 @@ export class StripeConnector {
             return stripe;
         }
 
-        // Show a selectino list
+        // Show a selection list
         const account = await select<'enter' | 'open'>({
             message,
             choices: [
                 {
-                    name: 'Enter API key manually',
+                    name: 'Enter Stripe API secret key',
                     value: 'enter'
                 },
                 {
-                    name: 'Open Stripe dashboard to create new API key',
+                    name: 'Open Stripe dashboard to get a Stripe API secret key',
                     value: 'open'
                 }
             ]
@@ -36,7 +36,7 @@ export class StripeConnector {
         if (account === 'enter') {
             // Prompts
             apiKey = await input({
-                message: 'Enter your Stripe API key'
+                message: 'Enter your Stripe API secret key:'
             });
         } else {
             const url = 'https://dashboard.stripe.com/apikeys';
