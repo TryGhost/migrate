@@ -108,7 +108,7 @@ describe('Recreating subscriptions', () => {
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
-        assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
+        assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'active');
         assert.equal(newSubscription.start_date, oldSubscription.start_date);
         assert.equal(newSubscription.current_period_end, oldSubscription.current_period_end);
@@ -118,7 +118,7 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.description, oldSubscription.description);
         assert.equal(newSubscription.default_payment_method, customer.invoice_settings.default_payment_method);
         assert.equal(newSubscription.items.data.length, 1);
-        assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
+        assert.equal(newSubscription.items.data[0].price.metadata.ghost_migrate_id, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
 
         // Did not charge yet
@@ -205,7 +205,7 @@ describe('Recreating subscriptions', () => {
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
-        assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
+        assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'active');
         assert.equal(newSubscription.start_date, oldSubscription.start_date);
         assert.equal(newSubscription.current_period_end, oldSubscription.current_period_end);
@@ -215,7 +215,7 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.description, oldSubscription.description);
         assert.equal(newSubscription.default_payment_method, validCustomer.invoice_settings.default_payment_method);
         assert.equal(newSubscription.items.data.length, 1);
-        assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
+        assert.equal(newSubscription.items.data[0].price.metadata.ghost_migrate_id, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
 
         // Did not charge yet
@@ -265,7 +265,7 @@ describe('Recreating subscriptions', () => {
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
-        assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
+        assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'trialing');
         assert.equal(newSubscription.start_date, oldSubscription.start_date);
         assert.equal(newSubscription.current_period_end, oldSubscription.current_period_end);
@@ -275,7 +275,7 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.description, oldSubscription.description);
         assert.equal(newSubscription.default_payment_method, validCustomer.invoice_settings.default_payment_method);
         assert.equal(newSubscription.items.data.length, 1);
-        assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
+        assert.equal(newSubscription.items.data[0].price.metadata.ghost_migrate_id, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
 
         // Did not charge yet
@@ -324,7 +324,7 @@ describe('Recreating subscriptions', () => {
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
-        assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
+        assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'trialing');
         assert.equal(newSubscription.start_date, oldSubscription.start_date);
         assert.equal(newSubscription.current_period_end, oldSubscription.trial_end);
@@ -334,7 +334,7 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.description, oldSubscription.description);
         assert.equal(newSubscription.default_payment_method, customer.invoice_settings.default_payment_method);
         assert.equal(newSubscription.items.data.length, 1);
-        assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
+        assert.equal(newSubscription.items.data[0].price.metadata.ghost_migrate_id, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
 
         // Did not charge yet
@@ -412,7 +412,7 @@ describe('Recreating subscriptions', () => {
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
-        assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
+        assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'active');
         assert.equal(newSubscription.start_date, oldSubscription.start_date);
         assert.equal(newSubscription.current_period_end, oldSubscription.current_period_end);
@@ -422,7 +422,7 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.description, oldSubscription.description);
         assert.equal(newSubscription.default_payment_method, customer.invoice_settings.default_payment_method);
         assert.equal(newSubscription.items.data.length, 1);
-        assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
+        assert.equal(newSubscription.items.data[0].price.metadata.ghost_migrate_id, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
 
         // Did not charge yet
@@ -461,7 +461,7 @@ describe('Recreating subscriptions', () => {
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
-        assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
+        assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'active');
         assert.equal(newSubscription.start_date, oldSubscription.start_date);
 
@@ -475,7 +475,7 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.description, oldSubscription.description);
         assert.equal(newSubscription.default_payment_method, validCustomer.invoice_settings.default_payment_method);
         assert.equal(newSubscription.items.data.length, 1);
-        assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
+        assert.equal(newSubscription.items.data[0].price.metadata.ghost_migrate_id, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
 
         // Did not charge yet
@@ -513,7 +513,7 @@ describe('Recreating subscriptions', () => {
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
-        assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
+        assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'active');
         assert.equal(newSubscription.start_date, oldSubscription.start_date);
 
@@ -527,7 +527,7 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.description, oldSubscription.description);
         assert.equal(newSubscription.default_payment_method, declinedCustomer.invoice_settings.default_payment_method);
         assert.equal(newSubscription.items.data.length, 1);
-        assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
+        assert.equal(newSubscription.items.data[0].price.metadata.ghost_migrate_id, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
 
         // Did not charge yet
@@ -585,7 +585,7 @@ describe('Recreating subscriptions', () => {
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
-        assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
+        assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'active');
         assert.equal(newSubscription.start_date, oldSubscription.start_date);
         assert.equal(newSubscription.current_period_end, oldSubscription.current_period_end);
@@ -595,7 +595,7 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.description, oldSubscription.description);
         assert.equal(newSubscription.default_payment_method, customer.invoice_settings.default_payment_method);
         assert.equal(newSubscription.items.data.length, 1);
-        assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
+        assert.equal(newSubscription.items.data[0].price.metadata.ghost_migrate_id, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
 
         // Wait 1 hour for the payment retry
@@ -681,7 +681,7 @@ describe('Recreating subscriptions', () => {
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
-        assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
+        assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'active');
         assert.equal(newSubscription.start_date, oldSubscription.start_date);
         assert.equal(newSubscription.current_period_end, currentPeriodEnd);
@@ -691,7 +691,7 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.description, oldSubscription.description);
         assert.equal(newSubscription.default_payment_method, customer.invoice_settings.default_payment_method);
         assert.equal(newSubscription.items.data.length, 1);
-        assert.equal(newSubscription.items.data[0].price.metadata.importOldId, oldPrice.id);
+        assert.equal(newSubscription.items.data[0].price.metadata.ghost_migrate_id, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
 
         // Check did not create invoices from the subscription
@@ -825,7 +825,7 @@ describe('Recreating subscriptions', () => {
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
-        assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
+        assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'active');
 
         // Advance time until the end of the coupon (3 months after start date)
@@ -900,7 +900,7 @@ describe('Recreating subscriptions', () => {
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
-        assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
+        assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'active');
 
         // Advance time until the end of the coupon (3 months after start date)
@@ -970,7 +970,7 @@ describe('Recreating subscriptions', () => {
         const newSubscription = await stripe.client.subscriptions.retrieve(newSubscriptionId);
 
         // Do some basic assertions
-        assert.equal(newSubscription.metadata.importOldId, oldSubscription.id);
+        assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'active');
 
         // Advance time until the cancelAt date + 2 hours

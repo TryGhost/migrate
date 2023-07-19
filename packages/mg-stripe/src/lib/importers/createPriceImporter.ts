@@ -31,8 +31,8 @@ export function createPriceImporter({oldStripe, newStripe, stats, productImporte
                 limit: 100,
                 active: true
             })) {
-                if (price.metadata.importOldId) {
-                    cachedPrices[price.metadata.importOldId] = price;
+                if (price.metadata.ghost_migrate_id) {
+                    cachedPrices[price.metadata.ghost_migrate_id] = price;
                 }
             }
 
@@ -53,7 +53,7 @@ export function createPriceImporter({oldStripe, newStripe, stats, productImporte
                         trial_period_days: oldPrice.recurring.trial_period_days ?? undefined
                     } : undefined,
                     metadata: {
-                        importOldId: oldPrice.id
+                        ghost_migrate_id: oldPrice.id
                     }
                 });
                 return price.id;

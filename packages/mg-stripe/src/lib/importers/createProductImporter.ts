@@ -30,8 +30,8 @@ export function createProductImporter({oldStripe, newStripe, stats}: {
                 limit: 100,
                 active: true
             })) {
-                if (product.metadata.importOldId) {
-                    cachedProducts[product.metadata.importOldId] = product;
+                if (product.metadata.ghost_migrate_id) {
+                    cachedProducts[product.metadata.ghost_migrate_id] = product;
                 }
             }
 
@@ -44,7 +44,7 @@ export function createProductImporter({oldStripe, newStripe, stats}: {
                     name: oldProduct.name,
                     description: oldProduct.description ?? undefined,
                     metadata: {
-                        importOldId: oldProduct.id
+                        ghost_migrate_id: oldProduct.id
                     }
                 });
                 return product.id;
