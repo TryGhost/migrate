@@ -13,9 +13,9 @@ import {revert as revertCommand} from './commands/revert.js';
 import {copy as copyCommand} from './commands/copy.js';
 
 class StripeCSVCommand {
-    id = 'stripe-csv';
+    id = 'stripe';
     group = 'Sources:';
-    flags = 'stripe-csv';
+    flags = 'stripe';
     desc = 'Migrate your Stripe subscriptions to a different Stripe account';
 
     constructor() {
