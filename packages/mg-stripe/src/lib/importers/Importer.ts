@@ -28,7 +28,7 @@ export type ImportProvider<T> = {
 
 export class Queue {
     runningTasks = 0;
-    maxRunningTasks = 1; // todo: concurrency issues!
+    maxRunningTasks = 5;
     waitingTasks = 0;
     queue: (() => Promise<void>)[] = [];
 
@@ -101,6 +101,26 @@ export class Queue {
     }
 }
 
+class ReuseLastCall<T> {
+    jobs: Map<string, Promise<T>> = new Map();
+
+    async schedule(id: string, job: () => Promise<T>): Promise<T> {
+        // Check if running:
+        const existingJob = this.jobs.get(id);
+        if (existingJob) {
+            return existingJob;
+        }
+
+        const promise = new Promise<T>((resolve, reject) => {
+            job().then(resolve).catch(reject);
+        });
+        this.jobs.set(id, promise);
+        const v = await promise;
+        this.jobs.delete(id);
+        return v;
+    }
+}
+
 export class Importer<T extends {id: string}> {
     objectName: string;
     stats: ImportStats;
@@ -109,6 +129,10 @@ export class Importer<T extends {id: string}> {
     recreatedMap: Map<string, string> = new Map();
     revertedSet: Set<string> = new Set();
     confirmedSet: Set<string> = new Set();
+
+    runningRecreateJobs = new ReuseLastCall<string>();
+    runningRevertJobs = new ReuseLastCall<void>();
+    runningConfirmJobs = new ReuseLastCall<void>();
 
     constructor(options: {objectName: string, provider: ImportProvider<T>, stats: ImportStats}) {
         this.objectName = options.objectName;
@@ -210,127 +234,142 @@ export class Importer<T extends {id: string}> {
     }
 
     async recreate(item: T): Promise<string> {
-        // Check if already imported
-        // We need to repeat this because sometimes the item is passed directly to this method, without going through recreateByID()
-        const alreadyRecreatedId = this.recreatedMap.get(item.id);
-        if (alreadyRecreatedId) {
-            Logger.vv?.info(`Skipped ${this.objectName} ${item.id}, because already recreated as ${alreadyRecreatedId} in this run`);
-            return alreadyRecreatedId;
-        }
+        return this.runningRecreateJobs.schedule(item.id, async () => {
+            // Check if already imported
+            // We need to repeat this because sometimes the item is passed directly to this method, without going through recreateByID()
+            const alreadyRecreatedId = this.recreatedMap.get(item.id);
+            if (alreadyRecreatedId) {
+                Logger.vv?.info(`Skipped ${this.objectName} ${item.id}, because already recreated as ${alreadyRecreatedId} in this run`);
+                return alreadyRecreatedId;
+            }
 
-        // To make sure the operation is idempotent, we first check if the item was already recreated in a previous run.
-        //if (!Options.shared.forceRecreate) {
-        const reuse = await this.provider.findExisting(item);
-        if (reuse) {
-            Logger.vv?.info(`Skipped ${this.objectName} ${item.id} because already recreated as ${reuse.id} in a previous run`);
-            this.stats.trackReused(this.objectName);
-            return reuse.id;
-        }
-        //}
+            // To make sure the operation is idempotent, we first check if the item was already recreated in a previous run.
+            //if (!Options.shared.forceRecreate) {
+            const reuse = await this.provider.findExisting(item);
+            if (reuse) {
+                Logger.vv?.info(`Skipped ${this.objectName} ${item.id} because already recreated as ${reuse.id} in a previous run`);
+                this.stats.trackReused(this.objectName);
 
-        // Import
-        Logger.vv?.info(`Recreating ${this.objectName} ${item.id}...`);
+                // Mark id, so we don't need to look it up again
+                this.recreatedMap.set(item.id, reuse.id);
+                return reuse.id;
+            }
+            //}
 
-        let newID: string;
-        try {
-            newID = await this.provider.recreate(item);
-        } catch (e: any) {
-            if (e instanceof ImportWarning) {
-                throw new ImportWarning({
+            // Import
+            Logger.vv?.info(`Recreating ${this.objectName} ${item.id}...`);
+
+            let newID: string;
+            try {
+                newID = await this.provider.recreate(item);
+            } catch (e: any) {
+                if (e instanceof ImportWarning) {
+                    throw new ImportWarning({
+                        message: 'Failed to recreate ' + this.objectName + ' ' + item.id,
+                        cause: e
+                    });
+                }
+                throw new ImportError({
                     message: 'Failed to recreate ' + this.objectName + ' ' + item.id,
                     cause: e
                 });
             }
-            throw new ImportError({
-                message: 'Failed to recreate ' + this.objectName + ' ' + item.id,
-                cause: e
-            });
-        }
 
-        this.recreatedMap.set(item.id, newID);
-        Logger.v?.ok(`Recreated ${this.objectName} ${item.id} as ${newID} in new account`);
-        this.stats.trackImported(this.objectName);
-        return newID;
+            this.recreatedMap.set(item.id, newID);
+            Logger.v?.ok(`Recreated ${this.objectName} ${item.id} as ${newID} in new account`);
+            this.stats.trackImported(this.objectName);
+            return newID;
+        });
     }
 
     async revert(item: T): Promise<void> {
-        // Check if already reverted
-        const alreadyReverted = this.revertedSet.has(item.id);
-        if (alreadyReverted) {
-            Logger.vv?.info(`Skipped reverting ${this.objectName} ${item.id}, because already reverted in this run`);
-            return;
-        }
+        return this.runningRevertJobs.schedule(item.id, async () => {
+            // Check if already reverted
+            const alreadyReverted = this.revertedSet.has(item.id);
+            if (alreadyReverted) {
+                Logger.vv?.info(`Skipped reverting ${this.objectName} ${item.id}, because already reverted in this run`);
+                return;
+            }
 
-        const newItem = await this.provider.findExisting(item);
-        if (!newItem) {
-            // Not yet created
-            Logger.vv?.info(`Skipped reverting ${this.objectName} ${item.id} because not yet recreated in new account`);
-            return;
-        }
+            const newItem = await this.provider.findExisting(item);
+            if (!newItem) {
+                // Not yet created
+                Logger.vv?.info(`Skipped reverting ${this.objectName} ${item.id} because not yet recreated in new account`);
 
-        // Import
-        Logger.vv?.info(`Removing ${newItem.id} (${item.id} in old account)`);
+                // Mark id, so we don't need to look it up again
+                this.revertedSet.add(item.id);
+                return;
+            }
 
-        try {
-            await this.provider.revert(item, newItem);
-        } catch (e: any) {
-            if (e instanceof ImportWarning) {
-                throw new ImportWarning({
+            // Import
+            Logger.vv?.info(`Removing ${newItem.id} (${item.id} in old account)`);
+
+            try {
+                await this.provider.revert(item, newItem);
+            } catch (e: any) {
+                if (e instanceof ImportWarning) {
+                    throw new ImportWarning({
+                        message: 'Failed to revert ' + this.objectName + ' ' + item.id,
+                        cause: e
+                    });
+                }
+                throw new ImportError({
                     message: 'Failed to revert ' + this.objectName + ' ' + item.id,
                     cause: e
                 });
             }
-            throw new ImportError({
-                message: 'Failed to revert ' + this.objectName + ' ' + item.id,
-                cause: e
-            });
-        }
 
-        this.revertedSet.add(item.id);
-        Logger.v?.ok(`Removed ${newItem.id}`);
-        this.stats.trackReverted(this.objectName);
+            this.revertedSet.add(item.id);
+            Logger.v?.ok(`Removed ${newItem.id}`);
+            this.stats.trackReverted(this.objectName);
+        });
     }
 
     async confirm(item: T): Promise<void> {
-        if (!this.provider.confirm) {
-            return;
-        }
+        return this.runningConfirmJobs.schedule(item.id, async () => {
+            if (!this.provider.confirm) {
+                return;
+            }
 
-        // Check if already reverted
-        const alreadyConfirmed = this.confirmedSet.has(item.id);
-        if (alreadyConfirmed) {
-            Logger.vv?.info(`Skipped confirming ${item.id}, because already confirmed in this run`);
-            return;
-        }
+            // Check if already reverted
+            const alreadyConfirmed = this.confirmedSet.has(item.id);
+            if (alreadyConfirmed) {
+                Logger.vv?.info(`Skipped confirming ${item.id}, because already confirmed in this run`);
+                return;
+            }
 
-        const newItem = await this.provider.findExisting(item);
-        if (!newItem) {
-            // Not yet created
-            Logger.vv?.info(`Skipped confirming ${item.id} because not yet recreated in new account`);
-            this.stats.addWarning('Could not confirm ' + this.objectName + ' ' + item.id + ' because not yet recreated in new account: did you disable creating in the old account?');
-            return;
-        }
+            const newItem = await this.provider.findExisting(item);
+            if (!newItem) {
+                // Not yet created
+                Logger.vv?.info(`Skipped confirming ${item.id} because not yet recreated in new account`);
+                this.stats.addWarning('Could not confirm ' + this.objectName + ' ' + item.id + ' because not yet recreated in new account: did you disable creating in the old account?');
 
-        // Import
-        Logger.vv?.info(`Confirming ${newItem.id} (${item.id} in old account)`);
+                // Mark id, so we don't need to look it up again
+                this.confirmedSet.add(item.id);
+                return;
+            }
 
-        try {
-            await this.provider.confirm(item, newItem);
-        } catch (e: any) {
-            if (e instanceof ImportWarning) {
-                throw new ImportWarning({
+            // Import
+            Logger.vv?.info(`Confirming ${newItem.id} (${item.id} in old account)`);
+
+            try {
+                await this.provider.confirm(item, newItem);
+            } catch (e: any) {
+                if (e instanceof ImportWarning) {
+                    throw new ImportWarning({
+                        message: 'Failed to confirm ' + this.objectName + ' ' + item.id,
+                        cause: e
+                    });
+                }
+                throw new ImportError({
                     message: 'Failed to confirm ' + this.objectName + ' ' + item.id,
                     cause: e
                 });
             }
-            throw new ImportError({
-                message: 'Failed to confirm ' + this.objectName + ' ' + item.id,
-                cause: e
-            });
-        }
 
-        this.confirmedSet.add(item.id);
-        Logger.v?.ok(`Confirmed ${newItem.id}`);
-        this.stats.trackConfirmed(this.objectName);
+            this.confirmedSet.add(item.id);
+            Logger.v?.ok(`Confirmed ${newItem.id}`);
+            this.stats.trackConfirmed(this.objectName);
+        });
     }
 }
