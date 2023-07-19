@@ -13,16 +13,16 @@ export function createCouponImporter({oldStripe, newStripe, stats}: {
 }) {
     const provider = {
         async getByID(oldId: string): Promise<Stripe.Coupon> {
-            return oldStripe.client.coupons.retrieve(oldId);
+            return oldStripe.use(client => client.coupons.retrieve(oldId));
         },
 
         getAll() {
-            return oldStripe.client.coupons.list({limit: 100});
+            return oldStripe.useAsyncIterator(client => client.coupons.list({limit: 100}));
         },
 
         async findExisting(oldItem: Stripe.Coupon) {
             try {
-                const existing = await newStripe.client.coupons.retrieve(oldItem.id);
+                const existing = await newStripe.use(client => client.coupons.retrieve(oldItem.id));
                 return existing;
             } catch (e: any) {
                 Logger.v?.info(`Coupon ${oldItem.id} not found in new Stripe: ${e.message}`);
@@ -32,7 +32,7 @@ export function createCouponImporter({oldStripe, newStripe, stats}: {
 
         async recreate(oldCoupon: Stripe.Coupon) {
             return await ifDryRunJustReturnFakeId(async () => {
-                const coupon = await newStripe.client.coupons.create({
+                const coupon = await newStripe.use(client => client.coupons.create({
                     id: oldCoupon.id,
                     name: oldCoupon.name ?? undefined,
                     amount_off: oldCoupon.amount_off ?? undefined,
@@ -45,7 +45,7 @@ export function createCouponImporter({oldStripe, newStripe, stats}: {
                     redeem_by: oldCoupon.redeem_by ?? undefined,
                     currency_options: oldCoupon.currency_options ?? undefined,
                     applies_to: oldCoupon.applies_to ?? undefined
-                });
+                }));
                 return coupon.id;
             });
         },
@@ -53,7 +53,7 @@ export function createCouponImporter({oldStripe, newStripe, stats}: {
         async revert(_: Stripe.Coupon, newCoupon: Stripe.Coupon) {
             // Delete the new coupon
             await ifNotDryRun(async () => {
-                await newStripe.client.coupons.del(newCoupon.id);
+                await newStripe.use(client => client.coupons.del(newCoupon.id));
             });
         }
     };
