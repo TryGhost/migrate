@@ -43,6 +43,8 @@ export async function confirm(options: Options) {
             process.exit(1);
         }
 
+        stats.markStart();
+
         // Step 2: Import data
         Logger.shared.startSpinner('Confirming subscriptions...');
         stats.addListener(() => {

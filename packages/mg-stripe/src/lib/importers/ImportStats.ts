@@ -2,6 +2,8 @@ import Logger from '../Logger.js';
 import {Options} from '../Options.js';
 
 export class ImportStats {
+    startedAt = Date.now();
+
     importedPerType: Map<string, number> = new Map();
     reusedPerType: Map<string, number> = new Map();
     confirmedPerType: Map<string, number> = new Map();
@@ -9,6 +11,10 @@ export class ImportStats {
     warnings: string[] = [];
 
     listeners: (() => void)[] = [];
+
+    markStart() {
+        this.startedAt = Date.now();
+    }
 
     trackImported(type: string) {
         this.importedPerType.set(type, (this.importedPerType.get(type) || 0) + 1);
@@ -48,18 +54,21 @@ export class ImportStats {
 
     print() {
         const isDryRun = Options.shared.dryRun;
+        const duration = (Date.now() - this.startedAt) / 1000;
 
         if (this.totalConfirmed > 0) {
             Logger.shared.info(`Confirmed ${this.totalConfirmed} items:`);
             for (const [type, count] of this.confirmedPerType.entries()) {
-                Logger.shared.info(`- ${type}s: ${count} confirmed`);
+                const perSecond = ((count) / duration).toFixed(2);
+                Logger.shared.info(`- ${type}s: ${count} confirmed (${perSecond}/s)`);
             }
         }
 
         if (this.totalReverted > 0) {
             Logger.shared.info(`Reverted ${this.totalReverted} items:`);
             for (const [type, count] of this.revertedPerType.entries()) {
-                Logger.shared.info(`- ${type}s: ${count} reverted`);
+                const perSecond = ((count) / duration).toFixed(2);
+                Logger.shared.info(`- ${type}s: ${count} reverted (${perSecond}/s)`);
             }
         }
 
@@ -72,7 +81,10 @@ export class ImportStats {
             Logger.shared.info(`${isDryRun ? 'Would have recreated' : 'Recreated'} ${this.totalImported} items:`);
             for (const [type, count] of this.importedPerType.entries()) {
                 const reused = this.reusedPerType.get(type) || 0;
-                Logger.shared.info(`- ${type}s: ${count} recreated, ${reused} reused`);
+
+                // Calculate recreated/s
+                const perSecond = ((count + reused) / duration).toFixed(2);
+                Logger.shared.info(`- ${type}s: ${count} recreated, ${reused} reused (${perSecond}/s)`);
             }
 
             // Reused
@@ -81,29 +93,42 @@ export class ImportStats {
                 if (imported !== 0) {
                     continue;
                 }
-                Logger.shared.info(`- ${type}s: 0 recreated, ${reused} reused`);
+
+                const perSecond = ((reused) / duration).toFixed(2);
+                Logger.shared.info(`- ${type}s: 0 recreated, ${reused} reused (${perSecond}/s)`);
             }
         }
     }
 
     toString() {
         const isDryRun = Options.shared.dryRun;
+        const duration = (Date.now() - this.startedAt) / 1000;
 
         const arr: string[] = [];
         if (this.totalConfirmed > 0) {
-            arr.push(`confirmed ${this.totalConfirmed} items`);
+            const perSecond = ((this.totalConfirmed) / duration).toFixed(2);
+            arr.push(`confirmed ${this.totalConfirmed} items (${perSecond}/s)`);
         }
 
         if (this.totalReverted > 0) {
-            arr.push(`reverted ${this.totalReverted} items`);
+            const perSecond = ((this.totalReverted) / duration).toFixed(2);
+            arr.push(`reverted ${this.totalReverted} items (${perSecond}/s)`);
         }
 
         if (this.totalImported > 0) {
-            arr.push(`${isDryRun ? 'would have recreated' : 'recreated'} ${this.totalImported} items`);
+            for (const [type, count] of this.importedPerType.entries()) {
+                // Calculate recreated/s
+                const perSecond = ((count) / duration).toFixed(2);
+                arr.push(`${count} ${type}s recreated (${perSecond}/s)`);
+            }
         }
 
         if (this.totalReused > 0) {
-            arr.push(`reused ${this.totalReused} items`);
+            for (const [type, count] of this.reusedPerType.entries()) {
+                // Calculate recreated/s
+                const perSecond = ((count) / duration).toFixed(2);
+                arr.push(`${count} ${type}s reused (${perSecond}/s)`);
+            }
         }
 
         if (arr.length === 0) {
