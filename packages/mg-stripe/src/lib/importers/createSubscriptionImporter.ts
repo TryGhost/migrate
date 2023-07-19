@@ -117,8 +117,31 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             let oldPaymentMethod = oldSubscription.default_payment_method as Stripe.PaymentMethod | null;
             let foundPaymentMethodId: string | undefined;
             let foundSourceId: string | undefined;
+            let oldPaymentSource = oldSubscription.default_source as Stripe.CustomerSource | null;
 
-            if (!oldPaymentMethod) {
+            if (oldPaymentSource && !oldPaymentMethod && oldPaymentSource.object === 'card') {
+                // Get sources
+                Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} payment sources`);
+                const sources = await newStripe.client.customers.listSources(getObjectId(oldSubscription.customer));
+
+                for (const source of sources.data) {
+                    if (source.object !== 'card') {
+                        continue;
+                    }
+                    // Check if this is the same source
+                    // The ID and fingerprint will be different
+                    if (source.last4 === oldPaymentSource.last4 && source.exp_month === oldPaymentSource.exp_month && source.exp_year === oldPaymentSource.exp_year && source.brand === oldPaymentSource.brand) {
+                        foundSourceId = source.id;
+                        break;
+                    }
+                }
+
+                if (!foundSourceId) {
+                    throw new ImportError({
+                        message: `Could not find new payment source for subscription ${oldSubscription.id} and original payment source ${oldPaymentSource.id}`
+                    });
+                }
+            } else if (!oldPaymentMethod) {
                 // Use customer's default payment method
                 if (!customer.default_source) {
                     if (!customer.invoice_settings.default_payment_method) {
@@ -143,7 +166,9 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 }
 
                 if (!foundPaymentMethodId) {
-                    throw new Error(`Could not find new payment method for subscription ${oldSubscription.id} and original payment method ${oldPaymentMethod.id}`);
+                    throw new ImportError({
+                        message: `Could not find new payment method for subscription ${oldSubscription.id} and original payment method ${oldPaymentMethod.id}`
+                    });
                 }
             }
 
