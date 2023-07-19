@@ -15,26 +15,26 @@ export async function revert(options: Options) {
     try {
         // Step 1: Connect to Stripe
         const connector = new StripeConnector();
-        const fromAccount = await connector.askForAccount('Which Stripe account did you migrate from?', options.oldApiKey);
+        const fromAccount = await connector.askForAccount('From which Stripe account did you copy?', options.oldApiKey);
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName, mode} = await fromAccount.validate();
         Logger.shared.succeed(`From ${chalk.cyan(accountName)} (${mode} account)`);
 
-        const toAccount = await connector.askForAccount('Which Stripe account did you migrate to?', options.newApiKey);
+        const toAccount = await connector.askForAccount('To which Stripe account did you copy?', options.newApiKey);
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName: accountNameTo, mode: modeTo} = await toAccount.validate();
         Logger.shared.succeed(`To ${chalk.cyan(accountNameTo)} (${modeTo} account)\n`);
 
         if (toAccount.id === fromAccount.id) {
-            Logger.shared.fail('You cannot migrate to the same account');
+            Logger.shared.fail('You cannot have copied to the same account');
             process.exit(1);
         }
 
         // Confirm
         const confirmMigration = await _confirm({
-            message: 'Revert migration from ' + chalk.green(accountName) + ' to ' + chalk.red(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : ''),
+            message: 'Revert copy from ' + chalk.green(accountName) + ' to ' + chalk.red(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : ''),
             default: false
         });
 
@@ -74,9 +74,12 @@ export async function revert(options: Options) {
         const subscriptionImporter = createSubscriptionImporter({
             ...sharedOptions,
             priceImporter,
-            couponImporter
+            couponImporter,
+            delay: 0
         });
+
         const warnings = await subscriptionImporter.revertAll();
+
         if (warnings) {
             Logger.shared.succeed(`Successfully reverted ${stats.importedPerType.get('subscription') ?? 0} subscriptions with ${warnings.length} warning${warnings.length > 1 ? 's' : ''}:`);
             Logger.shared.warn(warnings.toString());

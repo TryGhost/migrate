@@ -8,6 +8,7 @@ import {createProductImporter} from '../importers/createProductImporter.js';
 import {createSubscriptionImporter} from '../importers/createSubscriptionImporter.js';
 import {Options} from '../Options.js';
 import {confirm} from '@inquirer/prompts';
+import input from '@inquirer/input';
 
 export async function copy(options: Options) {
     const stats = new ImportStats();
@@ -31,19 +32,40 @@ export async function copy(options: Options) {
     }
 
     try {
-        // Step 1: Connect to Stripe
+        // Get delay
+        let delay = options.delay;
+
+        if (!options.dryRun) {
+            Logger.shared.info(`We recommend ${chalk.cyan('delaying payment collection')} from Stripe until the copy is finished, to avoid duplicate charges.`);
+            Logger.shared.info(`By default, we delay the payment collection for ${chalk.cyan(delay)} hours. As a rule of thumb, copying 10,000 subscriptions takes an hour. We suggest adding an extra hour of buffer time to be safe.`);
+
+            const delayInput = await input({
+                message: 'For how many hours would you like to pause payment collection?'
+            });
+            delay = parseInt(delayInput, 10);
+
+            if (!Number.isInteger(delay) || delay < 0) {
+                Logger.shared.fail('Expected a positive number of hours, to delay payment collection.');
+                process.exit(1);
+            }
+
+            Logger.shared.startSpinner('');
+            Logger.shared.succeed(`No payments will be collected for the next ${chalk.green(delay)} hour(s)`);
+        }
+
+        // Get from / to Stripe accounts
         const connector = new StripeConnector();
         const fromAccount = await connector.askForAccount('From which Stripe account do you want to copy?', options.oldApiKey);
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName, mode} = await fromAccount.validate();
-        Logger.shared.succeed(`Copying from ${chalk.cyan(accountName)} (${mode} account)`);
+        Logger.shared.succeed(`Copying from ${chalk.green(accountName)} (${mode} account)`);
 
         const toAccount = await connector.askForAccount('To which Stripe account do you want to copy?', options.newApiKey);
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName: accountNameTo, mode: modeTo} = await toAccount.validate();
-        Logger.shared.succeed(`Copying to ${chalk.cyan(accountNameTo)} (${modeTo} account)\n`);
+        Logger.shared.succeed(`Copying to ${chalk.green(accountNameTo)} (${modeTo} account)\n`);
 
         if (toAccount.id === fromAccount.id) {
             Logger.shared.fail('You cannot copy data to the same account');
@@ -92,7 +114,8 @@ export async function copy(options: Options) {
         const subscriptionImporter = createSubscriptionImporter({
             ...sharedOptions,
             priceImporter,
-            couponImporter
+            couponImporter,
+            delay
         });
         const warnings = await subscriptionImporter.recreateAll();
         if (warnings) {
