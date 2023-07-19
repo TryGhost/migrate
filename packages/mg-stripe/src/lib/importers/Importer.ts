@@ -1,10 +1,10 @@
 import Logger from '../Logger.js';
-import {Options} from '../Options.js';
 import {isWarning} from '../helpers.js';
 import {ErrorGroup} from './ErrorGroup.js';
 import {ImportError} from './ImportError.js';
 import {ImportStats} from './ImportStats.js';
 import {ImportWarning} from './ImportWarning.js';
+import {Queue} from '../Queue.js';
 
 export type ImportProvider<T> = {
     /**
@@ -24,81 +24,6 @@ export type ImportProvider<T> = {
     recreate(oldItem: T): Promise<string>
     revert(oldItem: T, newItem: T): Promise<void>
     confirm?(oldItem: T, newItem: T): Promise<void>
-}
-
-export class Queue {
-    runningTasks = 0;
-    maxRunningTasks = 5;
-    waitingTasks = 0;
-    queue: (() => Promise<void>)[] = [];
-
-    listeners: ((error?: Error) => void)[] = [];
-
-    addListener(listener: () => void) {
-        this.listeners.push(listener);
-    }
-
-    removeListener(listener: () => void) {
-        this.listeners = this.listeners.filter(l => l !== listener);
-    }
-
-    callListeners(error?: Error) {
-        for (const listener of this.listeners) {
-            listener(error);
-            if (error) {
-                // Prevent propagating the error to other listeners
-                error = undefined;
-            }
-        }
-    }
-
-    /**
-     * Queue a task and returns immediately. If the queue is full, it will block until a task is finished and a slot is available.
-     */
-    async add(task: () => Promise<void>) {
-        this.queue.push(task);
-        this.runNext();
-    }
-
-    runNext() {
-        if (this.runningTasks >= this.maxRunningTasks) {
-            return;
-        }
-
-        const task = this.queue.shift();
-        if (task) {
-            this.runningTasks += 1;
-            task().catch((e) => {
-                this.callListeners(e);
-            }).then(() => {
-                this.runningTasks -= 1;
-
-                // Run next
-                this.runNext();
-            });
-        } else {
-            // Call listeners
-            this.callListeners();
-        }
-    }
-
-    async waitUntilFinished() {
-        return new Promise<void>((resolve, reject) => {
-            const listener = (error?: Error) => {
-                if (error) {
-                    this.removeListener(listener);
-                    reject(error);
-                    return;
-                }
-                if (this.runningTasks === 0) {
-                    this.removeListener(listener);
-                    resolve();
-                }
-            };
-            this.addListener(listener);
-            listener();
-        });
-    }
 }
 
 class ReuseLastCall<T> {
@@ -140,7 +65,7 @@ export class Importer<T extends {id: string}> {
         this.stats = options.stats;
     }
 
-    private async runInQueue(provider: ImportProvider<T>, method: 'recreate' | 'revert' | 'confirm', options: {groupErrors: boolean} = {groupErrors: false}): Promise<ErrorGroup|undefined> {
+    private async runInQueue(method: 'recreate' | 'revert' | 'confirm', options: {groupErrors: boolean} = {groupErrors: false}): Promise<ErrorGroup|undefined> {
         // Loop through all items in the provider and import them
         const queue = new Queue();
         const errorGroup = new ErrorGroup();
@@ -176,15 +101,15 @@ export class Importer<T extends {id: string}> {
      * @returns An ErrorGroup if there were only warnings
      */
     async recreateAll(): Promise<ErrorGroup|undefined> {
-        return this.runInQueue(this.provider, 'recreate', {groupErrors: true});
+        return this.runInQueue('recreate', {groupErrors: true});
     }
 
     async revertAll() {
-        return this.runInQueue(this.provider, 'revert', {groupErrors: true});
+        return this.runInQueue('revert', {groupErrors: true});
     }
 
     async confirmAll() {
-        return this.runInQueue(this.provider, 'confirm', {groupErrors: true});
+        return this.runInQueue('confirm', {groupErrors: true});
     }
 
     async recreateByObjectOrId(idOrItem: string | T) {

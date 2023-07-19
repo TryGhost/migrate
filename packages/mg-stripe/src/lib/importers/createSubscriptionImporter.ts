@@ -10,9 +10,9 @@ import {ImportError} from './ImportError.js';
 
 async function resumeSubscription(stripe: StripeAPI, subscription: Stripe.Subscription) {
     // Resume subscription
-    stripe.client.subscriptions.update(subscription.id, {
+    stripe.use(client => client.subscriptions.update(subscription.id, {
         pause_collection: ''
-    });
+    }));
 
     // Resume draft invoices created
     await finalizeDraftInvoices(stripe, subscription);
@@ -20,14 +20,14 @@ async function resumeSubscription(stripe: StripeAPI, subscription: Stripe.Subscr
 
 async function finalizeDraftInvoices(stripe: StripeAPI, subscription: Stripe.Subscription) {
     // Resume draft invoices created
-    const invoices = await stripe.client.invoices.list({
+    const invoices = await stripe.use(client => client.invoices.list({
         subscription: subscription.id,
         status: 'draft'
-    });
+    }));
     for (const invoice of invoices.data) {
-        await stripe.client.invoices.finalizeInvoice(invoice.id, {
+        await stripe.use(client => client.invoices.finalizeInvoice(invoice.id, {
             auto_advance: true
-        });
+        }));
     }
 }
 
@@ -41,24 +41,24 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
 }) {
     const provider = {
         async getByID(oldId: string): Promise<Stripe.Subscription> {
-            return oldStripe.client.subscriptions.retrieve(oldId, {expand: ['data.default_payment_method']});
+            return oldStripe.use(client => client.subscriptions.retrieve(oldId, {expand: ['data.default_payment_method']}));
         },
 
         getAll() {
-            return oldStripe.client.subscriptions.list({
+            return oldStripe.useAsyncIterator(client => client.subscriptions.list({
                 limit: 100,
                 expand: ['data.default_payment_method'],
                 test_clock: Options.shared.testClock
-            });
+            }));
         },
 
         async findExisting(oldSubscription: Stripe.Subscription) {
             // Note: we don't use search here, because that is not read-write consistent + slower
-            const existing = await newStripe.client.subscriptions.list({
+            const existing = await newStripe.use(client => client.subscriptions.list({
                 customer: getObjectId(oldSubscription.customer),
                 limit: 100,
                 expand: ['data.default_payment_method']
-            });
+            }));
 
             // Return the first with metadata['ghost_migrate_id'] === oldSubscription.id
             for (const subscription of existing.data) {
@@ -98,7 +98,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
 
             let customer: Stripe.Customer | Stripe.DeletedCustomer;
             try {
-                customer = await newStripe.client.customers.retrieve(getObjectId(oldSubscription.customer));
+                customer = await newStripe.use(client => client.customers.retrieve(getObjectId(oldSubscription.customer)));
             } catch (err: any) {
                 if (err.message && err.message.includes('No such customer')) {
                     throw new ImportError({
@@ -122,7 +122,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             if (oldPaymentSource && !oldPaymentMethod && oldPaymentSource.object === 'card') {
                 // Get sources
                 Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} payment sources`);
-                const sources = await newStripe.client.customers.listSources(getObjectId(oldSubscription.customer));
+                const sources = await newStripe.use(client => client.customers.listSources(getObjectId(oldSubscription.customer)));
 
                 for (const source of sources.data) {
                     if (source.object !== 'card') {
@@ -155,7 +155,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 }
             } else {
                 Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} payment methods`);
-                const paymentMethods = await newStripe.client.customers.listPaymentMethods(getObjectId(oldSubscription.customer));
+                const paymentMethods = await newStripe.use(client => client.customers.listPaymentMethods(getObjectId(oldSubscription.customer)));
                 for (const paymentMethod of paymentMethods.data) {
                     // Check if this is the same payment method
                     // The ID and fingerprint will be different
@@ -207,34 +207,34 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             };
 
             // Duplicate any open invoices from the old subscription
-            const invoices = await oldStripe.client.invoices.list({
+            const invoices = await oldStripe.use(client => client.invoices.list({
                 subscription: oldSubscription.id,
                 status: 'open'
-            });
+            }));
 
             return await ifDryRunJustReturnFakeId(async () => {
                 // Pause old subscription
                 Logger.vv?.info(`Pausing old ${oldSubscription.id}`);
-                await oldStripe.client.subscriptions.update(oldSubscription.id, {
+                await oldStripe.use(client => client.subscriptions.update(oldSubscription.id, {
                     pause_collection: {
                         behavior: 'keep_as_draft'
                     }
-                });
+                }));
 
                 // Create the subscription
                 Logger.vv?.info(`Creating subscription`);
-                const subscription = await newStripe.client.subscriptions.create(data);
+                const subscription = await newStripe.use(client => client.subscriptions.create(data));
 
                 for (const oldInvoice of invoices.data) {
                     Logger.vv?.info(`Duplicating invoice ${oldInvoice.id} from old subscription ${oldSubscription.id} to new subscription ${subscription.id}`);
-                    const invoice = await newStripe.client.invoices.create({
+                    const invoice = await newStripe.use(client => client.invoices.create({
                         customer: getObjectId(oldSubscription.customer),
                         subscription: subscription.id,
                         auto_advance: false,
                         metadata: {
                             ghost_migrate_id: oldInvoice.id
                         }
-                    });
+                    }));
 
                     for (const item of oldInvoice.lines.data) {
                         Logger.vv?.info(`Duplicating invoice item ${item.id} from old invoice ${oldInvoice.id} to new invoice ${invoice.id}`);
@@ -255,20 +255,20 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                                 ghost_migrate_id: item.id
                             }
                         };
-                        await newStripe.client.invoiceItems.create(d);
+                        await newStripe.use(client => client.invoiceItems.create(d));
                     }
 
                     // Advance the invoice
                     // Logger.vv?.info(`Finalizing invoice ${invoice.id}`);
-                    // await newStripe.client.invoices.finalizeInvoice(invoice.id, {
+                    // await newStripe.use(client => client.invoices.finalizeInvoice(invoice.id, {
                     //     auto_advance: false
-                    // });
+                    // }));
 
                     // Force immediate payment (we generally don't want this, so commented out for now)
                     // Logger.vv?.info(`Paying invoice ${invoice.id}`);
                     //
                     // try {
-                    //     await newStripe.client.invoices.pay(invoice.id);
+                    //     await newStripe.use(client => client.invoices.pay(invoice.id));
                     // } catch (e) {
                     //     // Faield charge
                     //     // Not an issue: subscription will be overdue
@@ -284,7 +284,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
 
         async revert(oldSubscription: Stripe.Subscription, newSubscription: Stripe.Subscription) {
             await ifNotDryRun(async () => {
-                await newStripe.client.subscriptions.del(getObjectId(newSubscription));
+                await newStripe.use(client => client.subscriptions.del(getObjectId(newSubscription)));
 
                 // Unpause old subscription
                 Logger.vv?.info(`Resuming old ${oldSubscription.id}`);
