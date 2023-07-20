@@ -347,9 +347,13 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
 
         async confirm(oldSubscription: Stripe.Subscription, newSubscription: Stripe.Subscription) {
             if (oldSubscription.status === 'canceled') {
-                Logger.vv?.info(`Old subscription was ${oldSubscription.id} canceled, not confirming the new subscription`);
-                stats.addWarning(`Old subscription was ${oldSubscription.id} canceled, not confirming the new subscription`);
-                return;
+                // Cancel new subscription
+                await newStripe.use(client => client.subscriptions.del(getObjectId(newSubscription)));
+                stats.trackReverted('subscription');
+
+                throw new ImportWarning({
+                    message: `Old subscription was ${oldSubscription.id} canceled, deleting the new subscription too`
+                });
             }
 
             await ifNotDryRun(async () => {

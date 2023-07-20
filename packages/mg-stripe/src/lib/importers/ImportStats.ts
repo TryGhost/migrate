@@ -56,6 +56,13 @@ export class ImportStats {
         const isDryRun = Options.shared.dryRun;
         const duration = (Date.now() - this.startedAt) / 1000;
 
+        if (this.importedPerType.size === 0 && this.reusedPerType.size === 0 && this.confirmedPerType.size === 0 && this.revertedPerType.size === 0) {
+            Logger.shared.info('No items affected');
+
+            this.printWarnings();
+            return;
+        }
+
         if (this.totalConfirmed > 0) {
             Logger.shared.info(`Confirmed ${this.totalConfirmed} items:`);
             for (const [type, count] of this.confirmedPerType.entries()) {
@@ -70,11 +77,6 @@ export class ImportStats {
                 const perSecond = ((count) / duration).toFixed(2);
                 Logger.shared.info(`- ${type}s: ${count} reverted (${perSecond}/s)`);
             }
-        }
-
-        if (this.importedPerType.size === 0 && this.reusedPerType.size === 0 && this.confirmedPerType.size === 0 && this.revertedPerType.size === 0) {
-            Logger.shared.info('No items imported');
-            return;
         }
 
         if (this.importedPerType.size !== 0 || this.reusedPerType.size !== 0) {
@@ -96,6 +98,21 @@ export class ImportStats {
 
                 const perSecond = ((reused) / duration).toFixed(2);
                 Logger.shared.info(`- ${type}s: 0 recreated, ${reused} reused (${perSecond}/s)`);
+            }
+        }
+
+        this.printWarnings();
+    }
+
+    printWarnings() {
+        if (this.warnings.length > 0) {
+            Logger.shared.newline();
+            Logger.shared.warn(`With ${this.warnings.length} warning${this.warnings.length !== 1 ? 's' : ''}:`);
+            for (const warning of this.warnings.slice(0, 15)) {
+                Logger.shared.warn(`- ${warning}`);
+            }
+            if (this.warnings.length > 15) {
+                Logger.shared.warn(`- ... and ${this.warnings.length - 15} more`);
             }
         }
     }
@@ -132,7 +149,7 @@ export class ImportStats {
         }
 
         if (arr.length === 0) {
-            return 'No items recreated';
+            return 'No items affected';
         }
         return arr.join(', ');
     }
