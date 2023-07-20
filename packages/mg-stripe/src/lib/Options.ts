@@ -7,44 +7,44 @@ export class Options {
             type: 'boolean',
             flags: '--dry-run',
             defaultValue: false,
-            desc: 'Run the import without actually creating any subscriptions'
+            desc: 'Dry run a copy, without actually creating any data object in the new account (optional)'
         },
         {
             type: 'string',
             flags: '--from',
             defaultValue: false,
-            desc: 'The Stripe API key of the old account (optional)'
+            desc: 'The Stripe API secret key of the old account (optional)'
         },
         {
             type: 'string',
             flags: '--to',
             defaultValue: false,
-            desc: 'The Stripe API key of the new account (optional)'
+            desc: 'The Stripe API secret key of the new account (optional)'
         },
         {
             type: 'number',
             flags: '--delay',
-            defaultValue: 12,
-            desc: 'Period in hours in which newly created subscriptions won\'t create any charges (subscriptions that expire in this period will be delayed a bit). Within this period you should be able to confirm the migration or revert it. Defaults to 12.'
+            defaultValue: false,
+            desc: 'Period (in hours, starting now) during which payment collection is paused. This period should be large enough to cover the entire migration. Estimated time to migrate 10,000 members is 1 hour, we recommend adding an extra hour of buffer time to be safe (optional)'
         },
         {
             type: 'boolean',
             flags: '--debug',
             defaultValue: false,
-            desc: 'Print debug output'
+            desc: 'Print debug output (optional)'
         },
         {
             type: 'number',
             flags: '--verbose -v',
             defaultValue: false,
-            desc: 'Print verbose output'
+            desc: 'Print verbose output (optional)'
         },
         {
             type: 'boolean',
             // Somehow -vv is not working in sywac
             flags: '--very-verbose',
             defaultValue: false,
-            desc: 'Print very verbose output'
+            desc: 'Print very verbose output (optional)'
         }
     ];
 
@@ -55,7 +55,7 @@ export class Options {
     debug: boolean;
     testClock?: string;
     forceRecreate: boolean;
-    pausePeriod: number;
+    delay: number;
 
     static shared: Options;
 
@@ -67,7 +67,7 @@ export class Options {
         this.debug = argv.debug ?? false;
         this.testClock = argv['test-clock'] ?? undefined;
         this.forceRecreate = argv['force-recreate'] ?? false;
-        this.pausePeriod = argv.delay ?? 12;
+        this.delay = argv.delay ?? undefined;
     }
 
     static init(argv: any) {

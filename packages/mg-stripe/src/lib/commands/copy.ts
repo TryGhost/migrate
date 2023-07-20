@@ -8,38 +8,63 @@ import {createProductImporter} from '../importers/createProductImporter.js';
 import {createSubscriptionImporter} from '../importers/createSubscriptionImporter.js';
 import {Options} from '../Options.js';
 import {confirm} from '@inquirer/prompts';
+import {DelayPrompt} from '../DelayPrompt.js';
 
 export async function copy(options: Options) {
     const stats = new ImportStats();
 
+    Logger.shared.info(`The ${chalk.cyan('copy')} command will migrate Stripe products, prices, coupons, invoices and subscriptions from an old to a new Stripe account.`);
+    Logger.shared.info('------------------------------------------------------------------------------');
+    Logger.shared.info('Before proceeding, be sure to have:');
+    Logger.shared.info('1) Disabled new subscriptions on the old site');
+    Logger.shared.info('2) Migrated Stripe customers, using the Stripe dashboard:');
+    Logger.shared.info('https://stripe.com/docs/payments/account/data-migrations/pan-copy-self-serve');
+    Logger.shared.info('------------------------------------------------------------------------------');
+    Logger.shared.info(`We recommend running a dry run first, by passing the ${chalk.cyan('--dry-run')} option.`);
+    Logger.shared.info('The dry run will not create any data object in the new account, nor update anything in the old account.');
+    Logger.shared.info('------------------------------------------------------------------------------');
+
+    Logger.shared.startSpinner('');
+    if (options.dryRun) {
+        Logger.shared.succeed(`Starting copy in ${chalk.green('DRY RUN')} mode. No Stripe data will be created or updated.`);
+    } else {
+        Logger.shared.succeed(`Starting copy in ${chalk.green('LIVE')} mode.`);
+    }
+
     try {
-        // Step 1: Connect to Stripe
+        // Get delay
+        const delay = await new DelayPrompt().ask(options.delay);
+
+        Logger.shared.startSpinner('');
+        Logger.shared.succeed(`No payments will be collected for the next ${chalk.green(delay)} hour(s)`);
+
+        // Get from / to Stripe accounts
         const connector = new StripeConnector();
-        const fromAccount = await connector.askForAccount('Which Stripe account do you want to migrate from?', options.oldApiKey);
+        const fromAccount = await connector.askForAccount('From which Stripe account do you want to copy?', options.oldApiKey);
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName, mode} = await fromAccount.validate();
-        Logger.shared.succeed(`Migrating from: ${chalk.cyan(accountName)} in ${mode} mode`);
+        Logger.shared.succeed(`Copying from ${chalk.green(accountName)} (${mode} account)`);
 
-        const toAccount = await connector.askForAccount('Which Stripe account do you want to migrate to?', options.newApiKey);
+        const toAccount = await connector.askForAccount('To which Stripe account do you want to copy?', options.newApiKey);
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName: accountNameTo, mode: modeTo} = await toAccount.validate();
-        Logger.shared.succeed(`Migrating to: ${chalk.cyan(accountNameTo)} in ${modeTo} mode\n`);
+        Logger.shared.succeed(`Copying to ${chalk.green(accountNameTo)} (${modeTo} account)\n`);
 
         if (toAccount.id === fromAccount.id) {
-            Logger.shared.fail('You cannot migrate to the same account');
+            Logger.shared.fail('You cannot copy data to the same account');
             process.exit(1);
         }
 
         // Confirm
         const confirmMigration = await confirm({
-            message: 'Migrate from ' + chalk.red(accountName) + ' to ' + chalk.green(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : ''),
+            message: 'Copy from ' + chalk.red(accountName) + ' to ' + chalk.green(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : ''),
             default: false
         });
 
         if (!confirmMigration) {
-            Logger.shared.fail('Migration cancelled');
+            Logger.shared.fail('Copy cancelled');
             process.exit(1);
         }
 
@@ -74,7 +99,8 @@ export async function copy(options: Options) {
         const subscriptionImporter = createSubscriptionImporter({
             ...sharedOptions,
             priceImporter,
-            couponImporter
+            couponImporter,
+            delay
         });
         const warnings = await subscriptionImporter.recreateAll();
         if (warnings) {

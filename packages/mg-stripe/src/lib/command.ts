@@ -16,7 +16,7 @@ class StripeCSVCommand {
     id = 'stripe';
     group = 'Sources:';
     flags = 'stripe';
-    desc = 'Migrate your Stripe subscriptions to a different Stripe account';
+    desc = 'Migrate Stripe products, prices, coupons, invoices and subscriptions to another Stripe account';
 
     constructor() {
         // FIX `this` binding (sywac)
@@ -31,7 +31,7 @@ class StripeCSVCommand {
         sywac.command({
             id: 'copy',
             flags: 'copy',
-            desc: 'Copy subscriptions from one Stripe account to another. Pausing subscriptions in the old account and the newly created subscriptions. Before running this, make sure no new subscriptions can be created in the old Stripe account. This command can be run multiple times (already migrated subscriptions will be skipped).',
+            desc: 'Copy subscriptions from the old Stripe account to the new one. Before running this, make sure that the old site is not accepting any new subscriptions, and that you have migrated Stripe customers using the Stripe dashboard (https://stripe.com/docs/payments/account/data-migrations/pan-copy-self-serve). This command will pause existing subscriptions in the old account and activate them on the new account. The payment collection is paused in the new account by 12 hours by default (can be changed with the --delay option). This command can be run multiple times, already migrated subscriptions will be skipped.',
             run: async (argv: any) => {
                 const options = Options.init(argv);
                 Logger.init({verboseLevel: options.verboseLevel, debug: options.debug});
@@ -43,7 +43,7 @@ class StripeCSVCommand {
         sywac.command({
             id: 'confirm',
             flags: 'confirm',
-            desc: 'Confirm copy by unpausing the subscriptions created in the new Stripe account. If some old subscriptions were cancelled during the copy, it will also cancel them in the newly created subscription.',
+            desc: 'Confirm migration to the new Stripe account. This command will finalise any open invoices.',
             run: async (argv: any) => {
                 const options = Options.init(argv);
                 Logger.init({verboseLevel: options.verboseLevel, debug: options.debug});
@@ -55,7 +55,7 @@ class StripeCSVCommand {
         sywac.command({
             id: 'revert',
             flags: 'revert',
-            desc: 'Unpause the subscriptions created in the old Stripe account and revert all changes made to the new Stripe account.',
+            desc: 'Revert the migration. This command will clean up the new Stripe account and resume the subscriptions from the old Stripe account',
             run: async (argv: any) => {
                 const options = Options.init(argv);
                 Logger.init({verboseLevel: options.verboseLevel, debug: options.debug});

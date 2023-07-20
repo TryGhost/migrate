@@ -46,6 +46,8 @@ describe('Recreating subscriptions', () => {
             delay: 1
         });
 
+        const delay = Options.shared.delay;
+
         const productImporter = createProductImporter({
             ...sharedOptions
         });
@@ -62,7 +64,8 @@ describe('Recreating subscriptions', () => {
         subscriptionImporter = createSubscriptionImporter({
             ...sharedOptions,
             priceImporter,
-            couponImporter
+            couponImporter,
+            delay
         });
 
         sinon.stub(sharedOptions.oldStripe.debugClient.invoices, 'list').callsFake(() => {
