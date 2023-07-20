@@ -68,27 +68,26 @@ migrate stripe revert
 ## Develop
 
 This is a mono repository, managed with [lerna](https://lerna.js.org).
-
 Follow the instructions for the top-level repo.
-1. `git clone` this repo & `cd` into it as usual
-2. Run `yarn` to install top-level dependencies.
+
+### Install
+
+1. `cd` to the top of the monorepo
+2. Run `yarn` to install dependencies.
 
 
 ### Run
 
-To run a local development copy, `cd` into this directory, and use `yarn dev`:
-
-```sh
-yarn dev stripe <command>
-```
+1. `cd` to the top of the monorepo
+2. Run `yarn dev stripe <command>` to run the copy, confirm or revert command
 
 
-## Test
+### Test
 
 - `yarn lint` to run linting
 - `yarn test` to run test and linting
 
 
-# Copyright & License
+## Copyright & License
 
 Copyright (c) 2013-2023 Ghost Foundation - Released under the [MIT license](LICENSE).
