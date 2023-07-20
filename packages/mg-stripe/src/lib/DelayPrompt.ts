@@ -3,8 +3,8 @@ import input from '@inquirer/input';
 import chalk from 'chalk';
 
 export class DelayPrompt {
-    async ask(delayOpt?: number): Promise<number> {
-        if (delayOpt && Number.isInteger(delayOpt) && delayOpt > 1) {
+    async ask(delayOpt?: number | null): Promise<number> {
+        if (delayOpt && Number.isInteger(delayOpt) && delayOpt >= 1) {
             return delayOpt;
         }
 

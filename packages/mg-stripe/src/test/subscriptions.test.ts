@@ -39,14 +39,13 @@ describe('Recreating subscriptions', () => {
             oldStripe: new StripeAPI({apiKey: ''}), // old is invalid to prevent usage
             newStripe: stripe
         };
+        const delay = 1;
 
         Options.init({
             'force-recreate': true,
             'very-verbose': true,
-            delay: 1
+            delay
         });
-
-        const delay = Options.shared.delay;
 
         const productImporter = createProductImporter({
             ...sharedOptions
