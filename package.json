@@ -11,17 +11,19 @@
     "**/node_modules/**"
   ],
   "scripts": {
-    "predev": "lerna run --scope @tryghost/mg-stripe build",
+    "predev": "yarn build",
     "dev": "NODE_ENV=development migrate",
     "dev:morememory": "NODE_OPTIONS=\"--max-old-space-size=8192\" NODE_ENV=development migrate",
     "dev:debug": "DEBUG_COLORS=true DEBUG=@tryghost*,migrate:* NODE_ENV=development migrate",
+    "premigrate": "yarn build",
     "migrate": "migrate",
     "presetup": "yarn",
     "setup": "lerna bootstrap",
     "test:only": "lerna run test",
     "test": "lerna run test,lint",
     "lint": "lerna run lint",
-    "preship": "yarn test",
+    "build": "lerna run build",
+    "preship": "yarn build && yarn test",
     "ship": "lerna publish --no-private"
   },
   "devDependencies": {
