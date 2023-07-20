@@ -22,9 +22,9 @@ export async function revert(options: Options) {
 
     Logger.shared.startSpinner('');
     if (options.dryRun) {
-        Logger.shared.succeed(`Starting revert in ${chalk.green('DRY RUN')} mode.`);
+        Logger.shared.succeed(`Running ${chalk.green('revert')} command as ${chalk.green('DRY RUN')}. No Stripe data will be updated or deleted.`);
     } else {
-        Logger.shared.succeed(`Starting revert in ${chalk.green('LIVE')} mode.`);
+        Logger.shared.succeed(`Running ${chalk.green('revert')} command...`);
     }
 
     try {

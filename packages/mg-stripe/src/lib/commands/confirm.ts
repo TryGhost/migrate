@@ -22,9 +22,9 @@ export async function confirm(options: Options) {
 
     Logger.shared.startSpinner('');
     if (options.dryRun) {
-        Logger.shared.succeed(`Starting confirm in ${chalk.green('DRY RUN')} mode.`);
+        Logger.shared.succeed(`Running ${chalk.green('confirm')} command as ${chalk.green('DRY RUN')}. No Stripe data will be updated.`);
     } else {
-        Logger.shared.succeed(`Starting confirm in ${chalk.green('LIVE')} mode.`);
+        Logger.shared.succeed(`Running ${chalk.green('confirm')} command...`);
     }
 
     try {

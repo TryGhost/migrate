@@ -27,9 +27,9 @@ export async function copy(options: Options) {
 
     Logger.shared.startSpinner('');
     if (options.dryRun) {
-        Logger.shared.succeed(`Starting copy in ${chalk.green('DRY RUN')} mode. No Stripe data will be created or updated.`);
+        Logger.shared.succeed(`Running ${chalk.green('copy')} command as ${chalk.green('DRY RUN')}. No Stripe data will be created or updated.`);
     } else {
-        Logger.shared.succeed(`Starting copy in ${chalk.green('LIVE')} mode.`);
+        Logger.shared.succeed(`Running ${chalk.green('copy')} command...`);
     }
 
     try {
