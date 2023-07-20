@@ -13,7 +13,7 @@ const setup = (sywac) => {
     sywac.command({
         id: 'copy',
         flags: 'copy',
-        desc: 'Copy subscriptions from the old Stripe account to the new one. Before running this, make sure that the old site is not accepting any new subscriptions, and that you have migrated Stripe customers using the Stripe dashboard (https://stripe.com/docs/payments/account/data-migrations/pan-copy-self-serve). This command will pause existing subscriptions in the old account and activate them on the new account. The payment collection is paused in the new account by 12 hours by default (can be changed with the --delay option). This command can be run multiple times, already migrated subscriptions will be skipped.',
+        desc: 'Copy subscriptions from the old Stripe account to the new one. It will also pause existing subscriptions in the old account. This command can be run multiple times, already migrated subscriptions will be skipped.',
         run: async (argv) => {
             const options = Options.init(argv);
             Logger.init({verboseLevel: options.verboseLevel, debug: options.debug});
