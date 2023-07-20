@@ -5,7 +5,6 @@
   "author": "Ghost Foundation",
   "license": "MIT",
   "type": "module",
-  "private": true,
   "scripts": {
     "run:dev": "./cli.js stripe",
     "dev": "tsc --watch --preserveWatchOutput --sourceMap",
