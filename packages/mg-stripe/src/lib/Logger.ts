@@ -94,6 +94,19 @@ export default class Logger {
         }
     }
 
+    newline() {
+        if (this.spinner) {
+            this.spinner.clear();
+        }
+
+        // eslint-disable-next-line no-console
+        console.log('');
+
+        if (this.spinner) {
+            this.spinner.render();
+        }
+    }
+
     warn(message: string) {
         if (this.spinner) {
             this.spinner.clear();
