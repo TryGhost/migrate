@@ -9,7 +9,6 @@
   "main": "build/index.js",
   "types": "build/types.d.ts",
   "scripts": {
-    "run:dev": "./cli.js stripe",
     "dev": "tsc --watch --preserveWatchOutput --sourceMap",
     "build": "tsc --build --sourceMap",
     "prepare": "tsc --build --sourceMap",
