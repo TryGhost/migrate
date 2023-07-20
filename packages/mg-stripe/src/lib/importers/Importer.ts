@@ -1,4 +1,4 @@
-import Logger from '../Logger.js';
+import {Logger} from '../Logger.js';
 import {isWarning} from '../helpers.js';
 import {ErrorGroup} from './ErrorGroup.js';
 import {ImportError} from './ImportError.js';

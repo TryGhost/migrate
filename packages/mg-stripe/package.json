@@ -6,6 +6,8 @@
   "license": "MIT",
   "type": "module",
   "private": true,
+  "main": "build/index.js",
+  "types": "build/types.d.ts",
   "scripts": {
     "run:dev": "./cli.js stripe",
     "dev": "tsc --watch --preserveWatchOutput --sourceMap",

@@ -1,13 +1,5 @@
-import {confirm} from '@inquirer/prompts';
-import chalk from 'chalk';
-import Logger from './Logger.js';
+import {Logger} from './Logger.js';
 import {Options} from './Options.js';
-import {StripeConnector} from './StripeConnector.js';
-import {ImportStats} from './importers/ImportStats.js';
-import {createProductImporter} from './importers/createProductImporter.js';
-import {createPriceImporter} from './importers/createPriceImporter.js';
-import {createSubscriptionImporter} from './importers/createSubscriptionImporter.js';
-import {createCouponImporter} from './importers/createCouponImporter.js';
 import {confirm as confirmCommand} from './commands/confirm.js';
 import {revert as revertCommand} from './commands/revert.js';
 import {copy as copyCommand} from './commands/copy.js';

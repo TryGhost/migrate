@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import Logger from '../Logger.js';
+import {Logger} from '../Logger.js';
 import {StripeConnector} from '../StripeConnector.js';
 import {ImportStats} from '../importers/ImportStats.js';
 import {createCouponImporter} from '../importers/createCouponImporter.js';

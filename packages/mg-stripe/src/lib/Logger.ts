@@ -1,7 +1,7 @@
 import {ui} from '@tryghost/pretty-cli';
 import ora, {Ora} from 'ora';
 
-export default class Logger {
+export class Logger {
     static shared: Logger;
 
     /**

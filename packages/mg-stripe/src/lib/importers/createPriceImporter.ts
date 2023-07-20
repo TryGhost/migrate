@@ -4,7 +4,7 @@ import {StripeAPI} from '../StripeAPI.js';
 import {ImportStats} from './ImportStats.js';
 import {ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 import {ReuseLastCall} from '../ReuseLastCall.js';
-import Logger from '../Logger.js';
+import {Logger} from '../Logger.js';
 
 export function createPriceImporter({oldStripe, newStripe, stats, productImporter}: {
     dryRun: boolean,
