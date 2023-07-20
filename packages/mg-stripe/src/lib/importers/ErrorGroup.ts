@@ -26,10 +26,10 @@ export class ErrorGroup extends Error {
         }
 
         if (!this.isFatal) {
-            return 'Multiple importing warnings: \n' + this.errors.slice(0, MAX_PRINTED_ERRORS).map(e => e.toString()).join('\n\n') + (this.errors.length > MAX_PRINTED_ERRORS ? '\n\n and ' + (this.errors.length - 1) + ' more' : '');
+            return 'Multiple importing warnings: \n' + this.errors.slice(0, MAX_PRINTED_ERRORS).map(e => e.toString()).join('\n\n') + (this.errors.length > MAX_PRINTED_ERRORS ? '\n\n and ' + (this.errors.length - MAX_PRINTED_ERRORS) + ' more' : '');
         }
 
-        return 'Multiple importing errors: \n' + this.errors.slice(0, MAX_PRINTED_ERRORS).map(e => e.toString()).join('\n\n') + (this.errors.length > MAX_PRINTED_ERRORS ? '\n\n and ' + (this.errors.length - 1) + ' more' : '');
+        return 'Multiple importing errors: \n' + this.errors.slice(0, MAX_PRINTED_ERRORS).map(e => e.toString()).join('\n\n') + (this.errors.length > MAX_PRINTED_ERRORS ? '\n\n and ' + (this.errors.length - MAX_PRINTED_ERRORS) + ' more' : '');
     }
 
     get isEmpty() {

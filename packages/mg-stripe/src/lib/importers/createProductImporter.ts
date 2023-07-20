@@ -3,6 +3,7 @@ import {Importer} from './Importer.js';
 import {StripeAPI} from '../StripeAPI.js';
 import {ImportStats} from './ImportStats.js';
 import {getObjectId, ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
+import {ReuseLastCall} from '../ReuseLastCall.js';
 
 export function createProductImporter({oldStripe, newStripe, stats}: {
     dryRun: boolean,
@@ -11,6 +12,8 @@ export function createProductImporter({oldStripe, newStripe, stats}: {
     stats: ImportStats
 }) {
     let cachedProducts: {[key: string]: Stripe.Product} | null = null;
+    let reuse = new ReuseLastCall<void>();
+
     const provider = {
         async getByID(oldId: string): Promise<Stripe.Product> {
             return oldStripe.use(client => client.products.retrieve(oldId));
@@ -21,17 +24,29 @@ export function createProductImporter({oldStripe, newStripe, stats}: {
         },
 
         async findExisting(oldItem: Stripe.Product) {
-            if (cachedProducts) {
-                return cachedProducts[oldItem.id];
-            }
-            cachedProducts = {};
+            // We guard this call, to avoid returning too soon while we are still fetching all the prices
+            // The first one that gets here will start the fetching, and the rest will wait for it to finish
+            // Then after that, it will always return immediately
+            if (!cachedProducts) {
+                await reuse.schedule('findExisting', async () => {
+                    if (cachedProducts) {
+                        return;
+                    }
+                    const _cachedProducts: {[key: string]: Stripe.Product} = {};
 
-            for await (const product of newStripe.useAsyncIterator(client => client.products.list({
-                limit: 100,
-                active: true
-            }))) {
-                if (product.metadata.ghost_migrate_id) {
-                    cachedProducts[product.metadata.ghost_migrate_id] = product;
+                    for await (const product of newStripe.useAsyncIterator(client => client.products.list({
+                        limit: 100,
+                        active: true
+                    }))) {
+                        if (product.metadata.ghost_migrate_id) {
+                            _cachedProducts[product.metadata.ghost_migrate_id] = product;
+                        }
+                    }
+                    cachedProducts = _cachedProducts;
+                });
+
+                if (!cachedProducts) {
+                    throw new Error('cachedProducts should be set');
                 }
             }
 

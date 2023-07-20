@@ -5,6 +5,7 @@ import {ImportError} from './ImportError.js';
 import {ImportStats} from './ImportStats.js';
 import {ImportWarning} from './ImportWarning.js';
 import {Queue} from '../Queue.js';
+import {ReuseLastCall} from '../ReuseLastCall.js';
 
 export type ImportProvider<T> = {
     /**
@@ -25,27 +26,6 @@ export type ImportProvider<T> = {
     revert(oldItem: T, newItem: T): Promise<void>
     confirm?(oldItem: T, newItem: T): Promise<void>
 }
-
-class ReuseLastCall<T> {
-    jobs: Map<string, Promise<T>> = new Map();
-
-    async schedule(id: string, job: () => Promise<T>): Promise<T> {
-        // Check if running:
-        const existingJob = this.jobs.get(id);
-        if (existingJob) {
-            return existingJob;
-        }
-
-        const promise = new Promise<T>((resolve, reject) => {
-            job().then(resolve).catch(reject);
-        });
-        this.jobs.set(id, promise);
-        const v = await promise;
-        this.jobs.delete(id);
-        return v;
-    }
-}
-
 export class Importer<T extends {id: string}> {
     objectName: string;
     stats: ImportStats;

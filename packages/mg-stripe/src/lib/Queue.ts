@@ -47,7 +47,6 @@ export class Queue {
                     resolve(result);
                 } catch (e) {
                     reject(e);
-                    return;
                 }
                 const endTime = Date.now();
                 if (delayUntilFreeing) {
