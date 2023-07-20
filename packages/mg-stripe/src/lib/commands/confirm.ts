@@ -12,29 +12,43 @@ import {confirm as _confirm} from '@inquirer/prompts';
 export async function confirm(options: Options) {
     const stats = new ImportStats();
 
+    Logger.shared.info(`The ${chalk.cyan('confirm')} command will finalise the copy of Stripe subscriptions and invoices in the new Stripe account.`);
+    Logger.shared.info('------------------------------------------------------------------------------');
+    Logger.shared.info('Before proceeding, be sure to have:');
+    Logger.shared.info(`1) Executed the ${chalk.cyan('copy')} command`);
+    Logger.shared.info('2) Verified the products, prices, coupons, and subscriptions in the new Stripe account from the Stripe dashboard');
+    Logger.shared.info('------------------------------------------------------------------------------');
+
+    Logger.shared.startSpinner('');
+    if (options.dryRun) {
+        Logger.shared.succeed(`Starting confirm in ${chalk.green('DRY RUN')} mode.`);
+    } else {
+        Logger.shared.succeed(`Starting confirm in ${chalk.green('LIVE')} mode.`);
+    }
+
     try {
         // Step 1: Connect to Stripe
         const connector = new StripeConnector();
-        const fromAccount = await connector.askForAccount('Which Stripe account did you migrate from?', options.oldApiKey);
+        const fromAccount = await connector.askForAccount('From which Stripe account did you copy?', options.oldApiKey);
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName, mode} = await fromAccount.validate();
         Logger.shared.succeed(`From ${chalk.cyan(accountName)} (${mode} account)`);
 
-        const toAccount = await connector.askForAccount('Which Stripe account did you migrate to?', options.newApiKey);
+        const toAccount = await connector.askForAccount('To which Stripe account did you copy?', options.newApiKey);
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName: accountNameTo, mode: modeTo} = await toAccount.validate();
         Logger.shared.succeed(`To ${chalk.cyan(accountNameTo)} (${modeTo} account)\n`);
 
         if (toAccount.id === fromAccount.id) {
-            Logger.shared.fail('You cannot migrate to the same account');
+            Logger.shared.fail('You cannot confirm a copy to the same account');
             process.exit(1);
         }
 
         // Confirm
         const confirmMigration = await _confirm({
-            message: 'Confirm migration from ' + chalk.red(accountName) + ' to ' + chalk.green(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : ''),
+            message: 'Confirm copy from ' + chalk.red(accountName) + ' to ' + chalk.green(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : ''),
             default: false
         });
 

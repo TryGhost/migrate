@@ -12,6 +12,20 @@ import {confirm as _confirm} from '@inquirer/prompts';
 export async function revert(options: Options) {
     const stats = new ImportStats();
 
+    Logger.shared.info(`The ${chalk.cyan('revert')} command will delete the copy of Stripe products, prices, coupons, subscriptions and invoices from the new Stripe account. It will also resume the subscriptions in the old Stripe account.`);
+    Logger.shared.info('------------------------------------------------------------------------------');
+    Logger.shared.info('Before proceeding, be sure to have:');
+    Logger.shared.info(`1) Executed the ${chalk.cyan('copy')} command`);
+    Logger.shared.info('2) Verified that the errors cannot be resolved manually from the Stripe dashboard');
+    Logger.shared.info('------------------------------------------------------------------------------');
+
+    Logger.shared.startSpinner('');
+    if (options.dryRun) {
+        Logger.shared.succeed(`Starting revert in ${chalk.green('DRY RUN')} mode.`);
+    } else {
+        Logger.shared.succeed(`Starting revert in ${chalk.green('LIVE')} mode.`);
+    }
+
     try {
         // Step 1: Connect to Stripe
         const connector = new StripeConnector();
@@ -28,7 +42,7 @@ export async function revert(options: Options) {
         Logger.shared.succeed(`To ${chalk.cyan(accountNameTo)} (${modeTo} account)\n`);
 
         if (toAccount.id === fromAccount.id) {
-            Logger.shared.fail('You cannot have copied to the same account');
+            Logger.shared.fail('You cannot revert a copy from the same account');
             process.exit(1);
         }
 
