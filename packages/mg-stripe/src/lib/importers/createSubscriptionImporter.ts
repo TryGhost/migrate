@@ -8,6 +8,19 @@ import {ImportWarning} from './ImportWarning.js';
 import {Importer} from './Importer.js';
 import {ImportError} from './ImportError.js';
 
+/**
+ * CustomerSource can be a card, or a source with a card
+ */
+function getSourceCard(source: Stripe.CustomerSource): Stripe.Card | Stripe.Source.Card | undefined {
+    if (source.object === 'card') {
+        return source;
+    }
+    if (source.object === 'source' && source.type === 'card' && source.card) {
+        return source.card;
+    }
+    return;
+}
+
 async function resumeSubscription(stripe: StripeAPI, subscription: Stripe.Subscription) {
     // Resume subscription
     stripe.use(client => client.subscriptions.update(subscription.id, {
@@ -41,13 +54,13 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
 }) {
     const provider = {
         async getByID(oldId: string): Promise<Stripe.Subscription> {
-            return oldStripe.use(client => client.subscriptions.retrieve(oldId, {expand: ['data.default_payment_method']}));
+            return oldStripe.use(client => client.subscriptions.retrieve(oldId, {expand: ['data.default_payment_method', 'data.default_source']}));
         },
 
         getAll() {
             return oldStripe.useAsyncIterator(client => client.subscriptions.list({
                 limit: 100,
-                expand: ['data.default_payment_method'],
+                expand: ['data.default_payment_method', 'data.default_source'],
                 test_clock: Options.shared.testClock
             }));
         },
@@ -57,7 +70,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             const existing = await newStripe.use(client => client.subscriptions.list({
                 customer: getObjectId(oldSubscription.customer),
                 limit: 100,
-                expand: ['data.default_payment_method']
+                expand: ['data.default_payment_method', 'data.default_source']
             }));
 
             // Return the first with metadata['ghost_migrate_id'] === oldSubscription.id
@@ -119,18 +132,22 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             let foundSourceId: string | undefined;
             let oldPaymentSource = oldSubscription.default_source as Stripe.CustomerSource | null;
 
-            if (oldPaymentSource && !oldPaymentMethod && oldPaymentSource.object === 'card') {
+            const cardSource = oldPaymentSource ? getSourceCard(oldPaymentSource) : undefined;
+
+            if (cardSource && !oldPaymentMethod && oldPaymentSource) {
                 // Get sources
                 Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} payment sources`);
                 const sources = await newStripe.use(client => client.customers.listSources(getObjectId(oldSubscription.customer)));
 
                 for (const source of sources.data) {
-                    if (source.object !== 'card') {
+                    const card = getSourceCard(source);
+                    if (!card) {
                         continue;
                     }
+
                     // Check if this is the same source
                     // The ID and fingerprint will be different
-                    if (source.last4 === oldPaymentSource.last4 && source.exp_month === oldPaymentSource.exp_month && source.exp_year === oldPaymentSource.exp_year && source.brand === oldPaymentSource.brand) {
+                    if (card.last4 === cardSource.last4 && card.exp_month === cardSource.exp_month && card.exp_year === cardSource.exp_year && card.brand === cardSource.brand) {
                         foundSourceId = source.id;
                         break;
                     }
