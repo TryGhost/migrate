@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import Stripe from 'stripe';
 import DryRunIdGenerator from '../../lib/DryRunIdGenerator.js';
+import assert from 'assert/strict';
 
 export function getStripeTestAPIKey() {
     if (!process.env.STRIPE_API_KEY) {
@@ -25,7 +26,48 @@ export async function advanceClock({clock, stripe, time}: {clock: string, stripe
     }
 }
 
-export async function createValidCustomer<T extends boolean>(stripe: Stripe, options: {cardNumber?: string, name?: string, testClock?: T} = {}): Promise<{customer: Stripe.Customer, clock: T extends true ? string : undefined}> {
+export async function createPaymentMethod(stripe: Stripe, options: {cardNumber?: string, customerId: string, exp_month?: number, exp_year?: number}): Promise<Stripe.PaymentMethod> {
+    const paymentMethod = await stripe.paymentMethods.create({
+        type: 'card',
+        card: {
+            number: options.cardNumber ?? '4242424242424242',
+            exp_month: options.exp_month ?? 4,
+            exp_year: options.exp_year ?? 2028,
+            cvc: '314'
+        }
+    });
+
+    await stripe.paymentMethods.attach(paymentMethod.id, {
+        customer: options.customerId
+    });
+
+    return paymentMethod;
+}
+
+export async function createSource(stripe: Stripe, options: {cardNumber?: string, customerId: string, exp_month?: number, exp_year?: number}): Promise<{source: Stripe.Source, token: Stripe.Token}> {
+    const token = await stripe.tokens.create({
+        card: {
+            number: options.cardNumber ?? '4242424242424242',
+            exp_month: options.exp_month?.toString() ?? '4',
+            exp_year: options.exp_year?.toString() ?? '2028',
+            cvc: '314'
+        }
+    });
+
+    const source = await stripe.sources.create({
+        type: 'card',
+        token: token.id,
+        usage: 'reusable'
+    });
+
+    await stripe.customers.createSource(options.customerId, {
+        source: source.id
+    });
+
+    return {source, token};
+}
+
+export async function createValidCustomer<T extends boolean>(stripe: Stripe, options: {method?: 'source' | 'payment_method' | 'none', cardNumber?: string, name?: string, testClock?: T} = {}): Promise<{customer: Stripe.Customer, clock: T extends true ? string : undefined}> {
     let clockId: string | null = null;
     if (options.testClock) {
         const clock = await stripe.testHelpers.testClocks.create({
@@ -41,26 +83,31 @@ export async function createValidCustomer<T extends boolean>(stripe: Stripe, opt
         test_clock: clockId ?? undefined
     });
 
-    const paymentMethod = await stripe.paymentMethods.create({
-        type: 'card',
-        card: {
-            number: options.cardNumber ?? '4242424242424242',
-            exp_month: 4,
-            exp_year: 2028,
-            cvc: '314'
-        }
-    });
+    if (options.method === undefined || options.method === 'payment_method') {
+        const paymentMethod = await createPaymentMethod(stripe, {
+            customerId: customer.id,
+            cardNumber: options.cardNumber
+        });
 
-    await stripe.paymentMethods.attach(paymentMethod.id, {
-        customer: customer.id
-    });
+        // Set as default payment method
+        customer = await stripe.customers.update(customer.id, {
+            invoice_settings: {
+                default_payment_method: paymentMethod.id
+            }
+        });
+    }
 
-    // Set as default payment method
-    customer = await stripe.customers.update(customer.id, {
-        invoice_settings: {
-            default_payment_method: paymentMethod.id
-        }
-    });
+    if (options.method === 'source') {
+        const {source} = await createSource(stripe, {
+            customerId: customer.id,
+            cardNumber: options.cardNumber
+        });
+
+        // Set as default source
+        customer = await stripe.customers.update(customer.id, {
+            default_source: source.id
+        });
+    }
 
     return {customer, clock: clockId as any};
 }
