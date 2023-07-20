@@ -24,27 +24,27 @@ export class Options {
         {
             type: 'number',
             flags: '--delay',
-            defaultValue: 12,
-            desc: 'Period (in hours, starting now) during which payment collection is paused. This period should be large enough to perform the entire migration. Estimated time to migrate 10,000 members is 1 hour (optional, defaults to 12)'
+            defaultValue: false,
+            desc: 'Period (in hours, starting now) during which payment collection is paused. This period should be large enough to cover the entire migration. Estimated time to migrate 10,000 members is 1 hour, we recommend adding an extra hour of buffer time to be safe (optional)'
         },
         {
             type: 'boolean',
             flags: '--debug',
             defaultValue: false,
-            desc: 'Print debug output'
+            desc: 'Print debug output (optional)'
         },
         {
             type: 'number',
             flags: '--verbose -v',
             defaultValue: false,
-            desc: 'Print verbose output'
+            desc: 'Print verbose output (optional)'
         },
         {
             type: 'boolean',
             // Somehow -vv is not working in sywac
             flags: '--very-verbose',
             defaultValue: false,
-            desc: 'Print very verbose output'
+            desc: 'Print very verbose output (optional)'
         }
     ];
 
@@ -67,7 +67,7 @@ export class Options {
         this.debug = argv.debug ?? false;
         this.testClock = argv['test-clock'] ?? undefined;
         this.forceRecreate = argv['force-recreate'] ?? false;
-        this.delay = argv.delay ?? 12;
+        this.delay = argv.delay ?? undefined;
     }
 
     static init(argv: any) {

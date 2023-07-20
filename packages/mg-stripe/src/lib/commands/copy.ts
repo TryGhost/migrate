@@ -8,7 +8,7 @@ import {createProductImporter} from '../importers/createProductImporter.js';
 import {createSubscriptionImporter} from '../importers/createSubscriptionImporter.js';
 import {Options} from '../Options.js';
 import {confirm} from '@inquirer/prompts';
-import input from '@inquirer/input';
+import {DelayPrompt} from '../DelayPrompt.js';
 
 export async function copy(options: Options) {
     const stats = new ImportStats();
@@ -33,25 +33,10 @@ export async function copy(options: Options) {
 
     try {
         // Get delay
-        let delay = options.delay;
+        const delay = await new DelayPrompt().ask(options.delay);
 
-        if (!options.dryRun) {
-            Logger.shared.info(`We recommend ${chalk.cyan('delaying payment collection')} from Stripe until the copy is finished, to avoid duplicate charges.`);
-            Logger.shared.info(`By default, we delay the payment collection for ${chalk.cyan(delay)} hours. As a rule of thumb, copying 10,000 subscriptions takes an hour. We suggest adding an extra hour of buffer time to be safe.`);
-
-            const delayInput = await input({
-                message: 'For how many hours would you like to pause payment collection?'
-            });
-            delay = parseInt(delayInput, 10);
-
-            if (!Number.isInteger(delay) || delay < 0) {
-                Logger.shared.fail('Expected a positive number of hours, to delay payment collection.');
-                process.exit(1);
-            }
-
-            Logger.shared.startSpinner('');
-            Logger.shared.succeed(`No payments will be collected for the next ${chalk.green(delay)} hour(s)`);
-        }
+        Logger.shared.startSpinner('');
+        Logger.shared.succeed(`No payments will be collected for the next ${chalk.green(delay)} hour(s)`);
 
         // Get from / to Stripe accounts
         const connector = new StripeConnector();
