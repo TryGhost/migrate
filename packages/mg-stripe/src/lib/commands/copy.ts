@@ -17,7 +17,7 @@ export async function copy(options: Options) {
     Logger.shared.info('------------------------------------------------------------------------------');
     Logger.shared.info('Before proceeding, be sure to have:');
     Logger.shared.info('1) Disabled new subscriptions on the old site');
-    Logger.shared.info('2) Migrated Stripe customers, using the Stripe dashboard:');
+    Logger.shared.info('2) Copied all Stripe customers, using the Stripe dashboard:');
     Logger.shared.info('https://stripe.com/docs/payments/account/data-migrations/pan-copy-self-serve');
     Logger.shared.info('------------------------------------------------------------------------------');
     Logger.shared.info(`We recommend running a dry run first, by passing the ${chalk.cyan('--dry-run')} option.`);
