@@ -18,12 +18,13 @@ export async function revert(options: Options) {
     Logger.shared.info(`1) Executed the ${chalk.cyan('copy')} command`);
     Logger.shared.info('2) Verified that the errors cannot be resolved manually from the Stripe dashboard');
     Logger.shared.info('------------------------------------------------------------------------------');
+    Logger.shared.newline();
 
     Logger.shared.startSpinner('');
     if (options.dryRun) {
-        Logger.shared.succeed(`Starting revert in ${chalk.green('DRY RUN')} mode.`);
+        Logger.shared.succeed(`Running ${chalk.green('revert')} command as ${chalk.green('DRY RUN')}. No Stripe data will be updated or deleted.`);
     } else {
-        Logger.shared.succeed(`Starting revert in ${chalk.green('LIVE')} mode.`);
+        Logger.shared.succeed(`Running ${chalk.green('revert')} command...`);
     }
 
     try {
@@ -95,15 +96,21 @@ export async function revert(options: Options) {
         const warnings = await subscriptionImporter.revertAll();
 
         if (warnings) {
-            Logger.shared.succeed(`Successfully reverted ${stats.importedPerType.get('subscription') ?? 0} subscriptions with ${warnings.length} warning${warnings.length > 1 ? 's' : ''}:`);
+            Logger.shared.newline();
+            Logger.shared.succeed(`Successfully reverted ${stats.revertedPerType.get('subscription') ?? 0} subscriptions with ${warnings.length} warning${warnings.length > 1 ? 's' : ''}:`);
+            Logger.shared.newline();
+
             Logger.shared.warn(warnings.toString());
         } else {
             Logger.shared.succeed(`Successfully reverted all subscriptions`);
         }
 
+        Logger.shared.newline();
         stats.print();
     } catch (e) {
         Logger.shared.fail(e);
+
+        Logger.shared.newline();
         stats.print();
         process.exit(1);
     }

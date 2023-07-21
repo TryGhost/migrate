@@ -246,12 +246,15 @@ export class Importer<T extends {id: string}> {
             const newItem = await this.provider.findExisting(item);
             if (!newItem) {
                 // Not yet created
-                Logger.vv?.info(`Skipped confirming ${item.id} because not yet recreated in new account`);
-                this.stats.addWarning('Could not confirm ' + this.objectName + ' ' + item.id + ' because not yet recreated in new account: did you disable creating in the old account?');
+                // Logger.vv?.info(`Skipped confirming ${item.id} because not yet recreated in new account`);
+                //this.stats.addWarning('Could not confirm ' + this.objectName + ' ' + item.id + ' because not yet recreated in new account: did you disable creating new subscriptions in the old account? Consider running copy again.');
 
                 // Mark id, so we don't need to look it up again
                 this.confirmedSet.add(item.id);
-                return;
+
+                throw new ImportWarning({
+                    message: 'Could not confirm ' + this.objectName + ' ' + item.id + ' because not yet recreated in new account: did you disable creating new subscriptions in the old account? Consider running copy again.'
+                });
             }
 
             // Import

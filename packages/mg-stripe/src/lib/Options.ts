@@ -24,7 +24,7 @@ export class Options {
         {
             type: 'number',
             flags: '--delay',
-            defaultValue: false,
+            defaultValue: null,
             desc: 'Period (in hours, starting now) during which payment collection is paused. This period should be large enough to cover the entire migration. Estimated time to migrate 10,000 members is 1 hour, we recommend adding an extra hour of buffer time to be safe (optional)'
         },
         {
@@ -55,7 +55,7 @@ export class Options {
     debug: boolean;
     testClock?: string;
     forceRecreate: boolean;
-    delay: number;
+    delay: number | null;
 
     static shared: Options;
 
@@ -67,7 +67,7 @@ export class Options {
         this.debug = argv.debug ?? false;
         this.testClock = argv['test-clock'] ?? undefined;
         this.forceRecreate = argv['force-recreate'] ?? false;
-        this.delay = argv.delay ?? undefined;
+        this.delay = argv.delay ?? null;
     }
 
     static init(argv: any) {

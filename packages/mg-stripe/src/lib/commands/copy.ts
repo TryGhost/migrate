@@ -23,12 +23,13 @@ export async function copy(options: Options) {
     Logger.shared.info(`We recommend running a dry run first, by passing the ${chalk.cyan('--dry-run')} option.`);
     Logger.shared.info('The dry run will not create any data object in the new account, nor update anything in the old account.');
     Logger.shared.info('------------------------------------------------------------------------------');
+    Logger.shared.newline();
 
     Logger.shared.startSpinner('');
     if (options.dryRun) {
-        Logger.shared.succeed(`Starting copy in ${chalk.green('DRY RUN')} mode. No Stripe data will be created or updated.`);
+        Logger.shared.succeed(`Running ${chalk.green('copy')} command as ${chalk.green('DRY RUN')}. No Stripe data will be created or updated.`);
     } else {
-        Logger.shared.succeed(`Starting copy in ${chalk.green('LIVE')} mode.`);
+        Logger.shared.succeed(`Running ${chalk.green('copy')} command...`);
     }
 
     try {
@@ -44,13 +45,13 @@ export async function copy(options: Options) {
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName, mode} = await fromAccount.validate();
-        Logger.shared.succeed(`Copying from ${chalk.green(accountName)} (${mode} account)`);
+        Logger.shared.succeed(`Copying from ${chalk.green(accountName)} (${mode} mode)`);
 
         const toAccount = await connector.askForAccount('To which Stripe account do you want to copy?', options.newApiKey);
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName: accountNameTo, mode: modeTo} = await toAccount.validate();
-        Logger.shared.succeed(`Copying to ${chalk.green(accountNameTo)} (${modeTo} account)\n`);
+        Logger.shared.succeed(`Copying to ${chalk.green(accountNameTo)} (${modeTo} mode)\n`);
 
         if (toAccount.id === fromAccount.id) {
             Logger.shared.fail('You cannot copy data to the same account');
@@ -104,17 +105,29 @@ export async function copy(options: Options) {
         });
         const warnings = await subscriptionImporter.recreateAll();
         if (warnings) {
+            Logger.shared.newline();
             Logger.shared.succeed(`Successfully recreated ${stats.importedPerType.get('subscription') ?? 0} subscriptions with ${warnings.length} warning${warnings.length > 1 ? 's' : ''}:`);
+            Logger.shared.newline();
+
             Logger.shared.warn(warnings.toString());
         } else {
             Logger.shared.succeed(`Successfully recreated all subscriptions`);
         }
 
+        Logger.shared.newline();
         stats.print();
+
+        // Newline
+        Logger.shared.newline();
+        Logger.shared.warn(`Do not forget to run the ${chalk.cyan('confirm')} command to confirm the migration`);
     } catch (e) {
         Logger.shared.fail(e);
 
+        Logger.shared.newline();
         stats.print();
+
+        Logger.shared.newline();
+        Logger.shared.info(`You can either fix the issue and retry the ${chalk.cyan('copy')} command (will continue where it left off), or run ${chalk.cyan('revert')} command to revert the migration`);
         process.exit(1);
     }
 }

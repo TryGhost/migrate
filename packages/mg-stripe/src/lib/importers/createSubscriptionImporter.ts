@@ -289,21 +289,43 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
 
         async revert(oldSubscription: Stripe.Subscription, newSubscription: Stripe.Subscription) {
             await ifNotDryRun(async () => {
-                // Deleting invoices doesn't work at the moment because they are connected to a subscription
-                // Delete draft invoices that were created
-                // const invoices = await newStripe.use(client => client.invoices.list({
-                //     subscription: getObjectId(newSubscription),
-                //     limit: 100
-                // }));
-                //
-                // for (const invoice of invoices.data) {
-                //     if (!invoice.metadata?.ghost_migrate_id) {
-                //         continue;
-                //     }
-                //     Logger.vv?.info(`Voiding invoice ${invoice.id} from new subscription ${newSubscription.id}`);
-                //     await newStripe.use(client => client.invoices.del(invoice.id));
-                //     stats.trackReverted('invoice');
-                // }
+                // Void draft invoices that were created
+                // Via workaround refs https://github.com/stripe/stripe-node/issues/657
+                const invoices = await newStripe.use(client => client.invoices.list({
+                    subscription: getObjectId(newSubscription),
+                    limit: 100
+                }));
+
+                for (const invoice of invoices.data) {
+                    if (!invoice.metadata?.ghost_migrate_id) {
+                        // Not created by us
+                        continue;
+                    }
+
+                    // Add a note
+                    await newStripe.use(client => client.invoices.update(invoice.id, {
+                        description: 'This draft invoice was created during a platform migration. You will not get charged.'
+                    }));
+
+                    // Make sure we can void
+                    if (invoice.status === 'draft') {
+                        Logger.vv?.warn(`Cannot delete/void draft invoice ${invoice.id} from new subscription ${newSubscription.id} - Stripe limitation. Kept as draft with a note and deleted all the invoice items instead.`);
+
+                        // Delete invoice items
+                        const invoiceItems = await newStripe.use(client => client.invoiceItems.list({
+                            invoice: invoice.id,
+                            limit: 100
+                        }));
+                        for (const invoiceItem of invoiceItems.data) {
+                            await newStripe.use(client => client.invoiceItems.del(invoiceItem.id));
+                        }
+                    } else {
+                        // Void it
+                        Logger.vv?.info(`Voiding invoice ${invoice.id} from new subscription ${newSubscription.id}`);
+                        await newStripe.use(client => client.invoices.voidInvoice(invoice.id, {}));
+                    }
+                    stats.trackReverted('invoice');
+                }
 
                 await newStripe.use(client => client.subscriptions.del(getObjectId(newSubscription)));
 
@@ -325,9 +347,13 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
 
         async confirm(oldSubscription: Stripe.Subscription, newSubscription: Stripe.Subscription) {
             if (oldSubscription.status === 'canceled') {
-                Logger.vv?.info(`Old subscription was ${oldSubscription.id} canceled, not confirming the new subscription`);
-                stats.addWarning(`Old subscription was ${oldSubscription.id} canceled, not confirming the new subscription`);
-                return;
+                // Cancel new subscription
+                await newStripe.use(client => client.subscriptions.del(getObjectId(newSubscription)));
+                stats.trackReverted('subscription');
+
+                throw new ImportWarning({
+                    message: `Old subscription was ${oldSubscription.id} canceled, deleting the new subscription too`
+                });
             }
 
             await ifNotDryRun(async () => {

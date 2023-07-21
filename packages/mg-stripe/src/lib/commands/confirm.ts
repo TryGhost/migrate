@@ -18,12 +18,13 @@ export async function confirm(options: Options) {
     Logger.shared.info(`1) Executed the ${chalk.cyan('copy')} command`);
     Logger.shared.info('2) Verified the products, prices, coupons, and subscriptions in the new Stripe account from the Stripe dashboard');
     Logger.shared.info('------------------------------------------------------------------------------');
+    Logger.shared.newline();
 
     Logger.shared.startSpinner('');
     if (options.dryRun) {
-        Logger.shared.succeed(`Starting confirm in ${chalk.green('DRY RUN')} mode.`);
+        Logger.shared.succeed(`Running ${chalk.green('confirm')} command as ${chalk.green('DRY RUN')}. No Stripe data will be updated.`);
     } else {
-        Logger.shared.succeed(`Starting confirm in ${chalk.green('LIVE')} mode.`);
+        Logger.shared.succeed(`Running ${chalk.green('confirm')} command...`);
     }
 
     try {
@@ -95,15 +96,20 @@ export async function confirm(options: Options) {
         const warnings = await subscriptionImporter.confirmAll();
 
         if (warnings) {
-            Logger.shared.succeed(`Successfully confirmed ${stats.importedPerType.get('subscription') ?? 0} subscriptions with ${warnings.length} warning${warnings.length > 1 ? 's' : ''}:`);
+            Logger.shared.newline();
+            Logger.shared.succeed(`Successfully confirmed ${stats.confirmedPerType.get('subscription') ?? 0} subscriptions with ${warnings.length} warning${warnings.length > 1 ? 's' : ''}:`);
+            Logger.shared.newline();
             Logger.shared.warn(warnings.toString());
         } else {
             Logger.shared.succeed(`Successfully confirmed all subscriptions`);
         }
 
+        Logger.shared.newline();
         stats.print();
     } catch (e) {
         Logger.shared.fail(e);
+
+        Logger.shared.newline();
         stats.print();
         process.exit(1);
     }
