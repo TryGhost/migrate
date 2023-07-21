@@ -9,7 +9,8 @@
   "main": "build/index.js",
   "types": "build/types.d.ts",
   "scripts": {
-    "dev": "tsc --watch --preserveWatchOutput --sourceMap",
+    "dev": "./cli.js stripe",
+    "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",
     "build": "tsc --build --sourceMap",
     "prepare": "tsc --build --sourceMap",
     "lint": "eslint src/ --ext .ts --cache",
