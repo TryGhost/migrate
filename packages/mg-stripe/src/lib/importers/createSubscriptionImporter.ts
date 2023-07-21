@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import Logger from '../Logger.js';
+import {Logger} from '../Logger.js';
 import {Options} from '../Options.js';
 import {StripeAPI} from '../StripeAPI.js';
 import {getObjectId, ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';

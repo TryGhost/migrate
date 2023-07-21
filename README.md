@@ -15,6 +15,7 @@ Each tool has its own detailed documentation:
 - [Libsyn](https://github.com/TryGhost/migrate/tree/main/packages/mg-libsyn)
 - [Medium](https://github.com/TryGhost/migrate/tree/main/packages/mg-medium-export)
 - [Squarespace](https://github.com/TryGhost/migrate/tree/main/packages/mg-squarespace-xml)
+- [Stripe](https://github.com/TryGhost/migrate/tree/main/packages/mg-stripe)
 - [Substack](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack)
 - [Substack members](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack-members-csv)
 - [WordPress API](https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-api)

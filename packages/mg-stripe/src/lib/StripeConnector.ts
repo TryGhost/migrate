@@ -2,7 +2,7 @@ import input from '@inquirer/input';
 import select from '@inquirer/select';
 import {exec as exexSyc} from 'child_process';
 import util from 'util';
-import Logger from './Logger.js';
+import {Logger} from './Logger.js';
 import {StripeAPI} from './StripeAPI.js';
 
 const exec = util.promisify(exexSyc);

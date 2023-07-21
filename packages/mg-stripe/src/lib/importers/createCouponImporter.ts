@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import {Importer} from './Importer.js';
 import {StripeAPI} from '../StripeAPI.js';
 import {ImportStats} from './ImportStats.js';
-import Logger from '../Logger.js';
+import {Logger} from '../Logger.js';
 import {ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 
 export function createCouponImporter({oldStripe, newStripe, stats}: {

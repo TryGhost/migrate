@@ -1,5 +1,5 @@
 import DryRunIdGenerator from './DryRunIdGenerator.js';
-import Logger from './Logger.js';
+import {Logger} from './Logger.js';
 import {Options} from './Options.js';
 import {ErrorGroup} from './importers/ErrorGroup.js';
 import {ImportWarning} from './importers/ImportWarning.js';
