@@ -45,7 +45,7 @@
     "child_process": "1.0.2",
     "inquirer": "9.2.8",
     "ora": "5.4.1",
-    "stripe": "12.13.0",
+    "stripe": "12.14.0",
     "sywac": "1.3.0",
     "util": "0.12.5"
   }
