@@ -1,0 +1,34 @@
+{
+    "data": {
+        "authors": [
+            {
+                "first_names": "Lorem",
+                "last_name": "Ipsum",
+                "email": "lorem@ipsum.com",
+                "title": null,
+                "bio": null,
+                "photoUrl": "https://example.com/lorem.jpg",
+                "translations": [
+                    {
+                        "bio": "Lorem ipsum dolor simet",
+                        "title": "Staff Editor"
+                    }
+                ]
+            },
+            {
+                "first_names": "Dolor",
+                "last_name": "Simet",
+                "email": "dolor@simet.com",
+                "title": null,
+                "bio": null,
+                "photoUrl": "https://example.com/dolor.jpg",
+                "translations": [
+                    {
+                        "bio": "Lorem ipsum dolor simet",
+                        "title": "Staff Writer"
+                    }
+                ]
+            }
+        ]
+    }
+}
