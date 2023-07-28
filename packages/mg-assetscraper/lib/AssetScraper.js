@@ -4,6 +4,7 @@ import cheerio from 'cheerio';
 import got from 'got';
 import {parseSrcset} from 'srcset';
 import {fileTypeFromBuffer, fileTypeFromStream} from 'file-type';
+import mime from 'mime-types';
 import MarkdownIt from 'markdown-it';
 import prettyBytes from 'pretty-bytes';
 import SmartRenderer from '@tryghost/listr-smart-renderer';
@@ -611,7 +612,13 @@ class AssetScraper {
                 if (res.headers) {
                     let theHeaders = res.headers;
 
-                    if (fileType && fileType.mime) {
+                    if (theHeaders['content-type'] === 'application/octet-stream') {
+                        const disposition = theHeaders['content-disposition'];
+                        const parts = disposition.split('.');
+                        const extension = parts.pop();
+                        let newType = mime.lookup(extension);
+                        theHeaders['content-type'] = newType;
+                    } else if (fileType && fileType.mime) {
                         theHeaders['content-type'] = fileType.mime;
                     }
 

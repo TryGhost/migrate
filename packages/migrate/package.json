@@ -51,6 +51,8 @@
     "@tryghost/mg-squarespace-xml": "^0.3.12",
     "@tryghost/mg-substack": "^0.3.16",
     "@tryghost/mg-substack-members-csv": "^0.4.9",
+    "@tryghost/mg-tinynews": "0.0.1",
+    "@tryghost/mg-tinynews-members": "0.0.1",
     "@tryghost/mg-webscraper": "^0.9.10",
     "@tryghost/mg-wp-api": "^0.10.15",
     "@tryghost/mg-wp-xml": "^0.3.15",
