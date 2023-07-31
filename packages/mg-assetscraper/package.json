@@ -28,7 +28,7 @@
   "dependencies": {
     "@tryghost/listr-smart-renderer": "^0.5.8",
     "@tryghost/logging": "2.4.5",
-    "@tryghost/string": "0.2.7",
+    "@tryghost/string": "0.2.8",
     "cheerio": "1.0.0-rc.12",
     "fast-replaceall": "1.0.2",
     "file-type": "18.5.0",

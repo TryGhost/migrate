@@ -27,7 +27,7 @@
   "dependencies": {
     "@tryghost/errors": "1.2.25",
     "@tryghost/image-transform": "1.2.8",
-    "@tryghost/string": "0.2.7",
+    "@tryghost/string": "0.2.8",
     "@tryghost/zip": "1.1.35",
     "adm-zip": "0.5.10",
     "csv-parse": "5.4.0",
