@@ -29,7 +29,7 @@
     "@tryghost/errors": "1.2.25",
     "@tryghost/kg-default-cards": "9.1.0",
     "@tryghost/mg-fs-utils": "^0.12.14",
-    "@tryghost/string": "0.2.7",
+    "@tryghost/string": "0.2.8",
     "date-fns": "2.30.0",
     "html-entities": "2.4.0",
     "lodash": "4.17.21",

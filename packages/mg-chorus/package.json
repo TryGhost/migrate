@@ -27,6 +27,6 @@
   "dependencies": {
     "@tryghost/debug": "0.1.25",
     "@tryghost/errors": "1.2.25",
-    "@tryghost/string": "0.2.7"
+    "@tryghost/string": "0.2.8"
   }
 }
