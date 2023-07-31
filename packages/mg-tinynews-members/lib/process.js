@@ -29,7 +29,7 @@ const processMember = (tMember) => {
         email: email,
         name: [firstName, lastName].map(e => e.trim()).join(' ').trim(),
         complimentary_plan: false,
-        created_at: new Date(createdAt), // Given values are UTC
+        created_at: new Date(createdAt).toISOString(), // Given values are UTC
         labels: ['tinynews'],
         subscribed_to_emails: false
     };
