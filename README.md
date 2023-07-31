@@ -18,6 +18,8 @@ Each tool has its own detailed documentation:
 - [Stripe](https://github.com/TryGhost/migrate/tree/main/packages/mg-stripe)
 - [Substack](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack)
 - [Substack members](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack-members-csv)
+- [Tiny News](https://github.com/TryGhost/migrate/tree/main/packages/mg-tinynews)
+- [Tiny News Members](https://github.com/TryGhost/migrate/tree/main/packages/mg-tinynews-members)
 - [WordPress API](https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-api)
 - [WordPress XML](https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-xml)
 
