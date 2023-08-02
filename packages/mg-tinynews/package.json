@@ -27,7 +27,7 @@
   "dependencies": {
     "@tryghost/debug": "0.1.25",
     "@tryghost/errors": "1.2.24",
-    "@tryghost/kg-default-cards": "9.1.0",
+    "@tryghost/kg-default-cards": "9.1.1",
     "@tryghost/string": "0.2.8",
     "cheerio": "1.0.0-rc.12",
     "sanitize-html": "2.11.0",
