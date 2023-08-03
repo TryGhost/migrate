@@ -101,7 +101,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Only migrate posts before and including a given date e.g. 'March 20 2018'
     - string - default: `null`
 - **`--postsAfter`** 
-    - Only migrate posts after and including a given date e.g. 'August 16 2022'
+    - Only migrate posts after and including a given date e.g. 'August 16 2023'
     - string - default: `null`
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
