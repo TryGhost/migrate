@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@tryghost/listr-smart-renderer": "^0.5.8",
-    "@tryghost/logging": "2.4.5",
+    "@tryghost/logging": "2.4.6",
     "@tryghost/mg-assetscraper": "^0.4.1",
     "@tryghost/mg-blogger": "^0.1.2",
     "@tryghost/mg-chorus": "^0.1.9",
