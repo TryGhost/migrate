@@ -206,6 +206,14 @@ const EntryGoogleDocsEmbed = (block) => {
     return blockHtml;
 };
 
+const EntrySpotifyEmbed = (block) => {
+    let embedUrl = block.link.replace('https://open.spotify.com/episode/', 'https://open.spotify.com/embed/episode/');
+    embedUrl = embedUrl.replace('https://open.spotify.com/show/', 'https://open.spotify.com/embed/show/');
+    const blockHtml = `<iframe src="${embedUrl}" width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>`;
+
+    return blockHtml;
+};
+
 const jsonToHtml = (blocks, logger) => {
     let html = [];
 
@@ -224,7 +232,7 @@ const jsonToHtml = (blocks, logger) => {
         }
 
         if (itemType === 'text') {
-            if (itemStyle === 'TITLE' || itemStyle === 'SUBTITLE' || itemStyle === 'HEADING_1' || itemStyle === 'HEADING_2' || itemStyle === 'HEADING_3') {
+            if (itemStyle === 'TITLE' || itemStyle === 'SUBTITLE' || itemStyle === 'HEADING_1' || itemStyle === 'HEADING_2' || itemStyle === 'HEADING_3' || itemStyle === 'HEADING_4') {
                 html.push(EntryHeading(block));
             } else if (itemStyle === 'NORMAL_TEXT') {
                 html.push(EntryText(block));
@@ -255,6 +263,8 @@ const jsonToHtml = (blocks, logger) => {
                 html.push(EntryYoutubeEmbed(block));
             } else if (block.link.includes('https://podcasts.apple.com')) {
                 html.push(EntryApplePodcastsEmbed(block));
+            } else if (block.link.includes('https://open.spotify.com/episode/') || block.link.includes('https://open.spotify.com/show/')) {
+                html.push(EntrySpotifyEmbed(block));
             } else if (block.link.includes('https://www.instagram.com/p/')) {
                 html.push(EntryInstagramPostEmbed(block));
             } else if (block.link.includes('https://www.instagram.com/reel/')) {
