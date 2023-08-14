@@ -37,7 +37,7 @@
   "dependencies": {
     "@inquirer/input": "1.2.7",
     "@inquirer/prompts": "2.3.1",
-    "@inquirer/select": "1.2.6",
+    "@inquirer/select": "1.2.7",
     "@tryghost/debug": "0.1.25",
     "@tryghost/errors": "1.2.25",
     "@tryghost/pretty-cli": "1.2.38",

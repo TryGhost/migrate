@@ -473,7 +473,7 @@
     strip-ansi "^6.0.1"
     wrap-ansi "^6.0.1"
 
-"@inquirer/core@^3.0.0", "@inquirer/core@^3.1.0", "@inquirer/core@^3.1.1":
+"@inquirer/core@^3.0.0", "@inquirer/core@^3.1.1":
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/@inquirer/core/-/core-3.1.1.tgz#4c9beb7f05a53c92ed507592bae2f838df2749c5"
   integrity sha512-gPvWAiFBre2DJEV7yRT/ZoK2XyJvpTQlCV7F7+lWcejzdUKA1+wTqwa1e8x1LHxkulHc5hKCKZ855UMylE6ifA==
@@ -554,12 +554,12 @@
     "@inquirer/type" "^1.1.1"
     chalk "^4.1.2"
 
-"@inquirer/select@1.2.6", "@inquirer/select@^1.2.4":
-  version "1.2.6"
-  resolved "https://registry.yarnpkg.com/@inquirer/select/-/select-1.2.6.tgz#30f2681c127088a1563b6a33d9b9d26c524e480c"
-  integrity sha512-FE2UQ9sfabDMzu8ynz83nnFoTmUjeoh52AmEwCmiMo61ulN785B5N4t0w8R8ezm6hQtngIGXkP0/FCuGTbsR6g==
+"@inquirer/select@1.2.7", "@inquirer/select@^1.2.4":
+  version "1.2.7"
+  resolved "https://registry.yarnpkg.com/@inquirer/select/-/select-1.2.7.tgz#2e53e7b9299f9f2ff9d6856dd62e3d596cac5ab6"
+  integrity sha512-8QJXGEh8s3WYW+TjdO5S0VTyTGWOw+7Ox8hZ0ME/jM89hi0LQxvO7YTwgUpu/8PQ0VV7kMZvWVL4HK3Eh4HJ/g==
   dependencies:
-    "@inquirer/core" "^3.1.0"
+    "@inquirer/core" "^3.1.1"
     "@inquirer/type" "^1.1.1"
     ansi-escapes "^4.3.2"
     chalk "^4.1.2"
