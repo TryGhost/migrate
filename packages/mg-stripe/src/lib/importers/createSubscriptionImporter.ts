@@ -68,18 +68,27 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
         },
 
         async findExisting(oldSubscription: Stripe.Subscription) {
-            // Note: we don't use search here, because that is not read-write consistent + slower
-            const existing = await newStripe.use(client => client.subscriptions.list({
-                customer: getObjectId(oldSubscription.customer),
-                limit: 100,
-                expand: ['data.default_payment_method', 'data.default_source']
-            }));
+            try {
+                // Note: we don't use search here, because that is not read-write consistent + slower
+                const existing = await newStripe.use(client => client.subscriptions.list({
+                    customer: getObjectId(oldSubscription.customer),
+                    limit: 100,
+                    expand: ['data.default_payment_method', 'data.default_source']
+                }));
 
-            // Return the first with metadata['ghost_migrate_id'] === oldSubscription.id
-            for (const subscription of existing.data) {
-                if (subscription.metadata.ghost_migrate_id === oldSubscription.id) {
-                    return subscription;
+                // Return the first with metadata['ghost_migrate_id'] === oldSubscription.id
+                for (const subscription of existing.data) {
+                    if (subscription.metadata.ghost_migrate_id === oldSubscription.id) {
+                        return subscription;
+                    }
                 }
+            } catch (err: any) {
+                if (err.message && err.message.includes('No such customer')) {
+                    throw new ImportWarning({
+                        message: `Customer ${getObjectId(oldSubscription.customer)} not found. Skipping...`
+                    });
+                }
+                throw err;
             }
         },
 
@@ -116,8 +125,8 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 customer = await newStripe.use(client => client.customers.retrieve(getObjectId(oldSubscription.customer)));
             } catch (err: any) {
                 if (err.message && err.message.includes('No such customer')) {
-                    throw new ImportError({
-                        message: `Customer ${getObjectId(oldSubscription.customer)} does not exist and cannot be used for a new subscription. Check if you copied over your customers from the old Stripe account to the new account before running this command.`
+                    throw new ImportWarning({
+                        message: `Customer ${getObjectId(oldSubscription.customer)} not found. Skipping...`
                     });
                 }
                 throw err;

@@ -149,7 +149,6 @@ export class Importer<T extends {id: string}> {
             }
 
             // To make sure the operation is idempotent, we first check if the item was already recreated in a previous run.
-            //if (!Options.shared.forceRecreate) {
             const reuse = await this.provider.findExisting(item);
             if (reuse) {
                 Logger.vv?.info(`Skipped ${this.objectName} ${item.id} because already recreated as ${reuse.id} in a previous run`);
@@ -159,7 +158,6 @@ export class Importer<T extends {id: string}> {
                 this.recreatedMap.set(item.id, reuse.id);
                 return reuse.id;
             }
-            //}
 
             // Import
             Logger.vv?.info(`Recreating ${this.objectName} ${item.id}...`);
