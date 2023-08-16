@@ -1930,15 +1930,6 @@
     "@tryghost/debug" "^0.1.26"
     split2 "4.2.0"
 
-"@tryghost/errors@1.2.24":
-  version "1.2.24"
-  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-1.2.24.tgz#5daceff6cdee9421297849474fd885857c4bfe3f"
-  integrity sha512-5iRF8dl2wirb/1gQA2dv8MtxK204vnjbWvmb3fULNZoVlmuHY1ZUgwRJRquClfUEFyl2qGmNDuoxGoTvur8JKA==
-  dependencies:
-    "@stdlib/utils-copy" "^0.0.7"
-    lodash "^4.17.21"
-    uuid "^9.0.0"
-
 "@tryghost/errors@1.2.25":
   version "1.2.25"
   resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-1.2.25.tgz#9e1b715624dfd7dbde59a9fc196ebcb00d9c7553"
@@ -1948,7 +1939,7 @@
     lodash "^4.17.21"
     uuid "^9.0.0"
 
-"@tryghost/errors@^1.2.1", "@tryghost/errors@^1.2.26":
+"@tryghost/errors@1.2.26", "@tryghost/errors@^1.2.1", "@tryghost/errors@^1.2.26":
   version "1.2.26"
   resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-1.2.26.tgz#0d0503a51e681998421548fbddbdd7376384c457"
   integrity sha512-s/eynvVUiAhHP0HB7CPQs7qH7Pm1quJ2iUMTCuH7HV8LqiGoQFNc21/5R4lRv+2Jt3yf69UPCs/6G+kAgZipNw==

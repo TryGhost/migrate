@@ -39,7 +39,7 @@
     "@inquirer/prompts": "2.3.1",
     "@inquirer/select": "1.2.7",
     "@tryghost/debug": "0.1.25",
-    "@tryghost/errors": "1.2.25",
+    "@tryghost/errors": "1.2.26",
     "@tryghost/pretty-cli": "1.2.38",
     "chalk": "5.3.0",
     "child_process": "1.0.2",
