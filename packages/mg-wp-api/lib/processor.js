@@ -522,6 +522,17 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         $(el).replaceWith($figure);
     });
 
+    // Convert <blockquote>s with 2 or more <p> tags into a single <p> tag
+    $html('blockquote').each((i, el) => {
+        const paragraphs = $(el).find('p');
+
+        if (paragraphs.length >= 2) {
+            const combinedText = paragraphs.map((index, element) => $(element).text()).get().join('<br><br>');
+            const newParagraph = $('<p>').text(combinedText);
+            $(el).replaceWith(`<blockquote>${newParagraph}</blockquote>`);
+        }
+    });
+
     // TODO: this should be a parser plugin
     // Wrap nested lists in HTML card
     $html('ol, ul').each((i, list) => {

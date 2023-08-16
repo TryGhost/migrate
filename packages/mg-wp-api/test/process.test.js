@@ -571,6 +571,14 @@ describe('Process WordPress HTML', function () {
 
         expect(processed).toEqual('<img class="alignnone size-large wp-image-22700 lazyload" src="https://example.com/wp-content/uploads/2020/05/photo.jpg" alt="My photo" width="1000" height="1497" data-srcset="https://i0.wp.com/example.com/wp-content/uploads/2020/05/photo.jpg?resize=1000%2C1497&amp;ssl=1 1000w, https://i0.wp.com/example.com/wp-content/uploads/2020/05/photo.jpg?resize=200%2C300&amp;ssl=1 200w, https://i0.wp.com/example.com/wp-content/uploads/2020/05/photo.jpg?resize=768%2C1150&amp;ssl=1 768w, https://i0.wp.com/example.com/wp-content/uploads/2020/05/photo.jpg?resize=600%2C898&amp;ssl=1 600w, https://i0.wp.com/example.com/wp-content/uploads/2020/05/photo.jpg?w=1002&amp;ssl=1 1002w">');
     });
+
+    test('Can conbine <p> tags in <blockquote>s', async function () {
+        const html = `<blockquote><p>Paragraph 1</p><p>Paragraph 2</p><p>Paragraph 3</p></blockquote>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<blockquote><p>Paragraph 1<br><br>Paragraph 2<br><br>Paragraph 3</p></blockquote>');
+    });
 });
 
 describe('Process shortcodes', function () {
