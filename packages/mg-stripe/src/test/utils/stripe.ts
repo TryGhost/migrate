@@ -384,6 +384,7 @@ export function buildInvoice(overrides: Partial<Omit<Stripe.Invoice, 'lines' | '
         total_tax_amounts: [],
         transfer_data: null,
         webhooks_delivered_at: null,
+        subscription_details: null,
         ...overrides,
         lines: {
             object: 'list',

@@ -10,8 +10,8 @@
   "scripts": {
     "dev": "./cli.js stripe",
     "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",
-    "build": "tsc --build --sourceMap",
-    "prepare": "tsc --build --sourceMap",
+    "build": "rm -rf build && rm -rf tsconfig.tsbuildinfo && tsc --build --sourceMap",
+    "prepare": "yarn build",
     "lint": "eslint src/ --ext .ts --cache",
     "posttest": "yarn lint",
     "test:e2e": "rm -rf build && yarn build --force && NODE_OPTIONS=--experimental-vm-modules jest build/test"
