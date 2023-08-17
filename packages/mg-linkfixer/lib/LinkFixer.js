@@ -44,6 +44,11 @@ class LinkFixer {
 
         // @TODO: support for custom taxonomies
         ctx.result.posts.forEach(({url, data}) => {
+            // Exit if no url or is empty string
+            if (!url || url.length === 0) {
+                return;
+            }
+
             // Parse the current post URL, so we can use its domain as a fallback
             const postURLDomain = new URL(url);
 
