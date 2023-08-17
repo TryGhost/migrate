@@ -1,0 +1,3 @@
+id,web_title,status,audience,url,web_subtitle,email_subject_line,email_preview_text,content_html,thumbnail_url,created_at
+abcd1234-1505-4fbf-9576-f3d1bd3034cc,Sample Post,confirmed,free,https://example.beehiiv.com/p/sample-post,"A website subtitle",Sample Post as a subject line,"Email preview text","<p>Sample HTML here</p>",uploads/asset/file/12345678/image.png,2023-01-18 21:25:27
+efgh1234-1505-4fbf-9576-f3d1bd3034cc,Another Post,confirmed,free,https://example.beehiiv.com/p/another-post,"Another website subtitle",Another sample Post as a subject line,"Email preview text","<p>More sample HTML here</p>",uploads/asset/file/12345678/another.png,2023-01-19 21:25:27

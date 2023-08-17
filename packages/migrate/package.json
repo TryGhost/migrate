@@ -34,6 +34,7 @@
     "@tryghost/listr-smart-renderer": "^0.5.9",
     "@tryghost/logging": "2.4.6",
     "@tryghost/mg-assetscraper": "^0.4.2",
+    "@tryghost/mg-beehiiv": "^0.0.1",
     "@tryghost/mg-blogger": "^0.1.3",
     "@tryghost/mg-chorus": "^0.1.10",
     "@tryghost/mg-curated-export": "^0.3.15",
