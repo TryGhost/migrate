@@ -49,6 +49,7 @@
     "@tryghost/mg-linkfixer": "^0.5.10",
     "@tryghost/mg-medium-export": "^0.15.3",
     "@tryghost/mg-squarespace-xml": "^0.3.13",
+    "@tryghost/mg-stripe": "^0.1.0",
     "@tryghost/mg-substack": "^0.3.17",
     "@tryghost/mg-substack-members-csv": "^0.4.10",
     "@tryghost/mg-tinynews": "^0.0.2",
