@@ -37,5 +37,33 @@ export default ({content, post}) => {
         $(bq).html(`<p>${$(bq).html()}</p>`);
     });
 
+    $content.find('pre.graf--pre').each((i, pre) => {
+        $(pre).removeAttr('name');
+        $(pre).removeAttr('id');
+        $(pre).removeAttr('class');
+        $(pre).removeAttr('data-code-block-mode');
+        $(pre).removeAttr('spellcheck');
+        $(pre).html($(pre).html().trim());
+
+        const lang = $(pre).attr('data-code-block-lang');
+        $(pre).removeAttr('data-code-block-lang');
+
+        $(pre).find('span.pre--content').each((ii, span) => {
+            span.name = 'code';
+        });
+
+        $(pre).find('code').each((iii, code) => {
+            $(code).removeAttr('name');
+            $(code).removeAttr('id');
+            $(code).removeAttr('class');
+
+            if (lang && lang.length > 0) {
+                $(code).addClass(`language-${lang}`);
+            }
+
+            $(code).html($(code).html().replace(/<br>/g, ' \n').trim());
+        });
+    });
+
     return $content.html().trim();
 };

@@ -86,7 +86,7 @@ const processTags = ({$tags}) => {
 const processFeatureImage = ({html, post}) => {
     const $html = $.load(html, {
         decodeEntities: false
-    });
+    }, false);
 
     // Look for data-is-featured
     let featured = $html('[data-is-featured]')[0];
@@ -131,7 +131,7 @@ const processFeatureImage = ({html, post}) => {
 export default ({name, html, globalUser, options}) => {
     const $post = $.load(html, {
         decodeEntities: false
-    });
+    }, false);
 
     const post = processMeta({name, $post, options});
 

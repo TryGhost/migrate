@@ -1,6 +1,8 @@
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
+import $ from 'cheerio';
 import processPost from '../lib/process-post.js';
+import processContent from '../lib/process-content.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
@@ -165,5 +167,107 @@ describe('Process', function () {
         }});
 
         expect(post.data.canonical_url).toEqual('https://medium.com/@JoeBloggs/testpost-efefef12121212');
+    });
+});
+
+describe('Process Content', function () {
+    it('Can process code blocks', function () {
+        const source = `<div class="e-content"><pre name="4a0a" id="4a0a" class="graf graf--pre graf-after--p">
+    <code class="markup--code markup--pre-code">
+        &lt;div class="image-block"&gt;\n    &lt;a href="https://example.com"&gt;\n        &lt;img src="/images/photo.jpg" alt="My alt text"&gt;\n    &lt;/a&gt;\n&lt;/div&gt;
+    </code>
+</pre></div>`;
+
+        const $post = $.load(source, {
+            decodeEntities: false
+        }, false);
+
+        let derp = processContent({
+            content: $post('.e-content'),
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        expect(derp).toEqual(`<pre><code>&lt;div class="image-block"&gt;\n    &lt;a href="https://example.com"&gt;\n        &lt;img src="/images/photo.jpg" alt="My alt text"&gt;\n    &lt;/a&gt;\n&lt;/div&gt;</code></pre>`);
+    });
+
+    it('Can process code blocks wish slashes', function () {
+        const source = readSync('code-post.html');
+
+        const $post = $.load(source, {
+            decodeEntities: false
+        }, false);
+
+        const newHtml = processContent({
+            content: $post('.e-content'),
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        expect(newHtml).not.toContain('<pre name="4a0a" id="4a0a" class="graf graf--pre graf-after--p">');
+        expect(newHtml).toContain('<pre><code>sudo apt-get update \n' +
+        'sudo apt-get install \\ \n' +
+        '    apt-transport-https \\ \n' +
+        '    ca-certificates \\ \n' +
+        '    curl \\ \n' +
+        '    gnupg-agent \\ \n' +
+        '    software-properties-common \\ \n' +
+        '    example \\ \n' +
+        '    python3-example-lorem</code></pre>');
+    });
+
+    it('Can process code blocks', function () {
+        const source = readSync('code-post.html');
+
+        const $post = $.load(source, {
+            decodeEntities: false
+        }, false);
+
+        const newHtml = processContent({
+            content: $post('.e-content'),
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        expect(newHtml).not.toContain('<pre name="9a1f" id="9a1f" class="graf graf--pre graf-after--pre">');
+        expect(newHtml).toContain('<pre><code>echo "deb https://sub.example.com/ce/dolor lorem ipsum" |\\  \n' +
+        'sudo tee /etc/apt/sources.list.d/example.list \n' +
+        'sudo apt-get update \n' +
+        'sudo apt-get install example</code></pre>');
+    });
+
+    // Works
+    it('Can process code blocks', function () {
+        const source = `<div class="e-content"><p>My content</p>
+        <pre data-code-block-mode="2" spellcheck="false" data-code-block-lang="bash" name="2296" id="2296" class="graf graf--pre graf-after--p graf--preV2">
+        <span class="pre--content">wget https://example.com/package.zip</span>
+        </pre></div>`;
+
+        const $post = $.load(source, {
+            decodeEntities: false
+        }, false);
+
+        const newHtml = processContent({
+            content: $post('.e-content'),
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        expect(newHtml).not.toContain('<pre data-code-block-mode="2" spellcheck="false" data-code-block-lang="bash" name="2296" id="2296" class="graf graf--pre graf-after--p graf--preV2">\n' +
+            '<span class="pre--content">wget https://example.com/package.zip</span>\n' +
+            '</pre>');
+        expect(newHtml).toContain('<pre><code class="language-bash">wget https://example.com/package.zip</code></pre>');
     });
 });
