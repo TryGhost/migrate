@@ -35,7 +35,7 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@inquirer/input": "1.2.7",
+    "@inquirer/input": "1.2.8",
     "@inquirer/prompts": "2.3.1",
     "@inquirer/select": "1.2.7",
     "@tryghost/debug": "0.1.26",
