@@ -25,17 +25,16 @@ or
 To run basic Beehiiv migration, the required command is this:
 
 ```sh
-migrate beehiiv --posts /path/to/my-export.zip --url https://example.com
+migrate beehiiv --posts /path/to/posts.csv --url https://example.com
 ```
 
 A more complex command for a Beehiiv migration looks like this:
 
 ```sh
-migrate beehiiv --posts /path/to/my-export.zip --url https://example.com --default_author_name 'Author Name' --subscribeLink '/join'
+migrate beehiiv --posts /path/to/posts.csv --url https://example.com --default_author_name 'Author Name' --subscribeLink '/join'
 ```
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
-
 
 - **`--posts`** (required)
     - Path to a zip file
