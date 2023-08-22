@@ -1,7 +1,7 @@
 import {join} from 'node:path';
 import {memberStats} from '../index.js';
 import errors from '@tryghost/errors';
-import {getError} from './lib/NoErrorThrownError.js';
+import {getError} from './lib/no-error-thrown-error.js';
 const __dirname = new URL('.', import.meta.url).pathname;
 
 describe('Substack member CSV stats', function () {

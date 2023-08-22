@@ -26,7 +26,7 @@ export type ImportProvider<T> = {
     revert(oldItem: T, newItem: T): Promise<void>
     confirm?(oldItem: T, newItem: T): Promise<void>
 }
-export class Importer<T extends {id: string}> {
+export default class Importer<T extends {id: string}> {
     objectName: string;
     stats: ImportStats;
     provider: ImportProvider<T>;

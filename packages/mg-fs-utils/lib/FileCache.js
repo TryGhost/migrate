@@ -14,7 +14,7 @@ import {cacheNameFromPath} from './utils.js';
 const basePath = 'mg';
 const knownImageExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico', 'webp'];
 
-class FileCache {
+export default class FileCache {
     constructor(cacheName, options = {}) {
         this.tmpPath = options.tmpPath || false;
 
@@ -475,6 +475,3 @@ class FileCache {
     }
 }
 
-export {
-    FileCache
-};

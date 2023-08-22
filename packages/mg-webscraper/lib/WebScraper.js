@@ -47,7 +47,7 @@ const sleep = async (ms) => {
     });
 };
 
-class WebScraper {
+export default class WebScraper {
     constructor(fileCache, config, postProcessor, skipFn) {
         this.fileCache = fileCache;
         this.config = config;
@@ -180,5 +180,3 @@ class WebScraper {
         return tasks;
     }
 }
-
-export default WebScraper;

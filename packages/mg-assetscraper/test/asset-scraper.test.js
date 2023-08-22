@@ -2,7 +2,7 @@ import {URL} from 'node:url';
 import {join} from 'node:path';
 import {promises as fs} from 'node:fs';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
-import {AssetScraper} from '../lib/AssetScraper.js';
+import AssetScraper from '../lib/AssetScraper.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
