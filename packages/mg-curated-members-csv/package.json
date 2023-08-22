@@ -22,7 +22,7 @@
   "devDependencies": {
     "eslint": "8.47.0",
     "jest": "29.6.3",
-    "jest-extended": "3.2.4"
+    "jest-extended": "4.0.1"
   },
   "dependencies": {
     "bluebird": "3.7.2",
