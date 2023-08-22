@@ -579,6 +579,16 @@ describe('Process WordPress HTML', function () {
 
         expect(processed).toEqual('<blockquote><p>Paragraph 1<br><br>Paragraph 2<br><br>Paragraph 3</p></blockquote>');
     });
+
+    test('Can convert YouTUbe embeds', async function () {
+        const html = `<figure class="wp-block-embed is-type-video is-provider-youtube wp-block-embed-youtube wp-embed-aspect-16-9 wp-has-aspect-ratio"><div class="wp-block-embed__wrapper">
+        https://youtu.be/1234abcd123
+        </div></figure>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<figure class="kg-card kg-embed-card"><iframe width="160" height="90" src="https://www.youtube.com/embed/1234abcd123?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></figure>');
+    });
 });
 
 describe('Process shortcodes', function () {

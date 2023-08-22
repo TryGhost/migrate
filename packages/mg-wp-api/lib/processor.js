@@ -17,6 +17,11 @@ const stripHtml = (html) => {
     return html.replace(/<[^>]+>/g, '').replace(/\r?\n|\r/g, ' ').trim();
 };
 
+const getYouTubeID = (videoUrl) => {
+    const arr = videoUrl.split(/(vi\/|v%3D|v=|\/v\/|youtu\.be\/|\/embed\/)/);
+    return undefined !== arr[2] ? arr[2].split(/[^\w-]/i)[0] : arr[0];
+};
+
 const wpCDNToLocal = (imgUrl) => {
     if (!imgUrl) {
         return imgUrl;
@@ -573,6 +578,19 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     // Replace spacers with horizontal rules
     $html('.wp-block-spacer').each((i, el) => {
         $(el).replaceWith('<hr>');
+    });
+
+    // Handle YouTube embeds
+    $html('.wp-block-embed.is-provider-youtube').each((i, el) => {
+        const videoUrl = $(el).text();
+        const videoID = getYouTubeID(videoUrl);
+
+        if (videoUrl && videoID && videoID.length) {
+            $(el).replaceWith(`<figure class="kg-card kg-embed-card"><iframe width="160" height="90"
+            src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen=""></iframe></figure>`);
+        }
     });
 
     // Unwrap WP gallery blocks
