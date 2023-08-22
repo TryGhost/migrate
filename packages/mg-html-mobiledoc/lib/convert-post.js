@@ -1,6 +1,6 @@
 import converter from '@tryghost/html-to-mobiledoc';
 import errors from '@tryghost/errors';
-import {convertToHTMLCard} from './convertToHTMLCard.js';
+import {convertToHTMLCard} from './convert-to-html-card.js';
 
 const convertPost = (post, htmlCard = false, logger) => {
     if (typeof post.html === 'undefined') {

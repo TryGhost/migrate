@@ -5,7 +5,7 @@ import {StripeAPI} from '../StripeAPI.js';
 import {getObjectId, ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 import {ImportStats} from './ImportStats.js';
 import {ImportWarning} from './ImportWarning.js';
-import {Importer} from './Importer.js';
+import Importer from './Importer.js';
 import {ImportError} from './ImportError.js';
 
 /**

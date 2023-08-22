@@ -7,7 +7,7 @@ const htmlFields = ['html'];
 
 const isHTMLField = field => _.includes(htmlFields, field);
 
-class LinkFixer {
+export default class LinkFixer {
     constructor() {
         this.linkMap = {};
     }
@@ -168,5 +168,3 @@ class LinkFixer {
         return tasks;
     }
 }
-
-export default LinkFixer;

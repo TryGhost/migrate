@@ -1,6 +1,6 @@
 import {URL} from 'node:url';
 import {join} from 'node:path';
-import {AssetCache} from '../lib/AssetCache.js';
+import AssetCache from '../lib/AssetCache.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 

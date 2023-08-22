@@ -1,6 +1,6 @@
 import {jest} from '@jest/globals';
 import imageTransform from '@tryghost/image-transform';
-import {FileCache} from '../lib/FileCache.js';
+import FileCache from '../lib/FileCache.js';
 
 const mockFile = 'test.jpg';
 const mockStoragePath = `/tmp/blah/${mockFile}`;

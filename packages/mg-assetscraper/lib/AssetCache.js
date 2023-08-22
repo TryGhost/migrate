@@ -10,7 +10,7 @@ const remove = (array, iteratee) => {
     return result;
 };
 
-class AssetCache {
+export default class AssetCache {
     /**
      * @param {FileCache} fileCache
      */
@@ -122,7 +122,3 @@ class AssetCache {
         }
     }
 }
-
-export {
-    AssetCache
-};

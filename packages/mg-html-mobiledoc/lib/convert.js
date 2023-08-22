@@ -1,4 +1,4 @@
-import {convertPost} from './convertPost.js';
+import {convertPost} from './convert-post.js';
 
 const convert = (ctx, htmlCard) => {
     const {logger} = ctx;

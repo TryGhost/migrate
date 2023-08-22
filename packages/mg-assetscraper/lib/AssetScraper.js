@@ -9,7 +9,7 @@ import MarkdownIt from 'markdown-it';
 import prettyBytes from 'pretty-bytes';
 import SmartRenderer from '@tryghost/listr-smart-renderer';
 import replaceAll from 'fast-replaceall';
-import {AssetCache} from './AssetCache.js';
+import AssetCache from './AssetCache.js';
 
 // Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/shared/config/overrides.json
 const knownImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/webp'];
@@ -34,7 +34,7 @@ const trim = (str, c = '\\s') => {
  * How does this work?
  * Look at the comments above each task in the `fetch()` method
  */
-class AssetScraper {
+export default class AssetScraper {
     /**
      * @param {FileCache} fileCache
      * @param {Object} options
@@ -1081,7 +1081,3 @@ class AssetScraper {
         return tasks;
     }
 }
-
-export {
-    AssetScraper
-};

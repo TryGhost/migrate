@@ -1,4 +1,4 @@
-class Shortcodes {
+export default class Shortcodes {
     constructor() {
         this.shortcodes = [];
         this.html = '';
@@ -183,7 +183,3 @@ class Shortcodes {
         return this.html;
     }
 }
-
-export {
-    Shortcodes
-};

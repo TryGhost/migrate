@@ -1,4 +1,4 @@
-import {convertPost} from '../lib/convertPost.js';
+import {convertPost} from '../lib/convert-post.js';
 
 let fakeLogger = {
     warn: () => {},
