@@ -580,7 +580,15 @@ describe('Process WordPress HTML', function () {
         expect(processed).toEqual('<blockquote><p>Paragraph 1<br><br>Paragraph 2<br><br>Paragraph 3</p></blockquote>');
     });
 
-    test('Can convert YouTUbe embeds', async function () {
+    test('Can handle <cite> tags in <blockquote>s', async function () {
+        const html = `<blockquote class="wp-block-quote"><p><em>Lorem ipsum,<br>dolor simet.<br>Lorem Ipsum.<br>Dolor Simet.</em></p><cite>Person Name, Role. <em>Company</em>. Country.</cite></blockquote>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<blockquote><p><em>Lorem ipsum,<br>dolor simet.<br>Lorem Ipsum.<br>Dolor Simet.</em><br><br>Person Name, Role. <em>Company</em>. Country.</p></blockquote>');
+    });
+
+    test('Can convert YouTube embeds', async function () {
         const html = `<figure class="wp-block-embed is-type-video is-provider-youtube wp-block-embed-youtube wp-embed-aspect-16-9 wp-has-aspect-ratio"><div class="wp-block-embed__wrapper">
         https://youtu.be/1234abcd123
         </div></figure>`;

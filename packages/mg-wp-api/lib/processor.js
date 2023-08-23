@@ -529,11 +529,11 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     // Convert <blockquote>s with 2 or more <p> tags into a single <p> tag
     $html('blockquote').each((i, el) => {
-        const paragraphs = $(el).find('p');
+        const textElements = $(el).find('p, cite');
 
-        if (paragraphs.length >= 2) {
-            const combinedText = paragraphs.map((index, element) => $(element).text()).get().join('<br><br>');
-            const newParagraph = $('<p>').text(combinedText);
+        if (textElements.length >= 2) {
+            const combinedText = textElements.map((index, element) => $(element).html()).get().join('<br><br>');
+            const newParagraph = $('<p>').html(combinedText);
             $(el).replaceWith(`<blockquote>${newParagraph}</blockquote>`);
         }
     });
