@@ -27,6 +27,11 @@ describe('Beehiiv Mapper', () => {
             assert.equal(slug, 'hello-world');
         });
 
+        it('Can get the slug from post URL with a custom domain', async () => {
+            const slug = createSlug({domain: 'https://example.com/', url: 'https://example.com/p/hello-world'});
+            assert.equal(slug, 'hello-world');
+        });
+
         it('Can get the slug from post title when URL is blank', async () => {
             const slug = createSlug({url: '', title: '👋 This! Is a post title.'});
             assert.equal(slug, 'this-is-a-post-title');

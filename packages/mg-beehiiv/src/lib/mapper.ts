@@ -9,10 +9,18 @@ const parsePostsCSV = async ({pathToFile}: {pathToFile: string}) => {
     return parsed;
 };
 
-const createSlug = ({url, title}: {url: string, title?: string}) => {
+const createSlug = ({domain, url, title}: {domain?: string, url: string, title?: string}) => {
+    // Remove the trailing slash from the domain
+    if (domain) {
+        domain = domain.replace(/\/$/, '');
+    }
+
     if (url && url.length > 0) {
-        // TODO: Add support for custom domains
-        return url.replace(/https?:\/\/[a-z-A-Z0-9]+.beehiiv.com\/p\//, '');
+        let cleanedUrl = url.replace(/https?:\/\/[a-z-A-Z0-9]+.beehiiv.com\/p\//, '');
+        if (domain && domain.length > 0) {
+            cleanedUrl = cleanedUrl.replace(`${domain}/p/`, '');
+        }
+        return slugify(cleanedUrl);
     } else if (title) {
         return slugify(title);
     }
@@ -24,7 +32,8 @@ const fullImageURL = (path: string) => {
 };
 
 const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?: any}) => {
-    const postSlug = createSlug({url: postData.url, title: postData.web_title});
+    const domain = options?.url ?? false;
+    const postSlug = createSlug({domain, url: postData.url, title: postData.web_title});
 
     const mappedData: mappedDataObject = {
         url: postData.url,

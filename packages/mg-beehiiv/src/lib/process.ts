@@ -8,6 +8,12 @@ const getYouTubeID = (url: string) => {
 
 const processHTML = ({html, postData, options}: {html: string, postData?: mappedDataObject, options: any}) => {
     // First, clean up the email HTML to remove bits we don't want or change up
+
+    // Let's do some regexp magic to remove some beehiiv variables
+    // https://support.beehiiv.com/hc/en-us/articles/7606088263191
+    html = html.replace(/{{subscriber_id}}/g, '#');
+    html = html.replace(/{{rp_refer_url}}/g, '#');
+
     let $html = $.load(html, {
         xmlMode: true,
         decodeEntities: false
@@ -21,7 +27,11 @@ const processHTML = ({html, postData, options}: {html: string, postData?: mapped
     $html('table.mob-block').remove();
 
     // Remove the open tracking pixel element
-    $html(`div[data-open-tracking="true"]:contains("{{OPEN_TRACKING_PIXEL}}")`).remove();
+    $html('div[data-open-tracking="true"]:contains("{{OPEN_TRACKING_PIXEL}}")').remove();
+
+    $html('p:contains("{{rp_personalized_text}}")').remove();
+    $html('img[src="{{rp_next_milestone_image_url}}"]').remove();
+    $html(`a[href="{{rp_referral_hub_url}}"]`).remove();
 
     // Remove unsubscribe links, social links, & email footer
     $html('td.b').remove();
@@ -116,7 +126,7 @@ const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string, featureS
         let theElementItself = $(firstElement).get(0).name === 'img' ? firstElement : $(firstElement).find('img');
         let firstImgSrc: any = $(theElementItself).attr('src');
 
-        if (featureSrc.length > 0) {
+        if (featureSrc.length > 0 && firstImgSrc) {
             let normalizedFirstSrc = firstImgSrc.replace('fit=scale-down,format=auto,onerror=redirect,quality=80', 'quality=100');
 
             if (featureSrc === normalizedFirstSrc) {
