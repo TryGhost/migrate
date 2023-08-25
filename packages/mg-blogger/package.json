@@ -20,7 +20,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "jest": "29.6.3",
+    "jest": "29.6.4",
     "jest-extended": "4.0.1"
   },
   "dependencies": {
