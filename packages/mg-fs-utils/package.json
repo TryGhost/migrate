@@ -30,7 +30,7 @@
     "@tryghost/string": "0.2.8",
     "@tryghost/zip": "1.1.37",
     "adm-zip": "0.5.10",
-    "csv-parse": "5.4.0",
+    "csv-parse": "5.5.0",
     "date-fns": "2.30.0",
     "fs-extra": "11.1.1",
     "lodash": "4.17.21",
