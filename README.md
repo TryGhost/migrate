@@ -5,7 +5,7 @@ A collection of tools for migrating to Ghost.
 Each tool has its own detailed documentation:
 
 - [Ghost](https://github.com/TryGhost/migrate/tree/main/packages/mg-ghost-api)
-- [Beehiiv](https://github.com/TryGhost/migrate/tree/main/packages/mg-beehiiv)
+- [beehiiv](https://github.com/TryGhost/migrate/tree/main/packages/mg-beehiiv)
 - [Blogger](https://github.com/TryGhost/migrate/tree/main/packages/mg-blogger)
 - [Chorus](https://github.com/TryGhost/migrate/tree/main/packages/mg-chorus)
 - [Curated](https://github.com/TryGhost/migrate/tree/main/packages/mg-curated-export)

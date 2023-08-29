@@ -18,7 +18,7 @@ const mappedObject: mappedDataObject = {
     }
 };
 
-describe('Beehiiv Processor', () => {
+describe('beehiiv Processor', () => {
     describe('YouTube ID Extractor', () => {
         it('Full URL', () => {
             const id = getYouTubeID('https://youtube.com/watch?v=1234ABCD123');
@@ -41,7 +41,7 @@ describe('Beehiiv Processor', () => {
         });
     });
 
-    describe('Process Beehiiv Post Content', () => {
+    describe('Process beehiiv Post Content', () => {
         it('Can return basic HTML', () => {
             const processed = processHTML({html: '<body><p>Hello</p></body>', options: {}});
             assert.equal(processed, '<p>Hello</p>');

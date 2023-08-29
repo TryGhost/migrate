@@ -1,6 +1,6 @@
-# Migrate Beehiiv `csv` Export
+# Migrate beehiiv `csv` Export
 
-Converts a Beehiiv `csv` export and generates a `zip` file you can import into a Ghost installation.
+Converts a beehiiv `csv` export and generates a `zip` file you can import into a Ghost installation.
 
 
 ## Install
@@ -22,13 +22,13 @@ or
 
 ## Usage
 
-To run basic Beehiiv migration, the required command is this:
+To run basic beehiiv migration, the required command is this:
 
 ```sh
 migrate beehiiv --posts /path/to/posts.csv --url https://example.com
 ```
 
-A more complex command for a Beehiiv migration looks like this:
+A more complex command for a beehiiv migration looks like this:
 
 ```sh
 migrate beehiiv --posts /path/to/posts.csv --url https://example.com --default_author_name 'Author Name' --subscribeLink '/join'

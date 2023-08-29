@@ -155,7 +155,7 @@ const getFullTaskList = (options, logger) => {
     return [
         initialize(options, logger),
         {
-            title: 'Read Beehiiv content',
+            title: 'Read beehiiv content',
             task: async (ctx) => {
                 ctx.timings.readContent = Date.now();
                 try {
@@ -164,7 +164,7 @@ const getFullTaskList = (options, logger) => {
                     }, ctx.logger);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'beehiiv-export-data.json');
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to read Beehiiv content', error});
+                    ctx.logger.error({message: 'Failed to read beehiiv content', error});
                     throw error;
                 }
             }
@@ -172,7 +172,7 @@ const getFullTaskList = (options, logger) => {
         {
             task: (ctx) => {
                 ctx.logger.info({
-                    message: 'Read Beehiiv content',
+                    message: 'Read beehiiv content',
                     duration: Date.now() - ctx.timings.readContent
                 });
             }

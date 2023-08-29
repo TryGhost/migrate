@@ -20,7 +20,7 @@ const beehiivCsvObj: beehiivPostDataObject = {
     created_at: '2023-01-18 21:25:27'
 };
 
-describe('Beehiiv Mapper', () => {
+describe('beehiiv Mapper', () => {
     describe('Utils', () => {
         it('Can get the slug from post URL', async () => {
             const slug = createSlug({url: 'https://example.beehiiv.com/p/hello-world'});
@@ -76,7 +76,7 @@ describe('Beehiiv Mapper', () => {
         assert.equal(parsed[0].created_at, '2023-01-18 21:25:27');
     });
 
-    it('Gets map Beehiiv values to Ghost values', async () => {
+    it('Gets map beehiiv values to Ghost values', async () => {
         const bhObj = {...beehiivCsvObj};
 
         const mapped = await mapPost({postData: bhObj});

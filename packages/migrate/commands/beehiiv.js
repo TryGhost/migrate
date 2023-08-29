@@ -17,7 +17,7 @@ const group = 'Sources:';
 const flags = 'beehiiv';
 
 // Description for the top level command
-const desc = 'Migrate from Beehiiv using CSV files';
+const desc = 'Migrate from beehiiv using CSV files';
 
 // Configure all the options
 const options = [
