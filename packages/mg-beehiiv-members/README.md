@@ -25,13 +25,13 @@ or
 To run basic beehiiv member migration, the required command is this:
 
 ```sh
-migrate beehiiv --pathToCsv /path/to/members.csv
+migrate beehiiv-members --pathToCsv /path/to/members.csv
 ```
 
 A more complex command for a beehiiv member migration looks like this:
 
 ```sh
-migrate beehiiv --pathToCsv /path/to/members.csv --verbose true
+migrate beehiiv-members --pathToCsv /path/to/members.csv --verbose true
 ```
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
