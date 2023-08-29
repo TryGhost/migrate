@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-import {Api, styles} from '@tryghost/pretty-cli';
+import './update-check.js';
 
+import {Api, styles} from '@tryghost/pretty-cli';
 import {URL} from 'node:url';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
