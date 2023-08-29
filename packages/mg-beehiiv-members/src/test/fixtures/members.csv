@@ -1,0 +1,6 @@
+email,status,tier,created_at
+lorem@example.com,active,free,2023-03-24 10:23:10 UTC
+ipsum@example.com,active,premium,2023-03-24 10:36:47 UTC
+dolor@example.com,inactive,free,2023-03-24 10:36:48 UTC
+simet@example.com,inactive,premium,2023-03-24 10:37:04 UTC
+amett@example.com,pending,free,2023-04-11 14:02:46 UTC
