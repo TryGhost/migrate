@@ -35,7 +35,7 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@tryghost/debug": "0.1.25",
+    "@tryghost/debug": "0.1.26",
     "@tryghost/errors": "1.2.26",
     "@tryghost/mg-fs-utils": "0.12.14",
     "@tryghost/string": "0.2.8",
