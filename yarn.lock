@@ -497,25 +497,6 @@
     strip-ansi "^6.0.1"
     wrap-ansi "^6.0.1"
 
-"@inquirer/core@^3.1.2":
-  version "3.1.2"
-  resolved "https://registry.yarnpkg.com/@inquirer/core/-/core-3.1.2.tgz#d9691e6ffae85935685641550b8370ab7e599caa"
-  integrity sha512-lR2GaqBkp42Ew9BOAOqf2pSp+ymVES1qN8OC90WWh45yeoYLl0Ty1GyCxmkKqBJtq/+Ea1MF12AdFcZcpRNFsw==
-  dependencies:
-    "@inquirer/type" "^1.1.2"
-    "@types/mute-stream" "^0.0.1"
-    "@types/node" "^20.4.8"
-    "@types/wrap-ansi" "^3.0.0"
-    ansi-escapes "^4.3.2"
-    chalk "^4.1.2"
-    cli-spinners "^2.9.0"
-    cli-width "^4.1.0"
-    figures "^3.2.0"
-    mute-stream "^1.0.0"
-    run-async "^3.0.0"
-    strip-ansi "^6.0.1"
-    wrap-ansi "^6.2.0"
-
 "@inquirer/core@^4.0.0":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@inquirer/core/-/core-4.0.0.tgz#d82fa2f5f180106878da239e933767d1feeadcf5"
@@ -598,18 +579,7 @@
     "@inquirer/type" "^1.1.2"
     chalk "^4.1.2"
 
-"@inquirer/select@1.2.8":
-  version "1.2.8"
-  resolved "https://registry.yarnpkg.com/@inquirer/select/-/select-1.2.8.tgz#ce1b529a8d208afcb22819beb6d22f0ce2121742"
-  integrity sha512-XX0QMcqvXJwFYDZpx38cSSmJG4wNdpRUJZddY2zjDvzLfpbFRv488cl0vSVJCmRdluzzEwWFc+0tPOQGQ+dqLA==
-  dependencies:
-    "@inquirer/core" "^3.1.2"
-    "@inquirer/type" "^1.1.2"
-    ansi-escapes "^4.3.2"
-    chalk "^4.1.2"
-    figures "^3.2.0"
-
-"@inquirer/select@^1.2.4":
+"@inquirer/select@1.2.9", "@inquirer/select@^1.2.4":
   version "1.2.9"
   resolved "https://registry.yarnpkg.com/@inquirer/select/-/select-1.2.9.tgz#0a4a0392e6de8b3b9ce888c782d34625ae3b662d"
   integrity sha512-WXMQfUGzxrxdbDCU50xKqYCMoz+SOZnyV8sOeEJ8Ei5AjANz1fap3xA7EF8aZLJ9K1//m4OnyS/XDoi31Tqn+g==
@@ -2411,7 +2381,7 @@
   dependencies:
     "@types/node" "*"
 
-"@types/node@*", "@types/node@>=8.1.0", "@types/node@^20.4.2", "@types/node@^20.4.8", "@types/node@^20.5.6":
+"@types/node@*", "@types/node@>=8.1.0", "@types/node@^20.4.2", "@types/node@^20.5.6":
   version "20.5.7"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-20.5.7.tgz#4b8ecac87fbefbc92f431d09c30e176fc0a7c377"
   integrity sha512-dP7f3LdZIysZnmvP3ANJYTSwg+wLLl8p7RqniVlV7j+oXSXAbt9h0WIBFmJy5inWZoX9wZN6eXx+YXd9Rh3RBA==
