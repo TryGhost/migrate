@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node: [ '16', '18.12.1' ]
+        node: [ '18.12.1' ]
     name: Node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v3
