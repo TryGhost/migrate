@@ -2036,6 +2036,16 @@
   optionalDependencies:
     sharp "^0.32.0"
 
+"@tryghost/image-transform@1.2.9":
+  version "1.2.9"
+  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.2.9.tgz#7864852f9d4efa6cfe4928ee232b4d0eabd03496"
+  integrity sha512-aCuhQuGnFITJgqxUVsxeMTYpfIJYh4+PPamuKecLYEqHtq162MfIAOP2OzNrA3Yk87bFpOpWrrnpYnexpjuG6g==
+  dependencies:
+    "@tryghost/errors" "^1.2.26"
+    fs-extra "^11.0.0"
+  optionalDependencies:
+    sharp "^0.32.0"
+
 "@tryghost/kg-clean-basic-html@^3.0.30":
   version "3.0.30"
   resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-3.0.30.tgz#1661804f3448a2ca43992ccbffc7a201068fc01d"
