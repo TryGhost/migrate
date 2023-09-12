@@ -2000,12 +2000,12 @@
     lodash "^4.17.21"
     uuid "^9.0.0"
 
-"@tryghost/html-to-mobiledoc@2.0.31":
-  version "2.0.31"
-  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-2.0.31.tgz#999db41cd5cb6892f77a83644343387636207d60"
-  integrity sha512-2SCrOWtb/94f0U5zgAO+DBTunCce6Rzi7GU1K/6Lg3jdLYyOCBHEUTDCzLfpZyBt0W6VkzBG5Qgk7QdaJThSAA==
+"@tryghost/html-to-mobiledoc@2.0.32":
+  version "2.0.32"
+  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-2.0.32.tgz#4be6793fc249a719178d34cff7628a1d6b01e47d"
+  integrity sha512-VTxQ5oK5yKANfwJTojzliQbuRyC/N0ie7OGNiA/dIPB0/jxnaC3DBdC+lQon3uI1zsg9xijjm77iBnQWNYHk6A==
   dependencies:
-    "@tryghost/kg-parser-plugins" "^3.0.31"
+    "@tryghost/kg-parser-plugins" "^3.0.32"
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "^22.0.0"
 
@@ -2080,7 +2080,7 @@
     markdown-it-sup "^1.0.0"
     semver "^7.3.5"
 
-"@tryghost/kg-parser-plugins@^3.0.31":
+"@tryghost/kg-parser-plugins@^3.0.32":
   version "3.0.32"
   resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-3.0.32.tgz#2107ce84edea78bcdb580c0c91e8a5cd87bf8ac6"
   integrity sha512-6AO9X11jOlwtBo50YKJ2FL79pQ/atDKXk8AhrdChLug7fRjXu3hi60JBE6zDbGAvJiLkBVBqSCYPYA2nZGuEGA==
