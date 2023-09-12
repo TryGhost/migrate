@@ -11,7 +11,6 @@ Each tool has its own detailed documentation:
 - [Chorus](https://github.com/TryGhost/migrate/tree/main/packages/mg-chorus)
 - [Curated](https://github.com/TryGhost/migrate/tree/main/packages/mg-curated-export)
 - [Curated members](https://github.com/TryGhost/migrate/tree/main/packages/mg-curated-members-csv)
-- [HubSpot](https://github.com/TryGhost/migrate/tree/main/packages/mg-hubspot-api)
 - [Jekyll](https://github.com/TryGhost/migrate/tree/main/packages/mg-jekyll-export)
 - [Letterdrop](https://github.com/TryGhost/migrate/tree/main/packages/mg-letterdrop)
 - [Libsyn](https://github.com/TryGhost/migrate/tree/main/packages/mg-libsyn)
