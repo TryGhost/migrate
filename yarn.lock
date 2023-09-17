@@ -2052,12 +2052,12 @@
   resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-3.0.32.tgz#011a950a9b6146c482883f390e9d133fca482c10"
   integrity sha512-rUCw5SBeJXHOZMhXxAW1P0+um40E25WoevNGC0yxtgImzJNcPQzLkPTiKBPErVhW8TnZsMHkeYpWqKFi8o2xdg==
 
-"@tryghost/kg-default-cards@9.1.4":
-  version "9.1.4"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-default-cards/-/kg-default-cards-9.1.4.tgz#34c65cdc9733826271fa1464f1ca4d92d86d3e29"
-  integrity sha512-2Fw8aRytlVkLnVTrFOvNnRzl9zGRS4PwSabPYn277jke6LPlwolKo4RtDD9TKRZrtlxX6tKstsb2gc4Qzw5u7Q==
+"@tryghost/kg-default-cards@9.1.5":
+  version "9.1.5"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-default-cards/-/kg-default-cards-9.1.5.tgz#9df69c469a983a02cda9ab5668da3e6f25325736"
+  integrity sha512-8iYwF1ZjjZ0dBiAl8kp4ne0aHjre28unFm8BhqvOJGoeS9cESD5u/kDt/pST4rYTeizzL6Ywf2l4T93r5Qhygw==
   dependencies:
-    "@tryghost/kg-markdown-html-renderer" "^6.0.10"
+    "@tryghost/kg-markdown-html-renderer" "^6.0.11"
     "@tryghost/string" "^0.2.0"
     "@tryghost/url-utils" "^4.0.0"
     handlebars "^4.7.6"
@@ -2065,12 +2065,12 @@
     lodash "^4.17.21"
     luxon "^3.0.0"
 
-"@tryghost/kg-markdown-html-renderer@^6.0.10":
-  version "6.0.10"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-markdown-html-renderer/-/kg-markdown-html-renderer-6.0.10.tgz#2847962029eaf96ec8cb6af866741672767af601"
-  integrity sha512-4/XOv387HPm05nHhQ/utYJ48B7AMcPwe1tYKrUgok5KicJvBZNGvBvyn6O9PznXvjOIkivnGTGbvscPOgNUl6w==
+"@tryghost/kg-markdown-html-renderer@^6.0.11":
+  version "6.0.11"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-markdown-html-renderer/-/kg-markdown-html-renderer-6.0.11.tgz#59ea4960cbdf5106033af25820e86e907b40eb4f"
+  integrity sha512-/oS+7S2S6ACBmryAeHrsOGz8vrc03t1WzxcU76Q7fz7kvvSP0Q+3Hl5Pmi0DTIJWFfkYmQLrDPCXfX/mFUBtoQ==
   dependencies:
-    "@tryghost/kg-utils" "^1.0.18"
+    "@tryghost/kg-utils" "^1.0.19"
     markdown-it "^13.0.0"
     markdown-it-footnote "^3.0.3"
     markdown-it-image-lazy-loading "^1.1.0"
@@ -2087,10 +2087,10 @@
   dependencies:
     "@tryghost/kg-clean-basic-html" "^3.0.32"
 
-"@tryghost/kg-utils@^1.0.18":
-  version "1.0.18"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-utils/-/kg-utils-1.0.18.tgz#24b789e6e49f6841ce25062b61f1848ccad87a09"
-  integrity sha512-Yby3QZ469ZSh0CznW9eAjyMbZPg3PnppFM23oUw/vYCyTgOE9pAs39kYfcCOsQUzV8KApLfTxs3coQeUUXdYnw==
+"@tryghost/kg-utils@^1.0.19":
+  version "1.0.19"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-utils/-/kg-utils-1.0.19.tgz#5e11e0da5d9dc4e0731df652216a549a8d40d551"
+  integrity sha512-9NehRBLCGyVfRCQHkQJayLunaFQa1GTHzYpXwgarH7PfW/pjElcinzbR61DcWRIJ2KJOeRORTGhXxCxNsElKJg==
   dependencies:
     semver "^7.3.5"
 
