@@ -51,6 +51,12 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`-e` `--email`**
     - string - default: `false`
     - Provide an email domain for users e.g. example.com
+- **`--addTag`**
+    - string - default: `null`
+    - Provide a tag name which should be added to every post in this migration (Wrap in single quotes if tag name has spaces `'Like This'`)
+- **`--addPlatformTag`** 
+    - Add #medium tag to migrated content
+    - bool - default: `true`
 - **`--mediumAsCanonical`**
     - bool - default: `false`
     - Use medium article as canonical URL

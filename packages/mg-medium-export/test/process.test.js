@@ -47,7 +47,9 @@ describe('Process', function () {
     it('Can process a basic medium post', function () {
         const fixture = readSync('basic-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
-        const post = processPost({name: fakeName, html: fixture});
+        const post = processPost({name: fakeName, html: fixture, options: {
+            addPlatformTag: true
+        }});
 
         expect(post).toBeMediumMetaObject();
 
@@ -83,14 +85,15 @@ describe('Process', function () {
         expect(post.data.tags[1].url).toEqual('https://medium.com/tag/stuff');
         expect(post.data.tags[1].data.name).toEqual('Stuff');
         expect(post.data.tags[1].data.slug).toEqual('stuff');
-        // Migrator always marks posts with an internal tag
         expect(post.data.tags[2].data.name).toEqual('#medium');
     });
 
     it('Can process a draft medium post', function () {
         const fixture = readSync('draft-post.html');
         const fakeName = 'draft_blog-post-title-ababab121212.html';
-        const post = processPost({name: fakeName, html: fixture});
+        const post = processPost({name: fakeName, html: fixture, options: {
+            addPlatformTag: true
+        }});
 
         expect(post).toBeMediumMetaObject();
 
@@ -103,7 +106,6 @@ describe('Process', function () {
         expect(post.data.html).toMatch(/^<section name="007"/);
         expect(post.data.html).toMatch(/<\/section>$/);
 
-        // Migrator always marks posts with an internal tag
         expect(post.data.tags).toBeArrayOfSize(1);
         expect(post.data.tags[0].data.name).toEqual('#medium');
 
@@ -115,7 +117,9 @@ describe('Process', function () {
     it('Can do advanced content processing on medium posts', function () {
         const fixture = readSync('advanced-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
-        const post = processPost({name: fakeName, html: fixture});
+        const post = processPost({name: fakeName, html: fixture, options: {
+            addPlatformTag: true
+        }});
 
         expect(post).toBeMediumMetaObject();
 
@@ -138,12 +142,37 @@ describe('Process', function () {
         expect(post.data.feature_image_alt).toEqual('This is image alt text');
         expect(post.data.feature_image_caption).toEqual('This is an image caption');
 
-        // Migrator always marks posts with an internal tag
         expect(post.data.tags).toBeArrayOfSize(4);
         expect(post.data.tags[0].data.name).toEqual('Things');
         expect(post.data.tags[1].data.name).toEqual('Stuff');
         expect(post.data.tags[2].data.name).toEqual('#medium');
         expect(post.data.tags[3].data.name).toEqual('#auto-feature-image');
+    });
+
+    it('Can not add platform tags', function () {
+        const fixture = readSync('advanced-post.html');
+        const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
+        const post = processPost({name: fakeName, html: fixture});
+
+        expect(post.data.tags).toBeArrayOfSize(2);
+        expect(post.data.tags[0].data.name).toEqual('Things');
+        expect(post.data.tags[1].data.name).toEqual('Stuff');
+    });
+
+    it('Can add a custom tag at the start', function () {
+        const fixture = readSync('advanced-post.html');
+        const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
+        const post = processPost({name: fakeName, html: fixture, options: {
+            addTag: 'This is my custom tag',
+            addPlatformTag: true
+        }});
+
+        expect(post.data.tags).toBeArrayOfSize(5);
+        expect(post.data.tags[0].data.name).toEqual('This is my custom tag');
+        expect(post.data.tags[1].data.name).toEqual('Things');
+        expect(post.data.tags[2].data.name).toEqual('Stuff');
+        expect(post.data.tags[3].data.name).toEqual('#medium');
+        expect(post.data.tags[4].data.name).toEqual('#auto-feature-image');
     });
 
     it('Can process blockquotes', function () {

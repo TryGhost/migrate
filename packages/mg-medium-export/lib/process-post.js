@@ -83,7 +83,7 @@ const processTags = ({$tags}) => {
     return tags;
 };
 
-const processFeatureImage = ({html, post}) => {
+const processFeatureImage = ({html, post, options}) => {
     const $html = $.load(html, {
         decodeEntities: false
     }, false);
@@ -109,12 +109,15 @@ const processFeatureImage = ({html, post}) => {
     // We don't have a designated feature image, but there's an image above the content so use that image instead
     if (!featured && !preImageTags.includes('p')) {
         featured = foundImg;
-        // tag it with #auto-feature-image so we can tell the difference
-        post.data.tags.push({
-            data: {
-                name: '#auto-feature-image'
-            }
-        });
+
+        if (options?.addPlatformTag) {
+            // tag it with #auto-feature-image so we can tell the difference
+            post.data.tags.push({
+                data: {
+                    name: '#auto-feature-image'
+                }
+            });
+        }
     }
 
     if (featured) {
@@ -146,20 +149,34 @@ export default ({name, html, globalUser, options}) => {
         post.data.author = globalUser;
     }
 
-    // Process tags
-    if ($post('.p-tags a').length) {
-        post.data.tags = processTags({$tags: $post('.p-tags a')});
-    } else {
-        post.data.tags = [];
+    post.data.tags = [];
+
+    if (options?.addTag) {
+        post.data.tags.push({
+            url: 'migrator-added-tag',
+            data: {
+                name: options.addTag
+            }
+        });
     }
 
-    post.data.tags.push({
-        url: 'migrator-added-tag', data: {name: '#medium'}
-    });
+    // Process tags
+    if ($post('.p-tags a').length) {
+        post.data.tags = [...post.data.tags, ...processTags({$tags: $post('.p-tags a')})];
+    }
+
+    if (options?.addPlatformTag) {
+        post.data.tags.push({
+            url: 'migrator-added-platform-tag',
+            data: {
+                name: '#medium'
+            }
+        });
+    }
 
     // Grab the featured image
     // Do this last so that we can add tags to indicate feature image style
-    post.data.html = processFeatureImage({html: post.data.html, post});
+    post.data.html = processFeatureImage({html: post.data.html, post, options});
 
     return post;
 };

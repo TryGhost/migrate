@@ -60,6 +60,18 @@ const options = [
         desc: 'Provide an email domain for users e.g. mycompany.com'
     },
     {
+        type: 'string',
+        flags: '--addTag',
+        defaultValue: null,
+        desc: 'Provide a tag slug which should be added to every post in this migration'
+    },
+    {
+        type: 'boolean',
+        flags: '--addPlatformTag',
+        defaultValue: true,
+        desc: 'Add #medium tag to migrated content'
+    },
+    {
         type: 'boolean',
         flags: '--mediumAsCanonical',
         defaultValue: false,
