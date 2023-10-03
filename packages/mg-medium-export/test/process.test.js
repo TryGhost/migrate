@@ -7,7 +7,7 @@ import processContent from '../lib/process-content.js';
 const __dirname = new URL('.', import.meta.url).pathname;
 
 const readSync = (name) => {
-    let fixtureFileName = join(__dirname, './', 'fixtures', name);
+    let fixtureFileName = join(__dirname, './', 'fixtures', 'export', 'posts', name);
     return readFileSync(fixtureFileName, {encoding: 'utf8'});
 };
 
