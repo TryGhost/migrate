@@ -18,7 +18,7 @@
     "premigrate": "yarn build",
     "migrate": "migrate",
     "presetup": "yarn",
-    "setup": "lerna bootstrap",
+    "setup": "yarn install",
     "test:only": "lerna run test",
     "test": "lerna run test,lint",
     "lint": "lerna run lint",
