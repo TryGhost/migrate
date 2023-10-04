@@ -1988,12 +1988,12 @@
     lodash "^4.17.21"
     uuid "^9.0.0"
 
-"@tryghost/html-to-mobiledoc@2.0.34":
-  version "2.0.34"
-  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-2.0.34.tgz#33f28f4cab5c40464e5f91126491dfcaaae05b34"
-  integrity sha512-+jULjYKBSrk32sv9NF73xIi4kSOK4qIntBgi9QcbW1644+PGUdgKVDKHl918XLloFHhJdZa6Dr2eTWNvAy3c/w==
+"@tryghost/html-to-mobiledoc@2.0.35":
+  version "2.0.35"
+  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-2.0.35.tgz#9759373dc27a116f0d227c1e491f6664ec80e482"
+  integrity sha512-zA7ro0wquXYdAYCnOcqYSEMlLUjvW7oXJUof33oylsKvTbarkLuBMyg3P8a4cfQCVpJqHy2fT3JdG2cG0Vq02Q==
   dependencies:
-    "@tryghost/kg-parser-plugins" "^3.0.34"
+    "@tryghost/kg-parser-plugins" "^3.0.35"
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "^22.0.0"
 
@@ -2035,10 +2035,10 @@
   optionalDependencies:
     sharp "^0.32.0"
 
-"@tryghost/kg-clean-basic-html@^3.0.33":
-  version "3.0.33"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-3.0.33.tgz#886add303d4a1027180594b4174d6b1ce1e54b5f"
-  integrity sha512-yYy0YyK3zyhV8LvL7xtXwJrqZ6wOBCqsgoDbvmVokgPb9zpnumVBagTshPs3mUiXP2K/UC0rObTABIL/4og+tA==
+"@tryghost/kg-clean-basic-html@^3.0.34":
+  version "3.0.34"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-3.0.34.tgz#42ea54283b5df49c6a225504281eb9ffb0256ec6"
+  integrity sha512-GZLascvvk5C/D/BDCMGVJbASZrKC4BZKy2/F+hoLyoO7kbNNx+JVvuVYEF6XpjqCqpVXOR8Y5vjKQ+HCO1pJyA==
 
 "@tryghost/kg-default-cards@9.1.5":
   version "9.1.5"
@@ -2068,12 +2068,12 @@
     markdown-it-sup "^1.0.0"
     semver "^7.3.5"
 
-"@tryghost/kg-parser-plugins@^3.0.34":
-  version "3.0.34"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-3.0.34.tgz#212daec7a391a6a942e5750a5289740ab4d5f976"
-  integrity sha512-161+a/JmL+e72SWLcA874HllrQ4On+7Zb5LwU4ohXw17Qpy+rRpw2cKxVyrOmeK7kJx6y2++2/rkOoKGu9NXaQ==
+"@tryghost/kg-parser-plugins@^3.0.35":
+  version "3.0.35"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-3.0.35.tgz#d083af8df1810ae6600d299acda1b3346b72702c"
+  integrity sha512-+UjazptSiOW9iYjUHmhOe+3BzM33KdoATdoRXvtyEaXwyBfT/l7ayGREwE1z/FkypAJbVcW43hU0iJlznLlhVg==
   dependencies:
-    "@tryghost/kg-clean-basic-html" "^3.0.33"
+    "@tryghost/kg-clean-basic-html" "^3.0.34"
 
 "@tryghost/kg-utils@^1.0.19":
   version "1.0.19"
