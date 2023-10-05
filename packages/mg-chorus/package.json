@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-chorus",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-chorus",
   "author": "Ghost Foundation",
   "license": "MIT",
