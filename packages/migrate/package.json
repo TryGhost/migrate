@@ -49,6 +49,7 @@
     "@tryghost/mg-letterdrop": "^0.2.12",
     "@tryghost/mg-libsyn": "^0.1.5",
     "@tryghost/mg-linkfixer": "^0.5.12",
+    "@tryghost/mg-mailchimp-members": "^0.1.0",
     "@tryghost/mg-medium-export": "^0.16.0",
     "@tryghost/mg-medium-members": "^0.1.1",
     "@tryghost/mg-squarespace-xml": "^0.3.15",
