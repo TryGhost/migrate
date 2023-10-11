@@ -17,7 +17,7 @@ const processData = async ({csvPath, addLabel, includeUnsubscribed = true}: {csv
     let theMembers: memberObject[] = [];
 
     csvData.forEach((member: any) => {
-        // CCompletely skip unsubscribed members
+        // Completely skip unsubscribed members
         if (!includeUnsubscribed && member?.UNSUB_TIME) {
             return;
         }

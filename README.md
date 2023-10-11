@@ -14,6 +14,7 @@ Each tool has its own detailed documentation:
 - [Jekyll](https://github.com/TryGhost/migrate/tree/main/packages/mg-jekyll-export)
 - [Letterdrop](https://github.com/TryGhost/migrate/tree/main/packages/mg-letterdrop)
 - [Libsyn](https://github.com/TryGhost/migrate/tree/main/packages/mg-libsyn)
+- [Mailchimp Members](https://github.com/TryGhost/migrate/tree/main/packages/mg-mailchimp-members)
 - [Medium Content](https://github.com/TryGhost/migrate/tree/main/packages/mg-medium-export)
 - [Medium Members](https://github.com/TryGhost/migrate/tree/main/packages/mg-medium-members)
 - [Squarespace](https://github.com/TryGhost/migrate/tree/main/packages/mg-squarespace-xml)
