@@ -1,0 +1,6 @@
+Email Address,First Name,Last Name,Company,Position,ZIP Code,MEMBER_RATING,OPTIN_TIME,OPTIN_IP,CONFIRM_TIME,CONFIRM_IP,LATITUDE,LONGITUDE,GMTOFF,DSTOFF,TIMEZONE,CC,REGION,UNSUB_TIME,UNSUB_CAMPAIGN_TITLE,UNSUB_CAMPAIGN_ID,UNSUB_REASON,UNSUB_REASON_OTHER,LEID,EUID,NOTES,TAGS
+u1@example.com,Dolor,,,,,,2018-02-12 10:54:27,,2018-02-12 10:54:27,,,,,,,,,2018-07-23 12:19:27,,,,,,,,
+u2@example.com,,Simet,,,,,2018-02-12 10:54:26,,2018-02-12 10:54:26,,,,,,,,,2023-06-06 12:56:15,,,,,,,,"""Lorem Editors"""
+u3@example.com, Lorem , Ipsum ,Example foundation,,,,2020-12-25 13:35:34,,2020-12-25 13:35:34,,,,,,,,,2022-12-05 21:01:47,,,,,,,,"""Lorem Editors"""
+u4@example.com,,,,,,,2018-02-05 19:28:23,,2018-02-05 19:28:23,,,,,,,,,2020-05-13 10:18:25,,,,,,,,"""Lorem Editors"""
+u5@example.com,,,,,,,2018-02-05 19:28:23,,2018-02-05 19:28:23,,,,,,,,,2021-09-20 20:13:55,,,,,,,,"""Lorem Editors"""
