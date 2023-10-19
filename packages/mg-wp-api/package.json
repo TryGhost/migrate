@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-wp-api",
-  "version": "0.10.18",
+  "version": "0.10.19",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-api",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -27,9 +27,9 @@
   "dependencies": {
     "@tryghost/debug": "0.1.26",
     "@tryghost/errors": "1.2.26",
-    "@tryghost/mg-fs-utils": "^0.12.17",
-    "@tryghost/mg-shortcodes": "^0.2.11",
-    "@tryghost/mg-webscraper": "^0.9.13",
+    "@tryghost/mg-fs-utils": "^0.12.18",
+    "@tryghost/mg-shortcodes": "^0.2.12",
+    "@tryghost/mg-webscraper": "^0.9.14",
     "@tryghost/string": "0.2.8",
     "cheerio": "0.22.0",
     "date-fns": "2.30.0",
