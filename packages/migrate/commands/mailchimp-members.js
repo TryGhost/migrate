@@ -93,6 +93,9 @@ const run = async (argv) => {
 
     const startMigrationTime = Date.now();
 
+    // Remove any empty paths cause my spaces in the `pathToCsv` argument string
+    argv.pathToCsv = argv.pathToCsv.filter(path => path);
+
     try {
         // Fetch the tasks, configured correctly according to the options passed in
         let migrate = mailchimpMembers.getTaskRunner(argv, logger);
