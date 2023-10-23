@@ -18,7 +18,9 @@ const memberStats = async ({txtPath}: {txtPath: string}) => {
     const txtData = await readFile(txtPath, 'utf8');
     const emailList = txtData.split('\n').filter(el => el !== '');
 
-    return emailList.length;
+    return {
+        allMembers: emailList.length
+    };
 };
 
 export {

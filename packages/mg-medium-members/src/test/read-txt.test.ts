@@ -9,7 +9,7 @@ describe('Medium Members', () => {
     it('Can read number if entries in a txt file', async () => {
         const processed = await memberStats({txtPath: join(fixturesPath, 'members.txt')});
 
-        assert.equal(processed, 5);
+        assert.equal(processed.allMembers, 5);
     });
 
     it('Throws error is no path provided', async () => {
