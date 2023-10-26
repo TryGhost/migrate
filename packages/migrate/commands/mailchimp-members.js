@@ -17,16 +17,23 @@ const group = 'Sources:';
 const flags = 'mailchimp-members';
 
 // Description for the top level command
-const desc = 'Migrate members from mailchimp using CSV files';
+const desc = 'Migrate members from Mailchimp using a ZIP file or CSV files';
 
 // Configure all the options
 const options = [
+    {
+        type: 'string',
+        flags: '--pathToZip',
+        defaultValue: null,
+        desc: 'Path to members ZIP file',
+        required: false
+    },
     {
         type: 'array',
         flags: '--pathToCsv',
         defaultValue: null,
         desc: 'Path to members CSV file(s)',
-        required: true
+        required: false
     },
     {
         type: 'string',

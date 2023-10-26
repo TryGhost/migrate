@@ -11,8 +11,23 @@ type memberObject = {
     created_at: Date;
 };
 
-const processData = async ({csvPath, addLabel, includeUnsubscribed = true}: {csvPath: string, addLabel?: string | null, includeUnsubscribed: boolean}) => {
-    const csvData = await fsUtils.csv.parseCSV(csvPath);
+type processDataOptions = {
+    pathToCsv?: string;
+    pathToZip?: string;
+    csvContent?: string;
+    addLabel?: string | null;
+    includeUnsubscribed: boolean;
+}
+
+type processCsvOptions = {
+    pathToCsv?: string | string[];
+    pathToZip?: string;
+    addLabel?: string | null;
+    includeUnsubscribed: boolean
+}
+
+const processData = async ({pathToCsv, pathToZip, csvContent, addLabel, includeUnsubscribed = true}: processDataOptions) => {
+    const csvData = (csvContent) ? await fsUtils.csv.parseString(csvContent) : await fsUtils.csv.parseCSV(pathToCsv);
 
     let theMembers: memberObject[] = [];
 
@@ -83,19 +98,41 @@ const processData = async ({csvPath, addLabel, includeUnsubscribed = true}: {csv
     return theMembers;
 };
 
-const processCsv = async ({csvPath, addLabel, includeUnsubscribed = true}: {csvPath: string | string[], addLabel?: string | null, includeUnsubscribed: boolean}) => {
+const processCsv = async ({pathToCsv, pathToZip, addLabel, includeUnsubscribed = true}: processCsvOptions) => {
     const newObj: memberObject[] = [];
 
-    const paths: string[] = (typeof csvPath === 'string') ? [csvPath] : csvPath;
+    if (pathToZip) {
+        const zipEntries: any = [];
 
-    for (const list of paths) {
-        let processed: any = await processData({
-            csvPath: list,
-            addLabel,
-            includeUnsubscribed
+        fsUtils.zip.read(pathToZip, (entryName: any, zipEntry: any) => {
+            if (/\.csv$/.test(entryName)) {
+                zipEntries.push({
+                    name: entryName,
+                    data: zipEntry.getData().toString('utf8')
+                });
+            }
         });
 
-        newObj.push(...processed);
+        for (const entry of zipEntries) {
+            let pro = await processData({
+                csvContent: entry.data,
+                includeUnsubscribed: false
+            });
+
+            newObj.push(...pro);
+        }
+    } else if (pathToCsv) {
+        const paths: string[] = (typeof pathToCsv === 'string') ? [pathToCsv] : pathToCsv;
+
+        for (const list of paths) {
+            let processed: any = await processData({
+                pathToCsv: list,
+                addLabel,
+                includeUnsubscribed
+            });
+
+            newObj.push(...processed);
+        }
     }
 
     return newObj;

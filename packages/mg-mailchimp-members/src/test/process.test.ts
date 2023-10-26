@@ -1,14 +1,19 @@
+import {URL} from 'node:url';
+import {unlink} from 'node:fs';
+import {execSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {join} from 'node:path';
 import processCsv from '../index.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 const fixturesPath = join(__dirname, '../../src/test/fixtures');
+const inputPath = fixturesPath;
+const inputZipPath = join(fixturesPath, 'export.zip');
 
-describe('Mailchimp Members', () => {
+describe('Mailchimp Members CSV', () => {
     it('Can parse single CSV', async () => {
         const cleanedProcessed = await processCsv({
-            csvPath: join(fixturesPath, 'cleaned.csv')
+            pathToCsv: join(fixturesPath, 'cleaned.csv')
         });
 
         assert.equal(cleanedProcessed.length, 5);
@@ -16,7 +21,7 @@ describe('Mailchimp Members', () => {
 
     it('Can parse multiple CSVs', async () => {
         const cleanedProcessed = await processCsv({
-            csvPath: [
+            pathToCsv: [
                 join(fixturesPath, 'cleaned.csv'),
                 join(fixturesPath, 'subscribed.csv'),
                 join(fixturesPath, 'unsubscribed.csv')
@@ -28,7 +33,7 @@ describe('Mailchimp Members', () => {
 
     it('Can get subscribed member values', async () => {
         const processed = await processCsv({
-            csvPath: join(fixturesPath, 'subscribed.csv')
+            pathToCsv: join(fixturesPath, 'subscribed.csv')
         });
 
         const member = processed[4];
@@ -46,7 +51,7 @@ describe('Mailchimp Members', () => {
 
     it('Can get unsubscribed member values', async () => {
         const processed = await processCsv({
-            csvPath: join(fixturesPath, 'unsubscribed.csv')
+            pathToCsv: join(fixturesPath, 'unsubscribed.csv')
         });
 
         const member = processed[2];
@@ -65,7 +70,7 @@ describe('Mailchimp Members', () => {
 
     it('Can count subscribed members', async () => {
         const cleanedProcessed = await processCsv({
-            csvPath: [
+            pathToCsv: [
                 join(fixturesPath, 'cleaned.csv'),
                 join(fixturesPath, 'subscribed.csv'),
                 join(fixturesPath, 'unsubscribed.csv')
@@ -88,7 +93,7 @@ describe('Mailchimp Members', () => {
 
     it('Can add member label', async () => {
         const cleanedProcessed = await processCsv({
-            csvPath: join(fixturesPath, 'cleaned.csv'),
+            pathToCsv: join(fixturesPath, 'cleaned.csv'),
             addLabel: 'Migrated Member, Old Site'
         });
 
@@ -100,7 +105,7 @@ describe('Mailchimp Members', () => {
 
     it('Can exclude unsubscribed members', async () => {
         const cleanedProcessed = await processCsv({
-            csvPath: [
+            pathToCsv: [
                 join(fixturesPath, 'cleaned.csv'),
                 join(fixturesPath, 'subscribed.csv'),
                 join(fixturesPath, 'unsubscribed.csv')
@@ -111,5 +116,29 @@ describe('Mailchimp Members', () => {
         cleanedProcessed.forEach((member) => {
             assert.equal(member.subscribed_to_emails, true);
         });
+    });
+});
+
+describe('Mailchimp Members ZIP', () => {
+    beforeAll(function () {
+        execSync(`zip -r ${inputZipPath} *`, {
+            cwd: inputPath
+        });
+    });
+
+    afterAll(function () {
+        unlink(inputZipPath, (err) => {
+            if (err) {
+                throw err;
+            }
+        });
+    });
+
+    it('Can parse single ZIP', async () => {
+        const cleanedProcessed = await processCsv({
+            pathToZip: join(fixturesPath, 'export.zip')
+        });
+
+        assert.equal(cleanedProcessed.length, 10);
     });
 });

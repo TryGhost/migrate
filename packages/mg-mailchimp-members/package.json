@@ -36,6 +36,6 @@
   "dependencies": {
     "@tryghost/debug": "0.1.26",
     "@tryghost/errors": "1.2.26",
-    "@tryghost/mg-fs-utils": "0.12.14"
+    "@tryghost/mg-fs-utils": "0.12.19"
   }
 }

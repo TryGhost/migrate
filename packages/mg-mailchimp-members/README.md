@@ -36,9 +36,12 @@ migrate mailchimp-members --pathToCsv /path/to/members.csv, /path/to/another-mem
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
+- **`--pathToZip`** (required)
+    - Path to members ZIP file
+    - string - default: `null`
 - **`--pathToCsv`** (required)
     - Path to members CSV file
-    - string - default: `null`
+    - array - default: `null`
 - **`--addLabel`**
     - Label to add to all members
     - string - default: `null`

@@ -29,7 +29,7 @@ const getTaskRunner = (options, logger) => {
                 // 1. Read the csv file
                 try {
                     ctx.result = await csvIngest({
-                        csvPath: options.pathToCsv,
+                        pathToCsv: options.pathToCsv,
                         addLabel: options.addLabel,
                         includeUnsubscribed: options.includeUnsubscribed
                     });
