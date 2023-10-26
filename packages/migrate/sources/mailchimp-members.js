@@ -14,7 +14,7 @@ const getTaskRunner = (options, logger) => {
                 ctx.logger = logger;
 
                 // 0. Prep a file cache for the work we are about to do.
-                ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(options.pathToCsv[0]);
+                ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(options.pathToZip || options.pathToCsv[0]);
                 ctx.fileCache = new fsUtils.FileCache(`mailchimp-members-${ctx.options.cacheName}`, {
                     tmpPath: ctx.options.tmpPath,
                     contentDir: false
@@ -30,6 +30,7 @@ const getTaskRunner = (options, logger) => {
                 try {
                     ctx.result = await csvIngest({
                         pathToCsv: options.pathToCsv,
+                        pathToZip: options.pathToZip,
                         addLabel: options.addLabel,
                         includeUnsubscribed: options.includeUnsubscribed
                     });

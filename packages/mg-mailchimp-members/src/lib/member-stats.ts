@@ -1,6 +1,12 @@
 import {process} from './process.js';
 
-const memberStats = async ({csvPath, zipPath, includeUnsubscribed = false}: {csvPath?: string | string[], zipPath?: string, includeUnsubscribed?: boolean}) => {
+type memberStatsOptions = {
+    csvPath?: string | string[];
+    zipPath?: string;
+    includeUnsubscribed?: boolean;
+}
+
+const memberStats = async ({csvPath, zipPath, includeUnsubscribed = false}: memberStatsOptions) => {
     let allMembers: number = 0;
 
     if (csvPath) {
