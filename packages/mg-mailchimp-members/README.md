@@ -47,7 +47,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - string - default: `null`
 - **`--includeUnsubscribed`** 
     - Include unsubscribed members in the migration, but set to not receive emails
-    - bool - default: `true`
+    - bool - default: `false`
 - **`--cache`** 
     - Persist local cache after migration is complete (Only if `--zip` is `true`)
     - bool - default: `true`

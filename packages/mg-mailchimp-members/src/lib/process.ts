@@ -23,10 +23,10 @@ type processOptions = {
     pathToCsv?: string | string[];
     pathToZip?: string;
     addLabel?: string | null;
-    includeUnsubscribed: boolean
+    includeUnsubscribed?: boolean
 }
 
-const processData = async ({pathToCsv, pathToZip, csvContent, addLabel, includeUnsubscribed = true}: processDataOptions) => {
+const processData = async ({pathToCsv, pathToZip, csvContent, addLabel, includeUnsubscribed = false}: processDataOptions) => {
     const csvData = (csvContent) ? await fsUtils.csv.parseString(csvContent) : await fsUtils.csv.parseCSV(pathToCsv);
 
     let theMembers: memberObject[] = [];
@@ -98,7 +98,7 @@ const processData = async ({pathToCsv, pathToZip, csvContent, addLabel, includeU
     return theMembers;
 };
 
-const process = async ({pathToCsv, pathToZip, addLabel, includeUnsubscribed = true}: processOptions) => {
+const process = async ({pathToCsv, pathToZip, addLabel, includeUnsubscribed = false}: processOptions) => {
     const newObj: memberObject[] = [];
 
     if (pathToZip) {

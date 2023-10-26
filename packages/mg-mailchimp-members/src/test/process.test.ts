@@ -25,7 +25,8 @@ describe('Mailchimp Members CSV', () => {
                 join(fixturesPath, 'cleaned.csv'),
                 join(fixturesPath, 'subscribed.csv'),
                 join(fixturesPath, 'unsubscribed.csv')
-            ]
+            ],
+            includeUnsubscribed: true
         });
 
         assert.equal(cleanedProcessed.length, 15);
@@ -51,7 +52,8 @@ describe('Mailchimp Members CSV', () => {
 
     it('Can get unsubscribed member values', async () => {
         const processed = await processCsv({
-            pathToCsv: join(fixturesPath, 'unsubscribed.csv')
+            pathToCsv: join(fixturesPath, 'unsubscribed.csv'),
+            includeUnsubscribed: true
         });
 
         const member = processed[2];
@@ -86,9 +88,7 @@ describe('Mailchimp Members CSV', () => {
         });
 
         assert.equal(isSubscribed.length, 10);
-
-        assert.equal(notSubscribed.length, 5);
-        assert.equal(notSubscribed[0].note, 'Unsubscribed to emails on 2018-07-23 12:19:27');
+        assert.equal(notSubscribed.length, 0);
     });
 
     it('Can add member label', async () => {
