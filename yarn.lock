@@ -2019,6 +2019,16 @@
     "@tryghost/errors" "^1.2.26"
     "@tryghost/request" "^1.0.0"
 
+"@tryghost/image-transform@1.2.10":
+  version "1.2.10"
+  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.2.10.tgz#0aea78ba47056e28ca21da9f625da1f1b0ca6085"
+  integrity sha512-xSzivoo2ME4x/UsMT8UpX1kqQTFxzckzl7kVLfvgPsnsSpAOP3W5P5cEb5szptcTLwtZhs/8kCw331Sh9kBd+g==
+  dependencies:
+    "@tryghost/errors" "^1.2.26"
+    fs-extra "^11.0.0"
+  optionalDependencies:
+    sharp "^0.32.0"
+
 "@tryghost/image-transform@1.2.7":
   version "1.2.7"
   resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.2.7.tgz#761de1b15a67bba5bc299e3c3ddc632b86cdcde0"
@@ -2035,16 +2045,6 @@
   integrity sha512-UvBhaM0ZOPd6JxWr8ZvulD26NCCv923hdJmGPlbuUQcgua4x68HYSiMTM/4se2aCMQ2TVVNZUuTXOIqmX5zObg==
   dependencies:
     "@tryghost/errors" "^1.2.1"
-    fs-extra "^11.0.0"
-  optionalDependencies:
-    sharp "^0.32.0"
-
-"@tryghost/image-transform@1.2.9":
-  version "1.2.9"
-  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.2.9.tgz#7864852f9d4efa6cfe4928ee232b4d0eabd03496"
-  integrity sha512-aCuhQuGnFITJgqxUVsxeMTYpfIJYh4+PPamuKecLYEqHtq162MfIAOP2OzNrA3Yk87bFpOpWrrnpYnexpjuG6g==
-  dependencies:
-    "@tryghost/errors" "^1.2.26"
     fs-extra "^11.0.0"
   optionalDependencies:
     sharp "^0.32.0"
