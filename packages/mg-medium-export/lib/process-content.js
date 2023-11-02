@@ -114,6 +114,7 @@ export default ({content, post}) => {
         $(el).replaceWith(`<!--kg-card-begin: html-->\n${bookmarkHtml}\n<!--kg-card-end: html-->`);
     });
 
+    // Handle blockquotes made of 2 elements
     $content.find('blockquote.graf--pullquote, blockquote.graf--blockquote').each((i, bq) => {
         $(bq).removeAttr('name');
         $(bq).removeAttr('id');
@@ -124,7 +125,19 @@ export default ({content, post}) => {
             $(a).removeAttr('class');
         });
 
-        $(bq).html(`<p>${$(bq).html()}</p>`);
+        let textElements = [];
+        textElements.push($(bq).html().trim());
+
+        if ($(bq).next('.graf-after--pullquote')) {
+            const nextElem = $(bq).next('.graf-after--pullquote');
+            const nextText = $(nextElem).html();
+            if (nextText && nextText.length > 0) {
+                textElements.push(nextText.trim());
+                $(nextElem).remove();
+            }
+        }
+
+        $(bq).replaceWith(`<blockquote><p>${textElements.join('<br><br>')}</p></blockquote>`);
     });
 
     $content.find('pre.graf--pre').each((i, pre) => {

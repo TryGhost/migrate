@@ -377,4 +377,34 @@ describe('Process Content', function () {
 
         expect(newHtml).toContain('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.medium.com/list/1234"><div class="kg-bookmark-content"><div class="kg-bookmark-title">My best Articles</div><div class="kg-bookmark-description">A description</div><div class="kg-bookmark-metadata"></div></div><div class="kg-bookmark-thumbnail"><img src="https://cdn-images-1.medium.com/fit/c/304/160/0*5678.jpeg" alt=""></div></a></figure>');
     });
+
+    it('Can process blockquotes in 2 parts', function () {
+        const source = `<div class="e-content">
+            <p>Not quote text</p>
+            <blockquote name="68bf" id="68bf" class="graf graf--pullquote graf-after--p graf--trailing">Standalone quote</blockquote>
+            <p>Also not quote text</p>
+            <blockquote name="3755" id="3755" class="graf graf--pullquote graf--startsWithDoubleQuote graf-after--li">“Main quote.”</blockquote>
+            <blockquote name="8d9f" id="8d9f" class="graf graf--pullquote graf-after--pullquote graf--trailing">— <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></blockquote>
+        </div>`;
+
+        const $post = $.load(source, {
+            decodeEntities: false
+        }, false);
+
+        const newHtml = processContent({
+            content: $post('.e-content'),
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        expect(newHtml).not.toContain('<blockquote name="68bf" id="68bf" class="graf graf--pullquote graf-after--p graf--trailing">Standalone quote</blockquote>');
+        expect(newHtml).not.toContain('<blockquote name="3755" id="3755" class="graf graf--pullquote graf--startsWithDoubleQuote graf-after--li">“Main quote.”</blockquote>');
+        expect(newHtml).not.toContain('<blockquote name="8d9f" id="8d9f" class="graf graf--pullquote graf-after--pullquote graf--trailing">— <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></blockquote>');
+
+        expect(newHtml).toContain('<blockquote><p>Standalone quote</p></blockquote>');
+        expect(newHtml).toContain('<blockquote><p>“Main quote.”<br><br>— <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></p></blockquote>');
+    });
 });
