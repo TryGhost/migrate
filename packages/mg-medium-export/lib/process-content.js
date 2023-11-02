@@ -1,4 +1,7 @@
 import $ from 'cheerio';
+import SimpleDom from 'simple-dom';
+import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
+const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
 const doReplace = (str) => {
     const replaceParts = [
@@ -45,6 +48,45 @@ export default ({content, post}) => {
     $content.find('.graf--subtitle').each((i, el) => {
         if (equivalentTitles($(el).text(), post.data.custom_excerpt)) {
             $(el).remove();
+        }
+    });
+
+    // Convert galleries
+    $content.find('.section-inner.sectionLayout--outsetRow').each((i, el) => {
+        // Check we're only working with a group of <figure> elements
+        const children = $(el).children();
+        const childElementTags = children.map((ii, ell) => {
+            return ell.tagName.toLowerCase();
+        }).get();
+        const allFigures = childElementTags.every(e => e === 'figure');
+
+        // If it's all figures
+        if (allFigures) {
+            let hasCaption = $(el).find('figcaption');
+            let caption = hasCaption.length > 0 ? hasCaption.html().trim() : null;
+
+            let cardOpts = {
+                env: {dom: new SimpleDom.Document()},
+                payload: {
+                    images: [],
+                    caption: caption
+                }
+            };
+
+            $(el).find('figure').each((iii, elll) => { // eslint-disable-line no-shadow
+                let img = $(elll).find('img');
+                cardOpts.payload.images.push({
+                    row: 0,
+                    fileName: img.attr('data-image-id'),
+                    src: img.attr('src'),
+                    width: img.attr('data-width'),
+                    height: img.attr('data-height')
+                });
+            });
+
+            const galleryHtml = serializer.serialize(galleryCard.render(cardOpts));
+
+            $(el).replaceWith(galleryHtml);
         }
     });
 

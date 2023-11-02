@@ -286,7 +286,6 @@ describe('Process Content', function () {
         'sudo apt-get install example</code></pre>');
     });
 
-    // Works
     it('Can process code blocks', function () {
         const source = `<div class="e-content"><p>My content</p>
         <pre data-code-block-mode="2" spellcheck="false" data-code-block-lang="bash" name="2296" id="2296" class="graf graf--pre graf-after--p graf--preV2">
@@ -310,5 +309,37 @@ describe('Process Content', function () {
             '<span class="pre--content">wget https://example.com/package.zip</span>\n' +
             '</pre>');
         expect(newHtml).toContain('<pre><code class="language-bash">wget https://example.com/package.zip</code></pre>');
+    });
+
+    it('Can process galleries', function () {
+        const source = `<div class="e-content"><div class="section-inner sectionLayout--outsetRow" data-paragraph-count="3">
+            <figure name="f106" id="f106" class="graf graf--figure graf--layoutOutsetRow is-partialWidth graf-after--li" style="width: 34.74%;">
+                <img class="graf-image" data-image-id="1*1234.jpeg" data-width="768" data-height="933" src="https://cdn-images-1.medium.com/max/600/1*1234.jpeg">
+            </figure>
+            <figure name="13ec" id="13ec" class="graf graf--figure graf--layoutOutsetRowContinue is-partialWidth graf-after--figure" style="width: 31.659%;">
+                <img class="graf-image" data-image-id="1*5678.jpeg" data-width="768" data-height="1024" src="https://cdn-images-1.medium.com/max/400/1*5678.jpeg">
+            </figure>
+            <figure name="4dc5" id="4dc5" class="graf graf--figure graf--layoutOutsetRowContinue is-partialWidth graf-after--figure" style="width: 33.601%;">
+                <img class="graf-image" data-image-id="1*-abcd.jpeg" data-width="768" data-height="965" src="https://cdn-images-1.medium.com/max/600/1*-abcd.jpeg">
+                <figcaption class="imageCaption" style="width: 297.61%; left: -197.61%;">Photos by the author</figcaption>
+            </figure>
+        </div></div>`;
+
+        const $post = $.load(source, {
+            decodeEntities: false
+        }, false);
+
+        const newHtml = processContent({
+            content: $post('.e-content'),
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        expect(newHtml).not.toContain('<div class="section-inner sectionLayout--outsetRow" data-paragraph-count="3">');
+
+        expect(newHtml).toContain('<figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*1234.jpeg" width="768" height="933" loading="lazy" alt=""></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/400/1*5678.jpeg" width="768" height="1024" loading="lazy" alt=""></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*-abcd.jpeg" width="768" height="965" loading="lazy" alt=""></div></div></div><figcaption>Photos by the author</figcaption></figure>');
     });
 });
