@@ -1,6 +1,7 @@
 import $ from 'cheerio';
 import SimpleDom from 'simple-dom';
 import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
+import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
 const doReplace = (str) => {
@@ -88,6 +89,29 @@ export default ({content, post}) => {
 
             $(el).replaceWith(galleryHtml);
         }
+    });
+
+    // Convert Medium bookmarks
+    $content.find('.graf--mixtapeEmbed').each((i, el) => {
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {}
+        };
+
+        let href = $(el).find('.markup--anchor').attr('href');
+        cardOpts.payload.url = href;
+
+        let src = $(el).find('.js-mixtapeImage').css('background-image').replace(/url\((.*?)\)/, (m, p) => p);
+        cardOpts.payload.metadata = {
+            url: href,
+            title: $(el).find('.markup--strong').text(),
+            description: $(el).find('.markup--em').text(),
+            thumbnail: src
+        };
+
+        const bookmarkHtml = serializer.serialize(bookmarkCard.render(cardOpts));
+
+        $(el).replaceWith(`<!--kg-card-begin: html-->\n${bookmarkHtml}\n<!--kg-card-end: html-->`);
     });
 
     $content.find('blockquote.graf--pullquote, blockquote.graf--blockquote').each((i, bq) => {
