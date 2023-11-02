@@ -1,8 +1,25 @@
 import $ from 'cheerio';
 
+const doReplace = (str) => {
+    const replaceParts = [
+        [/[\s\n]/g, ''], // Remove spaces
+        [/\.$/, ''], // Trim trailing full stop
+        [/‘/, '\''], // Convert single opening curly quote to straight quote
+        [/’/, '\''], // Convert single closing curly quote to straight quote
+        [/“/, '"'], // Convert double opening curly quote to straight quote
+        [/”/, '"'] // Convert double closing curly quote to straight quote
+    ];
+
+    replaceParts.forEach((re) => {
+        str = str.replace(re[0], re[1]);
+    });
+
+    return str;
+};
+
 const equivalentTitles = (title1, title2) => {
-    title1 = title1.replace(/[\s\n]/g, '');
-    title2 = title2.replace(/[\s\n]/g, '');
+    title1 = doReplace(title1);
+    title2 = doReplace(title2);
 
     return title1 === title2;
 };
@@ -23,6 +40,13 @@ export default ({content, post}) => {
     if (equivalentTitles(firstTitle.text(), post.data.title)) {
         $content.find(firstTitle).remove();
     }
+
+    // Remove the subtitle if it's the same as the excerpt
+    $content.find('.graf--subtitle').each((i, el) => {
+        if (equivalentTitles($(el).text(), post.data.custom_excerpt)) {
+            $(el).remove();
+        }
+    });
 
     $content.find('blockquote.graf--pullquote, blockquote.graf--blockquote').each((i, bq) => {
         $(bq).removeAttr('name');

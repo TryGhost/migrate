@@ -197,6 +197,18 @@ describe('Process', function () {
 
         expect(post.data.canonical_url).toEqual('https://medium.com/@JoeBloggs/testpost-efefef12121212');
     });
+
+    it('does remove the subtitle if used as excerpt', function () {
+        const fixture = readSync('advanced-post.html');
+        const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
+        const post = processPost({name: fakeName, html: fixture, options: {
+            addTag: 'This is my custom tag',
+            addPlatformTag: true
+        }});
+
+        // "This is a subtitle of some sort" is already used as excerpt, so don't include it in the content
+        expect(post.data.html).not.toContain('<h4 name="456" id="456" class="graf graf--h4 graf-after--h3 graf--subtitle">This is a subtitle of some sort</h4>');
+    });
 });
 
 describe('Process Content', function () {
