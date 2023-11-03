@@ -2054,19 +2054,6 @@
   resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-3.0.40.tgz#ff9fbcae37f659136673d38347a08ab8f39c13c0"
   integrity sha512-K8Q1Slg7E9oJHZ41Aqwqfxkaly0uJ0ygfdCFWVPCVCLMyAkzR0E04DoWXO+T7sZRuTOk80yi1TyyMIKN1Ylfag==
 
-"@tryghost/kg-default-cards@9.1.8":
-  version "9.1.8"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-default-cards/-/kg-default-cards-9.1.8.tgz#96100ffe923fab98de5b2403ae06d53bc4d2610c"
-  integrity sha512-zwopCvpcBb6YgbxfT5h/9zetntIVXJaoJFVYSvpONH5EIXA1sG76PdFnboZCigOIYAaFBm1jM16ogat9/wL1Jw==
-  dependencies:
-    "@tryghost/kg-markdown-html-renderer" "^6.0.14"
-    "@tryghost/string" "^0.2.0"
-    "@tryghost/url-utils" "^4.0.0"
-    handlebars "^4.7.6"
-    juice "^9.0.0"
-    lodash "^4.17.21"
-    luxon "^3.0.0"
-
 "@tryghost/kg-default-cards@9.1.9":
   version "9.1.9"
   resolved "https://registry.yarnpkg.com/@tryghost/kg-default-cards/-/kg-default-cards-9.1.9.tgz#46388d46ea9b05e001958116c93bf0e7720f65e6"
@@ -2080,7 +2067,7 @@
     lodash "^4.17.21"
     luxon "^3.0.0"
 
-"@tryghost/kg-markdown-html-renderer@^6.0.14", "@tryghost/kg-markdown-html-renderer@^6.0.15":
+"@tryghost/kg-markdown-html-renderer@^6.0.15":
   version "6.0.15"
   resolved "https://registry.yarnpkg.com/@tryghost/kg-markdown-html-renderer/-/kg-markdown-html-renderer-6.0.15.tgz#ff314cad10d17ef87c201471066e158986c524d1"
   integrity sha512-kK18d/Ert9QDU5aXUrv3C36RzwX3JHz8MlXYiVR4tpmiPgTa8r6bBMuUFkXQQjvP6P8+tJXDLaSMgFiF0Su8yg==
