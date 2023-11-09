@@ -1,6 +1,6 @@
 import WPAPI from 'wpapi';
 
-const discover = async (url, {apiUser, usersJSON, pages, limit, cpt}) => {
+const discover = async (url, {apiUser, usersJSON, posts, pages, limit, cpt}) => {
     const requestOptions = {endpoint: `${url}/wp-json`};
 
     if (apiUser && apiUser.username && apiUser.password) {
@@ -29,9 +29,11 @@ const discover = async (url, {apiUser, usersJSON, pages, limit, cpt}) => {
 
     values.site = site;
 
-    const postsData = await site.posts().perPage(limit);
-    values.totals.posts = postsData._paging && postsData._paging.total ? postsData._paging.total : 0;
-    values.batches.posts = postsData._paging && postsData._paging.totalPages ? postsData._paging.totalPages : 0;
+    if (posts) {
+        const postsData = await site.posts().perPage(limit);
+        values.totals.posts = postsData._paging && postsData._paging.total ? postsData._paging.total : 0;
+        values.batches.posts = postsData._paging && postsData._paging.totalPages ? postsData._paging.totalPages : 0;
+    }
 
     if (pages) {
         const pageData = await site.pages().perPage(limit);
@@ -87,7 +89,7 @@ const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest, logger) =
 const tasks = async (url, ctx) => {
     const {logger} = ctx;
     const {apiUser} = ctx || {};
-    const {pages, limit, cpt} = ctx.options;
+    const {pages, posts, limit, cpt} = ctx.options;
     const {usersJSON} = ctx || null;
     let isAuthRequest = false;
 
@@ -99,7 +101,7 @@ const tasks = async (url, ctx) => {
         isAuthRequest = true;
     }
 
-    const api = await discover(url, {apiUser, usersJSON, limit, cpt, pages});
+    const api = await discover(url, {apiUser, usersJSON, posts, pages, limit, cpt});
 
     const theTasks = [];
 
