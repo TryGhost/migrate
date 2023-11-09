@@ -99,7 +99,7 @@ const tasks = async (url, ctx) => {
         isAuthRequest = true;
     }
 
-    const api = await discover(url, {apiUser, usersJSON, limit, cpt});
+    const api = await discover(url, {apiUser, usersJSON, limit, cpt, pages});
 
     const theTasks = [];
 
