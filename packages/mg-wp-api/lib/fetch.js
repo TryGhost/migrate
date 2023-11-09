@@ -29,21 +29,21 @@ const discover = async (url, {apiUser, usersJSON, pages, limit, cpt}) => {
 
     values.site = site;
 
-    const posts = await site.posts().perPage(limit);
-    values.totals.posts = posts._paging && posts._paging.total ? posts._paging.total : 0;
-    values.batches.posts = posts._paging && posts._paging.totalPages ? posts._paging.totalPages : 0;
+    const postsData = await site.posts().perPage(limit);
+    values.totals.posts = postsData._paging && postsData._paging.total ? postsData._paging.total : 0;
+    values.batches.posts = postsData._paging && postsData._paging.totalPages ? postsData._paging.totalPages : 0;
 
     if (pages) {
         const pageData = await site.pages().perPage(limit);
-        values.totals.pages = pageData._paging && pages._paging.total ? pageData._paging.total : 0;
-        values.batches.pages = pageData._paging && pages._paging.totalPages ? pageData._paging.totalPages : 0;
+        values.totals.pages = pageData._paging && pageData._paging.total ? pageData._paging.total : 0;
+        values.batches.pages = pageData._paging && pageData._paging.totalPages ? pageData._paging.totalPages : 0;
     }
 
     // If users were already supplied, don't fetch them
     if (!usersJSON) {
-        const users = await site.users().perPage(limit);
-        values.totals.users = users._paging && users._paging.total ? users._paging.total : 0;
-        values.batches.users = users._paging && users._paging.totalPages ? users._paging.totalPages : 0;
+        const usersData = await site.users().perPage(limit);
+        values.totals.users = usersData._paging && usersData._paging.total ? usersData._paging.total : 0;
+        values.batches.users = usersData._paging && usersData._paging.totalPages ? usersData._paging.totalPages : 0;
     }
 
     return values;
