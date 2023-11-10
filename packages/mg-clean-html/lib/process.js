@@ -33,7 +33,7 @@ const cleanHTML = (args) => {
 
     const $html = $.load(html, {
         decodeEntities: false
-    });
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // Remove left, center & right text alignment
     if (opinionated) {
@@ -287,6 +287,9 @@ const cleanHTML = (args) => {
 
     // convert HTML back to a string
     html = $html.html();
+
+    // Remove empty attributes
+    html = html.replace(/=""/g, '');
 
     return html;
 };
