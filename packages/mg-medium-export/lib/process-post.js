@@ -133,8 +133,9 @@ const processFeatureImage = ({html, post, options}) => {
 
 export default ({name, html, globalUser, options}) => {
     const $post = $.load(html, {
-        decodeEntities: false
-    }, false);
+        decodeEntities: false,
+        scriptingEnabled: false
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     const post = processMeta({name, $post, options});
 
