@@ -8,8 +8,9 @@ Receives raw HTML, returns processed HTML
 
 export default (rawHtml, options = {}) => {
     const $html = $.load(rawHtml, {
-        decodeEntities: false
-    });
+        decodeEntities: false,
+        scriptingEnabled: false
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // Convert relative links and image paths to absolute
     if (options.url) {
@@ -49,7 +50,14 @@ export default (rawHtml, options = {}) => {
         }
     });
 
-    let html = $html.html().trim();
+    // convert HTML back to a string
+    let html = $html.html();
+
+    // Remove empty attributes
+    html = html.replace(/=""/g, '');
+
+    // Trim whitespace
+    html = html.trim();
 
     return html;
 };
