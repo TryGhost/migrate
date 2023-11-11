@@ -88,10 +88,11 @@ const processContent = (post, siteUrl, options) => {
         return post;
     }
 
-    // As there is HTML, pass it to Cheerio inside a `<body>` tag so we have a global wrapper to target later on
-    const $html = $.load(`<body>${html}</body>`, {
-        decodeEntities: false
-    });
+    // As there is HTML, pass it to Cheerio inside a `<div class="migrate-substack-wrapper"></div>` element so we have a global wrapper to target later on
+    const $html = $.load(`<div class="migrate-substack-wrapper">${html}</div>`, {
+        decodeEntities: false,
+        scriptingEnabled: false
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // Empty text elements are commonplace and are not needed
     $html('p').each((i, el) => {
@@ -108,7 +109,7 @@ const processContent = (post, siteUrl, options) => {
             post.data.feature_image = largeImageUrl(post.data.og_image);
         }
 
-        let firstElement = $html('body *').first();
+        let firstElement = $html('.migrate-substack-wrapper *').first();
 
         if (firstElement.tagName === 'img' || ($(firstElement).get(0) && $(firstElement).get(0).name === 'img') || $(firstElement).find('img').length) {
             let theElementItself = (firstElement.tagName === 'img' || $(firstElement).get(0).name === 'img') ? firstElement : $(firstElement).find('img');
@@ -132,7 +133,7 @@ const processContent = (post, siteUrl, options) => {
     }
 
     if (useFirstImage && !post.data.feature_image) {
-        let firstElement = $html('body *').first();
+        let firstElement = $html('.migrate-substack-wrapper *').first();
 
         if (firstElement.tagName === 'img' || ($(firstElement).get(0) && $(firstElement).get(0).name === 'img') || $(firstElement).find('img').length) {
             let theElementItself = (firstElement.tagName === 'img' || $(firstElement).get(0).name === 'img') ? firstElement : $(firstElement).find('img');
@@ -168,7 +169,7 @@ const processContent = (post, siteUrl, options) => {
         const buildCard = audioCard.render(cardOpts);
         const cardHTML = buildCard.nodeValue;
 
-        $html('body').prepend(cardHTML);
+        $html('.migrate-substack-wrapper').prepend(cardHTML);
     }
 
     $html('div.tweet').each((i, el) => {
@@ -336,8 +337,8 @@ const processContent = (post, siteUrl, options) => {
     });
 
     if (footnotesCount > 0) {
-        // Only append notes markup is there are footnotes
-        $html('body').append(`<!--kg-card-begin: html-->${footnotesMarkup}<!--kg-card-end: html-->`);
+        let footnotedHTML = $.html($(footnotesMarkup));
+        $html('.migrate-substack-wrapper').append(`<!--kg-card-begin: html-->${footnotedHTML}<!--kg-card-end: html-->`);
     }
 
     // Wrap content that has footnote anchors in HTML tags to retain the footnote jump anchor
@@ -429,7 +430,10 @@ const processContent = (post, siteUrl, options) => {
     });
 
     // convert HTML back to a string
-    html = $html('body').html();
+    html = $html('.migrate-substack-wrapper').html();
+
+    // Remove empty attributes
+    html = html.replace(/=""/g, '');
 
     // Apply our new HTML back to the post object
     post.data.html = html.trim();

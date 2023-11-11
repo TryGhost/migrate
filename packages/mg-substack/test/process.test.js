@@ -658,15 +658,15 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         '                \n' +
         '                <!--kg-card-begin: html--><div class="footnotes"><hr><ol><li id="footnote-1">\n' +
         '                        <p>Lorem ipsum</p>\n' +
-        '                        <p>Dolor simet <a href="#footnote-anchor-1" title="Jump back to footnote 1 in the text.">&#x21A9;</a></p>\n' +
+        '                        <p>Dolor simet <a href="#footnote-anchor-1" title="Jump back to footnote 1 in the text.">↩</a></p>\n' +
         '                    </li><li id="footnote-2">\n' +
-        '                        <p>Consectetur adipiscing <a href="#footnote-anchor-2" title="Jump back to footnote 2 in the text.">&#x21A9;</a></p>\n' +
+        '                        <p>Consectetur adipiscing <a href="#footnote-anchor-2" title="Jump back to footnote 2 in the text.">↩</a></p>\n' +
         '                    </li><li id="footnote-3">\n' +
-        '                        <p>Elit elementum venenatis <a href="#footnote-anchor-3" title="Jump back to footnote 3 in the text.">&#x21A9;</a></p>\n' +
+        '                        <p>Elit elementum venenatis <a href="#footnote-anchor-3" title="Jump back to footnote 3 in the text.">↩</a></p>\n' +
         '                    </li></ol></div><!--kg-card-end: html-->');
     });
 
-    test('Can process footnotes in text contentin new style', async function () {
+    test('Can process footnotes in text content in new style', async function () {
         const post = {
             data: {
                 html: `<p>Lorem ipsum</p>
@@ -708,11 +708,11 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         '            \n' +
         '            <!--kg-card-begin: html--><div class="footnotes"><hr><ol><li id="footnote-1">\n' +
         '                    <p>Note content</p>\n' +
-        '                    <p>Two lines <a href="#footnote-anchor-1" title="Jump back to footnote 1 in the text.">&#x21A9;</a></p>\n' +
+        '                    <p>Two lines <a href="#footnote-anchor-1" title="Jump back to footnote 1 in the text.">↩</a></p>\n' +
         '                </li><li id="footnote-2">\n' +
-        '                    <p>More notes <a href="#footnote-anchor-2" title="Jump back to footnote 2 in the text.">&#x21A9;</a></p>\n' +
+        '                    <p>More notes <a href="#footnote-anchor-2" title="Jump back to footnote 2 in the text.">↩</a></p>\n' +
         '                </li><li id="footnote-3">\n' +
-        '                    <p><a href="https://ghost.org">Link</a> in this one <a href="#footnote-anchor-3" title="Jump back to footnote 3 in the text.">&#x21A9;</a></p>\n' +
+        '                    <p><a href="https://ghost.org">Link</a> in this one <a href="#footnote-anchor-3" title="Jump back to footnote 3 in the text.">↩</a></p>\n' +
         '                </li></ol></div><!--kg-card-end: html-->');
     });
 
