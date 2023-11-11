@@ -27,6 +27,6 @@
   "dependencies": {
     "cheerio": "1.0.0-rc.12",
     "escape-string-regexp": "5.0.0",
-    "style-to-object": "0.4.2"
+    "style-to-object": "1.0.4"
   }
 }
