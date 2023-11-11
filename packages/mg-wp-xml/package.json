@@ -26,7 +26,7 @@
   "dependencies": {
     "@tryghost/errors": "1.2.26",
     "@tryghost/mg-wp-api": "^0.10.20",
-    "cheerio": "0.22.0",
+    "cheerio": "1.0.0-rc.12",
     "date-fns": "2.30.0",
     "markdown-it": "13.0.2",
     "php-serialize": "4.1.1"
