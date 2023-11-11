@@ -16,8 +16,9 @@ const processContent = (html, postUrl, options) => {
     html = html.replace(/<li><br><\/li>/g, '');
 
     const $html = $.load(html, {
-        decodeEntities: false
-    });
+        decodeEntities: false,
+        scriptingEnabled: false
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // Letterdrop supplies internal links in post content with `.com/c/`, but post URLs in JSON are `.com/p/`.
     // Lets normalise that
@@ -77,8 +78,14 @@ const processContent = (html, postUrl, options) => {
         }
     });
 
-    // convert HTML back to a string
+    // Convert HTML back to a string
     html = $html.html();
+
+    // Remove empty attributes
+    html = html.replace(/=""/g, '');
+
+    // Trim whitespace
+    html = html.trim();
 
     return html;
 };
