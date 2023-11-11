@@ -28,7 +28,7 @@
     "@tryghost/errors": "1.2.26",
     "@tryghost/kg-default-cards": "9.1.9",
     "@tryghost/string": "0.2.8",
-    "cheerio": "0.22.0",
+    "cheerio": "1.0.0-rc.12",
     "node-fetch": "^3.3.1",
     "simple-dom": "1.4.0",
     "xml2json": "0.12.0"
