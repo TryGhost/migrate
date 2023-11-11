@@ -118,8 +118,9 @@ const processExcerpt = (html, excerptSelector = false) => {
     if (excerptSelector) {
         // TODO: this should be possible by using a pseudo selector as a passed `excerptSelector`, e. g. `h2.excerpt:first-of-type`,
         const $html = $.load(html, {
-            decodeEntities: false
-        });
+            decodeEntities: false,
+            scriptingEnabled: false
+        }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
         excerptText = $html(excerptSelector).first().html();
     } else {
@@ -179,8 +180,9 @@ const processShortcodes = async ({html}) => {
 
     shortcodes.add('caption', ({content}) => {
         const $html = $.load(content, {
-            decodeEntities: false
-        });
+            decodeEntities: false,
+            scriptingEnabled: false
+        }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
         let theImage = $html('img');
         let theCaption = $html.text().trim();
@@ -284,8 +286,9 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     }
 
     const $html = $.load(html, {
-        decodeEntities: false
-    });
+        decodeEntities: false,
+        scriptingEnabled: false
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // If the first element in the content is an image, and is the same as the feature image, remove it
     if (featureImageSrc) {
@@ -693,6 +696,9 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     // convert HTML back to a string
     html = $html.html();
+
+    // Remove empty attributes
+    html = html.replace(/=""/g, '');
 
     return html;
 };

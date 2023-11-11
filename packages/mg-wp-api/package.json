@@ -31,7 +31,7 @@
     "@tryghost/mg-shortcodes": "^0.2.13",
     "@tryghost/mg-webscraper": "^0.9.15",
     "@tryghost/string": "0.2.8",
-    "cheerio": "0.22.0",
+    "cheerio": "1.0.0-rc.12",
     "date-fns": "2.30.0",
     "html-to-text": "9.0.5",
     "wpapi": "1.2.2"
