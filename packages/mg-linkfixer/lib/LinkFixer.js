@@ -112,7 +112,10 @@ export default class LinkFixer {
     }
 
     async processHTML(html) {
-        let $ = cheerio.load(html);
+        let $ = cheerio.load(html, {
+            decodeEntities: false,
+            scriptingEnabled: false
+        }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
         let links = $('a').map(async (i, el) => {
             let href = $(el).attr('href');
