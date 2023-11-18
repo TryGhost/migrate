@@ -2281,12 +2281,12 @@
     extract-zip "^2.0.1"
     fs-extra "^10.0.0"
 
-"@tryghost/zip@1.1.38":
-  version "1.1.38"
-  resolved "https://registry.yarnpkg.com/@tryghost/zip/-/zip-1.1.38.tgz#fe1ead4aa6188d8bdb8e18c520fb3918ae6c75cd"
-  integrity sha512-cJIsmoeVJau0TUUa70xml91I0/13uAJLsMSAGlwzblDY7cCZu2/deTw36YdNP1oQtXHOZKDRZpqYX3NZ7uXgIQ==
+"@tryghost/zip@1.1.39":
+  version "1.1.39"
+  resolved "https://registry.yarnpkg.com/@tryghost/zip/-/zip-1.1.39.tgz#bfd3ac05f2ad3b968a6b4511776dd412175902c8"
+  integrity sha512-UentcPGgtyGYdJiwKk7Av827Ut59msF8MMh8oRyopZLNYAZv6v9EXEOjAVgtCNoJ1Bfpk7sjkmUjqoIrOyxTZQ==
   dependencies:
-    "@tryghost/errors" "^1.2.26"
+    "@tryghost/errors" "^1.2.27"
     archiver "^5.0.0"
     extract-zip "^2.0.1"
 
