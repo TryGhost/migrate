@@ -8,6 +8,10 @@ export default class Shortcodes {
         this.shortcodes.push({name, callback});
     }
 
+    addWitSplit(name, split, target, callback) {
+        this.shortcodes.push({name, split, target, callback});
+    }
+
     unwrap(name) {
         this.shortcodes.push({name, callback: ({content}) => {
             return `${content} `;
@@ -142,14 +146,24 @@ export default class Shortcodes {
         return (result) ? result : false;
     }
 
+    getShortcode(name) {
+        if (!name) {
+            return false;
+        }
+
+        let foundShortcode = this.shortcodes.filter(n => n.name === name);
+
+        return foundShortcode[0];
+    }
+
     getCallback(name) {
         if (!name) {
             return false;
         }
 
-        let thisThing = this.shortcodes.filter(n => n.name === name);
+        let foundShortcode = this.shortcodes.filter(n => n.name === name);
 
-        return thisThing[0].callback;
+        return foundShortcode[0].callback;
     }
 
     process() {
@@ -158,10 +172,18 @@ export default class Shortcodes {
         let knownShortcode = this.hasKnownShortcode(text);
 
         if (knownShortcode) {
-            // console.log({knownShortcode});
-            const theCall = this.getCallback(knownShortcode.name);
+            const thisShortcode = this.getShortcode(knownShortcode.name);
+            const theCall = thisShortcode.callback;
             const attrs = this.parseAttributes(knownShortcode.match.groups.attrs);
-            const content = knownShortcode.match.groups.content;
+            let content = knownShortcode.match.groups.content;
+
+            // If the shortcode has a `split` param & is present in the `content`, split the content and return the target
+            if (thisShortcode.split && content.includes(`[${thisShortcode.split}]`)) {
+                const splitContent = content.split(`[${thisShortcode.split}]`);
+                content = splitContent[thisShortcode.target];
+            }
+
+            // content = content?.trim();
 
             if (theCall) {
                 text = text.replace(knownShortcode.match[0], theCall({attrs, content}));

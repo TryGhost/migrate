@@ -25,6 +25,11 @@ shortcodes.add('link', ({attrs, content}) => {
     return `<a href="${attrs.url}">${content}</a>`;
 });
 
+// [abc color="red"]<p>Full post</p>[def]<p>Free excerpt</p>[/abc]
+shortcodes.addWitSplit('abc', 'def', 0, ({content}) => {
+    return content; // <p>Full post</p>
+});
+
 // Unwrap [block] shortcodes
 shortcodes.unwrap('block');
 
