@@ -467,6 +467,10 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     await Promise.all(libsynPodcasts);
 
+    $html('figure.wp-block-embed.is-provider-twitter').each((i, el) => {
+        $(el).replaceWith(`<blockquote class="twitter-tweet"><a href="${$(el).text()}"></a></blockquote>`);
+    });
+
     $html('blockquote.twitter-tweet').each((i, el) => {
         let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
         let $script = $('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
