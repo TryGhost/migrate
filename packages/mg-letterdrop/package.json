@@ -29,6 +29,6 @@
     "@tryghost/errors": "1.2.26",
     "@tryghost/string": "0.2.10",
     "cheerio": "1.0.0-rc.12",
-    "got": "11.8.6"
+    "got": "13.0.0"
   }
 }
