@@ -301,33 +301,39 @@ describe('HTML handling', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
-            html: '<a href="https://example.com"><img src="https://example.com/images/photo.jpg" /></a>'
+            html: '<a href="https://example.com"><img src="https://example.com/images/photo.jpg" /> Hello</a>'
         };
 
         convertPost(post, false);
 
         const lexical = JSON.parse(post.lexical ? post.lexical : '');
 
-        assert.equal(lexical.root.children[0].type, 'image');
-        assert.equal(lexical.root.children[0].href, 'https://example.com/');
-        assert.equal(lexical.root.children[0].src, 'https://example.com/images/photo.jpg');
+        assert.equal(lexical.root.children[0].children[0].type, 'link');
+        assert.equal(lexical.root.children[0].children[0].url, 'https://example.com');
+        assert.equal(lexical.root.children[0].children[0].children[0].type, 'image');
+        assert.equal(lexical.root.children[0].children[0].children[0].src, 'https://example.com/images/photo.jpg');
+        assert.equal(lexical.root.children[0].children[0].children[1].type, 'extended-text');
+        assert.equal(lexical.root.children[0].children[0].children[1].text, 'Hello');
     });
 
     test('Correctly converts a linked image with img alt', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
-            html: '<a href="https://example.com"><img src="https://example.com/images/photo.jpg" alt="Image alt" /></a>'
+            html: '<a href="https://example.com"><img src="https://example.com/images/photo.jpg" alt="Image alt" /> Hello</a>'
         };
 
         convertPost(post, false);
 
         const lexical = JSON.parse(post.lexical ? post.lexical : '');
 
-        assert.equal(lexical.root.children[0].type, 'image');
-        assert.equal(lexical.root.children[0].href, 'https://example.com/');
-        assert.equal(lexical.root.children[0].src, 'https://example.com/images/photo.jpg');
-        assert.equal(lexical.root.children[0].alt, 'Image alt');
+        assert.equal(lexical.root.children[0].children[0].type, 'link');
+        assert.equal(lexical.root.children[0].children[0].url, 'https://example.com');
+        assert.equal(lexical.root.children[0].children[0].children[0].type, 'image');
+        assert.equal(lexical.root.children[0].children[0].children[0].src, 'https://example.com/images/photo.jpg');
+        assert.equal(lexical.root.children[0].children[0].children[0].alt, 'Image alt');
+        assert.equal(lexical.root.children[0].children[0].children[1].type, 'extended-text');
+        assert.equal(lexical.root.children[0].children[0].children[1].text, 'Hello');
     });
 
     test('Correctly converts a WordPress flavoured image', function () {
