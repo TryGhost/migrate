@@ -6,7 +6,7 @@ import SimpleDom from 'simple-dom';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 import errors from '@tryghost/errors';
 
-const htmlTotextTrimmed = (html, max) => {
+const htmlToTextTrimmed = (html, max) => {
     let noHtml = html.replace(/<[^>]+>/g, ' ').replace(/\r?\n|\r/g, ' ').replace(/ {2,}/, ' ').trim();
     return noHtml && noHtml.length > max ? noHtml.slice(0,max).split(' ').slice(0, -1).join(' ') : noHtml;
 };
@@ -31,8 +31,8 @@ const processContent = (html) => {
 
     const $html = $.load(html, {
         decodeEntities: false,
-        normalizeWhitespace: true
-    });
+        scriptingEnabled: false
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     $html('.sqs-audio-embed').each((i, el) => {
         let audioSrc = $(el).attr('data-url');
@@ -78,8 +78,14 @@ const processContent = (html) => {
         $parent.after('<!--kg-card-end: html-->');
     });
 
-    // convert HTML back to a string
+    // Convert HTML back to a string
     html = $html.html();
+
+    // Remove empty attributes
+    html = html.replace(/=""/g, '');
+
+    // Trim whitespace
+    html = html.trim();
 
     return html;
 };
@@ -188,7 +194,7 @@ const processPost = ($sqPost, users, options) => {
                 url: 'migrator-added-tag-no-title', data: {name: '#no-title'}
             });
 
-            post.data.title = htmlTotextTrimmed(post.data.html, 50);
+            post.data.title = htmlToTextTrimmed(post.data.html, 50);
         }
 
         if (!post.data.author) {
@@ -248,8 +254,10 @@ const all = async (input, {options}) => {
     const $xml = $.load(input, {
         decodeEntities: false,
         xmlMode: true,
+        scriptingEnabled: false,
         lowerCaseTags: true // needed to find `pubDate` tags
-    });
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+    // });
 
     // grab the URL of the site we're importing
     options.url = $xml('channel > link').text();

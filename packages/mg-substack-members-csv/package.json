@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-substack-members-csv",
-  "version": "0.4.12",
+  "version": "0.4.14",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-substack-members-csv",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -20,9 +20,9 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.50.0",
+    "eslint": "8.54.0",
     "jest": "29.7.0",
-    "jest-extended": "4.0.1"
+    "jest-extended": "4.0.2"
   },
   "dependencies": {
     "@tryghost/errors": "1.2.26",

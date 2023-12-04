@@ -379,7 +379,7 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        expect(processed).toEqual('<p>This is an example page. It&#8217;s different from a blog post.</p><ul><li>Lorem</li><li>Ipsum</li></ul><p><strong>Dolor</strong> <a href="https://ghost.org" title="Try Ghost">sit</a> <em>amet</em>.</p>');
+        expect(processed).toEqual('<p>This is an example page. It’s different from a blog post.</p><ul><li>Lorem</li><li>Ipsum</li></ul><p><strong>Dolor</strong> <a href="https://ghost.org" title="Try Ghost">sit</a> <em>amet</em>.</p>');
     });
 
     test('Can wrap a nested unordered list in a HTML card', async function () {
@@ -596,6 +596,14 @@ describe('Process WordPress HTML', function () {
         const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<figure class="kg-card kg-embed-card"><iframe width="160" height="90" src="https://www.youtube.com/embed/1234abcd123?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></figure>');
+    });
+
+    test('Can convert Twitter embed', async function () {
+        const html = `<figure class="wp-block-embed is-type-rich is-provider-twitter wp-block-embed-twitter"><div class="wp-block-embed__wrapper">https://twitter.com/example/status/12345678</div></figure>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><a href="https://twitter.com/example/status/12345678"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure><!--kg-card-end: embed-->');
     });
 });
 

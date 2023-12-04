@@ -14,7 +14,7 @@ import AssetCache from './AssetCache.js';
 // Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/shared/config/overrides.json
 const knownImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/webp'];
 const knownMediaTypes = ['video/mp4', 'video/webm', 'video/ogg', 'audio/mpeg', 'audio/mp3', 'audio/vnd.wav', 'audio/wave', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/x-m4a'];
-const knownFileTypes = ['application/pdf', 'application/json', 'application/ld+json', 'application/vnd.oasis.opendocument.presentation', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.text', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/rtf', 'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/xml', 'application/atom+xml'];
+const knownFileTypes = ['application/pdf', 'application/json', 'application/ld+json', 'application/vnd.oasis.opendocument.presentation', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.text', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/rtf', 'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/xml', 'application/atom+xml', 'application/x-msdownload'];
 const knownTypes = [...knownImageTypes, ...knownMediaTypes, ...knownFileTypes];
 
 const isValidUrlString = (string) => {
@@ -612,7 +612,7 @@ export default class AssetScraper {
                 if (res.headers) {
                     let theHeaders = res.headers;
 
-                    if (theHeaders['content-type'] === 'application/octet-stream') {
+                    if (theHeaders['content-type'] === 'application/octet-stream' && theHeaders['content-disposition']) {
                         const disposition = theHeaders['content-disposition'];
                         const parts = disposition.split('.');
                         const extension = parts.pop();

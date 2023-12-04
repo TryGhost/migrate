@@ -197,6 +197,18 @@ describe('Process', function () {
 
         expect(post.data.canonical_url).toEqual('https://medium.com/@JoeBloggs/testpost-efefef12121212');
     });
+
+    it('does remove the subtitle if used as excerpt', function () {
+        const fixture = readSync('advanced-post.html');
+        const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
+        const post = processPost({name: fakeName, html: fixture, options: {
+            addTag: 'This is my custom tag',
+            addPlatformTag: true
+        }});
+
+        // "This is a subtitle of some sort" is already used as excerpt, so don't include it in the content
+        expect(post.data.html).not.toContain('<h4 name="456" id="456" class="graf graf--h4 graf-after--h3 graf--subtitle">This is a subtitle of some sort</h4>');
+    });
 });
 
 describe('Process Content', function () {
@@ -274,7 +286,6 @@ describe('Process Content', function () {
         'sudo apt-get install example</code></pre>');
     });
 
-    // Works
     it('Can process code blocks', function () {
         const source = `<div class="e-content"><p>My content</p>
         <pre data-code-block-mode="2" spellcheck="false" data-code-block-lang="bash" name="2296" id="2296" class="graf graf--pre graf-after--p graf--preV2">
@@ -298,5 +309,102 @@ describe('Process Content', function () {
             '<span class="pre--content">wget https://example.com/package.zip</span>\n' +
             '</pre>');
         expect(newHtml).toContain('<pre><code class="language-bash">wget https://example.com/package.zip</code></pre>');
+    });
+
+    it('Can process galleries', function () {
+        const source = `<div class="e-content"><div class="section-inner sectionLayout--outsetRow" data-paragraph-count="3">
+            <figure name="f106" id="f106" class="graf graf--figure graf--layoutOutsetRow is-partialWidth graf-after--li" style="width: 34.74%;">
+                <img class="graf-image" data-image-id="1*1234.jpeg" data-width="768" data-height="933" src="https://cdn-images-1.medium.com/max/600/1*1234.jpeg">
+            </figure>
+            <figure name="13ec" id="13ec" class="graf graf--figure graf--layoutOutsetRowContinue is-partialWidth graf-after--figure" style="width: 31.659%;">
+                <img class="graf-image" data-image-id="1*5678.jpeg" data-width="768" data-height="1024" src="https://cdn-images-1.medium.com/max/400/1*5678.jpeg">
+            </figure>
+            <figure name="4dc5" id="4dc5" class="graf graf--figure graf--layoutOutsetRowContinue is-partialWidth graf-after--figure" style="width: 33.601%;">
+                <img class="graf-image" data-image-id="1*-abcd.jpeg" data-width="768" data-height="965" src="https://cdn-images-1.medium.com/max/600/1*-abcd.jpeg">
+                <figcaption class="imageCaption" style="width: 297.61%; left: -197.61%;">Photos by the author</figcaption>
+            </figure>
+        </div></div>`;
+
+        const $post = $.load(source, {
+            decodeEntities: false
+        }, false);
+
+        const newHtml = processContent({
+            content: $post('.e-content'),
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        expect(newHtml).not.toContain('<div class="section-inner sectionLayout--outsetRow" data-paragraph-count="3">');
+
+        expect(newHtml).toContain('<figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*1234.jpeg" width="768" height="933" loading="lazy" alt=""></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/400/1*5678.jpeg" width="768" height="1024" loading="lazy" alt=""></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*-abcd.jpeg" width="768" height="965" loading="lazy" alt=""></div></div></div><figcaption>Photos by the author</figcaption></figure>');
+    });
+
+    it('Can process embeds', function () {
+        const source = `<div class="e-content">
+         <div name="d38c" id="d38c" class="graf graf--mixtapeEmbed graf-after--p graf--trailing"><a
+                     href="https://example.medium.com/list/1234"
+                     data-href="https://example.medium.com/list/1234"
+                     class="markup--anchor markup--mixtapeEmbed-anchor"
+                     title="https://example.medium.com/list/1234"><strong
+                       class="markup--strong markup--mixtapeEmbed-strong">My best Articles</strong><br>
+                       class="markup--em markup--mixtapeEmbed-em"><em class="markup--em markup--mixtapeEmbed-em">A description</em>example.medium.com</a><a
+                     href="https://example.medium.com/list/1234"
+                     class="js-mixtapeImage mixtapeImage mixtapeImage--mediumCatalog  u-ignoreBlock"
+                     data-media-id="abcd1234"
+                     data-thumbnail-img-id="0*5678.jpeg"
+                     style="background-image: url(https://cdn-images-1.medium.com/fit/c/304/160/0*5678.jpeg);"></a>
+                 </div>
+        </div>`;
+
+        const $post = $.load(source, {
+            decodeEntities: false
+        }, false);
+
+        const newHtml = processContent({
+            content: $post('.e-content'),
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        expect(newHtml).not.toContain('<div name="d38c" id="d38c" class="graf graf--mixtapeEmbed graf-after--p graf--trailing">');
+
+        expect(newHtml).toContain('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.medium.com/list/1234"><div class="kg-bookmark-content"><div class="kg-bookmark-title">My best Articles</div><div class="kg-bookmark-description">A description</div><div class="kg-bookmark-metadata"></div></div><div class="kg-bookmark-thumbnail"><img src="https://cdn-images-1.medium.com/fit/c/304/160/0*5678.jpeg" alt=""></div></a></figure>');
+    });
+
+    it('Can process blockquotes in 2 parts', function () {
+        const source = `<div class="e-content">
+            <p>Not quote text</p>
+            <blockquote name="68bf" id="68bf" class="graf graf--pullquote graf-after--p graf--trailing">Standalone quote</blockquote>
+            <p>Also not quote text</p>
+            <blockquote name="3755" id="3755" class="graf graf--pullquote graf--startsWithDoubleQuote graf-after--li">“Main quote.”</blockquote>
+            <blockquote name="8d9f" id="8d9f" class="graf graf--pullquote graf-after--pullquote graf--trailing">— <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></blockquote>
+        </div>`;
+
+        const $post = $.load(source, {
+            decodeEntities: false
+        }, false);
+
+        const newHtml = processContent({
+            content: $post('.e-content'),
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        expect(newHtml).not.toContain('<blockquote name="68bf" id="68bf" class="graf graf--pullquote graf-after--p graf--trailing">Standalone quote</blockquote>');
+        expect(newHtml).not.toContain('<blockquote name="3755" id="3755" class="graf graf--pullquote graf--startsWithDoubleQuote graf-after--li">“Main quote.”</blockquote>');
+        expect(newHtml).not.toContain('<blockquote name="8d9f" id="8d9f" class="graf graf--pullquote graf-after--pullquote graf--trailing">— <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></blockquote>');
+
+        expect(newHtml).toContain('<blockquote><p>Standalone quote</p></blockquote>');
+        expect(newHtml).toContain('<blockquote><p>“Main quote.”<br><br>— <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></p></blockquote>');
     });
 });

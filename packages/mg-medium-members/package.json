@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-medium-members",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-medium-members",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -27,9 +27,9 @@
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "c8": "8.0.1",
-    "eslint": "8.50.0",
+    "eslint": "8.54.0",
     "jest": "29.7.0",
-    "sinon": "^16.0.0",
+    "sinon": "^17.0.0",
     "typescript": "5.2.2"
   },
   "dependencies": {

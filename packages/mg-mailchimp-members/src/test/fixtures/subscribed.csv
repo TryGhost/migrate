@@ -1,0 +1,6 @@
+Email Address,First Name,Last Name,Company,Position,ZIP Code,MEMBER_RATING,OPTIN_TIME,OPTIN_IP,CONFIRM_TIME,CONFIRM_IP,LATITUDE,LONGITUDE,GMTOFF,DSTOFF,TIMEZONE,CC,REGION,LAST_CHANGED,LEID,EUID,NOTES,TAGS
+s1@example.com,,,,,,,2023-04-21 11:16:57,,2023-04-21 11:16:57,,,,,,,,,,,,,
+s2@example.com,,,,,,,2018-02-12 10:54:27,,2018-02-12 10:54:27,,,,,,,,,,,,,"""Lorem Editors"""
+s3@example.com,,,,,,,2018-02-12 10:54:27,,2018-02-12 10:54:27,,,,,,,,,,,,,"""Lorem Editors"""
+s4@example.com,,,,,,,2018-02-05 19:28:23,,2018-02-05 19:28:23,,,,,,,,,,,,,"""Lorem Editors"""
+s5@example.com, Dolor , Simet , Lorem Co. ,,,,2018-02-05 19:28:22,,2018-02-05 19:28:22,,,,,,,,,,,,,"""Lorem Editors"""

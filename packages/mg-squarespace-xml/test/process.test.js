@@ -48,7 +48,49 @@ describe('Process', function () {
         expect(data.updated_at).toEqual(new Date('2013-06-07T03:00:44.000Z'));
         expect(data.feature_image).toEqual('https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1268&q=80');
         expect(data.type).toEqual('post');
-        expect(data.html).toEqual('<div class="image-block-outer-wrapper layout-caption-below design-layout-inline" data-test="image-block-inline-outer-wrapper"> <figure class="sqs-block-image-figure intrinsic" style="max-width:409.0px;"> <a class="sqs-block-image-link" href="https://anothersite.co.uk" target="_blank"> <div style="padding-bottom:37.4083137512207%;" lass="image-block-wrapper" data-animation-role="image" data-animation-override> <noscript><img src="https://images.unsplash.com/photo-1601275225755-f6a6c1730cb1?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2765&q=80"></noscript>  </div> </a> </figure> </div> <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris pellentesque nisi sed neque vestibulum pulvinar.</p> <p>Integer iaculis ac elit a bibendum. Suspendisse rhoncus vitae dui vitae ultrices.</p> <table> <thead> <tr> <th>Width</th> <th>Height</th> </tr> </thead> <tbody> <tr> <td>20</td> <td>15</td> </tr> <tr> <td>40</td> <td>30</td> </tr> </tbody> </table> <p>Aenean velit mi, <a href="https://anothersite.co.uk" target="_blank">dapibus</a> eget ex sed, viverra ultrices mi. Nunc at odio bibendum, gravida lectus sit amet, congue dui. Mauris id justo ante. Cras viverra suscipit bibendum.</p> <p><strong>Sed vulputate consectetur tortor:</strong></p> <ul> <li>Lobortis mauris dapibus in</li> <li>Donec pharetra, orci sit amet fermentum</li> <li>Pretium, nisi arcu molestie mi, nec</li> <li>Consequat turpis tortor vulputate quam, mauris vel quam turpis</li> </ul> <p></p> <p>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nulla aliquet neque eu lectus sollicitudin, sit amet vestibulum diam commodo.</p> <p>&nbsp;</p> <p>&nbsp;</p> <p>&nbsp;</p>');
+        expect(data.html).toEqual('<div class="image-block-outer-wrapper layout-caption-below design-layout-inline" data-test="image-block-inline-outer-wrapper">\n' +
+        '        <figure class="sqs-block-image-figure intrinsic" style="max-width:409.0px;">\n' +
+        '          <a class="sqs-block-image-link" href="https://anothersite.co.uk" target="_blank">\n' +
+        '            <div style="padding-bottom:37.4083137512207%;" lass="image-block-wrapper" data-animation-role="image" data-animation-override>\n' +
+        '                <noscript><img src="https://images.unsplash.com/photo-1601275225755-f6a6c1730cb1?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=crop&amp;w=2765&amp;q=80"></noscript>\n' +
+        '                \n' +
+        '            </div>\n' +
+        '          </a>\n' +
+        '        </figure>\n' +
+        '        </div>\n' +
+        '        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris pellentesque nisi sed neque vestibulum pulvinar.</p>\n' +
+        '        <p>Integer iaculis ac elit a bibendum. Suspendisse rhoncus vitae dui vitae ultrices.</p>\n' +
+        '        <table>\n' +
+        '            <thead>\n' +
+        '                <tr>\n' +
+        '                    <th>Width</th>\n' +
+        '                    <th>Height</th>\n' +
+        '                </tr>\n' +
+        '            </thead>\n' +
+        '            <tbody>\n' +
+        '                <tr>\n' +
+        '                    <td>20</td>\n' +
+        '                    <td>15</td>\n' +
+        '                </tr>\n' +
+        '                <tr>\n' +
+        '                    <td>40</td>\n' +
+        '                    <td>30</td>\n' +
+        '                </tr>\n' +
+        '            </tbody>\n' +
+        '        </table>\n' +
+        '        <p>Aenean velit mi, <a href="https://anothersite.co.uk" target="_blank">dapibus</a> eget ex sed, viverra ultrices mi. Nunc at odio bibendum, gravida lectus sit amet, congue dui. Mauris id justo ante. Cras viverra suscipit bibendum.</p>\n' +
+        '        <p><strong>Sed vulputate consectetur tortor:</strong></p>\n' +
+        '        <ul>\n' +
+        '            <li>Lobortis mauris dapibus in</li>\n' +
+        '            <li>Donec pharetra, orci sit amet fermentum</li>\n' +
+        '            <li>Pretium, nisi arcu molestie mi, nec</li>\n' +
+        '            <li>Consequat turpis tortor vulputate quam, mauris vel quam turpis</li>\n' +
+        '        </ul>\n' +
+        '        <p></p>\n' +
+        '        <p>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nulla aliquet neque eu lectus sollicitudin, sit amet vestibulum diam commodo.</p>\n' +
+        '        <p>&nbsp;</p>\n' +
+        '        <p>&nbsp;</p>\n' +
+        '        <p>&nbsp;</p>');
 
         const tags = data.tags;
 

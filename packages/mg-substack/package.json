@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-substack",
-  "version": "0.3.19",
+  "version": "0.3.22",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-substack",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -20,16 +20,17 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.50.0",
+    "eslint": "8.54.0",
     "jest": "29.7.0",
-    "jest-extended": "4.0.1"
+    "jest-extended": "4.0.2"
   },
   "dependencies": {
     "@tryghost/debug": "0.1.26",
     "@tryghost/errors": "1.2.26",
-    "@tryghost/kg-default-cards": "9.1.5",
-    "@tryghost/mg-fs-utils": "^0.12.17",
-    "@tryghost/string": "0.2.8",
+    "@tryghost/kg-default-cards": "9.1.9",
+    "@tryghost/mg-fs-utils": "^0.12.19",
+    "@tryghost/string": "0.2.10",
+    "cheerio": "1.0.0-rc.12",
     "date-fns": "2.30.0",
     "html-entities": "2.4.0",
     "lodash": "4.17.21",

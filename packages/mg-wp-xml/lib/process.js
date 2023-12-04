@@ -339,8 +339,9 @@ const all = async (input, {options}) => {
     const $xml = $.load(input, {
         decodeEntities: false,
         xmlMode: true,
+        scriptingEnabled: false,
         lowerCaseTags: true // needed to find `pubDate` tags
-    });
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // grab the URL of the site we're importing
     options.url = $xml('channel > link').text();

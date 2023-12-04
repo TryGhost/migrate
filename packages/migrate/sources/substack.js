@@ -113,7 +113,11 @@ const scrapeConfig = {
 
                 let tags = [];
 
-                const $tags = $.load(x);
+                const $tags = $.load(x, {
+                    decodeEntities: false,
+                    scriptingEnabled: false
+                }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+
                 $tags('a').each((i, el) => {
                     const urlParts = $(el).attr('href').match(/.*\/s\/([a-zA-Z0-9-_]{1,})(\/.*)?/);
 

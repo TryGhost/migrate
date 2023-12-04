@@ -515,4 +515,62 @@ describe('Shortcode processing', function () {
 
         expect(parsed).toEqual('Hello  world  ');
     });
+
+    test('Can handle shortcodes with splits', function () {
+        const shortcodes = new Shortcodes();
+
+        shortcodes.addWitSplit('premium_content', 'premelse', 0, ({attrs, content}) => {
+            return `<div data-color="${attrs?.color ?? 'blue'}">${content}</div>`;
+        });
+
+        shortcodes.add('plan_setup', () => {
+            return '';
+        });
+
+        const html = `[premium_content color="red"]
+        <p>Full post</p>
+        [premelse]
+        <p>Free excerpt</p>
+        [/premium_content]
+        [premium_content plan="unregistered," type="show"]
+            [plan_setup id="2" hide_title="true"]
+        [/premium_content]`;
+
+        let parsed = shortcodes.parse(html).trim();
+
+        expect(parsed).toInclude('<div data-color="red">');
+        expect(parsed).toInclude('<p>Full post</p>');
+        expect(parsed).not.toInclude('<p>Free excerpt</p>');
+        expect(parsed).not.toInclude('premium_content');
+        expect(parsed).not.toInclude('plan_setup');
+    });
+
+    test('Can handle shortcodes with splits and return other part', function () {
+        const shortcodes = new Shortcodes();
+
+        shortcodes.addWitSplit('premium_content', 'premelse', 1, ({attrs, content}) => {
+            return `<div data-color="${attrs?.color ?? 'blue'}">${content}</div>`;
+        });
+
+        shortcodes.add('plan_setup', () => {
+            return '';
+        });
+
+        const html = `[premium_content color="red"]
+        <p>Full post</p>
+        [premelse]
+        <p>Free excerpt</p>
+        [/premium_content]
+        [premium_content plan="unregistered," type="show"]
+            [plan_setup id="2" hide_title="true"]
+        [/premium_content]`;
+
+        let parsed = shortcodes.parse(html).trim();
+
+        expect(parsed).toInclude('<div data-color="blue">');
+        expect(parsed).toInclude('<p>Free excerpt</p>');
+        expect(parsed).not.toInclude('<p>Full post</p>');
+        expect(parsed).not.toInclude('premium_content');
+        expect(parsed).not.toInclude('plan_setup');
+    });
 });

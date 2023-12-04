@@ -66,6 +66,9 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Provide a JSON file with users. Contents should be a JSON array of objects that match
       the format returned by the Wordpress API, including the following keys:
       "id", "slug", "name", "description", "email" and "url".
+- **`--posts**`**
+    - boolean - default: `true`
+    - Import posts
 - **`--pages**`**
     - boolean - default: `true`
     - Import pages

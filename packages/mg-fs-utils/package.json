@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-fs-utils",
-  "version": "0.12.17",
+  "version": "0.12.19",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-fs-utils",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -20,22 +20,22 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.50.0",
+    "eslint": "8.54.0",
     "jest": "29.7.0",
-    "jest-extended": "4.0.1"
+    "jest-extended": "4.0.2"
   },
   "dependencies": {
     "@tryghost/errors": "1.2.26",
-    "@tryghost/image-transform": "1.2.9",
-    "@tryghost/string": "0.2.8",
-    "@tryghost/zip": "1.1.38",
+    "@tryghost/image-transform": "1.2.11",
+    "@tryghost/string": "0.2.10",
+    "@tryghost/zip": "1.1.39",
     "adm-zip": "0.5.10",
-    "csv-parse": "5.5.0",
+    "csv-parse": "5.5.2",
     "date-fns": "2.30.0",
-    "fs-extra": "11.1.1",
+    "fs-extra": "11.2.0",
     "lodash": "4.17.21",
     "node-stream-zip": "1.15.0",
-    "sharp": "0.32.5",
+    "sharp": "0.32.6",
     "transliteration": "2.3.5"
   }
 }

@@ -70,6 +70,10 @@ const setup = (sywac) => {
         defaultValue: null,
         desc: 'Provide a JSON file with users'
     });
+    sywac.boolean('--posts', {
+        defaultValue: true,
+        desc: 'Import posts'
+    });
     sywac.boolean('--pages', {
         defaultValue: true,
         desc: 'Import pages'

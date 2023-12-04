@@ -48,7 +48,13 @@ const getAllAttributes = function (el) {
 const handleFirstImage = (args) => {
     let {postData, html} = args;
 
-    const $html = $.load(html);
+    // const $html = $.load(html);
+
+    const $html = $.load(html, {
+        decodeEntities: false,
+        scriptingEnabled: false
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+
     const firstContentElement = $html('*').first();
 
     if (firstContentElement[0].name === 'img') {
@@ -87,7 +93,10 @@ const processHTMLContent = async (args) => {
 
     html = autop(html);
 
-    const $html = $.load(html);
+    const $html = $.load(html, {
+        decodeEntities: false,
+        scriptingEnabled: false
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     $html('div.separator').each((i, el) => {
         $(el).replaceWith(`<hr><div>${$(el).html().trim()}</div>`);
@@ -183,7 +192,7 @@ const processHTMLContent = async (args) => {
         $(el).replaceWith(`<p>${$(el).html().trim()}</p>`);
     });
 
-    $html('div[style="style="text-align: center;"]').each((i, el) => {
+    $html('div[style="text-align: center;"]').each((i, el) => {
         $(el).replaceWith(`<p>${$(el).html().trim()}</p>`);
     });
 
@@ -216,7 +225,7 @@ const processHTMLContent = async (args) => {
     });
 
     $html('p').each((i, el) => {
-        if ($(el).html().trim() === '' || $(el).html() === '&#xA0;') {
+        if ($(el).html().trim() === '' || $(el).html() === '&#xA0;' || $(el).html().trim() === '&nbsp;') {
             $(el).remove();
         }
     });
@@ -243,6 +252,9 @@ const processHTMLContent = async (args) => {
 
     // Remove first element(s) if <hr>
     html = html.replace(/^(<hr\/?> ?)+/gm, '').trim();
+
+    // Remove empty attributes
+    html = html.replace(/=""/g, '');
 
     postData.html = html;
 

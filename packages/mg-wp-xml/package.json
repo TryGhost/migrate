@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-wp-xml",
-  "version": "0.3.18",
+  "version": "0.3.20",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-xml",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -21,12 +21,12 @@
   },
   "devDependencies": {
     "jest": "29.7.0",
-    "jest-extended": "4.0.1"
+    "jest-extended": "4.0.2"
   },
   "dependencies": {
     "@tryghost/errors": "1.2.26",
-    "@tryghost/mg-wp-api": "^0.10.18",
-    "cheerio": "0.22.0",
+    "@tryghost/mg-wp-api": "^0.10.20",
+    "cheerio": "1.0.0-rc.12",
     "date-fns": "2.30.0",
     "markdown-it": "13.0.2",
     "php-serialize": "4.1.1"

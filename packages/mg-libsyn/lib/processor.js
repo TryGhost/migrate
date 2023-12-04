@@ -47,15 +47,16 @@ const processContent = (libsynPost, options) => { // eslint-disable-line no-shad
     }
 
     const $html = $.load(html, {
-        decodeEntities: false
-    });
+        decodeEntities: false,
+        scriptingEnabled: false
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     $html('p').each((i, el) => {
         const content = $(el).html().trim();
         const noInvisibleChars = stripInvisibleChars(content);
         const noInvisibleCharsLength = noInvisibleChars.length;
 
-        if (noInvisibleCharsLength === 0 || content === '&#xA0;') {
+        if (noInvisibleCharsLength === 0 || content === '&#xA0;' || content === '&nbsp;') {
             $(el).remove();
         }
     });
@@ -71,10 +72,16 @@ const processContent = (libsynPost, options) => { // eslint-disable-line no-shad
         $parent.after('<!--kg-card-end: html-->');
     });
 
-    // convert HTML back to a string
+    // Convert HTML back to a string
     html = $html.html();
 
-    return html.trim();
+    // Remove empty attributes
+    html = html.replace(/=""/g, '');
+
+    // Trim whitespace
+    html = html.trim();
+
+    return html;
 };
 
 const processPost = (libsynPost, author, tags, options, errors) => { // eslint-disable-line no-shadow
