@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-substack",
-  "version": "0.3.22",
+  "version": "0.3.23",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-substack",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -28,7 +28,7 @@
     "@tryghost/debug": "0.1.26",
     "@tryghost/errors": "1.2.26",
     "@tryghost/kg-default-cards": "9.1.9",
-    "@tryghost/mg-fs-utils": "^0.12.19",
+    "@tryghost/mg-fs-utils": "^0.12.20",
     "@tryghost/string": "0.2.10",
     "cheerio": "1.0.0-rc.12",
     "date-fns": "2.30.0",

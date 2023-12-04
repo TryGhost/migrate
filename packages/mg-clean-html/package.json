@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-clean-html",
-  "version": "0.2.13",
+  "version": "0.2.14",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-clean-html",
   "author": "Ghost Foundation",
   "license": "MIT",

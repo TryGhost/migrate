@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-mailchimp-members",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-mailchimp-members",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -36,6 +36,6 @@
   "dependencies": {
     "@tryghost/debug": "0.1.26",
     "@tryghost/errors": "1.2.26",
-    "@tryghost/mg-fs-utils": "0.12.19"
+    "@tryghost/mg-fs-utils": "^0.12.20"
   }
 }
