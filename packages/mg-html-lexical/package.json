@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@tryghost/listr-smart-renderer": "0.5.12",
-    "@types/jest": "29.5.5",
+    "@types/jest": "29.5.11",
     "@types/sinon": "10.0.18",
     "@typescript-eslint/eslint-plugin": "6.13.2",
     "@typescript-eslint/parser": "6.13.2",
