@@ -101,13 +101,17 @@ export default ({content, post}) => {
         let href = $(el).find('.markup--anchor').attr('href');
         cardOpts.payload.url = href;
 
-        let src = $(el).find('.js-mixtapeImage').css('background-image').replace(/url\((.*?)\)/, (m, p) => p);
         cardOpts.payload.metadata = {
             url: href,
             title: $(el).find('.markup--strong').text(),
-            description: $(el).find('.markup--em').text(),
-            thumbnail: src
+            description: $(el).find('.markup--em').text()
         };
+
+        const bngImage = $(el).find('.js-mixtapeImage').css('background-image');
+        if (bngImage) {
+            let src = bngImage.replace(/url\((.*?)\)/, (m, p) => p);
+            cardOpts.payload.metadata.thumbnail = src;
+        }
 
         const bookmarkHtml = serializer.serialize(bookmarkCard.render(cardOpts));
 

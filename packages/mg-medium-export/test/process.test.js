@@ -343,7 +343,7 @@ describe('Process Content', function () {
         expect(newHtml).toContain('<figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*1234.jpeg" width="768" height="933" loading="lazy" alt=""></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/400/1*5678.jpeg" width="768" height="1024" loading="lazy" alt=""></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*-abcd.jpeg" width="768" height="965" loading="lazy" alt=""></div></div></div><figcaption>Photos by the author</figcaption></figure>');
     });
 
-    it('Can process embeds', function () {
+    it('Can process embeds with images', function () {
         const source = `<div class="e-content">
          <div name="d38c" id="d38c" class="graf graf--mixtapeEmbed graf-after--p graf--trailing"><a
                      href="https://example.medium.com/list/1234"
@@ -376,6 +376,37 @@ describe('Process Content', function () {
         expect(newHtml).not.toContain('<div name="d38c" id="d38c" class="graf graf--mixtapeEmbed graf-after--p graf--trailing">');
 
         expect(newHtml).toContain('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.medium.com/list/1234"><div class="kg-bookmark-content"><div class="kg-bookmark-title">My best Articles</div><div class="kg-bookmark-description">A description</div><div class="kg-bookmark-metadata"></div></div><div class="kg-bookmark-thumbnail"><img src="https://cdn-images-1.medium.com/fit/c/304/160/0*5678.jpeg" alt=""></div></a></figure>');
+    });
+
+    it('Can process embeds without images', function () {
+        const source = `<div class="e-content">
+            <div name="c123" id="c123" class="graf graf--mixtapeEmbed graf-after--p">
+                <a href="https://example.com/lorem/ipsum" data-href="https://example.com/lorem/ipsum" class="markup--anchor markup--mixtapeEmbed-anchor" title="https://example.com/lorem/ipsum">
+                    <strong class="markup--strong markup--mixtapeEmbed-strong">lorem/ipsum</strong>
+                    <br>
+                    <em class="markup--em markup--mixtapeEmbed-em">Dolor Simet.</em>
+                    example.com
+                </a>
+                <a href="https://example.com/lorem/ipsum" class="js-mixtapeImage mixtapeImage mixtapeImage--empty u-ignoreBlock" data-media-id="abcd1234"></a>
+            </div>
+        </div>`;
+
+        const $post = $.load(source, {
+            decodeEntities: false
+        }, false);
+
+        const newHtml = processContent({
+            content: $post('.e-content'),
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        expect(newHtml).not.toContain('<div name="c123" id="c123" class="graf graf--mixtapeEmbed graf-after--p">');
+
+        expect(newHtml).toContain('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.com/lorem/ipsum"><div class="kg-bookmark-content"><div class="kg-bookmark-title">lorem/ipsum</div><div class="kg-bookmark-description">Dolor Simet.</div><div class="kg-bookmark-metadata"></div></div></a></figure>');
     });
 
     it('Can process blockquotes in 2 parts', function () {
