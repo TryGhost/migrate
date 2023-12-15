@@ -61,11 +61,23 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--addTag`**
     - string - default: `null`
     - Provide a tag name which should be added to every post in this migration (Wrap in single quotes if tag name has spaces `'Like This'`)
+- **`--addPlatformTag`** 
+    - Add #substack tag to migrated content
+    - bool - default: `true`
+- **`--addTypeTag`** 
+    - Add #substack-{type} tag to migrated content (post, podcast, etc)
+    - bool - default: `true`
+- **`--addAccessTag`** 
+    - Add #substack-{access} tag to migrated content (public, paid, etc)
+    - bool - default: `true`
 - **`--drafts`** 
     - Import draft posts
     - bool - default: `true`
+- **`--pages`** 
+    - Import pages
+    - bool - default: `true`
 - **`--threads`** 
-    - Import thread posts
+    - Import threads
     - bool - default: `false`
 - **`--subscribeLink`** 
     - Provide a path that existing `/subscribe` anchors will link to e.g. `/join-us` or `#/portal/signup` (`#` characters need to be escaped with a `\`)
@@ -79,6 +91,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--useMetaImage`** 
     - Use `og:image` value as the feature image
     - bool - default: `true`  
+- **`--useFirstImage`** 
+    - Use the first image in content as the feature image (useMetaImage takes priority)
+    - bool - default: `true`  
 - **`--useMetaAuthor`** 
     - Use the author field from `ld+json` (useful for posts with multiple authors)
     - bool - default: `true`  
@@ -86,7 +101,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Only migrate posts before and including a given date e.g. 'March 20 2018'
     - string - default: `null`
 - **`--postsAfter`** 
-    - Only migrate posts after and including a given date e.g. 'August 16 2022'
+    - Only migrate posts after and including a given date e.g. 'August 16 2023'
     - string - default: `null`
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
@@ -124,4 +139,4 @@ yarn dev substack <pathToZip>
 
 # Copyright & License
 
-Copyright (c) 2013-2022 Ghost Foundation - Released under the [MIT license](LICENSE).
+Copyright (c) 2013-2023 Ghost Foundation - Released under the [MIT license](LICENSE).

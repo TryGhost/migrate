@@ -1,0 +1,220 @@
+[
+    {
+      "featured_image": {
+        "url": "https://assets.example.com/demo-site/all-embeds-and-formatting/imagekix.mpef3nc309qu.jpg",
+        "caption": "Featured image. Alt text is also the caption"
+      },
+      "live_url": "https://demo-site.example.com/articles/testing/all-embeds-and-formatting",
+      "id": 444,
+      "slug": "all-embeds-and-formatting",
+      "author": [
+        {
+          "author": {
+            "first_names": "Dolor",
+            "last_name": "Simet",
+            "email": "",
+            "title": null
+          }
+        }
+      ],
+      "translations": [
+        {
+          "published": true,
+          "last_published_at": "2023-03-24T19:55:47.250157+00:00",
+          "first_published_at": "2023-03-24T19:45:24.257025+00:00",
+          "locale_code": "en-US",
+          "custom_byline": "Angel Developer",
+          "headline": "All embeds and Formatting",
+          "content": [
+            {
+                "html": null,
+                "link": null,
+                "type": "text",
+                "style": "NORMAL_TEXT",
+                "children": [
+                  {
+                    "index": 15,
+                    "style": {},
+                    "content": "Example text"
+                  }
+                ]
+              }
+          ],
+          "facebook_description": "FB desc - An article that shows Google Docs integration elements",
+          "facebook_title": "FB Title - All Embeds and Formatting",
+          "twitter_description": "TW desc - An article that shows Google Docs integration elements",
+          "twitter_title": "TW Title - All Embeds and Formatting",
+          "search_description": "An article that shows Google Docs integration elements",
+          "search_title": "All embeds and Formatting",
+          "main_image": {
+            "link": null,
+            "type": "mainImage",
+            "children": [
+              {
+                "index": 12,
+                "width": 1059,
+                "height": 850,
+                "imageId": "kix.mpef3nc309qu",
+                "imageAlt": "Featured image. Alt text is also the caption",
+                "imageUrl": "https://assets.example.com/demo-site/all-embeds-and-formatting/imagekix.mpef3nc309qu.jpg"
+              }
+            ]
+          }
+        }
+      ],
+      "category": {
+        "slug": "test",
+        "title": null,
+        "published": true
+      },
+      "tags": [
+        {
+          "tag": {
+            "published": true,
+            "slug": "embeds",
+            "tag_translations": [
+              {
+                "title": "embeds"
+              }
+            ]
+          }
+        },
+        {
+          "tag": {
+            "published": true,
+            "slug": "images",
+            "tag_translations": [
+              {
+                "title": "Images"
+              }
+            ]
+          }
+        },
+        {
+          "tag": {
+            "published": true,
+            "slug": "testing",
+            "tag_translations": [
+              {
+                "title": "Testing"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "featured_image": {
+        "url": "https://assets.example.com/demo-site/images/imagekix.h4uzg1gckmrv.jpg",
+        "caption": ""
+      },
+      "live_url": "https://demo-site.example.com/articles/community/images",
+      "id": 430,
+      "slug": "images",
+      "author": [],
+      "translations": [
+        {
+          "published": true,
+          "last_published_at": "2023-03-24T20:03:04.911208+00:00",
+          "first_published_at": "2022-10-17T17:16:29.349272+00:00",
+          "locale_code": "en-US",
+          "custom_byline": "",
+          "headline": "Images ",
+          "content": [
+            {
+                "html": null,
+                "link": null,
+                "type": "text",
+                "style": "NORMAL_TEXT",
+                "children": [
+                  {
+                    "index": 15,
+                    "style": {},
+                    "content": "Example text"
+                  }
+                ]
+              }
+          ],
+          "facebook_description": "",
+          "facebook_title": "",
+          "twitter_description": "",
+          "twitter_title": "",
+          "search_description": "Images Images Images Images Images Images Images Images Images Images Images Images Images Images Images ",
+          "search_title": "Images ",
+          "main_image": {
+            "link": null,
+            "type": "mainImage",
+            "children": [
+              {
+                "index": 2,
+                "width": 1200,
+                "height": 1600,
+                "imageId": "kix.h4uzg1gckmrv",
+                "imageAlt": "",
+                "imageUrl": "https://assets.example.com/demo-site/images/imagekix.h4uzg1gckmrv.jpg"
+              }
+            ]
+          }
+        }
+      ],
+      "category": {
+        "slug": "community",
+        "title": null,
+        "published": true
+      },
+      "tags": []
+    },
+    {
+      "live_url": "https://demo-site.example.com/articles/community/all-embeds",
+      "id": 426,
+      "slug": "all-embeds",
+      "author": [
+        {
+          "author": {
+            "first_names": "Dolor",
+            "last_name": "Simet",
+            "email": null,
+            "title": null
+          }
+        }
+      ],
+      "translations": [
+        {
+          "published": true,
+          "last_published_at": "2023-04-07T22:31:28.725901+00:00",
+          "first_published_at": "2023-04-07T22:31:28.725901+00:00",
+          "locale_code": "en-US",
+          "custom_byline": "",
+          "headline": "All embeds",
+          "content": [
+            {
+                "html": null,
+                "link": null,
+                "type": "text",
+                "style": "NORMAL_TEXT",
+                "children": [
+                  {
+                    "index": 15,
+                    "style": {},
+                    "content": "Example text"
+                  }
+                ]
+              }
+          ],
+          "facebook_description": "",
+          "facebook_title": "",
+          "twitter_description": "",
+          "twitter_title": "",
+          "search_description": "All embeds all embeds all embeds",
+          "search_title": "All embeds",
+          "main_image": {}
+        }
+      ],
+      "category": {
+        "slug": "community",
+        "title": null,
+        "published": true
+      },
+      "tags": []
+    }
+  ]

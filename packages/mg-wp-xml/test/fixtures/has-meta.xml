@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"
+    xmlns:content="http://purl.org/rss/1.0/modules/content/"
+    xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:wp="http://wordpress.org/export/1.2/">
+    <channel>
+        <title>Acme Company</title>
+        <link>https://example.com</link>
+        <pubDate>Tue, 02 Apr 2013 05:16:20 +0000</pubDate>
+        <description />
+        <language>en-US</language>
+        <wp:wxr_version>1.2</wp:wxr_version>
+        <wp:author>
+            <wp:author_id>-19091979</wp:author_id>
+            <wp:author_login>hermione@example.com</wp:author_login>
+            <wp:author_email>hermione@example.com</wp:author_email>
+            <wp:author_display_name><![CDATA[Hermione Granger]]></wp:author_display_name>
+            <wp:author_first_name><![CDATA[Hermione]]></wp:author_first_name>
+            <wp:author_last_name><![CDATA[Granger]]></wp:author_last_name>
+        </wp:author>
+        <wp:author>
+            <wp:author_id>-31071980</wp:author_id>
+            <wp:author_login>harry@example.com</wp:author_login>
+            <wp:author_email>harry@example.com</wp:author_email>
+            <wp:author_display_name><![CDATA[Harry Potter]]></wp:author_display_name>
+            <wp:author_first_name><![CDATA[Harry]]></wp:author_first_name>
+            <wp:author_last_name><![CDATA[Potter]]></wp:author_last_name>
+        </wp:author>
+        <wp:category>
+            <wp:cat_name><![CDATA[Company News]]></wp:cat_name>
+            <wp:category_nicename>Company News</wp:category_nicename>
+            <wp:category_parent />
+        </wp:category>
+        <item>
+            <title><![CDATA[Sample Post]]></title>
+            <link>https://example.com/posts/post-slug/</link>
+            <pubDate>Mon, 09 May 2022 09:53:00 +0000</pubDate>
+            <dc:creator><![CDATA[darryl@example.com]]></dc:creator>
+            <guid isPermaLink="false">https://example.com/?p=1234</guid>
+            <description></description>
+            <content:encoded><![CDATA[&nbsp;]]></content:encoded>
+            <excerpt:encoded><![CDATA[Sample content]]></excerpt:encoded>
+            <wp:post_id>1234</wp:post_id>
+            <wp:post_date><![CDATA[2022-05-09 05:53:00]]></wp:post_date>
+            <wp:post_date_gmt><![CDATA[2022-05-09 09:53:00]]></wp:post_date_gmt>
+            <wp:post_modified><![CDATA[2022-05-09 08:20:14]]></wp:post_modified>
+            <wp:post_modified_gmt><![CDATA[2022-05-09 12:20:14]]></wp:post_modified_gmt>
+            <wp:comment_status><![CDATA[closed]]></wp:comment_status>
+            <wp:ping_status><![CDATA[closed]]></wp:ping_status>
+            <wp:post_name><![CDATA[post-slug]]></wp:post_name>
+            <wp:status><![CDATA[publish]]></wp:status>
+            <wp:post_parent>0</wp:post_parent>
+            <wp:menu_order>0</wp:menu_order>
+            <wp:post_type><![CDATA[enmse_message]]></wp:post_type>
+            <wp:post_password><![CDATA[]]></wp:post_password>
+            <wp:is_sticky>0</wp:is_sticky>
+            <wp:postmeta>
+                <wp:meta_key><![CDATA[lorem1234]]></wp:meta_key>
+                <wp:meta_value><![CDATA[433]]></wp:meta_value>
+            </wp:postmeta>
+            <wp:postmeta>
+                <wp:meta_key><![CDATA[ab_view_count]]></wp:meta_key>
+                <wp:meta_value><![CDATA[394]]></wp:meta_value>
+            </wp:postmeta>
+            <wp:postmeta>
+                <wp:meta_key><![CDATA[amazonS3_cache]]></wp:meta_key>
+                <wp:meta_value><![CDATA[a:2:{s:105:"//example1234com.s3.ca-central-1.amazonaws.com/wp-content/uploads/2019/05/26182814/abcdefg-12345-logo.png";a:2:{s:2:"id";s:4:"7050";s:11:"source_type";s:13:"media-library";}s:67:"//abcdefg1234.com/wp-content/uploads/2019/05/abcdefg-12345-logo.png";a:2:{s:2:"id";s:4:"7050";s:11:"source_type";s:13:"media-library";}}]]></wp:meta_value>
+            </wp:postmeta>
+            <wp:postmeta>
+                <wp:meta_key><![CDATA[_et_dynamic_cached_shortcodes]]></wp:meta_key>
+                <wp:meta_value><![CDATA[a:0:{}]]></wp:meta_value>
+            </wp:postmeta>
+            <wp:postmeta>
+                <wp:meta_key><![CDATA[_et_dynamic_cached_attributes]]></wp:meta_key>
+                <wp:meta_value><![CDATA[a:0:{}]]></wp:meta_value>
+            </wp:postmeta>
+        </item>
+    </channel>
+</rss>

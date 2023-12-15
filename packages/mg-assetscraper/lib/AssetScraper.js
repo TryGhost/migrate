@@ -3,17 +3,18 @@ import {join, dirname, basename, extname} from 'node:path';
 import cheerio from 'cheerio';
 import got from 'got';
 import {parseSrcset} from 'srcset';
-import {fileTypeFromBuffer} from 'file-type';
+import {fileTypeFromBuffer, fileTypeFromStream} from 'file-type';
+import mime from 'mime-types';
 import MarkdownIt from 'markdown-it';
 import prettyBytes from 'pretty-bytes';
 import SmartRenderer from '@tryghost/listr-smart-renderer';
 import replaceAll from 'fast-replaceall';
-import {AssetCache} from './AssetCache.js';
+import AssetCache from './AssetCache.js';
 
 // Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/shared/config/overrides.json
 const knownImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/webp'];
 const knownMediaTypes = ['video/mp4', 'video/webm', 'video/ogg', 'audio/mpeg', 'audio/mp3', 'audio/vnd.wav', 'audio/wave', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/x-m4a'];
-const knownFileTypes = ['application/pdf', 'application/json', 'application/ld+json', 'application/vnd.oasis.opendocument.presentation', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.text', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/rtf', 'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/xml', 'application/atom+xml'];
+const knownFileTypes = ['application/pdf', 'application/json', 'application/ld+json', 'application/vnd.oasis.opendocument.presentation', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.text', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/rtf', 'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/xml', 'application/atom+xml', 'application/x-msdownload'];
 const knownTypes = [...knownImageTypes, ...knownMediaTypes, ...knownFileTypes];
 
 const isValidUrlString = (string) => {
@@ -33,7 +34,7 @@ const trim = (str, c = '\\s') => {
  * How does this work?
  * Look at the comments above each task in the `fetch()` method
  */
-class AssetScraper {
+export default class AssetScraper {
     /**
      * @param {FileCache} fileCache
      * @param {Object} options
@@ -55,6 +56,8 @@ class AssetScraper {
             allowFiles: true,
             baseDomain: null
         }, options);
+
+        this.ctx = ctx;
 
         this.warnings = (ctx.warnings) ? ctx.warnings : [];
 
@@ -589,7 +592,7 @@ class AssetScraper {
     getRemoteHeaders(src) {
         return new Promise((resolve, reject) => {
             const stream = got.stream(src, {
-                timeout: 3000,
+                timeout: 10000,
                 retry: 0 // Not needed as we're requesting headers that either exist or don't
             });
 
@@ -597,13 +600,31 @@ class AssetScraper {
 
             stream.on('request', _req => req = _req);
 
-            stream.on('response', (res) => {
+            stream.on('response', async (res) => {
+                let fileType;
+
+                if (res.headers['content-type'] && !res.headers['content-type'].includes('text/html')) {
+                    fileType = await fileTypeFromStream(stream);
+                }
+
                 req.abort();
 
                 if (res.headers) {
+                    let theHeaders = res.headers;
+
+                    if (theHeaders['content-type'] === 'application/octet-stream' && theHeaders['content-disposition']) {
+                        const disposition = theHeaders['content-disposition'];
+                        const parts = disposition.split('.');
+                        const extension = parts.pop();
+                        let newType = mime.lookup(extension);
+                        theHeaders['content-type'] = newType;
+                    } else if (fileType && fileType.mime) {
+                        theHeaders['content-type'] = fileType.mime;
+                    }
+
                     resolve({
                         status: res.statusCode,
-                        headers: res.headers
+                        headers: theHeaders
                     });
                 } else {
                     reject('Failed to fetch file data');
@@ -611,7 +632,9 @@ class AssetScraper {
             });
 
             stream.on('error', (error) => {
-                req.destroy();
+                if (req) {
+                    req.destroy();
+                }
                 reject(error);
             });
         });
@@ -749,7 +772,7 @@ class AssetScraper {
      * @example
      * isAllowedMime('application/pdf');
      */
-    isAllowedMime(mime) {
+    isAllowedMime(mimeType) {
         let allowedMimes = [];
 
         if (this.defaultOptions.allowImages) {
@@ -764,7 +787,7 @@ class AssetScraper {
             allowedMimes.push(...knownFileTypes);
         }
 
-        if (allowedMimes.includes(mime)) {
+        if (allowedMimes.includes(mimeType)) {
             return true;
         } else {
             return false;
@@ -807,12 +830,12 @@ class AssetScraper {
      * determineSaveLocation('application/x-shockwave-flash');
      * => false
      */
-    determineSaveLocation(mime) {
-        if (knownImageTypes.includes(mime)) {
+    determineSaveLocation(mimeType) {
+        if (knownImageTypes.includes(mimeType)) {
             return 'images';
-        } else if (knownMediaTypes.includes(mime)) {
+        } else if (knownMediaTypes.includes(mimeType)) {
             return 'media';
-        } else if (knownFileTypes.includes(mime)) {
+        } else if (knownFileTypes.includes(mimeType)) {
             return 'files';
         }
 
@@ -937,8 +960,18 @@ class AssetScraper {
                     let trimmedRemote = item.remote.trim();
                     this._fixedValues = replaceAll(this._fixedValues, trimmedRemote, foundItem.newLocal);
 
+                    if (this?.ctx?.options?.assetAltReplace) {
+                        this._fixedValues = this._fixedValues.replaceAll(trimmedRemote, foundItem.newLocal);
+                    } else {
+                        this._fixedValues = replaceAll(this._fixedValues, trimmedRemote, foundItem.newLocal);
+                    }
+
                     // Add an artificial delay here so tasks are shown properly
-                    await new Promise(r => setTimeout(r, 2)); // eslint-disable-line no-promise-executor-return
+                    if (this?.ctx?.options?.assetDelay) {
+                        await new Promise(r => setTimeout(r, 200)); // eslint-disable-line no-promise-executor-return
+                    } else {
+                        await new Promise(r => setTimeout(r, 2)); // eslint-disable-line no-promise-executor-return
+                    }
                 }
             });
         });
@@ -1048,7 +1081,3 @@ class AssetScraper {
         return tasks;
     }
 }
-
-export {
-    AssetScraper
-};

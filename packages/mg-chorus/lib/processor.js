@@ -34,6 +34,20 @@ const processPost = (data, options) => {
         }
     };
 
+    if (data?.source?.author?.fullOrUserName) {
+        let authorSlug = slugify(data.source.author.fullOrUserName);
+        let authorObject = {
+            url: `/author/${authorSlug}`,
+            data: {
+                email: `${authorSlug}@example.com`,
+                slug: authorSlug,
+                name: data.source.author.fullOrUserName
+            }
+        };
+        post.data.authors.push(authorObject);
+        debug(`Adding author to ${data.slug} post object`, authorObject);
+    }
+
     if (data?.source?.authorProfile?.name) {
         let authorSlug = slugify(data.source.authorProfile.name);
         let authorObject = {

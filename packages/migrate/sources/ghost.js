@@ -1,5 +1,6 @@
 import {readFileSync} from 'node:fs';
 import ghostAPI from '@tryghost/mg-ghost-api';
+import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
 import {toGhostJSON} from '@tryghost/mg-json';
 import MgAssetScraper from '@tryghost/mg-assetscraper';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
@@ -43,6 +44,7 @@ const initialize = (options, logger) => {
                 formatDataAsGhost: false,
                 assetScraper: false,
                 linkFixer: false,
+                htmlToMobiledoc: false,
                 writeJSON: false,
                 writeZip: false,
                 clearCache: false
@@ -230,9 +232,31 @@ const getFullTaskList = (options, logger) => {
             }
         },
         {
+            title: 'Convert HTML -> MobileDoc',
+            task: (ctx) => {
+                // 7. Convert post HTML -> MobileDoc
+                ctx.timings.htmlToMobiledoc = Date.now();
+                try {
+                    let tasks = mgHtmlMobiledoc.convert(ctx); // eslint-disable-line no-shadow
+                    return makeTaskRunner(tasks, options);
+                } catch (error) {
+                    ctx.logger.error({message: 'Failed to convert HTML to Mobiledoc', error});
+                    throw error;
+                }
+            }
+        },
+        {
+            task: (ctx) => {
+                ctx.logger.info({
+                    message: 'Convert HTML -> MobileDoc',
+                    duration: Date.now() - ctx.timings.htmlToMobiledoc
+                });
+            }
+        },
+        {
             title: 'Write Ghost import JSON File',
             task: async (ctx) => {
-                // 7. Write a valid Ghost import zip
+                // 8. Write a valid Ghost import zip
                 ctx.timings.writeJSON = Date.now();
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
@@ -255,7 +279,7 @@ const getFullTaskList = (options, logger) => {
             title: 'Write Ghost import zip',
             skip: () => !options.zip,
             task: async (ctx, task) => {
-                // 8. Write a valid Ghost import zip
+                // 9. Write a valid Ghost import zip
                 ctx.timings.writeZip = Date.now();
                 const isStorage = (options?.outputStorage && typeof options.outputStorage === 'object') ?? false;
 

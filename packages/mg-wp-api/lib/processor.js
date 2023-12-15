@@ -17,6 +17,30 @@ const stripHtml = (html) => {
     return html.replace(/<[^>]+>/g, '').replace(/\r?\n|\r/g, ' ').trim();
 };
 
+const getYouTubeID = (videoUrl) => {
+    const arr = videoUrl.split(/(vi\/|v%3D|v=|\/v\/|youtu\.be\/|\/embed\/)/);
+    return undefined !== arr[2] ? arr[2].split(/[^\w-]/i)[0] : arr[0];
+};
+
+const wpCDNToLocal = (imgUrl) => {
+    if (!imgUrl) {
+        return imgUrl;
+    }
+
+    if (!imgUrl.match(/i[0-9]+.wp.com/g)) {
+        return imgUrl;
+    }
+
+    imgUrl = imgUrl.replace(/i[0-9]+.wp.com\//, '');
+
+    const newUrl = new URL(imgUrl);
+    newUrl.searchParams.delete('resize');
+
+    const updatedUrl = `${newUrl.origin}${newUrl.pathname}`;
+
+    return updatedUrl;
+};
+
 const largerSrc = (imageSrc) => {
     if (!imageSrc) {
         return imageSrc;
@@ -94,8 +118,9 @@ const processExcerpt = (html, excerptSelector = false) => {
     if (excerptSelector) {
         // TODO: this should be possible by using a pseudo selector as a passed `excerptSelector`, e. g. `h2.excerpt:first-of-type`,
         const $html = $.load(html, {
-            decodeEntities: false
-        });
+            decodeEntities: false,
+            scriptingEnabled: false
+        }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
         excerptText = $html(excerptSelector).first().html();
     } else {
@@ -120,7 +145,11 @@ const processShortcodes = async ({html}) => {
     const shortcodes = new Shortcodes();
 
     shortcodes.add('vc_btn', ({attrs}) => {
-        let buttonHref = attrs.link;
+        let buttonHref = attrs?.link ?? false;
+
+        if (!buttonHref) {
+            return;
+        }
 
         // Sometimes URLs have a `url:` prefix which we don't want
         if (buttonHref.startsWith('url:')) {
@@ -132,10 +161,28 @@ const processShortcodes = async ({html}) => {
         return `<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="${buttonHref}">${attrs.title}</a></div></div>`;
     });
 
+    shortcodes.add('vc_cta', ({attrs}) => {
+        let buttonHref = attrs?.btn_link ?? false;
+
+        if (!buttonHref) {
+            return;
+        }
+
+        // Sometimes URLs have a `url:` prefix which we don't want
+        if (buttonHref.startsWith('url:')) {
+            buttonHref = buttonHref.slice(4);
+        }
+
+        buttonHref = decodeURIComponent(buttonHref);
+
+        return `<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="${buttonHref}">${attrs.btn_title}</a></div></div>`;
+    });
+
     shortcodes.add('caption', ({content}) => {
         const $html = $.load(content, {
-            decodeEntities: false
-        });
+            decodeEntities: false,
+            scriptingEnabled: false
+        }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
         let theImage = $html('img');
         let theCaption = $html.text().trim();
@@ -187,12 +234,29 @@ const processShortcodes = async ({html}) => {
         return `<figure><pre class="${classString}"><code>${theContent}</code></pre>${captionString}</figure>`;
     });
 
+    shortcodes.add('vc_custom_heading', ({attrs}) => {
+        if (attrs?.font_container.includes('tag:h1')) {
+            return `<h1>${attrs.text}</h1>`;
+        } else if (attrs?.font_container.includes('tag:h2')) {
+            return `<h2>${attrs.text}</h2>`;
+        } else if (attrs?.font_container.includes('tag:h3')) {
+            return `<h3>${attrs.text}</h3>`;
+        }
+    });
+
+    shortcodes.add('vc_empty_space', () => {
+        return `<br></br>`;
+    });
+
     // We don't want to change these, but only retain what's inside.
     shortcodes.unwrap('row');
     shortcodes.unwrap('column');
     shortcodes.unwrap('vc_row');
+    shortcodes.unwrap('vc_row_inner');
     shortcodes.unwrap('vc_column');
+    shortcodes.unwrap('vc_column_inner');
     shortcodes.unwrap('vc_column_text');
+    shortcodes.unwrap('vc_basic_grid');
     shortcodes.unwrap('et_pb_code_builder_version');
     shortcodes.unwrap('et_pb_section');
     shortcodes.unwrap('et_pb_column');
@@ -222,8 +286,9 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     }
 
     const $html = $.load(html, {
-        decodeEntities: false
-    });
+        decodeEntities: false,
+        scriptingEnabled: false
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // If the first element in the content is an image, and is the same as the feature image, remove it
     if (featureImageSrc) {
@@ -291,13 +356,17 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     });
 
     // Remove duplicates images in <noscript> tags that have the same src
-    $html('img + noscript img').each((i, el) => {
-        let noScriptImgSrc = $(el).attr('src');
-        let prevImg = $(el).parent('noscript').prev('img');
-        let prevImgSrc = prevImg.attr('data-src') || prevImg.attr('src');
+    $html('noscript').each((i, el) => {
+        if (el.prev.name === 'img') {
+            const prevImgSrc = el.prev.attribs['data-src'] ?? el.prev.attribs.src;
+            const noScriptImgSrc = $(el).find('img').attr('src');
 
-        if (noScriptImgSrc === prevImgSrc) {
-            $(el).parent('noscript').remove();
+            const updatedPrevImgSrc = largerSrc(wpCDNToLocal(prevImgSrc));
+            const updatedNoScriptImgSrc = largerSrc(wpCDNToLocal(noScriptImgSrc));
+
+            if (updatedPrevImgSrc === updatedNoScriptImgSrc) {
+                $(el).remove();
+            }
         }
     });
 
@@ -317,6 +386,9 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             $(img).attr('height', $(img).attr('data-height'));
             $(img).removeAttr('data-height');
         }
+
+        const nonCDNSrc = wpCDNToLocal($(img).attr('src'));
+        $(img).attr('src', nonCDNSrc);
     });
 
     // (Some) WordPress renders gifs a different way. They use an `img` tag with a `src` for a still image,
@@ -395,6 +467,10 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     await Promise.all(libsynPodcasts);
 
+    $html('figure.wp-block-embed.is-provider-twitter').each((i, el) => {
+        $(el).replaceWith(`<blockquote class="twitter-tweet"><a href="${$(el).text()}"></a></blockquote>`);
+    });
+
     $html('blockquote.twitter-tweet').each((i, el) => {
         let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
         let $script = $('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
@@ -458,6 +534,17 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         $(el).replaceWith($figure);
     });
 
+    // Convert <blockquote>s with 2 or more <p> tags into a single <p> tag
+    $html('blockquote').each((i, el) => {
+        const textElements = $(el).find('p, cite');
+
+        if (textElements.length >= 2) {
+            const combinedText = textElements.map((index, element) => $(element).html()).get().join('<br><br>');
+            const newParagraph = $('<p>').html(combinedText);
+            $(el).replaceWith(`<blockquote>${newParagraph}</blockquote>`);
+        }
+    });
+
     // TODO: this should be a parser plugin
     // Wrap nested lists in HTML card
     $html('ol, ul').each((i, list) => {
@@ -498,6 +585,19 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     // Replace spacers with horizontal rules
     $html('.wp-block-spacer').each((i, el) => {
         $(el).replaceWith('<hr>');
+    });
+
+    // Handle YouTube embeds
+    $html('.wp-block-embed.is-provider-youtube').each((i, el) => {
+        const videoUrl = $(el).text();
+        const videoID = getYouTubeID(videoUrl);
+
+        if (videoUrl && videoID && videoID.length) {
+            $(el).replaceWith(`<figure class="kg-card kg-embed-card"><iframe width="160" height="90"
+            src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen=""></iframe></figure>`);
+        }
     });
 
     // Unwrap WP gallery blocks
@@ -601,6 +701,9 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     // convert HTML back to a string
     html = $html.html();
 
+    // Remove empty attributes
+    html = html.replace(/=""/g, '');
+
     return html;
 };
 
@@ -648,7 +751,7 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
     if (options.featureImage === 'featuredmedia' && wpPost.featured_media && wpPost._embedded['wp:featuredmedia'] && !post.data.feature_image) {
         const wpImage = wpPost._embedded['wp:featuredmedia'][0];
         try {
-            post.data.feature_image = wpImage.source_url;
+            post.data.feature_image = wpCDNToLocal(wpImage.source_url);
             post.data.feature_image_alt = wpImage.alt_text || null;
             post.data.feature_image_caption = (wpImage.caption) ? stripHtml(wpImage.caption.rendered) : null;
         } catch (error) {
@@ -836,6 +939,7 @@ const all = async (ctx) => {
 };
 
 export default {
+    wpCDNToLocal,
     processAuthor,
     processTerm,
     processTerms,

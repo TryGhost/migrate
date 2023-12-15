@@ -47,7 +47,7 @@ const sleep = async (ms) => {
     });
 };
 
-class WebScraper {
+export default class WebScraper {
     constructor(fileCache, config, postProcessor, skipFn) {
         this.fileCache = fileCache;
         this.config = config;
@@ -62,8 +62,8 @@ class WebScraper {
             let newItem = makeMetaObject(item);
             let matchedItem = findMatchIn(existing, newItem);
 
-            // if we find a match, copy data properties across
-            if (matchedItem) {
+            // if we find a match, and the existing data isn't an array, copy data properties across
+            if (matchedItem && !Array.isArray(existing)) {
                 _.each(newItem.data, (datum, key) => {
                     matchedItem.data[key] = datum;
                 });
@@ -113,12 +113,9 @@ class WebScraper {
                     'user-agent': 'Crawler/1.0'
                 }
             };
-            let {data, response} = await scrapeIt(reqOpts,config);
-            let {responseUrl, statusCode} = response;
-            if (statusCode > 399) {
-                throw ScrapeError({url, code: 'HTTPERROR', statusCode});
-            }
-            return {responseUrl, responseData: data};
+            let {data} = await scrapeIt(reqOpts, config);
+
+            return {requestURL: url, responseData: data};
         } catch (error) {
             if (error.errorType === 'ScrapeError') {
                 throw error;
@@ -150,84 +147,6 @@ class WebScraper {
         this.mergeResource(data, scrapedData);
     }
 
-    // TODO: This is a temporary step while this gets a re-think
-    get(ctx) {
-        let tasks = [];
-        let res = ctx.result;
-
-        // We only handle posts ATM, escape if there's nothing to do
-        if (!this.config.posts || !res.posts || res.posts.length === 0) {
-            return res;
-        }
-
-        tasks = res.posts.map((post) => {
-            let {url} = post;
-            let filename = slugify(url);
-
-            return {
-                title: url,
-                skip: () => {
-                    return this.skipFn ? this.skipFn(post) : false;
-                },
-                task: async (ctx) => { // eslint-disable-line no-shadow
-                    try {
-                        let response = await this.scrapeUrl(url, this.config.posts, filename, ctx.options.wait_after_scrape);
-
-                        let responseUrl = response.responseUrl || false;
-                        let responseData = response.responseData || {};
-
-                        post.metaData = {responseUrl, responseData};
-                    } catch (err) {
-                        ctx.logger.error({message: `Error fetching metadata ${url}`, err});
-                        throw err;
-                    }
-                }
-            };
-        });
-
-        return tasks;
-    }
-
-    // TODO: This is a temporary step while this gets a re-think
-    apply(ctx) {
-        let tasks = [];
-        let res = ctx.result;
-
-        // We only handle posts ATM, escape if there's nothing to do
-        if (!this.config.posts || !res.posts || res.posts.length === 0) {
-            return res;
-        }
-
-        tasks = res.posts.map((post) => {
-            let {url, data} = post;
-
-            return {
-                title: url,
-                skip: () => {
-                    return this.skipFn ? this.skipFn(post) : false;
-                },
-                task: async (ctx, task) => { // eslint-disable-line no-shadow
-                    try {
-                        let {responseUrl, responseData} = post.metaData;
-
-                        this.processScrapedData(responseData, data, ctx.options);
-
-                        if (responseUrl !== url) {
-                            post.originalUrl = url;
-                            post.url = responseUrl;
-                            task.title = responseUrl;
-                        }
-                    } catch (err) {
-                        ctx.logger.error({message: `Error applying metadata for ${url}`, err});
-                        throw err;
-                    }
-                }
-            };
-        });
-
-        return tasks;
-    }
-
     hydrate(ctx) {
         let tasks = [];
         let res = ctx.result;
@@ -246,16 +165,10 @@ class WebScraper {
                 skip: () => {
                     return this.skipFn ? this.skipFn(post) : false;
                 },
-                task: async (ctx, task) => { // eslint-disable-line no-shadow
+                task: async (ctx) => { // eslint-disable-line no-shadow
                     try {
-                        let {responseUrl, responseData} = await this.scrapeUrl(url, this.config.posts, filename, ctx.options.wait_after_scrape);
+                        let {responseData} = await this.scrapeUrl(url, this.config.posts, filename, ctx.options.wait_after_scrape);
                         this.processScrapedData(responseData, data, ctx.options);
-
-                        if (responseUrl !== url) {
-                            post.originalUrl = url;
-                            post.url = responseUrl;
-                            task.title = responseUrl;
-                        }
                     } catch (err) {
                         ctx.logger.error({message: `Error hydrating metadata for ${url}`, err});
                         throw err;
@@ -267,5 +180,3 @@ class WebScraper {
         return tasks;
     }
 }
-
-export default WebScraper;

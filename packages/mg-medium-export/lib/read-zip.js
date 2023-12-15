@@ -17,18 +17,25 @@ const contentStats = async (zipPath) => {
 };
 
 const readMediumZip = ({content, zipPath, options, skippedFileCount}) => {
+    const {removeResponses} = options;
+
     fsUtils.zip.read(zipPath, (entryName, zipEntry) => {
+        const entryHtml = zipEntry.getData().toString('utf8');
+
         // Catch all HTML files inside `profile/`
         if (/^profile\/profile\.html/.test(entryName)) {
-            content.profiles.push({data: zipEntry.getData().toString('utf8')});
+            content.profiles.push({data: entryHtml});
 
         // Catch all HTML files in `posts/`
         } else if (/^posts\/.*\.html$/.test(entryName)) {
+            if (removeResponses && !entryHtml.includes('graf--title')) {
+                return;
+            }
+
             content.posts.push({
                 name: entryName,
-                html: zipEntry.getData().toString('utf8')
+                html: entryHtml
             });
-
         // Skip if not matched above, and report skipped files if `--verbose`
         } else if (/.html$/.test(entryName)) {
             if (options.verbose) {

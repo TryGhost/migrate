@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-squarespace-xml",
-  "version": "0.3.6",
+  "version": "0.3.20",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-squarespace-xml",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "dev": "echo \"Implement me!\"",
-    "test": "node --experimental-vm-modules $(yarn bin jest)",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "lint": "eslint . --ext .js --cache",
     "posttest": "yarn lint"
   },
@@ -20,15 +20,15 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.36.0",
-    "jest": "29.5.0",
-    "jest-extended": "3.2.4"
+    "eslint": "8.55.0",
+    "jest": "29.7.0",
+    "jest-extended": "4.0.2"
   },
   "dependencies": {
-    "@tryghost/errors": "1.2.22",
-    "@tryghost/kg-default-cards": "6.0.5",
-    "cheerio": "0.22.0",
-    "date-fns": "2.29.3",
+    "@tryghost/errors": "1.3.0",
+    "@tryghost/kg-default-cards": "9.1.9",
+    "cheerio": "1.0.0-rc.12",
+    "date-fns": "2.30.0",
     "simple-dom": "1.4.0"
   }
 }

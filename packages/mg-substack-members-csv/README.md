@@ -50,14 +50,14 @@ It's possible to pass more options, in order to achieve a better migration file 
     - int - default: `5000`
 - **`--comp`**
     - Provide two values in the format `YY|YYYYMMDD:none|free`. YY is the threshold in years or `YYYYMMDD` as the exact date after which Substack `comp` members should receive a complimentary plan depending on the expiry date. `none|free` the option how to import members before this threshold, e. g. `5:free`
-    - string - default: `5:free`
+    - string - default: `0:free`
     - Choices: `YY:none`, `YY:free`, `YYYYMMDD:none`, `YYYYMMDD:free`
 - **`--compLabel`**
     - Provide a label for Substack `comp` subscribers
     - string - default: `substack-comp`
 - **`--gift`**
     - Provide two values in the format `YY|YYYYMMDD:none|free`. YY is the threshold in years or `YYYYMMDD` as the exact date after which Substack `gift` members should receive a complimentary plan depending on the expiry date. `none|free` the option how to import members before this threshold, e. g. `5:free`
-    - string - default: `5:free`
+    - string - default: `0:free`
     - Choices: `YY:none`, `YY:free`, `YYYYMMDD:none`, `YYYYMMDD:free`
 - **`--giftLabel`**
     - Provide a label for Substack `gift` subscribers
@@ -105,4 +105,4 @@ yarn dev substack-members --pathToFile /path/to/emails.csv
 
 # Copyright & License
 
-Copyright (c) 2013-2022 Ghost Foundation - Released under the [MIT license](LICENSE).
+Copyright (c) 2013-2023 Ghost Foundation - Released under the [MIT license](LICENSE).

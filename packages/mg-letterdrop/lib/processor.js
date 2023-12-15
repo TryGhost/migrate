@@ -16,8 +16,9 @@ const processContent = (html, postUrl, options) => {
     html = html.replace(/<li><br><\/li>/g, '');
 
     const $html = $.load(html, {
-        decodeEntities: false
-    });
+        decodeEntities: false,
+        scriptingEnabled: false
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // Letterdrop supplies internal links in post content with `.com/c/`, but post URLs in JSON are `.com/p/`.
     // Lets normalise that
@@ -46,11 +47,14 @@ const processContent = (html, postUrl, options) => {
     });
 
     $html('.letterdrop-custom-button').each((i, el) => {
-        let aHref = $(el).find('a').attr('href');
-        let referralsRegExp = new RegExp(`${options.url}/referrals/[a-zA-Z0-9]{24}`);
+        const aHref = $(el).find('a').attr('href');
+        const referralsRegExp = new RegExp(`${options.url}/referrals/[a-zA-Z0-9]{24}`);
 
         if (aHref.match(referralsRegExp)) {
             $(el).remove();
+        } else {
+            const buttonText = $(el).find('a').html();
+            $(el).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${aHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
         }
     });
 
@@ -58,8 +62,30 @@ const processContent = (html, postUrl, options) => {
         $(el).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${options.subscribeText}</a></div>`);
     });
 
-    // convert HTML back to a string
+    $html('blockquote').each((i, el) => {
+        const classes = $(el).attr('class') ?? null;
+        if (!classes) {
+            $(el).replaceWith(`<blockquote><p>${$(el).html()}</p></blockquote>`);
+        }
+    });
+
+    $html('a').each((i, el) => {
+        const href = $(el).attr('href');
+        const theDomain = options.url.replace(/(https?:\/\/)(www.)?/, '');
+
+        if (href.includes(`${theDomain}/plans`) || href.includes(`${theDomain}/subscribe`) || href.includes(`${theDomain}/promo`)) {
+            $(el).attr('href', options.subscribeLink);
+        }
+    });
+
+    // Convert HTML back to a string
     html = $html.html();
+
+    // Remove empty attributes
+    html = html.replace(/=""/g, '');
+
+    // Trim whitespace
+    html = html.trim();
 
     return html;
 };

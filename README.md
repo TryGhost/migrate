@@ -5,16 +5,24 @@ A collection of tools for migrating to Ghost.
 Each tool has its own detailed documentation:
 
 - [Ghost](https://github.com/TryGhost/migrate/tree/main/packages/mg-ghost-api)
+- [beehiiv](https://github.com/TryGhost/migrate/tree/main/packages/mg-beehiiv)
+- [beehiiv Members](https://github.com/TryGhost/migrate/tree/main/packages/mg-beehiiv-members)
+- [Blogger](https://github.com/TryGhost/migrate/tree/main/packages/mg-blogger)
 - [Chorus](https://github.com/TryGhost/migrate/tree/main/packages/mg-chorus)
 - [Curated](https://github.com/TryGhost/migrate/tree/main/packages/mg-curated-export)
 - [Curated members](https://github.com/TryGhost/migrate/tree/main/packages/mg-curated-members-csv)
-- [HubSpot](https://github.com/TryGhost/migrate/tree/main/packages/mg-hubspot-api)
 - [Jekyll](https://github.com/TryGhost/migrate/tree/main/packages/mg-jekyll-export)
 - [Letterdrop](https://github.com/TryGhost/migrate/tree/main/packages/mg-letterdrop)
-- [Medium](https://github.com/TryGhost/migrate/tree/main/packages/mg-medium-export)
+- [Libsyn](https://github.com/TryGhost/migrate/tree/main/packages/mg-libsyn)
+- [Mailchimp Members](https://github.com/TryGhost/migrate/tree/main/packages/mg-mailchimp-members)
+- [Medium Content](https://github.com/TryGhost/migrate/tree/main/packages/mg-medium-export)
+- [Medium Members](https://github.com/TryGhost/migrate/tree/main/packages/mg-medium-members)
 - [Squarespace](https://github.com/TryGhost/migrate/tree/main/packages/mg-squarespace-xml)
+- [Stripe](https://github.com/TryGhost/migrate/tree/main/packages/mg-stripe)
 - [Substack](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack)
 - [Substack members](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack-members-csv)
+- [Tiny News](https://github.com/TryGhost/migrate/tree/main/packages/mg-tinynews)
+- [Tiny News Members](https://github.com/TryGhost/migrate/tree/main/packages/mg-tinynews-members)
 - [WordPress API](https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-api)
 - [WordPress XML](https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-xml)
 
@@ -77,4 +85,4 @@ yarn dev [source]
 
 # Copyright & License
 
-Copyright (c) 2013-2022 Ghost Foundation - Released under the [MIT license](LICENSE).
+Copyright (c) 2013-2023 Ghost Foundation - Released under the [MIT license](LICENSE).

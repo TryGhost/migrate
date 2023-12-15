@@ -1,7 +1,8 @@
 import {jest} from '@jest/globals';
 import path from 'node:path';
 import {promises as fs} from 'node:fs';
-import process from '../lib/process.js';
+import $ from 'cheerio';
+import process, {processWPMeta} from '../lib/process.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
@@ -411,5 +412,34 @@ describe('Process', function () {
         const posts = processed.posts;
 
         expect(posts).toBeArrayOfSize(1);
+    });
+
+    test('Can read post_meta', async function () {
+        const input = await readSync('has-meta.xml');
+        const $xml = $.load(input, {
+            decodeEntities: false,
+            xmlMode: true,
+            lowerCaseTags: true
+        });
+
+        let posts = [];
+
+        $xml('item').each((i, post) => {
+            posts.push(post);
+        });
+
+        const post = posts[0];
+        const metaValues = await processWPMeta(post);
+
+        expect(metaValues).toEqual({
+            lorem1234: '433',
+            ab_view_count: '394',
+            amazonS3_cache: {
+                '//example1234com.s3.ca-central-1.amazonaws.com/wp-content/uploads/2019/05/26182814/abcdefg-12345-logo.png': {id: '7050', source_type: 'media-library'},
+                '//abcdefg1234.com/wp-content/uploads/2019/05/abcdefg-12345-logo.png': {id: '7050', source_type: 'media-library'}
+            },
+            _et_dynamic_cached_shortcodes: [],
+            _et_dynamic_cached_attributes: []
+        });
     });
 });

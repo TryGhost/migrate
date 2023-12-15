@@ -34,6 +34,10 @@ const readFiles = async (files, postsDir) => {
     return postContent;
 };
 
+const largeImageUrl = (src) => {
+    return src.replace(/w_[0-9]{2,5},h_[0-9]{2,5}/, 'w_2000,h_2000');
+};
+
 const getUnsizedImageName = (str) => {
     const noSizeRegex = /(.*)(_[0-9]{1,4}x[0-9]{1,4}.[a-z]{2,4})/gmi;
     let srcParts = str.split(/\/|%2F/);
@@ -48,8 +52,12 @@ const getUnsizedImageName = (str) => {
 };
 
 const largestSrc = ($imageElem) => {
-    const src = $imageElem.attr('src');
-    const srcset = $imageElem.attr('srcset') || false;
+    const src = $imageElem.attr('src') ?? false;
+    const srcset = $imageElem.attr('srcset') ?? false;
+
+    if (!src || !src.length) {
+        return '';
+    }
 
     let srcToUse = src;
 
@@ -68,8 +76,8 @@ const largestSrc = ($imageElem) => {
 };
 
 const processContent = (post, siteUrl, options) => {
-    const {substackPodcastURL, metaData} = post;
-    const responseData = metaData?.responseData || {};
+    const {substackPodcastURL} = post;
+    const {useMetaImage, useFirstImage} = options;
 
     let html = post.data?.html;
 
@@ -80,10 +88,11 @@ const processContent = (post, siteUrl, options) => {
         return post;
     }
 
-    // As there is HTML, pass it to Cheerio inside a `<body>` tag so we have a global wrapper to target later on
-    const $html = $.load(`<body>${html}</body>`, {
-        decodeEntities: false
-    });
+    // As there is HTML, pass it to Cheerio inside a `<div class="migrate-substack-wrapper"></div>` element so we have a global wrapper to target later on
+    const $html = $.load(`<div class="migrate-substack-wrapper">${html}</div>`, {
+        decodeEntities: false,
+        scriptingEnabled: false
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // Empty text elements are commonplace and are not needed
     $html('p').each((i, el) => {
@@ -95,8 +104,12 @@ const processContent = (post, siteUrl, options) => {
     });
 
     // We use the `'og:image` as the feature image. If the first item in the content is an image and is the same as the `og:image`, remove it
-    if (responseData?.og_image) {
-        let firstElement = $html('body *').first();
+    if (post.data?.og_image) {
+        if (useMetaImage) {
+            post.data.feature_image = largeImageUrl(post.data.og_image);
+        }
+
+        let firstElement = $html('.migrate-substack-wrapper *').first();
 
         if (firstElement.tagName === 'img' || ($(firstElement).get(0) && $(firstElement).get(0).name === 'img') || $(firstElement).find('img').length) {
             let theElementItself = (firstElement.tagName === 'img' || $(firstElement).get(0).name === 'img') ? firstElement : $(firstElement).find('img');
@@ -105,10 +118,33 @@ const processContent = (post, siteUrl, options) => {
             if (firstImgSrc.length > 0) {
                 let unsizedFirstSrc = getUnsizedImageName(firstImgSrc);
 
-                let ogImgSrc = responseData.og_image;
+                let ogImgSrc = post.data.og_image;
                 let unsizedOgSrc = getUnsizedImageName(ogImgSrc);
 
                 if (unsizedFirstSrc === unsizedOgSrc) {
+                    if ($(firstElement).find('figcaption').length) {
+                        post.data.feature_image_caption = $(firstElement).find('figcaption').html();
+                    }
+
+                    $(firstElement).remove();
+                }
+            }
+        }
+    }
+
+    if (useFirstImage && !post.data.feature_image) {
+        let firstElement = $html('.migrate-substack-wrapper *').first();
+
+        if (firstElement.tagName === 'img' || ($(firstElement).get(0) && $(firstElement).get(0).name === 'img') || $(firstElement).find('img').length) {
+            let theElementItself = (firstElement.tagName === 'img' || $(firstElement).get(0).name === 'img') ? firstElement : $(firstElement).find('img');
+            let firstImgSrc = $(theElementItself).attr('src');
+
+            if (firstImgSrc.length > 0) {
+                let unsizedFirstSrc = largeImageUrl(firstImgSrc);
+
+                if (unsizedFirstSrc) {
+                    post.data.feature_image = unsizedFirstSrc;
+
                     if ($(firstElement).find('figcaption').length) {
                         post.data.feature_image_caption = $(firstElement).find('figcaption').html();
                     }
@@ -133,7 +169,7 @@ const processContent = (post, siteUrl, options) => {
         const buildCard = audioCard.render(cardOpts);
         const cardHTML = buildCard.nodeValue;
 
-        $html('body').prepend(cardHTML);
+        $html('.migrate-substack-wrapper').prepend(cardHTML);
     }
 
     $html('div.tweet').each((i, el) => {
@@ -282,8 +318,15 @@ const processContent = (post, siteUrl, options) => {
     let footnotesCount = 0;
     $html('.footnote').each((i, el) => {
         let footnoteBodyAnchor = $(el).find('a').attr('href');
-        let footnoteID = $(el).attr('id');
-        let footnoteNumber = parseInt(footnoteID);
+
+        let footnoteID = null;
+        if ($(el).attr('id')) {
+            footnoteID = $(el).attr('id');
+        } else {
+            footnoteID = $(el).find('a').attr('id');
+        }
+
+        let footnoteNumber = footnoteID.replace('footnote-', '');
         let footnoteContent = $(el).find('.footnote-content');
 
         footnoteContent.find('p').last().append(` <a href="${footnoteBodyAnchor}" title="Jump back to footnote ${footnoteNumber} in the text.">↩</a>`);
@@ -294,8 +337,8 @@ const processContent = (post, siteUrl, options) => {
     });
 
     if (footnotesCount > 0) {
-        // Only append notes markup is there are footnotes
-        $html('body').append(`<!--kg-card-begin: html-->${footnotesMarkup}<!--kg-card-end: html-->`);
+        let footnotedHTML = $.html($(footnotesMarkup));
+        $html('.migrate-substack-wrapper').append(`<!--kg-card-begin: html-->${footnotedHTML}<!--kg-card-end: html-->`);
     }
 
     // Wrap content that has footnote anchors in HTML tags to retain the footnote jump anchor
@@ -360,8 +403,37 @@ const processContent = (post, siteUrl, options) => {
         $bookmark.after('<!--kg-card-end: html-->');
     });
 
+    $html('div.instagram').each((i, el) => {
+        let src = $(el).find('a.instagram-image').attr('href');
+
+        if (!src) {
+            return;
+        }
+
+        let parsed = url.parse(src);
+
+        if (parsed.search) {
+            // remove possible query params
+            parsed.search = null;
+        }
+        src = url.format(parsed, {search: false});
+
+        let $iframe = $('<iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;"></iframe>');
+        let $script = $('<script async="" src="//www.instagram.com/embed.js"></script>');
+        let $figure = $('<figure class="instagram"></figure>');
+
+        $iframe.attr('src', `${src}embed/captioned/`);
+        $figure.append($iframe);
+        $figure.append($script);
+
+        $(el).replaceWith($figure);
+    });
+
     // convert HTML back to a string
-    html = $html('body').html();
+    html = $html('.migrate-substack-wrapper').html();
+
+    // Remove empty attributes
+    html = html.replace(/=""/g, '');
 
     // Apply our new HTML back to the post object
     post.data.html = html.trim();

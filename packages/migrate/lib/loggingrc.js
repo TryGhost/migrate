@@ -19,7 +19,7 @@ if (process?.env?.NODE_ENV === 'development') {
         transports: ['file'],
         path: logPath
     };
-} else {
+} else if (process?.env?.NODE_ENV !== 'test') {
     // TODO: Add production logging
     logOpts = {
         name: 'migrateTools',

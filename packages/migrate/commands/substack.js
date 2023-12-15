@@ -74,21 +74,51 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--addPlatformTag',
+        defaultValue: true,
+        desc: 'Add #substack tag to migrated content'
+    },
+    {
+        type: 'boolean',
+        flags: '--addTypeTag',
+        defaultValue: true,
+        desc: 'Add #substack-{type} tag to migrated content (post, podcast, etc)'
+    },
+    {
+        type: 'boolean',
+        flags: '--addAccessTag',
+        defaultValue: true,
+        desc: 'Add #substack-{access} tag to migrated content (public, paid, etc)'
+    },
+    {
+        type: 'boolean',
         flags: '--drafts',
         defaultValue: true,
         desc: 'Import draft posts'
     },
     {
         type: 'boolean',
+        flags: '--pages',
+        defaultValue: true,
+        desc: 'Import pages'
+    },
+    {
+        type: 'boolean',
         flags: '--threads',
         defaultValue: false,
-        desc: 'Import thread posts'
+        desc: 'Import threads'
     },
     {
         type: 'boolean',
         flags: '--useMetaImage',
         defaultValue: true,
         desc: 'Use "og:image" value as the feature image'
+    },
+    {
+        type: 'boolean',
+        flags: '--useFirstImage',
+        defaultValue: true,
+        desc: 'Use the first image in content as the feature image (useMetaImage takes priority)'
     },
     {
         type: 'boolean',

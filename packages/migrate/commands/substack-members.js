@@ -56,14 +56,14 @@ const options = [
     {
         type: 'string',
         flags: '--comp',
-        defaultValue: '5:free',
+        defaultValue: '0:free',
         choices: ['YY:none', 'YY:free', 'YYYYMMDD:none', 'YYYYMMDD:free'],
         desc: 'Provide two values in the format "YY|YYYYMMDD:none|free". YY is the threshold in years or YYYYMMDD as the exact date after which Substack `comp` members should receive a complimentary plan depending on the expiry date. "none|free" the option how to import members before this threshold, e. g. 5:free'
     },
     {
         type: 'string',
         flags: '--gift',
-        defaultValue: '5:free',
+        defaultValue: '0:free',
         choices: ['YY:none', 'YY:free', 'YYYYMMDD:none', 'YYYYMMDD:free'],
         desc: 'Provide two values in the format "YY|YYYYMMDD:none|free". YY is the threshold in years or YYYYMMDD as the exact date after which Substack `gift` members should receive a complimentary plan depending on the expiry date. "none|free" the option how to import members before this threshold, e. g. 5:free'
     },

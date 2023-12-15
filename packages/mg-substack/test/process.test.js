@@ -34,27 +34,37 @@ describe('Process Substack ZIP file', function () {
             options: {
                 pathToZip: inputZipPath,
                 drafts: true,
+                pages: true,
                 url: 'https://example.substack.com',
                 email: 'exampleuser@email.com'
             }
         });
 
-        expect(processed.posts).toBeArrayOfSize(3);
+        expect(processed.posts).toBeArrayOfSize(4);
 
         expect(processed.posts[0].url).toEqual('https://example.substack.com/p/plain-text');
         expect(processed.posts[0].substackId).toEqual('123401.plain-text');
         expect(processed.posts[0].substackPodcastURL).toEqual(false);
         expect(processed.posts[0].data.slug).toEqual('plain-text');
+        expect(processed.posts[0].data.type).toEqual('post');
 
         expect(processed.posts[1].url).toEqual('https://example.substack.com/p/podcast');
         expect(processed.posts[1].substackId).toEqual('123402.podcast');
         expect(processed.posts[1].substackPodcastURL).toEqual('https://example.com/my-audio/file.mp3');
         expect(processed.posts[1].data.slug).toEqual('podcast');
+        expect(processed.posts[1].data.type).toEqual('post');
 
         expect(processed.posts[2].url).toEqual('https://example.substack.com/p/draft-text');
         expect(processed.posts[2].substackId).toEqual('123404.draft-text');
         expect(processed.posts[2].substackPodcastURL).toEqual(false);
         expect(processed.posts[2].data.slug).toEqual('draft-text');
+        expect(processed.posts[2].data.type).toEqual('post');
+
+        expect(processed.posts[3].url).toEqual('https://example.substack.com/p/about-us');
+        expect(processed.posts[3].substackId).toEqual('123405.about-us');
+        expect(processed.posts[3].substackPodcastURL).toEqual(false);
+        expect(processed.posts[3].data.slug).toEqual('about-us');
+        expect(processed.posts[3].data.type).toEqual('page');
     });
 });
 
@@ -86,8 +96,12 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 drafts: true,
+                pages: false,
                 url: 'https://example.substack.com',
-                email: 'exampleuser@email.com'
+                email: 'exampleuser@email.com',
+                addPlatformTag: true,
+                addTypeTag: true,
+                addAccessTag: true
             }
         };
         const mapped = await map(postDataFromFixtures, ctx.options);
@@ -96,8 +110,6 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         expect(mapped.posts[0].substackId).toEqual('123401.plain-text');
 
         const processed = await process(mapped, ctx);
-
-        expect(processed.posts).toBeArrayOfSize(3);
 
         const post = processed.posts[0];
         expect(post).toBeObject();
@@ -145,7 +157,11 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 drafts: true,
-                url: 'https://example.substack.com'
+                pages: false,
+                url: 'https://example.substack.com',
+                addPlatformTag: true,
+                addTypeTag: true,
+                addAccessTag: true
             }
         };
         const mapped = await map(postDataFromFixtures, ctx.options);
@@ -178,6 +194,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 drafts: true,
+                pages: false,
                 url: 'https://example.substack.com',
                 email: 'exampleuser@email.com'
             }
@@ -196,6 +213,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 drafts: true,
+                pages: false,
                 url: 'https://example.substack.com',
                 email: 'exampleuser@email.com',
                 postsBefore: 'January 20, 2021'
@@ -211,6 +229,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 drafts: true,
+                pages: false,
                 url: 'https://example.substack.com',
                 email: 'exampleuser@email.com',
                 postsAfter: 'January 20, 2019',
@@ -227,6 +246,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 drafts: true,
+                pages: false,
                 url: 'https://example.substack.com',
                 email: 'exampleuser@email.com',
                 postsAfter: 'August 12, 2022'
@@ -242,6 +262,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 drafts: true,
+                pages: false,
                 threads: true,
                 url: 'https://example.substack.com',
                 email: 'exampleuser@email.com'
@@ -256,7 +277,11 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 url: 'https://example.substack.com',
-                addTag: 'Hello World'
+                addTag: 'Hello World',
+                pages: false,
+                addPlatformTag: true,
+                addTypeTag: true,
+                addAccessTag: true
             }
         };
         const mapped = await map(postDataFromFixtures, ctx.options);
@@ -277,6 +302,131 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         expect(tag3.url).toEqual('migrator-added-tag');
         expect(tag3.data.name).toEqual('#substack');
         expect(tag3.data.slug).toEqual('hash-substack');
+    });
+
+    test('Can skip platform tag', async function () {
+        const ctx = {
+            options: {
+                url: 'https://example.substack.com',
+                pages: false,
+                addPlatformTag: false,
+                addTypeTag: true,
+                addAccessTag: true
+            }
+        };
+        const mapped = await map(postDataFromFixtures, ctx.options);
+
+        const post = mapped.posts[0];
+
+        const tag1 = post.data.tags[0];
+        expect(tag1.url).toEqual('https://example.substack.com/tag/newsletter');
+        expect(tag1.data.name).toEqual('Newsletter');
+        expect(tag1.data.slug).toEqual('newsletter');
+
+        const tag2 = post.data.tags[1];
+        expect(tag2.url).toEqual('migrator-added-tag-substack-type-newsletter');
+        expect(tag2.data.name).toEqual('#substack-type-newsletter');
+        expect(tag2.data.slug).toEqual('hash-substack-type-newsletter');
+
+        const tag3 = post.data.tags[2];
+        expect(tag3.url).toEqual('migrator-added-tag-substack-access-everyone');
+        expect(tag3.data.name).toEqual('#substack-access-everyone');
+        expect(tag3.data.slug).toEqual('hash-substack-access-everyone');
+    });
+
+    test('Can skip type tag', async function () {
+        const ctx = {
+            options: {
+                url: 'https://example.substack.com',
+                pages: false,
+                addPlatformTag: true,
+                addTypeTag: false,
+                addAccessTag: true
+            }
+        };
+        const mapped = await map(postDataFromFixtures, ctx.options);
+
+        const post = mapped.posts[0];
+
+        const tag1 = post.data.tags[0];
+        expect(tag1.url).toEqual('https://example.substack.com/tag/newsletter');
+        expect(tag1.data.name).toEqual('Newsletter');
+        expect(tag1.data.slug).toEqual('newsletter');
+
+        const tag2 = post.data.tags[1];
+        expect(tag2.url).toEqual('migrator-added-tag');
+        expect(tag2.data.name).toEqual('#substack');
+        expect(tag2.data.slug).toEqual('hash-substack');
+
+        const tag3 = post.data.tags[2];
+        expect(tag3.url).toEqual('migrator-added-tag-substack-access-everyone');
+        expect(tag3.data.name).toEqual('#substack-access-everyone');
+        expect(tag3.data.slug).toEqual('hash-substack-access-everyone');
+    });
+
+    test('Can skip access tag', async function () {
+        const ctx = {
+            options: {
+                url: 'https://example.substack.com',
+                pages: false,
+                addPlatformTag: true,
+                addTypeTag: true,
+                addAccessTag: false
+            }
+        };
+        const mapped = await map(postDataFromFixtures, ctx.options);
+
+        const post = mapped.posts[0];
+
+        const tag1 = post.data.tags[0];
+        expect(tag1.url).toEqual('https://example.substack.com/tag/newsletter');
+        expect(tag1.data.name).toEqual('Newsletter');
+        expect(tag1.data.slug).toEqual('newsletter');
+
+        const tag2 = post.data.tags[1];
+        expect(tag2.url).toEqual('migrator-added-tag');
+        expect(tag2.data.name).toEqual('#substack');
+        expect(tag2.data.slug).toEqual('hash-substack');
+
+        const tag3 = post.data.tags[2];
+        expect(tag3.url).toEqual('migrator-added-tag-substack-type-newsletter');
+        expect(tag3.data.name).toEqual('#substack-type-newsletter');
+        expect(tag3.data.slug).toEqual('hash-substack-type-newsletter');
+    });
+
+    test('Can skip all platform, type & access tags', async function () {
+        const ctx = {
+            options: {
+                url: 'https://example.substack.com',
+                pages: false,
+                addPlatformTag: false,
+                addTypeTag: false,
+                addAccessTag: false
+            }
+        };
+        const mapped = await map(postDataFromFixtures, ctx.options);
+
+        const post = mapped.posts[0];
+
+        const tag1 = post.data.tags[0];
+        expect(tag1.url).toEqual('https://example.substack.com/tag/newsletter');
+        expect(tag1.data.name).toEqual('Newsletter');
+        expect(tag1.data.slug).toEqual('newsletter');
+    });
+
+    test('Can migrate pages', async function () {
+        const ctx = {
+            options: {
+                url: 'https://example.substack.com',
+                pages: true
+            }
+        };
+        const mapped = await map(postDataFromFixtures, ctx.options);
+
+        expect(mapped.posts).toBeArrayOfSize(3);
+        expect(mapped.posts[0].data.type).toEqual('post');
+        expect(mapped.posts[1].data.type).toEqual('post');
+        expect(mapped.posts[2].data.type).toEqual('page');
     });
 });
 
@@ -455,7 +605,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         '                </ul>');
     });
 
-    test('Can process footnotes in text content', async function () {
+    test('Can process footnotes in text content in old style', async function () {
         const post = {
             data: {
                 html: `<p>Lorem ipsum</p>
@@ -508,12 +658,62 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         '                \n' +
         '                <!--kg-card-begin: html--><div class="footnotes"><hr><ol><li id="footnote-1">\n' +
         '                        <p>Lorem ipsum</p>\n' +
-        '                        <p>Dolor simet <a href="#footnote-anchor-1" title="Jump back to footnote NaN in the text.">&#x21A9;</a></p>\n' +
+        '                        <p>Dolor simet <a href="#footnote-anchor-1" title="Jump back to footnote 1 in the text.">↩</a></p>\n' +
         '                    </li><li id="footnote-2">\n' +
-        '                        <p>Consectetur adipiscing <a href="#footnote-anchor-2" title="Jump back to footnote NaN in the text.">&#x21A9;</a></p>\n' +
+        '                        <p>Consectetur adipiscing <a href="#footnote-anchor-2" title="Jump back to footnote 2 in the text.">↩</a></p>\n' +
         '                    </li><li id="footnote-3">\n' +
-        '                        <p>Elit elementum venenatis <a href="#footnote-anchor-3" title="Jump back to footnote NaN in the text.">&#x21A9;</a></p>\n' +
+        '                        <p>Elit elementum venenatis <a href="#footnote-anchor-3" title="Jump back to footnote 3 in the text.">↩</a></p>\n' +
         '                    </li></ol></div><!--kg-card-end: html-->');
+    });
+
+    test('Can process footnotes in text content in new style', async function () {
+        const post = {
+            data: {
+                html: `<p>Lorem ipsum</p>
+                <p>Lorem ipsum<a class="footnote-anchor" id="footnote-anchor-1" href="#footnote-1">1</a>.</p>
+                    <p>Dolor simet</p>
+                    <p>Dolor simet <a class="footnote-anchor" id="footnote-anchor-2" href="#footnote-2">2</a>.</p>
+                    <p>Hello world</p>
+                    <p>Hello world. This<a class="footnote-anchor" id="footnote-anchor-3" href="#footnote-3">3</a> is new</p>
+            <div class="footnote"><a id="footnote-1" href="#footnote-anchor-1" class="footnote-number" contenteditable="false">2</a>
+                <div class="footnote-content">
+                    <p>Note content</p>
+                    <p>Two lines</p>
+                </div>
+            </div>
+            <div class="footnote"><a id="footnote-2" href="#footnote-anchor-2" class="footnote-number" contenteditable="false">3</a>
+                <div class="footnote-content">
+                    <p>More notes</p>
+                </div>
+            </div>
+            <div class="footnote"><a id="footnote-3" href="#footnote-anchor-3" class="footnote-number" contenteditable="false">4</a>
+                <div class="footnote-content">
+                    <p><a href="https://ghost.org">Link</a> in this one</p>
+                </div>
+            </div>`
+            }
+        };
+        const url = 'https://example.com';
+        const options = {};
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).toEqual('<p>Lorem ipsum</p>\n' +
+        '                <!--kg-card-begin: html--><p>Lorem ipsum<a class="footnote-anchor" id="footnote-anchor-1" href="#footnote-1">1</a>.</p><!--kg-card-end: html-->\n' +
+        '                    <p>Dolor simet</p>\n' +
+        '                    <!--kg-card-begin: html--><p>Dolor simet <a class="footnote-anchor" id="footnote-anchor-2" href="#footnote-2">2</a>.</p><!--kg-card-end: html-->\n' +
+        '                    <p>Hello world</p>\n' +
+        '                    <!--kg-card-begin: html--><p>Hello world. This<a class="footnote-anchor" id="footnote-anchor-3" href="#footnote-3">3</a> is new</p><!--kg-card-end: html-->\n' +
+        '            \n' +
+        '            \n' +
+        '            <!--kg-card-begin: html--><div class="footnotes"><hr><ol><li id="footnote-1">\n' +
+        '                    <p>Note content</p>\n' +
+        '                    <p>Two lines <a href="#footnote-anchor-1" title="Jump back to footnote 1 in the text.">↩</a></p>\n' +
+        '                </li><li id="footnote-2">\n' +
+        '                    <p>More notes <a href="#footnote-anchor-2" title="Jump back to footnote 2 in the text.">↩</a></p>\n' +
+        '                </li><li id="footnote-3">\n' +
+        '                    <p><a href="https://ghost.org">Link</a> in this one <a href="#footnote-anchor-3" title="Jump back to footnote 3 in the text.">↩</a></p>\n' +
+        '                </li></ol></div><!--kg-card-end: html-->');
     });
 
     test('Can process embedded posts', async function () {
@@ -576,12 +776,8 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const post = {
             data: {
                 html: `<p></p><img src="https://example.com/content/file_1200x800.jpg" /><p>My content</p>`,
-                title: 'My Image Post'
-            },
-            metaData: {
-                responseData: {
-                    og_image: 'https://example.com/content/file_1024x768.jpg'
-                }
+                title: 'My Image Post',
+                og_image: 'https://example.com/content/file_1024x768.jpg'
             }
         };
         const url = 'https://example.com';
@@ -590,6 +786,45 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const processed = await processContent(post, url, options);
 
         expect(processed.data.html).toEqual('<p>My content</p>');
+    });
+
+    test('Will take useMetaImage as priority over useFirstImage', async function () {
+        const post = {
+            data: {
+                html: `<p></p><figure><img src="https://example.com/content/first-image.jpg" /><figcaption>My image</figcaption></figure><p>My content</p>`,
+                title: 'My Image Post',
+                og_image: 'https://example.com/content/file_1024x768.jpg'
+            }
+        };
+        const url = 'https://example.com';
+        const options = {
+            useMetaImage: true,
+            useFirstImage: true
+        };
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).toEqual('<figure><img src="https://example.com/content/first-image.jpg"><figcaption>My image</figcaption></figure><p>My content</p>');
+        expect(processed.data.feature_image).toEqual('https://example.com/content/file_1024x768.jpg');
+    });
+
+    test('Can useFirstImage', async function () {
+        const post = {
+            data: {
+                html: `<p></p><figure><img src="https://example.com/content/first-image.jpg" /><figcaption>My image</figcaption></figure><p>My content</p>`,
+                title: 'My Image Post'
+            }
+        };
+        const url = 'https://example.com';
+        const options = {
+            useFirstImage: true
+        };
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).toEqual('<p>My content</p>');
+        expect(processed.data.feature_image).toEqual('https://example.com/content/first-image.jpg');
+        expect(processed.data.feature_image_caption).toEqual('My image');
     });
 });
 
@@ -637,5 +872,35 @@ describe('Change image element source', function () {
         const processed = await processContent(post, 'https://example.com', {});
 
         expect(processed.data.html).toEqual('<figure class="kg-card kg-image-card"><a href="https://ghost.org"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-abcdabcd-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2F12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png" class="kg-image" alt loading="lazy"></a></figure>');
+    });
+
+    test('Handles images with no src attribute', async function () {
+        let thehtml = `<p>Hello</p><a class="image-link is-viewable-img image2" target="_blank" href="https://ghost.org"><div class="image2-inset"><picture> <source type="image/webp"><img class="sizing-normal" alt=""></picture></div></a>`;
+
+        const post = {
+            data: {
+                html: thehtml,
+                title: 'My Image Post'
+            }
+        };
+
+        const processed = await processContent(post, 'https://example.com', {});
+
+        expect(processed.data.html).toEqual('<p>Hello</p>');
+    });
+
+    test('Can process Instagram embeds', async () => {
+        let theHtml = `<div class="instagram" data-attrs="{&quot;instagram_id&quot;:&quot;QWERTYNgZO8&quot;,&quot;title&quot;:&quot;A post shared by Example User (@exampleuser)&quot;,&quot;author_name&quot;:&quot;exampleuser&quot;,&quot;thumbnail_url&quot;:&quot;https://scontent.cdninstagram.com/v/t01.2345-67/e01/p480x480/125269447_123456789439748_5866997504257834626_n.jpg?_nc_ht=scontent.cdninstagram.com&amp;_nc_cat=100&amp;_nc_ohc=ABCDKvvBbVMAX-g_pZ8&amp;tp=1&amp;oh=c4e4faca2360d3c909134133edddccd6&amp;oe=60138323&quot;,&quot;timestamp&quot;:null,&quot;belowTheFold&quot;:false}"><div class="instagram-top-bar"><a class="instagram-author-name" href="https://instagram.com/exampleuser" target="_blank">exampleuser</a></div><a class="instagram-image" href="https://instagram.com/p/QWERTYNgZO8" target="_blank"><img src="https://scontent.cdninstagram.com/v/t01.2345-67/e01/p480x480/125269447_123456789439748_5866997504257834626_n.jpg?_nc_ht=scontent.cdninstagram.com&amp;_nc_cat=100&amp;_nc_ohc=ABCDKvvBbVMAX-g_pZ8&amp;tp=1&amp;oh=c4e4faca2360d3c909134133edddccd6&amp;oe=60138323"></a><div class="instagram-bottom-bar"><div class="instagram-title">A post shared by Example User (<a href="https://instagram.com/exampleuser" target="_blank">@exampleuser</a>)</div></div></div>`;
+
+        const post = {
+            data: {
+                html: theHtml,
+                title: 'My Instagram Post'
+            }
+        };
+
+        const processed = await processContent(post, 'https://example.com', {});
+
+        expect(processed.data.html).toEqual('<figure class="instagram"><iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;" src="https://instagram.com/p/QWERTYNgZO8embed/captioned/"></iframe><script async src="//www.instagram.com/embed.js"></script></figure>');
     });
 });

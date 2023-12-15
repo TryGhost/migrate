@@ -7,7 +7,7 @@ const htmlFields = ['html'];
 
 const isHTMLField = field => _.includes(htmlFields, field);
 
-class LinkFixer {
+export default class LinkFixer {
     constructor() {
         this.linkMap = {};
     }
@@ -44,6 +44,11 @@ class LinkFixer {
 
         // @TODO: support for custom taxonomies
         ctx.result.posts.forEach(({url, data}) => {
+            // Exit if no url or is empty string
+            if (!url || url.length === 0) {
+                return;
+            }
+
             // Parse the current post URL, so we can use its domain as a fallback
             const postURLDomain = new URL(url);
 
@@ -87,6 +92,13 @@ class LinkFixer {
                     this.linkMap[tagUrl] = `/tag/${tagData.slug}/`;
                 });
             }
+
+            if (data.authors) {
+                data.authors.forEach((author) => {
+                    this.linkMap[author.url] = `/author/${author.data.slug}/`;
+                });
+            }
+
             if (data.author) {
                 this.linkMap[data.author.url] = `/author/${data.author.data.slug}/`;
             }
@@ -100,7 +112,10 @@ class LinkFixer {
     }
 
     async processHTML(html) {
-        let $ = cheerio.load(html);
+        let $ = cheerio.load(html, {
+            decodeEntities: false,
+            scriptingEnabled: false
+        }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
         let links = $('a').map(async (i, el) => {
             let href = $(el).attr('href');
@@ -156,5 +171,3 @@ class LinkFixer {
         return tasks;
     }
 }
-
-export default LinkFixer;

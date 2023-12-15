@@ -1,6 +1,6 @@
 import WPAPI from 'wpapi';
 
-const discover = async (url, {apiUser, usersJSON, limit, cpt}) => {
+const discover = async (url, {apiUser, usersJSON, posts, pages, limit, cpt}) => {
     const requestOptions = {endpoint: `${url}/wp-json`};
 
     if (apiUser && apiUser.username && apiUser.password) {
@@ -29,19 +29,23 @@ const discover = async (url, {apiUser, usersJSON, limit, cpt}) => {
 
     values.site = site;
 
-    const posts = await site.posts().perPage(limit);
-    values.totals.posts = posts._paging && posts._paging.total ? posts._paging.total : 0;
-    values.batches.posts = posts._paging && posts._paging.totalPages ? posts._paging.totalPages : 0;
+    if (posts) {
+        const postsData = await site.posts().perPage(limit);
+        values.totals.posts = postsData._paging && postsData._paging.total ? postsData._paging.total : 0;
+        values.batches.posts = postsData._paging && postsData._paging.totalPages ? postsData._paging.totalPages : 0;
+    }
 
-    const pages = await site.pages().perPage(limit);
-    values.totals.pages = pages._paging && pages._paging.total ? pages._paging.total : 0;
-    values.batches.pages = pages._paging && pages._paging.totalPages ? pages._paging.totalPages : 0;
+    if (pages) {
+        const pageData = await site.pages().perPage(limit);
+        values.totals.pages = pageData._paging && pageData._paging.total ? pageData._paging.total : 0;
+        values.batches.pages = pageData._paging && pageData._paging.totalPages ? pageData._paging.totalPages : 0;
+    }
 
     // If users were already supplied, don't fetch them
     if (!usersJSON) {
-        const users = await site.users().perPage(limit);
-        values.totals.users = users._paging && users._paging.total ? users._paging.total : 0;
-        values.batches.users = users._paging && users._paging.totalPages ? users._paging.totalPages : 0;
+        const usersData = await site.users().perPage(limit);
+        values.totals.users = usersData._paging && usersData._paging.total ? usersData._paging.total : 0;
+        values.batches.users = usersData._paging && usersData._paging.totalPages ? usersData._paging.totalPages : 0;
     }
 
     return values;
@@ -85,8 +89,7 @@ const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest, logger) =
 const tasks = async (url, ctx) => {
     const {logger} = ctx;
     const {apiUser} = ctx || {};
-    const {limit} = ctx.options;
-    const {cpt} = ctx.options;
+    const {pages, posts, limit, cpt} = ctx.options;
     const {usersJSON} = ctx || null;
     let isAuthRequest = false;
 
@@ -98,7 +101,7 @@ const tasks = async (url, ctx) => {
         isAuthRequest = true;
     }
 
-    const api = await discover(url, {apiUser, usersJSON, limit, cpt});
+    const api = await discover(url, {apiUser, usersJSON, posts, pages, limit, cpt});
 
     const theTasks = [];
 
@@ -108,7 +111,10 @@ const tasks = async (url, ctx) => {
     };
 
     buildTasks(ctx.fileCache, theTasks, api, 'posts', limit, isAuthRequest, logger);
-    buildTasks(ctx.fileCache, theTasks, api, 'pages', limit, isAuthRequest, logger);
+
+    if (pages) {
+        buildTasks(ctx.fileCache, theTasks, api, 'pages', limit, isAuthRequest, logger);
+    }
 
     // If users were already supplied, don't fetch them
     if (!usersJSON) {

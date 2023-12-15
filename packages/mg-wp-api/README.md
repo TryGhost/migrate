@@ -66,6 +66,12 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Provide a JSON file with users. Contents should be a JSON array of objects that match
       the format returned by the Wordpress API, including the following keys:
       "id", "slug", "name", "description", "email" and "url".
+- **`--posts**`**
+    - boolean - default: `true`
+    - Import posts
+- **`--pages**`**
+    - boolean - default: `true`
+    - Import pages
 - **`--tags`**
     - boolean - default: `true`
     - Set to false if you don't want to import WordPress tags, only categories
@@ -91,7 +97,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Only migrate posts before and including a given date e.g. 'March 20 2018'
     - string - default: `null`
 - **`--postsAfter`** 
-    - Only migrate posts after and including a given date e.g. 'August 16 2022'
+    - Only migrate posts after and including a given date e.g. 'August 16 2023'
     - string - default: `null`
 - **`--cpt`** 
     - A comma-separated list of custom post type slugs e.g. `resources,newsletters`
@@ -164,4 +170,4 @@ yarn dev wp-api <url>
 
 # Copyright & License
 
-Copyright (c) 2013-2022 Ghost Foundation - Released under the [MIT license](LICENSE).
+Copyright (c) 2013-2023 Ghost Foundation - Released under the [MIT license](LICENSE).

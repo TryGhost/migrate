@@ -60,6 +60,30 @@ const options = [
         desc: 'Provide an email domain for users e.g. mycompany.com'
     },
     {
+        type: 'string',
+        flags: '--addTag',
+        defaultValue: null,
+        desc: 'Provide a tag slug which should be added to every post in this migration'
+    },
+    {
+        type: 'boolean',
+        flags: '--addPlatformTag',
+        defaultValue: true,
+        desc: 'Add #medium tag to migrated content'
+    },
+    {
+        type: 'boolean',
+        flags: '--mediumAsCanonical',
+        defaultValue: false,
+        desc: 'Use medium article as canonical URL'
+    },
+    {
+        type: 'boolean',
+        flags: '--removeResponses',
+        defaultValue: true,
+        desc: 'Remove response posts such as comments from the output'
+    },
+    {
         type: 'boolean',
         flags: '--fallBackHTMLCard',
         defaultValue: true,

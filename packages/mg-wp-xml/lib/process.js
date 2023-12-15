@@ -6,6 +6,7 @@ import errors from '@tryghost/errors';
 import MarkdownIt from 'markdown-it';
 import MgWpAPI from '@tryghost/mg-wp-api';
 import {formatISO, parseISO, isBefore, isAfter, add} from 'date-fns';
+import {isSerialized, unserialize} from 'php-serialize';
 
 const processUser = ($user) => {
     const authorSlug = slugify($($user).children('wp\\:author_login').text());
@@ -18,6 +19,25 @@ const processUser = ($user) => {
             email: $($user).children('wp\\:author_email').text()
         }
     };
+};
+
+const processWPMeta = async ($post) => {
+    let metaData = {};
+
+    let postMeta = $($post).children('wp\\:postmeta').map(async (i, meta) => {
+        let key = $(meta).children('wp\\:meta_key').text();
+        let value = $(meta).children('wp\\:meta_value').text();
+
+        if (isSerialized(value)) {
+            value = unserialize(value);
+        }
+
+        metaData[key] = value;
+    }).get();
+
+    await Promise.all(postMeta);
+
+    return metaData;
 };
 
 // The feature images is not "connected" to the post, other than it's located
@@ -137,6 +157,9 @@ const processPost = async ($post, users, options) => {
     let parsedPostUrl = new URL(postUrl, url);
     postUrl = parsedPostUrl.href;
 
+    // If you need <wp:postmeta> data, access it here
+    // const postMeta = await processWPMeta($post);
+
     const post = {
         url: postUrl,
         wpPostType: postTypeVal,
@@ -159,7 +182,8 @@ const processPost = async ($post, users, options) => {
     });
 
     const mdParser = new MarkdownIt({
-        html: true
+        html: true,
+        breaks: true
     });
     post.data.html = mdParser.render(post.data.html);
 
@@ -315,8 +339,9 @@ const all = async (input, {options}) => {
     const $xml = $.load(input, {
         decodeEntities: false,
         xmlMode: true,
+        scriptingEnabled: false,
         lowerCaseTags: true // needed to find `pubDate` tags
-    });
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // grab the URL of the site we're importing
     options.url = $xml('channel > link').text();
@@ -398,5 +423,6 @@ export default {
 };
 
 export {
+    processWPMeta,
     processHTMLContent
 };

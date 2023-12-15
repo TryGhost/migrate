@@ -172,4 +172,13 @@ describe('Clean HTML', function () {
         });
         expect(result).toEqual(html);
     });
+
+    test('Removes empty attributes', function () {
+        let html = '<script async="" data-not-areal-thing src="/example.js"></script>';
+        let result = cleanHTML({
+            html,
+            cards: true
+        });
+        expect(result).toEqual('<script async data-not-areal-thing src="/example.js"></script>');
+    });
 });

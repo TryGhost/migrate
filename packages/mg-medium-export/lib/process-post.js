@@ -5,7 +5,9 @@ import processContent from './process-content.js';
 
 const sectionTags = ['aside', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'img'];
 
-const processMeta = (name, $post) => {
+const processMeta = ({name, $post, options}) => {
+    const mediumAsCanonical = options?.mediumAsCanonical ?? false;
+
     let urlInfo;
 
     // Get an ISO 8601 date - https://date-fns.org/docs/formatISO
@@ -33,6 +35,11 @@ const processMeta = (name, $post) => {
         post.data.updated_at = $post('.dt-published').attr('datetime') || dateNow;
     }
 
+    if (mediumAsCanonical) {
+        const canonicalUrl = $post('.p-canonical').attr('href');
+        post.data.canonical_url = canonicalUrl;
+    }
+
     // $('img').map(async (i, el) => {
     //     let $image = $(el);
     //     let type = $image.attr('src') === undefined ? 'data-src' : 'src';
@@ -48,7 +55,7 @@ const processMeta = (name, $post) => {
     return post;
 };
 
-const processAuthor = ($author) => {
+const processAuthor = ({$author}) => {
     return {
         url: $author.attr('href'),
         data: {
@@ -61,7 +68,7 @@ const processAuthor = ($author) => {
     };
 };
 
-const processTags = ($tags) => {
+const processTags = ({$tags}) => {
     const tags = [];
     $tags.each((i, tag) => {
         let $tag = $(tag);
@@ -76,10 +83,10 @@ const processTags = ($tags) => {
     return tags;
 };
 
-const processFeatureImage = (html, post) => {
+const processFeatureImage = ({html, post, options}) => {
     const $html = $.load(html, {
         decodeEntities: false
-    });
+    }, false);
 
     // Look for data-is-featured
     let featured = $html('[data-is-featured]')[0];
@@ -102,12 +109,15 @@ const processFeatureImage = (html, post) => {
     // We don't have a designated feature image, but there's an image above the content so use that image instead
     if (!featured && !preImageTags.includes('p')) {
         featured = foundImg;
-        // tag it with #auto-feature-image so we can tell the difference
-        post.data.tags.push({
-            data: {
-                name: '#auto-feature-image'
-            }
-        });
+
+        if (options?.addPlatformTag) {
+            // tag it with #auto-feature-image so we can tell the difference
+            post.data.tags.push({
+                data: {
+                    name: '#auto-feature-image'
+                }
+            });
+        }
     }
 
     if (featured) {
@@ -121,38 +131,53 @@ const processFeatureImage = (html, post) => {
     return $html.html().trim();
 };
 
-export default (name, html, globalUser) => {
+export default ({name, html, globalUser, options}) => {
     const $post = $.load(html, {
-        decodeEntities: false
-    });
+        decodeEntities: false,
+        scriptingEnabled: false
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
-    const post = processMeta(name, $post);
+    const post = processMeta({name, $post, options});
 
     // Process content
-    post.data.html = processContent($post('.e-content'), post);
+    post.data.html = processContent({content: $post('.e-content'), post});
 
     // Process author
     if ($post('.p-author').length) {
-        post.data.author = processAuthor($post('.p-author'));
+        post.data.author = processAuthor({$author: $post('.p-author')});
         // @TODO check if this is the global user and use that?
     } else if (globalUser) {
         post.data.author = globalUser;
     }
 
-    // Process tags
-    if ($post('.p-tags a').length) {
-        post.data.tags = processTags($post('.p-tags a'));
-    } else {
-        post.data.tags = [];
+    post.data.tags = [];
+
+    if (options?.addTag) {
+        post.data.tags.push({
+            url: 'migrator-added-tag',
+            data: {
+                name: options.addTag
+            }
+        });
     }
 
-    post.data.tags.push({
-        url: 'migrator-added-tag', data: {name: '#medium'}
-    });
+    // Process tags
+    if ($post('.p-tags a').length) {
+        post.data.tags = [...post.data.tags, ...processTags({$tags: $post('.p-tags a')})];
+    }
+
+    if (options?.addPlatformTag) {
+        post.data.tags.push({
+            url: 'migrator-added-platform-tag',
+            data: {
+                name: '#medium'
+            }
+        });
+    }
 
     // Grab the featured image
     // Do this last so that we can add tags to indicate feature image style
-    post.data.html = processFeatureImage(post.data.html, post);
+    post.data.html = processFeatureImage({html: post.data.html, post, options});
 
     return post;
 };

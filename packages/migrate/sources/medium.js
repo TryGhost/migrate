@@ -6,7 +6,6 @@ import MgWebScraper from '@tryghost/mg-webscraper';
 import MgAssetScraper from '@tryghost/mg-assetscraper';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
-import {slugify} from '@tryghost/string';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import prettyMilliseconds from 'pretty-ms';
 
@@ -61,18 +60,35 @@ const scrapeConfig = {
             selector: 'meta[property="twitter:description"]',
             attr: 'content'
         },
-        tags: {
-            listItem: 'ul > li > a[href*="/tagged/"]',
-            name: 'tags',
+        scrapedTags: {
+            // We cannot rely on tags being available as HTML elements because of gating. They are available
+            // as JSON, but the script tag they're in has no ID, so we need to look at all script tags, and
+            // only process the tag that contains `window.__APOLLO_STATE__`.
+            listItem: 'script',
             data: {
-                name: {
+                scriptTag: {
+                    how: 'html',
                     convert: (x) => {
-                        return x;
-                    }
-                },
-                url: {
-                    convert: (x) => {
-                        return slugify(x);
+                        if (x && x.includes('window.__APOLLO_STATE__')) {
+                            const theTags = [];
+                            const parsed = JSON.parse(x.replace('window.__APOLLO_STATE__ =', ''));
+
+                            Object.values(parsed).forEach((value) => {
+                                if (value.__typename === 'Tag') {
+                                    theTags.push({
+                                        url: `https://medium.com/tag/${value.normalizedTagSlug}`,
+                                        data: {
+                                            name: value.displayTitle,
+                                            slug: value.normalizedTagSlug
+                                        }
+                                    });
+                                }
+                            });
+
+                            return theTags;
+                        } else {
+                            return;
+                        }
                     }
                 }
             }
@@ -81,10 +97,35 @@ const scrapeConfig = {
 };
 
 const postProcessor = (scrapedData) => {
+    if (!scrapedData.tags) {
+        scrapedData.tags = [];
+    }
+
     if (scrapedData.status === 'Unlisted') {
         scrapedData.status = 'draft';
-        scrapedData.tags = scrapedData.tags || [];
-        scrapedData.tags.push({url: 'migrator-added-tag', name: '#Unlisted'});
+        scrapedData.tags.push(
+            {
+                url: 'migrator-added-tag',
+                name: '#Unlisted',
+                slug: 'hash-unlisted'
+            }
+        );
+    }
+
+    if (scrapedData.scrapedTags) {
+        Object.values(scrapedData.scrapedTags).forEach((value) => {
+            if (value && value.scriptTag) {
+                Object.values(value.scriptTag).forEach((value2) => {
+                    scrapedData.tags.push({
+                        url: value2.url,
+                        name: value2.data.name,
+                        slug: value2.data.slug
+                    });
+                });
+            }
+        });
+
+        delete scrapedData.scrapedTags;
     }
 
     return scrapedData;

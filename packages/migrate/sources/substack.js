@@ -9,6 +9,7 @@ import zipIngest from '@tryghost/mg-substack';
 import {slugify} from '@tryghost/string';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import prettyMilliseconds from 'pretty-ms';
+import $ from 'cheerio';
 
 const scrapeConfig = {
     posts: {
@@ -102,22 +103,33 @@ const scrapeConfig = {
                 return theAuthors;
             }
         },
-        labels: {
-            listItem: '.post-header > .post-label > a',
-            name: 'labels',
-            data: {
-                url: {
-                    attr: 'href',
-                    convert: (x) => {
-                        const urlParts = x.match(/.*\/s\/([a-zA-Z0-9-_]{1,})(\/.*)?/);
-                        return urlParts[1]; // [1] is the tag name itself from `https://example.substack.com/s/my-tag/?utm_source=substack`
-                    }
-                },
-                name: {
-                    convert: (x) => {
-                        return x;
-                    }
+        tags: {
+            selector: '.post-header > .post-label',
+            how: 'html',
+            convert: (x) => {
+                if (!x) {
+                    return;
                 }
+
+                let tags = [];
+
+                const $tags = $.load(x, {
+                    decodeEntities: false,
+                    scriptingEnabled: false
+                }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+
+                $tags('a').each((i, el) => {
+                    const urlParts = $(el).attr('href').match(/.*\/s\/([a-zA-Z0-9-_]{1,})(\/.*)?/);
+
+                    tags.push({
+                        data: {
+                            name: $(el).text(),
+                            slug: urlParts[1]
+                        }
+                    });
+                });
+
+                return tags;
             }
         }
     }
@@ -181,14 +193,6 @@ const getTaskRunner = (options, logger) => {
                     web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
                 };
 
-                // If enabled, set the `og:image` as the feature image
-                if (options.useMetaImage) {
-                    scrapeConfig.posts.feature_image = {
-                        selector: 'meta[property="og:image"]',
-                        attr: 'content'
-                    };
-                }
-
                 // Delete the authors meta field if the option is not enabled (this data is fetched regardless of options passed)
                 if (!options.useMetaAuthor) {
                     delete scrapeConfig.posts.authors;
@@ -212,7 +216,6 @@ const getTaskRunner = (options, logger) => {
                     readContent: false,
                     processContent: false,
                     webScraper: false,
-                    applyFromWebScraper: false,
                     buildLinkMap: false,
                     formatDataAsGhost: false,
                     assetScraper: false,
@@ -254,7 +257,7 @@ const getTaskRunner = (options, logger) => {
             task: (ctx) => {
                 // 2. Pass the results through the web scraper to get any missing data
                 ctx.timings.webScraper = Date.now();
-                let tasks = ctx.webScraper.get(ctx); // eslint-disable-line no-shadow
+                let tasks = ctx.webScraper.hydrate(ctx);
 
                 let webScraperOptions = options;
                 webScraperOptions.concurrent = 1;
@@ -293,30 +296,9 @@ const getTaskRunner = (options, logger) => {
             }
         },
         {
-            title: 'Apply missing data from WebScraper',
-            skip: ctx => !ctx.allowScrape.web,
-            task: (ctx) => {
-                // 4. Pass the results through the web scraper to apply any missing data
-                ctx.timings.applyFromWebScraper = Date.now();
-                let tasks = ctx.webScraper.apply(ctx); // eslint-disable-line no-shadow
-                let webScraperOptions = options;
-                webScraperOptions.concurrent = 1;
-                return makeTaskRunner(tasks, webScraperOptions);
-            }
-        },
-        {
-            skip: ctx => !ctx.allowScrape.web,
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Apply missing data from WebScraper',
-                    duration: Date.now() - ctx.timings.applyFromWebScraper
-                });
-            }
-        },
-        {
             title: 'Build Link Map',
             task: async (ctx) => {
-                // 5. Create a map of all known links for use later
+                // 4. Create a map of all known links for use later
                 ctx.timings.buildLinkMap = Date.now();
                 try {
                     ctx.linkFixer.buildMap(ctx);
@@ -337,7 +319,7 @@ const getTaskRunner = (options, logger) => {
         {
             title: 'Format data as Ghost JSON',
             task: (ctx) => {
-                // 6. Format the data as a valid Ghost JSON file
+                // 5. Format the data as a valid Ghost JSON file
                 ctx.timings.formatDataAsGhost = Date.now();
                 try {
                     ctx.result = toGhostJSON(ctx.result, ctx.options, ctx);
@@ -361,7 +343,7 @@ const getTaskRunner = (options, logger) => {
                 return [ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false);
             },
             task: async (ctx) => {
-                // 7. Format the data as a valid Ghost JSON file
+                // 6. Format the data as a valid Ghost JSON file
                 ctx.timings.assetScraper = Date.now();
                 let tasks = ctx.assetScraper.fetch(ctx);
                 return makeTaskRunner(tasks, {
@@ -385,7 +367,7 @@ const getTaskRunner = (options, logger) => {
         {
             title: 'Update links in content via LinkFixer',
             task: async (ctx, task) => {
-                // 8. Process the content looking for known links, and update them to new links
+                // 7. Process the content looking for known links, and update them to new links
                 ctx.timings.linkFixer = Date.now();
                 let tasks = ctx.linkFixer.fix(ctx, task); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
@@ -403,7 +385,7 @@ const getTaskRunner = (options, logger) => {
             // @TODO don't duplicate this with the utils json file
             title: 'Convert HTML -> MobileDoc',
             task: (ctx) => {
-                // 9. Convert post HTML -> MobileDoc
+                // 8. Convert post HTML -> MobileDoc
                 ctx.timings.htmlToMobiledoc = Date.now();
                 try {
                     let tasks = mgHtmlMobiledoc.convert(ctx); // eslint-disable-line no-shadow
@@ -425,7 +407,7 @@ const getTaskRunner = (options, logger) => {
         {
             title: 'Write Ghost import JSON File',
             task: async (ctx) => {
-                // 10. Write a valid Ghost import zip
+                // 9. Write a valid Ghost import zip
                 ctx.timings.writeJSON = Date.now();
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
@@ -448,7 +430,7 @@ const getTaskRunner = (options, logger) => {
             title: 'Write Ghost import zip',
             skip: () => !options.zip,
             task: async (ctx, task) => {
-                // 11. Write a valid Ghost import zip
+                // 10. Write a valid Ghost import zip
                 ctx.timings.writeZip = Date.now();
                 const isStorage = (options?.outputStorage && typeof options.outputStorage === 'object') ?? false;
 

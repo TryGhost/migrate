@@ -75,3 +75,7 @@ ghost-import*.*
 ghost-members*.*
 gh-*
 tmp/
+
+# TypeScript
+packages/**/build/
+tsconfig.tsbuildinfo

@@ -6,7 +6,7 @@ import SimpleDom from 'simple-dom';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 import errors from '@tryghost/errors';
 
-const htmlTotextTrimmed = (html, max) => {
+const htmlToTextTrimmed = (html, max) => {
     let noHtml = html.replace(/<[^>]+>/g, ' ').replace(/\r?\n|\r/g, ' ').replace(/ {2,}/, ' ').trim();
     return noHtml && noHtml.length > max ? noHtml.slice(0,max).split(' ').slice(0, -1).join(' ') : noHtml;
 };
@@ -31,8 +31,8 @@ const processContent = (html) => {
 
     const $html = $.load(html, {
         decodeEntities: false,
-        normalizeWhitespace: true
-    });
+        scriptingEnabled: false
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     $html('.sqs-audio-embed').each((i, el) => {
         let audioSrc = $(el).attr('data-url');
@@ -78,8 +78,14 @@ const processContent = (html) => {
         $parent.after('<!--kg-card-end: html-->');
     });
 
-    // convert HTML back to a string
+    // Convert HTML back to a string
     html = $html.html();
+
+    // Remove empty attributes
+    html = html.replace(/=""/g, '');
+
+    // Trim whitespace
+    html = html.trim();
 
     return html;
 };
@@ -129,7 +135,8 @@ const processTags = ($sqCategories, fetchTags) => {
     return categories.concat(tags);
 };
 
-const processPost = ($sqPost, users, {addTag, tags: fetchTags, url}) => {
+const processPost = ($sqPost, users, options) => {
+    const {addTag, tags: fetchTags, url} = options;
     const postType = $($sqPost).children('wp\\:post_type').text();
 
     // only grab posts and pages
@@ -137,6 +144,8 @@ const processPost = ($sqPost, users, {addTag, tags: fetchTags, url}) => {
         const featureImage = processFeatureImage($sqPost);
         const authorSlug = slugify($($sqPost).children('dc\\:creator').text());
         let postSlug = $($sqPost).children('link').text();
+        postSlug = postSlug.replace(/(\.html)/i, '');
+        postSlug = postSlug.split('/').pop();
 
         if (!postSlug || postSlug.indexOf('null') >= 0) {
             // drafts can have a post slug/link of `/null`
@@ -151,7 +160,7 @@ const processPost = ($sqPost, users, {addTag, tags: fetchTags, url}) => {
         const post = {
             url: `${url}${$($sqPost).children('link').text()}`,
             data: {
-                slug: $($sqPost).children('wp\\:post_name').text().replace(/(\.html)/i, ''),
+                slug: postSlug,
                 title: postTitle,
                 status: $($sqPost).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
                 published_at: postDate,
@@ -185,7 +194,7 @@ const processPost = ($sqPost, users, {addTag, tags: fetchTags, url}) => {
                 url: 'migrator-added-tag-no-title', data: {name: '#no-title'}
             });
 
-            post.data.title = htmlTotextTrimmed(post.data.html, 50);
+            post.data.title = htmlToTextTrimmed(post.data.html, 50);
         }
 
         if (!post.data.author) {
@@ -245,8 +254,10 @@ const all = async (input, {options}) => {
     const $xml = $.load(input, {
         decodeEntities: false,
         xmlMode: true,
+        scriptingEnabled: false,
         lowerCaseTags: true // needed to find `pubDate` tags
-    });
+    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+    // });
 
     // grab the URL of the site we're importing
     options.url = $xml('channel > link').text();

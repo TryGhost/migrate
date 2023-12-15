@@ -1,0 +1,4 @@
+"Channel id",Status,Tier,"Tier title",Tags,"Created at","Deleted at","Engagement OptIn",Email,Id,Name,Surname,"Updated At","User id"
+1234,1,0,default,,"2022-10-28 22:18:42",,1,lorem@example.com,456789,"Lorem Ipsum",,"2022-10-28 22:22:20",0
+1234,4,0,default,"Multiple Tags,Example, More tags","2022-10-26 18:56:45",,1,dolor@example.com,123456,Dolor, Simet ,"2022-10-26 18:56:45",0
+1234,0,0,default,"Lorem | Ipsum Dolor | Simet","2022-10-26 18:56:45",,1,nosub@example.com,123456,Not, Subscribed ,"2022-10-26 18:56:45",0
