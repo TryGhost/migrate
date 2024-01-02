@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-medium-members",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-medium-members",
   "author": "Ghost Foundation",
   "license": "MIT",

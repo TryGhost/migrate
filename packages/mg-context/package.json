@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-context",
-  "version": "0.0.1",
+  "version": "0.1.0-alpha.0",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-context",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -33,6 +33,5 @@
     "jest": "29.7.0",
     "sinon": "17.0.1",
     "typescript": "5.3.3"
-  },
-  "dependencies": {}
+  }
 }
