@@ -94,6 +94,22 @@ const processContent = (post, siteUrl, options) => {
         scriptingEnabled: false
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
+    // Convert bucketeer image paths
+    $html('a[href^="https://bucketeer-"], img[src^="https://bucketeer-"]').each((i, el) => {
+        const href = $(el).attr('href') ?? false;
+        const src = $(el).attr('src') ?? false;
+
+        const prependString = 'https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/';
+
+        if (href) {
+            $(el).attr('href', `${prependString}${href.replace($(el).attr('href'), encodeURI(href))}`);
+        }
+
+        if (src) {
+            $(el).attr('src', `${prependString}${src.replace($(el).attr('src'), encodeURI(src))}`);
+        }
+    });
+
     // Empty text elements are commonplace and are not needed
     $html('p').each((i, el) => {
         let content = $(el).html().trim();
@@ -206,10 +222,13 @@ const processContent = (post, siteUrl, options) => {
             payload: {
                 src: imageSrc,
                 alt: imgAlt,
-                caption: imgCaption,
-                href: linkHref
+                caption: imgCaption
             }
         };
+
+        if (imageSrc !== linkHref) {
+            cardOpts.payload.href = linkHref;
+        }
 
         $(div).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
