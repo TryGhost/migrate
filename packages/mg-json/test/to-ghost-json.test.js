@@ -1,6 +1,7 @@
 import toGhostJSON from '../lib/to-ghost-json/index.js';
 
 import singlePostOnlyFixture from './fixtures/single-post-only.json';
+import singlePostWithEmptyTagFixture from './fixtures/single-post-with-empty-tag.json';
 import singlePostAuthorFixture from './fixtures/single-post-author.json';
 import multiPostOnlyFixture from './fixtures/multi-post-only.json';
 import singlePostWithBadTagOrderFixture from './fixtures/single-post-with-bad-tag-order.json';
@@ -170,6 +171,14 @@ describe('toGhostJSON', function () {
         expect(output.data.tags[0].name).toEqual('Things');
         expect(output.data.tags[1].name).toEqual('Stuff');
         expect(output.data.tags[2].name).toEqual('#internal');
+    });
+
+    test('Filters out empty tags ', function () {
+        const output = toGhostJSON(singlePostWithEmptyTagFixture);
+
+        expect(output.data.tags).toBeArrayOfSize(2);
+        expect(output.data.tags[0].name).toEqual('Things');
+        expect(output.data.tags[1].name).toEqual('Stuff');
     });
 
     test('Trims strings that are too long', function () {

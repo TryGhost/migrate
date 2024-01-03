@@ -4,6 +4,9 @@ export default (json) => {
         let publicTags = [];
         let internalTags = [];
 
+        // Filter out empty tags
+        tags = tags.filter(tag => tag.data.name.length);
+
         tags.forEach((tag) => {
             if (tag.data.name.includes('#')) {
                 internalTags.push(tag);
