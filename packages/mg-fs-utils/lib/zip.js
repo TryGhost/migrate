@@ -13,7 +13,6 @@ _private.openZipForRead = (zipPath) => {
 /**
  * Read a Zip File
  * - Flattens the structure if there's one top-level directory, so we only get the files inside
- * @TODO: Refactor to use @tryghost/zip to extract zip files and drop adm-zip dependency
  */
 const read = (zipPath, callback) => {
     let zip; // eslint-disable-line no-shadow
@@ -21,6 +20,18 @@ const read = (zipPath, callback) => {
         zip = _private.openZipForRead(zipPath);
     } catch (error) {
         throw new errors.InternalServerError({message: `Unable to read zip file ${zipPath}: ${error}`});
+    }
+
+    // If the zip has one entry and its another zip, unzip & read that instead
+    const preCheckEntries = zip.getEntries().filter((entry) => {
+        return !(entry.entryName.match(/^__MACOSX/) || entry.entryName.match(/\.DS_Store$/));
+    });
+
+    if (preCheckEntries.length === 1 && preCheckEntries[0].entryName.includes('.zip')) {
+        const childZipBuffer = preCheckEntries[0].getData();
+
+        // Redeclare the results array, we don't want to lust parent zip files
+        zip = _private.openZipForRead(childZipBuffer);
     }
 
     // Entries is cleaned first
