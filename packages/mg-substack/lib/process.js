@@ -102,11 +102,11 @@ const processContent = (post, siteUrl, options) => {
         const prependString = 'https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/';
 
         if (href) {
-            $(el).attr('href', `${prependString}${href.replace($(el).attr('href'), encodeURI(href))}`);
+            $(el).attr('href', `${prependString}${encodeURI(href)}`);
         }
 
         if (src) {
-            $(el).attr('src', `${prependString}${src.replace($(el).attr('src'), encodeURI(src))}`);
+            $(el).attr('src', `${prependString}${encodeURI(src)}`);
         }
     });
 
