@@ -124,7 +124,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         expect(data.updated_at).toEqual('2019-07-26T20:48:19.814Z');
         expect(data.created_at).toEqual('2019-07-26T20:48:19.814Z');
         expect(data.title).toEqual('Plain Text');
-        expect(data.custom_excerpt).toEqual('Lorem ipsum dolor sit amet.');
+        expect(data.custom_excerpt).toEqual('“This quote’s rather short”');
         expect(data.type).toEqual('post');
         expect(data.status).toEqual('published');
         expect(data.visibility).toEqual('public');
