@@ -198,8 +198,16 @@ const processContent = (post, siteUrl, options) => {
         }
         src = url.format(parsed, {search: false});
 
+        let tweetText = $(el).find('.tweet-text').html().replace(/(?:\r\n|\r|\n)/g, '<br>');
+        let tweetAuthorName = $(el).find('.tweet-author-name').html().trim();
+        let tweetAuthorHandle = $(el).find('.tweet-author-handle').html().trim();
+        let tweetDateTime = $(el).find('.tweet-date').text().trim();
+        let tweetURL = $(el).find('.tweet-link-top').attr('href');
+
+        let theHtml = `<p lang="en" dir="ltr">${tweetText}</p>&mdash; ${tweetAuthorName} (${tweetAuthorHandle}) <a href="${tweetURL}">${tweetDateTime}</a>`;
+
         let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
-        let $blockquote = $('<blockquote class="twitter-tweet"></blockquote>');
+        let $blockquote = $(`<blockquote class="twitter-tweet">${theHtml}</blockquote>`);
         let $anchor = $(`<a href="${src}"></a>`);
         let $script = $('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
 
