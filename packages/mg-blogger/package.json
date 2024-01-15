@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-blogger",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-blogger",
   "author": "Ghost Foundation",
   "license": "MIT",
