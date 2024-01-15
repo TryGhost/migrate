@@ -844,6 +844,115 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         expect(processed.data.html).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-abcd1234-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2Fefgh5678-fad6-49df-b659-b16976e1ce59_1024x683.jpeg" class="kg-image" alt loading="lazy"><figcaption>My image</figcaption></figure><p>Hello</p>');
     });
 
+    test('Converts galleries', async function () {
+        const post = {
+            data: {
+                html: `<div dir="auto" class="body markup">
+                    <p>Hello</p>
+                    <figure class="frontend-components-ImageGallery-module__imageGallery--shoTe">
+                        <div class="pencraft pc-display-flex pc-flexDirection-column pc-gap-8 pc-reset">
+                            <div
+                                class="pencraft pc-display-flex pc-gap-8 pc-reset frontend-components-ImageGallery-module__imageRow--RFMqP">
+                                <picture>
+                                    <source type="image/webp"
+                                        srcset="https://substackcdn.com/image/fetch/w_424,c_limit,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1234-2021-4a0e-b815-90b9ae74d5a0_7008x4672.jpeg 424w, https://substackcdn.com/image/fetch/w_474,c_limit,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1234-2021-4a0e-b815-90b9ae74d5a0_7008x4672.jpeg 474w"
+                                        sizes="100vw"><img
+                                        src="https://substackcdn.com/image/fetch/w_474,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1234-2021-4a0e-b815-90b9ae74d5a0_7008x4672.jpeg"
+                                        sizes="100vw" alt="My alt text"
+                                        srcset="https://substackcdn.com/image/fetch/w_424,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1234-2021-4a0e-b815-90b9ae74d5a0_7008x4672.jpeg 424w, https://substackcdn.com/image/fetch/w_474,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1234-2021-4a0e-b815-90b9ae74d5a0_7008x4672.jpeg 474w"
+                                        width="474"
+                                        class="frontend-components-responsive_img-module__img--Pgjj2 frontend-components-ImageGallery-module__image--g2yvp frontend-components-ImageGallery-module__small--Muz63 frontend-components-ImageGallery-module__zoom--eQKQQ pencraft pc-reset">
+                                </picture>
+                                <picture>
+                                    <source type="image/webp"
+                                        srcset="https://substackcdn.com/image/fetch/w_424,c_limit,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabc1235-6563-4aa8-bde7-e5b3ddcd2729_4000x6000.jpeg 424w, https://substackcdn.com/image/fetch/w_474,c_limit,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabc1235-6563-4aa8-bde7-e5b3ddcd2729_4000x6000.jpeg 474w"
+                                        sizes="100vw"><img
+                                        src="https://substackcdn.com/image/fetch/w_474,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabc1235-6563-4aa8-bde7-e5b3ddcd2729_4000x6000.jpeg"
+                                        sizes="100vw" alt="My alt text"
+                                        srcset="https://substackcdn.com/image/fetch/w_424,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabc1235-6563-4aa8-bde7-e5b3ddcd2729_4000x6000.jpeg 424w, https://substackcdn.com/image/fetch/w_474,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabc1235-6563-4aa8-bde7-e5b3ddcd2729_4000x6000.jpeg 474w"
+                                        width="474"
+                                        class="frontend-components-responsive_img-module__img--Pgjj2 frontend-components-ImageGallery-module__image--g2yvp frontend-components-ImageGallery-module__small--Muz63 frontend-components-ImageGallery-module__zoom--eQKQQ pencraft pc-reset">
+                                </picture>
+                                <picture>
+                                    <source type="image/webp"
+                                        srcset="https://substackcdn.com/image/fetch/w_424,c_limit,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1236-c233-4e0d-87c0-6a0d128bc07d_3600x2025.jpeg 424w, https://substackcdn.com/image/fetch/w_474,c_limit,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1236-c233-4e0d-87c0-6a0d128bc07d_3600x2025.jpeg 474w"
+                                        sizes="100vw"><img
+                                        src="https://substackcdn.com/image/fetch/w_474,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1236-c233-4e0d-87c0-6a0d128bc07d_3600x2025.jpeg"
+                                        sizes="100vw" alt="My alt text"
+                                        srcset="https://substackcdn.com/image/fetch/w_424,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1236-c233-4e0d-87c0-6a0d128bc07d_3600x2025.jpeg 424w, https://substackcdn.com/image/fetch/w_474,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1236-c233-4e0d-87c0-6a0d128bc07d_3600x2025.jpeg 474w"
+                                        width="474"
+                                        class="frontend-components-responsive_img-module__img--Pgjj2 frontend-components-ImageGallery-module__image--g2yvp frontend-components-ImageGallery-module__small--Muz63 frontend-components-ImageGallery-module__zoom--eQKQQ pencraft pc-reset">
+                                </picture>
+                            </div>
+                            <div
+                                class="pencraft pc-display-flex pc-gap-8 pc-reset frontend-components-ImageGallery-module__imageRow--RFMqP">
+                                <picture>
+                                    <source type="image/webp"
+                                        srcset="https://substackcdn.com/image/fetch/w_424,c_limit,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1237-2469-4db8-874b-36ad8733bd97_8048x5368.jpeg 424w, https://substackcdn.com/image/fetch/w_474,c_limit,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1237-2469-4db8-874b-36ad8733bd97_8048x5368.jpeg 474w"
+                                        sizes="100vw"><img
+                                        src="https://substackcdn.com/image/fetch/w_474,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1237-2469-4db8-874b-36ad8733bd97_8048x5368.jpeg"
+                                        sizes="100vw" alt="My alt text"
+                                        srcset="https://substackcdn.com/image/fetch/w_424,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1237-2469-4db8-874b-36ad8733bd97_8048x5368.jpeg 424w, https://substackcdn.com/image/fetch/w_474,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1237-2469-4db8-874b-36ad8733bd97_8048x5368.jpeg 474w"
+                                        width="474"
+                                        class="frontend-components-responsive_img-module__img--Pgjj2 frontend-components-ImageGallery-module__image--g2yvp frontend-components-ImageGallery-module__small--Muz63 frontend-components-ImageGallery-module__zoom--eQKQQ pencraft pc-reset">
+                                </picture>
+                                <picture>
+                                    <source type="image/webp"
+                                        srcset="https://substackcdn.com/image/fetch/w_424,c_limit,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1238-2236-442c-9d9a-b0387c946a18_4032x3024.jpeg 424w, https://substackcdn.com/image/fetch/w_474,c_limit,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1238-2236-442c-9d9a-b0387c946a18_4032x3024.jpeg 474w"
+                                        sizes="100vw"><img
+                                        src="https://substackcdn.com/image/fetch/w_474,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1238-2236-442c-9d9a-b0387c946a18_4032x3024.jpeg"
+                                        sizes="100vw" alt="My alt text"
+                                        srcset="https://substackcdn.com/image/fetch/w_424,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1238-2236-442c-9d9a-b0387c946a18_4032x3024.jpeg 424w, https://substackcdn.com/image/fetch/w_474,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1238-2236-442c-9d9a-b0387c946a18_4032x3024.jpeg 474w"
+                                        width="474"
+                                        class="frontend-components-responsive_img-module__img--Pgjj2 frontend-components-ImageGallery-module__image--g2yvp frontend-components-ImageGallery-module__small--Muz63 frontend-components-ImageGallery-module__zoom--eQKQQ pencraft pc-reset">
+                                </picture>
+                                <picture>
+                                    <source type="image/webp"
+                                        srcset="https://substackcdn.com/image/fetch/w_424,c_limit,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1239-e31d-401c-b94f-ceae393d95f6_9504x6336.jpeg 424w, https://substackcdn.com/image/fetch/w_474,c_limit,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1239-e31d-401c-b94f-ceae393d95f6_9504x6336.jpeg 474w"
+                                        sizes="100vw"><img
+                                        src="https://substackcdn.com/image/fetch/w_474,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1239-e31d-401c-b94f-ceae393d95f6_9504x6336.jpeg"
+                                        sizes="100vw" alt="My alt text"
+                                        srcset="https://substackcdn.com/image/fetch/w_424,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1239-e31d-401c-b94f-ceae393d95f6_9504x6336.jpeg 424w, https://substackcdn.com/image/fetch/w_474,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1239-e31d-401c-b94f-ceae393d95f6_9504x6336.jpeg 474w"
+                                        width="474"
+                                        class="frontend-components-responsive_img-module__img--Pgjj2 frontend-components-ImageGallery-module__image--g2yvp frontend-components-ImageGallery-module__small--Muz63 frontend-components-ImageGallery-module__zoom--eQKQQ pencraft pc-reset">
+                                </picture>
+                            </div>
+                            <figcaption class="frontend-components-ImageGallery-module__imageCaption--JESLj">My caption</figcaption>
+                        </div>
+                    </figure>
+                    <p>World</p>
+                </div>`,
+                title: 'My gallery post'
+            }
+        };
+        const url = 'https://example.com';
+        const options = {
+            useFirstImage: false
+        };
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).not.toInclude('<figure class="frontend-components-ImageGallery-module__imageGallery--shoTe">');
+        expect(processed.data.html).toInclude('<figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1234-2021-4a0e-b815-90b9ae74d5a0_7008x4672.jpeg" width="474" height="auto" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabc1235-6563-4aa8-bde7-e5b3ddcd2729_4000x6000.jpeg" width="474" height="auto" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1236-c233-4e0d-87c0-6a0d128bc07d_3600x2025.jpeg" width="474" height="auto" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1237-2469-4db8-874b-36ad8733bd97_8048x5368.jpeg" width="474" height="auto" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1238-2236-442c-9d9a-b0387c946a18_4032x3024.jpeg" width="474" height="auto" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1239-e31d-401c-b94f-ceae393d95f6_9504x6336.jpeg" width="474" height="auto" loading="lazy" alt></div></div></div><figcaption>My caption</figcaption></figure>');
+    });
+
+    test('Converts embeded galleries', async function () {
+        const post = {
+            data: {
+                html: `<p>Before</p><div class="image-gallery-embed" data-attrs="{&quot;gallery&quot;:{&quot;images&quot;:[{&quot;type&quot;:&quot;image/jpeg&quot;,&quot;src&quot;:&quot;https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-2021-4a0e-b815-90b9ae74d5a0_7008x4672.jpeg&quot;},{&quot;type&quot;:&quot;image/jpeg&quot;,&quot;src&quot;:&quot;https://substack-post-media.s3.amazonaws.com/public/images/abc1235-6563-4aa8-bde7-e5b3ddcd2729_4000x6000.jpeg&quot;},{&quot;type&quot;:&quot;image/jpeg&quot;,&quot;src&quot;:&quot;https://substack-post-media.s3.amazonaws.com/public/images/abcd1236-c233-4e0d-87c0-6a0d128bc07d_3600x2025.jpeg&quot;},{&quot;type&quot;:&quot;image/jpeg&quot;,&quot;src&quot;:&quot;https://substack-post-media.s3.amazonaws.com/public/images/abcd1237-2469-4db8-874b-36ad8733bd97_8048x5368.jpeg&quot;},{&quot;type&quot;:&quot;image/jpeg&quot;,&quot;src&quot;:&quot;https://substack-post-media.s3.amazonaws.com/public/images/abcd1238-2236-442c-9d9a-b0387c946a18_4032x3024.jpeg&quot;},{&quot;type&quot;:&quot;image/jpeg&quot;,&quot;src&quot;:&quot;https://substack-post-media.s3.amazonaws.com/public/images/abcd1239-e31d-401c-b94f-ceae393d95f6_9504x6336.jpeg&quot;}],&quot;caption&quot;:&quot;My caption&quot;,&quot;alt&quot;:&quot;My alt text&quot;,&quot;staticGalleryImage&quot;:{&quot;type&quot;:&quot;image/png&quot;,&quot;src&quot;:&quot;https://substack-post-media.s3.amazonaws.com/public/images/abcd1240-6dbe-4463-8494-4171b6c05b3a_1456x964.png&quot;}},&quot;isEditorNode&quot;:true}"></div><p>After</p>`,
+                title: 'My gallery embed post'
+            }
+        };
+        const url = 'https://example.com';
+        const options = {
+            useFirstImage: false
+        };
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).toBe('<p>Before</p><figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-2021-4a0e-b815-90b9ae74d5a0_7008x4672.jpeg" width="auto" height="auto" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abc1235-6563-4aa8-bde7-e5b3ddcd2729_4000x6000.jpeg" width="auto" height="auto" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1236-c233-4e0d-87c0-6a0d128bc07d_3600x2025.jpeg" width="auto" height="auto" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1237-2469-4db8-874b-36ad8733bd97_8048x5368.jpeg" width="auto" height="auto" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1238-2236-442c-9d9a-b0387c946a18_4032x3024.jpeg" width="auto" height="auto" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1239-e31d-401c-b94f-ceae393d95f6_9504x6336.jpeg" width="auto" height="auto" loading="lazy" alt></div></div></div><figcaption>My caption</figcaption></figure><p>After</p>');
+    });
+
     test('Includes supplied content in tweet blockquote', async function () {
         const post = {
             data: {

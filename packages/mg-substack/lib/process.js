@@ -1,11 +1,12 @@
 import {promises as fs} from 'node:fs';
-import {join} from 'node:path';
+import {join, basename} from 'node:path';
 import url from 'node:url';
 import $ from 'cheerio';
 import errors from '@tryghost/errors';
 import SimpleDom from 'simple-dom';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
+import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
 import {decode} from 'html-entities';
 import {parseSrcset} from 'srcset';
 import {_base as debugFactory} from '@tryghost/debug';
@@ -119,6 +120,22 @@ const processContent = (post, siteUrl, options) => {
         }
     });
 
+    $html('.image3').each((i, el) => {
+        const attrs = $(el).attr('data-attrs');
+        const attrsObj = JSON.parse(attrs);
+
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: attrsObj.src,
+                alt: attrsObj.title,
+                caption: attrsObj.title
+            }
+        };
+
+        $(el).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
+    });
+
     // We use the `'og:image` as the feature image. If the first item in the content is an image and is the same as the `og:image`, remove it
     if (post.data?.og_image) {
         if (useMetaImage) {
@@ -136,6 +153,8 @@ const processContent = (post, siteUrl, options) => {
 
                 let ogImgSrc = post.data.og_image;
                 let unsizedOgSrc = getUnsizedImageName(ogImgSrc);
+
+                // console.log({unsizedFirstSrc, unsizedOgSrc});
 
                 if (unsizedFirstSrc === unsizedOgSrc) {
                     if ($(firstElement).find('figcaption').length) {
@@ -217,6 +236,81 @@ const processContent = (post, siteUrl, options) => {
         $figure.append($script);
 
         $(el).replaceWith($figure);
+    });
+
+    $html('.image-gallery-embed').each((i, el) => {
+        const attrs = $(el).attr('data-attrs');
+        const attrsObj = JSON.parse(attrs);
+
+        let items = [];
+
+        attrsObj.gallery.images.forEach((item) => {
+            items.push({
+                fileName: basename(item.src),
+                src: item.src,
+                width: 'auto',
+                height: 'auto'
+            });
+        });
+
+        items = items.map((item, index) => {
+            return {
+                ...item,
+                row: Math.floor(index / 3)
+            };
+        });
+
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                images: items,
+                caption: attrsObj.gallery.caption
+            }
+        };
+
+        $(el).replaceWith(serializer.serialize(galleryCard.render(cardOpts)));
+    });
+
+    $html('[class*="ImageGallery-module__imageGallery"]').each((i, el) => {
+        const $row = $(el).find('[class*="ImageGallery-module__imageRow"]');
+        const caption = $(el).find('figcaption').html();
+
+        let items = [];
+
+        $row.each((ii, row) => {
+            const $pictures = $(row).find('picture');
+
+            $pictures.each((iii, picture) => {
+                const $img = $(picture).find('img');
+
+                const src = largestSrc($img);
+                const width = $img.attr('width');
+
+                items.push({
+                    fileName: basename(src),
+                    src: src,
+                    width: width,
+                    height: 'auto'
+                });
+            });
+        });
+
+        items = items.map((item, index) => {
+            return {
+                ...item,
+                row: Math.floor(index / 3)
+            };
+        });
+
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                images: items,
+                caption: caption
+            }
+        };
+
+        $(el).replaceWith(serializer.serialize(galleryCard.render(cardOpts)));
     });
 
     $html('.captioned-image-container').each((i, div) => {
