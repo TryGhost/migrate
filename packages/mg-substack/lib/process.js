@@ -52,6 +52,20 @@ const getUnsizedImageName = (str) => {
     }
 };
 
+const getImageDimensions = (str) => {
+    const imageSizeRegexp = /_([0-9]{2,5})x([0-9]{2,5}).[a-zA-Z]{2,4}/;
+    const matches = str.match(imageSizeRegexp);
+
+    if (matches && matches[1] && matches[2]) {
+        return {
+            width: parseInt(matches[1]),
+            height: parseInt(matches[2])
+        };
+    } else {
+        return false;
+    }
+};
+
 const largestSrc = ($imageElem) => {
     const src = $imageElem.attr('src') ?? false;
     const srcset = $imageElem.attr('srcset') ?? false;
@@ -245,11 +259,13 @@ const processContent = (post, siteUrl, options) => {
         let items = [];
 
         attrsObj.gallery.images.forEach((item) => {
+            const dimensions = getImageDimensions(item.src);
+
             items.push({
                 fileName: basename(item.src),
                 src: item.src,
-                width: 'auto',
-                height: 'auto'
+                width: (dimensions) ? dimensions.width : '100',
+                height: (dimensions) ? dimensions.height : '100'
             });
         });
 
@@ -282,15 +298,14 @@ const processContent = (post, siteUrl, options) => {
 
             $pictures.each((iii, picture) => {
                 const $img = $(picture).find('img');
-
                 const src = largestSrc($img);
-                const width = $img.attr('width');
+                const dimensions = getImageDimensions(src);
 
                 items.push({
                     fileName: basename(src),
                     src: src,
-                    width: width,
-                    height: 'auto'
+                    width: (dimensions) ? dimensions.width : '100',
+                    height: (dimensions) ? dimensions.height : '100'
                 });
             });
         });
@@ -595,4 +610,7 @@ export default async (input, ctx) => {
     return output;
 };
 
-export {processContent};
+export {
+    processContent,
+    getImageDimensions
+};
