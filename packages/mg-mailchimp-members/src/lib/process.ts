@@ -25,6 +25,24 @@ type processOptions = {
     includeUnsubscribed?: boolean
 }
 
+const colMapper = (fieldNames: string[], member: any) => {
+    let keys = Object.keys(member);
+
+    let useThis;
+
+    fieldNames.forEach((name: any) => {
+        if (keys.includes(name)) {
+            useThis = member[name];
+        }
+    });
+
+    return useThis;
+};
+
+const emailFields = ['Email', 'email', 'Email Address'];
+const firstNameFields = ['First Name'];
+const lastNameFields = ['Last Name'];
+
 const processData = async ({pathToCsv, csvContent, addLabel, includeUnsubscribed = false}: processDataOptions) => {
     const csvData = (csvContent) ? await fsUtils.csv.parseString(csvContent) : await fsUtils.csv.parseCSV(pathToCsv);
 
@@ -36,10 +54,14 @@ const processData = async ({pathToCsv, csvContent, addLabel, includeUnsubscribed
             return;
         }
 
+        const email: any = colMapper(emailFields, member);
+        const firstName: any = colMapper(firstNameFields, member);
+        const lastName: any = colMapper(lastNameFields, member);
+
         const createdAt = new Date(member.created_at);
 
         let newMember: memberObject = {
-            email: member['Email Address'],
+            email: email,
             name: null,
             note: null,
             subscribed_to_emails: false,
@@ -49,15 +71,15 @@ const processData = async ({pathToCsv, csvContent, addLabel, includeUnsubscribed
             created_at: createdAt
         };
 
-        if (member['First Name'] || member['Last Name']) {
+        if (firstName || lastName) {
             let allNames: string[] = [];
 
-            if (member['First Name']) {
-                allNames.push(member['First Name'].trim());
+            if (firstName) {
+                allNames.push(firstName.trim());
             }
 
-            if (member['Last Name']) {
-                allNames.push(member['Last Name'].trim());
+            if (lastName) {
+                allNames.push(lastName.trim());
             }
 
             newMember.name = allNames.join(' ');
