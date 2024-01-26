@@ -231,16 +231,40 @@ const processContent = (post, siteUrl, options) => {
         }
         src = url.format(parsed, {search: false});
 
-        let tweetText = $(el).find('.tweet-text').html().replace(/(?:\r\n|\r|\n)/g, '<br>');
-        let tweetAuthorName = $(el).find('.tweet-author-name').html().trim();
-        let tweetAuthorHandle = $(el).find('.tweet-author-handle').html().trim();
-        let tweetDateTime = $(el).find('.tweet-date').text().trim();
-        let tweetURL = $(el).find('.tweet-link-top').attr('href');
+        let tweetText = $(el)?.find('.tweet-text')?.html()?.replace(/(?:\r\n|\r|\n)/g, '<br>') ?? false;
+        let tweetAuthorName = $(el)?.find('.tweet-author-name')?.html()?.trim() ?? false;
+        let tweetAuthorHandle = $(el)?.find('.tweet-author-handle')?.html()?.trim() ?? false;
+        let tweetDateTime = $(el)?.find('.tweet-date')?.text()?.trim() ?? false;
+        let tweetURL = $(el)?.find('.tweet-link-top')?.attr('href') ?? false;
 
-        let theHtml = `<p lang="en" dir="ltr">${tweetText}</p>&mdash; ${tweetAuthorName} (${tweetAuthorHandle}) <a href="${tweetURL}">${tweetDateTime}</a>`;
+        let theHtml = [];
+
+        if (tweetText) {
+            theHtml.push(`<p lang="en" dir="ltr">${tweetText}</p>`);
+        }
+
+        theHtml.push(`&mdash;`);
+
+        if (tweetAuthorName) {
+            theHtml.push(`${tweetAuthorName}`);
+        }
+
+        if (tweetAuthorHandle) {
+            theHtml.push(`(${tweetAuthorHandle})`);
+        }
+
+        if (tweetURL) {
+            theHtml.push(`<a href="${tweetURL}">`);
+        }
+
+        if (tweetDateTime) {
+            theHtml.push(`${tweetDateTime}`);
+        }
+
+        theHtml.push(`</a>`);
 
         let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
-        let $blockquote = $(`<blockquote class="twitter-tweet">${theHtml}</blockquote>`);
+        let $blockquote = $(`<blockquote class="twitter-tweet">${theHtml.join(' ')}</blockquote>`);
         let $anchor = $(`<a href="${src}"></a>`);
         let $script = $('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
 

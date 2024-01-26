@@ -994,7 +994,50 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        expect(processed.data.html).toEqual('<p>Hello</p><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><p lang="en" dir="ltr">This is the tweet text</p>— example (@example) <a href="https://twitter.com/example/status/123456?s=21&amp;t=abcd7890">1:26 AM ∙ Apr 28, 2022</a><a href="https://twitter.com/example/status/123456"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure><p>World</p>');
+        expect(processed.data.html).toEqual('<p>Hello</p><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><p lang="en" dir="ltr">This is the tweet text</p> — example (@example) <a href="https://twitter.com/example/status/123456?s=21&amp;t=abcd7890"> 1:26 AM ∙ Apr 28, 2022 </a><a href="https://twitter.com/example/status/123456"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure><p>World</p>');
+    });
+
+    test('Includes supplied content in tweet blockquote derp', async function () {
+        const post = {
+            data: {
+                html: `<p>Hello</p><div class="tweet">
+                <a class="tweet-link-top" href="https://twitter.com/example/status/123456?s=21&amp;t=abcd7890" target="_blank">
+                    <div class="tweet-header">
+                        <img class="tweet-header-avatar" src="https://example.com/image/twitter_name/w_96/example.jpg" alt="Twitter avatar for @example" loading="lazy">
+                        <div class="tweet-header-text">
+                            <span class="tweet-author-name">example </span>
+                        </div>
+                    </div>
+                </a>
+                <a class="tweet-link-bottom" href="https://twitter.com/example/status/123456?s=21&amp;t=abcd7890" target="_blank">
+                    <div class="tweet-footer">
+                        <span class="tweet-date">1:26 AM ∙ Apr 28, 2022</span>
+                        <hr>
+                        <div class="tweet-ufi">
+                            <span href="https://twitter.com/example/status/123456?s=21&amp;t=abcd7890/likes" class="likes">
+                                <span class="like-count">50</span>
+                                Likes
+                            </span>
+                            <span href="https://twitter.com/example/status/123456?s=21&amp;t=abcd7890/retweets"
+                                class="retweets">
+                                <span class="rt-count">35</span>
+                                Retweets
+                            </span>
+                        </div>
+                    </div>
+                </a>
+            </div><p>World</p>`,
+                title: 'My tweet post'
+            }
+        };
+        const url = 'https://example.com';
+        const options = {
+            useFirstImage: false
+        };
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).toEqual('<p>Hello</p><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet">— example <a href="https://twitter.com/example/status/123456?s=21&amp;t=abcd7890"> 1:26 AM ∙ Apr 28, 2022 </a><a href="https://twitter.com/example/status/123456"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure><p>World</p>');
     });
 });
 
