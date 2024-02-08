@@ -1060,7 +1060,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const processed = await processContent(post, url, options);
 
         expect(processed.data.html).not.toInclude('<div class="digest-post-embed"');
-        expect(processed.data.html).toInclude('<h6>Good Articles</h6><h3>Post Embed</h3><p>Author Name • Feb 2, 2024</p><a href="https://example.substack.com/p/dolor-simet"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fa1b2c3d4-8aff-4483-a1b5-417b7589d64d_2500x1325.jpeg" alt></a><p>Lorem ipsum this is a caption<br><br><a href="https://example.substack.com/p/dolor-simet">Read full story →</a></p>');
+        expect(processed.data.html).toInclude('<h6>Good Articles</h6><h3><a href="https://example.substack.com/p/dolor-simet">Post Embed</a></h3><p>Author Name • Feb 2, 2024</p><a href="https://example.substack.com/p/dolor-simet"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fa1b2c3d4-8aff-4483-a1b5-417b7589d64d_2500x1325.jpeg" alt></a><p>Lorem ipsum this is a caption<br><br><a href="https://example.substack.com/p/dolor-simet">Read full story →</a></p>');
     });
 });
 

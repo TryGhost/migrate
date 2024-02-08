@@ -407,7 +407,19 @@ const processContent = (post, siteUrl, options) => {
         }
 
         if (attrs.title) {
-            theHtml.push(`<h3>${attrs.title}</h3>`);
+            theHtml.push(`<h3>`);
+
+            if (attrs.canonical_url) {
+                theHtml.push(`<a href="${attrs.canonical_url}">`);
+            }
+
+            theHtml.push(attrs.title);
+
+            if (attrs.canonical_url) {
+                theHtml.push(`</a>`);
+            }
+
+            theHtml.push(`</h3>`);
         }
 
         if (attrs.publishedBylines.length || attrs.post_date) {
