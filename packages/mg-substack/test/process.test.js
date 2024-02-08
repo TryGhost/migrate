@@ -1039,6 +1039,29 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         expect(processed.data.html).toEqual('<p>Hello</p><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet">— example <a href="https://twitter.com/example/status/123456?s=21&amp;t=abcd7890"> 1:26 AM ∙ Apr 28, 2022 </a><a href="https://twitter.com/example/status/123456"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure><p>World</p>');
     });
+
+    test('Handle post embeds', async function () {
+        const post = {
+            data: {
+                html: `<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</p>
+                <div class="digest-post-embed"
+                    data-attrs="{&quot;nodeId&quot;:&quot;a1b2c3d4-6a56-454f-9898-fc0655dfb6a7&quot;,&quot;caption&quot;:&quot;Lorem ipsum this is a caption&quot;,&quot;size&quot;:&quot;lg&quot;,&quot;isEditorNode&quot;:true,&quot;title&quot;:&quot;Post Embed&quot;,&quot;publishedBylines&quot;:[{&quot;id&quot;:12345811,&quot;name&quot;:&quot;Author Name&quot;,&quot;bio&quot;:&quot;The authors bio&quot;,&quot;photo_url&quot;:&quot;https://substack-post-media.s3.amazonaws.com/public/images/a1b2c3d4-818e-4d7a-b98f-1a4218da1bc1_786x954.jpeg&quot;,&quot;is_guest&quot;:false,&quot;bestseller_tier&quot;:1000}],&quot;post_date&quot;:&quot;2024-02-02T14:53:15.249Z&quot;,&quot;cover_image&quot;:&quot;https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fa1b2c3d4-8aff-4483-a1b5-417b7589d64d_2500x1325.jpeg&quot;,&quot;cover_image_alt&quot;:null,&quot;canonical_url&quot;:&quot;https://example.substack.com/p/dolor-simet&quot;,&quot;section_name&quot;:&quot;Good Articles&quot;,&quot;id&quot;:123488182,&quot;type&quot;:&quot;newsletter&quot;,&quot;reaction_count&quot;:13,&quot;comment_count&quot;:5,&quot;publication_name&quot;:&quot;Author Name's Site&quot;,&quot;publication_logo_url&quot;:&quot;https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-a1b2c3d4-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2F7b14ab4e-cf85-4d21-9a46-4b293d31a28e_256x256.png&quot;,&quot;belowTheFold&quot;:false}">
+                </div>
+                <p>Dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>
+                `,
+                title: 'My embed post'
+            }
+        };
+        const url = 'https://example.com';
+        const options = {
+            useFirstImage: false
+        };
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).not.toInclude('<div class="digest-post-embed"');
+        expect(processed.data.html).toInclude('<h6>Good Articles</h6><h3>Post Embed</h3><p>Author Name • Feb 2, 2024</p><a href="https://example.substack.com/p/dolor-simet"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fa1b2c3d4-8aff-4483-a1b5-417b7589d64d_2500x1325.jpeg" alt></a><p>Lorem ipsum this is a caption<br><br><a href="https://example.substack.com/p/dolor-simet">Read full story →</a></p>');
+    });
 });
 
 describe('Image handling', function () {

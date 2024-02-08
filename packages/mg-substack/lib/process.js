@@ -396,6 +396,70 @@ const processContent = (post, siteUrl, options) => {
         $(anchor).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
+    $html('.digest-post-embed').each((i, el) => {
+        const attrsRaw = $(el).attr('data-attrs');
+        const attrs = JSON.parse(attrsRaw);
+
+        let theHtml = [];
+
+        if (attrs.section_name) {
+            theHtml.push(`<h6>${attrs.section_name}</h6>`);
+        }
+
+        if (attrs.title) {
+            theHtml.push(`<h3>${attrs.title}</h3>`);
+        }
+
+        if (attrs.publishedBylines.length || attrs.post_date) {
+            theHtml.push(`<p>`);
+
+            if (attrs.publishedBylines) {
+                let bylines = [];
+
+                attrs.publishedBylines.forEach((byline) => {
+                    bylines.push(byline.name);
+                });
+
+                theHtml.push(bylines.join(', '));
+            }
+
+            if (attrs.publishedBylines.length && attrs.post_date) {
+                theHtml.push(` &bull; `);
+            }
+
+            if (attrs.post_date) {
+                theHtml.push(new Date(attrs.post_date).toLocaleString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}));
+            }
+
+            theHtml.push(`</p>`);
+        }
+
+        if (attrs.cover_image) {
+            if (attrs.canonical_url) {
+                theHtml.push(`<a href="${attrs.canonical_url}">`);
+            }
+
+            theHtml.push(`<img src="${attrs.cover_image}" alt="${attrs.cover_image_alt || ''}">`);
+
+            if (attrs.canonical_url) {
+                theHtml.push(`</a>`);
+            }
+        }
+
+        if (attrs.caption) {
+            theHtml.push(`<p>`);
+            theHtml.push(attrs.caption);
+
+            if (attrs.canonical_url) {
+                theHtml.push(`<br><br><a href="${attrs.canonical_url}">Read full story &rarr;</a>`);
+            }
+
+            theHtml.push(`</p>`);
+        }
+
+        $(el).replaceWith(theHtml.join(''));
+    });
+
     $html('a > style').each((i, style) => {
         $(style).remove();
     });
