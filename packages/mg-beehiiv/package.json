@@ -40,6 +40,6 @@
     "@tryghost/mg-fs-utils": "0.12.14",
     "@tryghost/string": "0.2.11",
     "cheerio": "1.0.0-rc.12",
-    "sanitize-html": "2.11.0"
+    "sanitize-html": "2.12.1"
   }
 }
