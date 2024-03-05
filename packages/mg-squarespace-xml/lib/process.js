@@ -1,7 +1,6 @@
 import {extname} from 'path';
 import $ from 'cheerio';
 import {slugify} from '@tryghost/string';
-import {parse} from 'date-fns';
 import SimpleDom from 'simple-dom';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 import errors from '@tryghost/errors';
@@ -153,7 +152,7 @@ const processPost = ($sqPost, users, options) => {
         }
 
         // WP XML only provides a published date, we let's use that all dates Ghost expects
-        const postDate = parse($($sqPost).children('pubDate').text(), 'EEE, d MMM yyyy HH:mm:ss xx', new Date());
+        const postDate = new Date($($sqPost).children('pubDate').text());
 
         const postTitle = ($($sqPost).children('title').text().length > 0) ? $($sqPost).children('title').text() : false;
 
