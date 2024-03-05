@@ -3,7 +3,6 @@ import {parse} from 'csv-parse';
 import {parse as parseSync} from 'csv-parse/sync';
 import {createReadStream} from 'node:fs';
 import {outputFile, ensureDirSync} from 'fs-extra/esm';
-import {isDate} from 'date-fns';
 import errors from '@tryghost/errors';
 
 /**
@@ -60,7 +59,7 @@ const jsonToCSV = (data, fields = Object.keys(data[0])) => {
             let fieldToAdd;
 
             if (entry[field] !== null) {
-                if (isDate(entry[field])) {
+                if (entry[field] instanceof Date) {
                     fieldToAdd = entry[field].toISOString();
                 } else if (entry[field] && entry[field].toString().indexOf(',') !== -1) { // If the field contains a comma, wrap it in quotes
                     fieldToAdd = `"${entry[field]}"`;

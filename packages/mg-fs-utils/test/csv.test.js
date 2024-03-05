@@ -1,6 +1,5 @@
 import {URL} from 'node:url';
 import path from 'node:path';
-import {parseISO} from 'date-fns';
 import csv from '../lib/csv.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
@@ -48,7 +47,7 @@ describe('Format JSON to CSV', function () {
                 subscribed_to_emails: true,
                 complimentary_plan: false,
                 stripe_customer_id: null,
-                created_at: parseISO('2018-12-25T20:43:22.178Z'),
+                created_at: new Date('2018-12-25T20:43:22.178Z'),
                 expiry: null,
                 type: 'free',
                 labels: 'substack-free'
@@ -58,7 +57,7 @@ describe('Format JSON to CSV', function () {
                 subscribed_to_emails: true,
                 complimentary_plan: false,
                 stripe_customer_id: null,
-                created_at: parseISO('2019-08-18T13:36:31.230Z'),
+                created_at: new Date('2019-08-18T13:36:31.230Z'),
                 expiry: null,
                 type: 'free',
                 labels: 'substack-free'
@@ -68,7 +67,7 @@ describe('Format JSON to CSV', function () {
                 subscribed_to_emails: true,
                 complimentary_plan: false,
                 stripe_customer_id: null,
-                created_at: parseISO('2022-03-13T13:36:31.230Z'),
+                created_at: new Date('2022-03-13T13:36:31.230Z'),
                 expiry: null,
                 type: 'comp',
                 labels: 'substack-comp, 2023-02'
