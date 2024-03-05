@@ -1,5 +1,3 @@
-import {parse, parseISO} from 'date-fns';
-
 const processOptions = (member, options) => {
     if (options.freeLabel) {
         member.labels = options.freeLabel;
@@ -9,15 +7,14 @@ const processOptions = (member, options) => {
 };
 
 const processMember = (sMember, options) => {
-    // Parse the date from the supplied format `2021-01-28 17:26:04 +0000`
-    const createdAtDate = parse(sMember['Subscribed at'], 'yyyy-MM-dd HH:mm:ss xx', new Date());
+    const createdAtDate = sMember['Subscribed at'] ? new Date(sMember['Subscribed at']) : new Date();
 
     let member = {
         email: sMember['Email Address'],
         subscribed_to_emails: true,
         complimentary_plan: false,
         stripe_customer_id: null,
-        created_at: createdAtDate || parseISO(new Date()),
+        created_at: createdAtDate,
         expiry: null,
         type: 'free'
     };
