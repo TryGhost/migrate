@@ -63,6 +63,14 @@ This is a mono repository, managed with [lerna](https://lernajs.io/).
 
 ## Run
 
+To make sure the TypeScript packages are built (immediately and after file changes), use
+
+```sh
+yarn build:watch
+```
+
+Or run `yarn build` once if you don't need the watching.
+
 To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
 
 ```sh

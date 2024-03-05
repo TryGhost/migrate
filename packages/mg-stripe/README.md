@@ -79,6 +79,7 @@ Follow the instructions for the top-level repo.
 ### Run
 
 1. `cd` to the top of the monorepo
+1. Run `yarn dev:watch` (compiles TypeScript files)
 2. Run `yarn dev stripe <command>` to run the copy, confirm or revert command
 
 

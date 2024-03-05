@@ -23,6 +23,7 @@
     "test": "lerna run test,lint",
     "lint": "lerna run lint",
     "build": "lerna run build",
+    "build:watch": "lerna run build:watch",
     "preship": "yarn build && yarn test",
     "ship": "lerna publish --no-private",
     "update": "git pull origin main && yarn"
