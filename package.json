@@ -24,7 +24,8 @@
     "lint": "lerna run lint",
     "build": "lerna run build",
     "preship": "yarn build && yarn test",
-    "ship": "lerna publish --no-private"
+    "ship": "lerna publish --no-private",
+    "update": "git pull origin main && yarn"
   },
   "devDependencies": {
     "@tryghost/errors": "1.3.0",
