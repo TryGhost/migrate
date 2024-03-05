@@ -1,5 +1,4 @@
 import $ from 'cheerio';
-import {formatISO} from 'date-fns';
 import string from '@tryghost/string';
 import processContent from './process-content.js';
 
@@ -10,8 +9,7 @@ const processMeta = ({name, $post, options}) => {
 
     let urlInfo;
 
-    // Get an ISO 8601 date - https://date-fns.org/docs/formatISO
-    const dateNow = formatISO(new Date());
+    const dateNow = new Date();
 
     const post = {
         url: $post('.p-canonical').attr('href'),
