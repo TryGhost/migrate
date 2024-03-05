@@ -92,6 +92,12 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--posts',
+        defaultValue: true,
+        desc: 'Import posts'
+    },
+    {
+        type: 'boolean',
         flags: '--drafts',
         defaultValue: true,
         desc: 'Import draft posts'
@@ -101,6 +107,12 @@ const options = [
         flags: '--pages',
         defaultValue: true,
         desc: 'Import pages'
+    },
+    {
+        type: 'boolean',
+        flags: '--podcasts',
+        defaultValue: true,
+        desc: 'Import podcasts'
     },
     {
         type: 'boolean',

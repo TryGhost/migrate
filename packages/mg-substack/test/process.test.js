@@ -33,6 +33,8 @@ describe('Process Substack ZIP file', function () {
         const processed = await processZip.ingest({
             options: {
                 pathToZip: inputZipPath,
+                posts: true,
+                podcasts: true,
                 drafts: true,
                 pages: true,
                 url: 'https://example.substack.com',
@@ -95,6 +97,8 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
     test('Reads CSV and converts to JSON', async function () {
         const ctx = {
             options: {
+                posts: true,
+                podcasts: true,
                 drafts: true,
                 pages: false,
                 url: 'https://example.substack.com',
@@ -156,6 +160,8 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
     test('Can add a tag based on the post type', async function () {
         const ctx = {
             options: {
+                posts: true,
+                podcasts: true,
                 drafts: true,
                 pages: false,
                 url: 'https://example.substack.com',
@@ -193,6 +199,8 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
     test('Can convert a draft podcast post', async function () {
         const ctx = {
             options: {
+                posts: true,
+                podcasts: true,
                 drafts: true,
                 pages: false,
                 url: 'https://example.substack.com',
@@ -212,6 +220,8 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
     test('Can migrate posts before a given date', async function () {
         const ctx = {
             options: {
+                posts: true,
+                podcasts: true,
                 drafts: true,
                 pages: false,
                 url: 'https://example.substack.com',
@@ -228,6 +238,8 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
     test('Can migrate posts between 2 given dates', async function () {
         const ctx = {
             options: {
+                posts: true,
+                podcasts: true,
                 drafts: true,
                 pages: false,
                 url: 'https://example.substack.com',
@@ -245,6 +257,8 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
     test('Can migrate posts after a given date', async function () {
         const ctx = {
             options: {
+                posts: true,
+                podcasts: true,
                 drafts: true,
                 pages: false,
                 url: 'https://example.substack.com',
@@ -261,6 +275,8 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
     test('Can optionally include thread posts', async function () {
         const ctx = {
             options: {
+                posts: true,
+                podcasts: true,
                 drafts: true,
                 pages: false,
                 threads: true,
@@ -278,6 +294,8 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
             options: {
                 url: 'https://example.substack.com',
                 addTag: 'Hello World',
+                posts: true,
+                podcasts: true,
                 pages: false,
                 addPlatformTag: true,
                 addTypeTag: true,
@@ -308,6 +326,8 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 url: 'https://example.substack.com',
+                posts: true,
+                podcasts: true,
                 pages: false,
                 addPlatformTag: false,
                 addTypeTag: true,
@@ -338,6 +358,8 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 url: 'https://example.substack.com',
+                posts: true,
+                podcasts: true,
                 pages: false,
                 addPlatformTag: true,
                 addTypeTag: false,
@@ -368,6 +390,8 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 url: 'https://example.substack.com',
+                posts: true,
+                podcasts: true,
                 pages: false,
                 addPlatformTag: true,
                 addTypeTag: true,
@@ -398,6 +422,8 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ctx = {
             options: {
                 url: 'https://example.substack.com',
+                posts: true,
+                podcasts: true,
                 pages: false,
                 addPlatformTag: false,
                 addTypeTag: false,
@@ -414,19 +440,70 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         expect(tag1.data.slug).toEqual('newsletter');
     });
 
-    test('Can migrate pages', async function () {
+    test('Can migrate only posts', async function () {
         const ctx = {
             options: {
                 url: 'https://example.substack.com',
+                posts: true,
+                podcasts: false,
+                threads: false,
+                pages: false
+            }
+        };
+        const mapped = await map(postDataFromFixtures, ctx.options);
+
+        expect(mapped.posts).toBeArrayOfSize(1);
+        expect(mapped.posts[0].data.type).toEqual('post');
+    });
+
+    test('Can migrate only pages', async function () {
+        const ctx = {
+            options: {
+                url: 'https://example.substack.com',
+                posts: false,
+                podcasts: false,
+                threads: false,
                 pages: true
             }
         };
         const mapped = await map(postDataFromFixtures, ctx.options);
 
-        expect(mapped.posts).toBeArrayOfSize(3);
+        expect(mapped.posts).toBeArrayOfSize(1);
+        expect(mapped.posts[0].data.type).toEqual('page');
+    });
+
+    test('Can migrate only threads', async function () {
+        const ctx = {
+            options: {
+                url: 'https://example.substack.com',
+                posts: false,
+                podcasts: false,
+                threads: true,
+                pages: false
+            }
+        };
+        const mapped = await map(postDataFromFixtures, ctx.options);
+
+        expect(mapped.posts).toBeArrayOfSize(1);
         expect(mapped.posts[0].data.type).toEqual('post');
-        expect(mapped.posts[1].data.type).toEqual('post');
-        expect(mapped.posts[2].data.type).toEqual('page');
+        expect(mapped.posts[0].substackId).toEqual('123403.thread');
+    });
+
+    test('Can migrate only podcast', async function () {
+        const ctx = {
+            options: {
+                url: 'https://example.substack.com',
+                posts: false,
+                podcasts: true,
+                threads: false,
+                pages: false
+            }
+        };
+        const mapped = await map(postDataFromFixtures, ctx.options);
+
+        expect(mapped.posts).toBeArrayOfSize(1);
+        expect(mapped.posts[0].data.type).toEqual('post');
+        expect(mapped.posts[0].substackId).toEqual('123402.podcast');
     });
 });
 

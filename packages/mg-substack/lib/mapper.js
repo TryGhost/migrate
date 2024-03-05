@@ -140,6 +140,11 @@ export default async (input, options) => {
     // Reassign the CSV array to input var
     input = input.meta;
 
+    if (!options.posts) {
+        debug(`Ignoring posts`);
+        input = input.filter(data => data.type.toLowerCase() !== `newsletter`);
+    }
+
     if (!options.drafts) {
         debug(`Ignoring drafts`);
         input = input.filter(data => data.is_published.toLowerCase() === `true`);
@@ -153,6 +158,11 @@ export default async (input, options) => {
     if (!options.threads) {
         debug(`Ignoring threads`);
         input = input.filter(data => data.type.toLowerCase() !== `thread`);
+    }
+
+    if (!options.podcasts) {
+        debug(`Ignoring podcasts`);
+        input = input.filter(data => data.type.toLowerCase() !== `podcast`);
     }
 
     if (options.postsBefore && options.postsAfter) {

@@ -34,6 +34,10 @@ A more complex command for a Substack migration looks like this:
 migrate substack --pathToZip /path/to/my-export.zip --url https://example.com --email 'person@example.com' --drafts false
 ```
 
+```sh
+migrate substack --pathToZip /path/to/my-export.zip --url https://example.com --posts false --pages false --podcasts false --threads true
+```
+
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
 - **`--pathToZip`** (required)
@@ -70,11 +74,17 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--addAccessTag`** 
     - Add #substack-{access} tag to migrated content (public, paid, etc)
     - bool - default: `true`
+- **`--posts`** 
+    - Import posts
+    - bool - default: `true`
 - **`--drafts`** 
     - Import draft posts
     - bool - default: `true`
 - **`--pages`** 
     - Import pages
+    - bool - default: `true`
+- **`--podcasts`** 
+    - Import podcasts
     - bool - default: `true`
 - **`--threads`** 
     - Import threads
