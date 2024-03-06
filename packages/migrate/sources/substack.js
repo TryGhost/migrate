@@ -131,6 +131,10 @@ const scrapeConfig = {
 
                 return tags;
             }
+        },
+        podcast_audio_src: {
+            selector: 'div[class*="player-wrapper-outer"] audio',
+            attr: 'src'
         }
     }
 };

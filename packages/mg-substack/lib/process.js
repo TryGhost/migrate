@@ -168,8 +168,6 @@ const processContent = (post, siteUrl, options) => {
                 let ogImgSrc = post.data.og_image;
                 let unsizedOgSrc = getUnsizedImageName(ogImgSrc);
 
-                // console.log({unsizedFirstSrc, unsizedOgSrc});
-
                 if (unsizedFirstSrc === unsizedOgSrc) {
                     if ($(firstElement).find('figcaption').length) {
                         post.data.feature_image_caption = $(firstElement).find('figcaption').html();
@@ -204,21 +202,33 @@ const processContent = (post, siteUrl, options) => {
         }
     }
 
-    // If we have a podcast URL, embed an audio card at the start of the document
-    if (substackPodcastURL) {
-        debug(`Post ${post.data.slug} has podcast episode`);
-        let cardOpts = {
-            env: {dom: new SimpleDom.Document()},
-            payload: {
-                src: substackPodcastURL,
-                title: post.data.title
-            }
-        };
+    // If we have a podcast URL `posts.csv`, embed an audio card at the start of the document
+    // Else, if we have scraped a podcast URL, embed that instead
+    if (substackPodcastURL || post.data?.podcast_audio_src) {
+        let audioSrc = '';
 
-        const buildCard = audioCard.render(cardOpts);
-        const cardHTML = buildCard.nodeValue;
+        if (substackPodcastURL) {
+            debug(`Post ${post.data.slug} has podcast episode from CSV`);
+            audioSrc = substackPodcastURL;
+        } else if (post.data?.podcast_audio_src) {
+            debug(`Post ${post.data.slug} has podcast episode from scrape`);
+            audioSrc = post.data.podcast_audio_src;
+        }
 
-        $html('.migrate-substack-wrapper').prepend(cardHTML);
+        if (audioSrc && audioSrc.length > 0) {
+            let cardOpts = {
+                env: {dom: new SimpleDom.Document()},
+                payload: {
+                    src: audioSrc,
+                    title: post.data.title
+                }
+            };
+
+            const buildCard = audioCard.render(cardOpts);
+            const cardHTML = buildCard.nodeValue;
+
+            $html('.migrate-substack-wrapper').prepend(cardHTML);
+        }
     }
 
     $html('div.tweet').each((i, el) => {

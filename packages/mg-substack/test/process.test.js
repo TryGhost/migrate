@@ -842,11 +842,29 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        expect(processed.data.html).toContain('<p>Hello</p>');
-        expect(processed.data.html).toContain('<div class="kg-card kg-audio-card">');
+        expect(processed.data.html).toStartWith('<div class="kg-card kg-audio-card">');
         expect(processed.data.html).toContain('<div class="kg-audio-player-container">');
         expect(processed.data.html).toContain('<audio src="https://example.com/files/audio.mp3" preload="metadata"></audio>');
         expect(processed.data.html).toContain('<div class="kg-audio-title">My Podcast Episode #1</div>');
+        expect(processed.data.html).toContain('<p>Hello</p>');
+    });
+
+    test('Scraped audio`', async function () {
+        const post = {
+            data: {
+                html: `<p>My content</p>`,
+                title: 'My Podcast Post',
+                podcast_audio_src: 'https://api.substack.com/api/v1/audio/upload/1234abcd-1234-abcd-5678-123456abcdef/src'
+            }
+        };
+        const url = 'https://example.com';
+        const options = {};
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).toStartWith('<div class="kg-card kg-audio-card">');
+        expect(processed.data.html).toContain('<audio src="https://api.substack.com/api/v1/audio/upload/1234abcd-1234-abcd-5678-123456abcdef/src"');
+        expect(processed.data.html).toContain('<p>My content</p>');
     });
 
     test('Can remove the first image if it is the same as `og:image`', async function () {
