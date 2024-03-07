@@ -5,8 +5,18 @@ import {StripeAPI} from '../StripeAPI.js';
 import {getObjectId, ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 import {ImportStats} from './ImportStats.js';
 import {ImportWarning} from './ImportWarning.js';
-import Importer from './Importer.js';
+import Importer, {BaseImporter} from './Importer.js';
 import {ImportError} from './ImportError.js';
+import {ReportTags, Reporter} from './Reporter.js';
+
+function tagSubscription(subscription: Stripe.Subscription, tags: ReportTags) {
+    tags.addTag('Platform', (subscription.application as Stripe.Application)?.name ?? 'None');
+    tags.addTag('Platform fees', (subscription.application_fee_percent ?? 0).toString() + '%');
+    tags.addTag('Coupon', subscription.discount?.coupon?.name ?? 'None');
+    tags.addTag('Status', subscription.status);
+    tags.addTag('Cancel at period end', subscription.cancel_at_period_end ? 'Yes' : 'No');
+    tags.addTag('Payment collection paused', subscription.pause_collection ? 'Yes' : 'No');
+}
 
 /**
  * CustomerSource can be a card, or a source with a card
@@ -45,13 +55,14 @@ async function finalizeDraftInvoices(stripe: StripeAPI, subscription: Stripe.Sub
     }
 }
 
-export function createSubscriptionImporter({oldStripe, newStripe, stats, priceImporter, couponImporter, delay}: {
+export function createSubscriptionImporter({oldStripe, newStripe, stats, priceImporter, couponImporter, delay, reporter}: {
     dryRun: boolean,
     oldStripe: StripeAPI,
     newStripe: StripeAPI,
     stats: ImportStats,
-    priceImporter: Importer<Stripe.Price>,
-    couponImporter: Importer<Stripe.Coupon>,
+    reporter: Reporter,
+    priceImporter: BaseImporter<Stripe.Price>,
+    couponImporter: BaseImporter<Stripe.Coupon>,
     delay: number,
 }) {
     const provider = {
@@ -92,8 +103,14 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             }
         },
 
-        async recreate(oldSubscription: Stripe.Subscription) {
+        async recreate(oldSubscription: Stripe.Subscription, tags: ReportTags) {
+            // Some stats:
+            // Best to add these asap so we also have this data available in case of an error, which helps with debugging
+            tagSubscription(oldSubscription, tags);
+
             if (!['active', 'past_due', 'trialing'].includes(oldSubscription.status)) {
+                tags.addTag('reason', `Status is ${oldSubscription.status}`);
+
                 throw new ImportWarning({
                     message: `Subscription ${oldSubscription.id} has a status of ${oldSubscription.status} and will not be recreated`
                 });
@@ -101,8 +118,26 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
 
             // Do checks of supporte features we definitly don't support
             if (oldSubscription.collection_method === 'send_invoice') {
+                tags.addTag('reason', 'Send invoice not supported');
+
                 throw new ImportWarning({
                     message: `Subscription ${oldSubscription.id} uses collection_method: send_invoice which is not supported`
+                });
+            }
+
+            if ((oldSubscription.application as Stripe.Application) && (oldSubscription.application as Stripe.Application).name === 'Ghost') {
+                tags.addTag('reason', 'Created by Ghost');
+
+                throw new ImportWarning({
+                    message: `Subscription ${oldSubscription.id} was created by Ghost and will not be recreated`
+                });
+            }
+
+            if (oldSubscription.items.data.length > 1 || oldSubscription.items.has_more) {
+                tags.addTag('reason', 'Subscription has multiple items, which is not supported in Ghost');
+
+                throw new ImportWarning({
+                    message: `Subscription ${oldSubscription.id} has multiple line items`
                 });
             }
 
@@ -125,6 +160,8 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 customer = await newStripe.use(client => client.customers.retrieve(getObjectId(oldSubscription.customer)));
             } catch (err: any) {
                 if (err.message && err.message.includes('No such customer')) {
+                    tags.addTag('reason', 'Customer not found');
+
                     throw new ImportWarning({
                         message: `Customer ${getObjectId(oldSubscription.customer)} not found. Skipping...`
                     });
@@ -133,7 +170,9 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             }
 
             if (customer.deleted) {
-                throw new ImportError({
+                tags.addTag('reason', 'Deleted customer');
+
+                throw new ImportWarning({
                     message: `Customer ${getObjectId(oldSubscription.customer)} has been permanently deleted and cannot be used for a new subscription`
                 });
             }
@@ -165,6 +204,8 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 }
 
                 if (!foundSourceId) {
+                    tags.addTag('reason', 'Payment source not found');
+
                     throw new ImportError({
                         message: `Could not find new payment source for subscription ${oldSubscription.id} and original payment source ${oldPaymentSource.id}`
                     });
@@ -173,6 +214,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 // Use customer's default payment method
                 if (!customer.default_source) {
                     if (!customer.invoice_settings.default_payment_method) {
+                        tags.addTag('reason', 'No default payment method');
                         throw new Error(`Customer ${getObjectId(oldSubscription.customer)} does not have a default payment method and the subscription ${oldSubscription.id} does not have a default payment method`);
                     }
                     Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} default payment method`);
@@ -194,6 +236,8 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 }
 
                 if (!foundPaymentMethodId) {
+                    tags.addTag('reason', 'No payment method set');
+
                     throw new ImportError({
                         message: `Could not find new payment method for subscription ${oldSubscription.id} and original payment method ${oldPaymentMethod.id}`
                     });
@@ -239,6 +283,8 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 subscription: oldSubscription.id,
                 status: 'open'
             }));
+
+            tags.addTag('Has open invoices', invoices.data.length > 0 ? 'Yes' : 'No');
 
             return await ifDryRunJustReturnFakeId(async () => {
                 // Pause old subscription
@@ -296,7 +342,9 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             });
         },
 
-        async revert(oldSubscription: Stripe.Subscription, newSubscription: Stripe.Subscription) {
+        async revert(oldSubscription: Stripe.Subscription, newSubscription: Stripe.Subscription, tags: ReportTags) {
+            tagSubscription(oldSubscription, tags);
+
             await ifNotDryRun(async () => {
                 // Void draft invoices that were created
                 // Via workaround refs https://github.com/stripe/stripe-node/issues/657
@@ -354,11 +402,19 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             }
         },
 
-        async confirm(oldSubscription: Stripe.Subscription, newSubscription: Stripe.Subscription) {
+        async confirm(oldSubscription: Stripe.Subscription, newSubscription: Stripe.Subscription, tags: ReportTags) {
+            tagSubscription(oldSubscription, tags);
+
             if (oldSubscription.status === 'canceled') {
-                // Cancel new subscription
-                await newStripe.use(client => client.subscriptions.del(getObjectId(newSubscription)));
+                await ifNotDryRun(async () => {
+                    // Cancel new subscription
+                    await newStripe.use(client => client.subscriptions.del(getObjectId(newSubscription)));
+                });
+
                 stats.trackReverted('subscription');
+
+                tags.addTag('reason', `Old subscription was canceled during the migration`);
+                tags.addTag('action', `The new subscription has also been deleted`);
 
                 throw new ImportWarning({
                     message: `Old subscription was ${oldSubscription.id} canceled, deleting the new subscription too`
@@ -366,6 +422,9 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             }
 
             await ifNotDryRun(async () => {
+                // Cancel new subscription
+                await oldStripe.use(client => client.subscriptions.del(getObjectId(oldSubscription)));
+
                 // Unpause new subscription
                 Logger.vv?.info(`Finalizing ${newSubscription.id}`);
                 await finalizeDraftInvoices(newStripe, newSubscription, stats);
@@ -374,8 +433,9 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
     };
 
     return new Importer({
-        objectName: 'subscription',
+        objectName: 'Subscription',
         stats,
-        provider
+        provider,
+        reporter
     });
 }

@@ -1,16 +1,22 @@
 import Stripe from 'stripe';
-import Importer from './Importer.js';
+import Importer, {createNoopImporter} from './Importer.js';
 import {StripeAPI} from '../StripeAPI.js';
 import {ImportStats} from './ImportStats.js';
 import {Logger} from '../Logger.js';
 import {ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
+import {Reporter} from './Reporter.js';
 
-export function createCouponImporter({oldStripe, newStripe, stats}: {
+export function createCouponImporter({oldStripe, newStripe, stats, reporter}: {
     dryRun: boolean,
     oldStripe: StripeAPI,
     newStripe: StripeAPI,
-    stats: ImportStats
+    stats: ImportStats,
+    reporter: Reporter
 }) {
+    if (oldStripe.id === newStripe.id) {
+        return createNoopImporter();
+    }
+
     const provider = {
         async getByID(oldId: string): Promise<Stripe.Coupon> {
             return oldStripe.use(client => client.coupons.retrieve(oldId));
@@ -59,8 +65,9 @@ export function createCouponImporter({oldStripe, newStripe, stats}: {
     };
 
     return new Importer({
-        objectName: 'coupon',
+        objectName: 'Coupon',
         stats,
-        provider
+        provider,
+        reporter
     });
 }

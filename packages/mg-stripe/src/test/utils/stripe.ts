@@ -26,16 +26,8 @@ export async function advanceClock({clock, stripe, time}: {clock: string, stripe
     }
 }
 
-export async function createPaymentMethod(stripe: Stripe, options: {cardNumber?: string, customerId: string, exp_month?: number, exp_year?: number}): Promise<Stripe.PaymentMethod> {
-    const paymentMethod = await stripe.paymentMethods.create({
-        type: 'card',
-        card: {
-            number: options.cardNumber ?? '4242424242424242',
-            exp_month: options.exp_month ?? 4,
-            exp_year: options.exp_year ?? 2028,
-            cvc: '314'
-        }
-    });
+export async function createPaymentMethod(stripe: Stripe, options: {card: string, customerId: string}): Promise<Stripe.PaymentMethod> {
+    const paymentMethod = await stripe.paymentMethods.retrieve(options.card);
 
     await stripe.paymentMethods.attach(paymentMethod.id, {
         customer: options.customerId
@@ -44,19 +36,10 @@ export async function createPaymentMethod(stripe: Stripe, options: {cardNumber?:
     return paymentMethod;
 }
 
-export async function createSource(stripe: Stripe, options: {cardNumber?: string, customerId: string, exp_month?: number, exp_year?: number}): Promise<{source: Stripe.Source, token: Stripe.Token}> {
-    const token = await stripe.tokens.create({
-        card: {
-            number: options.cardNumber ?? '4242424242424242',
-            exp_month: options.exp_month?.toString() ?? '4',
-            exp_year: options.exp_year?.toString() ?? '2028',
-            cvc: '314'
-        }
-    });
-
+export async function createSource(stripe: Stripe, options: {token: string, customerId: string}): Promise<{source: Stripe.Source, card?: Stripe.Source.Card}> {
     const source = await stripe.sources.create({
         type: 'card',
-        token: token.id,
+        token: options.token,
         usage: 'reusable'
     });
 
@@ -64,10 +47,10 @@ export async function createSource(stripe: Stripe, options: {cardNumber?: string
         source: source.id
     });
 
-    return {source, token};
+    return {source, card: source.card};
 }
 
-export async function createValidCustomer<T extends boolean>(stripe: Stripe, options: {method?: 'source' | 'payment_method' | 'none', cardNumber?: string, name?: string, testClock?: T} = {}): Promise<{customer: Stripe.Customer, clock: T extends true ? string : undefined}> {
+export async function createValidCustomer<T extends boolean>(stripe: Stripe, options: {method?: 'source' | 'payment_method' | 'none', paymentMethod?: string, token?: string, name?: string, testClock?: T} = {}): Promise<{customer: Stripe.Customer, clock: T extends true ? string : undefined}> {
     let clockId: string | null = null;
     if (options.testClock) {
         const clock = await stripe.testHelpers.testClocks.create({
@@ -86,7 +69,7 @@ export async function createValidCustomer<T extends boolean>(stripe: Stripe, opt
     if (options.method === undefined || options.method === 'payment_method') {
         const paymentMethod = await createPaymentMethod(stripe, {
             customerId: customer.id,
-            cardNumber: options.cardNumber
+            card: options.paymentMethod ?? 'pm_card_visa'
         });
 
         // Set as default payment method
@@ -100,7 +83,7 @@ export async function createValidCustomer<T extends boolean>(stripe: Stripe, opt
     if (options.method === 'source') {
         const {source} = await createSource(stripe, {
             customerId: customer.id,
-            cardNumber: options.cardNumber
+            token: options.token ?? 'tok_visa'
         });
 
         // Set as default source
@@ -114,7 +97,7 @@ export async function createValidCustomer<T extends boolean>(stripe: Stripe, opt
 
 export async function createDeclinedCustomer<T extends boolean>(stripe: Stripe, options: {testClock?: T} = {}): Promise<{customer: Stripe.Customer, clock: T extends true ? string : undefined}> {
     return createValidCustomer(stripe, {
-        cardNumber: '4000000000000341',
+        paymentMethod: 'pm_card_chargeCustomerFail',
         name: 'Declined Customer',
         testClock: options.testClock
     });

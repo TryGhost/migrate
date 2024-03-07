@@ -9,11 +9,18 @@ import {createSubscriptionImporter} from '../importers/createSubscriptionImporte
 import {Options} from '../Options.js';
 import {confirm} from '@inquirer/prompts';
 import {DelayPrompt} from '../DelayPrompt.js';
+import {Reporter, ReportingCategory} from '../importers/Reporter.js';
 
 export async function copy(options: Options) {
     const stats = new ImportStats();
+    const reporter = new Reporter(new ReportingCategory(''));
 
-    Logger.shared.info(`The ${chalk.cyan('copy')} command will migrate Stripe products, prices, coupons, invoices and subscriptions from an old to a new Stripe account.`);
+    Logger.shared.info(`The ${chalk.cyan('copy')} command will:`);
+    Logger.shared.info(`- Migrate Stripe products, prices, coupons, invoices and subscriptions from an old to a new Stripe account.`);
+    Logger.shared.info(`- Recreate subscriptions without Platform fees within the same Stripe account.`);
+    Logger.shared.info('');
+    Logger.shared.info('Created subscriptions will be delayed by 1 hour by default (change with --delay option) - their renew date will only change if they would normally renew within that delay period');
+    Logger.shared.info('This makes sure you can still undo the migration (using the revert command) if something goes wrong within that time frame and avoid charging customers.');
     Logger.shared.info('------------------------------------------------------------------------------');
     Logger.shared.info('Before proceeding, be sure to have:');
     Logger.shared.info('1) Disabled new subscriptions on the old site');
@@ -34,34 +41,21 @@ export async function copy(options: Options) {
 
     try {
         // Get delay
-        const delay = await new DelayPrompt().ask(options.delay);
+        const delay = (options.dryRun) ? 1 : (await new DelayPrompt().ask(options.delay));
 
         Logger.shared.startSpinner('');
-        Logger.shared.succeed(`No payments will be collected for the next ${chalk.green(delay)} hour(s)`);
+
+        if (!options.dryRun) {
+            Logger.shared.succeed(`No payments will be collected for the next ${chalk.green(delay)} hour(s)`);
+        }
 
         // Get from / to Stripe accounts
         const connector = new StripeConnector();
-        const fromAccount = await connector.askForAccount('From which Stripe account do you want to copy?', options.oldApiKey);
+        const {fromAccount, toAccount} = await connector.askAccounts(options);
 
-        Logger.shared.startSpinner('Validating API-key');
-        const {accountName, mode} = await fromAccount.validate();
-        Logger.shared.succeed(`Copying from ${chalk.green(accountName)} (${mode} mode)`);
-
-        const toAccount = await connector.askForAccount('To which Stripe account do you want to copy?', options.newApiKey);
-
-        Logger.shared.startSpinner('Validating API-key');
-        const {accountName: accountNameTo, mode: modeTo} = await toAccount.validate();
-        Logger.shared.succeed(`Copying to ${chalk.green(accountNameTo)} (${modeTo} mode)\n`);
-
-        if (toAccount.id === fromAccount.id) {
-            Logger.shared.fail('You cannot copy data to the same account');
-            process.exit(1);
-        }
-
-        // Confirm
         const confirmMigration = await confirm({
-            message: 'Copy from ' + chalk.red(accountName) + ' to ' + chalk.green(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : ''),
-            default: false
+            message: 'Confirm copy?' + (options.dryRun ? ' (dry run)' : ''),
+            default: true
         });
 
         if (!confirmMigration) {
@@ -81,7 +75,8 @@ export async function copy(options: Options) {
             dryRun: options.dryRun,
             stats,
             oldStripe: fromAccount,
-            newStripe: toAccount
+            newStripe: toAccount,
+            reporter
         };
 
         const productImporter = createProductImporter({
@@ -103,23 +98,24 @@ export async function copy(options: Options) {
             couponImporter,
             delay
         });
-        const warnings = await subscriptionImporter.recreateAll();
-        if (warnings) {
-            Logger.shared.newline();
-            Logger.shared.succeed(`Successfully recreated ${stats.importedPerType.get('subscription') ?? 0} subscriptions with ${warnings.length} warning${warnings.length > 1 ? 's' : ''}:`);
-            Logger.shared.newline();
 
+        const warnings = await subscriptionImporter.recreateAll();
+
+        Logger.shared.succeed(`Finished`);
+        Logger.shared.newline();
+
+        if (warnings) {
             Logger.shared.warn(warnings.toString());
-        } else {
-            Logger.shared.succeed(`Successfully recreated all subscriptions`);
+            Logger.shared.newline();
         }
 
+        reporter.print({});
         Logger.shared.newline();
-        stats.print();
 
         // Newline
-        Logger.shared.newline();
-        Logger.shared.warn(`Do not forget to run the ${chalk.cyan('confirm')} command to confirm the migration`);
+        if (!options.dryRun) {
+            Logger.shared.warn(`Do not forget to run the ${chalk.cyan('confirm')} command to confirm the migration`);
+        }
     } catch (e) {
         Logger.shared.fail(e);
 

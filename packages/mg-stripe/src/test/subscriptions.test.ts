@@ -11,18 +11,25 @@ import assert from 'assert/strict';
 import sinon from 'sinon';
 import {isWarning} from '../lib/helpers.js';
 import DryRunIdGenerator from '../lib/DryRunIdGenerator.js';
+import {Reporter, ReportingCategory} from '../lib/importers/Reporter.js';
 
 const stripeTestApiKey = getStripeTestAPIKey();
 
 describe('Recreating subscriptions', () => {
     const stripe = new StripeAPI({apiKey: stripeTestApiKey});
     let stats: ImportStats;
+    let reporter: Reporter;
     let subscriptionImporter: ReturnType<typeof createSubscriptionImporter>;
     let validCustomer: Stripe.Customer;
     let declinedCustomer: Stripe.Customer;
     let currentInvoices: Stripe.Invoice[];
 
     beforeAll(async () => {
+        await stripe.validate();
+        if (stripe.mode !== 'test') {
+            throw new Error('Tests must run on a Stripe Account in test mode');
+        }
+
         const {customer: vc} = await createValidCustomer(stripe.debugClient, {testClock: false});
         const {customer: dc} = await createDeclinedCustomer(stripe.debugClient, {testClock: false});
 
@@ -32,12 +39,15 @@ describe('Recreating subscriptions', () => {
 
     beforeEach(async () => {
         stats = new ImportStats();
+        reporter = new Reporter(new ReportingCategory(''));
+
         currentInvoices = [];
         const sharedOptions = {
             dryRun: false,
             stats,
             oldStripe: new StripeAPI({apiKey: ''}), // old is invalid to prevent usage
-            newStripe: stripe
+            newStripe: stripe,
+            reporter
         };
         const delay = 1;
 
@@ -77,6 +87,10 @@ describe('Recreating subscriptions', () => {
         });
 
         sinon.stub(sharedOptions.oldStripe.debugClient.subscriptions, 'update').callsFake(() => {
+            return Promise.resolve({} as Stripe.Response<Stripe.Subscription>);
+        });
+
+        sinon.stub(sharedOptions.oldStripe.debugClient.subscriptions, 'del').callsFake(() => {
             return Promise.resolve({} as Stripe.Response<Stripe.Subscription>);
         });
     });
@@ -542,7 +556,7 @@ describe('Recreating subscriptions', () => {
 
     it('Past Due Subscription', async () => {
         const now = Math.floor(new Date().getTime() / 1000);
-        const currentPeriodEnd = now + 17 * 24 * 60 * 60;
+        const currentPeriodEnd = now + 5 * 24 * 60 * 60;
         const currentPeriodStart = currentPeriodEnd - 31 * 24 * 60 * 60;
 
         const {customer, clock} = await createDeclinedCustomer(stripe.debugClient, {testClock: true});
@@ -637,7 +651,7 @@ describe('Recreating subscriptions', () => {
         await advanceClock({
             clock,
             stripe: stripe.debugClient,
-            time: oldSubscription.current_period_end - 60 * 60
+            time: oldSubscription.current_period_end + 10
         });
 
         // Should be canceled now (depends on account settings!)
@@ -941,7 +955,7 @@ describe('Recreating subscriptions', () => {
         const {customer, clock} = await createValidCustomer(stripe.debugClient, {testClock: true});
         const now = Math.floor(new Date().getTime() / 1000);
 
-        const currentPeriodEnd = now + 15 * 24 * 60 * 60;
+        const currentPeriodEnd = now + 5 * 24 * 60 * 60;
         const currentPeriodStart = currentPeriodEnd - 31 * 24 * 60 * 60;
         const startDate = currentPeriodStart - 31 * 24 * 60 * 60;
         const cancelAt = currentPeriodEnd + (31 + 15) * 24 * 60 * 60;
@@ -1120,8 +1134,7 @@ describe('Recreating subscriptions', () => {
                 customerId: customer.id,
 
                 // Make sure these are different than the default, so we can find the card
-                exp_month: 1,
-                exp_year: 2029
+                card: 'pm_card_mastercard'
             });
             const oldProduct = buildProduct({});
 
@@ -1236,8 +1249,7 @@ describe('Recreating subscriptions', () => {
                 customerId: customer.id,
 
                 // Make sure these are different than the default, so we can find the card
-                exp_month: 1,
-                exp_year: 2029
+                token: 'tok_mastercard'
             });
             const oldProduct = buildProduct({});
 
@@ -1346,14 +1358,11 @@ describe('Recreating subscriptions', () => {
             const {customer, clock} = await createValidCustomer(stripe.debugClient, {testClock: true, method: 'source'});
 
             // Attach a non default source
-            const {source, token} = await createSource(stripe.debugClient, {
+            const {source, card} = await createSource(stripe.debugClient, {
                 customerId: customer.id,
-
-                // Make sure these are different than the default, so we can find the card
-                exp_month: 1,
-                exp_year: 2029
+                token: 'tok_mastercard'
             });
-            const card = token.card!;
+            console.log('source', source, card);
             const oldProduct = buildProduct({});
 
             const now = Math.floor(new Date().getTime() / 1000);
@@ -1378,7 +1387,7 @@ describe('Recreating subscriptions', () => {
                 current_period_end: currentPeriodEnd,
                 default_source: {
                     // Card source
-                    ...card,
+                    ...(card as any),
                     id: DryRunIdGenerator.getNext('card_')
                 }
             });
