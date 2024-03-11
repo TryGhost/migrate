@@ -39,7 +39,8 @@ const colMapper = (fieldNames: string[], member: any) => {
     return useThis;
 };
 
-const emailFields = ['Email', 'email', 'Email Address'];
+// TODO: It's possible the first column is always the email…
+const emailFields = ['Email', 'email', 'Email Address', 'Deine E-Mail Adresse'];
 const firstNameFields = ['First Name'];
 const lastNameFields = ['Last Name'];
 
@@ -61,7 +62,7 @@ const processData = async ({pathToCsv, csvContent, addLabel, includeUnsubscribed
         const createdAt = new Date(member.created_at);
 
         let newMember: memberObject = {
-            email: email,
+            email: email.trim(),
             name: null,
             note: null,
             subscribed_to_emails: false,
@@ -160,5 +161,6 @@ const process = async ({pathToCsv, pathToZip, addLabel, includeUnsubscribed = fa
 };
 
 export {
-    process
+    process,
+    processData
 };

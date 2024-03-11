@@ -4,6 +4,7 @@ import {execSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {join} from 'node:path';
 import processCsv from '../index.js';
+import {processData} from '../lib/process.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 const fixturesPath = join(__dirname, '../../src/test/fixtures');
@@ -116,6 +117,32 @@ describe('Mailchimp Members CSV', () => {
         cleanedProcessed.forEach((member) => {
             assert.equal(member.subscribed_to_emails, true);
         });
+    });
+
+    it('Different email key 1', async () => {
+        let yo = `Email Address,First Name,Last Name
+        c1@example.com,Dolor,`;
+
+        const cleanedProcessed = await processData({
+            csvContent: yo,
+            includeUnsubscribed: false
+        });
+
+        assert.equal(cleanedProcessed.length, 1);
+        assert.equal(cleanedProcessed[0].email, 'c1@example.com');
+    });
+
+    it('Different email key 2', async () => {
+        let yo = `Deine E-Mail Adresse,First Name,Last Name
+        c1@example.com,Dolor,`;
+
+        const cleanedProcessed = await processData({
+            csvContent: yo,
+            includeUnsubscribed: false
+        });
+
+        assert.equal(cleanedProcessed.length, 1);
+        assert.equal(cleanedProcessed[0].email, 'c1@example.com');
     });
 });
 
