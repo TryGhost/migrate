@@ -45,7 +45,6 @@ export class StripeAPI {
                 mode: this.mode
             };
         } catch (err) {
-            console.error(err);
             throw new Error('Failed to connect to Stripe API, please check your API key');
         }
     }
