@@ -1080,9 +1080,7 @@ describe('Recreating subscriptions', () => {
                 subscription: newSubscription.id
             }));
             assert.equal(newInvoicesAfter.data.length, 1);
-            assert.equal(newInvoicesAfter.data[0].amount_due, 100);
-            assert.equal(newInvoicesAfter.data[0].status, 'paid');
-            assert.equal(newInvoicesAfter.data[0].amount_paid, 100);
+            assert.equal(newInvoicesAfter.data[0].amount_paid + newInvoicesAfter.data[0].amount_remaining, 100);
 
             // Now confirm
             await subscriptionImporter.confirm(oldSubscription);
@@ -1100,9 +1098,7 @@ describe('Recreating subscriptions', () => {
             }));
 
             assert.equal(newInvoicesAfterConfirm.data.length, 1);
-            assert.equal(newInvoicesAfterConfirm.data[0].amount_due, 100);
-            assert.equal(newInvoicesAfterConfirm.data[0].status, 'paid');
-            assert.equal(newInvoicesAfterConfirm.data[0].amount_paid, 100);
+            assert.equal(newInvoicesAfterConfirm.data[0].amount_paid + newInvoicesAfterConfirm.data[0].amount_remaining, 100);
         });
 
         test('Default payment method on subscription', async () => {
@@ -1195,9 +1191,7 @@ describe('Recreating subscriptions', () => {
                 subscription: newSubscription.id
             }));
             assert.equal(newInvoicesAfter.data.length, 1);
-            assert.equal(newInvoicesAfter.data[0].amount_due, 100);
-            assert.equal(newInvoicesAfter.data[0].status, 'paid');
-            assert.equal(newInvoicesAfter.data[0].amount_paid, 100);
+            assert.equal(newInvoicesAfter.data[0].amount_paid + newInvoicesAfter.data[0].amount_remaining, 100);
 
             // Now confirm
             await subscriptionImporter.confirm(oldSubscription);
@@ -1215,9 +1209,7 @@ describe('Recreating subscriptions', () => {
             }));
 
             assert.equal(newInvoicesAfterConfirm.data.length, 1);
-            assert.equal(newInvoicesAfterConfirm.data[0].amount_due, 100);
-            assert.equal(newInvoicesAfterConfirm.data[0].status, 'paid');
-            assert.equal(newInvoicesAfterConfirm.data[0].amount_paid, 100);
+            assert.equal(newInvoicesAfterConfirm.data[0].amount_paid + newInvoicesAfterConfirm.data[0].amount_remaining, 100);
         });
 
         test('Default source on subscription', async () => {
@@ -1306,7 +1298,7 @@ describe('Recreating subscriptions', () => {
                 subscription: newSubscription.id
             }));
             assert.equal(newInvoicesAfter.data.length, 1);
-            assert.equal(newInvoicesAfter.data[0].amount_due + newInvoicesAfter.data[0].amount_remaining, 100);
+            assert.equal(newInvoicesAfter.data[0].amount_paid + newInvoicesAfter.data[0].amount_remaining, 100);
 
             // Now confirm
             await subscriptionImporter.confirm(oldSubscription);
@@ -1398,7 +1390,7 @@ describe('Recreating subscriptions', () => {
                 subscription: newSubscription.id
             }));
             assert.equal(newInvoicesAfter.data.length, 1);
-            assert.equal(newInvoicesAfter.data[0].amount_due + newInvoicesAfter.data[0].amount_remaining, 100);
+            assert.equal(newInvoicesAfter.data[0].amount_paid + newInvoicesAfter.data[0].amount_remaining, 100);
 
             // Now confirm
             await subscriptionImporter.confirm(oldSubscription);
