@@ -144,6 +144,14 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             const items: Stripe.SubscriptionCreateParams.Item[] = [];
 
             for (const item of oldSubscription.items.data) {
+                if (item.quantity !== 1) {
+                    tags.addTag('reason', 'Subscription has an item with quantity != 1, which is not supported in Ghost');
+
+                    throw new ImportWarning({
+                        message: `Subscription ${oldSubscription.id} has an item with quantity != 1`
+                    });
+                }
+
                 const newPriceId = await priceImporter.recreate(item.price);
                 items.push({
                     price: newPriceId,
