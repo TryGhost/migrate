@@ -4,6 +4,9 @@ import {Queue} from './Queue.js';
 export class StripeAPI {
     mode: 'live' | 'test';
     id!: string;
+    name?: string;
+    #apiKey: string;
+
     #maxRequestsPerSecond: number;
     #client: Stripe;
     #queue: Queue;
@@ -13,8 +16,10 @@ export class StripeAPI {
     }
 
     constructor({apiKey}: {apiKey: string}) {
+        this.#apiKey = apiKey;
         this.#client = new Stripe(apiKey, {
-            apiVersion: '2022-11-15'
+            apiVersion: '2022-11-15',
+            telemetry: false
         });
         this.mode = apiKey.includes('_test_') ? 'test' : 'live';
         this.#maxRequestsPerSecond = this.mode === 'test' ? 20 : 90;
@@ -23,12 +28,17 @@ export class StripeAPI {
         });
     }
 
+    hasSameKey(apiKey: string) {
+        return this.#apiKey === apiKey;
+    }
+
     async validate() {
         try {
             const account = await this.use(client => client.accounts.retrieve());
             //ui.log.ok(`Connected to Stripe account: ${account.settings?.dashboard.display_name} - ${this.mode} mode`);
 
             this.id = account.id;
+            this.name = account.settings?.dashboard.display_name ?? 'Unknown';
 
             return {
                 accountName: account.settings?.dashboard.display_name ?? 'Unknown',

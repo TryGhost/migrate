@@ -70,6 +70,19 @@ export class Logger {
         }
     }
 
+    plain(message: string) {
+        if (this.spinner) {
+            this.spinner.clear();
+        }
+
+        // eslint-disable-next-line no-console
+        console.log(message);
+
+        if (this.spinner) {
+            this.spinner.render();
+        }
+    }
+
     info(message: string) {
         if (this.spinner) {
             this.spinner.clear();

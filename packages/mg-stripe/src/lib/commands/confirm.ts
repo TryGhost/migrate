@@ -8,9 +8,11 @@ import {createProductImporter} from '../importers/createProductImporter.js';
 import {createSubscriptionImporter} from '../importers/createSubscriptionImporter.js';
 import {Options} from '../Options.js';
 import {confirm as _confirm} from '@inquirer/prompts';
+import {Reporter, ReportingCategory} from '../importers/Reporter.js';
 
 export async function confirm(options: Options) {
     const stats = new ImportStats();
+    const reporter = new Reporter(new ReportingCategory(''));
 
     Logger.shared.info(`The ${chalk.cyan('confirm')} command will finalise the copy of Stripe subscriptions and invoices in the new Stripe account.`);
     Logger.shared.info('------------------------------------------------------------------------------');
@@ -30,34 +32,17 @@ export async function confirm(options: Options) {
     try {
         // Step 1: Connect to Stripe
         const connector = new StripeConnector();
-        const fromAccount = await connector.askForAccount('From which Stripe account did you copy?', options.oldApiKey);
+        const {fromAccount, toAccount} = await connector.askAccounts(options);
 
-        Logger.shared.startSpinner('Validating API-key');
-        const {accountName, mode} = await fromAccount.validate();
-        Logger.shared.succeed(`From ${chalk.cyan(accountName)} (${mode} account)`);
-
-        const toAccount = await connector.askForAccount('To which Stripe account did you copy?', options.newApiKey);
-
-        Logger.shared.startSpinner('Validating API-key');
-        const {accountName: accountNameTo, mode: modeTo} = await toAccount.validate();
-        Logger.shared.succeed(`To ${chalk.cyan(accountNameTo)} (${modeTo} account)\n`);
-
-        if (toAccount.id === fromAccount.id) {
-            Logger.shared.fail('You cannot confirm a copy to the same account');
-            process.exit(1);
-        }
-
-        // Confirm
         const confirmMigration = await _confirm({
-            message: 'Confirm copy from ' + chalk.red(accountName) + ' to ' + chalk.green(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : ''),
-            default: false
+            message: 'Confirm?' + (options.dryRun ? ' (dry run)' : ''),
+            default: true
         });
 
         if (!confirmMigration) {
-            Logger.shared.fail('Confirming cancelled');
+            Logger.shared.fail('Confirmation cancelled');
             process.exit(1);
         }
-
         stats.markStart();
 
         // Step 2: Import data
@@ -70,7 +55,8 @@ export async function confirm(options: Options) {
             dryRun: options.dryRun,
             stats,
             oldStripe: fromAccount,
-            newStripe: toAccount
+            newStripe: toAccount,
+            reporter
         };
 
         const productImporter = createProductImporter({
@@ -95,17 +81,16 @@ export async function confirm(options: Options) {
 
         const warnings = await subscriptionImporter.confirmAll();
 
+        Logger.shared.succeed(`Finished`);
+        Logger.shared.newline();
+
         if (warnings) {
-            Logger.shared.newline();
-            Logger.shared.succeed(`Successfully confirmed ${stats.confirmedPerType.get('subscription') ?? 0} subscriptions with ${warnings.length} warning${warnings.length > 1 ? 's' : ''}:`);
-            Logger.shared.newline();
             Logger.shared.warn(warnings.toString());
-        } else {
-            Logger.shared.succeed(`Successfully confirmed all subscriptions`);
+            Logger.shared.newline();
         }
 
+        reporter.print({});
         Logger.shared.newline();
-        stats.print();
     } catch (e) {
         Logger.shared.fail(e);
 

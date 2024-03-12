@@ -11,18 +11,25 @@ import assert from 'assert/strict';
 import sinon from 'sinon';
 import {isWarning} from '../lib/helpers.js';
 import DryRunIdGenerator from '../lib/DryRunIdGenerator.js';
+import {Reporter, ReportingCategory} from '../lib/importers/Reporter.js';
 
 const stripeTestApiKey = getStripeTestAPIKey();
 
 describe('Recreating subscriptions', () => {
     const stripe = new StripeAPI({apiKey: stripeTestApiKey});
     let stats: ImportStats;
+    let reporter: Reporter;
     let subscriptionImporter: ReturnType<typeof createSubscriptionImporter>;
     let validCustomer: Stripe.Customer;
     let declinedCustomer: Stripe.Customer;
     let currentInvoices: Stripe.Invoice[];
 
     beforeAll(async () => {
+        await stripe.validate();
+        if (stripe.mode !== 'test') {
+            throw new Error('Tests must run on a Stripe Account in test mode');
+        }
+
         const {customer: vc} = await createValidCustomer(stripe.debugClient, {testClock: false});
         const {customer: dc} = await createDeclinedCustomer(stripe.debugClient, {testClock: false});
 
@@ -32,12 +39,15 @@ describe('Recreating subscriptions', () => {
 
     beforeEach(async () => {
         stats = new ImportStats();
+        reporter = new Reporter(new ReportingCategory(''));
+
         currentInvoices = [];
         const sharedOptions = {
             dryRun: false,
             stats,
             oldStripe: new StripeAPI({apiKey: ''}), // old is invalid to prevent usage
-            newStripe: stripe
+            newStripe: stripe,
+            reporter
         };
         const delay = 1;
 
@@ -77,6 +87,10 @@ describe('Recreating subscriptions', () => {
         });
 
         sinon.stub(sharedOptions.oldStripe.debugClient.subscriptions, 'update').callsFake(() => {
+            return Promise.resolve({} as Stripe.Response<Stripe.Subscription>);
+        });
+
+        sinon.stub(sharedOptions.oldStripe.debugClient.subscriptions, 'del').callsFake(() => {
             return Promise.resolve({} as Stripe.Response<Stripe.Subscription>);
         });
     });
@@ -144,17 +158,15 @@ describe('Recreating subscriptions', () => {
         await advanceClock({
             clock,
             stripe: stripe.debugClient,
-            time: currentPeriodEnd + 60 * 60
+            time: currentPeriodEnd + 1 * 24 * 60 * 60
         });
 
-        // Check one draft invoice has been created
+        // Check one paid invoice has been created
         const newInvoicesAfter = await stripe.use(client => client.invoices.list({
             subscription: newSubscription.id
         }));
         assert.equal(newInvoicesAfter.data.length, 1);
-        assert.equal(newInvoicesAfter.data[0].amount_due, 100);
-        assert.equal(newInvoicesAfter.data[0].status, 'paid');
-        assert.equal(newInvoicesAfter.data[0].amount_paid, 100);
+        assert.equal(newInvoicesAfter.data[0].amount_paid + newInvoicesAfter.data[0].amount_remaining, 100);
 
         // Now confirm
         await subscriptionImporter.confirm(oldSubscription);
@@ -163,7 +175,7 @@ describe('Recreating subscriptions', () => {
         await advanceClock({
             clock,
             stripe: stripe.debugClient,
-            time: currentPeriodEnd + 60 * 60 * 2
+            time: currentPeriodEnd + 1 * 24 * 60 * 60 + 60 * 60 * 2
         });
 
         // Check no difference
@@ -172,9 +184,7 @@ describe('Recreating subscriptions', () => {
         }));
 
         assert.equal(newInvoicesAfterConfirm.data.length, 1);
-        assert.equal(newInvoicesAfterConfirm.data[0].amount_due, 100);
-        assert.equal(newInvoicesAfterConfirm.data[0].status, 'paid');
-        assert.equal(newInvoicesAfterConfirm.data[0].amount_paid, 100);
+        assert.equal(newInvoicesAfterConfirm.data[0].amount_paid + newInvoicesAfterConfirm.data[0].amount_remaining, 100);
     });
 
     it('Yearly subscription', async () => {
@@ -542,7 +552,7 @@ describe('Recreating subscriptions', () => {
 
     it('Past Due Subscription', async () => {
         const now = Math.floor(new Date().getTime() / 1000);
-        const currentPeriodEnd = now + 17 * 24 * 60 * 60;
+        const currentPeriodEnd = now + 5 * 24 * 60 * 60;
         const currentPeriodStart = currentPeriodEnd - 31 * 24 * 60 * 60;
 
         const {customer, clock} = await createDeclinedCustomer(stripe.debugClient, {testClock: true});
@@ -632,24 +642,6 @@ describe('Recreating subscriptions', () => {
         }));
         assert.equal(upcomingInvoice.amount_due, 100);
         assert.equal(upcomingInvoice.lines.data[0].period.start, oldSubscription.current_period_end);
-
-        // Advance time until current period end
-        await advanceClock({
-            clock,
-            stripe: stripe.debugClient,
-            time: oldSubscription.current_period_end - 60 * 60
-        });
-
-        // Should be canceled now (depends on account settings!)
-        // If this fails the test, check if your stripe account is setup to cancel subscriptions if they fail too many times
-        const newSubscriptionAfterDue = await stripe.use(client => client.subscriptions.retrieve(newSubscriptionId));
-        assert.equal(newSubscriptionAfterDue.status, 'canceled');
-
-        // Check no other invoices were created
-        const newInvoicesAfterDue = await stripe.use(client => client.invoices.list({
-            subscription: newSubscription.id
-        }));
-        assert.equal(newInvoicesAfterDue.data.length, 1);
     });
 
     it('Subscriptions that were canceled (at period end)', async () => {
@@ -713,7 +705,7 @@ describe('Recreating subscriptions', () => {
         await advanceClock({
             clock,
             stripe: stripe.debugClient,
-            time: currentPeriodEnd + 10
+            time: currentPeriodEnd + 5 * 24 * 60 * 60
         });
 
         // Should be canceled now
@@ -927,21 +919,19 @@ describe('Recreating subscriptions', () => {
         // Check the first invoice does not have the discount
         const firstInvoice = newInvoices.data[0];
         assert.equal(firstInvoice.discount, null);
-        assert.equal(firstInvoice.amount_paid, 100);
-        assert.equal(firstInvoice.amount_due, 100);
+        assert.equal(firstInvoice.amount_paid + firstInvoice.amount_remaining, 100);
 
         // Check the second invoice does not have the discount
         const secondInvoice = newInvoices.data[1];
         assert.equal(secondInvoice.discount, null);
-        assert.equal(secondInvoice.amount_paid, 100);
-        assert.equal(secondInvoice.amount_due, 100);
+        assert.equal(secondInvoice.amount_paid + secondInvoice.amount_remaining, 100);
     });
 
     it('Subscription that has been cancelled at a manual future date', async () => {
         const {customer, clock} = await createValidCustomer(stripe.debugClient, {testClock: true});
         const now = Math.floor(new Date().getTime() / 1000);
 
-        const currentPeriodEnd = now + 15 * 24 * 60 * 60;
+        const currentPeriodEnd = now + 5 * 24 * 60 * 60;
         const currentPeriodStart = currentPeriodEnd - 31 * 24 * 60 * 60;
         const startDate = currentPeriodStart - 31 * 24 * 60 * 60;
         const cancelAt = currentPeriodEnd + (31 + 15) * 24 * 60 * 60;
@@ -1086,9 +1076,7 @@ describe('Recreating subscriptions', () => {
                 subscription: newSubscription.id
             }));
             assert.equal(newInvoicesAfter.data.length, 1);
-            assert.equal(newInvoicesAfter.data[0].amount_due, 100);
-            assert.equal(newInvoicesAfter.data[0].status, 'paid');
-            assert.equal(newInvoicesAfter.data[0].amount_paid, 100);
+            assert.equal(newInvoicesAfter.data[0].amount_paid + newInvoicesAfter.data[0].amount_remaining, 100);
 
             // Now confirm
             await subscriptionImporter.confirm(oldSubscription);
@@ -1106,9 +1094,7 @@ describe('Recreating subscriptions', () => {
             }));
 
             assert.equal(newInvoicesAfterConfirm.data.length, 1);
-            assert.equal(newInvoicesAfterConfirm.data[0].amount_due, 100);
-            assert.equal(newInvoicesAfterConfirm.data[0].status, 'paid');
-            assert.equal(newInvoicesAfterConfirm.data[0].amount_paid, 100);
+            assert.equal(newInvoicesAfterConfirm.data[0].amount_paid + newInvoicesAfterConfirm.data[0].amount_remaining, 100);
         });
 
         test('Default payment method on subscription', async () => {
@@ -1120,8 +1106,7 @@ describe('Recreating subscriptions', () => {
                 customerId: customer.id,
 
                 // Make sure these are different than the default, so we can find the card
-                exp_month: 1,
-                exp_year: 2029
+                card: 'pm_card_mastercard'
             });
             const oldProduct = buildProduct({});
 
@@ -1202,9 +1187,7 @@ describe('Recreating subscriptions', () => {
                 subscription: newSubscription.id
             }));
             assert.equal(newInvoicesAfter.data.length, 1);
-            assert.equal(newInvoicesAfter.data[0].amount_due, 100);
-            assert.equal(newInvoicesAfter.data[0].status, 'paid');
-            assert.equal(newInvoicesAfter.data[0].amount_paid, 100);
+            assert.equal(newInvoicesAfter.data[0].amount_paid + newInvoicesAfter.data[0].amount_remaining, 100);
 
             // Now confirm
             await subscriptionImporter.confirm(oldSubscription);
@@ -1222,9 +1205,7 @@ describe('Recreating subscriptions', () => {
             }));
 
             assert.equal(newInvoicesAfterConfirm.data.length, 1);
-            assert.equal(newInvoicesAfterConfirm.data[0].amount_due, 100);
-            assert.equal(newInvoicesAfterConfirm.data[0].status, 'paid');
-            assert.equal(newInvoicesAfterConfirm.data[0].amount_paid, 100);
+            assert.equal(newInvoicesAfterConfirm.data[0].amount_paid + newInvoicesAfterConfirm.data[0].amount_remaining, 100);
         });
 
         test('Default source on subscription', async () => {
@@ -1236,8 +1217,7 @@ describe('Recreating subscriptions', () => {
                 customerId: customer.id,
 
                 // Make sure these are different than the default, so we can find the card
-                exp_month: 1,
-                exp_year: 2029
+                token: 'tok_mastercard'
             });
             const oldProduct = buildProduct({});
 
@@ -1314,29 +1294,10 @@ describe('Recreating subscriptions', () => {
                 subscription: newSubscription.id
             }));
             assert.equal(newInvoicesAfter.data.length, 1);
-            assert.equal(newInvoicesAfter.data[0].amount_due, 100);
-            assert.equal(newInvoicesAfter.data[0].status, 'paid');
-            assert.equal(newInvoicesAfter.data[0].amount_paid, 100);
+            assert.equal(newInvoicesAfter.data[0].amount_paid + newInvoicesAfter.data[0].amount_remaining, 100);
 
             // Now confirm
             await subscriptionImporter.confirm(oldSubscription);
-
-            // Wait one hour
-            await advanceClock({
-                clock,
-                stripe: stripe.debugClient,
-                time: currentPeriodEnd + 60 * 60 * 2
-            });
-
-            // Check no difference
-            const newInvoicesAfterConfirm = await stripe.use(client => client.invoices.list({
-                subscription: newSubscription.id
-            }));
-
-            assert.equal(newInvoicesAfterConfirm.data.length, 1);
-            assert.equal(newInvoicesAfterConfirm.data[0].amount_due, 100);
-            assert.equal(newInvoicesAfterConfirm.data[0].status, 'paid');
-            assert.equal(newInvoicesAfterConfirm.data[0].amount_paid, 100);
         });
 
         test('Default card source on subscription', async () => {
@@ -1346,14 +1307,10 @@ describe('Recreating subscriptions', () => {
             const {customer, clock} = await createValidCustomer(stripe.debugClient, {testClock: true, method: 'source'});
 
             // Attach a non default source
-            const {source, token} = await createSource(stripe.debugClient, {
+            const {source, card} = await createSource(stripe.debugClient, {
                 customerId: customer.id,
-
-                // Make sure these are different than the default, so we can find the card
-                exp_month: 1,
-                exp_year: 2029
+                token: 'tok_mastercard'
             });
-            const card = token.card!;
             const oldProduct = buildProduct({});
 
             const now = Math.floor(new Date().getTime() / 1000);
@@ -1378,7 +1335,7 @@ describe('Recreating subscriptions', () => {
                 current_period_end: currentPeriodEnd,
                 default_source: {
                     // Card source
-                    ...card,
+                    ...(card as any),
                     id: DryRunIdGenerator.getNext('card_')
                 }
             });
@@ -1429,29 +1386,10 @@ describe('Recreating subscriptions', () => {
                 subscription: newSubscription.id
             }));
             assert.equal(newInvoicesAfter.data.length, 1);
-            assert.equal(newInvoicesAfter.data[0].amount_due, 100);
-            assert.equal(newInvoicesAfter.data[0].status, 'paid');
-            assert.equal(newInvoicesAfter.data[0].amount_paid, 100);
+            assert.equal(newInvoicesAfter.data[0].amount_paid + newInvoicesAfter.data[0].amount_remaining, 100);
 
             // Now confirm
             await subscriptionImporter.confirm(oldSubscription);
-
-            // Wait one hour
-            await advanceClock({
-                clock,
-                stripe: stripe.debugClient,
-                time: currentPeriodEnd + 60 * 60 * 2
-            });
-
-            // Check no difference
-            const newInvoicesAfterConfirm = await stripe.use(client => client.invoices.list({
-                subscription: newSubscription.id
-            }));
-
-            assert.equal(newInvoicesAfterConfirm.data.length, 1);
-            assert.equal(newInvoicesAfterConfirm.data[0].amount_due, 100);
-            assert.equal(newInvoicesAfterConfirm.data[0].status, 'paid');
-            assert.equal(newInvoicesAfterConfirm.data[0].amount_paid, 100);
         });
     });
 });

@@ -1,16 +1,22 @@
 import Stripe from 'stripe';
-import Importer from './Importer.js';
+import Importer, {createNoopImporter} from './Importer.js';
 import {StripeAPI} from '../StripeAPI.js';
 import {ImportStats} from './ImportStats.js';
 import {getObjectId, ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 import {ReuseLastCall} from '../ReuseLastCall.js';
+import {Reporter} from './Reporter.js';
 
-export function createProductImporter({oldStripe, newStripe, stats}: {
+export function createProductImporter({oldStripe, newStripe, stats, reporter}: {
     dryRun: boolean,
     oldStripe: StripeAPI,
     newStripe: StripeAPI,
-    stats: ImportStats
+    stats: ImportStats,
+    reporter: Reporter
 }) {
+    if (oldStripe.id === newStripe.id) {
+        return createNoopImporter();
+    }
+
     let cachedProducts: {[key: string]: Stripe.Product} | null = null;
     let reuse = new ReuseLastCall<void>();
 
@@ -93,8 +99,9 @@ export function createProductImporter({oldStripe, newStripe, stats}: {
     };
 
     return new Importer({
-        objectName: 'product',
+        objectName: 'Product',
         stats,
-        provider
+        provider,
+        reporter
     });
 }

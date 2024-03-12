@@ -8,9 +8,11 @@ import {createProductImporter} from '../importers/createProductImporter.js';
 import {createSubscriptionImporter} from '../importers/createSubscriptionImporter.js';
 import {Options} from '../Options.js';
 import {confirm as _confirm} from '@inquirer/prompts';
+import {Reporter, ReportingCategory} from '../importers/Reporter.js';
 
 export async function revert(options: Options) {
     const stats = new ImportStats();
+    const reporter = new Reporter(new ReportingCategory(''));
 
     Logger.shared.info(`The ${chalk.cyan('revert')} command will delete the copy of Stripe products, prices, coupons, subscriptions and invoices from the new Stripe account. It will also resume the subscriptions in the old Stripe account.`);
     Logger.shared.info('------------------------------------------------------------------------------');
@@ -30,27 +32,11 @@ export async function revert(options: Options) {
     try {
         // Step 1: Connect to Stripe
         const connector = new StripeConnector();
-        const fromAccount = await connector.askForAccount('From which Stripe account did you copy?', options.oldApiKey);
+        const {fromAccount, toAccount} = await connector.askAccounts(options);
 
-        Logger.shared.startSpinner('Validating API-key');
-        const {accountName, mode} = await fromAccount.validate();
-        Logger.shared.succeed(`From ${chalk.cyan(accountName)} (${mode} account)`);
-
-        const toAccount = await connector.askForAccount('To which Stripe account did you copy?', options.newApiKey);
-
-        Logger.shared.startSpinner('Validating API-key');
-        const {accountName: accountNameTo, mode: modeTo} = await toAccount.validate();
-        Logger.shared.succeed(`To ${chalk.cyan(accountNameTo)} (${modeTo} account)\n`);
-
-        if (toAccount.id === fromAccount.id) {
-            Logger.shared.fail('You cannot revert a copy from the same account');
-            process.exit(1);
-        }
-
-        // Confirm
         const confirmMigration = await _confirm({
-            message: 'Revert copy from ' + chalk.green(accountName) + ' to ' + chalk.red(accountNameTo) + '?' + (options.dryRun ? ' (dry run)' : ''),
-            default: false
+            message: 'Revert copy?' + (options.dryRun ? ' (dry run)' : ''),
+            default: true
         });
 
         if (!confirmMigration) {
@@ -70,7 +56,8 @@ export async function revert(options: Options) {
             dryRun: options.dryRun,
             stats,
             oldStripe: fromAccount,
-            newStripe: toAccount
+            newStripe: toAccount,
+            reporter
         };
 
         const productImporter = createProductImporter({
@@ -95,18 +82,16 @@ export async function revert(options: Options) {
 
         const warnings = await subscriptionImporter.revertAll();
 
-        if (warnings) {
-            Logger.shared.newline();
-            Logger.shared.succeed(`Successfully reverted ${stats.revertedPerType.get('subscription') ?? 0} subscriptions with ${warnings.length} warning${warnings.length > 1 ? 's' : ''}:`);
-            Logger.shared.newline();
+        Logger.shared.succeed(`Finished`);
+        Logger.shared.newline();
 
+        if (warnings) {
             Logger.shared.warn(warnings.toString());
-        } else {
-            Logger.shared.succeed(`Successfully reverted all subscriptions`);
+            Logger.shared.newline();
         }
 
+        reporter.print({});
         Logger.shared.newline();
-        stats.print();
     } catch (e) {
         Logger.shared.fail(e);
 
