@@ -12,7 +12,7 @@ import {ReportTags, Reporter} from './Reporter.js';
 function tagSubscription(subscription: Stripe.Subscription, tags: ReportTags) {
     tags.addTag('Platform', (subscription.application as Stripe.Application)?.name ?? 'None');
     tags.addTag('Platform fees', (subscription.application_fee_percent ?? 0).toString() + '%');
-    tags.addTag('Coupon', subscription.discount?.coupon?.name ?? 'None');
+    tags.addTag('Coupon', subscription.discount?.coupon ? (subscription.discount?.coupon?.name ?? '(Coupon without name)') : 'None');
     tags.addTag('Status', subscription.status);
     tags.addTag('Cancel at period end', subscription.cancel_at_period_end ? 'Yes' : 'No');
     tags.addTag('Payment collection paused', subscription.pause_collection ? 'Yes' : 'No');
