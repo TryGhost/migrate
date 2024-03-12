@@ -125,6 +125,14 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 });
             }
 
+            if (oldSubscription.pause_collection) {
+                tags.addTag('reason', 'Payment collection paused');
+
+                throw new ImportWarning({
+                    message: `Subscription ${oldSubscription.id} has payment collection paused`
+                });
+            }
+
             if ((oldSubscription.application as Stripe.Application) && (oldSubscription.application as Stripe.Application).name === 'Ghost') {
                 tags.addTag('reason', 'Created by Ghost');
 
