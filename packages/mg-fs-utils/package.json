@@ -29,7 +29,7 @@
     "@tryghost/image-transform": "1.2.11",
     "@tryghost/string": "0.2.11",
     "@tryghost/zip": "1.1.41",
-    "adm-zip": "0.5.10",
+    "adm-zip": "0.5.12",
     "csv-parse": "5.5.5",
     "fs-extra": "11.2.0",
     "lodash": "4.17.21",
