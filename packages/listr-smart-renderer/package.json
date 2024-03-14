@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "chalk": "5.3.0",
-    "cli-truncate": "3.1.0",
+    "cli-truncate": "4.0.0",
     "elegant-spinner": "3.0.0",
     "indent-string": "5.0.0",
     "listr2": "6.6.1",
