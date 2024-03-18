@@ -32,6 +32,10 @@ export class StripeAPI {
         return this.#apiKey === apiKey;
     }
 
+    getKey() {
+        return this.#apiKey;
+    }
+
     equals(api: StripeAPI) {
         return this.#apiKey === api.#apiKey || (this.id && api.id && this.id === api.id);
     }
