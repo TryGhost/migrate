@@ -10,6 +10,8 @@ import {Options} from '../Options.js';
 import {confirm} from '@inquirer/prompts';
 import {DelayPrompt} from '../DelayPrompt.js';
 import {Reporter, ReportingCategory} from '../importers/Reporter.js';
+import {isWarning} from '../helpers.js';
+import {ErrorGroup} from '../importers/ErrorGroup.js';
 
 export async function copy(options: Options) {
     const stats = new ImportStats();
@@ -37,6 +39,12 @@ export async function copy(options: Options) {
         Logger.shared.succeed(`Running ${chalk.green('copy')} command as ${chalk.green('DRY RUN')}. No Stripe data will be created or updated.`);
     } else {
         Logger.shared.succeed(`Running ${chalk.green('copy')} command...`);
+    }
+
+    if (options.subscription) {
+        Logger.shared.newline();
+        Logger.shared.warn(`Migration is limited to subscription with ID ${options.subscription}`);
+        Logger.shared.newline();
     }
 
     try {
@@ -99,12 +107,28 @@ export async function copy(options: Options) {
             delay
         });
 
-        const warnings = await subscriptionImporter.recreateAll();
+        let warnings: ErrorGroup|undefined = new ErrorGroup();
+
+        if (options.subscription) {
+            try {
+                await subscriptionImporter.recreateByID(options.subscription);
+            } catch (e: any) {
+                if (isWarning(e)) {
+                    // Only log warnings immediately in verbose mode
+                    Logger.v?.warn(e.toString());
+                } else {
+                    Logger.shared.error(e.toString());
+                }
+                warnings.add(e);
+            }
+        } else {
+            warnings = await subscriptionImporter.recreateAll();
+        }
 
         Logger.shared.succeed(`Finished`);
         Logger.shared.newline();
 
-        if (warnings) {
+        if (warnings && !warnings.isEmpty) {
             Logger.shared.warn(warnings.toString());
             Logger.shared.newline();
         }

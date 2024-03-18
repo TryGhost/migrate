@@ -22,6 +22,12 @@ export class Options {
             desc: 'The Stripe API secret key of the new account (optional)'
         },
         {
+            type: 'string',
+            flags: '--subscription',
+            defaultValue: false,
+            desc: 'Only migrate a specific subscription id (optional)'
+        },
+        {
             type: 'number',
             flags: '--delay',
             defaultValue: null,
@@ -56,6 +62,7 @@ export class Options {
     testClock?: string;
     forceRecreate: boolean;
     delay: number | null;
+    subscription: string | null;
 
     static shared: Options;
 
@@ -68,6 +75,7 @@ export class Options {
         this.testClock = argv['test-clock'] ?? undefined;
         this.forceRecreate = argv['force-recreate'] ?? false;
         this.delay = argv.delay ?? null;
+        this.subscription = argv.subscription ?? null;
     }
 
     static init(argv: any) {

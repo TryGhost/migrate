@@ -67,7 +67,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
 }) {
     const provider = {
         async getByID(oldId: string): Promise<Stripe.Subscription> {
-            return oldStripe.use(client => client.subscriptions.retrieve(oldId, {expand: ['data.default_payment_method', 'data.default_source']}));
+            return oldStripe.use(client => client.subscriptions.retrieve(oldId, {expand: ['default_payment_method', 'default_source']}));
         },
 
         getAll() {
