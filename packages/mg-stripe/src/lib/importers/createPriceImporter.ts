@@ -1,10 +1,10 @@
+/* eslint-disable camelcase */
 import Stripe from 'stripe';
-import Importer, {BaseImporter, createNoopImporter} from './Importer.js';
-import {StripeAPI} from '../StripeAPI.js';
-import {ImportStats} from './ImportStats.js';
-import {ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 import {ReuseLastCall} from '../ReuseLastCall.js';
-import {Logger} from '../Logger.js';
+import {StripeAPI} from '../StripeAPI.js';
+import {ifDryRunJustReturnFakeId} from '../helpers.js';
+import {ImportStats} from './ImportStats.js';
+import Importer, {BaseImporter, createNoopImporter} from './Importer.js';
 import {Reporter} from './Reporter.js';
 
 export function createPriceImporter({oldStripe, newStripe, stats, productImporter, reporter}: {
@@ -65,6 +65,18 @@ export function createPriceImporter({oldStripe, newStripe, stats, productImporte
             const newProductId = await productImporter.recreateByObjectOrId(oldPrice.product as Stripe.Product | string);
 
             return await ifDryRunJustReturnFakeId(async () => {
+                const currency_options: {
+                    [key: string]: Stripe.PriceCreateParams.CurrencyOptions;
+                } = {};
+
+                if (oldPrice.currency_options) {
+                    for (const currency of Object.keys(oldPrice.currency_options)) {
+                        currency_options[currency] = {
+                            unit_amount: oldPrice.currency_options[currency].unit_amount ?? undefined
+                        };
+                    }
+                }
+
                 const price = await newStripe.use(client => client.prices.create({
                     product: newProductId,
                     currency: oldPrice.currency,
@@ -76,7 +88,8 @@ export function createPriceImporter({oldStripe, newStripe, stats, productImporte
                     } : undefined,
                     metadata: {
                         ghost_migrate_id: oldPrice.id
-                    }
+                    },
+                    currency_options
                 }));
                 return price.id;
             });

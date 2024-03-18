@@ -108,6 +108,14 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             // Best to add these asap so we also have this data available in case of an error, which helps with debugging
             tagSubscription(oldSubscription, tags);
 
+            if (oldSubscription.metadata.ghost_migrate_id) {
+                tags.addTag('reason', `Already migrated`);
+
+                throw new ImportWarning({
+                    message: `Skipping recreating subscription ${oldSubscription.id} because it is an already migrated subscription`
+                });
+            }
+
             if (!['active', 'past_due', 'trialing'].includes(oldSubscription.status)) {
                 tags.addTag('reason', `Status is ${oldSubscription.status}`);
 
@@ -161,6 +169,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 }
 
                 const newPriceId = await priceImporter.recreate(item.price);
+
                 items.push({
                     price: newPriceId,
                     quantity: item.quantity,
@@ -289,6 +298,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                 coupon,
                 trial_end: isTrial ? oldSubscription.trial_end! : undefined, // Stripe returns trial end in the past, but doesn't allow it to be in the past when creating a subscription
                 cancel_at: oldSubscription.cancel_at ?? undefined,
+                currency: oldSubscription.currency,
                 metadata: {
                     ghost_migrate_created: oldSubscription.created,
                     ghost_migrate_id: oldSubscription.id,

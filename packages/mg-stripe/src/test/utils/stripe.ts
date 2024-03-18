@@ -36,11 +36,12 @@ export async function createPaymentMethod(stripe: Stripe, options: {card: string
     return paymentMethod;
 }
 
-export async function createSource(stripe: Stripe, options: {token: string, customerId: string}): Promise<{source: Stripe.Source, card?: Stripe.Card}> {
+export async function createSource(stripe: Stripe, options: {token: string, customerId: string, currency?: string}): Promise<{source: Stripe.Source, card?: Stripe.Card}> {
     const source = await stripe.sources.create({
         type: 'card',
         token: options.token,
-        usage: 'reusable'
+        usage: 'reusable',
+        currency: options.currency
     });
 
     await stripe.customers.createSource(options.customerId, {
@@ -52,7 +53,7 @@ export async function createSource(stripe: Stripe, options: {token: string, cust
     return {source, card: token.card};
 }
 
-export async function createValidCustomer<T extends boolean>(stripe: Stripe, options: {method?: 'source' | 'payment_method' | 'none', paymentMethod?: string, token?: string, name?: string, testClock?: T} = {}): Promise<{customer: Stripe.Customer, clock: T extends true ? string : undefined}> {
+export async function createValidCustomer<T extends boolean>(stripe: Stripe, options: {method?: 'source' | 'payment_method' | 'none', paymentMethod?: string, token?: string, name?: string, currency?: string, testClock?: T} = {}): Promise<{customer: Stripe.Customer, clock: T extends true ? string : undefined}> {
     let clockId: string | null = null;
     if (options.testClock) {
         const clock = await stripe.testHelpers.testClocks.create({
@@ -85,7 +86,8 @@ export async function createValidCustomer<T extends boolean>(stripe: Stripe, opt
     if (options.method === 'source') {
         const {source} = await createSource(stripe, {
             customerId: customer.id,
-            token: options.token ?? 'tok_visa'
+            token: options.token ?? 'tok_visa',
+            currency: options.currency
         });
 
         // Set as default source
@@ -230,7 +232,7 @@ export function buildSubscription(overrides: Partial<Omit<Stripe.Subscription, '
         cancellation_details: null,
         collection_method: 'charge_automatically',
         created: now - DAY * 45,
-        currency: '',
+        currency: 'usd',
         current_period_end: now + DAY * 15,
         current_period_start: now - DAY * 15,
         days_until_due: null,
