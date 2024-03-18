@@ -3,6 +3,7 @@ import {Options} from './Options.js';
 import {confirm as confirmCommand} from './commands/confirm.js';
 import {revert as revertCommand} from './commands/revert.js';
 import {copy as copyCommand} from './commands/copy.js';
+import {touch as touchCommand} from './commands/touch.js';
 
 export default {id: 'stripe',
     group: 'Sources:',
@@ -47,6 +48,18 @@ export default {id: 'stripe',
                 Logger.init({verboseLevel: options.verboseLevel, debug: options.debug});
 
                 await revertCommand(options);
+            }
+        });
+
+        sywac.command({
+            id: 'touch',
+            flags: 'touch',
+            desc: 'Make small metadata changes to force Ghost to recheck subscription statuses.',
+            run: async (argv: any) => {
+                const options = Options.init(argv);
+                Logger.init({verboseLevel: options.verboseLevel, debug: options.debug});
+
+                await touchCommand(options);
             }
         });
     }};

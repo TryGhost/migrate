@@ -82,23 +82,6 @@ describe('Recreating subscriptions', () => {
             delay
         });
 
-        sinon.stub(sharedOptions.oldStripe.debugClient.invoices, 'list').callsFake(() => {
-            return Promise.resolve({
-                data: currentInvoices,
-                object: 'list',
-                has_more: false,
-                url: ''
-            }) as Stripe.ApiListPromise<Stripe.Invoice>;
-        });
-
-        sinon.stub(sharedOptions.oldStripe.debugClient.subscriptions, 'update').callsFake(() => {
-            return Promise.resolve({} as Stripe.Response<Stripe.Subscription>);
-        });
-
-        sinon.stub(sharedOptions.oldStripe.debugClient.subscriptions, 'del').callsFake(() => {
-            return Promise.resolve({} as Stripe.Response<Stripe.Subscription>);
-        });
-
         // Real object importers from fake data -> actual stripe account
         const realSharedOptions = {
             dryRun: false,
@@ -195,7 +178,7 @@ describe('Recreating subscriptions', () => {
         assert.ok(upcomingInvoice.lines.data[0].period.end <= oldSubscription.current_period_end + 32 * 24 * 60 * 60);
     });
 
-    it.only('Multi currency prices subscription', async () => {
+    it('Multi-currency prices subscription', async () => {
         const {customer} = await createValidCustomer(stripe.debugClient, {testClock: false, currency: 'eur', method: 'source'});
         const fakeProduct = buildProduct({});
 
