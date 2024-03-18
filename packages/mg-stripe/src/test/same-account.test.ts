@@ -1,0 +1,197 @@
+import Stripe from 'stripe';
+import {StripeAPI} from '../lib/StripeAPI.js';
+import {ImportStats} from '../lib/importers/ImportStats.js';
+import {createCouponImporter} from '../lib/importers/createCouponImporter.js';
+import {createPriceImporter} from '../lib/importers/createPriceImporter.js';
+import {createProductImporter} from '../lib/importers/createProductImporter.js';
+import {createSubscriptionImporter} from '../lib/importers/createSubscriptionImporter.js';
+import {advanceClock, buildCoupon, buildDiscount, buildInvoice, buildPrice, buildProduct, buildSubscription, createDeclinedCustomer, createPaymentMethod, createSource, createValidCustomer, getStripeTestAPIKey} from './utils/stripe.js';
+import {Options} from '../lib/Options.js';
+import assert from 'assert/strict';
+import sinon from 'sinon';
+import {isWarning} from '../lib/helpers.js';
+import DryRunIdGenerator from '../lib/DryRunIdGenerator.js';
+import {Reporter, ReportingCategory} from '../lib/importers/Reporter.js';
+
+const stripeTestApiKey = getStripeTestAPIKey();
+
+describe('Recreating subscriptions', () => {
+    const stripe = new StripeAPI({apiKey: stripeTestApiKey});
+    let stats: ImportStats;
+    let reporter: Reporter;
+    let subscriptionImporter: ReturnType<typeof createSubscriptionImporter>;
+    let validCustomer: Stripe.Customer;
+    let declinedCustomer: Stripe.Customer;
+    let currentInvoices: Stripe.Invoice[];
+
+    // Helpers for creating initial data:
+    let realProductImporter: ReturnType<typeof createProductImporter>;
+    let realPriceImporter: ReturnType<typeof createPriceImporter>;
+    let realCouponImporter: ReturnType<typeof createCouponImporter>;
+
+    beforeAll(async () => {
+        await stripe.validate();
+        if (stripe.mode !== 'test') {
+            throw new Error('Tests must run on a Stripe Account in test mode');
+        }
+
+        const {customer: vc} = await createValidCustomer(stripe.debugClient, {testClock: false});
+        const {customer: dc} = await createDeclinedCustomer(stripe.debugClient, {testClock: false});
+
+        validCustomer = vc;
+        declinedCustomer = dc;
+    });
+
+    beforeEach(async () => {
+        stats = new ImportStats();
+        reporter = new Reporter(new ReportingCategory(''));
+
+        currentInvoices = [];
+        const sharedOptions = {
+            dryRun: false,
+            stats,
+            oldStripe: stripe,
+            newStripe: stripe,
+            reporter
+        };
+        const delay = 1;
+
+        Options.init({
+            'force-recreate': true,
+            'very-verbose': true,
+            delay
+        });
+
+        const productImporter = createProductImporter({
+            ...sharedOptions
+        });
+
+        const priceImporter = createPriceImporter({
+            ...sharedOptions,
+            productImporter
+        });
+
+        const couponImporter = createCouponImporter({
+            ...sharedOptions
+        });
+
+        subscriptionImporter = createSubscriptionImporter({
+            ...sharedOptions,
+            priceImporter,
+            couponImporter,
+            delay
+        });
+
+        sinon.stub(sharedOptions.oldStripe.debugClient.invoices, 'list').callsFake(() => {
+            return Promise.resolve({
+                data: currentInvoices,
+                object: 'list',
+                has_more: false,
+                url: ''
+            }) as Stripe.ApiListPromise<Stripe.Invoice>;
+        });
+
+        sinon.stub(sharedOptions.oldStripe.debugClient.subscriptions, 'update').callsFake(() => {
+            return Promise.resolve({} as Stripe.Response<Stripe.Subscription>);
+        });
+
+        sinon.stub(sharedOptions.oldStripe.debugClient.subscriptions, 'del').callsFake(() => {
+            return Promise.resolve({} as Stripe.Response<Stripe.Subscription>);
+        });
+
+        // Real object importers from fake data -> actual stripe account
+        const realSharedOptions = {
+            dryRun: false,
+            stats,
+            oldStripe: new StripeAPI({apiKey: ''}), // old is invalid to prevent usage
+            newStripe: stripe,
+            reporter
+        };
+
+        realProductImporter = createProductImporter({
+            ...realSharedOptions
+        });
+
+        realPriceImporter = createPriceImporter({
+            ...realSharedOptions,
+            productImporter: realProductImporter
+        });
+
+        realCouponImporter = createCouponImporter({
+            ...realSharedOptions
+        });
+    });
+
+    it('Monthly subscription', async () => {
+        const {customer} = await createValidCustomer(stripe.debugClient, {testClock: false});
+        const fakeProduct = buildProduct({});
+
+        const now = Math.floor(new Date().getTime() / 1000);
+        const currentPeriodEnd = now + 15 * 24 * 60 * 60;
+        const currentPeriodStart = currentPeriodEnd - 31 * 24 * 60 * 60;
+
+        const fakePrice = buildPrice({
+            product: fakeProduct,
+            recurring: {
+                interval: 'month'
+            }
+        });
+
+        // Create the actual price in our stripe account
+        const priceId = await realPriceImporter.recreate(fakePrice);
+        const price = await stripe.debugClient.prices.retrieve(priceId);
+
+        const oldSubscription = buildSubscription({
+            customer: customer.id,
+            items: [
+                {
+                    price: price
+                }
+            ],
+            current_period_start: currentPeriodStart,
+            current_period_end: currentPeriodEnd
+        });
+
+        const newSubscriptionId = await subscriptionImporter.recreateAndConfirm(oldSubscription);
+        const newSubscription = await stripe.use(client => client.subscriptions.retrieve(newSubscriptionId));
+
+        // Do some basic assertions
+        assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
+        assert.equal(newSubscription.status, 'active');
+        assert.equal(newSubscription.start_date, oldSubscription.start_date);
+        assert.equal(newSubscription.current_period_end, oldSubscription.current_period_end);
+        assert.equal(newSubscription.trial_end, null);
+        assert.equal(newSubscription.cancel_at_period_end, oldSubscription.cancel_at_period_end);
+        assert.equal(newSubscription.customer, customer.id);
+        assert.equal(newSubscription.description, oldSubscription.description);
+
+        // Same payment source used
+        assert.equal(newSubscription.default_payment_method, oldSubscription.default_payment_method);
+        assert.equal(newSubscription.default_source, oldSubscription.default_source);
+
+        // Same customer
+        assert.equal(newSubscription.customer, oldSubscription.customer);
+
+        assert.equal(newSubscription.items.data.length, 1);
+
+        // Same price id (no newly created one)
+        assert.equal(newSubscription.items.data[0].price.id, priceId);
+        assert.equal(newSubscription.items.data[0].quantity, 1);
+
+        // Did not charge yet
+        const newInvoices = await stripe.use(client => client.invoices.list({
+            subscription: newSubscription.id
+        }));
+        assert.equal(newInvoices.data.length, 0);
+
+        // Check upcoming invoice
+        const upcomingInvoice = await stripe.use(client => client.invoices.retrieveUpcoming({
+            customer: customer.id,
+            subscription: newSubscription.id
+        }));
+        assert.equal(upcomingInvoice.amount_due, 100);
+        assert.equal(upcomingInvoice.lines.data[0].period.start, oldSubscription.current_period_end);
+        assert.ok(upcomingInvoice.lines.data[0].period.end >= oldSubscription.current_period_end + 27 * 24 * 60 * 60);
+        assert.ok(upcomingInvoice.lines.data[0].period.end <= oldSubscription.current_period_end + 32 * 24 * 60 * 60);
+    });
+});

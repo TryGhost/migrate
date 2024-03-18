@@ -15,7 +15,7 @@ export function createPriceImporter({oldStripe, newStripe, stats, productImporte
     productImporter: BaseImporter<Stripe.Product>,
     reporter: Reporter
 }) {
-    if (oldStripe.id === newStripe.id) {
+    if (oldStripe.equals(newStripe)) {
         return createNoopImporter();
     }
 

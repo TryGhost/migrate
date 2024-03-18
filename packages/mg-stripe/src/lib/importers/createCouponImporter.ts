@@ -13,7 +13,7 @@ export function createCouponImporter({oldStripe, newStripe, stats, reporter}: {
     stats: ImportStats,
     reporter: Reporter
 }) {
-    if (oldStripe.id === newStripe.id) {
+    if (oldStripe.equals(newStripe)) {
         return createNoopImporter();
     }
 

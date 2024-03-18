@@ -365,7 +365,7 @@ describe('Recreating subscriptions', () => {
         await advanceClock({
             clock,
             stripe: stripe.debugClient,
-            time: trialEnd + 60 * 60
+            time: trialEnd + 1 * 24 * 60 * 60
         });
 
         // Check status
@@ -611,12 +611,12 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.items.data[0].price.metadata.ghost_migrate_id, oldPrice.id);
         assert.equal(newSubscription.items.data[0].quantity, 1);
 
-        // Wait 1 hour for the payment retry
+        // Wait for the payment retry
         // Advance time until current period end
         await advanceClock({
             clock,
             stripe: stripe.debugClient,
-            time: now + 3600 + 60
+            time: now + 1 * 24 * 60 * 60
         });
         const newSubscriptionAfterRetry = await stripe.use(client => client.subscriptions.retrieve(newSubscriptionId));
         assert.equal(newSubscriptionAfterRetry.status, 'past_due');
@@ -966,11 +966,11 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'active');
 
-        // Advance time until the cancelAt date + 2 hours
+        // Advance time until the cancelAt date
         await advanceClock({
             clock,
             stripe: stripe.debugClient,
-            time: cancelAt + 60 * 60 * 2
+            time: cancelAt + 1 * 24 * 60 * 60
         });
 
         const newSubscriptionAfterCancel = await stripe.use(client => client.subscriptions.retrieve(newSubscriptionId));
@@ -1068,7 +1068,7 @@ describe('Recreating subscriptions', () => {
             await advanceClock({
                 clock,
                 stripe: stripe.debugClient,
-                time: currentPeriodEnd + 60 * 60
+                time: currentPeriodEnd + 1 * 24 * 60 * 60
             });
 
             // Check one draft invoice has been created
@@ -1085,7 +1085,7 @@ describe('Recreating subscriptions', () => {
             await advanceClock({
                 clock,
                 stripe: stripe.debugClient,
-                time: currentPeriodEnd + 60 * 60 * 2
+                time: currentPeriodEnd + 2 * 24 * 60 * 60
             });
 
             // Check no difference
@@ -1179,7 +1179,7 @@ describe('Recreating subscriptions', () => {
             await advanceClock({
                 clock,
                 stripe: stripe.debugClient,
-                time: currentPeriodEnd + 60 * 60
+                time: currentPeriodEnd + 1 * 24 * 60 * 60
             });
 
             // Check one draft invoice has been created
@@ -1196,7 +1196,7 @@ describe('Recreating subscriptions', () => {
             await advanceClock({
                 clock,
                 stripe: stripe.debugClient,
-                time: currentPeriodEnd + 60 * 60 * 2
+                time: currentPeriodEnd + 2 * 24 * 60 * 60
             });
 
             // Check no difference
@@ -1286,7 +1286,7 @@ describe('Recreating subscriptions', () => {
             await advanceClock({
                 clock,
                 stripe: stripe.debugClient,
-                time: currentPeriodEnd + 60 * 60
+                time: currentPeriodEnd + 1 * 24 * 60 * 60
             });
 
             // Check one draft invoice has been created
@@ -1378,7 +1378,7 @@ describe('Recreating subscriptions', () => {
             await advanceClock({
                 clock,
                 stripe: stripe.debugClient,
-                time: currentPeriodEnd + 60 * 60
+                time: currentPeriodEnd + 1 * 24 * 60 * 60
             });
 
             // Check one draft invoice has been created

@@ -36,7 +36,7 @@ export async function createPaymentMethod(stripe: Stripe, options: {card: string
     return paymentMethod;
 }
 
-export async function createSource(stripe: Stripe, options: {token: string, customerId: string}): Promise<{source: Stripe.Source, card?: Stripe.Source.Card}> {
+export async function createSource(stripe: Stripe, options: {token: string, customerId: string}): Promise<{source: Stripe.Source, card?: Stripe.Card}> {
     const source = await stripe.sources.create({
         type: 'card',
         token: options.token,
@@ -47,7 +47,9 @@ export async function createSource(stripe: Stripe, options: {token: string, cust
         source: source.id
     });
 
-    return {source, card: source.card};
+    // Important here is that we need to return token.card, because that contains the card source object. Source.card is not the right type
+    const token = await stripe.tokens.retrieve(options.token);
+    return {source, card: token.card};
 }
 
 export async function createValidCustomer<T extends boolean>(stripe: Stripe, options: {method?: 'source' | 'payment_method' | 'none', paymentMethod?: string, token?: string, name?: string, testClock?: T} = {}): Promise<{customer: Stripe.Customer, clock: T extends true ? string : undefined}> {
@@ -209,7 +211,8 @@ export function buildSubscription(overrides: Partial<Omit<Stripe.Subscription, '
             plan: {} as Stripe.Plan,
             subscription: id,
             tax_rates: [],
-            price: item.price
+            price: item.price,
+            quantity: 1
         };
     });
     const now = Math.floor(new Date().getTime() / 1000);

@@ -198,65 +198,71 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
             let foundSourceId: string | undefined;
             let oldPaymentSource = oldSubscription.default_source as Stripe.CustomerSource | null;
 
-            const cardSource = oldPaymentSource ? getSourceCard(oldPaymentSource) : undefined;
-
-            if (cardSource && !oldPaymentMethod && oldPaymentSource) {
-                // Get sources
-                Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} payment sources`);
-                const sources = await newStripe.use(client => client.customers.listSources(getObjectId(oldSubscription.customer)));
-
-                for (const source of sources.data) {
-                    const card = getSourceCard(source);
-                    if (!card) {
-                        continue;
-                    }
-
-                    // Check if this is the same source
-                    // The ID and fingerprint will be different
-                    if (card.last4 === cardSource.last4 && card.exp_month === cardSource.exp_month && card.exp_year === cardSource.exp_year && card.brand === cardSource.brand) {
-                        foundSourceId = source.id;
-                        break;
-                    }
-                }
-
-                if (!foundSourceId) {
-                    tags.addTag('reason', 'Payment source not found');
-
-                    throw new ImportError({
-                        message: `Could not find new payment source for subscription ${oldSubscription.id} and original payment source ${oldPaymentSource.id}`
-                    });
-                }
-            } else if (!oldPaymentMethod) {
-                // Use customer's default payment method
-                if (!customer.default_source) {
-                    if (!customer.invoice_settings.default_payment_method) {
-                        tags.addTag('reason', 'No default payment method');
-                        throw new Error(`Customer ${getObjectId(oldSubscription.customer)} does not have a default payment method and the subscription ${oldSubscription.id} does not have a default payment method`);
-                    }
-                    Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} default payment method`);
-                    foundPaymentMethodId = getObjectId(customer.invoice_settings.default_payment_method);
-                } else {
-                    Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} default payment method source`);
-                    foundSourceId = getObjectId(customer.default_source);
-                }
+            if (oldStripe.equals(newStripe)) {
+                // We can reuse the same payment methods
+                foundPaymentMethodId = oldPaymentMethod ? getObjectId(oldPaymentMethod) : undefined;
+                foundSourceId = oldPaymentSource ? getObjectId(oldPaymentSource) : undefined;
             } else {
-                Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} payment methods`);
-                const paymentMethods = await newStripe.use(client => client.customers.listPaymentMethods(getObjectId(oldSubscription.customer)));
-                for (const paymentMethod of paymentMethods.data) {
-                    // Check if this is the same payment method
-                    // The ID and fingerprint will be different
-                    if (paymentMethod.type === oldPaymentMethod.type && paymentMethod.card?.last4 === oldPaymentMethod.card?.last4 && paymentMethod.card?.exp_month === oldPaymentMethod.card?.exp_month && paymentMethod.card?.exp_year === oldPaymentMethod.card?.exp_year && paymentMethod.card?.brand === oldPaymentMethod.card?.brand) {
-                        foundPaymentMethodId = paymentMethod.id;
-                        break;
+                const cardSource = oldPaymentSource ? getSourceCard(oldPaymentSource) : undefined;
+
+                if (cardSource && !oldPaymentMethod && oldPaymentSource) {
+                    // Get sources
+                    Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} payment sources`);
+                    const sources = await newStripe.use(client => client.customers.listSources(getObjectId(oldSubscription.customer)));
+
+                    for (const source of sources.data) {
+                        const card = getSourceCard(source);
+                        if (!card) {
+                            continue;
+                        }
+
+                        // Check if this is the same source
+                        // The ID and fingerprint will be different
+                        if (card.last4 === cardSource.last4 && card.exp_month === cardSource.exp_month && card.exp_year === cardSource.exp_year && card.brand === cardSource.brand) {
+                            foundSourceId = source.id;
+                            break;
+                        }
                     }
-                }
 
-                if (!foundPaymentMethodId) {
-                    tags.addTag('reason', 'No payment method set');
+                    if (!foundSourceId) {
+                        tags.addTag('reason', 'Payment source not found');
 
-                    throw new ImportError({
-                        message: `Could not find new payment method for subscription ${oldSubscription.id} and original payment method ${oldPaymentMethod.id}`
-                    });
+                        throw new ImportError({
+                            message: `Could not find new payment source for subscription ${oldSubscription.id} and original payment source ${oldPaymentSource.id}`
+                        });
+                    }
+                } else if (!oldPaymentMethod) {
+                    // Use customer's default payment method
+                    if (!customer.default_source) {
+                        if (!customer.invoice_settings.default_payment_method) {
+                            tags.addTag('reason', 'No default payment method');
+                            throw new Error(`Customer ${getObjectId(oldSubscription.customer)} does not have a default payment method and the subscription ${oldSubscription.id} does not have a default payment method`);
+                        }
+                        Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} default payment method`);
+                        foundPaymentMethodId = getObjectId(customer.invoice_settings.default_payment_method);
+                    } else {
+                        Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} default payment method source`);
+                        foundSourceId = getObjectId(customer.default_source);
+                    }
+                } else {
+                    Logger.vv?.info(`Getting customer ${getObjectId(oldSubscription.customer)} payment methods`);
+                    const paymentMethods = await newStripe.use(client => client.customers.listPaymentMethods(getObjectId(oldSubscription.customer)));
+                    for (const paymentMethod of paymentMethods.data) {
+                        // Check if this is the same payment method
+                        // The ID and fingerprint will be different
+                        if (paymentMethod.type === oldPaymentMethod.type && paymentMethod.card?.last4 === oldPaymentMethod.card?.last4 && paymentMethod.card?.exp_month === oldPaymentMethod.card?.exp_month && paymentMethod.card?.exp_year === oldPaymentMethod.card?.exp_year && paymentMethod.card?.brand === oldPaymentMethod.card?.brand) {
+                            foundPaymentMethodId = paymentMethod.id;
+                            break;
+                        }
+                    }
+
+                    if (!foundPaymentMethodId) {
+                        tags.addTag('reason', 'No payment method set');
+
+                        throw new ImportError({
+                            message: `Could not find new payment method for subscription ${oldSubscription.id} and original payment method ${oldPaymentMethod.id}`
+                        });
+                    }
                 }
             }
 

@@ -14,7 +14,7 @@
     "prepare": "yarn build",
     "lint": "eslint src/ --ext .ts --cache",
     "posttest": "yarn lint",
-    "test:e2e": "rm -rf build && yarn build --force && NODE_OPTIONS=\"--experimental-vm-modules --enable-source-maps\"  jest build/test"
+    "test:e2e": "rm -rf build && yarn build --force && NODE_OPTIONS=\"--experimental-vm-modules --enable-source-maps\" jest"
   },
   "files": [
     "build"
