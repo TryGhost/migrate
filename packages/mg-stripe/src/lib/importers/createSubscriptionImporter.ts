@@ -3,7 +3,6 @@ import {Logger} from '../Logger.js';
 import {Options} from '../Options.js';
 import {StripeAPI} from '../StripeAPI.js';
 import {getObjectId, ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
-import {ImportStats} from './ImportStats.js';
 import {ImportWarning} from './ImportWarning.js';
 import Importer, {BaseImporter} from './Importer.js';
 import {ImportError} from './ImportError.js';
@@ -15,7 +14,6 @@ function tagSubscription(subscription: Stripe.Subscription, tags: ReportTags) {
     tags.addTag('Coupon', subscription.discount?.coupon ? (subscription.discount?.coupon?.name ?? '(Coupon without name)') : 'None');
     tags.addTag('Status', subscription.status);
     tags.addTag('Cancel at period end', subscription.cancel_at_period_end ? 'Yes' : 'No');
-    tags.addTag('Payment collection paused', subscription.pause_collection ? 'Yes' : 'No');
 }
 
 /**
@@ -31,17 +29,17 @@ function getSourceCard(source: Stripe.CustomerSource): Stripe.Card | Stripe.Sour
     return;
 }
 
-async function resumeSubscription(stripe: StripeAPI, subscription: Stripe.Subscription, stats?: ImportStats) {
+async function resumeSubscription(stripe: StripeAPI, subscription: Stripe.Subscription) {
     // Resume subscription
     stripe.use(client => client.subscriptions.update(subscription.id, {
         pause_collection: ''
     }));
 
     // Resume draft invoices created
-    await finalizeDraftInvoices(stripe, subscription, stats);
+    await finalizeDraftInvoices(stripe, subscription);
 }
 
-async function finalizeDraftInvoices(stripe: StripeAPI, subscription: Stripe.Subscription, stats?: ImportStats) {
+async function finalizeDraftInvoices(stripe: StripeAPI, subscription: Stripe.Subscription) {
     // Resume draft invoices created
     const invoices = await stripe.use(client => client.invoices.list({
         subscription: subscription.id,
@@ -51,15 +49,13 @@ async function finalizeDraftInvoices(stripe: StripeAPI, subscription: Stripe.Sub
         await stripe.use(client => client.invoices.finalizeInvoice(invoice.id, {
             auto_advance: true
         }));
-        stats?.trackConfirmed('invoice');
     }
 }
 
-export function createSubscriptionImporter({oldStripe, newStripe, stats, priceImporter, couponImporter, delay, reporter}: {
+export function createSubscriptionImporter({oldStripe, newStripe, priceImporter, couponImporter, delay, reporter}: {
     dryRun: boolean,
     oldStripe: StripeAPI,
     newStripe: StripeAPI,
-    stats: ImportStats,
     reporter: Reporter,
     priceImporter: BaseImporter<Stripe.Price>,
     couponImporter: BaseImporter<Stripe.Coupon>,
@@ -106,15 +102,17 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
         async recreate(oldSubscription: Stripe.Subscription, tags: ReportTags) {
             // Some stats:
             // Best to add these asap so we also have this data available in case of an error, which helps with debugging
-            tagSubscription(oldSubscription, tags);
 
             if (oldSubscription.metadata.ghost_migrate_id) {
-                tags.addTag('reason', `Already migrated`);
+                tags.addTag('reason', `This subscription is already a copy of a different subscription`);
 
                 throw new ImportWarning({
-                    message: `Skipping recreating subscription ${oldSubscription.id} because it is an already migrated subscription`
+                    message: `Skipping copying subscription ${oldSubscription.id} because it is the copy of ${oldSubscription.metadata.ghost_migrate_id}}`
                 });
             }
+
+            // Ony tag here
+            tagSubscription(oldSubscription, tags);
 
             if (!['active', 'past_due', 'trialing'].includes(oldSubscription.status)) {
                 tags.addTag('reason', `Status is ${oldSubscription.status}`);
@@ -329,7 +327,21 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
 
                 // Create the subscription
                 Logger.vv?.info(`Creating subscription`);
-                const subscription = await newStripe.use(client => client.subscriptions.create(data));
+
+                let subscription: Stripe.Subscription;
+
+                try {
+                    subscription = await newStripe.use(client => client.subscriptions.create(data));
+                } catch (e) {
+                    // Revert pause
+                    try {
+                        await resumeSubscription(oldStripe, oldSubscription);
+                    } catch (ee: any) {
+                        Logger.shared.error('Failed to unpause subscription ' + oldSubscription.id + ' after failing to recreate the subscription: manual action required');
+                        Logger.shared.error(ee.toString());
+                    }
+                    throw e;
+                }
 
                 for (const oldInvoice of invoices.data) {
                     Logger.vv?.info(`Duplicating invoice ${oldInvoice.id} from old subscription ${oldSubscription.id} to new subscription ${subscription.id}`);
@@ -363,8 +375,6 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                         };
                         await newStripe.use(client => client.invoiceItems.create(d));
                     }
-
-                    stats.trackImported('invoice');
                 }
 
                 return subscription.id;
@@ -413,7 +423,6 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                         Logger.vv?.info(`Voiding invoice ${invoice.id} from new subscription ${newSubscription.id}`);
                         await newStripe.use(client => client.invoices.voidInvoice(invoice.id, {}));
                     }
-                    stats.trackReverted('invoice');
                 }
 
                 await newStripe.use(client => client.subscriptions.del(getObjectId(newSubscription)));
@@ -443,8 +452,6 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
                     await newStripe.use(client => client.subscriptions.del(getObjectId(newSubscription)));
                 });
 
-                stats.trackReverted('subscription');
-
                 tags.addTag('reason', `Old subscription was canceled during the migration`);
                 tags.addTag('action', `The new subscription has also been deleted`);
 
@@ -459,14 +466,13 @@ export function createSubscriptionImporter({oldStripe, newStripe, stats, priceIm
 
                 // Unpause new subscription
                 Logger.vv?.info(`Finalizing ${newSubscription.id}`);
-                await finalizeDraftInvoices(newStripe, newSubscription, stats);
+                await finalizeDraftInvoices(newStripe, newSubscription);
             });
         }
     };
 
     return new Importer({
         objectName: 'Subscription',
-        stats,
         provider,
         reporter
     });

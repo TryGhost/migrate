@@ -1,16 +1,14 @@
 import Stripe from 'stripe';
 import Importer, {createNoopImporter} from './Importer.js';
 import {StripeAPI} from '../StripeAPI.js';
-import {ImportStats} from './ImportStats.js';
 import {getObjectId, ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 import {ReuseLastCall} from '../ReuseLastCall.js';
 import {Reporter} from './Reporter.js';
 
-export function createProductImporter({oldStripe, newStripe, stats, reporter}: {
+export function createProductImporter({oldStripe, newStripe, reporter}: {
     dryRun: boolean,
     oldStripe: StripeAPI,
     newStripe: StripeAPI,
-    stats: ImportStats,
     reporter: Reporter
 }) {
     if (oldStripe.equals(newStripe)) {
@@ -84,7 +82,6 @@ export function createProductImporter({oldStripe, newStripe, stats, reporter}: {
                         await newStripe.use(client => client.prices.update(price.id, {
                             active: false
                         }));
-                        stats.trackReverted('price');
                     }
                 }
                 if (prices.data.length === 0) {
@@ -100,7 +97,6 @@ export function createProductImporter({oldStripe, newStripe, stats, reporter}: {
 
     return new Importer({
         objectName: 'Product',
-        stats,
         provider,
         reporter
     });

@@ -1,16 +1,14 @@
 import Stripe from 'stripe';
 import Importer, {createNoopImporter} from './Importer.js';
 import {StripeAPI} from '../StripeAPI.js';
-import {ImportStats} from './ImportStats.js';
 import {Logger} from '../Logger.js';
 import {ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 import {Reporter} from './Reporter.js';
 
-export function createCouponImporter({oldStripe, newStripe, stats, reporter}: {
+export function createCouponImporter({oldStripe, newStripe, reporter}: {
     dryRun: boolean,
     oldStripe: StripeAPI,
     newStripe: StripeAPI,
-    stats: ImportStats,
     reporter: Reporter
 }) {
     if (oldStripe.equals(newStripe)) {
@@ -66,7 +64,6 @@ export function createCouponImporter({oldStripe, newStripe, stats, reporter}: {
 
     return new Importer({
         objectName: 'Coupon',
-        stats,
         provider,
         reporter
     });

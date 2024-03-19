@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import {Logger} from '../Logger.js';
 import {StripeConnector} from '../StripeConnector.js';
-import {ImportStats} from '../importers/ImportStats.js';
 import {createCouponImporter} from '../importers/createCouponImporter.js';
 import {createPriceImporter} from '../importers/createPriceImporter.js';
 import {createProductImporter} from '../importers/createProductImporter.js';
@@ -11,8 +10,7 @@ import {confirm as _confirm} from '@inquirer/prompts';
 import {Reporter, ReportingCategory} from '../importers/Reporter.js';
 
 export async function confirm(options: Options) {
-    const stats = new ImportStats();
-    const reporter = new Reporter(new ReportingCategory(''));
+    const reporter = new Reporter(new ReportingCategory('', {skipTitle: true}));
 
     Logger.shared.info(`The ${chalk.cyan('confirm')} command will finalise the copy of Stripe subscriptions and invoices in the new Stripe account.`);
     Logger.shared.info('------------------------------------------------------------------------------');
@@ -43,17 +41,15 @@ export async function confirm(options: Options) {
             Logger.shared.fail('Confirmation cancelled');
             process.exit(1);
         }
-        stats.markStart();
 
         // Step 2: Import data
         Logger.shared.startSpinner('Confirming subscriptions...');
-        stats.addListener(() => {
-            Logger.shared.processSpinner(stats.toString());
+        reporter.addListener(() => {
+            Logger.shared.processSpinner('Confirming subscriptions...\n\n' + reporter.toString());
         });
 
         const sharedOptions = {
             dryRun: options.dryRun,
-            stats,
             oldStripe: fromAccount,
             newStripe: toAccount,
             reporter
@@ -95,7 +91,7 @@ export async function confirm(options: Options) {
         Logger.shared.fail(e);
 
         Logger.shared.newline();
-        stats.print();
+        reporter.print({});
         process.exit(1);
     }
 }

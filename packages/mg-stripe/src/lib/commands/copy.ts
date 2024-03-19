@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import {Logger} from '../Logger.js';
 import {StripeConnector} from '../StripeConnector.js';
-import {ImportStats} from '../importers/ImportStats.js';
 import {createCouponImporter} from '../importers/createCouponImporter.js';
 import {createPriceImporter} from '../importers/createPriceImporter.js';
 import {createProductImporter} from '../importers/createProductImporter.js';
@@ -14,8 +13,7 @@ import {isWarning} from '../helpers.js';
 import {ErrorGroup} from '../importers/ErrorGroup.js';
 
 export async function copy(options: Options) {
-    const stats = new ImportStats();
-    const reporter = new Reporter(new ReportingCategory(''));
+    const reporter = new Reporter(new ReportingCategory('', {skipTitle: true}));
 
     Logger.shared.info(`The ${chalk.cyan('copy')} command will:`);
     Logger.shared.info(`- Migrate Stripe products, prices, coupons, invoices and subscriptions from an old to a new Stripe account.`);
@@ -71,17 +69,15 @@ export async function copy(options: Options) {
             process.exit(1);
         }
 
-        stats.markStart();
-
         // Step 2: Import data
         Logger.shared.startSpinner('Recreating subscriptions...');
-        stats.addListener(() => {
-            Logger.shared.processSpinner(stats.toString());
+
+        reporter.addListener(() => {
+            Logger.shared.processSpinner('Recreating subscriptions...\n\n' + reporter.toString());
         });
 
         const sharedOptions = {
             dryRun: options.dryRun,
-            stats,
             oldStripe: fromAccount,
             newStripe: toAccount,
             reporter
@@ -107,31 +103,23 @@ export async function copy(options: Options) {
             delay
         });
 
-        let warnings: ErrorGroup|undefined = new ErrorGroup();
-
         if (options.subscription) {
             try {
                 await subscriptionImporter.recreateByID(options.subscription);
             } catch (e: any) {
                 if (isWarning(e)) {
                     // Only log warnings immediately in verbose mode
-                    Logger.v?.warn(e.toString());
+                    Logger.shared.warn(e.toString());
                 } else {
                     Logger.shared.error(e.toString());
                 }
-                warnings.add(e);
             }
         } else {
-            warnings = await subscriptionImporter.recreateAll();
+            await subscriptionImporter.recreateAll();
         }
 
         Logger.shared.succeed(`Finished`);
         Logger.shared.newline();
-
-        if (warnings && !warnings.isEmpty) {
-            Logger.shared.warn(warnings.toString());
-            Logger.shared.newline();
-        }
 
         reporter.print({});
         Logger.shared.newline();
@@ -144,7 +132,7 @@ export async function copy(options: Options) {
         Logger.shared.fail(e);
 
         Logger.shared.newline();
-        stats.print();
+        reporter.print({});
 
         Logger.shared.newline();
         Logger.shared.info(`You can either fix the issue and retry the ${chalk.cyan('copy')} command (will continue where it left off), or run ${chalk.cyan('revert')} command to revert the migration`);

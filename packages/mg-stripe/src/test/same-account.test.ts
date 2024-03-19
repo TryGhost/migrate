@@ -1,23 +1,18 @@
+import assert from 'assert/strict';
 import Stripe from 'stripe';
+import {Options} from '../lib/Options.js';
 import {StripeAPI} from '../lib/StripeAPI.js';
-import {ImportStats} from '../lib/importers/ImportStats.js';
+import {Reporter, ReportingCategory} from '../lib/importers/Reporter.js';
 import {createCouponImporter} from '../lib/importers/createCouponImporter.js';
 import {createPriceImporter} from '../lib/importers/createPriceImporter.js';
 import {createProductImporter} from '../lib/importers/createProductImporter.js';
 import {createSubscriptionImporter} from '../lib/importers/createSubscriptionImporter.js';
-import {advanceClock, buildCoupon, buildDiscount, buildInvoice, buildPrice, buildProduct, buildSubscription, createDeclinedCustomer, createPaymentMethod, createSource, createValidCustomer, getStripeTestAPIKey} from './utils/stripe.js';
-import {Options} from '../lib/Options.js';
-import assert from 'assert/strict';
-import sinon from 'sinon';
-import {isWarning} from '../lib/helpers.js';
-import DryRunIdGenerator from '../lib/DryRunIdGenerator.js';
-import {Reporter, ReportingCategory} from '../lib/importers/Reporter.js';
+import {buildPrice, buildProduct, buildSubscription, createDeclinedCustomer, createValidCustomer, getStripeTestAPIKey} from './utils/stripe.js';
 
 const stripeTestApiKey = getStripeTestAPIKey();
 
 describe('Recreating subscriptions', () => {
     const stripe = new StripeAPI({apiKey: stripeTestApiKey});
-    let stats: ImportStats;
     let reporter: Reporter;
     let subscriptionImporter: ReturnType<typeof createSubscriptionImporter>;
     let validCustomer: Stripe.Customer;
@@ -43,13 +38,11 @@ describe('Recreating subscriptions', () => {
     });
 
     beforeEach(async () => {
-        stats = new ImportStats();
         reporter = new Reporter(new ReportingCategory(''));
 
         currentInvoices = [];
         const sharedOptions = {
             dryRun: false,
-            stats,
             oldStripe: stripe,
             newStripe: stripe,
             reporter
@@ -85,7 +78,6 @@ describe('Recreating subscriptions', () => {
         // Real object importers from fake data -> actual stripe account
         const realSharedOptions = {
             dryRun: false,
-            stats,
             oldStripe: new StripeAPI({apiKey: ''}), // old is invalid to prevent usage
             newStripe: stripe,
             reporter

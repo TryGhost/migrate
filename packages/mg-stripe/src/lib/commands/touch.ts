@@ -3,12 +3,10 @@ import chalk from 'chalk';
 import {Logger} from '../Logger.js';
 import {Options} from '../Options.js';
 import {StripeConnector} from '../StripeConnector.js';
-import {ImportStats} from '../importers/ImportStats.js';
 import {Reporter, ReportingCategory} from '../importers/Reporter.js';
 
 export async function touch(options: Options) {
-    const stats = new ImportStats();
-    const reporter = new Reporter(new ReportingCategory(''));
+    const reporter = new Reporter(new ReportingCategory('', {skipTitle: true}));
 
     Logger.shared.info(`The ${chalk.cyan('touch')} command will make small metadata changes to subscriptions in Stripe to force Ghost to recheck subscription statuses.`);
     Logger.shared.newline();
@@ -38,12 +36,11 @@ export async function touch(options: Options) {
             Logger.shared.fail('Touch cancelled');
             process.exit(1);
         }
-        stats.markStart();
 
         // Step 2: Import data
         Logger.shared.startSpinner('Updating subscriptions metadata...');
-        stats.addListener(() => {
-            Logger.shared.processSpinner(stats.toString());
+        reporter.addListener(() => {
+            Logger.shared.processSpinner('Updating subscriptions metadata...\n\n' + reporter.toString());
         });
 
         let lastSubscriptionId: string|null = null;
@@ -105,7 +102,7 @@ export async function touch(options: Options) {
         Logger.shared.fail(e);
 
         Logger.shared.newline();
-        stats.print();
+        reporter.print({});
         process.exit(1);
     }
 }

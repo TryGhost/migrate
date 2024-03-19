@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import {Logger} from '../Logger.js';
 import {StripeConnector} from '../StripeConnector.js';
-import {ImportStats} from '../importers/ImportStats.js';
 import {createCouponImporter} from '../importers/createCouponImporter.js';
 import {createPriceImporter} from '../importers/createPriceImporter.js';
 import {createProductImporter} from '../importers/createProductImporter.js';
@@ -11,8 +10,7 @@ import {confirm as _confirm} from '@inquirer/prompts';
 import {Reporter, ReportingCategory} from '../importers/Reporter.js';
 
 export async function revert(options: Options) {
-    const stats = new ImportStats();
-    const reporter = new Reporter(new ReportingCategory(''));
+    const reporter = new Reporter(new ReportingCategory('', {skipTitle: true}));
 
     Logger.shared.info(`The ${chalk.cyan('revert')} command will delete the copy of Stripe products, prices, coupons, subscriptions and invoices from the new Stripe account. It will also resume the subscriptions in the old Stripe account.`);
     Logger.shared.info('------------------------------------------------------------------------------');
@@ -44,17 +42,14 @@ export async function revert(options: Options) {
             process.exit(1);
         }
 
-        stats.markStart();
-
         // Step 2: Import data
         Logger.shared.startSpinner('Reverting subscriptions...');
-        stats.addListener(() => {
-            Logger.shared.processSpinner(stats.toString());
+        reporter.addListener(() => {
+            Logger.shared.processSpinner('Reverting subscriptions...\n\n' + reporter.toString());
         });
 
         const sharedOptions = {
             dryRun: options.dryRun,
-            stats,
             oldStripe: fromAccount,
             newStripe: toAccount,
             reporter
@@ -96,7 +91,7 @@ export async function revert(options: Options) {
         Logger.shared.fail(e);
 
         Logger.shared.newline();
-        stats.print();
+        reporter.print({});
         process.exit(1);
     }
 }

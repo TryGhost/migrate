@@ -38,6 +38,7 @@ export class ReportingCategory {
  */
 export class Reporter {
     category: ReportingCategory;
+    listeners: (() => void)[] = [];
 
     constructor(category: ReportingCategory) {
         this.category = category;
@@ -53,6 +54,9 @@ export class Reporter {
             throw new Error('Reporter already has a child reporter for ' + reporter.category.name);
         }
         this.children.set(reporter.category, reporter);
+        reporter.addListener(() => {
+            this.callListeners();
+        });
     }
 
     report(categories: ReportingCategory[], tags: ReportTags) {
@@ -64,6 +68,7 @@ export class Reporter {
             this.tagCounts.set(groupName, group);
             group.set(value, (group.get(value) ?? 0) + 1);
         }
+        this.callListeners();
 
         if (categories.length === 0) {
             return;
@@ -85,7 +90,22 @@ export class Reporter {
 
     private log(str: string, options: LogOptions) {
         // eslint-disable-next-line no-console
-        Logger.shared.plain('    '.repeat(options.indent ?? 0) + this.style(options.prefix ?? '', options?.prefixStyle) + this.style(str, options.style));
+        Logger.shared.plain(this.logString(str, options));
+    }
+
+    private logString(str: string, options: LogOptions) {
+        // eslint-disable-next-line no-console
+        return ('    '.repeat(options.indent ?? 0) + this.style(options.prefix ?? '', options?.prefixStyle) + this.style(str, options.style));
+    }
+
+    addListener(listener: () => void) {
+        this.listeners.push(listener);
+    }
+
+    callListeners() {
+        for (const listener of this.listeners) {
+            listener();
+        }
     }
 
     print(options: LogOptions) {
@@ -164,5 +184,53 @@ export class Reporter {
                 });
             }
         }
+    }
+
+    toString() {
+        if (this.children.size > 0) {
+            let first = true;
+            let strs: string[] = [];
+            for (const [category, reporter] of this.children) {
+                first = false;
+
+                strs.push(reporter.toString());
+            }
+
+            if (this.category.options.skipTitle) {
+                return strs.join('\n');
+            }
+
+            return this.logString(`${this.category.options.skipCount ? '' : this.totalCount + ' '}${this.category.options.title ?? this.category.name}`, this.category.options.titleLogOptions ?? {}) + '\n' + strs.join(', ');
+        }
+
+        if (this.category.options.skipTitle) {
+            return '';
+        }
+
+        return this.logString(`${this.totalCount} ${this.category.options.title ?? this.category.name}`, this.category.options.titleLogOptions ?? {});
+
+        // if (category.options.skipTitle) {
+        //     reporter.print({
+        //         ...category.options.logOptions,
+        //         ...options
+        //     });
+        // } else {
+        //     if (!category.options.skipCount) {
+        //         this.log(`${reporter.totalCount === this.totalCount ? 'All' : reporter.totalCount} ${category.options.title ?? category.name}${reporter.totalCount === this.totalCount ? ' (' + reporter.totalCount + ')' : ''}`, {
+        //             ...category.options.titleLogOptions,
+        //             ...options
+        //         });
+        //     } else {
+        //         this.log(`${category.options.title ?? category.name}`, {
+        //             ...category.options.titleLogOptions,
+        //             ...options
+        //         });
+        //     }
+        //     reporter.print({
+        //         ...category.options.logOptions,
+        //         ...options,
+        //         indent: (options?.indent ?? 0) + ((category.options.indentChildren ?? true) ? 1 : 0)
+        //     });
+        // }
     }
 }

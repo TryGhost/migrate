@@ -3,7 +3,6 @@ import chalk from 'chalk';
 import {Logger} from '../Logger.js';
 import {Options} from '../Options.js';
 import {StripeConnector} from '../StripeConnector.js';
-import {ImportStats} from '../importers/ImportStats.js';
 import {Reporter, ReportingCategory} from '../importers/Reporter.js';
 import util from 'util';
 import Stripe from 'stripe';
@@ -11,8 +10,7 @@ import {exec as _exec} from 'child_process';
 const exec = util.promisify(_exec);
 
 export async function resend(options: Options) {
-    const stats = new ImportStats();
-    const reporter = new Reporter(new ReportingCategory(''));
+    const reporter = new Reporter(new ReportingCategory('', {skipTitle: true}));
 
     Logger.shared.info(`The ${chalk.cyan('resend')} command will resend pending webhook events`);
     Logger.shared.newline();
@@ -42,12 +40,11 @@ export async function resend(options: Options) {
             Logger.shared.fail('Resend cancelled');
             process.exit(1);
         }
-        stats.markStart();
 
         // Step 2: Import data
         Logger.shared.startSpinner('Resending webhooks...');
-        stats.addListener(() => {
-            Logger.shared.processSpinner(stats.toString());
+        reporter.addListener(() => {
+            Logger.shared.processSpinner(reporter.toString());
         });
 
         const endpoints = await fromAccount.use((client) => {
@@ -131,7 +128,7 @@ export async function resend(options: Options) {
         Logger.shared.fail(e);
 
         Logger.shared.newline();
-        stats.print();
+        reporter.print({});
         process.exit(1);
     }
 }

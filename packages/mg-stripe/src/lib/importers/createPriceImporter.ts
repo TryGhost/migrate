@@ -3,15 +3,13 @@ import Stripe from 'stripe';
 import {ReuseLastCall} from '../ReuseLastCall.js';
 import {StripeAPI} from '../StripeAPI.js';
 import {ifDryRunJustReturnFakeId} from '../helpers.js';
-import {ImportStats} from './ImportStats.js';
 import Importer, {BaseImporter, createNoopImporter} from './Importer.js';
 import {Reporter} from './Reporter.js';
 
-export function createPriceImporter({oldStripe, newStripe, stats, productImporter, reporter}: {
+export function createPriceImporter({oldStripe, newStripe, productImporter, reporter}: {
     dryRun: boolean,
     oldStripe: StripeAPI,
     newStripe: StripeAPI,
-    stats: ImportStats,
     productImporter: BaseImporter<Stripe.Product>,
     reporter: Reporter
 }) {
@@ -107,7 +105,6 @@ export function createPriceImporter({oldStripe, newStripe, stats, productImporte
 
     return new Importer({
         objectName: 'Price',
-        stats,
         provider,
         reporter
     });

@@ -2,7 +2,6 @@ import {Logger} from '../Logger.js';
 import {isWarning} from '../helpers.js';
 import {ErrorGroup} from './ErrorGroup.js';
 import {ImportError} from './ImportError.js';
-import {ImportStats} from './ImportStats.js';
 import {ImportWarning} from './ImportWarning.js';
 import {Queue} from '../Queue.js';
 import {ReuseLastCall} from '../ReuseLastCall.js';
@@ -85,7 +84,6 @@ const SKIPPED_CATEGORY = new ReportingCategory('skipped', {
 
 export default class Importer<T extends {id: string}> implements BaseImporter<T> {
     objectName: string;
-    stats: ImportStats;
     provider: ImportProvider<T>;
     reporter: Reporter;
 
@@ -97,10 +95,9 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
     runningRevertJobs = new ReuseLastCall<void>();
     runningConfirmJobs = new ReuseLastCall<void>();
 
-    constructor(options: {objectName: string, provider: ImportProvider<T>, stats: ImportStats, reporter: Reporter}) {
+    constructor(options: {objectName: string, provider: ImportProvider<T>, reporter: Reporter}) {
         this.objectName = options.objectName;
         this.provider = options.provider;
-        this.stats = options.stats;
         this.reporter = new Reporter(new ReportingCategory(this.objectName, {
             skipCount: true,
             indentChildren: false,
@@ -130,7 +127,7 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
                     }
                     if (isWarning(e)) {
                         // Only log warnings immediately in verbose mode
-                        Logger.v?.warn(e.toString());
+                        Logger.shared.warn(e.toString());
                     } else {
                         Logger.shared.error(e.toString());
                     }
@@ -223,13 +220,12 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
             // To make sure the operation is idempotent, we first check if the item was already recreated in a previous run.
             const reuse = await this.provider.findExisting(item);
             if (reuse) {
-                Logger.vv?.info(`Skipped ${this.objectName} ${item.id} because already recreated as ${reuse.id} in a previous run`);
-                this.stats.trackReused(this.objectName);
+                Logger.v?.info(`Skipped ${this.objectName} ${item.id} because already recreated as ${reuse.id} in a previous run`);
 
                 // Mark id, so we don't need to look it up again
                 this.recreatedMap.set(item.id, reuse.id);
 
-                tags.addTag('reason', 'Already created in previous runs');
+                tags.addTag('reason', 'Already copied in previous runs');
                 this.reporter.report([COPIED_CATEGORY, SKIPPED_CATEGORY], tags);
                 return reuse.id;
             }
@@ -260,7 +256,6 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
             this.reporter.report([COPIED_CATEGORY, SUCCEEDED_CATEGORY], tags);
             this.recreatedMap.set(item.id, newID);
             Logger.v?.ok(`Recreated ${this.objectName} ${item.id} as ${newID} in new account`);
-            this.stats.trackImported(this.objectName);
             return newID;
         });
     }
@@ -316,7 +311,6 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
             Logger.v?.ok(`Removed ${newItem.id}`);
 
             this.reporter.report([REVERT_CATEGORY, SUCCEEDED_CATEGORY], tags);
-            this.stats.trackReverted(this.objectName);
         });
     }
 
@@ -336,10 +330,6 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
 
             const newItem = await this.provider.findExisting(item);
             if (!newItem) {
-                // Not yet created
-                // Logger.vv?.info(`Skipped confirming ${item.id} because not yet recreated in new account`);
-                //this.stats.addWarning('Could not confirm ' + this.objectName + ' ' + item.id + ' because not yet recreated in new account: did you disable creating new subscriptions in the old account? Consider running copy again.');
-
                 // Mark id, so we don't need to look it up again
                 this.confirmedSet.add(item.id);
 
@@ -373,7 +363,6 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
             Logger.v?.ok(`Confirmed ${newItem.id}`);
 
             this.reporter.report([CONFIRM_CATEGORY, SUCCEEDED_CATEGORY], tags);
-            this.stats.trackConfirmed(this.objectName);
         });
     }
 }

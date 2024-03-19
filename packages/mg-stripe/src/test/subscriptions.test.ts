@@ -1,6 +1,5 @@
 import Stripe from 'stripe';
 import {StripeAPI} from '../lib/StripeAPI.js';
-import {ImportStats} from '../lib/importers/ImportStats.js';
 import {createCouponImporter} from '../lib/importers/createCouponImporter.js';
 import {createPriceImporter} from '../lib/importers/createPriceImporter.js';
 import {createProductImporter} from '../lib/importers/createProductImporter.js';
@@ -17,7 +16,6 @@ const stripeTestApiKey = getStripeTestAPIKey();
 
 describe('Recreating subscriptions', () => {
     const stripe = new StripeAPI({apiKey: stripeTestApiKey});
-    let stats: ImportStats;
     let reporter: Reporter;
     let subscriptionImporter: ReturnType<typeof createSubscriptionImporter>;
     let validCustomer: Stripe.Customer;
@@ -38,13 +36,11 @@ describe('Recreating subscriptions', () => {
     });
 
     beforeEach(async () => {
-        stats = new ImportStats();
         reporter = new Reporter(new ReportingCategory(''));
 
         currentInvoices = [];
         const sharedOptions = {
             dryRun: false,
-            stats,
             oldStripe: new StripeAPI({apiKey: ''}), // old is invalid to prevent usage
             newStripe: stripe,
             reporter
