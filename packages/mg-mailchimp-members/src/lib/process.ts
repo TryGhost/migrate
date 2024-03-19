@@ -8,7 +8,7 @@ type memberObject = {
     stripe_customer_id: string | null;
     complimentary_plan: boolean;
     labels: string[];
-    created_at: Date;
+    created_at: string;
 };
 
 type processDataOptions = {
@@ -59,8 +59,6 @@ const processData = async ({pathToCsv, csvContent, addLabel, includeUnsubscribed
         const firstName: any = colMapper(firstNameFields, member);
         const lastName: any = colMapper(lastNameFields, member);
 
-        const createdAt = new Date(member.created_at);
-
         let newMember: memberObject = {
             email: email.trim(),
             name: null,
@@ -69,7 +67,7 @@ const processData = async ({pathToCsv, csvContent, addLabel, includeUnsubscribed
             stripe_customer_id: null,
             complimentary_plan: false,
             labels: [],
-            created_at: createdAt
+            created_at: new Date().toISOString()
         };
 
         if (firstName || lastName) {
@@ -103,7 +101,9 @@ const processData = async ({pathToCsv, csvContent, addLabel, includeUnsubscribed
         }
 
         if (member?.CONFIRM_TIME) {
-            newMember.created_at = new Date(member.CONFIRM_TIME);
+            newMember.created_at = new Date(member.CONFIRM_TIME).toISOString();
+        } else if (member?.OPTIN_TIME) {
+            newMember.created_at = new Date(member.OPTIN_TIME).toISOString();
         }
 
         if (member?.UNSUB_TIME) {

@@ -48,7 +48,7 @@ describe('Mailchimp Members CSV', () => {
         assert.equal(member.complimentary_plan, false);
         assert.equal(member.labels.length, 1);
         assert.equal(member.labels[0], 'Lorem Editors');
-        assert.deepEqual(member.created_at, new Date('2018-02-05T19:28:22.000Z'));
+        assert.deepEqual(member.created_at, '2018-02-05T19:28:22.000Z');
     });
 
     it('Can get unsubscribed member values', async () => {
@@ -68,7 +68,7 @@ describe('Mailchimp Members CSV', () => {
         assert.equal(member.labels.length, 2);
         assert.equal(member.labels[0], 'Lorem Editors');
         assert.equal(member.labels[1], 'mailchimp-unsubscribed');
-        assert.deepEqual(member.created_at, new Date('2020-12-25T13:35:34.000Z'));
+        assert.deepEqual(member.created_at, '2020-12-25T13:35:34.000Z');
     });
 
     it('Can count subscribed members', async () => {
@@ -120,11 +120,11 @@ describe('Mailchimp Members CSV', () => {
     });
 
     it('Different email key 1', async () => {
-        let yo = `Email Address,First Name,Last Name
+        const csvContent = `Email Address,First Name,Last Name
         c1@example.com,Dolor,`;
 
         const cleanedProcessed = await processData({
-            csvContent: yo,
+            csvContent: csvContent,
             includeUnsubscribed: false
         });
 
@@ -133,16 +133,44 @@ describe('Mailchimp Members CSV', () => {
     });
 
     it('Different email key 2', async () => {
-        let yo = `Deine E-Mail Adresse,First Name,Last Name
+        const csvContent = `Deine E-Mail Adresse,First Name,Last Name
         c1@example.com,Dolor,`;
 
         const cleanedProcessed = await processData({
-            csvContent: yo,
+            csvContent: csvContent,
             includeUnsubscribed: false
         });
 
         assert.equal(cleanedProcessed.length, 1);
         assert.equal(cleanedProcessed[0].email, 'c1@example.com');
+    });
+
+    it('Different timestamp key 1', async () => {
+        const csvContent = `Email,CONFIRM_TIME
+        c1@example.com,2018-02-05 19:28:22`;
+
+        const cleanedProcessed = await processData({
+            csvContent: csvContent,
+            includeUnsubscribed: false
+        });
+
+        assert.equal(cleanedProcessed.length, 1);
+        assert.equal(cleanedProcessed[0].email, 'c1@example.com');
+        assert.equal(cleanedProcessed[0].created_at, '2018-02-05T19:28:22.000Z');
+    });
+
+    it('Different timestamp key 2', async () => {
+        const csvContent = `Email,OPTIN_TIME
+        c1@example.com,2018-02-05 19:28:22`;
+
+        const cleanedProcessed = await processData({
+            csvContent: csvContent,
+            includeUnsubscribed: false
+        });
+
+        assert.equal(cleanedProcessed.length, 1);
+        assert.equal(cleanedProcessed[0].email, 'c1@example.com');
+        assert.equal(cleanedProcessed[0].created_at, '2018-02-05T19:28:22.000Z');
     });
 });
 
