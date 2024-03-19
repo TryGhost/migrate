@@ -14,7 +14,7 @@ export async function resend(options: Options) {
     const stats = new ImportStats();
     const reporter = new Reporter(new ReportingCategory(''));
 
-    Logger.shared.info(`The ${chalk.cyan('resend')} command will resending pending webhook events`);
+    Logger.shared.info(`The ${chalk.cyan('resend')} command will resend pending webhook events`);
     Logger.shared.newline();
 
     Logger.shared.startSpinner('');
