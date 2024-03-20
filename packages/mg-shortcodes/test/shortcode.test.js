@@ -35,7 +35,7 @@ describe('Interface', function () {
 });
 
 describe('Shortcode attributes', function () {
-    test('Handles quoted string', function () {
+    test('Handles double-quoted string', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
@@ -43,6 +43,18 @@ describe('Shortcode attributes', function () {
         });
 
         const html = `[test url="https://example.com"]Hello[/test]`;
+
+        shortcodes.parse(html);
+    });
+
+    test('Handles single-quoted string', function () {
+        const shortcodes = new Shortcodes();
+
+        shortcodes.add('test', ({attrs}) => {
+            expect(attrs.url).toEqual('https://example.com');
+        });
+
+        const html = `[test url='https://example.com']Hello[/test]`;
 
         shortcodes.parse(html);
     });

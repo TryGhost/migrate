@@ -38,6 +38,9 @@ export default class Shortcodes {
                 // Quoted key="value" pairs
                 theKey = item[1];
                 theValue = this.typeCast(item[2]);
+            } else if (item[3] && item[4] !== 'undefined') {
+                theKey = item[3];
+                theValue = this.typeCast(item[4]);
             } else if (item[5] && item[6] !== 'undefined') {
                 // Unquoted key=value pairs
                 theKey = item[5];
