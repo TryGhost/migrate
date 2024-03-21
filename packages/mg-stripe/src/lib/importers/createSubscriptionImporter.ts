@@ -76,6 +76,16 @@ export function createSubscriptionImporter({oldStripe, newStripe, priceImporter,
 
         async findExisting(oldSubscription: Stripe.Subscription) {
             try {
+                if (oldSubscription.metadata.ghost_migrated_to) {
+                    const existing = await newStripe.use(client => client.subscriptions.retrieve(oldSubscription.metadata.ghost_migrated_to));
+                    return existing;
+                }
+            } catch (e: any) {
+                Logger.shared.error(`Failed to find existing subscription ${oldSubscription.metadata.ghost_migrated_to}`);
+                Logger.shared.error(e.toString());
+            }
+
+            try {
                 // Note: we don't use search here, because that is not read-write consistent + slower
                 const existing = await newStripe.use(client => client.subscriptions.list({
                     customer: getObjectId(oldSubscription.customer),
@@ -377,6 +387,15 @@ export function createSubscriptionImporter({oldStripe, newStripe, priceImporter,
                     }
                 }
 
+                // Pause old subscription
+                Logger.vv?.info(`Setting ghost_migrated_to for ${oldSubscription.id}`);
+                await oldStripe.use(client => client.subscriptions.update(oldSubscription.id, {
+                    metadata: {
+                        ...oldSubscription.metadata,
+                        ghost_migrated_to: subscription.id
+                    }
+                }));
+
                 return subscription.id;
             }, {
                 oldSubscription,
@@ -425,6 +444,14 @@ export function createSubscriptionImporter({oldStripe, newStripe, priceImporter,
                     }
                 }
 
+                // Remove ghost_migrated_to from old subscription
+                await oldStripe.use(client => client.subscriptions.update(oldSubscription.id, {
+                    metadata: {
+                        ...oldSubscription.metadata,
+                        ghost_migrated_to: ''
+                    }
+                }));
+
                 await newStripe.use(client => client.subscriptions.del(getObjectId(newSubscription)));
 
                 // Unpause old subscription
@@ -461,7 +488,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, priceImporter,
             }
 
             await ifNotDryRun(async () => {
-                // Cancel new subscription
+                // Cancel old subscription
                 await oldStripe.use(client => client.subscriptions.del(getObjectId(oldSubscription)));
 
                 // Unpause new subscription
