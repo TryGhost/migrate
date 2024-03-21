@@ -28,7 +28,7 @@
     "@tryghost/mg-wp-api": "^0.10.25",
     "cheerio": "1.0.0-rc.12",
     "date-fns": "2.30.0",
-    "markdown-it": "14.0.0",
+    "markdown-it": "14.1.0",
     "php-serialize": "4.1.1"
   }
 }

@@ -31,6 +31,6 @@
     "@tryghost/string": "0.2.11",
     "cheerio": "1.0.0-rc.12",
     "front-matter": "4.0.2",
-    "markdown-it": "14.0.0"
+    "markdown-it": "14.1.0"
   }
 }
