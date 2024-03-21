@@ -63,7 +63,6 @@ export async function touch(options: Options) {
                             // Can only update cancellation_details
                             return client.subscriptions.update(subscription.id, {
                                 cancellation_details: {
-                                    ...subscription.cancellation_details,
                                     comment: (subscription.cancellation_details?.comment ?? 'Touch') + ' ' // add a space to force update
                                 }
                             });
