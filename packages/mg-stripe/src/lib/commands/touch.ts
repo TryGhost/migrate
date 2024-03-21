@@ -46,6 +46,7 @@ export async function touch(options: Options) {
         let lastSubscriptionId: string|null = null;
         let totalSubscriptions = 0;
 
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             const subscriptions = await fromAccount.use((client) => {
                 return client.subscriptions.list({

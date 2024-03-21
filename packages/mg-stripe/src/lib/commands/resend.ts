@@ -78,6 +78,7 @@ export async function resend(options: Options) {
 
         let eventSet = new Set<string>();
 
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             const events = await fromAccount.use((client) => {
                 return client.events.list({
