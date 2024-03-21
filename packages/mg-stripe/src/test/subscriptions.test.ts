@@ -4,7 +4,7 @@ import {createCouponImporter} from '../lib/importers/createCouponImporter.js';
 import {createPriceImporter} from '../lib/importers/createPriceImporter.js';
 import {createProductImporter} from '../lib/importers/createProductImporter.js';
 import {createSubscriptionImporter} from '../lib/importers/createSubscriptionImporter.js';
-import {advanceClock, buildCoupon, buildDiscount, buildInvoice, buildPrice, buildProduct, buildSubscription, createDeclinedCustomer, createPaymentMethod, createSource, createValidCustomer, getStripeTestAPIKey} from './utils/stripe.js';
+import {advanceClock, buildCoupon, buildDiscount, buildInvoice, buildPrice, buildProduct, buildSubscription, cleanup, createDeclinedCustomer, createPaymentMethod, createSource, createValidCustomer, getStripeTestAPIKey} from './utils/stripe.js';
 import {Options} from '../lib/Options.js';
 import assert from 'assert/strict';
 import sinon from 'sinon';
@@ -33,6 +33,10 @@ describe('Recreating subscriptions', () => {
 
         validCustomer = vc;
         declinedCustomer = dc;
+    });
+
+    afterEach(async () => {
+        await cleanup(stripe.debugClient);
     });
 
     beforeEach(async () => {
@@ -361,7 +365,7 @@ describe('Recreating subscriptions', () => {
         await advanceClock({
             clock,
             stripe: stripe.debugClient,
-            time: trialEnd + 1 * 24 * 60 * 60
+            time: trialEnd + 3 * 24 * 60 * 60
         });
 
         // Check status
@@ -612,7 +616,7 @@ describe('Recreating subscriptions', () => {
         await advanceClock({
             clock,
             stripe: stripe.debugClient,
-            time: now + 1 * 24 * 60 * 60
+            time: now + 3 * 24 * 60 * 60
         });
         const newSubscriptionAfterRetry = await stripe.use(client => client.subscriptions.retrieve(newSubscriptionId));
         assert.equal(newSubscriptionAfterRetry.status, 'past_due');

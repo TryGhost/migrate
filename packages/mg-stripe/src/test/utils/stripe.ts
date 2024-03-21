@@ -11,6 +11,17 @@ export function getStripeTestAPIKey() {
     return process.env.STRIPE_API_KEY;
 }
 
+export async function cleanup(stripe: Stripe) {
+    for await (const c of stripe.testHelpers.testClocks.list({limit: 100})) {
+        // Advance time until current period end
+        try {
+            await stripe.testHelpers.testClocks.del(c.id);
+        } catch (e) {
+            // Ignore
+        }
+    }
+}
+
 export async function advanceClock({clock, stripe, time}: {clock: string, stripe: Stripe, time: number}) {
     // Advance time until current period end
     let c = await stripe.testHelpers.testClocks.advance(clock!, {
@@ -20,7 +31,7 @@ export async function advanceClock({clock, stripe, time}: {clock: string, stripe
     // Poll clock until testClock is settled
     while (c.status === 'advancing') {
         await new Promise((resolve) => {
-            setTimeout(resolve, 1000);
+            setTimeout(resolve, 200);
         });
         c = await stripe.testHelpers.testClocks.retrieve(clock!);
     }
