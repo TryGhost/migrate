@@ -8,11 +8,14 @@ import {createPriceImporter} from '../lib/importers/createPriceImporter.js';
 import {createProductImporter} from '../lib/importers/createProductImporter.js';
 import {createSubscriptionImporter} from '../lib/importers/createSubscriptionImporter.js';
 import {buildPrice, buildProduct, buildSubscription, createDeclinedCustomer, createValidCustomer, getStripeTestAPIKey} from './utils/stripe.js';
+import sinon from 'sinon';
 
 const stripeTestApiKey = getStripeTestAPIKey();
 
 describe('Recreating subscriptions', () => {
     const stripe = new StripeAPI({apiKey: stripeTestApiKey});
+    const oldStripe = new StripeAPI({apiKey: stripeTestApiKey});
+
     let reporter: Reporter;
     let subscriptionImporter: ReturnType<typeof createSubscriptionImporter>;
     let validCustomer: Stripe.Customer;
@@ -29,12 +32,30 @@ describe('Recreating subscriptions', () => {
         if (stripe.mode !== 'test') {
             throw new Error('Tests must run on a Stripe Account in test mode');
         }
+        await oldStripe.validate();
 
         const {customer: vc} = await createValidCustomer(stripe.debugClient, {testClock: false});
         const {customer: dc} = await createDeclinedCustomer(stripe.debugClient, {testClock: false});
 
         validCustomer = vc;
         declinedCustomer = dc;
+
+        sinon.stub(oldStripe.debugClient.invoices, 'list').callsFake(() => {
+            return Promise.resolve({
+                data: currentInvoices,
+                object: 'list',
+                has_more: false,
+                url: ''
+            }) as Stripe.ApiListPromise<Stripe.Invoice>;
+        });
+
+        sinon.stub(oldStripe.debugClient.subscriptions, 'update').callsFake(() => {
+            return Promise.resolve({} as Stripe.Response<Stripe.Subscription>);
+        });
+
+        sinon.stub(oldStripe.debugClient.subscriptions, 'del').callsFake(() => {
+            return Promise.resolve({} as Stripe.Response<Stripe.Subscription>);
+        });
     });
 
     beforeEach(async () => {
@@ -43,7 +64,7 @@ describe('Recreating subscriptions', () => {
         currentInvoices = [];
         const sharedOptions = {
             dryRun: false,
-            oldStripe: stripe,
+            oldStripe: oldStripe,
             newStripe: stripe,
             reporter
         };

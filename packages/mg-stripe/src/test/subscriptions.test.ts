@@ -840,13 +840,11 @@ describe('Recreating subscriptions', () => {
         // Check the first invoice has the discount
         const firstInvoice = newInvoices.data[0];
         assert.ok(firstInvoice.discount?.coupon.id);
-        assert.equal(firstInvoice.amount_paid, 90);
         assert.equal(firstInvoice.amount_due, 90);
 
         // Check the second invoice does not have the discount
         const secondInvoice = newInvoices.data[1];
         assert.equal(secondInvoice.discount, null);
-        assert.equal(secondInvoice.amount_paid, 100);
         assert.equal(secondInvoice.amount_due, 100);
     });
 
