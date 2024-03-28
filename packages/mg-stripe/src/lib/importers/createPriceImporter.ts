@@ -3,8 +3,9 @@ import Stripe from 'stripe';
 import {ReuseLastCall} from '../ReuseLastCall.js';
 import {StripeAPI} from '../StripeAPI.js';
 import {ifDryRunJustReturnFakeId} from '../helpers.js';
-import Importer, {BaseImporter, createNoopImporter} from './Importer.js';
+import Importer, {BaseImporter} from './Importer.js';
 import {Reporter} from './Reporter.js';
+import {createNoopImporter} from './NoopImporter.js';
 
 export function createPriceImporter({oldStripe, newStripe, productImporter, reporter}: {
     dryRun: boolean,

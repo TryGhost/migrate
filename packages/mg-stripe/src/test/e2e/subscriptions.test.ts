@@ -1,16 +1,16 @@
 import Stripe from 'stripe';
-import {StripeAPI} from '../lib/StripeAPI.js';
-import {createCouponImporter} from '../lib/importers/createCouponImporter.js';
-import {createPriceImporter} from '../lib/importers/createPriceImporter.js';
-import {createProductImporter} from '../lib/importers/createProductImporter.js';
-import {createSubscriptionImporter} from '../lib/importers/createSubscriptionImporter.js';
-import {advanceClock, buildCoupon, buildDiscount, buildInvoice, buildPrice, buildProduct, buildSubscription, cleanup, createDeclinedCustomer, createPaymentMethod, createSource, createValidCustomer, getStripeTestAPIKey} from './utils/stripe.js';
-import {Options} from '../lib/Options.js';
+import {StripeAPI} from '../../lib/StripeAPI.js';
+import {createCouponImporter} from '../../lib/importers/createCouponImporter.js';
+import {createPriceImporter} from '../../lib/importers/createPriceImporter.js';
+import {createProductImporter} from '../../lib/importers/createProductImporter.js';
+import {createSubscriptionImporter} from '../../lib/importers/createSubscriptionImporter.js';
+import {advanceClock, buildCoupon, buildDiscount, buildInvoice, buildPrice, buildProduct, buildSubscription, cleanup, createDeclinedCustomer, createPaymentMethod, createSource, createValidCustomer, getStripeTestAPIKey} from './../utils/stripe.js';
+import {Options} from '../../lib/Options.js';
 import assert from 'assert/strict';
 import sinon from 'sinon';
-import {isWarning} from '../lib/helpers.js';
-import DryRunIdGenerator from '../lib/DryRunIdGenerator.js';
-import {Reporter, ReportingCategory} from '../lib/importers/Reporter.js';
+import {isWarning} from '../../lib/helpers.js';
+import DryRunIdGenerator from '../../lib/DryRunIdGenerator.js';
+import {Reporter, ReportingCategory} from '../../lib/importers/Reporter.js';
 
 const stripeTestApiKey = getStripeTestAPIKey();
 
@@ -993,8 +993,7 @@ describe('Recreating subscriptions', () => {
         // Only charged partially
         const secondInvoice = newInvoices.data[1];
         assert.equal(secondInvoice.discount, null);
-        assert.equal(secondInvoice.amount_paid, 750);
-        assert.equal(secondInvoice.amount_due, 750);
+        assert(secondInvoice.amount_due > 700 && secondInvoice.amount_due < 800); // Depends on length of month etc
     });
 
     describe('Payment methods', () => {

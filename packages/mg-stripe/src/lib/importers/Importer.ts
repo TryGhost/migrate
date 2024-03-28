@@ -34,27 +34,6 @@ export type BaseImporter<T extends {id: string}> = {
     revertByObjectOrId(idOrItem: string | T): Promise<void>
 }
 
-export function createNoopImporter<T extends {id: string}>(): BaseImporter<T> {
-    return {
-        async recreate(item: T) {
-            return item.id;
-        },
-        async recreateByObjectOrId(idOrItem: string | T) {
-            if (typeof idOrItem === 'string') {
-                return idOrItem;
-            } else {
-                return idOrItem.id;
-            }
-        },
-        revert() {
-            return Promise.resolve();
-        },
-        revertByObjectOrId() {
-            return Promise.resolve();
-        }
-    };
-}
-
 const COPIED_CATEGORY = new ReportingCategory('copying', {skipTitle: true});
 const CONFIRM_CATEGORY = new ReportingCategory('confirmed', {skipTitle: true});
 const REVERT_CATEGORY = new ReportingCategory('reverted', {skipTitle: true});
@@ -109,7 +88,7 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
         options.reporter.addChildReporter(this.reporter);
     }
 
-    private async runInQueue(method: 'recreate' | 'revert' | 'confirm', options: {groupErrors: boolean} = {groupErrors: false}): Promise<ErrorGroup|undefined> {
+    private async runInQueue(method: 'recreate' | 'revert' | 'confirm'): Promise<ErrorGroup|undefined> {
         // Loop through all items in the provider and import them
         const queue = new Queue();
         const errorGroup = new ErrorGroup();
@@ -118,13 +97,6 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
                 try {
                     await this[method](item);
                 } catch (e: any) {
-                    if (!options.groupErrors) {
-                        if (isWarning(e)) {
-                            errorGroup.add(e);
-                            return;
-                        }
-                        throw e;
-                    }
                     if (isWarning(e)) {
                         // Only log warnings immediately in verbose mode
                         Logger.shared.warn(e.toString());
@@ -146,15 +118,15 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
      * @returns An ErrorGroup if there were only warnings
      */
     async recreateAll(): Promise<ErrorGroup|undefined> {
-        return this.runInQueue('recreate', {groupErrors: true});
+        return this.runInQueue('recreate');
     }
 
     async revertAll() {
-        return this.runInQueue('revert', {groupErrors: true});
+        return this.runInQueue('revert');
     }
 
     async confirmAll() {
-        return this.runInQueue('confirm', {groupErrors: true});
+        return this.runInQueue('confirm');
     }
 
     async recreateByObjectOrId(idOrItem: string | T) {

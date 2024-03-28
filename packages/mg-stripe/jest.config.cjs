@@ -1,9 +1,23 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
     testEnvironment: 'node',
-    transform: {},
-    testTimeout: 60 * 1000,
+    preset: 'ts-jest',
+    testTimeout: 10 * 1000,
     roots: [
-        './build/test/'
+        './src/test/unit/'
+    ],
+    transform: {
+        '\\.[jt]s?$': [
+            'ts-jest',
+            {
+                useESM: true
+            }
+        ]
+    },
+    moduleNameMapper: {
+        '(.+)\\.js': '$1'
+    },
+    extensionsToTreatAsEsm: [
+        '.ts'
     ]
 };

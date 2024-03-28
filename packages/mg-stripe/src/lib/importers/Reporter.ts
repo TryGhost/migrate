@@ -54,7 +54,12 @@ export class Reporter {
             throw new Error('Reporter already has a child reporter for ' + reporter.category.name);
         }
         this.children.set(reporter.category, reporter);
+        let a = reporter.totalCount;
+        this.totalCount += reporter.totalCount;
+
         reporter.addListener(() => {
+            this.totalCount += reporter.totalCount - a;
+            a = reporter.totalCount;
             this.callListeners();
         });
     }

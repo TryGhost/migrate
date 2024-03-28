@@ -1,9 +1,10 @@
 import Stripe from 'stripe';
-import Importer, {createNoopImporter} from './Importer.js';
+import Importer from './Importer.js';
 import {StripeAPI} from '../StripeAPI.js';
 import {getObjectId, ifNotDryRun, ifDryRunJustReturnFakeId} from '../helpers.js';
 import {ReuseLastCall} from '../ReuseLastCall.js';
 import {Reporter} from './Reporter.js';
+import {createNoopImporter} from './NoopImporter.js';
 
 export function createProductImporter({oldStripe, newStripe, reporter}: {
     dryRun: boolean,

@@ -1,13 +1,13 @@
 import assert from 'assert/strict';
 import Stripe from 'stripe';
-import {Options} from '../lib/Options.js';
-import {StripeAPI} from '../lib/StripeAPI.js';
-import {Reporter, ReportingCategory} from '../lib/importers/Reporter.js';
-import {createCouponImporter} from '../lib/importers/createCouponImporter.js';
-import {createPriceImporter} from '../lib/importers/createPriceImporter.js';
-import {createProductImporter} from '../lib/importers/createProductImporter.js';
-import {createSubscriptionImporter} from '../lib/importers/createSubscriptionImporter.js';
-import {buildPrice, buildProduct, buildSubscription, createDeclinedCustomer, createValidCustomer, getStripeTestAPIKey} from './utils/stripe.js';
+import {Options} from '../../lib/Options.js';
+import {StripeAPI} from '../../lib/StripeAPI.js';
+import {Reporter, ReportingCategory} from '../../lib/importers/Reporter.js';
+import {createCouponImporter} from '../../lib/importers/createCouponImporter.js';
+import {createPriceImporter} from '../../lib/importers/createPriceImporter.js';
+import {createProductImporter} from '../../lib/importers/createProductImporter.js';
+import {createSubscriptionImporter} from '../../lib/importers/createSubscriptionImporter.js';
+import {buildPrice, buildProduct, buildSubscription, createDeclinedCustomer, createValidCustomer, getStripeTestAPIKey} from './../utils/stripe.js';
 import sinon from 'sinon';
 
 const stripeTestApiKey = getStripeTestAPIKey();
