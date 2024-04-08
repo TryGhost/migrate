@@ -10,7 +10,6 @@ import {confirm} from '@inquirer/prompts';
 import {DelayPrompt} from '../DelayPrompt.js';
 import {Reporter, ReportingCategory} from '../importers/Reporter.js';
 import {isWarning} from '../helpers.js';
-import {ErrorGroup} from '../importers/ErrorGroup.js';
 
 export async function copy(options: Options) {
     const reporter = new Reporter(new ReportingCategory('', {skipTitle: true}));

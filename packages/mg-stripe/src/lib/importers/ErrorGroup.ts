@@ -1,6 +1,6 @@
 import {ImportError} from './ImportError.js';
 
-const MAX_PRINTED_ERRORS = 5;
+const MAX_PRINTED_ERRORS = 15;
 
 export class ErrorGroup extends Error {
     errors: Error[];
