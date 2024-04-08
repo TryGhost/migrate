@@ -202,7 +202,7 @@ export class Reporter {
             }
 
             if (this.category.options.skipTitle) {
-                return strs.join('\n');
+                return strs.join(', ');
             }
 
             return this.logString(`${this.category.options.skipCount ? '' : this.totalCount + ' '}${this.category.options.title ?? this.category.name}`, this.category.options.titleLogOptions ?? {}) + '\n' + strs.join(', ');
@@ -213,29 +213,5 @@ export class Reporter {
         }
 
         return this.logString(`${this.totalCount} ${this.category.options.title ?? this.category.name}`, this.category.options.titleLogOptions ?? {});
-
-        // if (category.options.skipTitle) {
-        //     reporter.print({
-        //         ...category.options.logOptions,
-        //         ...options
-        //     });
-        // } else {
-        //     if (!category.options.skipCount) {
-        //         this.log(`${reporter.totalCount === this.totalCount ? 'All' : reporter.totalCount} ${category.options.title ?? category.name}${reporter.totalCount === this.totalCount ? ' (' + reporter.totalCount + ')' : ''}`, {
-        //             ...category.options.titleLogOptions,
-        //             ...options
-        //         });
-        //     } else {
-        //         this.log(`${category.options.title ?? category.name}`, {
-        //             ...category.options.titleLogOptions,
-        //             ...options
-        //         });
-        //     }
-        //     reporter.print({
-        //         ...category.options.logOptions,
-        //         ...options,
-        //         indent: (options?.indent ?? 0) + ((category.options.indentChildren ?? true) ? 1 : 0)
-        //     });
-        // }
     }
 }
