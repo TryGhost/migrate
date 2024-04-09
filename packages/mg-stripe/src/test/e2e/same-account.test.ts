@@ -7,7 +7,7 @@ import {createCouponImporter} from '../../lib/importers/createCouponImporter.js'
 import {createPriceImporter} from '../../lib/importers/createPriceImporter.js';
 import {createProductImporter} from '../../lib/importers/createProductImporter.js';
 import {createSubscriptionImporter} from '../../lib/importers/createSubscriptionImporter.js';
-import {buildCoupon, buildDiscount, buildPrice, buildProduct, buildSubscription, cleanup, createDeclinedCustomer, createValidCustomer, getStripeTestAPIKey} from './../utils/stripe.js';
+import {advanceClock, buildCoupon, buildDiscount, buildPrice, buildProduct, buildSubscription, cleanup, createDeclinedCustomer, createValidCustomer, getStripeTestAPIKey} from './../utils/stripe.js';
 import sinon from 'sinon';
 
 const stripeTestApiKey = getStripeTestAPIKey();
@@ -439,5 +439,108 @@ describe('Recreating subscriptions', () => {
         assert.ok(upcomingInvoice.lines.data[0].period.end <= oldSubscription.current_period_end + 32 * 24 * 60 * 60);
     });
 
-    it.todo('Test with a trial period');
+    it('Test with a trial period', async () => {
+        const {customer, clock} = await createValidCustomer(stripe.debugClient, {testClock: true});
+        const fakeProduct = buildProduct({});
+
+        const now = Math.floor(new Date().getTime() / 1000);
+        const currentPeriodEnd = now + 15 * 24 * 60 * 60; // 15 days from now
+        const currentPeriodStart = currentPeriodEnd - 31 * 24 * 60 * 60; // Started 16 days ago
+        const trialEnds = now + 5 * 24 * 60 * 60; // Trial ends in 5 days
+
+        const fakePrice = buildPrice({
+            product: fakeProduct,
+            recurring: {
+                interval: 'month'
+            }
+        });
+
+        // Create the actual price in our stripe account
+        const priceId = await realPriceImporter.recreate(fakePrice);
+        const price = await stripe.debugClient.prices.retrieve(priceId);
+
+        const oldSubscription = buildSubscription({
+            customer: customer.id,
+            items: [
+                {
+                    price: price
+                }
+            ],
+            trial_end: trialEnds,
+            current_period_start: currentPeriodStart,
+            current_period_end: currentPeriodEnd
+        });
+
+        const newSubscriptionId = await subscriptionImporter.recreateAndConfirm(oldSubscription);
+        const newSubscription = await stripe.use(client => client.subscriptions.retrieve(newSubscriptionId));
+
+        // Do some basic assertions
+        assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
+        assert.equal(newSubscription.status, 'trialing');
+        assert.equal(newSubscription.start_date, oldSubscription.start_date);
+        assert.equal(newSubscription.current_period_end, oldSubscription.trial_end);
+        assert.equal(newSubscription.trial_end, oldSubscription.trial_end);
+        assert.equal(newSubscription.cancel_at_period_end, oldSubscription.cancel_at_period_end);
+        assert.equal(newSubscription.customer, customer.id);
+        assert.equal(newSubscription.description, oldSubscription.description);
+
+        // Same payment source used
+        assert.equal(newSubscription.default_payment_method, oldSubscription.default_payment_method);
+        assert.equal(newSubscription.default_source, oldSubscription.default_source);
+
+        // Same customer
+        assert.equal(newSubscription.customer, oldSubscription.customer);
+
+        assert.equal(newSubscription.items.data.length, 1);
+
+        // Same price id (no newly created one)
+        assert.equal(newSubscription.items.data[0].price.id, priceId);
+        assert.equal(newSubscription.items.data[0].quantity, 1);
+
+        // Did not charge yet
+        const newInvoices = await stripe.use(client => client.invoices.list({
+            subscription: newSubscription.id
+        }));
+        assert.equal(newInvoices.data.length, 1);
+        assert.equal(newInvoices.data[0].amount_paid + newInvoices.data[0].amount_remaining, 0);
+
+        // Check upcoming invoice
+        const upcomingInvoice = await stripe.use(client => client.invoices.retrieveUpcoming({
+            customer: customer.id,
+            subscription: newSubscription.id
+        }));
+        assert.equal(upcomingInvoice.amount_due, 100);
+        assert.equal(upcomingInvoice.lines.data[0].period.start, oldSubscription.trial_end);
+        assert.ok(upcomingInvoice.lines.data[0].period.end >= oldSubscription.trial_end! + 28 * 24 * 60 * 60);
+        assert.ok(upcomingInvoice.lines.data[0].period.end <= oldSubscription.trial_end! + 31 * 24 * 60 * 60);
+
+        // Advanced 4 days
+        await advanceClock({
+            clock,
+            stripe: stripe.debugClient,
+            time: now + 4 * 24 * 60 * 60
+        });
+
+        // Check one draft invoice has been created
+        const newInvoicesAfter = await stripe.use(client => client.invoices.list({
+            subscription: newSubscription.id
+        }));
+        assert.equal(newInvoicesAfter.data.length, 1);
+        assert.equal(newInvoicesAfter.data[0].amount_paid + newInvoicesAfter.data[0].amount_remaining, 0);
+
+        // Advanced another 2 days
+        await advanceClock({
+            clock,
+            stripe: stripe.debugClient,
+            time: now + 6 * 24 * 60 * 60
+        });
+
+        // Check one draft invoice has been created
+        const newInvoicesAfterAgain = await stripe.use(client => client.invoices.list({
+            subscription: newSubscription.id
+        }));
+        assert.equal(newInvoicesAfterAgain.data.length, 2);
+        assert.equal(newInvoicesAfterAgain.data[0].amount_paid + newInvoicesAfterAgain.data[0].amount_remaining, 100);
+        assert.equal(newInvoicesAfterAgain.data[1].amount_paid + newInvoicesAfterAgain.data[1].amount_remaining, 0);
+    });
 });
