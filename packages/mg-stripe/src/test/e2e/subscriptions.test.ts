@@ -8,6 +8,7 @@ import {advanceClock, buildCoupon, buildDiscount, buildInvoice, buildPrice, buil
 import {Options} from '../../lib/Options.js';
 import assert from 'assert/strict';
 import sinon from 'sinon';
+import {Logger} from '../../lib/Logger.js';
 import {isWarning} from '../../lib/helpers.js';
 import DryRunIdGenerator from '../../lib/DryRunIdGenerator.js';
 import {Reporter, ReportingCategory} from '../../lib/importers/Reporter.js';
@@ -33,6 +34,8 @@ describe('Recreating subscriptions', () => {
 
         validCustomer = vc;
         declinedCustomer = dc;
+
+        Logger.init({verboseLevel: 2, debug: true});
     });
 
     afterEach(async () => {
