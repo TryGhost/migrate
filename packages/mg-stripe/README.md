@@ -86,7 +86,15 @@ Follow the instructions for the top-level repo.
 ### Test
 
 - `yarn lint` to run linting
-- `yarn test` to run test and linting
+- `yarn test` to run unit tests
+
+To run E2E tests, you need a test Stripe API-key. Create a `.env` file and store it in this folder (packages/mg-stripe):
+
+```
+STRIPE_API_KEY=sk_test_xxx
+```
+
+After that you can run the E2E tests via `yarn test:e2e`
 
 
 ## Copyright & License
