@@ -117,7 +117,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, priceImporter,
                 tags.addTag('reason', `This subscription is already a copy of a different subscription`);
 
                 throw new ImportWarning({
-                    message: `Skipping copying subscription ${oldSubscription.id} because it is the copy of ${oldSubscription.metadata.ghost_migrate_id}}`
+                    message: `Skipping copying subscription ${oldSubscription.id} because it is the copy of ${oldSubscription.metadata.ghost_migrate_id}`
                 });
             }
 
