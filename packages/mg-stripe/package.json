@@ -14,7 +14,7 @@
     "prepare": "yarn build",
     "lint": "eslint src/ --ext .ts --cache",
     "posttest": "yarn lint",
-    "test:e2e": "NODE_OPTIONS=\"--experimental-vm-modules --enable-source-maps\" jest -c jest.config.e2e.cjs",
+    "test:e2e": "NODE_OPTIONS=\"--experimental-vm-modules --enable-source-maps\" jest -c jest.config.e2e.cjs --runInBand",
     "test": "NODE_OPTIONS=\"--experimental-vm-modules --enable-source-maps\" jest"
   },
   "files": [
