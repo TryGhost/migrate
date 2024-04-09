@@ -4,6 +4,20 @@ module.exports = {
     preset: 'ts-jest',
     testTimeout: 60 * 1000,
     roots: [
-        './build/test/e2e/'
+        './src/test/e2e/'
+    ],
+    transform: {
+        '\\.[jt]s?$': [
+            'ts-jest',
+            {
+                useESM: true
+            }
+        ]
+    },
+    moduleNameMapper: {
+        '(.+)\\.js': '$1'
+    },
+    extensionsToTreatAsEsm: [
+        '.ts'
     ]
 };
