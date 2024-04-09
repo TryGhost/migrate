@@ -94,7 +94,9 @@ To run E2E tests, you need a test Stripe API-key. Create a `.env` file and store
 STRIPE_API_KEY=sk_test_xxx
 ```
 
-After that you can run the E2E tests via `yarn test:e2e`
+After that you can run the E2E tests via `yarn test:e2e`.
+
+To easily filter and write new E2E tests you can run it like `yarn test:e2e same-account` to only run E2E tests that match a file name.
 
 
 ## Copyright & License
