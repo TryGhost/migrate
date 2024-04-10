@@ -36,7 +36,9 @@ const readFiles = async (files, postsDir) => {
 };
 
 const largeImageUrl = (src) => {
-    return src.replace(/w_[0-9]{2,5},h_[0-9]{2,5}/, 'w_2000,h_2000');
+    src = src.replace(/w_[0-9]{2,5},h_[0-9]{2,5}/, 'w_2000,h_2000');
+    src = src.replace(',c_fill,', ',');
+    return src;
 };
 
 const getUnsizedImageName = (str) => {
@@ -722,5 +724,6 @@ export default async (input, ctx) => {
 
 export {
     processContent,
-    getImageDimensions
+    getImageDimensions,
+    largeImageUrl
 };

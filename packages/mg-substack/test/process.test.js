@@ -5,7 +5,7 @@ import {execSync} from 'node:child_process';
 import csv from '@tryghost/mg-fs-utils/lib/csv';
 import processZip from '../index.js';
 import map from '../lib/mapper.js';
-import process, {processContent, getImageDimensions} from '../lib/process.js';
+import process, {processContent, getImageDimensions, largeImageUrl} from '../lib/process.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
@@ -1246,5 +1246,13 @@ describe('Image handling', function () {
         expect(d2).toEqual({width: 968, height: 813});
         const d3 = getImageDimensions(url3);
         expect(d3).toEqual({width: 968, height: 813});
+    });
+
+    test('Can upscale images and remove crop', async () => {
+        let originalSrc = 'https://substackcdn.com/image/fetch/w_1200,h_600,c_fill,f_jpg,q_auto:good,fl_progressive:steep,g_auto/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F3c4b3aa9-abcd-efgh-1234-1234567891234_4368x2151.png';
+
+        let larger = largeImageUrl(originalSrc);
+
+        expect(larger).toEqual('https://substackcdn.com/image/fetch/w_2000,h_2000,f_jpg,q_auto:good,fl_progressive:steep,g_auto/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F3c4b3aa9-abcd-efgh-1234-1234567891234_4368x2151.png');
     });
 });
