@@ -36,7 +36,7 @@
     "indent-string": "5.0.0",
     "listr2": "6.6.1",
     "log-symbols": "6.0.0",
-    "log-update": "5.0.1",
+    "log-update": "6.0.0",
     "strip-ansi": "7.1.0"
   }
 }
