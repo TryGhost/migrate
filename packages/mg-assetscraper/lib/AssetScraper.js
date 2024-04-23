@@ -373,6 +373,20 @@ export default class AssetScraper {
             });
         });
 
+        $('img[srcset]').each((i, el) => {
+            let srcset = $(el).attr('srcset');
+            let srcsetParts = parseSrcset(srcset);
+
+            if (srcsetParts) {
+                srcsetParts.forEach((item) => {
+                    this.addRawValue({
+                        remote: item.url,
+                        postContext
+                    });
+                });
+            }
+        });
+
         $('img').each((i, el) => {
             let $image = $(el);
             let type = $image.attr('src') === undefined ? 'data-src' : 'src';

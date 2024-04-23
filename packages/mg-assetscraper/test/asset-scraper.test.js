@@ -614,6 +614,27 @@ describe('Find assets in content', function () {
             expect(data[0].newRemote).toEqual('https://example.com/my/image.jpg');
         });
 
+        test('Will find assets in an <img> `srcset`', async function () {
+            const assetScraper = new AssetScraper(mockFileCache);
+
+            assetScraper.findInHTML(`<p>Hello</p><img loading="lazy" decoding="async" width="300" height="300" src="https://example.com/wp-content/uploads/coffee-300x300.jpg" alt="Making the Cut" class="wp-image-3829" srcset="https://example.com/wp-content/uploads/coffee-300x300.jpg 300w, https://example.com/wp-content/uploads/coffee-1024x1024.jpg 1024w, https://example.com/wp-content/uploads/coffee-150x150.jpg 150w, https://example.com/wp-content/uploads/coffee-768x768.jpg 768w, https://example.com/wp-content/uploads/coffee-1536x1536.jpg 1536w, https://example.com/wp-content/uploads/coffee-1218x1218.jpg 1218w, https://example.com/wp-content/uploads/coffee-870x870.jpg 870w, https://example.com/wp-content/uploads/coffee-480x480.jpg 480w, https://example.com/wp-content/uploads/coffee-100x100.jpg 100w, https://example.com/wp-content/uploads/coffee.jpg 1600w" sizes="(max-width: 300px) 100vw, 300px" />`);
+
+            const data = assetScraper._foundAssets;
+
+            expect(data).toBeArrayOfSize(10);
+
+            expect(data[0].newRemote).toEqual('https://example.com/wp-content/uploads/coffee-300x300.jpg');
+            expect(data[1].newRemote).toEqual('https://example.com/wp-content/uploads/coffee-1024x1024.jpg');
+            expect(data[2].newRemote).toEqual('https://example.com/wp-content/uploads/coffee-150x150.jpg');
+            expect(data[3].newRemote).toEqual('https://example.com/wp-content/uploads/coffee-768x768.jpg');
+            expect(data[4].newRemote).toEqual('https://example.com/wp-content/uploads/coffee-1536x1536.jpg');
+            expect(data[5].newRemote).toEqual('https://example.com/wp-content/uploads/coffee-1218x1218.jpg');
+            expect(data[6].newRemote).toEqual('https://example.com/wp-content/uploads/coffee-870x870.jpg');
+            expect(data[7].newRemote).toEqual('https://example.com/wp-content/uploads/coffee-480x480.jpg');
+            expect(data[8].newRemote).toEqual('https://example.com/wp-content/uploads/coffee-100x100.jpg');
+            expect(data[9].newRemote).toEqual('https://example.com/wp-content/uploads/coffee.jpg');
+        });
+
         test('Will find assets with `data-src` in HTML', async function () {
             const assetScraper = new AssetScraper(mockFileCache);
 
