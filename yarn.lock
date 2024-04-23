@@ -8940,10 +8940,10 @@ scrape-it-core@^1.0.0:
     obj-def "^1.0.9"
     typpy "^2.3.13"
 
-scrape-it@6.1.0:
-  version "6.1.0"
-  resolved "https://registry.yarnpkg.com/scrape-it/-/scrape-it-6.1.0.tgz#c77c9cad4d865227a0f73a352d77c600848d4ced"
-  integrity sha512-8pCJvtlE7yoF0ybV63Vq9pmXWb2oRTLz+zKTB5aVm18OJBoVKdxEniX4f+SUY9RC9o9vw/fwZJdQz/AqqDtRHQ==
+scrape-it@6.1.2:
+  version "6.1.2"
+  resolved "https://registry.yarnpkg.com/scrape-it/-/scrape-it-6.1.2.tgz#1dc7d1537dfbc8d4a913541847bd6a3ab3773df6"
+  integrity sha512-58DMh1/I68d49wP3By+9ulwy6Nwy52iix13m+gB1KjkIpREa8cyqMXTHffgn1BWgHUFHr5ON9SNbcoMSuCFmXA==
   dependencies:
     "@types/cheerio" "^0.22.31"
     assured "^1.0.15"

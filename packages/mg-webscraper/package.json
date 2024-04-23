@@ -29,6 +29,6 @@
     "@tryghost/string": "0.2.11",
     "lodash": "4.17.21",
     "omit-empty": "1.0.0",
-    "scrape-it": "6.1.0"
+    "scrape-it": "6.1.2"
   }
 }
