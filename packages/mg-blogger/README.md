@@ -28,7 +28,7 @@ or
 To run a Blogger migration, the required command is:
 
 ```sh
-migrate blogger --apiKey abcd --siteID 1234
+migrate blogger --apiKey abcd --blogID 1234
 ```
 
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
@@ -36,7 +36,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--apiKey`** (required)
     - string - default: `null`
     - API Key
-- **`--siteID`** (required)
+- **`--blogID`** (required)
     - array - default: `null`
     - Comma separated list of site IDs
 - **`-V` `--verbose`** 
@@ -68,7 +68,7 @@ It's possible to pass more options, in order to achieve a better migration file 
 A more complex migration command could look like this:
 
 ```sh
-migrate blogger --apiKey abcd --siteID 1234, 5678 --addTag 'Blog Posts' --pages false
+migrate blogger --apiKey abcd --blogID 1234, 5678 --addTag 'Blog Posts' --pages false
 ```
 
 This will fetch posts only from 2 sites, and add a 'Blog Posts' tag to each post.
@@ -88,7 +88,7 @@ Follow the instructions for the top-level repo.
 To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
 
 ```sh
-yarn dev blogger --apiKey abcd --siteID 1234
+yarn dev blogger --apiKey abcd --blogID 1234
 ```
 
 
