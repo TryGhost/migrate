@@ -1,4 +1,4 @@
-import converter from '@tryghost/kg-html-to-lexical';
+import {htmlToLexical} from '@tryghost/kg-html-to-lexical';
 import errors from '@tryghost/errors';
 import {convertToHTMLCard} from './convert-to-html-card.js';
 
@@ -23,7 +23,7 @@ const convertPost = (post: postOptions, htmlCard = false, logger?: any) => { // 
             html: post.html
         });
     } else {
-        post.lexical = JSON.stringify(converter.htmlToLexical(post.html));
+        post.lexical = JSON.stringify(htmlToLexical(post.html));
     }
 
     delete post.html;

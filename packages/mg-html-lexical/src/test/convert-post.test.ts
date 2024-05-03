@@ -1,4 +1,3 @@
-import {inspect} from 'node:util';
 import assert from 'assert/strict';
 import {convertPost} from '../index.js';
 import type {postOptions} from '../lib/convert-post.js';

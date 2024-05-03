@@ -1,4 +1,3 @@
-import {inspect} from 'node:util';
 import assert from 'assert/strict';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {convert} from '../index.js';
