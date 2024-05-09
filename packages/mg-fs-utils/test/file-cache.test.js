@@ -136,6 +136,20 @@ describe('resolveFileName character handling', function () {
         expect(fileName.outputPath).toEqual('/content/images/my-images/blah.jpg');
     });
 
+    it('Will not concatenate dashes', async function () {
+        let fileCache = new FileCache('test');
+
+        let fileNameOneDash = await fileCache.resolveFileName('/my-images/-.jpeg');
+        expect(fileNameOneDash.filename).toEqual('/my-images/-.jpg');
+        expect(fileNameOneDash.storagePath).toInclude('/content/images/my-images/-.jpg');
+        expect(fileNameOneDash.outputPath).toEqual('/content/images/my-images/-.jpg');
+
+        let fileNameThreeDashes = await fileCache.resolveFileName('/my-images/---.jpeg');
+        expect(fileNameThreeDashes.filename).toEqual('/my-images/---.jpg');
+        expect(fileNameThreeDashes.storagePath).toInclude('/content/images/my-images/---.jpg');
+        expect(fileNameThreeDashes.outputPath).toEqual('/content/images/my-images/---.jpg');
+    });
+
     it('Will handle Russian characters', async function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/счастливые-маленькие-деревья.jpeg');

@@ -143,10 +143,15 @@ export default class FileCache {
 
     sanitizeFileName(src) {
         let fileNameNoExt = parse(src).name;
+        let fileNameExt = extname(src);
 
-        let safeFileNameNoExt = transliterate.slugify(fileNameNoExt);
+        let safeFileNameNoExt = transliterate.slugify(fileNameNoExt, {
+            separator: '_'
+        });
 
-        return src.replace(fileNameNoExt, safeFileNameNoExt);
+        let result = src.replace(`${fileNameNoExt}${fileNameExt}`, `${safeFileNameNoExt}${fileNameExt}`);
+
+        return result;
     }
 
     ensureJsonExtension({filename, isJSON = true}) {
