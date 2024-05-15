@@ -48,7 +48,7 @@ export class StripeConnector {
             choices: [
                 ...(same ? [
                     {
-                        name: 'Within the same account (' + same.name! + ')',
+                        name: 'Within the same account (' + same.name! + ' / ' + same.id! + ')',
                         value: 'same' as 'same'
                     }
                 ] : []),
