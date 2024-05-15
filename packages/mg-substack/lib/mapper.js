@@ -130,7 +130,7 @@ export default async (input, options) => {
     // Inline the HTML we have with the CSV data
     input.meta.map((post) => {
         const thisPostHTML = input.posts.find(item => item.name.includes(post.post_id));
-        post.html = thisPostHTML.html;
+        post.html = thisPostHTML?.html ?? '';
         return post;
     });
 
