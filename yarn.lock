@@ -2104,14 +2104,14 @@
     "@stdlib/utils-copy" "^0.0.7"
     uuid "^9.0.0"
 
-"@tryghost/html-to-mobiledoc@3.0.5":
-  version "3.0.5"
-  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-3.0.5.tgz#f43da12bfd0e1473089221cdc0c562370fa21cb0"
-  integrity sha512-NfOctkASG9ArB6R3Yb9c+eSuQBupWyTiErkGTUVxg2X3ZOAxvx5sp1YiHtCoSv9aabrOYTXDgqJOlT0SaGbT3A==
+"@tryghost/html-to-mobiledoc@3.0.9":
+  version "3.0.9"
+  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-3.0.9.tgz#e7f4c217177e35d2fdb732fd2a3ce7e73d25584a"
+  integrity sha512-yhbK/h0lDQnYjnDg7YyOFaHgdNq7uK81fO91+GzpBZZWttxK6qu+b5NSuZBKn9WxBDY8Gj8eRaD9UsY+SwGNtw==
   dependencies:
-    "@tryghost/kg-parser-plugins" "^4.0.4"
+    "@tryghost/kg-parser-plugins" "4.0.8"
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
-    jsdom "^23.0.0"
+    jsdom "^24.0.0"
 
 "@tryghost/http-stream@^0.1.30":
   version "0.1.30"
@@ -2151,10 +2151,10 @@
   optionalDependencies:
     sharp "^0.32.0"
 
-"@tryghost/kg-clean-basic-html@^4.0.4":
-  version "4.0.4"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-4.0.4.tgz#7128ab60571d3b7b48ae0ea261ea7272c4fdd4b5"
-  integrity sha512-5Mz6oUxFQ969WAe4Iohza1mq/gvFPZk5LTvtYs0N7+ccwl7QGRLpzIAp5BUPLPE8CVISn/mHNSjGgOcyafFLpw==
+"@tryghost/kg-clean-basic-html@4.0.8", "@tryghost/kg-clean-basic-html@^4.0.4":
+  version "4.0.8"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-4.0.8.tgz#517eb3dbd2caf1a1b318863d53822d7bede79eb7"
+  integrity sha512-CagB06zvkzuzYGeB092Tjch7DhxAPMj1Pa3hRjg0rybxmP7gBO6XR04bo6c+YhfNP7lxxcKvgHsFCbIWPZNrqw==
 
 "@tryghost/kg-default-cards@10.0.3":
   version "10.0.3"
@@ -2228,12 +2228,12 @@
     markdown-it-sup "^2.0.0"
     semver "^7.3.5"
 
-"@tryghost/kg-parser-plugins@^4.0.4":
-  version "4.0.4"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-4.0.4.tgz#79304ee3d6067f4b9e20b0eed6ac99f25c5034a0"
-  integrity sha512-uuMKW941OYaEag0JufAjnX3VdemHrstVsbOkY9Q7B6LsFC9fMZJk67Hx8BjpLX4jJnqOL6aPxJipaHXV0ywgSw==
+"@tryghost/kg-parser-plugins@4.0.8":
+  version "4.0.8"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-4.0.8.tgz#129d72b44c2b3e99cda37872603a62d04cfbf59f"
+  integrity sha512-taoBE0h5Qt1u7PTV6iNkHDyuy3kYdtEZp39LevWrUmtJweTW5m0idhE8sFS3OBpFe3boCETmzc+aSavsaedXoA==
   dependencies:
-    "@tryghost/kg-clean-basic-html" "^4.0.4"
+    "@tryghost/kg-clean-basic-html" "4.0.8"
 
 "@tryghost/kg-utils@^1.0.24":
   version "1.0.24"
@@ -6939,6 +6939,33 @@ jsdom@^23.0.0:
     ws "^8.16.0"
     xml-name-validator "^5.0.0"
 
+jsdom@^24.0.0:
+  version "24.0.0"
+  resolved "https://registry.yarnpkg.com/jsdom/-/jsdom-24.0.0.tgz#e2dc04e4c79da368481659818ee2b0cd7c39007c"
+  integrity sha512-UDS2NayCvmXSXVP6mpTj+73JnNQadZlr9N68189xib2tx5Mls7swlTNao26IoHv46BZJFvXygyRtyXd1feAk1A==
+  dependencies:
+    cssstyle "^4.0.1"
+    data-urls "^5.0.0"
+    decimal.js "^10.4.3"
+    form-data "^4.0.0"
+    html-encoding-sniffer "^4.0.0"
+    http-proxy-agent "^7.0.0"
+    https-proxy-agent "^7.0.2"
+    is-potential-custom-element-name "^1.0.1"
+    nwsapi "^2.2.7"
+    parse5 "^7.1.2"
+    rrweb-cssom "^0.6.0"
+    saxes "^6.0.0"
+    symbol-tree "^3.2.4"
+    tough-cookie "^4.1.3"
+    w3c-xmlserializer "^5.0.0"
+    webidl-conversions "^7.0.0"
+    whatwg-encoding "^3.1.1"
+    whatwg-mimetype "^4.0.0"
+    whatwg-url "^14.0.0"
+    ws "^8.16.0"
+    xml-name-validator "^5.0.0"
+
 jsesc@^2.5.1:
   version "2.5.2"
   resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-2.5.2.tgz#80564d2e483dacf6e8ef209650a67df3f0c283a4"
@@ -7951,6 +7978,11 @@ number-is-nan@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/number-is-nan/-/number-is-nan-1.0.1.tgz#097b602b53422a522c1afb8790318336941a011d"
   integrity sha512-4jbtZXNAsfZbAHiiqjLPBiCl16dES1zI4Hpzzxw61Tk+loF+sBDBKx1ICKKKwIqQ7M0mFn1TmkN7euSncWgHiQ==
+
+nwsapi@^2.2.7:
+  version "2.2.10"
+  resolved "https://registry.yarnpkg.com/nwsapi/-/nwsapi-2.2.10.tgz#0b77a68e21a0b483db70b11fad055906e867cda8"
+  integrity sha512-QK0sRs7MKv0tKe1+5uZIQk/C8XGza4DAnztJG8iD+TpJIORARrCxczA738awHrZoHeTjSSoHqao2teO0dC/gFQ==
 
 oauth-sign@~0.9.0:
   version "0.9.0"
