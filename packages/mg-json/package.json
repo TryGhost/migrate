@@ -25,7 +25,7 @@
     "jest-extended": "4.0.2"
   },
   "dependencies": {
-    "@tryghost/string": "0.2.11",
+    "@tryghost/string": "0.2.12",
     "bson-objectid": "2.0.4",
     "html-entities": "2.5.2",
     "lodash": "4.17.21"
