@@ -2366,10 +2366,10 @@
     caller "^1.0.1"
     find-root "^1.1.0"
 
-"@tryghost/string@0.2.11", "@tryghost/string@^0.2.0":
-  version "0.2.11"
-  resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.2.11.tgz#6c55af09d55ebede5731ca9b6ba2c24c537a51db"
-  integrity sha512-fXA9Vbr133Mx3w55jPuQ2gkZFrGszwIGiV7R+4Rr3jiUnQF3ecyazx+LJ0tVbI3ayzl9EY5eAG7PhcGEc6BlSA==
+"@tryghost/string@0.2.12", "@tryghost/string@^0.2.0":
+  version "0.2.12"
+  resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.2.12.tgz#fc0e06939e7b43922e2471135ed9af4f22ddcd54"
+  integrity sha512-1ygv+nOycupvFX/lwvRbThcGzwlMlwNXUUQn3HqWnKYZmDAA2FOP5SvlcY/BkOLzpPQUlBgSs3PvjOurCIZU7g==
   dependencies:
     unidecode "^0.1.8"
 
