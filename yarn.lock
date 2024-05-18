@@ -2156,12 +2156,12 @@
   resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-4.0.8.tgz#517eb3dbd2caf1a1b318863d53822d7bede79eb7"
   integrity sha512-CagB06zvkzuzYGeB092Tjch7DhxAPMj1Pa3hRjg0rybxmP7gBO6XR04bo6c+YhfNP7lxxcKvgHsFCbIWPZNrqw==
 
-"@tryghost/kg-default-cards@10.0.3":
-  version "10.0.3"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-default-cards/-/kg-default-cards-10.0.3.tgz#10d8cd96e40ee5cef05cd8bcae6966ec77a71edd"
-  integrity sha512-q4y0umW/0jdQ4lJ+abxK8iVvVev61QSE2KDxU4f01N7FtYBdh9TwvaL01wR+PsmZ9n5zoOrxLX16FyJlxtQcTw==
+"@tryghost/kg-default-cards@10.0.5":
+  version "10.0.5"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-default-cards/-/kg-default-cards-10.0.5.tgz#464893395256db5346ea68b84834fc8ae0d2ecf3"
+  integrity sha512-H/bAfSaiuuHwn/WioErdXbYLKnIO/JPkcownIBmxAkJQRgCVskwukV2ImgUEEknlwamsxWa6SYkQUYv95h7Xvg==
   dependencies:
-    "@tryghost/kg-markdown-html-renderer" "^7.0.3"
+    "@tryghost/kg-markdown-html-renderer" "7.0.5"
     "@tryghost/string" "^0.2.0"
     "@tryghost/url-utils" "^4.0.0"
     handlebars "^4.7.6"
@@ -2213,12 +2213,12 @@
     jsdom "^23.0.0"
     lexical "0.13.1"
 
-"@tryghost/kg-markdown-html-renderer@^7.0.3":
-  version "7.0.3"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-markdown-html-renderer/-/kg-markdown-html-renderer-7.0.3.tgz#775bd39042276a7e4d31ac856a6db9fdadadb630"
-  integrity sha512-FxQ5XMNji/yDkLYkOMtbIQjjnL4nUeILvQEGN2D6NrEF4+7e+IbndvgzDBkj3Bi5dKKvhdvaCNvWSYAk8rKrkg==
+"@tryghost/kg-markdown-html-renderer@7.0.5", "@tryghost/kg-markdown-html-renderer@^7.0.3":
+  version "7.0.5"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-markdown-html-renderer/-/kg-markdown-html-renderer-7.0.5.tgz#96fb7440291ab9188b1e32c7cc71f6aa5fdec48e"
+  integrity sha512-Y1f2tKenyfrYIOfOVTI+9/hIVAed2MN/96B5pRBXpn/Bv2/+Sq8RCAFqlLmNwX4o7XeNp51BHZK96Mu+sU/Ltg==
   dependencies:
-    "@tryghost/kg-utils" "^1.0.24"
+    "@tryghost/kg-utils" "1.0.26"
     markdown-it "^14.0.0"
     markdown-it-footnote "^4.0.0"
     markdown-it-image-lazy-loading "^2.0.0"
@@ -2235,10 +2235,10 @@
   dependencies:
     "@tryghost/kg-clean-basic-html" "4.0.8"
 
-"@tryghost/kg-utils@^1.0.24":
-  version "1.0.24"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-utils/-/kg-utils-1.0.24.tgz#4ef358ef803272cbe257993b9f79ea0a6b432077"
-  integrity sha512-+GpfZOsvJkli1Nt0rDl5+hIFVikbieavkBZKjrSMIMO75Jm+BJvWqEppHD+qtfjhF9biZqoYXkGZnOjcJU+4eg==
+"@tryghost/kg-utils@1.0.26":
+  version "1.0.26"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-utils/-/kg-utils-1.0.26.tgz#48e18b05d8bcf2c0d3c94f3d500e9b267d6723e6"
+  integrity sha512-DXx/qJwMYB6mjyhBk1mOg2hA5sXGNVcP2R0FyhkmHKtdNEwP0WIpV7UZt7DIYDT4c4uWFddya+u6yVpqU9Nhxg==
   dependencies:
     semver "^7.3.5"
 
