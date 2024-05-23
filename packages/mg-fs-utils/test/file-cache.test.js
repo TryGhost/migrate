@@ -19,6 +19,9 @@ describe('writeContentFile', function () {
     let transformStub;
 
     beforeEach(function () {
+        // Env is set before each test if the file is present, so reset that here
+        delete process.env.CACHE_PATH;
+
         transformStub = jest.spyOn(imageTransform, 'resizeFromBuffer').mockReturnValue('optimizedimagebuffer');
     });
 
@@ -33,9 +36,11 @@ describe('writeContentFile', function () {
 
         expect(fileCache.tmpDirPath).toEqual('/Users/MyName/Desktop/Files');
         expect(fileCache.cacheBaseDir).toEqual('/Users/MyName/Desktop/Files/mg');
+
+        await fileCache.emptyCurrentCacheDir();
     });
 
-    it('Will use env', function () {
+    it('Will use env', async function () {
         process.env.CACHE_PATH = '/random/location';
 
         let fileCache = new FileCache('test');
@@ -43,10 +48,10 @@ describe('writeContentFile', function () {
         expect(fileCache.tmpDirPath).toEqual('/random/location');
         expect(fileCache.cacheBaseDir).toEqual('/random/location/mg');
 
-        delete process.env.CACHE_PATH;
+        await fileCache.emptyCurrentCacheDir();
     });
 
-    it('Will use constructor tmpPath even if env CACHE_PATH is specified', function () {
+    it('Will use constructor tmpPath even if env CACHE_PATH is specified', async function () {
         process.env.CACHE_PATH = '/random/location';
 
         let fileCache = new FileCache('test', {
@@ -56,16 +61,18 @@ describe('writeContentFile', function () {
         expect(fileCache.tmpDirPath).toEqual('/Users/MyName/Desktop/Files');
         expect(fileCache.cacheBaseDir).toEqual('/Users/MyName/Desktop/Files/mg');
 
-        delete process.env.CACHE_PATH;
+        await fileCache.emptyCurrentCacheDir();
     });
 
-    it('Will use system temp dir if constructor tmpPath and env CACHE_PATH are empty', function () {
+    it('Will use system temp dir if constructor tmpPath and env CACHE_PATH are empty', async function () {
         let fileCache = new FileCache('test');
 
         const osTempDir = tmpdir();
 
         expect(fileCache.tmpDirPath).toEqual(osTempDir);
         expect(fileCache.cacheBaseDir).toEqual(`${osTempDir}/mg`);
+
+        await fileCache.emptyCurrentCacheDir();
     });
 
     it('Writes one file if optimize is false', async function () {
@@ -85,6 +92,7 @@ describe('writeContentFile', function () {
         expect(resultPath).toEqual(mockOutputPath);
 
         spy.mockRestore();
+        await fileCache.emptyCurrentCacheDir();
     });
 
     it('Writes two files if optimize is true', async function () {
@@ -107,6 +115,7 @@ describe('writeContentFile', function () {
         expect(resultPath).toEqual(mockOutputPath);
 
         spy.mockRestore();
+        await fileCache.emptyCurrentCacheDir();
     });
 
     it('Writes one file if the extension is not supported for optimization', async function () {
@@ -126,6 +135,7 @@ describe('writeContentFile', function () {
         expect(resultPath).toEqual('/content/images/blah.bmp');
 
         spy.mockRestore();
+        await fileCache.emptyCurrentCacheDir();
     });
 
     it('Correctly converts file sizes', async function () {
@@ -139,6 +149,8 @@ describe('writeContentFile', function () {
 
         const check3 = fileCache.convertMbToBytes(20);
         expect(check3).toEqual(20971520);
+
+        await fileCache.emptyCurrentCacheDir();
     });
 });
 
@@ -150,6 +162,8 @@ describe('resolveFileName character handling', function () {
         expect(fileName.filename).toEqual('/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
         expect(fileName.storagePath).toInclude('/content/images/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
         expect(fileName.outputPath).toEqual('/content/images/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+
+        await fileCache.emptyCurrentCacheDir();
     });
 
     it('Will shortern the storage path is too long', async function () {
@@ -159,6 +173,8 @@ describe('resolveFileName character handling', function () {
         expect(fileName.filename).toEqual('/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
         expect(fileName.storagePath).toInclude('/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
         expect(fileName.outputPath).toEqual('/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+
+        await fileCache.emptyCurrentCacheDir();
     });
 
     it('Will change jpeg to jpg', async function () {
@@ -168,6 +184,8 @@ describe('resolveFileName character handling', function () {
         expect(fileName.filename).toEqual('/my-images/blah.jpg');
         expect(fileName.storagePath).toInclude('/content/images/my-images/blah.jpg');
         expect(fileName.outputPath).toEqual('/content/images/my-images/blah.jpg');
+
+        await fileCache.emptyCurrentCacheDir();
     });
 
     it('Will not concatenate dashes', async function () {
@@ -182,6 +200,8 @@ describe('resolveFileName character handling', function () {
         expect(fileNameThreeDashes.filename).toEqual('/my-images/---.jpg');
         expect(fileNameThreeDashes.storagePath).toInclude('/content/images/my-images/---.jpg');
         expect(fileNameThreeDashes.outputPath).toEqual('/content/images/my-images/---.jpg');
+
+        await fileCache.emptyCurrentCacheDir();
     });
 
     it('Will handle Russian characters', async function () {
@@ -191,6 +211,8 @@ describe('resolveFileName character handling', function () {
         expect(fileName.filename).toEqual('/my-images/schastlivye-malenkie-derevya.jpg');
         expect(fileName.storagePath).toInclude('/content/images/my-images/schastlivye-malenkie-derevya.jpg');
         expect(fileName.outputPath).toEqual('/content/images/my-images/schastlivye-malenkie-derevya.jpg');
+
+        await fileCache.emptyCurrentCacheDir();
     });
 
     it('Will handle Bulgarian characters', async function () {
@@ -200,6 +222,8 @@ describe('resolveFileName character handling', function () {
         expect(fileName.filename).toEqual('/my-images/shchastlivi-malki-drveta.jpg');
         expect(fileName.storagePath).toInclude('/content/images/my-images/shchastlivi-malki-drveta.jpg');
         expect(fileName.outputPath).toEqual('/content/images/my-images/shchastlivi-malki-drveta.jpg');
+
+        await fileCache.emptyCurrentCacheDir();
     });
 
     it('Will handle Serbian characters', async function () {
@@ -209,6 +233,8 @@ describe('resolveFileName character handling', function () {
         expect(fileName.filename).toEqual('/my-images/s-etshna_mala-drvetsha.jpg');
         expect(fileName.storagePath).toInclude('/content/images/my-images/s-etshna_mala-drvetsha.jpg');
         expect(fileName.outputPath).toEqual('/content/images/my-images/s-etshna_mala-drvetsha.jpg');
+
+        await fileCache.emptyCurrentCacheDir();
     });
 
     it('Will handle Chinese characters', async function () {
@@ -218,6 +244,8 @@ describe('resolveFileName character handling', function () {
         expect(fileName.filename).toEqual('/my-images/kuai_le_de_xiao_shu.jpg');
         expect(fileName.storagePath).toInclude('/content/images/my-images/kuai_le_de_xiao_shu.jpg');
         expect(fileName.outputPath).toEqual('/content/images/my-images/kuai_le_de_xiao_shu.jpg');
+
+        await fileCache.emptyCurrentCacheDir();
     });
 
     it('Will handle Japanese characters', async function () {
@@ -227,6 +255,8 @@ describe('resolveFileName character handling', function () {
         expect(fileName.filename).toEqual('/my-images/xing_senaxiao_sanamu.jpg');
         expect(fileName.storagePath).toInclude('/content/images/my-images/xing_senaxiao_sanamu.jpg');
         expect(fileName.outputPath).toEqual('/content/images/my-images/xing_senaxiao_sanamu.jpg');
+
+        await fileCache.emptyCurrentCacheDir();
     });
 
     it('Will handle Arabic characters', async function () {
@@ -236,5 +266,7 @@ describe('resolveFileName character handling', function () {
         expect(fileName.filename).toEqual('/my-images/shjr_sgyr_saayd.jpg');
         expect(fileName.storagePath).toInclude('/content/images/my-images/shjr_sgyr_saayd.jpg');
         expect(fileName.outputPath).toEqual('/content/images/my-images/shjr_sgyr_saayd.jpg');
+
+        await fileCache.emptyCurrentCacheDir();
     });
 });
