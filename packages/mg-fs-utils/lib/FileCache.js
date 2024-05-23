@@ -1,6 +1,8 @@
 import {join, parse, extname, basename, dirname} from 'node:path';
+import {URL} from 'node:url';
 import {tmpdir} from 'node:os';
 import {createHash} from 'node:crypto';
+import * as dotenv from 'dotenv';
 import _ from 'lodash';
 import {writeFileSync, readdirSync, rmdir, lstatSync, existsSync} from 'node:fs';
 import {writeFile} from 'node:fs/promises';
@@ -11,12 +13,22 @@ import transliterate from 'transliteration';
 import csv from './csv.js';
 import {cacheNameFromPath} from './utils.js';
 
+const __dirname = new URL('.', import.meta.url).pathname;
+
+// Define the .end path for this project, as well as parent env files
+dotenv.config({
+    path: [
+        join(__dirname, '../', '.env'),
+        '.env'
+    ]
+});
+
 const basePath = 'mg';
 const knownImageExtensions = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico', 'webp'];
 
 export default class FileCache {
     constructor(cacheName, options = {}) {
-        this.tmpPath = options.tmpPath || false;
+        this.tmpPath = options?.tmpPath ?? process?.env?.CACHE_PATH ?? false;
 
         this.originalName = cacheName;
         this.options = Object.assign({contentDir: true}, options);

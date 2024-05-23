@@ -11,6 +11,13 @@ or
 
 ## Usage
 
+You can add `.env` file in the root of this package to set a different local cache path.
+By default, it will create a temporary folder in the system's temp directory, but you may want to chang this to a more permanent location. Setting `CACHE_PATH` in `.env` will override the default.
+
+```env
+CACHE_PATH=/path/to/cache
+```
+
 
 ## Develop
 

@@ -1,3 +1,4 @@
+import {tmpdir} from 'node:os';
 import {jest} from '@jest/globals';
 import imageTransform from '@tryghost/image-transform';
 import FileCache from '../lib/FileCache.js';
@@ -32,6 +33,39 @@ describe('writeContentFile', function () {
 
         expect(fileCache.tmpDirPath).toEqual('/Users/MyName/Desktop/Files');
         expect(fileCache.cacheBaseDir).toEqual('/Users/MyName/Desktop/Files/mg');
+    });
+
+    it('Will use env', function () {
+        process.env.CACHE_PATH = '/random/location';
+
+        let fileCache = new FileCache('test');
+
+        expect(fileCache.tmpDirPath).toEqual('/random/location');
+        expect(fileCache.cacheBaseDir).toEqual('/random/location/mg');
+
+        delete process.env.CACHE_PATH;
+    });
+
+    it('Will use constructor tmpPath even if env CACHE_PATH is specified', function () {
+        process.env.CACHE_PATH = '/random/location';
+
+        let fileCache = new FileCache('test', {
+            tmpPath: '/Users/MyName/Desktop/Files'
+        });
+
+        expect(fileCache.tmpDirPath).toEqual('/Users/MyName/Desktop/Files');
+        expect(fileCache.cacheBaseDir).toEqual('/Users/MyName/Desktop/Files/mg');
+
+        delete process.env.CACHE_PATH;
+    });
+
+    it('Will use system temp dir if constructor tmpPath and env CACHE_PATH are empty', function () {
+        let fileCache = new FileCache('test');
+
+        const osTempDir = tmpdir();
+
+        expect(fileCache.tmpDirPath).toEqual(osTempDir);
+        expect(fileCache.cacheBaseDir).toEqual(`${osTempDir}/mg`);
     });
 
     it('Writes one file if optimize is false', async function () {
