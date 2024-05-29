@@ -204,6 +204,17 @@ describe('resolveFileName character handling', function () {
         await fileCache.emptyCurrentCacheDir();
     });
 
+    it('Handles extensions in the middle of the path', async function () {
+        let fileCache = new FileCache('test');
+
+        let fileNameOneDash = await fileCache.resolveFileName('/photo.jpg/my-images/hello.png');
+        expect(fileNameOneDash.filename).toEqual('/photo-jpg/my-images/hello.png');
+        expect(fileNameOneDash.storagePath).toInclude('/content/images/photo-jpg/my-images/hello.png');
+        expect(fileNameOneDash.outputPath).toEqual('/content/images/photo-jpg/my-images/hello.png');
+
+        await fileCache.emptyCurrentCacheDir();
+    });
+
     it('Will handle Russian characters', async function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/счастливые-маленькие-деревья.jpeg');

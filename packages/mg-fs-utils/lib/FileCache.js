@@ -1,4 +1,4 @@
-import {join, parse, extname, basename, dirname} from 'node:path';
+import {basename, dirname, extname, format, join, parse} from 'node:path';
 import {URL} from 'node:url';
 import {tmpdir} from 'node:os';
 import {createHash} from 'node:crypto';
@@ -179,7 +179,12 @@ export default class FileCache {
     }
 
     resolveFileName(filename, type = 'images') {
-        let ext = extname(filename);
+        const ext = extname(filename);
+
+        // Replace any dots in the path with dashes
+        const parsedPath = parse(filename);
+        parsedPath.dir = parsedPath.dir.replace(/\./g, '-');
+        filename = format(parsedPath);
 
         let typeDir = null;
         let typePath = null;
