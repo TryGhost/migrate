@@ -140,7 +140,9 @@ export default (json) => {
         }
     };
 
-    json.posts.forEach(processPostRelations);
+    if (json.posts) {
+        json.posts.forEach(processPostRelations);
+    }
 
     return json;
 };

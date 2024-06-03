@@ -4,7 +4,7 @@ const convert = (ctx, htmlCard) => {
     const {logger} = ctx;
     let {options} = ctx;
     let res = ctx.result;
-    let posts = res.posts;
+    let posts = res?.posts ?? [];
 
     if (!posts && res.data && res.data.posts) {
         posts = res.data.posts;

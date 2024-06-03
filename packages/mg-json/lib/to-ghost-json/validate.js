@@ -1,4 +1,8 @@
 export default (json, ctx = null) => {
+    if (!json.posts) {
+        return json;
+    }
+
     json.posts.forEach((item, index) => {
         let input = item.data;
 

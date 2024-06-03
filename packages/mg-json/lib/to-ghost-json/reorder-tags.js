@@ -1,4 +1,8 @@
 export default (json) => {
+    if (!json.posts) {
+        return json;
+    }
+
     json.posts.forEach((post) => {
         let tags = post.data.tags || [];
         let publicTags = [];
