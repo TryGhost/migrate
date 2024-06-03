@@ -55,7 +55,7 @@ describe('Process', function () {
 
         expect(post.url).toEqual('https://medium.com/@JoeBloggs/testpost-efefef12121212');
 
-        expect(post.data.title).toEqual('Blog Post Title');
+        expect(post.data.title).toEqual('Basic Post Title');
         expect(post.data.slug).toEqual('testpost');
         expect(post.data.custom_excerpt).toEqual('This is a subtitle of some sort');
         expect(post.data.status).toEqual('published');
@@ -99,7 +99,7 @@ describe('Process', function () {
 
         expect(post.url).toEqual('https://medium.com/p/ababab12121212');
 
-        expect(post.data.title).toEqual('Blog Post Title');
+        expect(post.data.title).toEqual('Draft Post Title');
         expect(post.data.slug).toEqual('blog-post-title');
         expect(post.data.custom_excerpt).toEqual('This is a subtitle of some sort');
         expect(post.data.status).toEqual('draft');
@@ -147,6 +147,27 @@ describe('Process', function () {
         expect(post.data.tags[1].data.name).toEqual('Stuff');
         expect(post.data.tags[2].data.name).toEqual('#medium');
         expect(post.data.tags[3].data.name).toEqual('#auto-feature-image');
+    });
+
+    it('Can detect comment', function () {
+        const fixture = readSync('comment.html');
+        const fakeName = '2018-08-11_blog-comment-efefef121212.html';
+        const post = processPost({name: fakeName, html: fixture, options: {
+            addPlatformTag: true
+        }});
+
+        expect(post.data.status).toEqual('draft');
+        expect(post.data.tags[1].data.name).toEqual('#Medium Possible Comment');
+    });
+
+    it('Can detect comment 2', function () {
+        const fixture = readSync('short-post.html');
+        const fakeName = '2018-08-11_blog-short-post-efefef121212.html';
+        const post = processPost({name: fakeName, html: fixture, options: {
+            addPlatformTag: true
+        }});
+
+        expect(post.data.status).toEqual('published');
     });
 
     it('Can not add platform tags', function () {
@@ -223,7 +244,7 @@ describe('Process Content', function () {
             decodeEntities: false
         }, false);
 
-        let derp = processContent({
+        const post = processContent({
             content: $post('.e-content'),
             post: {
                 data: {
@@ -232,7 +253,7 @@ describe('Process Content', function () {
             }
         });
 
-        expect(derp).toEqual(`<pre><code>&lt;div class="image-block"&gt;\n    &lt;a href="https://example.com"&gt;\n        &lt;img src="/images/photo.jpg" alt="My alt text"&gt;\n    &lt;/a&gt;\n&lt;/div&gt;</code></pre>`);
+        expect(post.data.html).toEqual(`<pre><code>&lt;div class="image-block"&gt;\n    &lt;a href="https://example.com"&gt;\n        &lt;img src="/images/photo.jpg" alt="My alt text"&gt;\n    &lt;/a&gt;\n&lt;/div&gt;</code></pre>`);
     });
 
     it('Can process code blocks wish slashes', function () {
@@ -242,7 +263,7 @@ describe('Process Content', function () {
             decodeEntities: false
         }, false);
 
-        const newHtml = processContent({
+        const post = processContent({
             content: $post('.e-content'),
             post: {
                 data: {
@@ -251,8 +272,8 @@ describe('Process Content', function () {
             }
         });
 
-        expect(newHtml).not.toContain('<pre name="4a0a" id="4a0a" class="graf graf--pre graf-after--p">');
-        expect(newHtml).toContain('<pre><code>sudo apt-get update \n' +
+        expect(post.data.html).not.toContain('<pre name="4a0a" id="4a0a" class="graf graf--pre graf-after--p">');
+        expect(post.data.html).toContain('<pre><code>sudo apt-get update \n' +
         'sudo apt-get install \\ \n' +
         '    apt-transport-https \\ \n' +
         '    ca-certificates \\ \n' +
@@ -270,7 +291,7 @@ describe('Process Content', function () {
             decodeEntities: false
         }, false);
 
-        const newHtml = processContent({
+        const post = processContent({
             content: $post('.e-content'),
             post: {
                 data: {
@@ -279,8 +300,8 @@ describe('Process Content', function () {
             }
         });
 
-        expect(newHtml).not.toContain('<pre name="9a1f" id="9a1f" class="graf graf--pre graf-after--pre">');
-        expect(newHtml).toContain('<pre><code>echo "deb https://sub.example.com/ce/dolor lorem ipsum" |\\  \n' +
+        expect(post.data.html).not.toContain('<pre name="9a1f" id="9a1f" class="graf graf--pre graf-after--pre">');
+        expect(post.data.html).toContain('<pre><code>echo "deb https://sub.example.com/ce/dolor lorem ipsum" |\\  \n' +
         'sudo tee /etc/apt/sources.list.d/example.list \n' +
         'sudo apt-get update \n' +
         'sudo apt-get install example</code></pre>');
@@ -296,7 +317,7 @@ describe('Process Content', function () {
             decodeEntities: false
         }, false);
 
-        const newHtml = processContent({
+        const post = processContent({
             content: $post('.e-content'),
             post: {
                 data: {
@@ -305,10 +326,10 @@ describe('Process Content', function () {
             }
         });
 
-        expect(newHtml).not.toContain('<pre data-code-block-mode="2" spellcheck="false" data-code-block-lang="bash" name="2296" id="2296" class="graf graf--pre graf-after--p graf--preV2">\n' +
+        expect(post.data.html).not.toContain('<pre data-code-block-mode="2" spellcheck="false" data-code-block-lang="bash" name="2296" id="2296" class="graf graf--pre graf-after--p graf--preV2">\n' +
             '<span class="pre--content">wget https://example.com/package.zip</span>\n' +
             '</pre>');
-        expect(newHtml).toContain('<pre><code class="language-bash">wget https://example.com/package.zip</code></pre>');
+        expect(post.data.html).toContain('<pre><code class="language-bash">wget https://example.com/package.zip</code></pre>');
     });
 
     it('Can process galleries', function () {
@@ -329,7 +350,7 @@ describe('Process Content', function () {
             decodeEntities: false
         }, false);
 
-        const newHtml = processContent({
+        const post = processContent({
             content: $post('.e-content'),
             post: {
                 data: {
@@ -338,9 +359,9 @@ describe('Process Content', function () {
             }
         });
 
-        expect(newHtml).not.toContain('<div class="section-inner sectionLayout--outsetRow" data-paragraph-count="3">');
+        expect(post.data.html).not.toContain('<div class="section-inner sectionLayout--outsetRow" data-paragraph-count="3">');
 
-        expect(newHtml).toContain('<figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*1234.jpeg" width="768" height="933" loading="lazy" alt=""></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/400/1*5678.jpeg" width="768" height="1024" loading="lazy" alt=""></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*-abcd.jpeg" width="768" height="965" loading="lazy" alt=""></div></div></div><figcaption>Photos by the author</figcaption></figure>');
+        expect(post.data.html).toContain('<figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*1234.jpeg" width="768" height="933" loading="lazy" alt=""></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/400/1*5678.jpeg" width="768" height="1024" loading="lazy" alt=""></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*-abcd.jpeg" width="768" height="965" loading="lazy" alt=""></div></div></div><figcaption>Photos by the author</figcaption></figure>');
     });
 
     it('Can process embeds with images', function () {
@@ -364,7 +385,7 @@ describe('Process Content', function () {
             decodeEntities: false
         }, false);
 
-        const newHtml = processContent({
+        const post = processContent({
             content: $post('.e-content'),
             post: {
                 data: {
@@ -373,9 +394,9 @@ describe('Process Content', function () {
             }
         });
 
-        expect(newHtml).not.toContain('<div name="d38c" id="d38c" class="graf graf--mixtapeEmbed graf-after--p graf--trailing">');
+        expect(post.data.html).not.toContain('<div name="d38c" id="d38c" class="graf graf--mixtapeEmbed graf-after--p graf--trailing">');
 
-        expect(newHtml).toContain('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.medium.com/list/1234"><div class="kg-bookmark-content"><div class="kg-bookmark-title">My best Articles</div><div class="kg-bookmark-description">A description</div><div class="kg-bookmark-metadata"></div></div><div class="kg-bookmark-thumbnail"><img src="https://cdn-images-1.medium.com/fit/c/304/160/0*5678.jpeg" alt=""></div></a></figure>');
+        expect(post.data.html).toContain('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.medium.com/list/1234"><div class="kg-bookmark-content"><div class="kg-bookmark-title">My best Articles</div><div class="kg-bookmark-description">A description</div><div class="kg-bookmark-metadata"></div></div><div class="kg-bookmark-thumbnail"><img src="https://cdn-images-1.medium.com/fit/c/304/160/0*5678.jpeg" alt=""></div></a></figure>');
     });
 
     it('Can process embeds without images', function () {
@@ -395,7 +416,7 @@ describe('Process Content', function () {
             decodeEntities: false
         }, false);
 
-        const newHtml = processContent({
+        const post = processContent({
             content: $post('.e-content'),
             post: {
                 data: {
@@ -404,9 +425,9 @@ describe('Process Content', function () {
             }
         });
 
-        expect(newHtml).not.toContain('<div name="c123" id="c123" class="graf graf--mixtapeEmbed graf-after--p">');
+        expect(post.data.html).not.toContain('<div name="c123" id="c123" class="graf graf--mixtapeEmbed graf-after--p">');
 
-        expect(newHtml).toContain('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.com/lorem/ipsum"><div class="kg-bookmark-content"><div class="kg-bookmark-title">lorem/ipsum</div><div class="kg-bookmark-description">Dolor Simet.</div><div class="kg-bookmark-metadata"></div></div></a></figure>');
+        expect(post.data.html).toContain('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.com/lorem/ipsum"><div class="kg-bookmark-content"><div class="kg-bookmark-title">lorem/ipsum</div><div class="kg-bookmark-description">Dolor Simet.</div><div class="kg-bookmark-metadata"></div></div></a></figure>');
     });
 
     it('Can process blockquotes in 2 parts', function () {
@@ -422,7 +443,7 @@ describe('Process Content', function () {
             decodeEntities: false
         }, false);
 
-        const newHtml = processContent({
+        const post = processContent({
             content: $post('.e-content'),
             post: {
                 data: {
@@ -431,11 +452,11 @@ describe('Process Content', function () {
             }
         });
 
-        expect(newHtml).not.toContain('<blockquote name="68bf" id="68bf" class="graf graf--pullquote graf-after--p graf--trailing">Standalone quote</blockquote>');
-        expect(newHtml).not.toContain('<blockquote name="3755" id="3755" class="graf graf--pullquote graf--startsWithDoubleQuote graf-after--li">“Main quote.”</blockquote>');
-        expect(newHtml).not.toContain('<blockquote name="8d9f" id="8d9f" class="graf graf--pullquote graf-after--pullquote graf--trailing">— <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></blockquote>');
+        expect(post.data.html).not.toContain('<blockquote name="68bf" id="68bf" class="graf graf--pullquote graf-after--p graf--trailing">Standalone quote</blockquote>');
+        expect(post.data.html).not.toContain('<blockquote name="3755" id="3755" class="graf graf--pullquote graf--startsWithDoubleQuote graf-after--li">“Main quote.”</blockquote>');
+        expect(post.data.html).not.toContain('<blockquote name="8d9f" id="8d9f" class="graf graf--pullquote graf-after--pullquote graf--trailing">— <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></blockquote>');
 
-        expect(newHtml).toContain('<blockquote><p>Standalone quote</p></blockquote>');
-        expect(newHtml).toContain('<blockquote><p>“Main quote.”<br><br>— <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></p></blockquote>');
+        expect(post.data.html).toContain('<blockquote><p>Standalone quote</p></blockquote>');
+        expect(post.data.html).toContain('<blockquote><p>“Main quote.”<br><br>— <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></p></blockquote>');
     });
 });

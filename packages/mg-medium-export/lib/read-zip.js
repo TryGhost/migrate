@@ -17,8 +17,6 @@ const contentStats = async (zipPath) => {
 };
 
 const readMediumZip = ({content, zipPath, options, skippedFileCount}) => {
-    const {removeResponses} = options;
-
     fsUtils.zip.read(zipPath, (entryName, zipEntry) => {
         const entryHtml = zipEntry.getData().toString('utf8');
 
@@ -28,10 +26,6 @@ const readMediumZip = ({content, zipPath, options, skippedFileCount}) => {
 
         // Catch all HTML files in `posts/`
         } else if (/^posts\/.*\.html$/.test(entryName)) {
-            if (removeResponses && !entryHtml.includes('graf--title')) {
-                return;
-            }
-
             content.posts.push({
                 name: entryName,
                 html: entryHtml

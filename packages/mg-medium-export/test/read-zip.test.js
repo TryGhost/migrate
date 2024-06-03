@@ -28,7 +28,7 @@ describe('contentStats', function () {
         const stats = await contentStats(inputZipPath);
 
         expect(stats).toContainAllKeys(['posts', 'users']);
-        expect(stats.posts).toEqual(5);
+        expect(stats.posts).toEqual(7);
         expect(stats.users).toEqual(1);
     });
 });

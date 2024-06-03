@@ -31,6 +31,23 @@ const equivalentTitles = (title1, title2) => {
 export default ({content, post}) => {
     let $content = $(content);
 
+    // Detect if post is likely to be a comment. If so, set as draft and add tag
+    // Based on being published, content having 1 paragraph, and having no images
+    let childrenCount = $content.children().length;
+    let pCount = $content.find('p').length;
+    let imgCount = $content.find('img').length;
+
+    if (post.data.status === 'published' && childrenCount <= 1 && pCount <= 1 && imgCount === 0) {
+        post.data.status = 'draft';
+        post.data.tags.push({
+            url: 'migrator-added-medium-possible-comment',
+            data: {
+                name: '#Medium Possible Comment',
+                slug: 'hash-medium-possible-comment'
+            }
+        });
+    }
+
     // Medium usually has an hr divider at the very beginning of the content
     // We don't need this so remove it if we find it
     let $firstSection = $content.find('.section--first');
@@ -172,5 +189,7 @@ export default ({content, post}) => {
         });
     });
 
-    return $content.html().trim();
+    post.data.html = $content.html().trim();
+
+    return post;
 };

@@ -135,10 +135,7 @@ export default ({name, html, globalUser, options}) => {
         scriptingEnabled: false
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
-    const post = processMeta({name, $post, options});
-
-    // Process content
-    post.data.html = processContent({content: $post('.e-content'), post});
+    let post = processMeta({name, $post, options});
 
     // Process author
     if ($post('.p-author').length) {
@@ -172,6 +169,10 @@ export default ({name, html, globalUser, options}) => {
             }
         });
     }
+
+    // Process content
+    // post.data.html = processContent({content: $post('.e-content'), post});
+    post = processContent({content: $post('.e-content'), post});
 
     // Grab the featured image
     // Do this last so that we can add tags to indicate feature image style
