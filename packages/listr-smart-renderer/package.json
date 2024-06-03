@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/listr-smart-renderer",
-  "version": "0.5.13",
+  "version": "0.5.14",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/listr-smart-renderer",
   "author": "Ghost Foundation",
   "license": "MIT",
