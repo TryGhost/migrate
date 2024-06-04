@@ -15,6 +15,9 @@ class TestContext extends MigrateBase {
         this.#schema = {
             name: {required: true, type: 'string', maxLength: 20},
             slug: {required: true, type: 'string', maxLength: 10},
+            html: {type: 'string', maxLength: 1000000000},
+            mobiledoc: {type: 'string', maxLength: 1000000000},
+            lexical: {type: 'string', maxLength: 1000000000},
             created_at: {type: 'dateTime'},
             role: {required: true, type: 'string', choices: ['Contributor', 'Author', 'Editor', 'Administrator']},
             list: {type: 'array', default: []},
@@ -54,7 +57,7 @@ describe('MigrateBase', () => {
 
     test('TestContext has all keys from schema', () => {
         const instance: any = new TestContext();
-        assert.deepEqual(Object.keys(instance.data), ['name', 'slug', 'created_at', 'role', 'list', 'featured']);
+        assert.deepEqual(Object.keys(instance.data), ['name', 'slug', 'html', 'mobiledoc', 'lexical', 'created_at', 'role', 'list', 'featured']);
     });
 
     test('Can set individual key', () => {
@@ -95,6 +98,9 @@ describe('MigrateBase', () => {
             data: {
                 name: 'Test',
                 slug: 'test',
+                html: null,
+                mobiledoc: null,
+                lexical: null,
                 created_at: null,
                 role: 'Author',
                 list: [],

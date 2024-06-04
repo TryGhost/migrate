@@ -40,6 +40,15 @@ post.set('updated_at', new Date('2023-12-08T13:36:42.000Z'));
 post.set('html', '<p>My post content</p>');
 ```
 
+You can optionally set the content format to `lexical` or `mobiledoc`. By default, only `html` is exported. This can be done in the constructor or by setting the property directly.
+
+```js
+const post = context.addPost({contentFormat: 'lexical'});
+
+const post = context.addPost();
+post.contentFormat = 'lexical';
+```
+
 ### Add a tag
 
 ```js

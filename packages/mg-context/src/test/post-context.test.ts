@@ -54,6 +54,13 @@ describe('PostContext', function () {
         assert.equal(instance.getSourceValue('id'), 'abcd');
     });
 
+    test('Can set and get content format', () => {
+        const instance: any = new PostContext();
+        instance.contentFormat = 'lexical';
+
+        assert.equal(instance.contentFormat, 'lexical');
+    });
+
     describe('Post Handling', function () {
         test('Can add a post directly to post context', async () => {
             const instance: any = new PostContext();
@@ -62,6 +69,71 @@ describe('PostContext', function () {
 
             assert.equal(instance.data.title, 'My Post');
             assert.equal(instance.data.slug, 'my-post');
+        });
+
+        test('Do not convert is format is not specified', function () {
+            const instance: any = new PostContext();
+            instance.set('title', 'My Post');
+            instance.set('slug', 'my-post');
+            instance.set('html', '<p>Hello world</p>');
+            instance.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
+            instance.set('updated_at', new Date('2023-11-24T12:00:00.000Z'));
+            instance.set('published_at', new Date('2023-11-24T12:00:00.000Z'));
+
+            const final = instance.getFinal;
+
+            assert.deepEqual(final.data.html, '<p>Hello world</p>');
+            assert.deepEqual(final.data.mobiledoc, null);
+            assert.deepEqual(final.data.lexical, null);
+        });
+
+        test('Can set export format to Mobiledoc with constructor arg', function () {
+            const instance: any = new PostContext({contentFormat: 'mobiledoc'});
+            instance.set('title', 'My Post');
+            instance.set('slug', 'my-post');
+            instance.set('html', '<p>Hello world</p>');
+            instance.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
+            instance.set('updated_at', new Date('2023-11-24T12:00:00.000Z'));
+            instance.set('published_at', new Date('2023-11-24T12:00:00.000Z'));
+
+            const final = instance.getFinal;
+
+            assert.deepEqual(final.data.html, '<p>Hello world</p>');
+            assert.deepEqual(typeof final.data.mobiledoc, 'object');
+            assert.deepEqual(final.data.lexical, null);
+        });
+
+        test('Can set export format to Lexical with constructor arg', function () {
+            const instance: any = new PostContext({contentFormat: 'lexical'});
+            instance.set('title', 'My Post');
+            instance.set('slug', 'my-post');
+            instance.set('html', '<p>Hello world</p>');
+            instance.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
+            instance.set('updated_at', new Date('2023-11-24T12:00:00.000Z'));
+            instance.set('published_at', new Date('2023-11-24T12:00:00.000Z'));
+
+            const final = instance.getFinal;
+
+            assert.deepEqual(final.data.html, '<p>Hello world</p>');
+            assert.deepEqual(typeof final.data.lexical, 'object');
+            assert.deepEqual(final.data.mobiledoc, null);
+        });
+
+        test('Can set content format with setter', function () {
+            const instance: any = new PostContext();
+            instance.contentFormat = 'lexical';
+            instance.set('title', 'My Post');
+            instance.set('slug', 'my-post');
+            instance.set('html', '<p>Hello world</p>');
+            instance.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
+            instance.set('updated_at', new Date('2023-11-24T12:00:00.000Z'));
+            instance.set('published_at', new Date('2023-11-24T12:00:00.000Z'));
+
+            const final = instance.getFinal;
+
+            assert.deepEqual(final.data.html, '<p>Hello world</p>');
+            assert.deepEqual(typeof final.data.lexical, 'object');
+            assert.deepEqual(final.data.mobiledoc, null);
         });
 
         test('Can get final object', function () {
@@ -79,6 +151,8 @@ describe('PostContext', function () {
                     title: 'My Post',
                     slug: 'my-post',
                     html: null,
+                    mobiledoc: null,
+                    lexical: null,
                     comment_id: null,
                     plaintext: null,
                     feature_image: null,
@@ -273,6 +347,44 @@ describe('PostContext', function () {
             assert.equal(instance.data.tags[1].data.name, 'First Tag');
             assert.equal(instance.data.tags[2].data.name, 'Second Tag');
         });
+
+        test('Can detect if post has tag slug', function () {
+            const instance: any = new PostContext();
+            instance.addTag({
+                name: 'First Tag',
+                slug: 'first-tag'
+            });
+            instance.addTag({
+                name: 'Second Tag',
+                slug: 'second-tag'
+            });
+            instance.setPrimaryTag({
+                name: 'Primary Tag',
+                slug: 'primary-tag'
+            });
+
+            assert.equal(instance.hasTagSlug('second-tag'), true);
+            assert.equal(instance.hasTagSlug('not-a-tag'), false);
+        });
+
+        test('Can detect if post has tag name', function () {
+            const instance: any = new PostContext();
+            instance.addTag({
+                name: 'First Tag',
+                slug: 'first-tag'
+            });
+            instance.addTag({
+                name: 'Second Tag',
+                slug: 'second-tag'
+            });
+            instance.setPrimaryTag({
+                name: 'Primary Tag',
+                slug: 'primary-tag'
+            });
+
+            assert.equal(instance.hasTagName('Second Tag'), true);
+            assert.equal(instance.hasTagName('Not a tag'), false);
+        });
     });
 
     describe('Author Handling', function () {
@@ -441,6 +553,66 @@ describe('PostContext', function () {
             assert.equal(instance.data.authors[0].data.name, 'Primary Author');
             assert.equal(instance.data.authors[1].data.name, 'First Author');
             assert.equal(instance.data.authors[2].data.name, 'Second Author');
+        });
+
+        test('Can detect if post has author slug', function () {
+            const instance: any = new PostContext();
+            instance.addAuthor({
+                name: 'First Author',
+                slug: 'first-author'
+            });
+            instance.addAuthor({
+                name: 'Second Author',
+                slug: 'second-author'
+            });
+            instance.setPrimaryAuthor({
+                name: 'Primary Author',
+                slug: 'primary-author'
+            });
+
+            assert.equal(instance.hasAuthorSlug('second-author'), true);
+            assert.equal(instance.hasAuthorSlug('not-an-author'), false);
+        });
+
+        test('Can detect if post has author name', function () {
+            const instance: any = new PostContext();
+            instance.addAuthor({
+                name: 'First Author',
+                slug: 'first-author'
+            });
+            instance.addAuthor({
+                name: 'Second Author',
+                slug: 'second-author'
+            });
+            instance.setPrimaryAuthor({
+                name: 'Primary Author',
+                slug: 'primary-author'
+            });
+
+            assert.equal(instance.hasAuthorName('Second Author'), true);
+            assert.equal(instance.hasAuthorName('Not an author'), false);
+        });
+
+        test('Can detect if post has author email', function () {
+            const instance: any = new PostContext();
+            instance.addAuthor({
+                name: 'First Author',
+                slug: 'first-author',
+                email: 'first-author@example.com'
+            });
+            instance.addAuthor({
+                name: 'Second Author',
+                slug: 'second-author',
+                email: 'second-author@example.com'
+            });
+            instance.setPrimaryAuthor({
+                name: 'Primary Author',
+                slug: 'primary-author',
+                email: 'primary-author@example.com'
+            });
+
+            assert.equal(instance.hasAuthorEmail('second-author@example.com'), true);
+            assert.equal(instance.hasAuthorEmail('not-an-author@example.com'), false);
         });
     });
 });

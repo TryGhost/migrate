@@ -1,3 +1,5 @@
+import mobiledocConverter from '@tryghost/html-to-mobiledoc';
+import lexicalConverter from '@tryghost/kg-html-to-lexical';
 import MigrateBase from './MigrateBase.js';
 import TagContext, {TagObject, TagDataObject} from './TagContext.js';
 import AuthorContext, {AuthorObject, AuthorDataObject} from './AuthorContext.js';
@@ -6,6 +8,8 @@ export type PostObject = {
     title: string;
     slug: string;
     html?: string;
+    mobiledoc?: string;
+    lexical?: string;
     comment_id?: string;
     plaintext?: string;
     feature_image?: string;
@@ -42,15 +46,17 @@ export type PostDataObject = {
 export type PostConstructorOptions = {
     source?: Object;
     meta?: Object;
+    contentFormat?: 'mobiledoc' | 'lexical' | 'html';
 };
 
 export default class PostContext extends MigrateBase {
     #source: any;
     #schema;
     #meta: any;
+    #contentFormat: 'mobiledoc' | 'lexical' | 'html';
     data: any = {};
 
-    constructor({source = {}, meta = {}}: PostConstructorOptions = {}) {
+    constructor({source = {}, meta = {}, contentFormat = 'html'}: PostConstructorOptions = {}) {
         super();
 
         // Source data from another platform
@@ -58,11 +64,15 @@ export default class PostContext extends MigrateBase {
 
         this.#meta = meta;
 
+        this.#contentFormat = contentFormat;
+
         // Define what fields are allowed, their types, validations, and defaults
         this.#schema = {
             title: {required: true, type: 'string', maxLength: 255},
             slug: {required: true, type: 'string', maxLength: 191},
             html: {type: 'string', maxLength: 1000000000},
+            mobiledoc: {type: 'string', maxLength: 1000000000},
+            lexical: {type: 'string', maxLength: 1000000000},
             comment_id: {type: 'string', maxLength: 50},
             plaintext: {type: 'string', maxLength: 1000000000},
             feature_image: {type: 'string', maxLength: 2000},
@@ -101,8 +111,30 @@ export default class PostContext extends MigrateBase {
         });
     }
 
+    get contentFormat() {
+        return this.#contentFormat;
+    }
+
+    set contentFormat(format: 'mobiledoc' | 'lexical' | 'html') {
+        this.#contentFormat = format;
+    }
+
     get meta() {
         return this.#meta;
+    }
+
+    set(prop: string, value: any) {
+        if (prop === 'html') {
+            if (this.#contentFormat === 'mobiledoc') {
+                super.set('mobiledoc', mobiledocConverter.toMobiledoc(value));
+            } else if (this.#contentFormat === 'lexical') {
+                super.set('lexical', lexicalConverter.htmlToLexical(value));
+            }
+        }
+
+        super.set(prop, value);
+
+        return this;
     }
 
     setMeta(value: any) {
