@@ -904,11 +904,14 @@ export default class AssetScraper {
                     try {
                         let newFile = await this.fetchFile(src, ctx);
 
-                        if ((knownTypes.includes(newFile.fileData.mime))) {
+                        const responseMime = newFile?.fileData?.mime ?? newFile?.response?.headers['content-type'] ?? null;
+                        const responseExt = newFile?.fileData?.ext ?? extname(src).replace('.', '');
+
+                        if (knownTypes.includes(responseMime)) {
                             // Set the file extension to match the buffers mime type
-                            imageOptions.filename = this.changeExtension(imageOptions.filename, newFile.fileData.ext);
-                            imageOptions.storagePath = this.changeExtension(imageOptions.storagePath, newFile.fileData.ext);
-                            imageOptions.outputPath = this.changeExtension(imageOptions.outputPath, newFile.fileData.ext);
+                            imageOptions.filename = this.changeExtension(imageOptions.filename, responseExt);
+                            imageOptions.storagePath = this.changeExtension(imageOptions.storagePath, responseExt);
+                            imageOptions.outputPath = this.changeExtension(imageOptions.outputPath, responseExt);
 
                             // Trim the file name length to 200 characters
                             let theExt = extname(imageOptions.outputPath);
