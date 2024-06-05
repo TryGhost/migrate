@@ -938,7 +938,7 @@ export default class AssetScraper {
                             this.AssetCache.add(item);
                         }
                     } catch (error) {
-                        this.logger.error({message: `Failed to save image ${src}`, src, error});
+                        this.logger.error({message: `Failed to save file ${src}`, src, error});
                     }
                 }
             });
