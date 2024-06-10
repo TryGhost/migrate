@@ -33,7 +33,7 @@ migrate wp-xml --pathToFile /path/to/file.xml
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
 - **`--pathToFile`** (required)
-    - Path to XML file
+    - Path to XML file, or folder of XML files
     - string - default: `null`
 - **`-V` `--verbose`**
     - bool - default: `false`

@@ -25,7 +25,7 @@ const options = [
         type: 'string',
         flags: '--pathToFile',
         defaultValue: null,
-        desc: 'Path to XML file',
+        desc: 'Path to XML file, or folder of XML files',
         required: true
     },
     {

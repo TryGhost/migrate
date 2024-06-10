@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:wp="http://wordpress.org/export/1.2/">
+  <channel>
+    <title>Acme Company</title>
+    <link>https://example.com</link>
+    <pubDate>Tue, 02 Apr 2013 05:16:20 +0000</pubDate>
+    <description />
+    <language>en-US</language>
+    <wp:wxr_version>1.2</wp:wxr_version>
+    <item>
+      <link>https://example.com/services</link>
+      <title>Services</title>
+      <pubDate>Sat, 27 May 2017 11:33:38 +0000</pubDate>
+      <content:encoded><![CDATA[<p>We're not testing HTML output here. That happens in @tryghost/mg-wp-api</p>]]></content:encoded>
+      <wp:post_name>services</wp:post_name>
+      <wp:post_type>page</wp:post_type>
+      <wp:post_id>135</wp:post_id>
+      <wp:status>publish</wp:status>
+      <dc:creator>harry@example.com</dc:creator>
+    </item>
+  </channel>
+</rss>

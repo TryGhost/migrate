@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:wp="http://wordpress.org/export/1.2/">
+  <channel>
+    <title>Acme Company</title>
+    <link>https://example.com</link>
+    <pubDate>Tue, 02 Apr 2013 05:16:20 +0000</pubDate>
+    <description />
+    <language>en-US</language>
+    <wp:wxr_version>1.2</wp:wxr_version>
+    <item>
+      <wp:attachment_url>https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1268&q=80</wp:attachment_url>
+      <link>https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1268&q=80</link>
+      <title>miniature-green-pumpkin-on-white-table</title>
+      <wp:post_name>Carmen-Thumbnail-jpg</wp:post_name>
+      <wp:post_type>attachment</wp:post_type>
+      <wp:post_id>5</wp:post_id>
+      <wp:post_parent>4</wp:post_parent>
+      <wp:status>inherit</wp:status>
+      <content:encoded><![CDATA[img-5134cbefe4b0c6fb04df8065]]></content:encoded>
+      <excerpt:encoded><![CDATA[exc-5134cbefe4b0c6fb04df8065]]></excerpt:encoded>
+      <pubDate>Mon, 09 Oct 2017 01:30:56 +0000</pubDate>
+      <wp:post_date>2017-10-09 01:30:56</wp:post_date>
+      <wp:post_date_gmt>2017-10-09 01:30:56</wp:post_date_gmt>
+      <dc:creator>hermione@example.com</dc:creator>
+    </item>
+  </channel>
+</rss>
