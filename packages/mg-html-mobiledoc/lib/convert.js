@@ -6,7 +6,7 @@ const convert = (ctx, htmlCard) => {
     let res = ctx.result;
     let posts = res?.posts ?? [];
 
-    if (!posts && res.data && res.data.posts) {
+    if ((!posts || posts.length === 0) && res.data && res.data.posts) {
         posts = res.data.posts;
     }
 

@@ -1,3 +1,4 @@
+import {convert} from '../lib/convert.js';
 import {convertPost} from '../lib/convert-post.js';
 
 let fakeLogger = {
@@ -195,5 +196,28 @@ describe('Convert', function () {
         expect(mobiledoc.cards).toEqual([['image',{src: 'https://example.com/wp-content/uploads/2021/12/photo-1024x683.jpg', width: 1024, height: 683, href: 'https://example.com/2021/12/13/compare/', caption: 'My awesome page'}]]);
         expect(mobiledoc.markups).toEqual([]);
         expect(mobiledoc.sections).toEqual([[10,0]]);
+    });
+});
+
+describe('Convert tasks', function () {
+    test('Can make tasks', function () {
+        let ctx = {
+            result: {
+                data: {
+                    posts: [
+                        {
+                            html: '<h2>First post</h2>'
+                        },
+                        {
+                            html: '<h2>Second post</h2>'
+                        }
+                    ]
+                }
+            }
+        };
+
+        let tasks = convert(ctx);
+
+        expect(tasks).toBeArrayOfSize(2);
     });
 });
