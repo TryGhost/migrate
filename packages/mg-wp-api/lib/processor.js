@@ -357,7 +357,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     // Remove duplicates images in <noscript> tags that have the same src
     $html('noscript').each((i, el) => {
-        if (el.prev.name === 'img') {
+        if (el?.prev?.name === 'img') {
             const prevImgSrc = el.prev.attribs['data-src'] ?? el.prev.attribs.src;
             const noScriptImgSrc = $(el).find('img').attr('src');
 
