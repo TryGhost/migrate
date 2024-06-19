@@ -43,6 +43,9 @@ describe('beehiiv Mapper', () => {
 
             const slashNewPath = fullImageURL('/uploads/my-path.jpg');
             assert.equal(slashNewPath, 'https://media.beehiiv.com/cdn-cgi/image/quality=100/uploads/my-path.jpg');
+
+            const fullPath = fullImageURL('https://media.beehiiv.com/cdn-cgi/image/quality=100/uploads/my-path.jpg');
+            assert.equal(fullPath, 'https://media.beehiiv.com/cdn-cgi/image/quality=100/uploads/my-path.jpg');
         });
     });
 
@@ -215,6 +218,25 @@ describe('beehiiv Mapper', () => {
             const mapped = await mapPost({postData: bhObj});
 
             assert.equal(mapped.data.visibility, 'paid');
+        });
+
+        it('Handles an \'All premium subscribers\' post visibility', async () => {
+            const bhObj = {...beehiivCsvObj};
+            delete bhObj.audience;
+            bhObj.web_audiences = 'All premium subscribers';
+
+            const mapped = await mapPost({postData: bhObj});
+
+            assert.equal(mapped.data.visibility, 'paid');
+        });
+
+        it('Handles an no post visibility being set', async () => {
+            const bhObj = {...beehiivCsvObj};
+            delete bhObj.audience;
+
+            const mapped = await mapPost({postData: bhObj});
+
+            assert.equal(mapped.data.visibility, 'public');
         });
     });
 

@@ -1,9 +1,26 @@
 import $ from 'cheerio';
 import sanitizeHtml from 'sanitize-html';
+import SimpleDom from 'simple-dom';
+import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
+
+const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
 const getYouTubeID = (url: string) => {
     const arr = url.split(/(vi\/|v%3D|v=|\/v\/|youtu\.be\/|\/embed\/)/);
     return undefined !== arr[2] ? arr[2].split(/[^\w-]/i)[0] : arr[0];
+};
+
+const isURL = (urlString: string | undefined) => {
+    if (undefined === urlString) {
+        return false;
+    }
+
+    try {
+        new URL(urlString);
+        return true;
+    } catch (err) {
+        return false;
+    }
 };
 
 const processHTML = ({html, postData, options}: {html: string, postData?: mappedDataObject, options: any}) => {
@@ -18,6 +35,28 @@ const processHTML = ({html, postData, options}: {html: string, postData?: mapped
         xmlMode: true,
         decodeEntities: false
     });
+
+    if (options?.url) {
+        $html('a').each((i, el) => {
+            const theHref = $html(el).attr('href');
+            const isHrefURL = isURL(theHref);
+
+            if (theHref && isHrefURL) {
+                const url = new URL(theHref);
+
+                const params = new URLSearchParams(url.search);
+
+                params.delete('utm_source');
+                params.delete('utm_medium');
+                params.delete('utm_campaign');
+                params.delete('last_resource_guid');
+
+                url.search = params.toString();
+
+                $html(el).attr('href', url.toString());
+            }
+        });
+    }
 
     // Remove hidden elements
     $html('[style*="display:none"]').remove();
@@ -85,6 +124,40 @@ const processHTML = ({html, postData, options}: {html: string, postData?: mapped
         }
     });
 
+    $html('img').each((i, el) => {
+        const parentTable = $html(el).parent().parent().parent();
+
+        if (parentTable.prop('tagName').toLowerCase() === 'table') {
+            const theSrc = $html(el).attr('src');
+            let theAlt = $html(el).attr('alt');
+
+            const secondTr = ($(parentTable).find('tr').eq(1).find('p').length) ? $(parentTable).find('tr').eq(1).find('p') : false;
+            const theText = $(secondTr)?.html()?.trim() ?? false;
+
+            if (!theAlt) {
+                theAlt = $(secondTr)?.text()?.trim();
+            }
+
+            let cardOpts = {
+                env: {dom: new SimpleDom.Document()},
+                payload: {
+                    src: theSrc,
+                    alt: theAlt,
+                    caption: theText
+                }
+            };
+
+            $(parentTable).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
+        }
+    });
+
+    // Convert buttons to Ghost buttons
+    $html('a[style="color:#FFFFFF;font-size:18px;padding:0px 14px;text-decoration:none;"]').each((i, el) => {
+        const buttonText = $html(el).text();
+        const buttonHref = $html(el).attr('href');
+        $(el).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+    });
+
     if (options?.url && options?.subscribeLink) {
         $html(`a[href^="${options.url}/subscribe"]`).each((i, el) => {
             $html(el).attr('href', options.subscribeLink);
@@ -104,10 +177,15 @@ const processHTML = ({html, postData, options}: {html: string, postData?: mapped
             'div', 'hr', 'iframe'
         ],
         allowedAttributes: {
-            a: ['href', 'title', 'rel', 'target'],
+            a: ['href', 'title', 'rel', 'target', 'class'],
             img: ['src', 'alt', 'title'],
             iframe: ['width', 'height', 'src', 'title', 'frameborder', 'allow', 'allowfullscreen'],
-            figure: ['class']
+            figure: ['class'],
+            div: ['class']
+        },
+        allowedClasses: {
+            a: ['kg-btn', 'kg-btn-accent'],
+            div: ['kg-card', 'kg-button-card', 'kg-align-center', 'kg-card-hascaption']
         }
     });
 

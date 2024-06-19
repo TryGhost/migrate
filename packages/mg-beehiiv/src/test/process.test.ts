@@ -186,6 +186,137 @@ describe('beehiiv Processor', () => {
 
             assert.equal(processed, '<p>Stay updated! Be sure to <a href="#/portal/signup">subscribe to our newsletter</a>.</p>');
         });
+
+        it('Wraps images in figure tags with alt text', () => {
+            const htmlContent = `<body><table><tr>
+            <td>
+                <table>
+                    <tr>
+                        <td><img src="https://example.com/image.jpg" alt="My alt text" /></td>
+                    </tr>
+                </table>
+            </td>
+        </tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+
+            assert.match(processed, /<figure class="kg-card kg-image-card"><img src="https:\/\/example.com\/image.jpg" alt="My alt text" \/><\/figure>/);
+        });
+
+        it('Wraps images in figure tags and use caption as alt text', () => {
+            const htmlContent = `<body><table><tr>
+            <td>
+                <table>
+                    <tr>
+                        <td><img src="https://example.com/image.jpg" /></td>
+                    </tr>
+                    <tr>
+                        <td align="center" valign="top" class="t" style="width:610px;">
+                            <p>Image caption</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+
+            assert.match(processed, /<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https:\/\/example.com\/image.jpg" alt="Image caption" \/><figcaption>Image caption<\/figcaption><\/figure>/);
+        });
+
+        it('Wraps images in figure tags with caption', () => {
+            const htmlContent = `<body><table><tr>
+            <td>
+                <table>
+                    <tr>
+                        <td><img src="https://example.com/image.jpg" alt="My alt text" /></td>
+                    </tr>
+                    <tr>
+                        <td align="center" valign="top" class="t" style="width:610px;">
+                            <p>Image caption</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+
+            assert.match(processed, /<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https:\/\/example.com\/image.jpg" alt="My alt text" \/><figcaption>Image caption<\/figcaption><\/figure>/);
+        });
+
+        it('Wraps images in figure tags with missing caption text', () => {
+            const htmlContent = `<body><table><tr>
+            <td>
+                <table>
+                    <tr>
+                        <td><img src="https://example.com/image.jpg" alt="My alt text" /></td>
+                    </tr>
+                    <tr></tr>
+                </table>
+            </td>
+        </tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+
+            assert.match(processed, /<figure class="kg-card kg-image-card"><img src="https:\/\/example.com\/image.jpg" alt="My alt text" \/><\/figure>/);
+        });
+
+        it('Keep buttons as buttons', () => {
+            const htmlContent = `<body><table><tr>
+            <td align="center" valign="top" style="padding-bottom:14px;padding-left:25px;padding-right:25px;padding-top:14px;text-align:center;width:100%;word-break:break-word;" class="dd">
+                <table role="none" border="0" cellspacing="0" cellpadding="0" align="center">
+                    <tr>
+                        <td class="v" align="center" valign="middle" height="42" style="height:42px;"><a href="https://www.example.com/upgrade" target="_blank" rel="noopener noreferrer nofollow" style="color:#FFFFFF;font-size:18px;padding:0px 14px;text-decoration:none;">Upgrade</a></td>
+                    </tr>
+                </table>
+            </td>
+        </tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+
+            assert.equal(processed, '<div class="kg-card kg-button-card kg-align-center"><a href="https://www.example.com/upgrade" class="kg-btn kg-btn-accent">Upgrade</a></div>');
+        });
+
+        it('Removes UTM params from internal URLs', () => {
+            const htmlContent = `<body><a href="https://www.example.com/p/post-slug?utm_source=www.example.com&utm_medium=newsletter&utm_campaign=lorem-ipsum-dolor-simet-1234&last_resource_guid=Post%3Aabcd1234-c74e-427a-83f3-3f8c0bad81e6">Article</a></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
+                url: 'https://www.example.com'
+            }});
+
+            assert.equal(processed, '<a href="https://www.example.com/p/post-slug">Article</a>');
+        });
+
+        it('Does not remove non-UTM params from internal URLs', () => {
+            const htmlContent = `<body><a href="https://www.example.com/upgrade?hello=world">Upgrade</a></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
+                url: 'https://www.example.com'
+            }});
+
+            assert.equal(processed, '<a href="https://www.example.com/upgrade?hello=world">Upgrade</a>');
+        });
+
+        it('Removes URL params from external URLs', () => {
+            const htmlContent = `<body><a href="https://www.another.com/p/another-post-slug?utm_source=www.another.com&utm_medium=newsletter&utm_campaign=lorem-ipsum-dolor-simet-1234&last_resource_guid=Post%3Aabcd1234-c74e-427a-83f3-3f8c0bad81e6">Another Article</a></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
+                url: 'https://www.example.com'
+            }});
+
+            assert.equal(processed, '<a href="https://www.another.com/p/another-post-slug">Another Article</a>');
+        });
+
+        it('Skips empty URLs', () => {
+            const htmlContent = `<body><a>Upgrade</a></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
+                url: 'https://www.example.com'
+            }});
+
+            assert.equal(processed, '<a>Upgrade</a>');
+        });
+
+        it('Skips non-URLs', () => {
+            const htmlContent = `<body><a href="{{not_a_url}}">Upgrade</a></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
+                url: 'https://www.example.com'
+            }});
+
+            assert.equal(processed, '<a href="{{not_a_url}}">Upgrade</a>');
+        });
     });
 
     describe('Feature image deduplication', () => {

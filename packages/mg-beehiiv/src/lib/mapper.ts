@@ -27,13 +27,19 @@ const createSlug = ({domain, url, title}: {domain?: string, url: string, title?:
 };
 
 const fullImageURL = (path: string) => {
-    const noLeadingSlash = path.replace(/^\//, '');
-    return `https://media.beehiiv.com/cdn-cgi/image/quality=100/${noLeadingSlash}`;
+    if (path.startsWith('uploads/') || path.startsWith('/uploads/')) {
+        const noLeadingSlash = path.replace(/^\//, '');
+        return `https://media.beehiiv.com/cdn-cgi/image/quality=100/${noLeadingSlash}`;
+    } else {
+        return path;
+    }
 };
 
 const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?: any}) => {
     const domain = options?.url ?? false;
     const postSlug = createSlug({domain, url: postData.url, title: postData.web_title});
+
+    const theAudience = postData.audience ?? postData.web_audiences ?? false;
 
     const mappedData: mappedDataObject = {
         url: postData.url,
@@ -52,9 +58,9 @@ const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?
         }
     };
 
-    if (postData.audience === 'premium') {
+    if (theAudience === 'premium' || theAudience === 'All premium subscribers') {
         mappedData.data.visibility = 'paid';
-    } else if (postData.audience === 'both') {
+    } else if (theAudience === 'both') {
         mappedData.data.visibility = 'members';
     }
 
@@ -85,13 +91,16 @@ const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?
         }
     });
 
-    mappedData.data.tags.push({
-        url: `migrator-added-tag-hash-beehiiv-${postData.audience}`,
-        data: {
-            slug: `hash-beehiiv-visibility-${postData.audience}`,
-            name: `#beehiiv-visibility-${postData.audience}`
-        }
-    });
+    if (theAudience) {
+        const theAudienceSlug = slugify(theAudience);
+        mappedData.data.tags.push({
+            url: `migrator-added-tag-hash-beehiiv-${theAudienceSlug}`,
+            data: {
+                slug: `hash-beehiiv-visibility-${theAudienceSlug}`,
+                name: `#beehiiv-visibility-${theAudienceSlug}`
+            }
+        });
+    }
 
     mappedData.data.html = processHTML({html: mappedData.data.html, postData: mappedData, options});
 

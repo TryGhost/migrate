@@ -31,53 +31,6 @@ const scrapeConfig = {
         twitter_description: {
             selector: 'meta[property="twitter:description"]',
             attr: 'content'
-        },
-        authors: {
-            selector: 'script[type="application/ld+json"]',
-            convert: (x) => {
-                if (!x) {
-                    return;
-                }
-
-                let ldJSON = JSON.parse(x);
-                let theAuthors = [];
-
-                if (ldJSON.author.length > 1) {
-                    ldJSON.author.forEach((person) => {
-                        theAuthors.push({
-                            url: slugify(person.url),
-                            data: {
-                                name: person.name,
-                                slug: slugify(person.name),
-                                email: `${slugify(person.name)}@example.com`
-                            }
-                        });
-                    });
-
-                    return theAuthors;
-                } else if ((ldJSON.author[0]) ? ldJSON.author[0].name : ldJSON.author.name) {
-                    let author = (ldJSON.author[0]) ? ldJSON.author[0].name : ldJSON.author.name;
-
-                    // Split string by ['and', '&', ','], trim white space from the resulting array items, and remove empty items
-                    let authorSplit = author.split(/(?:,|and|&)+/).map(function (item) {
-                        return item.trim();
-                    }).filter(i => i);
-
-                    authorSplit.forEach((item) => {
-                        theAuthors.push({
-                            data: {
-                                name: item,
-                                slug: slugify(item),
-                                email: `${slugify(item)}@example.com`
-                            }
-                        });
-                    });
-
-                    return theAuthors;
-                } else {
-                    return;
-                }
-            }
         }
     }
 };

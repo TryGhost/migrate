@@ -1,3 +1,4 @@
+declare module '@tryghost/kg-default-cards/lib/cards/image.js';
 declare module '@tryghost/mg-fs-utils';
 declare module '@tryghost/string';
 declare module 'sanitize-html';
@@ -6,7 +7,8 @@ type beehiivPostDataObject = {
     id: string;
     web_title: string;
     status: 'archived' | 'confirmed' | 'draft'
-    audience: 'both' | 'free' | 'premium'
+    audience?: 'both' | 'free' | 'premium'
+    web_audiences?: 'All free subscribers, All premium subscribers' | 'All free subscribers' | 'All premium subscribers'
     url: string;
     web_subtitle?: string;
     email_subject_line: string;
