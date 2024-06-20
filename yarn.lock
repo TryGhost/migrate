@@ -2240,14 +2240,14 @@
   resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-4.1.1.tgz#132a019abc6b6b6a0948c7e2d3e3ce37d18983b7"
   integrity sha512-R654qIHRf//FP/1hHLkehTYxZz/Zp5NXomfEuQSezw4uDmOwGn1ME4yZD5TDi5+8ism71tfMeGVVI5XmLOeDLg==
 
-"@tryghost/kg-default-cards@10.0.5":
-  version "10.0.5"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-default-cards/-/kg-default-cards-10.0.5.tgz#464893395256db5346ea68b84834fc8ae0d2ecf3"
-  integrity sha512-H/bAfSaiuuHwn/WioErdXbYLKnIO/JPkcownIBmxAkJQRgCVskwukV2ImgUEEknlwamsxWa6SYkQUYv95h7Xvg==
+"@tryghost/kg-default-cards@10.0.6":
+  version "10.0.6"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-default-cards/-/kg-default-cards-10.0.6.tgz#17f10a711814196719c8fa2c6506a7d2ea9f3d7f"
+  integrity sha512-wOjaqFj8G9hFr6bI85CUAO55aD9B2NoLIVaeqZgzzU6Ix09ZhP4M4abrwQup7hp89PSrGz7noqmac9NTb/Lvxg==
   dependencies:
     "@tryghost/kg-markdown-html-renderer" "7.0.5"
-    "@tryghost/string" "^0.2.0"
-    "@tryghost/url-utils" "^4.0.0"
+    "@tryghost/string" "0.2.12"
+    "@tryghost/url-utils" "4.4.8"
     handlebars "^4.7.6"
     juice "^10.0.0"
     lodash "^4.17.21"
@@ -2432,7 +2432,7 @@
     caller "^1.0.1"
     find-root "^1.1.0"
 
-"@tryghost/string@0.2.12", "@tryghost/string@^0.2.0":
+"@tryghost/string@0.2.12":
   version "0.2.12"
   resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.2.12.tgz#fc0e06939e7b43922e2471135ed9af4f22ddcd54"
   integrity sha512-1ygv+nOycupvFX/lwvRbThcGzwlMlwNXUUQn3HqWnKYZmDAA2FOP5SvlcY/BkOLzpPQUlBgSs3PvjOurCIZU7g==
@@ -2453,7 +2453,7 @@
   dependencies:
     lodash.template "^4.5.0"
 
-"@tryghost/url-utils@^4.0.0":
+"@tryghost/url-utils@4.4.8":
   version "4.4.8"
   resolved "https://registry.yarnpkg.com/@tryghost/url-utils/-/url-utils-4.4.8.tgz#fb867d8bd59a640dc67ab61c1a3d921bd12a8c2b"
   integrity sha512-kheB4cdGZ9WqmWGzDCJ3JMCDO1fQOGIR44FFalbUhukj8Xl7g+QeHFsiwQg77KvrrL58x0nIZ4uwmo9K1aE/Ew==
