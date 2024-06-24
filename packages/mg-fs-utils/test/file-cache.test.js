@@ -215,6 +215,22 @@ describe('resolveFileName character handling', function () {
         await fileCache.emptyCurrentCacheDir();
     });
 
+    it('Handles spaces in the middle of the path', async function () {
+        let fileCache = new FileCache('test');
+
+        let fileNameEncodedSpaces = await fileCache.resolveFileName('/assets/Lorem%20Ipsum/Dolor%20Sit%20Amet/document.pdf');
+        expect(fileNameEncodedSpaces.filename).toEqual('/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
+        expect(fileNameEncodedSpaces.storagePath).toInclude('/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
+        expect(fileNameEncodedSpaces.outputPath).toEqual('/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
+
+        let fileNameRawSpaces = await fileCache.resolveFileName('/assets/Lorem Ipsum/Dolor Sit Amet/document.pdf');
+        expect(fileNameRawSpaces.filename).toEqual('/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
+        expect(fileNameRawSpaces.storagePath).toInclude('/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
+        expect(fileNameRawSpaces.outputPath).toEqual('/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
+
+        await fileCache.emptyCurrentCacheDir();
+    });
+
     it('Will handle Russian characters', async function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/счастливые-маленькие-деревья.jpeg');

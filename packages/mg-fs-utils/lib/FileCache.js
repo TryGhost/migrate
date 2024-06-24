@@ -181,9 +181,11 @@ export default class FileCache {
     resolveFileName(filename, type = 'images') {
         const ext = extname(filename);
 
-        // Replace any dots in the path with dashes
+        // Replace any dots and spaces in the path with dashes
         const parsedPath = parse(filename);
         parsedPath.dir = parsedPath.dir.replace(/\./g, '-');
+        parsedPath.dir = parsedPath.dir.replace(/ /g, '-');
+        parsedPath.dir = parsedPath.dir.replace(/%20/g, '-');
         filename = format(parsedPath);
 
         let typeDir = null;
