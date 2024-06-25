@@ -588,7 +588,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     // Handle YouTube embeds
     $html('.wp-block-embed.is-provider-youtube').each((i, el) => {
-        const videoUrl = $(el).text();
+        const videoUrl = $(el).find('iframe').attr('src') ?? $(el).text();
         const videoID = getYouTubeID(videoUrl);
 
         if (videoUrl && videoID && videoID.length) {
