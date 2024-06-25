@@ -7,7 +7,6 @@ import Shortcodes from '@tryghost/mg-shortcodes';
 import {slugify} from '@tryghost/string';
 import MgFsUtils from '@tryghost/mg-fs-utils';
 import {htmlToText} from 'html-to-text';
-import {formatISO, parseISO, isBefore, isAfter, add} from 'date-fns';
 import {_base as debugFactory} from '@tryghost/debug';
 
 const debug = debugFactory('migrate:wp-api:fetch');
@@ -855,43 +854,6 @@ const processPosts = async (posts, users, options, errors, fileCache) => { // es
         });
 
         posts = foundPosts;
-    }
-
-    if (options.postsBefore && options.postsAfter) {
-        const startDate = parseISO(formatISO(new Date(options.postsAfter)));
-        const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
-            days: 1
-        });
-
-        posts = posts.filter((post) => {
-            if (isAfter(parseISO(post.date_gmt), startDate) && isBefore(parseISO(post.date_gmt), endDate)) {
-                return post;
-            } else {
-                return false;
-            }
-        });
-    } else if (options.postsAfter) {
-        const startDate = parseISO(formatISO(new Date(options.postsAfter)));
-
-        posts = posts.filter((post) => {
-            if (isAfter(parseISO(post.date_gmt), startDate)) {
-                return post;
-            } else {
-                return false;
-            }
-        });
-    } else if (options.postsBefore) {
-        const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
-            days: 1
-        });
-
-        posts = posts.filter((post) => {
-            if (isBefore(parseISO(post.date_gmt), endDate)) {
-                return post;
-            } else {
-                return false;
-            }
-        });
     }
 
     return Promise.all(posts.map(post => processPost(post, users, options, errors, fileCache)));
