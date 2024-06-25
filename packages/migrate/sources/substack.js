@@ -84,7 +84,7 @@ const scrapeConfig = {
                     let author = (ldJSON.author[0]) ? ldJSON.author[0].name : ldJSON.author.name;
 
                     // Split string by ['and', '&', ','], trim white space from the resulting array items, and remove empty items
-                    let authorSplit = author.split(/(?:,|and|&)+/).map(function (item) {
+                    let authorSplit = author.split(/\s*(?:,\s| and | & )\s*/).map(function (item) {
                         return item.trim();
                     }).filter(i => i);
 
