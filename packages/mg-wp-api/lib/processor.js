@@ -226,6 +226,21 @@ const processShortcodes = async ({html}) => {
         return `<figure><pre class="${classString}"><code>${theContent}</code></pre>${captionString}</figure>`;
     });
 
+    shortcodes.add('audio', ({attrs}) => {
+        const sourceSrc = attrs?.src ?? null;
+        const sourceMp3 = attrs?.mp3 ?? null;
+        const sourceM4a = attrs?.m4a ?? null;
+        const sourceOgg = attrs?.ogg ?? null;
+        const sourceWav = attrs?.wav ?? null;
+        const sourceWma = attrs?.wma ?? null;
+
+        const firstAudioSrc = sourceSrc || sourceMp3 || sourceM4a || sourceOgg || sourceWav || sourceWma;
+
+        if (firstAudioSrc) {
+            return `<!--kg-card-begin: html--><audio src="${firstAudioSrc}" preload="metadata"></audio><!--kg-card-end: html-->`;
+        }
+    });
+
     shortcodes.add('code', ({attrs, content}) => {
         let captionString = (attrs?.title) ? `<figcaption>${attrs.title}</figcaption>` : '';
         let classString = (attrs?.language) ? `language-${attrs.language}` : '';

@@ -667,6 +667,14 @@ const hello () => {
         '  return new MyClass();\n' +
         '}</code></pre><figcaption>My method</figcaption></figure>');
     });
+
+    test('Can handle audio shortcodes', async function () {
+        let html = `[audio mp3="/path/to/file.mp3" wav="/path/to/file.wav"][/audio] [audio ogg="/path/to/file.ogg"]`;
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        expect(convertedHtml).toEqual('<!--kg-card-begin: html--><audio src="/path/to/file.mp3" preload="metadata"></audio><!--kg-card-end: html--> <!--kg-card-begin: html--><audio src="/path/to/file.ogg" preload="metadata"></audio><!--kg-card-end: html-->');
+    });
 });
 
 describe('wpCDNToLocal', function () {
