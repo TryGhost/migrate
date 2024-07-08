@@ -668,7 +668,16 @@ export default class AssetScraper {
             tasks.push({
                 title: `Checking file type: ${item.newRemote}`,
                 skip: () => {
-                    return cacheItem && (cacheItem.checked || cacheItem.skip);
+                    const skipReasons = [
+                        'ERR_NON_2XX_3XX_RESPONSE',
+                        'ETIMEDOUT'
+                    ];
+
+                    if (cacheItem && cacheItem.skipReason && skipReasons.includes(cacheItem.skipReason)) {
+                        return false;
+                    } else {
+                        return cacheItem && (cacheItem.checked || cacheItem.skip);
+                    }
                 },
                 task: async () => {
                     let newCache = item;
@@ -866,7 +875,7 @@ export default class AssetScraper {
         let tasks = [];
 
         this.AssetCache.all().forEach((item) => {
-            if (item.skip) {
+            if (item.skip && ['Is blocked domain'].includes(item.skipReason)) {
                 return false;
             }
 
