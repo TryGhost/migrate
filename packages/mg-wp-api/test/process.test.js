@@ -673,7 +673,7 @@ const hello () => {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        expect(convertedHtml).toEqual('<!--kg-card-begin: html--><audio src="/path/to/file.mp3" preload="metadata"></audio><!--kg-card-end: html--> <!--kg-card-begin: html--><audio src="/path/to/file.ogg" preload="metadata"></audio><!--kg-card-end: html-->');
+        expect(convertedHtml).toEqual('<!--kg-card-begin: html--><audio controls src="/path/to/file.mp3" preload="metadata"></audio><!--kg-card-end: html--> <!--kg-card-begin: html--><audio controls src="/path/to/file.ogg" preload="metadata"></audio><!--kg-card-end: html-->');
     });
 });
 

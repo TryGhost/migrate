@@ -237,7 +237,7 @@ const processShortcodes = async ({html}) => {
         const firstAudioSrc = sourceSrc || sourceMp3 || sourceM4a || sourceOgg || sourceWav || sourceWma;
 
         if (firstAudioSrc) {
-            return `<!--kg-card-begin: html--><audio src="${firstAudioSrc}" preload="metadata"></audio><!--kg-card-end: html-->`;
+            return `<!--kg-card-begin: html--><audio controls src="${firstAudioSrc}" preload="metadata"></audio><!--kg-card-end: html-->`;
         }
     });
 
