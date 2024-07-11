@@ -37,7 +37,7 @@ const scrapeConfig = {
 
 const postProcessor = (scrapedData, data, options) => { // eslint-disable-line no-unused-vars
     if (!scrapedData.authors || scrapedData.authors.length === 0) {
-        const defaultAuthorName = options.default_author_name;
+        const defaultAuthorName = options.defaultAuthorName;
         const defaultAuthorSlug = slugify(defaultAuthorName);
         const defaultAuthorEmail = `${defaultAuthorSlug}@example.com`;
 

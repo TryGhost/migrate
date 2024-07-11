@@ -37,7 +37,7 @@ const options = [
     },
     {
         type: 'string',
-        flags: '--default_author_name',
+        flags: '--defaultAuthorName',
         defaultValue: null,
         desc: 'The full name of the default author to assign to posts, if one cannot be found'
     },
