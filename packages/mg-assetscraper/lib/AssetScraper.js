@@ -474,7 +474,7 @@ export default class AssetScraper {
 
         $('[style*="background-image"]').each(async (i, el) => {
             let $image = $(el);
-            let match = $image.css('background-image').match(/url\(([^)]*?)\)/);
+            let match = $image.css('background-image')?.match(/url\(([^)]*?)\)/);
 
             if (match) {
                 let src = match[1];
@@ -488,7 +488,7 @@ export default class AssetScraper {
 
         $('[style*="background:"]').each(async (i, el) => {
             let $image = $(el);
-            let match = $image.css('background').match(/url\(([^)]*?)\)/);
+            let match = $image.css('background')?.match(/url\(([^)]*?)\)/);
 
             if (match) {
                 let src = match[1];
