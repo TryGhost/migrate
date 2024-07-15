@@ -30,6 +30,6 @@
     "date-fns": "2.30.0",
     "fast-glob": "3.3.2",
     "markdown-it": "14.1.0",
-    "php-serialize": "4.1.1"
+    "php-serialize": "5.0.1"
   }
 }
