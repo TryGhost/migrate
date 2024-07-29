@@ -26,7 +26,7 @@
     "jest-extended": "4.0.2"
   },
   "dependencies": {
-    "@tryghost/debug": "0.1.30",
+    "@tryghost/debug": "0.1.32",
     "@tryghost/kg-default-cards": "10.0.6",
     "@tryghost/mg-fs-utils": "0.14.2",
     "@tryghost/string": "0.2.12",
