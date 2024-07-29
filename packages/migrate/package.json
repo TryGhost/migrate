@@ -68,7 +68,7 @@
     "listr": "0.14.3",
     "lodash": "4.17.21",
     "pretty-ms": "9.1.0",
-    "update-notifier": "7.1.0",
+    "update-notifier": "7.2.0",
     "xml2json": "0.12.0"
   }
 }
