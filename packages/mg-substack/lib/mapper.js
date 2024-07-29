@@ -1,4 +1,3 @@
-import {formatISO, parseISO, isBefore, isAfter, add} from 'date-fns';
 import _ from 'lodash';
 import errors from '@tryghost/errors';
 import {slugify} from '@tryghost/string';
@@ -11,8 +10,7 @@ const mapConfig = (data, options) => {
     const {url, email, useMetaAuthor, addTag, addPlatformTag, addTypeTag, addAccessTag} = options;
     const slug = data.post_id.replace(/^(?:\d{1,10}\.)(\S*)/gm, '$1');
 
-    // Get an ISO 8601 date - https://date-fns.org/docs/formatISO
-    const dateNow = formatISO(new Date());
+    const dateNow = new Date();
 
     const typeSlug = slugify(data.type);
     const visibilitySlug = slugify(data.audience);
@@ -166,34 +164,30 @@ export default async (input, options) => {
     }
 
     if (options.postsBefore && options.postsAfter) {
-        const startDate = parseISO(formatISO(new Date(options.postsAfter)));
-        const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
-            days: 1
-        });
+        const startDate = new Date(options.postsAfter);
+        const endDate = new Date(new Date(options.postsBefore).setDate(new Date(options.postsBefore).getDate() + 1));
         debug(`Getting posts between ${startDate} and ${endDate}`);
 
         await input.forEach((data) => {
-            if (isAfter(parseISO(data.post_date), startDate) && isBefore(parseISO(data.post_date), endDate)) {
+            if ((new Date(data.post_date) > startDate) && (new Date(data.post_date) < endDate)) {
                 output.posts.push(mapConfig(data, options));
             }
         });
     } else if (options.postsAfter) {
-        const startDate = parseISO(formatISO(new Date(options.postsAfter)));
+        const startDate = new Date(options.postsAfter);
         debug(`Getting posts after ${startDate}`);
 
         await input.forEach((data) => {
-            if (isAfter(parseISO(data.post_date), startDate)) {
+            if ((new Date(data.post_date) > startDate)) {
                 output.posts.push(mapConfig(data, options));
             }
         });
     } else if (options.postsBefore) {
-        const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
-            days: 1
-        });
+        const endDate = new Date(new Date(options.postsBefore).setDate(new Date(options.postsBefore).getDate() + 1));
         debug(`Getting posts until ${endDate}`);
 
         await input.forEach((data) => {
-            if (isBefore(parseISO(data.post_date), endDate)) {
+            if (new Date(data.post_date) < endDate) {
                 output.posts.push(mapConfig(data, options));
             }
         });

@@ -1,7 +1,6 @@
 import url from 'node:url';
 import {htmlToText} from 'html-to-text';
 import $ from 'cheerio';
-import {formatISO, parse} from 'date-fns';
 import errors from '@tryghost/errors';
 
 const VideoError = ({src, postUrl}) => {
@@ -225,8 +224,7 @@ const processContent = (html, postUrl, errors) => { // eslint-disable-line no-sh
  * }
  */
 const processPost = (hsPost, tags, errors) => { // eslint-disable-line no-shadow
-    // Get an ISO 8601 date - https://date-fns.org/docs/formatISO
-    const dateNow = formatISO(new Date());
+    const dateNow = new Date();
 
     const post = {
         url: hsPost.url,
@@ -234,9 +232,9 @@ const processPost = (hsPost, tags, errors) => { // eslint-disable-line no-shadow
             slug: hsPost.slug,
             title: hsPost.name || hsPost.html_title,
             comment_id: hsPost.analytics_page_id,
-            created_at: formatISO(parse(hsPost.created_time)) || dateNow,
-            published_at: formatISO(parse(hsPost.publish_date)) || dateNow,
-            updated_at: formatISO(parse(hsPost.updated)) || dateNow,
+            created_at: new Date(hsPost.created_time) || dateNow,
+            published_at: new Date(hsPost.publish_date) || dateNow,
+            updated_at: new Date(hsPost.updated) || dateNow,
             meta_title: hsPost.page_title || hsPost.title,
             meta_description: hsPost.meta_description,
             status: hsPost.state.toLowerCase()

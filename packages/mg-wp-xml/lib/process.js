@@ -1,11 +1,9 @@
 import {URL} from 'node:url';
 import $ from 'cheerio';
 import {slugify} from '@tryghost/string';
-import {parse} from 'date-fns';
 import errors from '@tryghost/errors';
 import MarkdownIt from 'markdown-it';
 import MgWpAPI from '@tryghost/mg-wp-api';
-import {formatISO, parseISO, isBefore, isAfter, add} from 'date-fns';
 import {isSerialized, unserialize} from 'php-serialize';
 
 const processUser = ($user) => {
@@ -150,7 +148,7 @@ const processPost = async ($post, users, options) => {
     }
 
     // WP XML only provides a published date, we let's use that all dates Ghost expects
-    const postDate = parse($($post).children('pubDate').text(), 'EEE, d MMM yyyy HH:mm:ss xx', new Date());
+    const postDate = new Date($($post).children('pubDate').text());
 
     // This should result in an absolute URL addressable in a browser
     let postUrl = $($post).children('link').text();
@@ -354,35 +352,31 @@ const all = async (input, {options}) => {
     output.posts = await processPosts($xml, output.users, options);
 
     if (options.postsBefore && options.postsAfter) {
-        const startDate = parseISO(formatISO(new Date(options.postsAfter)));
-        const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
-            days: 1
-        });
+        const startDate = new Date(options.postsAfter);
+        const endDate = new Date(options.postsBefore).setDate(new Date(options.postsBefore).getDate() + 1);
 
         output.posts = output.posts.filter((post) => {
-            if (isAfter(post.data.published_at, startDate) && isBefore(post.data.published_at, endDate)) {
+            if (new Date(post.data.published_at) > startDate && new Date(post.data.published_at) < endDate) {
                 return post;
             } else {
                 return false;
             }
         });
     } else if (options.postsAfter) {
-        const startDate = parseISO(formatISO(new Date(options.postsAfter)));
+        const startDate = new Date(options.postsAfter);
 
         output.posts = output.posts.filter((post) => {
-            if (isAfter(post.data.published_at, startDate)) {
+            if (new Date(post.data.published_at) > startDate) {
                 return post;
             } else {
                 return false;
             }
         });
     } else if (options.postsBefore) {
-        const endDate = add(parseISO(formatISO(new Date(options.postsBefore))), {
-            days: 1
-        });
+        const endDate = new Date(options.postsBefore).setDate(new Date(options.postsBefore).getDate() + 1);
 
         output.posts = output.posts.filter((post) => {
-            if (isBefore(post.data.published_at, endDate)) {
+            if (new Date(post.data.published_at) < endDate) {
                 return post;
             } else {
                 return false;

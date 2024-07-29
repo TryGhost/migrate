@@ -1,6 +1,5 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
-import {parse, addYears} from 'date-fns';
 import substackMembers from '../sources/substack-members.js';
 import {GhostLogger} from '@tryghost/logging';
 import logConfig from '../lib/loggingrc.js';
@@ -140,8 +139,7 @@ const parseCompGift = (val) => {
 
     try {
         if (yearsOrDate.length >= 4) {
-            // try parsing the date into a valid UTC date
-            yearsOrDate = parse(`${yearsOrDate}Z`, 'yyyyMMdX', addYears(new Date(), 10));
+            yearsOrDate = new Date(yearsOrDate.replace(/([0-9]{4})([0-9]{2})([0-9]{2})/, `$1-$2-$3T12:00:00+0000`));
         } else {
             yearsOrDate = parseInt(yearsOrDate);
         }
@@ -218,4 +216,8 @@ export default {
     setup,
     run,
     defaults
+};
+
+export {
+    parseCompGift
 };

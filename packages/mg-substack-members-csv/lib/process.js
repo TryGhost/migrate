@@ -1,22 +1,14 @@
-import {
-    isDate,
-    parseISO,
-    addYears,
-    isAfter,
-    format
-} from 'date-fns';
-
 const processCompGift = (member, {thresholdYearOrDate, beforeThreshold}) => {
     const sType = member.type;
-    const thresholdDate = isDate(thresholdYearOrDate) ? thresholdYearOrDate : addYears(new Date(), thresholdYearOrDate);
+    const thresholdDate = (typeof thresholdYearOrDate.getMonth === 'function') ? thresholdYearOrDate : new Date().setFullYear(new Date().getFullYear() + thresholdYearOrDate);
 
-    if (isAfter(member.expiry, thresholdDate)) {
+    if (new Date(member.expiry) > thresholdDate) {
         member.type = 'comp',
         member.complimentary_plan = true;
         member.stripe_customer_id = null;
         member.note = `Substack expiry date: ${member.expiry.toISOString()}`;
         member.info = `${sType} member after threshold - importing as complimentary: ${member.email}`;
-        member.labels = [`exp-${format(member.expiry, 'yyyy-MM')}`];
+        member.labels = [`exp-${member.expiry.getFullYear()}-${('00' + (member.expiry.getMonth() + 1)).slice(-2)}`];
     } else if (beforeThreshold === 'none') {
         member.type = 'skip';
         member.info = `${sType} member below threshold - skipping: ${member.email}`;
@@ -63,8 +55,8 @@ const processMember = (sMember, options) => {
         subscribed_to_emails: sMember.email_disabled === 'true' ? false : true,
         complimentary_plan: false,
         stripe_customer_id: sMember.stripe_customer_id ? sMember.stripe_customer_id : null,
-        created_at: parseISO(sMember.created_at) || parseISO(new Date()),
-        expiry: sMember.expiry ? parseISO(sMember.expiry) : null,
+        created_at: new Date(sMember.created_at) || new Date(),
+        expiry: sMember.expiry ? new Date(sMember.expiry) : null,
         type: sMember.type,
         labels: []
     };

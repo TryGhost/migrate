@@ -87,7 +87,6 @@ const processContent = (libsynPost, options) => { // eslint-disable-line no-shad
 const processPost = (libsynPost, author, tags, options, errors) => { // eslint-disable-line no-shadow
     const {url, addTag, useFeedCategories, useItemKeywords} = options;
 
-    // Get an ISO 8601 date - https://date-fns.org/docs/formatISO
     const dateNow = new Date().toISOString();
 
     const postSlug = slugify(libsynPost.title);
