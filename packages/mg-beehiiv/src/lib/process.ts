@@ -2,6 +2,7 @@ import $ from 'cheerio';
 import sanitizeHtml from 'sanitize-html';
 import SimpleDom from 'simple-dom';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
+import embedCard from '@tryghost/kg-default-cards/lib/cards/embed.js';
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
@@ -97,7 +98,7 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         }
     });
 
-    $html('a[href*="youtube.com"]').each((i: any, el: any) => {
+    $html('a[href*="youtube.com"], a[href*="youtu.be"]').each((i: any, el: any) => {
         const imageCount = $html(el).find('img').length;
         const hasPlayIcon = $html(el).find('img[src*="youtube_play_icon.png"]').length;
         const hasThumbnail = $html(el).find('img[src*="i.ytimg.com/vi"]').length;
@@ -108,25 +109,39 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         if (imageCount === 2 && hasPlayIcon && hasThumbnail && src) {
             const videoID = getYouTubeID(src);
 
-            const $figure = $(`<figure></figure>`);
-            $figure.addClass('kg-card kg-embed-card');
-
-            const $figcaption = $(`<figcaption></figcaption>`);
-            const $iframe = $(`<iframe src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen=""></iframe>`);
-
-            $figure.append($iframe);
+            let cardOpts = {
+                env: {dom: new SimpleDom.Document()},
+                payload: {
+                    caption: null,
+                    html: `<iframe src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen="" width="160" height="90"></iframe>`
+                }
+            };
 
             if (captionText && captionText.length > 0) {
-                $iframe.attr('title', captionText);
+                cardOpts.payload.caption = captionHtml;
             }
+    
+            $html(el).replaceWith(serializer.serialize(embedCard.render(cardOpts)));
 
-            if (captionHtml) {
-                $figure.addClass('kg-card-hascaption');
-                $figcaption.html(captionHtml);
-                $figure.append($figcaption);
-            }
+            // const $figure = $(`<figure></figure>`);
+            // $figure.addClass('kg-card kg-embed-card');
 
-            $html(el).replaceWith($figure);
+            // const $figcaption = $(`<figcaption></figcaption>`);
+            // const $iframe = $(`<iframe src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen="" width="160" height="90"></iframe>`);
+
+            // $figure.append($iframe);
+
+            // if (captionText && captionText.length > 0) {
+            //     $iframe.attr('title', captionText);
+            // }
+
+            // if (captionHtml) {
+            //     $figure.addClass('kg-card-hascaption');
+            //     $figcaption.html(captionHtml);
+            //     $figure.append($figcaption);
+            // }
+
+            // $html(el).replaceWith($figure);
         }
     });
 

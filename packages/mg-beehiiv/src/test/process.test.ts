@@ -114,7 +114,7 @@ describe('beehiiv Processor', () => {
 
         it('Converts YouTube links to embeds with no caption', () => {
             const htmlContent = `<body><table><tr id="content-blocks">
-                <a href="https://youtube.com/watch?v=1234ABCD123">
+                <a href="https://youtu.be/1234ABCD123">
                     <table>
                         <tr>
                             <td>
@@ -134,12 +134,12 @@ describe('beehiiv Processor', () => {
                         </tr>
                     </table>
                 </a>
-                <p><a href="https://youtube.com/watch?v=1234ABCD123">Regular YouTube link</a></p>
+                <p><a href="https://youtu.be/1234ABCD123">Regular YouTube link</a></p>
             </tr></table></body>`;
             const processed = processHTML({html: htmlContent, postData: mappedObject});
 
-            assert.equal(processed, `<figure class="kg-card kg-embed-card"><iframe src="https://www.youtube.com/embed/1234ABCD123?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></figure>
-                <p><a href="https://youtube.com/watch?v=1234ABCD123">Regular YouTube link</a></p>`);
+            assert.equal(processed, '<figure class="kg-card kg-embed-card"><iframe src="https://www.youtube.com/embed/1234ABCD123?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen width="160" height="90"></iframe></figure>\n' +
+          '                <p><a href="https://youtu.be/1234ABCD123">Regular YouTube link</a></p>');
         });
 
         it('Converts YouTube links to embeds with caption', () => {
@@ -173,8 +173,8 @@ describe('beehiiv Processor', () => {
             </tr></table></body>`;
             const processed = processHTML({html: htmlContent, postData: mappedObject});
 
-            assert.equal(processed, `<figure class="kg-card kg-embed-card kg-card-hascaption"><iframe src="https://www.youtube.com/embed/1234ABCD123?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen title="Example YouTube caption. Watch here"><figcaption>Example YouTube caption. Watch <a href="https://youtube.com/watch?v=1234ABCD123">here</a></figcaption></iframe></figure>
-                <p><a href="https://youtube.com/watch?v=1234ABCD123">Regular YouTube link</a></p>`);
+            assert.equal(processed, '<figure class="kg-card kg-embed-card kg-card-hascaption"><iframe src="https://www.youtube.com/embed/1234ABCD123?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen width="160" height="90"><figcaption>Example YouTube caption. Watch <a href="https://youtube.com/watch?v=1234ABCD123">here</a></figcaption></iframe></figure>\n' +
+          '                <p><a href="https://youtube.com/watch?v=1234ABCD123">Regular YouTube link</a></p>');
         });
 
         it('Updates subscribe links', () => {
