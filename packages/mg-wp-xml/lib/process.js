@@ -32,6 +32,11 @@ const processWPMeta = async ($post) => {
             value = unserialize(value);
         }
 
+        // Convert empty serialized arrays to empty arrays, which `php-serialize` doesn't do
+        if (value === 'a:0:{}') {
+            value = [];
+        }
+
         metaData[key] = value;
     }).get();
 
