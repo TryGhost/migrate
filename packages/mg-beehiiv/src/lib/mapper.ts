@@ -1,6 +1,6 @@
 import fsUtils from '@tryghost/mg-fs-utils';
-import {processHTML, removeDuplicateFeatureImage} from './process.js';
 import {slugify} from '@tryghost/string';
+import {processHTML, removeDuplicateFeatureImage} from './process.js';
 
 const parsePostsCSV = async ({pathToFile}: {pathToFile: string}) => {
     const parseCSV = fsUtils.csv.parseCSV;
@@ -64,8 +64,8 @@ const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?
         mappedData.data.visibility = 'members';
     }
 
-    if (mappedData.data.status === 'draft' && options?.defaultAuthorName) {
-        const defaultAuthorName = options.defaultAuthorName;
+    if (mappedData.data.status === 'draft') {
+        const defaultAuthorName = options?.defaultAuthorName ?? 'Author';
         const defaultAuthorSlug = slugify(defaultAuthorName);
         const defaultAuthorEmail = `${defaultAuthorSlug}@example.com`;
 

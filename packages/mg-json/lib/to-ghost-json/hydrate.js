@@ -15,7 +15,6 @@ import Entities from 'html-entities';
  * - a name
  * - an email address
  */
-
 const fakeName = 'Example User';
 const fakeEmailDomain = `example.com`;
 const fakeEmail = (nameSlug, domain) => `${nameSlug}@${domain}`;
@@ -36,7 +35,7 @@ const hydrateUser = (input, options) => {
 
     // Handle the case where there is no email by generating one based on slug or name
     if (!input.email) {
-        input.email = fakeEmail(input.slug || _.kebabCase(input.name), options.email || fakeEmailDomain);
+        input.email = fakeEmail(input.slug || _.kebabCase(input.name), options?.email || fakeEmailDomain);
     }
 
     // @TODO: log some sort of warning for things like this?

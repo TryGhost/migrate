@@ -31,13 +31,30 @@ const scrapeConfig = {
         twitter_description: {
             selector: 'meta[property="twitter:description"]',
             attr: 'content'
+        },
+        author: {
+            selector: 'meta[name="author"]',
+            attr: 'content'
         }
     }
 };
 
 const postProcessor = (scrapedData, data, options) => { // eslint-disable-line no-unused-vars
-    if (!scrapedData.authors || scrapedData.authors.length === 0) {
-        const defaultAuthorName = options.defaultAuthorName;
+    if (scrapedData.author && scrapedData.author.length > 0) {
+        const authorSlug = slugify(scrapedData.author);
+        const authorEmail = `${authorSlug}@example.com`;
+
+        scrapedData.authors = [{
+            data: {
+                slug: authorSlug,
+                name: scrapedData.author,
+                email: authorEmail
+            }
+        }];
+
+        delete scrapedData.author;
+    } else {
+        const defaultAuthorName = options.defaultAuthorName ?? 'Author';
         const defaultAuthorSlug = slugify(defaultAuthorName);
         const defaultAuthorEmail = `${defaultAuthorSlug}@example.com`;
 

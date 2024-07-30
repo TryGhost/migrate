@@ -122,26 +122,6 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
             }
     
             $html(el).replaceWith(serializer.serialize(embedCard.render(cardOpts)));
-
-            // const $figure = $(`<figure></figure>`);
-            // $figure.addClass('kg-card kg-embed-card');
-
-            // const $figcaption = $(`<figcaption></figcaption>`);
-            // const $iframe = $(`<iframe src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen="" width="160" height="90"></iframe>`);
-
-            // $figure.append($iframe);
-
-            // if (captionText && captionText.length > 0) {
-            //     $iframe.attr('title', captionText);
-            // }
-
-            // if (captionHtml) {
-            //     $figure.addClass('kg-card-hascaption');
-            //     $figcaption.html(captionHtml);
-            //     $figure.append($figcaption);
-            // }
-
-            // $html(el).replaceWith($figure);
         }
     });
 

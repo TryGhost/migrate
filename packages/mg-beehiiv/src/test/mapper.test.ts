@@ -130,6 +130,24 @@ describe('beehiiv Mapper', () => {
             }
         });
     });
+    
+    it('Applies fallback default author to draft posts', async () => {
+        const bhObj = {...beehiivCsvObj};
+        bhObj.status = 'draft';
+
+        const mapped = await mapPost({postData: bhObj});
+
+        assert.equal(mapped.data.status, 'draft');
+
+        assert.deepEqual(mapped.data.author, {
+            url: 'migrator-added-author-author',
+            data: {
+                slug: 'author',
+                name: 'Author',
+                email: 'author@example.com'
+            }
+        });
+    });
 
     it('Can add tags', async () => {
         const bhObj = {...beehiivCsvObj};
