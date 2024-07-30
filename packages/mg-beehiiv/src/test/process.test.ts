@@ -43,77 +43,77 @@ describe('beehiiv Processor', () => {
 
     describe('Process beehiiv Post Content', () => {
         it('Can return basic HTML', () => {
-            const processed = processHTML({html: '<body><p>Hello</p></body>', options: {}});
+            const processed = processHTML({html: '<table><tr id="content-blocks"><p>Hello</p></tr></table>'});
             assert.equal(processed, '<p>Hello</p>');
         });
 
         // Remove hidden elements
         it('Remove hidden elements', () => {
-            const htmlContent = `<body><div style="display:none">Hide 1</div><div style="display: none">Hide 2</div><div style="display: none ">Hide 3</div><div style="display: none;">Hide 4</div><div style="display:none; color: red;">Hide 5</div><p>Visible</p></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+            const htmlContent = `<body><table><tr id="content-blocks"><div style="display:none">Hide 1</div><div style="display: none">Hide 2</div><div style="display: none ">Hide 3</div><div style="display: none;">Hide 4</div><div style="display:none; color: red;">Hide 5</div><p>Visible</p></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
 
             assert.equal(processed, '<p>Visible</p>');
         });
 
         // Remove the share links at the top
         it('Remove the share links at the top', () => {
-            const htmlContent = `<body><table class="mob-block"><tr><td>Big bunch of links</td></tr></table><p>Real content</p></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+            const htmlContent = `<body><table><tr id="content-blocks"><table class="mob-block"><tr><td>Big bunch of links</td></tr></table><p>Real content</p></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
 
             assert.equal(processed, '<p>Real content</p>');
         });
 
         // Remove the open tracking pixel element
         it('Remove the open tracking pixel element', () => {
-            const htmlContent = `<body><table><tr><td style="height:0px;width:0px;"><div style="height:1px;" data-open-tracking="true"> {{OPEN_TRACKING_PIXEL}} </div></td></tr></table><p>Real content</p></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+            const htmlContent = `<body><table><tr id="content-blocks"><table><tr><td style="height:0px;width:0px;"><div style="height:1px;" data-open-tracking="true"> {{OPEN_TRACKING_PIXEL}} </div></td></tr></table><p>Real content</p></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
 
             assert.equal(processed, '<p>Real content</p>');
         });
 
         // Remove unsubscribe links, social links, & email footer
         it('Remove unsubscribe links, social links, & email footer', () => {
-            const htmlContent = `<body><table><tr><td class="b">Big bunch of links</td></tr></table><p>Real content</p></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+            const htmlContent = `<body><table><tr id="content-blocks"><table><tr><td class="b">Big bunch of links</td></tr></table><p>Real content</p></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
 
             assert.equal(processed, '<p>Real content</p>');
         });
 
         // Remove the 'Read online' link
         it('Remove the "Read online" link', () => {
-            const htmlContent = `<body><table><tr><td class="f"><p> July 10, 2023 &nbsp; | &nbsp; <a href="https://example.beehiiv.com/p/news-premium-subscribers">Read Online</a></p></td></tr></table><p>Real content</p></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+            const htmlContent = `<body><table><tr id="content-blocks"><table><tr><td class="f"><p> July 10, 2023 &nbsp; | &nbsp; <a href="https://example.beehiiv.com/p/news-premium-subscribers">Read Online</a></p></td></tr></table><p>Real content</p></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
 
             assert.equal(processed, '<p>Real content</p>');
         });
 
         // Remove the post title container, otherwise it would be a duplicate
         it('Remove the post title container', () => {
-            const htmlContent = `<body><table>
+            const htmlContent = `<body><table><tr id="content-blocks"><td><table>
                     <tr>
                         <td align="center" valign="top">
-                            <h1>Example Post </h1>
+                            <h1> Example Post </h1>
                             <p>An example subheader</p>
                         </td>
                     </tr>
                 </table>
                 <p>Real content</p>
-            </body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+            </td></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
 
             assert.equal(processed, '<p>Real content</p>');
         });
 
         // Convert '...' to <hr />
         it('Convert ... to <hr />', () => {
-            const htmlContent = `<body><p>...</p><p>…</p><p>&hellip;</p></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+            const htmlContent = `<body><table><tr id="content-blocks"><p>...</p><p>…</p><p>&hellip;</p></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
 
             assert.equal(processed, '<hr /><hr /><hr />');
         });
 
         it('Converts YouTube links to embeds with no caption', () => {
-            const htmlContent = `<body>
+            const htmlContent = `<body><table><tr id="content-blocks">
                 <a href="https://youtube.com/watch?v=1234ABCD123">
                     <table>
                         <tr>
@@ -135,15 +135,15 @@ describe('beehiiv Processor', () => {
                     </table>
                 </a>
                 <p><a href="https://youtube.com/watch?v=1234ABCD123">Regular YouTube link</a></p>
-            </body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+            </tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
 
             assert.equal(processed, `<figure class="kg-card kg-embed-card"><iframe src="https://www.youtube.com/embed/1234ABCD123?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></figure>
                 <p><a href="https://youtube.com/watch?v=1234ABCD123">Regular YouTube link</a></p>`);
         });
 
         it('Converts YouTube links to embeds with caption', () => {
-            const htmlContent = `<body>
+            const htmlContent = `<body><table><tr id="content-blocks">
                 <a href="https://youtube.com/watch?v=1234ABCD123">
                     <table>
                         <tr>
@@ -170,15 +170,15 @@ describe('beehiiv Processor', () => {
                     </table>
                 </a>
                 <p><a href="https://youtube.com/watch?v=1234ABCD123">Regular YouTube link</a></p>
-            </body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+            </tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
 
             assert.equal(processed, `<figure class="kg-card kg-embed-card kg-card-hascaption"><iframe src="https://www.youtube.com/embed/1234ABCD123?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen title="Example YouTube caption. Watch here"><figcaption>Example YouTube caption. Watch <a href="https://youtube.com/watch?v=1234ABCD123">here</a></figcaption></iframe></figure>
                 <p><a href="https://youtube.com/watch?v=1234ABCD123">Regular YouTube link</a></p>`);
         });
 
         it('Updates subscribe links', () => {
-            const htmlContent = `<body><p>Stay updated! Be sure to <a class="link" href="https://example.beehiiv.com/subscribe?utm_source=example.beehiiv.com&utm_medium=newsletter" target="_blank" rel="noopener noreferrer nofollow">subscribe to our newsletter</a>.</p></body>`;
+            const htmlContent = `<body><table><tr id="content-blocks"><p>Stay updated! Be sure to <a class="link" href="https://example.beehiiv.com/subscribe?utm_source=example.beehiiv.com&utm_medium=newsletter" target="_blank" rel="noopener noreferrer nofollow">subscribe to our newsletter</a>.</p></tr></table></body>`;
             const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
                 url: 'https://example.beehiiv.com',
                 subscribeLink: '#/portal/signup'
@@ -188,7 +188,7 @@ describe('beehiiv Processor', () => {
         });
 
         it('Wraps images in figure tags with alt text', () => {
-            const htmlContent = `<body><table><tr>
+            const htmlContent = `<body><table><tr id="content-blocks">
             <td>
                 <table>
                     <tr>
@@ -197,13 +197,13 @@ describe('beehiiv Processor', () => {
                 </table>
             </td>
         </tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
 
             assert.match(processed, /<figure class="kg-card kg-image-card"><img src="https:\/\/example.com\/image.jpg" alt="My alt text" \/><\/figure>/);
         });
 
         it('Wraps images in figure tags and use caption as alt text', () => {
-            const htmlContent = `<body><table><tr>
+            const htmlContent = `<body><table><tr id="content-blocks">
             <td>
                 <table>
                     <tr>
@@ -217,13 +217,13 @@ describe('beehiiv Processor', () => {
                 </table>
             </td>
         </tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
 
             assert.match(processed, /<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https:\/\/example.com\/image.jpg" alt="Image caption" \/><figcaption>Image caption<\/figcaption><\/figure>/);
         });
 
         it('Wraps images in figure tags with caption', () => {
-            const htmlContent = `<body><table><tr>
+            const htmlContent = `<body><table><tr id="content-blocks">
             <td>
                 <table>
                     <tr>
@@ -237,13 +237,13 @@ describe('beehiiv Processor', () => {
                 </table>
             </td>
         </tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
 
             assert.match(processed, /<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https:\/\/example.com\/image.jpg" alt="My alt text" \/><figcaption>Image caption<\/figcaption><\/figure>/);
         });
 
         it('Wraps images in figure tags with missing caption text', () => {
-            const htmlContent = `<body><table><tr>
+            const htmlContent = `<body><table><tr id="content-blocks">
             <td>
                 <table>
                     <tr>
@@ -253,13 +253,13 @@ describe('beehiiv Processor', () => {
                 </table>
             </td>
         </tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
 
             assert.match(processed, /<figure class="kg-card kg-image-card"><img src="https:\/\/example.com\/image.jpg" alt="My alt text" \/><\/figure>/);
         });
 
         it('Keep buttons as buttons', () => {
-            const htmlContent = `<body><table><tr>
+            const htmlContent = `<body><table><tr id="content-blocks">
             <td align="center" valign="top" style="padding-bottom:14px;padding-left:25px;padding-right:25px;padding-top:14px;text-align:center;width:100%;word-break:break-word;" class="dd">
                 <table role="none" border="0" cellspacing="0" cellpadding="0" align="center">
                     <tr>
@@ -268,13 +268,13 @@ describe('beehiiv Processor', () => {
                 </table>
             </td>
         </tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {}});
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
 
             assert.equal(processed, '<div class="kg-card kg-button-card kg-align-center"><a href="https://www.example.com/upgrade" class="kg-btn kg-btn-accent">Upgrade</a></div>');
         });
 
         it('Removes UTM params from internal URLs', () => {
-            const htmlContent = `<body><a href="https://www.example.com/p/post-slug?utm_source=www.example.com&utm_medium=newsletter&utm_campaign=lorem-ipsum-dolor-simet-1234&last_resource_guid=Post%3Aabcd1234-c74e-427a-83f3-3f8c0bad81e6">Article</a></body>`;
+            const htmlContent = `<body><table><tr id="content-blocks"><a href="https://www.example.com/p/post-slug?utm_source=www.example.com&utm_medium=newsletter&utm_campaign=lorem-ipsum-dolor-simet-1234&last_resource_guid=Post%3Aabcd1234-c74e-427a-83f3-3f8c0bad81e6">Article</a></tr></table></body>`;
             const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
                 url: 'https://www.example.com'
             }});
@@ -283,7 +283,7 @@ describe('beehiiv Processor', () => {
         });
 
         it('Does not remove non-UTM params from internal URLs', () => {
-            const htmlContent = `<body><a href="https://www.example.com/upgrade?hello=world">Upgrade</a></body>`;
+            const htmlContent = `<body><table><tr id="content-blocks"><a href="https://www.example.com/upgrade?hello=world">Upgrade</a></tr></table></body>`;
             const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
                 url: 'https://www.example.com'
             }});
@@ -292,7 +292,7 @@ describe('beehiiv Processor', () => {
         });
 
         it('Removes URL params from external URLs', () => {
-            const htmlContent = `<body><a href="https://www.another.com/p/another-post-slug?utm_source=www.another.com&utm_medium=newsletter&utm_campaign=lorem-ipsum-dolor-simet-1234&last_resource_guid=Post%3Aabcd1234-c74e-427a-83f3-3f8c0bad81e6">Another Article</a></body>`;
+            const htmlContent = `<body><table><tr id="content-blocks"><a href="https://www.another.com/p/another-post-slug?utm_source=www.another.com&utm_medium=newsletter&utm_campaign=lorem-ipsum-dolor-simet-1234&last_resource_guid=Post%3Aabcd1234-c74e-427a-83f3-3f8c0bad81e6">Another Article</a></tr></table></body>`;
             const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
                 url: 'https://www.example.com'
             }});
@@ -301,7 +301,7 @@ describe('beehiiv Processor', () => {
         });
 
         it('Skips empty URLs', () => {
-            const htmlContent = `<body><a>Upgrade</a></body>`;
+            const htmlContent = `<body><table><tr id="content-blocks"><a>Upgrade</a></tr></table></body>`;
             const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
                 url: 'https://www.example.com'
             }});
@@ -310,7 +310,7 @@ describe('beehiiv Processor', () => {
         });
 
         it('Skips non-URLs', () => {
-            const htmlContent = `<body><a href="{{not_a_url}}">Upgrade</a></body>`;
+            const htmlContent = `<body><table><tr id="content-blocks"><a href="{{not_a_url}}">Upgrade</a></tr></table></body>`;
             const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
                 url: 'https://www.example.com'
             }});

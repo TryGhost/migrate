@@ -15,7 +15,7 @@ const beehiivCsvObj: beehiivPostDataObject = {
     web_subtitle: 'A website subtitle',
     email_subject_line: 'Sample Post as a subject line',
     email_preview_text: 'Email preview text',
-    content_html: '<p>Sample HTML here</p>',
+    content_html: '<table><tr id="content-blocks"><p>Sample HTML here</p></tr></table>',
     thumbnail_url: 'uploads/asset/file/12345678/image.png',
     created_at: '2023-01-18 21:25:27'
 };

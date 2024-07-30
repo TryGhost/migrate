@@ -23,7 +23,7 @@ const isURL = (urlString: string | undefined) => {
     }
 };
 
-const processHTML = ({html, postData, options}: {html: string, postData?: mappedDataObject, options: any}) => {
+const processHTML = ({html, postData, allData, options}: {html: string, postData?: mappedDataObject, allData?: any, options?: any}) => {
     // First, clean up the email HTML to remove bits we don't want or change up
 
     // Let's do some regexp magic to remove some beehiiv variables
@@ -31,13 +31,18 @@ const processHTML = ({html, postData, options}: {html: string, postData?: mapped
     html = html.replace(/{{subscriber_id}}/g, '#');
     html = html.replace(/{{rp_refer_url}}/g, '#');
 
-    let $html = $.load(html, {
+    const $allHtml: any = $.load(html, {
+        xmlMode: true,
+        decodeEntities: false
+    });
+
+    const $html: any = $.load($allHtml('#content-blocks').html(), {
         xmlMode: true,
         decodeEntities: false
     });
 
     if (options?.url) {
-        $html('a').each((i, el) => {
+        $html('a').each((i: any, el: any) => {
             const theHref = $html(el).attr('href');
             const isHrefURL = isURL(theHref);
 
@@ -84,14 +89,15 @@ const processHTML = ({html, postData, options}: {html: string, postData?: mapped
     }
 
     // Convert '...' to <hr />
-    $html('p').each((i, el) => {
+    $html('p').each((i: any, el: any) => {
         const text = $html(el).text().trim();
+
         if (text === '...' || text === '…' || text === '&hellip;') {
             $html(el).replaceWith('<hr />');
         }
     });
 
-    $html('a[href*="youtube.com"]').each((i, el) => {
+    $html('a[href*="youtube.com"]').each((i: any, el: any) => {
         const imageCount = $html(el).find('img').length;
         const hasPlayIcon = $html(el).find('img[src*="youtube_play_icon.png"]').length;
         const hasThumbnail = $html(el).find('img[src*="i.ytimg.com/vi"]').length;
@@ -124,42 +130,40 @@ const processHTML = ({html, postData, options}: {html: string, postData?: mapped
         }
     });
 
-    $html('img').each((i, el) => {
+    $html('img').each((i: any, el: any) => {
         const parentTable = $html(el).parent().parent().parent();
 
-        if (parentTable.prop('tagName').toLowerCase() === 'table') {
-            const theSrc = $html(el).attr('src');
-            let theAlt = $html(el).attr('alt');
+        const theSrc = $html(el).attr('src');
+        let theAlt = $html(el).attr('alt');
 
-            const secondTr = ($(parentTable).find('tr').eq(1).find('p').length) ? $(parentTable).find('tr').eq(1).find('p') : false;
-            const theText = $(secondTr)?.html()?.trim() ?? false;
+        const secondTr = ($(parentTable).find('tr').eq(1).find('p').length) ? $(parentTable).find('tr').eq(1).find('p') : false;
+        const theText = $(secondTr)?.html()?.trim() ?? false;
 
-            if (!theAlt) {
-                theAlt = $(secondTr)?.text()?.trim();
-            }
-
-            let cardOpts = {
-                env: {dom: new SimpleDom.Document()},
-                payload: {
-                    src: theSrc,
-                    alt: theAlt,
-                    caption: theText
-                }
-            };
-
-            $(parentTable).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
+        if (!theAlt) {
+            theAlt = $(secondTr)?.text()?.trim();
         }
+
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: theSrc,
+                alt: theAlt,
+                caption: theText
+            }
+        };
+
+        $(parentTable).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
     // Convert buttons to Ghost buttons
-    $html('a[style="color:#FFFFFF;font-size:18px;padding:0px 14px;text-decoration:none;"]').each((i, el) => {
+    $html('a[style="color:#FFFFFF;font-size:18px;padding:0px 14px;text-decoration:none;"]').each((i: any, el: any) => {
         const buttonText = $html(el).text();
         const buttonHref = $html(el).attr('href');
         $(el).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
     });
 
     if (options?.url && options?.subscribeLink) {
-        $html(`a[href^="${options.url}/subscribe"]`).each((i, el) => {
+        $html(`a[href^="${options.url}/subscribe"]`).each((i: any, el: any) => {
             $html(el).attr('href', options.subscribeLink);
             $html(el).removeAttr('target');
             $html(el).removeAttr('rel');
@@ -167,7 +171,7 @@ const processHTML = ({html, postData, options}: {html: string, postData?: mapped
     }
 
     // Get the cleaned HTML
-    const bodyHtml = $html('body').html();
+    let bodyHtml = $html.html();
 
     // Pass the cleaned HTML through the sanitizer to only include specific elements
     const sanitizedHtml = sanitizeHtml(bodyHtml, {

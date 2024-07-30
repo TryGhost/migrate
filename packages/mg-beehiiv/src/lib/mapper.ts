@@ -102,7 +102,7 @@ const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?
         });
     }
 
-    mappedData.data.html = processHTML({html: mappedData.data.html, postData: mappedData, options});
+    mappedData.data.html = processHTML({html: mappedData.data.html, postData: mappedData, allData: postData, options});
 
     if (mappedData.data.feature_image) {
         mappedData.data.html = removeDuplicateFeatureImage({html: mappedData.data.html, featureSrc: mappedData.data.feature_image});
