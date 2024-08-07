@@ -576,10 +576,10 @@
     "@inquirer/core" "^9.0.9"
     "@inquirer/type" "^1.5.2"
 
-"@inquirer/core@^9.0.8", "@inquirer/core@^9.0.9":
-  version "9.0.9"
-  resolved "https://registry.yarnpkg.com/@inquirer/core/-/core-9.0.9.tgz#bcc46e9dee79b83d22670c8021027266d55a6fa7"
-  integrity sha512-mvQmOz1hf5dtvY+bpVK22YiwLxn5arEhykSt1IWT5GS7ojgqKLSE9P8WXI4fPimtC0ggmnf0bVbKtERlIZkV0g==
+"@inquirer/core@^9.0.10", "@inquirer/core@^9.0.8", "@inquirer/core@^9.0.9":
+  version "9.0.10"
+  resolved "https://registry.yarnpkg.com/@inquirer/core/-/core-9.0.10.tgz#4270191e2ad3bea6223530a093dd9479bcbc7dd0"
+  integrity sha512-TdESOKSVwf6+YWDz8GhS6nKscwzkIyakEzCLJ5Vh6O3Co2ClhCJ0A4MG909MUWfaWdpJm7DE45ii51/2Kat9tA==
   dependencies:
     "@inquirer/figures" "^1.0.5"
     "@inquirer/type" "^1.5.2"
@@ -618,20 +618,12 @@
   resolved "https://registry.yarnpkg.com/@inquirer/figures/-/figures-1.0.5.tgz#57f9a996d64d3e3345d2a3ca04d36912e94f8790"
   integrity sha512-79hP/VWdZ2UVc9bFGJnoQ/lQMpL74mGgzSYX1xUqCVk7/v73vJCMw1VuyWN1jGkZ9B3z7THAbySqGbCNefcjfA==
 
-"@inquirer/input@2.2.7":
-  version "2.2.7"
-  resolved "https://registry.yarnpkg.com/@inquirer/input/-/input-2.2.7.tgz#87a922243a6c833ee5f1d4a6102c68b3cee9f19d"
-  integrity sha512-QFk31Gq4Wr+Ve9ilMiFGGrSjGZQBilV0cgTN1zubD98Bx65fsNrh8++Biy/9mjNKRaqHFbZBw5baAcQvOmW8OQ==
+"@inquirer/input@2.2.9", "@inquirer/input@^2.2.7", "@inquirer/input@^2.2.8":
+  version "2.2.9"
+  resolved "https://registry.yarnpkg.com/@inquirer/input/-/input-2.2.9.tgz#08fdf9a48e4f6fc64c2d508b9d10afac843f9bd8"
+  integrity sha512-7Z6N+uzkWM7+xsE+3rJdhdG/+mQgejOVqspoW+w0AbSZnL6nq5tGMEVASaYVWbkoSzecABWwmludO2evU3d31g==
   dependencies:
-    "@inquirer/core" "^9.0.8"
-    "@inquirer/type" "^1.5.1"
-
-"@inquirer/input@^2.2.7", "@inquirer/input@^2.2.8":
-  version "2.2.8"
-  resolved "https://registry.yarnpkg.com/@inquirer/input/-/input-2.2.8.tgz#50ae38d1215b4e7f67e5718bd6e9dc3dabe0fc7f"
-  integrity sha512-DoLuc+DIJVZiDIn01hUQrxpPHF7MuE1bGfhxVfPWQDVFIqCoFQEmiUqMLx7zv4/pFArykY9j+i3uLUIOWqk+xg==
-  dependencies:
-    "@inquirer/core" "^9.0.9"
+    "@inquirer/core" "^9.0.10"
     "@inquirer/type" "^1.5.2"
 
 "@inquirer/number@^1.0.8", "@inquirer/number@^1.0.9":
