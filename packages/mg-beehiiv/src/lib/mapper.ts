@@ -83,6 +83,19 @@ const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?
         mappedData.data.feature_image = fullImageURL(postData.thumbnail_url);
     }
 
+    if (postData.content_tags) {
+        const tags = postData.content_tags.split(';');
+        tags.forEach((tag: string) => {
+            mappedData.data.tags.push({
+                url: `migrator-added-tag-${slugify(tag.trim())}`,
+                data: {
+                    slug: slugify(tag.trim()),
+                    name: tag.trim()
+                }
+            });
+        });
+    }
+
     mappedData.data.tags.push({
         url: 'migrator-added-tag-hash-beehiiv',
         data: {

@@ -11,6 +11,7 @@ const beehiivCsvObj: beehiivPostDataObject = {
     web_title: 'Sample Post',
     status: 'confirmed',
     audience: 'free',
+    content_tags: 'Hello World; Test',
     url: 'https://example.beehiiv.com/p/sample-post',
     web_subtitle: 'A website subtitle',
     email_subject_line: 'Sample Post as a subject line',
@@ -59,7 +60,7 @@ describe('beehiiv Mapper', () => {
         const parsed = await parsePostsCSV({pathToFile: join(fixturesPath, 'posts.csv')});
 
         // Check that the fields are correct
-        const fields = ['id', 'web_title', 'status', 'audience', 'url', 'web_subtitle', 'email_subject_line', 'email_preview_text', 'content_html', 'thumbnail_url', 'created_at'];
+        const fields = ['id', 'web_title', 'status', 'audience', 'content_tags', 'url', 'web_subtitle', 'email_subject_line', 'email_preview_text', 'content_html', 'thumbnail_url', 'created_at'];
         assert.deepEqual(Object.keys(parsed[0]), fields);
         assert.deepEqual(Object.keys(parsed[1]), fields);
     });
@@ -71,6 +72,7 @@ describe('beehiiv Mapper', () => {
         assert.equal(parsed[0].web_title, 'Sample Post');
         assert.equal(parsed[0].status, 'confirmed');
         assert.equal(parsed[0].audience, 'free');
+        assert.equal(parsed[0].content_tags, 'Lorem Ipsum; Dolor Simet');
         assert.equal(parsed[0].url, 'https://example.beehiiv.com/p/sample-post');
         assert.equal(parsed[0].web_subtitle, 'A website subtitle');
         assert.equal(parsed[0].email_subject_line, 'Sample Post as a subject line');
@@ -90,6 +92,8 @@ describe('beehiiv Mapper', () => {
         const dataFields = ['slug', 'published_at', 'updated_at', 'created_at', 'title', 'type', 'html', 'status', 'custom_excerpt', 'visibility', 'tags', 'feature_image'];
         assert.deepEqual(Object.keys(mapped.data), dataFields);
 
+        // console.log(mapped.data.tags);
+
         assert.equal(mapped.url, 'https://example.beehiiv.com/p/sample-post');
         assert.equal(mapped.data.slug, 'sample-post');
         assert.equal(mapped.data.published_at, '2023-01-18 21:25:27');
@@ -101,6 +105,22 @@ describe('beehiiv Mapper', () => {
         assert.equal(mapped.data.status, 'published');
         assert.equal(mapped.data.custom_excerpt, 'A website subtitle');
         assert.equal(mapped.data.visibility, 'public');
+
+        assert.deepEqual(mapped.data.tags[0], {
+            url: 'migrator-added-tag-hello-world',
+            data: {
+                slug: 'hello-world',
+                name: 'Hello World'
+            }
+        });
+      
+        assert.deepEqual(mapped.data.tags[1], {
+            url: 'migrator-added-tag-test',
+            data: {
+                slug: 'test',
+                name: 'Test'
+            }
+        });
     });
 
     it('Can add featured image', async () => {
@@ -154,22 +174,21 @@ describe('beehiiv Mapper', () => {
 
         const mapped = await mapPost({postData: bhObj});
 
-        assert.deepEqual(mapped.data.tags, [
-            {
-                url: 'migrator-added-tag-hash-beehiiv',
-                data: {
-                    slug: 'hash-beehiiv',
-                    name: '#beehiiv'
-                }
-            },
-            {
-                url: 'migrator-added-tag-hash-beehiiv-free',
-                data: {
-                    slug: 'hash-beehiiv-visibility-free',
-                    name: '#beehiiv-visibility-free'
-                }
+        assert.deepEqual(mapped.data.tags[2], {
+            url: 'migrator-added-tag-hash-beehiiv',
+            data: {
+                slug: 'hash-beehiiv',
+                name: '#beehiiv'
             }
-        ]);
+        });
+      
+        assert.deepEqual(mapped.data.tags[3], {
+            url: 'migrator-added-tag-hash-beehiiv-free',
+            data: {
+                slug: 'hash-beehiiv-visibility-free',
+                name: '#beehiiv-visibility-free'
+            }
+        });
     });
 
     it('Sets custom excerpt to null if none supplied', async () => {
