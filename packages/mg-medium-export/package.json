@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@tryghost/debug": "0.1.32",
-    "@tryghost/kg-default-cards": "10.0.6",
+    "@tryghost/kg-default-cards": "10.0.9",
     "@tryghost/mg-fs-utils": "0.14.2",
     "@tryghost/string": "0.2.12",
     "cheerio": "1.0.0-rc.12",
