@@ -177,6 +177,26 @@ describe('resolveFileName character handling', function () {
         await fileCache.emptyCurrentCacheDir();
     });
 
+    it('Will convert entities to dashes', async function () {
+        let fileCache = new FileCache('test');
+
+        let fileName = await fileCache.resolveFileName('/image/fetch/w_600%2Ch_400,c_fill,f_auto,q_auto:good,fl_progressive:steep,g_center/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fad8015f6-a9.0c-46f8-89f2-b6d7db866c6e_3866x2298.jpeg');
+
+        expect(fileName.filename).toEqual('/image/fetch/w_600-h_400-c_fill-f_auto-q_auto:good-fl_progressive:steep-g_center/https_3a_2f_2fsubstack-post-media-s3-amazonaws-com_2fpublic_2fimages_2fad8015f6-a9-0c-46f8-89f2-b6d7db866c6e_3866x2298.jpg');
+
+        await fileCache.emptyCurrentCacheDir();
+    });
+
+    it('Will handle URLs with 2 extensions', async function () {
+        let fileCache = new FileCache('test');
+
+        let fileName = await fileCache.resolveFileName('/file.jpg/blah.jpeg');
+
+        expect(fileName.filename).toEqual('/file-jpg/blah.jpg');
+
+        await fileCache.emptyCurrentCacheDir();
+    });
+
     it('Will change jpeg to jpg', async function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/blah.jpeg');
@@ -290,9 +310,9 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/أشجار صغيرة سعيدة.jpeg');
 
-        expect(fileName.filename).toEqual('/my-images/shjr_sgyr_saayd.jpg');
-        expect(fileName.storagePath).toInclude('/content/images/my-images/shjr_sgyr_saayd.jpg');
-        expect(fileName.outputPath).toEqual('/content/images/my-images/shjr_sgyr_saayd.jpg');
+        expect(fileName.filename).toEqual('/my-images/shjr-sgyr_-saayd.jpg');
+        expect(fileName.storagePath).toInclude('/content/images/my-images/shjr-sgyr_-saayd.jpg');
+        expect(fileName.outputPath).toEqual('/content/images/my-images/shjr-sgyr_-saayd.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });

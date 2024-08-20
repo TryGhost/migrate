@@ -181,11 +181,18 @@ export default class FileCache {
     resolveFileName(filename, type = 'images') {
         const ext = extname(filename);
 
+        // Replace parts of the string, but exclude the extension, and them combine them back together when done
+        let filenameNoExt = filename.replace(new RegExp(ext, 'g'), '');
+        filenameNoExt = filenameNoExt.replace(/\./g, '-'); // dots
+        filenameNoExt = filenameNoExt.replace(/ /g, '-'); // spaces
+        filenameNoExt = filenameNoExt.replace(/%20/g, '-'); // encoded spaces
+        filenameNoExt = filenameNoExt.replace(/,/g, '-'); // commas
+        filenameNoExt = filenameNoExt.replace(/%2C/g, '-'); // encoded commas
+        filename = `${filenameNoExt}${ext}`;
+
         // Replace any dots and spaces in the path with dashes
         const parsedPath = parse(filename);
-        parsedPath.dir = parsedPath.dir.replace(/\./g, '-');
-        parsedPath.dir = parsedPath.dir.replace(/ /g, '-');
-        parsedPath.dir = parsedPath.dir.replace(/%20/g, '-');
+
         filename = format(parsedPath);
 
         let typeDir = null;
