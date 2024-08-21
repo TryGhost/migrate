@@ -1,5 +1,6 @@
 import url from 'node:url';
 import {readFileSync} from 'node:fs';
+import {basename} from 'node:path';
 import _ from 'lodash';
 import $ from 'cheerio';
 import MgWebScraper from '@tryghost/mg-webscraper';
@@ -8,8 +9,12 @@ import {slugify} from '@tryghost/string';
 import MgFsUtils from '@tryghost/mg-fs-utils';
 import {htmlToText} from 'html-to-text';
 import {_base as debugFactory} from '@tryghost/debug';
+import SimpleDom from 'simple-dom';
+import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
 
-const debug = debugFactory('migrate:wp-api:fetch');
+const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
+
+const debug = debugFactory('migrate:wp-api:processor');
 
 const stripHtml = (html) => {
     // Remove HTML tags, new line characters, and trim white-space
@@ -612,6 +617,31 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowfullscreen=""></iframe></figure>`);
         }
+    });
+
+    // Handle list-based galleries
+    $html('ul.wp-block-gallery').each((i, el) => {
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                images: []
+            }
+        };
+
+        $(el).find('figure').each((iii, elll) => { // eslint-disable-line no-shadow
+            let img = $(elll).find('img');
+            cardOpts.payload.images.push({
+                row: 0,
+                fileName: basename(img.attr('src')),
+                src: img.attr('data-full') ?? img.attr('src'),
+                width: img.attr('width'),
+                height: img.attr('height')
+            });
+        });
+
+        const galleryHtml = serializer.serialize(galleryCard.render(cardOpts));
+
+        $(el).replaceWith(galleryHtml);
     });
 
     // Unwrap WP gallery blocks

@@ -535,6 +535,43 @@ describe('Process WordPress HTML', function () {
 
         expect(processed).toEqual('<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><a href="https://twitter.com/example/status/12345678"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure><!--kg-card-end: embed-->');
     });
+
+    test('Can convert a list-based gallery', async function () {
+        const html = `<ul class="wp-block-gallery alignwide columns-3 is-cropped">
+            <li class="blocks-gallery-item">
+                <figure>
+                    <a href="https://example.com/wp-content/uploads/2024/07/photo1.jpg">
+                        <img width="500" height="375" src="https://example.com/wp-content/uploads/2024/07/photo1.jpg" class="attachment-large size-large" alt="" data-full="https://example.com/wp-content/uploads/2024/07/photo1.jpg" loading="lazy">
+                    </a>
+                </figure>
+            </li>
+            <li class="blocks-gallery-item">
+                <figure>
+                    <a href="https://example.com/wp-content/uploads/2024/07/photo2.jpg">
+                        <img width="500" height="375" src="https://example.com/wp-content/uploads/2024/07/photo2.jpg" class="attachment-large size-large" alt="" data-full="https://example.com/wp-content/uploads/2024/07/photo2.jpg" loading="lazy">
+                    </a>
+                </figure>
+            </li>
+            <li class="blocks-gallery-item">
+                <figure>
+                    <a href="https://example.com/wp-content/uploads/2024/07/photo3.jpg">
+                        <img loading="lazy" width="500" height="375" src="https://example.com/wp-content/uploads/2024/07/photo3.jpg" class="attachment-large size-large" alt="">
+                    </a>
+                </figure>
+            </li>
+            <li class="blocks-gallery-item">
+                <figure>
+                    <a href="https://example.com/wp-content/uploads/2024/07/photo4.jpg">
+                        <img loading="lazy" width="500" height="375" src="https://example.com/wp-content/uploads/2024/07/photo4.jpg" class="attachment-large size-large" alt="">
+                    </a>
+                </figure>
+            </li>
+        </ul>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo1.jpg" width="500" height="375" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo2.jpg" width="500" height="375" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo4.jpg" width="500" height="375" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo3.jpg" width="500" height="375" loading="lazy" alt></div></div></div></figure>');
+    });
 });
 
 describe('Process shortcodes', function () {
