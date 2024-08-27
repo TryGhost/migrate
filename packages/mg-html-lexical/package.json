@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-html-lexical",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-html-lexical",
   "author": "Ghost Foundation",
   "license": "MIT",
