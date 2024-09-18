@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';
 import beehiivIngest from '@tryghost/mg-beehiiv';
 import {toGhostJSON} from '@tryghost/mg-json';
-import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
+import mgHtmlLexical from '@tryghost/mg-html-lexical';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import MgAssetScraper from '@tryghost/mg-assetscraper';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
@@ -110,7 +110,7 @@ const initialize = (options, logger) => {
                 formatDataAsGhost: false,
                 assetScraper: false,
                 linkFixer: false,
-                htmlToMobiledoc: false,
+                htmlToLexical: false,
                 writeJSON: false,
                 writeZip: false,
                 clearCache: false
@@ -253,15 +253,15 @@ const getFullTaskList = (options, logger) => {
             }
         },
         {
-            title: 'Convert HTML -> MobileDoc',
+            title: 'Convert HTML -> Lexical',
             task: (ctx) => {
-                // 8. Convert post HTML -> MobileDoc
-                ctx.timings.htmlToMobiledoc = Date.now();
+                // 8. Convert post HTML -> Lexical
+                ctx.timings.htmlToLexical = Date.now();
                 try {
-                    let tasks = mgHtmlMobiledoc.convert(ctx);
+                    let tasks = mgHtmlLexical.convert(ctx);
                     return makeTaskRunner(tasks, options);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to convert HTML -> MobileDoc', error});
+                    ctx.logger.error({message: 'Failed to convert HTML -> Lexical', error});
                     throw error;
                 }
             }
@@ -269,8 +269,8 @@ const getFullTaskList = (options, logger) => {
         {
             task: (ctx) => {
                 ctx.logger.info({
-                    message: 'Convert HTML -> MobileDoc',
-                    duration: Date.now() - ctx.timings.htmlToMobiledoc
+                    message: 'Convert HTML -> Lexical',
+                    duration: Date.now() - ctx.timings.htmlToLexical
                 });
             }
         },
