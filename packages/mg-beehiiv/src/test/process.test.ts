@@ -47,6 +47,16 @@ describe('beehiiv Processor', () => {
             assert.equal(processed, '<p>Hello</p>');
         });
 
+        it('Can remove empty p tags', () => {
+            const processed = processHTML({html: '<table><tr id="content-blocks"><p>Hello</p><p></p></tr></table>'});
+            assert.equal(processed, '<p>Hello</p>');
+        });
+
+        it('Can remove empty figure tags', () => {
+            const processed = processHTML({html: '<table><tr id="content-blocks"><figure class="kg-card" /><p>Hello</p></tr></table>'});
+            assert.equal(processed, '<p>Hello</p>');
+        });
+
         // Remove hidden elements
         it('Remove hidden elements', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><div style="display:none">Hide 1</div><div style="display: none">Hide 2</div><div style="display: none ">Hide 3</div><div style="display: none;">Hide 4</div><div style="display:none; color: red;">Hide 5</div><p>Visible</p></tr></table></body>`;

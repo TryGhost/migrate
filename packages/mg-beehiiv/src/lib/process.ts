@@ -209,6 +209,15 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         });
     }
 
+    // Remove empty tags
+    $html('p, figure').each((i: any, el: any) => {
+        const elementHtml = $html(el).html().trim();
+
+        if (elementHtml === '') {
+            $(el).remove();
+        }
+    });
+
     // Get the cleaned HTML
     let bodyHtml = $html.html();
 
