@@ -32,6 +32,7 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
     // https://support.beehiiv.com/hc/en-us/articles/7606088263191
     html = html.replace(/{{subscriber_id}}/g, '#');
     html = html.replace(/{{rp_refer_url}}/g, '#');
+    html = html.replace(/{{rp_refer_url_no_params}}/g, '#');
 
     const $allHtml: any = $.load(html, {
         xmlMode: true,
@@ -124,6 +125,15 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         $html(`h1:contains("${postData.data.title}")`).parentsUntil('table').remove();
     }
 
+    // Remove cells that only contain a non-breaking space
+    $html('td').each((i: any, el: any) => {
+        const text = $html(el).html().trim();
+
+        if (text === '&nbsp;') {
+            $(el).remove();
+        }
+    });
+
     // Convert '...' to <hr />
     $html('p').each((i: any, el: any) => {
         const text = $html(el).text().trim();
@@ -133,6 +143,7 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         }
     });
 
+    // Convert linked YouTube thumbnails to embeds
     $html('a[href*="youtube.com"], a[href*="youtu.be"]').each((i: any, el: any) => {
         const imageCount = $html(el).find('img').length;
         const hasPlayIcon = $html(el).find('img[src*="youtube_play_icon.png"]').length;
