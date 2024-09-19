@@ -1,0 +1,354 @@
+{
+  "errors": [],
+  "options": {
+    "scrape": "none",
+    "zip": false,
+    "verbose": true,
+    "_": [],
+    "h": false,
+    "help": false,
+    "v": false,
+    "version": false,
+    "url": "https://example.com",
+    "V": true,
+    "s": "none",
+    "I": false,
+    "info": false,
+    "b": 0,
+    "batch": 0,
+    "l": 100,
+    "limit": 100,
+    "a": null,
+    "auth": null,
+    "u": null,
+    "users": null,
+    "fallBackHTMLCard": false,
+    "tags": true,
+    "addTag": null,
+    "featureImage": "featuredmedia",
+    "excerptSelector": null,
+    "renderer": "verbose",
+    "exitOnError": false,
+    "concurrent": 3
+  },
+  "result": {
+    "users": [
+      {
+        "url": "https://example.com/author/anotherauthor/",
+        "data": {
+          "id": 2,
+          "slug": "anotherauthor",
+          "name": "Another Author",
+          "bio": "",
+          "profile_image": "",
+          "website": ""
+        }
+      },
+      {
+        "url": "https://example.com/author/theauthor/",
+        "data": {
+          "id": 1,
+          "slug": "theauthor",
+          "name": "The Author",
+          "bio": "",
+          "profile_image": "",
+          "website": "https://example.com"
+        }
+      }
+    ],
+    "posts": [
+      {
+        "url": "https://example.com/lorem-ipsum/",
+        "data": {
+          "slug": "lorem-ipsum",
+          "title": "Lorem Ipsum",
+          "comment_id": 134,
+          "lexical": "{\"root\":{\"children\":[{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"Lorem ipsum \",\"type\":\"extended-text\",\"version\":1},{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"dolor sit amet\",\"type\":\"extended-text\",\"version\":1}],\"direction\":\"ltr\",\"format\":\"\",\"indent\":0,\"type\":\"link\",\"version\":1,\"rel\":\"noreferrer\",\"target\":null,\"title\":null,\"url\":\"https://example.com/lorem-ipsum/\"},{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\", consectetur \",\"type\":\"extended-text\",\"version\":1},{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"adipiscing\",\"type\":\"extended-text\",\"version\":1}],\"direction\":\"ltr\",\"format\":\"\",\"indent\":0,\"type\":\"link\",\"version\":1,\"rel\":\"noreferrer\",\"target\":null,\"title\":null,\"url\":\"https://example.com/dolor-simet/\"},{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\" elit. \",\"type\":\"extended-text\",\"version\":1},{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"Pellentesque in\",\"type\":\"extended-text\",\"version\":1}],\"direction\":\"ltr\",\"format\":\"\",\"indent\":0,\"type\":\"link\",\"version\":1,\"rel\":\"noreferrer\",\"target\":null,\"title\":null,\"url\":\"https://example.com/est-vitae/\"},{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\" sagittis tortor. \",\"type\":\"extended-text\",\"version\":1},{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"Vestibulum interdum\",\"type\":\"extended-text\",\"version\":1}],\"direction\":\"ltr\",\"format\":\"\",\"indent\":0,\"type\":\"link\",\"version\":1,\"rel\":\"noreferrer\",\"target\":null,\"title\":null,\"url\":\"https://example.com/sample-page/child-sample-page/\"},{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\" mi vel \",\"type\":\"extended-text\",\"version\":1},{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"justo\",\"type\":\"extended-text\",\"version\":1}],\"direction\":\"ltr\",\"format\":\"\",\"indent\":0,\"type\":\"link\",\"version\":1,\"rel\":\"noreferrer\",\"target\":null,\"title\":null,\"url\":\"https://example.com/sample-page/\"},{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\" scelerisque, \",\"type\":\"extended-text\",\"version\":1},{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"nec\",\"type\":\"extended-text\",\"version\":1}],\"direction\":\"ltr\",\"format\":\"\",\"indent\":0,\"type\":\"link\",\"version\":1,\"rel\":\"noreferrer\",\"target\":null,\"title\":null,\"url\":\"https://example.com/query-params/\"},{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\" pellentesque \",\"type\":\"extended-text\",\"version\":1},{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"justo\",\"type\":\"extended-text\",\"version\":1}],\"direction\":\"ltr\",\"format\":\"\",\"indent\":0,\"type\":\"link\",\"version\":1,\"rel\":\"noreferrer\",\"target\":null,\"title\":null,\"url\":\"https://example.com/p/substack-url/\"},{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\".\",\"type\":\"extended-text\",\"version\":1}],\"direction\":\"ltr\",\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1}],\"direction\":\"ltr\",\"format\":\"\",\"indent\":0,\"type\":\"root\",\"version\":1}}",
+          "type": "post",
+          "status": "published",
+          "created_at": "2020-06-27T12:07:24",
+          "published_at": "2020-06-27T12:07:24",
+          "updated_at": "2021-06-10T10:44:35",
+          "author": {
+            "url": "https://example.com/author/theauthor/",
+            "data": {
+              "id": 1,
+              "slug": "theauthor",
+              "name": "The Author",
+              "bio": "",
+              "profile_image": "",
+              "website": "https://example.com"
+            }
+          },
+          "feature_image": "https://example.com/wp-content/uploads/2020/06/brooke-cagle-RnDGGnMEOao-unsplash-scaled.jpg",
+          "tags": [
+            {
+              "url": "https://example.com/category/meals/",
+              "data": {
+                "slug": "meals",
+                "name": "Meals"
+              }
+            },
+            {
+              "url": "https://example.com/category/cakes/fruit/",
+              "data": {
+                "slug": "fruit",
+                "name": "Fruit"
+              }
+            },
+            {
+              "url": "https://example.com/category/cakes/",
+              "data": {
+                "slug": "cakes",
+                "name": "Cakes"
+              }
+            },
+            {
+              "url": "https://example.com/category/meals/pasta/",
+              "data": {
+                "slug": "pasta",
+                "name": "Pasta"
+              }
+            },
+            {
+              "url": "https://example.com/tag/cruiser/",
+              "data": {
+                "slug": "cruiser",
+                "name": "Cruiser"
+              }
+            },
+            {
+              "url": "migrator-added-tag",
+              "data": {
+                "name": "#wp"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "url": "https://example.com/dolor-simet/",
+        "data": {
+          "slug": "dolor-simet",
+          "title": "Dolor Simet",
+          "comment_id": 187,
+          "html": "\n<p>Non aut <a href=\"https://example.com/dolor-simet/\">numquam</a> laborum eos. Asperiores odit harum qui in saepe. Quam ut suscipit ab et aliquam Dolore <a href=\"https://ernser.com/\">facere quae</a> Modi eum ducimus rerum quisquam Rerum commodi repellat repellendus. Et quo consequatur Ut quod et hic. Velit numquam quia aut occaecati repudiandae.</p>\n\n\n\n<ul><li><a href=\"https://example.com/sample-page/\">Lorem</a></li><li>Ipsum <a href=\"https://example.com/category/cakes/fruit/\">dolor</a> simet</li></ul>\n\n\n\n<p>Quaerat est assumenda repellendus quam facilis exercitationem Dolores at non at. Vero voluptates placeat aut. Consectetur et eos nulla. Velit voluptatibus est tenetur voluptatibus repellendus voluptates. quia ab ut nobis dolores. Sequi autem tenetur Rerum aut qui non et. <a href=\"https://example.com/category/meals/pizza/\">Voluptate</a> aperiam doloribus fuga assumenda tempore. minus asperiores et esse ad quia adipisci.</p>\n",
+          "type": "post",
+          "status": "published",
+          "created_at": "2020-06-02T01:57:54",
+          "published_at": "2020-06-02T01:57:54",
+          "updated_at": "2021-06-10T10:48:11",
+          "author": {
+            "url": "https://example.com/author/anotherauthor/",
+            "data": {
+              "id": 2,
+              "slug": "anotherauthor",
+              "name": "Another Author",
+              "bio": "",
+              "profile_image": "",
+              "website": ""
+            }
+          },
+          "feature_image": "https://example.com/wp-content/uploads/2020/06/jacob-vega-jlsJhi0_ikc-unsplash-scaled.jpg",
+          "tags": [
+            {
+              "url": "https://example.com/category/meals/",
+              "data": {
+                "slug": "meals",
+                "name": "Meals"
+              }
+            },
+            {
+              "url": "https://example.com/category/meals/pizza/",
+              "data": {
+                "slug": "ducati",
+                "name": "Ducati"
+              }
+            },
+            {
+              "url": "https://example.com/category/meals/pasta/",
+              "data": {
+                "slug": "pasta",
+                "name": "Pasta"
+              }
+            },
+            {
+              "url": "https://example.com/category/meals/bbq/",
+              "data": {
+                "slug": "yamaha",
+                "name": "Yamaha"
+              }
+            },
+            {
+              "url": "https://example.com/tag/fast/",
+              "data": {
+                "slug": "fast",
+                "name": "Fast"
+              }
+            },
+            {
+              "url": "migrator-added-tag",
+              "data": {
+                "name": "#wp"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "url": "https://example.com/est-vitae/",
+        "data": {
+          "slug": "est-vitae",
+          "title": "Est Vitae",
+          "comment_id": 195,
+          "html": "\n<p>Ut est vitae ab explicabo vitae. Quasi et <a title=\"Velit iste adipisci.\" href=\"https://www.exampleurl.com/ipsam-eveniet-vero-sit-dolores-aliquam-qui-iusto\">nobis impedit cum</a> perspiciatis Quasi <a href=\"https://example.com/sample-page/child-sample-page/\">quis</a> quos atque. id voluptatem ipsam Sequi aut et nesciunt nesciunt sed rerum. Autem soluta et quibusdam eum. labore soluta neque <a href=\"https://example.com/sample-page/\">sequi</a> earum perferendis. Atque <a title=\"Sint reiciendis libero.\" href=\"https://exampleurl.net/iure-quae-dolore-odit-aut-accusantium-ipsam.html\">provident labore</a> ipsum et Quasi qui velit eum repudiandae qui tempore. Sit eos <a title=\"Eos.\" href=\"https://exampleurl.com/minima-perspiciatis-occaecati-ut\">maxime et. Veritatis non</a> laudantium nihil. Sed ut sunt quisquam asperiores distinctio et. Similique facere odit eum voluptas placeat porro. Quos aspernatur temporibus nesciunt reprehenderit nisi. Ex impedit similique minus autem Beatae dolorem et et et et Ipsa <a title=\"Error alias ea praesentium sint.\" href=\"https://exampleurl.org/est-similique-nemo-velit-beatae\">suscipit cumque modi ipsa</a> incidunt. Iure autem et voluptates ipsa. quasi rem ratione soluta cupiditate. Quam molestiae quia neque eum. et quo <a title=\"Et quam.\" href=\"https://exampleurl.com/et-minus-beatae-maiores-nesciunt-molestiae-nemo-exercitationem-cumque\">officia</a> magnam. ex sed alias alias sapiente eligendi. Architecto expedita libero neque neque enim sed quod. Itaque odit eos officia dolores nostrum.</p>\n",
+          "type": "post",
+          "status": "published",
+          "created_at": "2020-04-12T21:42:49",
+          "published_at": "2020-04-12T21:42:49",
+          "updated_at": "2021-06-10T10:47:34",
+          "author": {
+            "url": "https://example.com/author/theauthor/",
+            "data": {
+              "id": 1,
+              "slug": "theauthor",
+              "name": "The Author",
+              "bio": "",
+              "profile_image": "",
+              "website": "https://example.com"
+            }
+          },
+          "tags": [
+            {
+              "url": "https://example.com/category/meals/",
+              "data": {
+                "slug": "meals",
+                "name": "Meals"
+              }
+            },
+            {
+              "url": "https://example.com/category/cakes/",
+              "data": {
+                "slug": "cakes",
+                "name": "Cakes"
+              }
+            },
+            {
+              "url": "https://example.com/tag/slow/",
+              "data": {
+                "slug": "slow",
+                "name": "Slow"
+              }
+            },
+            {
+              "url": "migrator-added-tag",
+              "data": {
+                "name": "#wp"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "url": "https://example.com/sample-page/child-sample-page/",
+        "data": {
+          "slug": "child-sample-page",
+          "title": "Child Sample Page",
+          "comment_id": 310,
+          "html": "\n<p>Velit numquam quia aut occaecati repudiandae. Quaerat est assumenda <a href=\"https://example.com/sample-page/\">repellendus</a> quam facilis exercitationem Dolores at non at. Vero voluptates placeat aut. <a href=\"https://example.com/lorem-ipsum/\">Consectetur</a> et eos nulla. Velit voluptatibus est tenetur voluptatibus repellendus voluptates. quia ab ut nobis dolores.</p>\n",
+          "type": "page",
+          "status": "published",
+          "created_at": "2021-06-10T10:47:15",
+          "published_at": "2021-06-10T10:47:15",
+          "updated_at": "2021-06-10T10:47:21",
+          "author": {
+            "url": "https://example.com/author/theauthor/",
+            "data": {
+              "id": 1,
+              "slug": "theauthor",
+              "name": "The Author",
+              "bio": "",
+              "profile_image": "",
+              "website": "https://example.com"
+            }
+          }
+        }
+      },
+      {
+        "url": "https://example.com/sample-page/",
+        "data": {
+          "slug": "sample-page",
+          "title": "Sample Page",
+          "comment_id": 2,
+          "html": "\n<p>This is an example page. It&#8217;s different from a blog post because it will stay in one place and will show up in your site navigation (in most themes). Most people start with an About page that introduces them to potential site visitors. It might say something like this:</p>\n\n\n\n<blockquote class=\"wp-block-quote\"><p>Hi there! I&#8217;m a bike messenger by day, aspiring actor by night, and this is my website. I live in Los Angeles, have a great dog named Jack, and I like pi&#241;a coladas. (And gettin&#8217; caught in the rain.)</p></blockquote>\n\n\n\n<p>&#8230;or something like this:</p>\n\n\n\n<blockquote class=\"wp-block-quote\"><p>The XYZ Doohickey Company was founded in 1971, and has been providing quality doohickeys to the public ever since. Located in Gotham City, XYZ employs over 2,000 people and does all kinds of awesome things for the Gotham community.</p></blockquote>\n\n\n\n<p>As a new WordPress user, you should go to <a href=\"http://example.com/sample-page/\">your dashboard</a> to delete this page and create new pages for your content. Have fun!</p>\n",
+          "type": "page",
+          "status": "published",
+          "created_at": "2021-03-10T09:48:32",
+          "published_at": "2021-03-10T09:48:32",
+          "updated_at": "2021-03-10T09:48:32",
+          "author": {
+            "url": "https://example.com/author/theauthor/",
+            "data": {
+              "id": 1,
+              "slug": "theauthor",
+              "name": "The Author",
+              "bio": "",
+              "profile_image": "",
+              "website": "https://example.com"
+            }
+          }
+        }
+      },
+      {
+        "url": "https://example.com/query-params/",
+        "data": {
+          "slug": "query-params",
+          "title": "Query Params",
+          "comment_id": 20,
+          "html": "\n<p><a href=\"https://example.com/sample-page/?hello=world\">Sample page with query params</a><a href=\"https://example.com/sample-page/child-sample-page/?lorem=ipsum\">Child sample page with query params</a><a href=\"https://exampleurl.com/sample-page/?let=amos\">External sample page with query params</a><a href=\"https://exampleurl.com/sample-page/child-sample-page/?dolor=simet\">External child sample page with query params</a></p><p><a href=\"https://example.com/p/substack-url/?s=w\">Substack-like URL</a></p>\n",
+          "type": "page",
+          "status": "published",
+          "created_at": "2021-03-10T09:48:32",
+          "published_at": "2021-03-10T09:48:32",
+          "updated_at": "2021-03-10T09:48:32",
+          "author": {
+            "url": "https://example.com/author/theauthor/",
+            "data": {
+              "id": 1,
+              "slug": "theauthor",
+              "name": "The Author",
+              "bio": "",
+              "profile_image": "",
+              "website": "https://example.com"
+            }
+          }
+        }
+      },
+      {
+        "url": "https://example.com/p/substack-url/",
+        "data": {
+          "slug": "substack-url",
+          "title": "Query Params",
+          "comment_id": 21,
+          "html": "\n<p>Hey there</p>\n",
+          "type": "page",
+          "status": "published",
+          "created_at": "2021-03-10T09:48:32",
+          "published_at": "2021-03-10T09:48:32",
+          "updated_at": "2021-03-10T09:48:32",
+          "author": {
+            "url": "https://example.com/author/theauthor/",
+            "data": {
+              "id": 1,
+              "slug": "theauthor",
+              "name": "The Author",
+              "bio": "",
+              "profile_image": "",
+              "website": "https://example.com"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

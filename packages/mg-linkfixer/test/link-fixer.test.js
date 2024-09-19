@@ -3,6 +3,7 @@ import linkFixer from '../lib/LinkFixer.js';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 
 import standardFixtures from './fixtures/ctx.json';
+import standardLexicalFixtures from './fixtures/ctx-lexical.json';
 import yyyymmFixtures from './fixtures/ctx-yyyy-mm.json';
 import slugYyyymmFixtures from './fixtures/ctx-slug-yyyy-mm.json';
 import yyyymmddFixtures from './fixtures/ctx-yyyy-mm-dd.json';
@@ -19,6 +20,8 @@ const getPosts = async (options = {}) => {
         ctx = slugYyyymmFixtures;
     } else if (options.datedPermalinks === '/*/yyyy/mm/dd/') {
         ctx = slugYyyymmddFixtures;
+    } else if (options.lexical === true) {
+        ctx = standardLexicalFixtures;
     } else {
         ctx = standardFixtures;
     }
@@ -42,6 +45,7 @@ let slugMonthlyPosts;
 let monthlyPosts;
 let slugDailyPosts;
 let dailyPosts;
+let datelessLexicalPosts;
 let datelessPosts;
 
 beforeAll(async () => {
@@ -49,15 +53,41 @@ beforeAll(async () => {
     monthlyPosts = await getPosts({datedPermalinks: '/yyyy/mm/'});
     slugDailyPosts = await getPosts({datedPermalinks: '/*/yyyy/mm/dd/'});
     dailyPosts = await getPosts({datedPermalinks: '/yyyy/mm/dd/'});
+    datelessLexicalPosts = await getPosts({lexical: true});
     datelessPosts = await getPosts();
 });
 
 describe('LinkFixer', function () {
-    test('Fixes links to posts', async function () {
+    test('Fixes links to posts in HTML', async function () {
         expect(datelessPosts).toBeArrayOfSize(7);
 
         expect(datelessPosts[3].html).not.toContain('<a href="https://example.com/2020/06/27/lorem-ipsum/">Consectetur</a>');
         expect(datelessPosts[3].html).toContain('<a href="/lorem-ipsum/">Consectetur</a>');
+    });
+
+    test('Fixes links to posts in Lexical', async function () {
+        expect(datelessLexicalPosts).toBeArrayOfSize(7);
+
+        expect(datelessLexicalPosts[0].lexical).not.toContain(`"url":"https://example.com/lorem-ipsum/"`);
+        expect(datelessLexicalPosts[0].lexical).toContain(`"url":"/lorem-ipsum/"`);
+
+        expect(datelessLexicalPosts[0].lexical).not.toContain(`"url":"https://example.com/dolor-simet/"`);
+        expect(datelessLexicalPosts[0].lexical).toContain(`"url":"/dolor-simet/"`);
+
+        expect(datelessLexicalPosts[0].lexical).not.toContain(`"url":"https://example.com/est-vitae/"`);
+        expect(datelessLexicalPosts[0].lexical).toContain(`"url":"/est-vitae/"`);
+
+        expect(datelessLexicalPosts[0].lexical).not.toContain(`"url":"https://example.com/sample-page/child-sample-page/"`);
+        expect(datelessLexicalPosts[0].lexical).toContain(`"url":"/child-sample-page/"`);
+
+        expect(datelessLexicalPosts[0].lexical).not.toContain(`"url":"https://example.com/sample-page/"`);
+        expect(datelessLexicalPosts[0].lexical).toContain(`"url":"/sample-page/"`);
+
+        expect(datelessLexicalPosts[0].lexical).not.toContain(`"url":"https://example.com/query-params/"`);
+        expect(datelessLexicalPosts[0].lexical).toContain(`"url":"/query-params/"`);
+
+        expect(datelessLexicalPosts[0].lexical).not.toContain(`"url":"https://example.com/p/substack-url/"`);
+        expect(datelessLexicalPosts[0].lexical).toContain(`"url":"/substack-url/"`);
     });
 
     it('Treats http and https links to the same domain equally', async function () {

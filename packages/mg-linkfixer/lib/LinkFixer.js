@@ -4,8 +4,22 @@ import cheerio from 'cheerio';
 
 // @TODO: expand this list
 const htmlFields = ['html'];
+const lexicalFields = ['lexical'];
 
 const isHTMLField = field => _.includes(htmlFields, field);
+const isLexicalField = field => _.includes(lexicalFields, field);
+
+function mapObject(obj, fn) {
+    return Object.fromEntries(
+        Object.entries(obj).map(([key, value]) => {
+            if (typeof value === 'object' &&
+                value !== null) {
+                return [key, mapObject(value, fn)];
+            }
+            return [key, fn(key, value)];
+        })
+    );
+}
 
 export default class LinkFixer {
     constructor() {
@@ -38,12 +52,14 @@ export default class LinkFixer {
     }
 
     buildMap(ctx) {
-        if (!ctx.result.posts) {
+        if (!ctx?.result?.posts && !ctx?.data?.posts) {
             return;
         }
 
+        const theDataToParse = ctx?.result?.posts ?? ctx?.data?.posts;
+
         // @TODO: support for custom taxonomies
-        ctx.result.posts.forEach(({url, data}) => {
+        theDataToParse.forEach(({url, data}) => {
             // Exit if no url or is empty string
             if (!url || url.length === 0) {
                 return;
@@ -136,6 +152,22 @@ export default class LinkFixer {
         return $.html();
     }
 
+    async processLexical(lexical) {
+        const parsedLexical = JSON.parse(lexical);
+
+        const mappedObject = mapObject(parsedLexical, (key, value) => {
+            if (key === 'url') {
+                let updatedURL = this.cleanURL(value);
+
+                return this.linkMap[updatedURL];
+            } else {
+                return value;
+            }
+        });
+
+        return JSON.stringify(mappedObject);
+    }
+
     fix(ctx, task) {
         let tasks = [];
         let json = ctx.result;
@@ -151,6 +183,19 @@ export default class LinkFixer {
             _.forEach(resources, (resource) => {
                 // For each field
                 _.forEach(resource, (value, field) => {
+                    if (isLexicalField(field)) {
+                        tasks.push({
+                            title: `${type}: ${resource.slug} ${field}`,
+                            task: async () => {
+                                try {
+                                    resource[field] = await this.processLexical(value);
+                                } catch (error) {
+                                    ctx.errors.push(error);
+                                    throw error;
+                                }
+                            }
+                        });
+                    }
                     if (isHTMLField(field)) {
                         tasks.push({
                             title: `${type}: ${resource.slug} ${field}`,
