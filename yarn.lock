@@ -3053,12 +3053,12 @@
     "@stdlib/utils-copy" "^0.2.0"
     uuid "^9.0.0"
 
-"@tryghost/html-to-mobiledoc@3.1.4":
-  version "3.1.4"
-  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-3.1.4.tgz#70554e218074f6d7fdcf36a83128b8a372ca840e"
-  integrity sha512-/FitXeRf/HPcMyCWpNHNjInsitRd0CBtE8wf74IoeL0G38VZUyvsxodtFkzLCeltrPowi8ViGjErColqlA3Udw==
+"@tryghost/html-to-mobiledoc@3.1.5":
+  version "3.1.5"
+  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-3.1.5.tgz#f2a0538f885e846e581652d02198a11923419103"
+  integrity sha512-n2NQAsfAG0NIXVs+bbo8NR7rWkwXvainN+EtacAkVJ++fVv4z/KHgv5YCXo/FNAy0HAxTTmKgyDjQvNzolznEw==
   dependencies:
-    "@tryghost/kg-parser-plugins" "4.1.3"
+    "@tryghost/kg-parser-plugins" "4.1.4"
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "^24.1.0"
 
@@ -3099,11 +3099,6 @@
     fs-extra "^11.0.0"
   optionalDependencies:
     sharp "^0.32.0"
-
-"@tryghost/kg-clean-basic-html@4.1.3":
-  version "4.1.3"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-4.1.3.tgz#be0724ac222a76af1f6a6e2c7e1ea1d41f69c2d1"
-  integrity sha512-z2TLpPTMDR8onNGV177/B1BUdGIumwJ9Pd8i2GXfBbX8LtTnqswK465iR1CUVrKlwZFXFsqvj1ZFPnt51KWQKQ==
 
 "@tryghost/kg-clean-basic-html@4.1.4":
   version "4.1.4"
@@ -3182,12 +3177,12 @@
     markdown-it-sup "^2.0.0"
     semver "^7.6.2"
 
-"@tryghost/kg-parser-plugins@4.1.3":
-  version "4.1.3"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-4.1.3.tgz#8e2892926161a40dde3963a150ffca020d2cdaca"
-  integrity sha512-JE+B5WrO1+iFrlDmLB4k+SZTQ4LRzy9AzCuY56+JePMPbJJ7hZoqaMcIUkIH+6z1X39zLA/+3cuFOPLouk4Q6Q==
+"@tryghost/kg-parser-plugins@4.1.4":
+  version "4.1.4"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-4.1.4.tgz#4ae323b0a6b9ad3f8bf0fcc41d9f570d690cd66e"
+  integrity sha512-ZI4kUKHPACrymRujX63MF9FU33bT8fuYnf1HPkcW8RVEzd1l1BhXDgio6O/f01odawmA/X0OHq0Dwq1C70fRVA==
   dependencies:
-    "@tryghost/kg-clean-basic-html" "4.1.3"
+    "@tryghost/kg-clean-basic-html" "4.1.4"
 
 "@tryghost/kg-utils@1.0.28":
   version "1.0.28"
