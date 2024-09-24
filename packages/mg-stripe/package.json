@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@inquirer/input": "2.3.0",
-    "@inquirer/prompts": "5.5.0",
+    "@inquirer/prompts": "6.0.1",
     "@inquirer/select": "2.5.0",
     "@tryghost/debug": "0.1.33",
     "@tryghost/errors": "1.3.5",
