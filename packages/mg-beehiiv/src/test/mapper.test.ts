@@ -29,7 +29,7 @@ describe('beehiiv Mapper', () => {
         });
 
         it('Can get the slug from post URL with a custom domain', async () => {
-            const slug = createSlug({domain: 'https://example.com/', url: 'https://example.com/p/hello-world'});
+            const slug = createSlug({url: 'https://example.com/p/hello-world'});
             assert.equal(slug, 'hello-world');
         });
 
@@ -113,7 +113,7 @@ describe('beehiiv Mapper', () => {
                 name: 'Hello World'
             }
         });
-      
+
         assert.deepEqual(mapped.data.tags[1], {
             url: 'migrator-added-tag-test',
             data: {
@@ -150,7 +150,7 @@ describe('beehiiv Mapper', () => {
             }
         });
     });
-    
+
     it('Applies fallback default author to draft posts', async () => {
         const bhObj = {...beehiivCsvObj};
         bhObj.status = 'draft';
@@ -181,7 +181,7 @@ describe('beehiiv Mapper', () => {
                 name: '#beehiiv'
             }
         });
-      
+
         assert.deepEqual(mapped.data.tags[3], {
             url: 'migrator-added-tag-hash-beehiiv-free',
             data: {

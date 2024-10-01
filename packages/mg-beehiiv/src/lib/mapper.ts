@@ -9,21 +9,14 @@ const parsePostsCSV = async ({pathToFile}: {pathToFile: string}) => {
     return parsed;
 };
 
-const createSlug = ({domain, url, title}: {domain?: string, url: string, title?: string}) => {
-    // Remove the trailing slash from the domain
-    if (domain) {
-        domain = domain.replace(/\/$/, '');
+const createSlug = ({url, title}: {url: string, title?: string}) => {
+    if (url && url.length > 0) {
+        let splitIt = url.split('/p/');
+
+        return slugify(splitIt[1]);
     }
 
-    if (url && url.length > 0) {
-        let cleanedUrl = url.replace(/https?:\/\/[a-z-A-Z0-9]+.beehiiv.com\/p\//, '');
-        if (domain && domain.length > 0) {
-            cleanedUrl = cleanedUrl.replace(`${domain}/p/`, '');
-        }
-        return slugify(cleanedUrl);
-    } else if (title) {
-        return slugify(title);
-    }
+    return slugify(title);
 };
 
 const fullImageURL = (path: string) => {
@@ -37,7 +30,7 @@ const fullImageURL = (path: string) => {
 
 const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?: any}) => {
     const domain = options?.url ?? false;
-    const postSlug = createSlug({domain, url: postData.url, title: postData.web_title});
+    const postSlug = createSlug({url: postData.url, title: postData.web_title});
 
     const theAudience = postData.audience ?? postData.web_audiences ?? false;
 
