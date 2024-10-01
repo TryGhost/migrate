@@ -20,7 +20,7 @@ const memberStats = async (args = {}) => {
 
     const isValid = await fsUtils.csv.hasKeys({
         filePath: csvPath,
-        required: ['email', 'active_subscription', 'expiry', 'email_disabled', 'prefer_digests', 'created_at'],
+        required: ['email', 'active_subscription', 'expiry', 'email_disabled', 'created_at'],
         blocked: ['stripe_connected_customer_id']
     });
 
