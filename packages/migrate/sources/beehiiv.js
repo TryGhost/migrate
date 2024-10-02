@@ -32,27 +32,65 @@ const scrapeConfig = {
             selector: 'meta[property="twitter:description"]',
             attr: 'content'
         },
-        author: {
-            selector: 'meta[name="author"]',
-            attr: 'content'
+        authors: {
+            // We cannot rely on tags being available as HTML elements because of gating. They are available
+            // as JSON, but the script tag they're in has no ID, so we need to look at all script tags, and
+            // only process the tag that contains `window.__remixContext`.
+            listItem: 'script',
+            data: {
+                authors: {
+                    how: 'html',
+                    convert: (x) => {
+                        if (x && x.includes('window.__remixContext')) {
+                            let theAuthors = [];
+
+                            let remixContent = x.replace('window.__remixContext =', '');
+                            remixContent = remixContent.replace(/;$/, '');
+
+                            const parsed = JSON.parse(remixContent);
+
+                            const parsedAuthors = parsed.state.loaderData['routes/p/$slug'].post.authors;
+
+                            parsedAuthors.forEach((person) => {
+                                theAuthors.push(person.name);
+                            });
+
+                            return theAuthors;
+                        } else {
+                            return;
+                        }
+                    }
+                }
+            }
         }
     }
 };
 
 const postProcessor = (scrapedData, data, options) => { // eslint-disable-line no-unused-vars
-    if (scrapedData.author && scrapedData.author.length > 0) {
-        const authorSlug = slugify(scrapedData.author);
-        const authorEmail = `${authorSlug}@example.com`;
+    if (scrapedData.authors && scrapedData.authors.length > 0) {
+        let realAuthors = [];
 
-        scrapedData.authors = [{
-            data: {
-                slug: authorSlug,
-                name: scrapedData.author,
-                email: authorEmail
+        scrapedData.authors.forEach((block) => {
+            if (!block.authors) {
+                return;
             }
-        }];
+
+            block.authors.forEach((author) => {
+                const authorSlug = slugify(author);
+                const authorEmail = `${authorSlug}@example.com`;
+
+                realAuthors.push({
+                    data: {
+                        slug: authorSlug,
+                        name: author,
+                        email: authorEmail
+                    }
+                });
+            });
+        });
 
         delete scrapedData.author;
+        scrapedData.authors = realAuthors;
     } else {
         const defaultAuthorName = options.defaultAuthorName ?? 'Author';
         const defaultAuthorSlug = slugify(defaultAuthorName);
