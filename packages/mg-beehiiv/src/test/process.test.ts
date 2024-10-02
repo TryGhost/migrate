@@ -334,6 +334,86 @@ describe('beehiiv Processor', () => {
             assert.equal(processed, '<figure class="kg-card kg-image-card"><img src="https://example.com/image.jpg" class="kg-image" alt="My alt text" /></figure>');
         });
 
+        it('Converts galleries with captions to figures with figcaptions', () => {
+            const htmlContent = `<body><table><tr id="content-blocks">
+                <td width="100%">
+                    <table class="mob-w-full">
+                        <tr>
+                            <td class="mob-stack">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <table>
+                                                    <tr>
+                                                        <td>
+                                                            <img src="https://example.com/image1.jpg" alt="" height="auto" width="210" />
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <p>Caption one</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                            <td class="mob-stack">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <table>
+                                                    <tr>
+                                                        <td>
+                                                            <img src="https://example.com/image2.jpg" alt="" height="auto" width="220" />
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <p>Caption 2</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                            <td class="mob-stack">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <table>
+                                                    <tr>
+                                                        <td>
+                                                            <img src="https://example.com/image3.jpg" alt="" height="auto" width="230" />
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <p></p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
+
+            assert.equal(processed, '<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://example.com/image1.jpg" class="kg-image" alt="" /><figcaption>Caption one</figcaption></figure><figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://example.com/image2.jpg" class="kg-image" alt="" /><figcaption>Caption 2</figcaption></figure><figure class="kg-card kg-image-card"><img src="https://example.com/image3.jpg" class="kg-image" alt="" /></figure>');
+        });
+
         it('Keep buttons as buttons', () => {
             const htmlContent = `<body><table><tr id="content-blocks">
             <td align="center" valign="top" style="padding-bottom:14px;padding-left:25px;padding-right:25px;padding-top:14px;text-align:center;width:100%;word-break:break-word;" class="dd">

@@ -66,6 +66,32 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         });
     }
 
+    // Galleries
+    $html('table.mob-w-full').each((i: any, el: any) => {
+        let allImages: string[] = [];
+
+        $(el).find('td.mob-stack').each((ii, ell) => {
+            const img = $(ell).find('img');
+            const pText = $(ell).find('p').text().trim();
+
+            let cardOpts: any = {
+                env: {dom: new SimpleDom.Document()},
+                payload: {
+                    src: img.attr('src'),
+                    alt: img.attr('alt')
+                }
+            };
+
+            if (pText && pText.length > 0) {
+                cardOpts.payload.caption = pText;
+            }
+
+            allImages.push(serializer.serialize(imageCard.render(cardOpts)));
+        });
+
+        $(el).replaceWith(allImages.join(''));
+    });
+
     // Embeds
     $html('td.embed-img.mob-stack').each((i: any, el: any) => {
         const parent = $(el).parent().parent();
@@ -173,10 +199,7 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
 
     $html('img').each((i: any, el: any) => {
         // Skip if the image is in a figure
-        const parentLevel1 = $(el).parent('figure').length;
-        const parentLevel2 = $(el).parent().parent('figure').length;
-        const parentLevel3 = $(el).parent().parent().parent('figure').length;
-        const isInFigure = parentLevel1 || parentLevel2 || parentLevel3;
+        const isInFigure = $(el).parents('figure').length;
         if (isInFigure) {
             return;
         }
@@ -241,7 +264,7 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         ],
         allowedAttributes: {
             a: ['href', 'title', 'rel', 'target', 'class'],
-            img: ['src', 'alt', 'title', 'class'],
+            img: ['src', 'alt', 'title', 'class', 'width', 'height'],
             iframe: ['width', 'height', 'src', 'title', 'frameborder', 'allow', 'allowfullscreen'],
             figure: ['class'],
             div: ['class']
