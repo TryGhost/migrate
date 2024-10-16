@@ -112,6 +112,11 @@ const processContent = (post, siteUrl, options) => {
         scriptingEnabled: false
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
+    // Change paywall card to comment
+    $html('.paywall-jump').each((i, el) => {
+        $(el).replaceWith('<!--members-only-->');
+    });
+
     // Convert bucketeer image paths
     $html('a[href^="https://bucketeer-"], img[src^="https://bucketeer-"]').each((i, el) => {
         const href = $(el).attr('href') ?? false;

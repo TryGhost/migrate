@@ -520,6 +520,20 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         expect(processed.data.html).toEqual('');
     });
 
+    test('Can transform paywalls', async function () {
+        const post = {
+            data: {
+                html: `<p>Public text</p><div class="paywall-jump" data-component-name="PaywallToDOM"></div><p>Premium text</p>`
+            }
+        };
+        const url = 'https://example.com';
+        const options = {};
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).toEqual(`<p>Public text</p><!--members-only--><p>Premium text</p>`);
+    });
+
     test('Can transform subscribe links with custom defined URL', async function () {
         const post = {
             data: {
