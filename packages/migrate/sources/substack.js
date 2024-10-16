@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 import {toGhostJSON} from '@tryghost/mg-json';
-import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
+import mgHtmlLexical from '@tryghost/mg-html-lexical';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import MgAssetScraper from '@tryghost/mg-assetscraper';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
@@ -224,7 +224,7 @@ const getTaskRunner = (options, logger) => {
                     formatDataAsGhost: false,
                     assetScraper: false,
                     linkFixer: false,
-                    htmlToMobiledoc: false,
+                    htmlToLexical: false,
                     writeJSON: false,
                     writeZip: false,
                     clearCache: false
@@ -387,15 +387,15 @@ const getTaskRunner = (options, logger) => {
         },
         {
             // @TODO don't duplicate this with the utils json file
-            title: 'Convert HTML -> MobileDoc',
+            title: 'Convert HTML -> Lexical',
             task: (ctx) => {
-                // 8. Convert post HTML -> MobileDoc
-                ctx.timings.htmlToMobiledoc = Date.now();
+                // 8. Convert post HTML -> Lexical
+                ctx.timings.htmlToLexical = Date.now();
                 try {
-                    let tasks = mgHtmlMobiledoc.convert(ctx); // eslint-disable-line no-shadow
+                    let tasks = mgHtmlLexical.convert(ctx); // eslint-disable-line no-shadow
                     return makeTaskRunner(tasks, options);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to convert HTML to Mobiledoc', error});
+                    ctx.logger.error({message: 'Failed to convert HTML to Lexical', error});
                     throw error;
                 }
             }
@@ -403,8 +403,8 @@ const getTaskRunner = (options, logger) => {
         {
             task: (ctx) => {
                 ctx.logger.info({
-                    message: 'Convert HTML -> MobileDoc',
-                    duration: Date.now() - ctx.timings.htmlToMobiledoc
+                    message: 'Convert HTML -> Lexical',
+                    duration: Date.now() - ctx.timings.htmlToLexical
                 });
             }
         },
