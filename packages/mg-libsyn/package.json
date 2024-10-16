@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-libsyn",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-libsyn",
   "author": "Ghost Foundation",
   "license": "MIT",
