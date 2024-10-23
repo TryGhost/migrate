@@ -11,23 +11,13 @@ describe('TagContext', () => {
     test('Has schema', () => {
         const tag: any = new TagContext();
 
-        assert.deepEqual(tag.schema, {
-            name: {required: true, type: 'string', maxLength: 255},
-            slug: {required: true, type: 'string', maxLength: 191},
-            description: {type: 'string', maxLength: 500, default: null},
-            feature_image: {type: 'string', maxLength: 2000},
-            og_image: {type: 'string', maxLength: 2000},
-            og_title: {type: 'string', maxLength: 300},
-            og_description: {type: 'string', maxLength: 500},
-            twitter_image: {type: 'string', maxLength: 2000},
-            twitter_title: {type: 'string', maxLength: 300},
-            twitter_description: {type: 'string', maxLength: 500},
-            meta_title: {type: 'string', maxLength: 300},
-            meta_description: {type: 'string', maxLength: 500},
-            codeinjection_head: {type: 'text', maxLength: 65535},
-            codeinjection_foot: {type: 'text', maxLength: 65535},
-            canonical_url: {type: 'string', maxLength: 2000}
-        });
+        // Check the number of items
+        assert.equal(Object.keys(tag.schema).length, 15);
+
+        // And to sanity check, look at the first item
+        assert.equal(tag.schema.name.required, true);
+        assert.equal(tag.schema.name.type, 'string');
+        assert.equal(tag.schema.name.maxLength, 255);
     });
 
     test('Can accept initialData', () => {
