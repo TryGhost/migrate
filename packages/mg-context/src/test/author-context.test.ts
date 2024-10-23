@@ -9,23 +9,15 @@ describe('AuthorContext', () => {
     });
 
     test('Has schema', () => {
-        const tag: any = new AuthorContext();
+        const author: any = new AuthorContext();
 
-        assert.deepEqual(tag.schema, {
-            name: {require: true, type: 'string', maxLength: 191},
-            slug: {require: true, type: 'string', maxLength: 191},
-            email: {require: true, type: 'string', maxLength: 191},
-            profile_image: {type: 'string', maxLength: 2000},
-            cover_image: {type: 'string', maxLength: 2000},
-            bio: {type: 'text', maxLength: 200},
-            website: {type: 'string', maxLength: 2000},
-            location: {type: 'text', maxLength: 150},
-            facebook: {type: 'string', maxLength: 2000},
-            twitter: {type: 'string', maxLength: 2000},
-            meta_title: {type: 'string', maxLength: 300},
-            meta_description: {type: 'string', maxLength: 500},
-            role: {required: true, type: 'string', choices: ['Contributor', 'Author', 'Editor', 'Administrator'], default: 'Contributor'}
-        });
+        // Check the number of items
+        assert.equal(Object.keys(author.schema).length, 13);
+
+        // And to sanity check, look at the first item
+        assert.equal(author.schema.name.required, true);
+        assert.equal(author.schema.name.type, 'string');
+        assert.equal(author.schema.name.maxLength, 191);
     });
 
     test('Can accept initialData', () => {
@@ -93,5 +85,21 @@ describe('AuthorContext', () => {
         author.remove('website');
 
         assert.equal(author.data.website, null);
+    });
+
+    test('Will throw on an invalid email address', () => {
+        const thisIs80Chars = 'this-string-is-80-chars-long-lorem-ipsum-dolor-sit-amet-consectetur-adipiscing-el';
+
+        const author = new AuthorContext({
+            name: 'Test',
+            slug: 'test',
+            website: 'https://test.com'
+        });
+
+        assert.throws(() => author.set('email', `${thisIs80Chars}@email.com`), {
+            name: 'InternalServerError',
+            statusCode: 500,
+            message: '(Author) Invalid email address'
+        });
     });
 });

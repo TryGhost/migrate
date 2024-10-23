@@ -35,5 +35,8 @@
     "jest": "29.7.0",
     "sinon": "18.0.1",
     "typescript": "5.5.4"
+  },
+  "dependencies": {
+    "@tryghost/validator": "0.2.15"
   }
 }
