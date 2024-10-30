@@ -57,8 +57,13 @@ describe('beehiiv Processor', () => {
             assert.equal(processed, '<p>Hello</p>');
         });
 
-        it('Can remove empty cells', () => {
+        it('Can convert HRs', () => {
             const processed = processHTML({html: '<table><tr id="content-blocks"><td align="center" valign="top" style="font-size:0px;line-height:0px;padding:20px 0px;" class="dd"><table class="j" role="none" width="50%" border="0" cellspacing="0" cellpadding="0" align="center"><tr><td> &nbsp; </td></tr></table></td><p>Hello</p></tr></table>'});
+            assert.equal(processed, '<hr /><p>Hello</p>');
+        });
+
+        it('Can remove empty cells', () => {
+            const processed = processHTML({html: '<table><tr id="content-blocks"><td align="center" valign="top" style="font-size:0px;line-height:0px;padding:20px 0px;" class="dd"><table role="none" width="50%" border="0" cellspacing="0" cellpadding="0" align="center"><tr><td> &nbsp; </td></tr></table></td><p>Hello</p></tr></table>'});
             assert.equal(processed, '<p>Hello</p>');
         });
 

@@ -66,6 +66,14 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         });
     }
 
+    $html('table.j').each((i: any, el: any) => {
+        const tdContent = $html(el).find('td').html().trim();
+
+        if (tdContent === '&nbsp;') {
+            $(el).replaceWith('<hr>');
+        }
+    });
+
     // Galleries
     $html('table.mob-w-full').each((i: any, el: any) => {
         let allImages: string[] = [];
