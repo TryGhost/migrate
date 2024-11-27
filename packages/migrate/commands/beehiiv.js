@@ -55,6 +55,18 @@ const options = [
         desc: 'Provide a path that existing "subscribe" anchors will link to e.g. "/join-us" or "#/portal/signup" (# characters need to be escaped with a \\)'
     },
     {
+        type: 'boolean',
+        flags: '--comments',
+        defaultValue: true,
+        desc: 'Keep comment buttons'
+    },
+    {
+        type: 'string',
+        flags: '--commentLink',
+        defaultValue: '#ghost-comments-root',
+        desc: 'Provide a path that existing "comment" anchors will link to e.g. "#comments" or "#ghost-comments-root" (# characters need to be escaped with a \\)'
+    },
+    {
         type: 'number',
         flags: '--wait_after_scrape',
         defaultValue: 200,

@@ -251,6 +251,26 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         });
     }
 
+    if (options?.url && options?.comments && options?.commentLink) {
+        $html('a[href*="comments=true"]').each((i: any, el: any) => {
+            const href = $html(el).attr('href');
+
+            if (href.includes(options.url)) {
+                $html(el).attr('href', options.commentLink);
+                $html(el).removeAttr('target');
+                $html(el).removeAttr('rel');
+            }
+        });
+    } else if (options?.url && options?.comments === false) {
+        $html('a[href*="comments=true"]').each((i: any, el: any) => {
+            const href = $html(el).attr('href');
+
+            if (href.includes(options.url)) {
+                $html(el).remove();
+            }
+        });
+    }
+
     // Remove empty tags
     $html('p, figure').each((i: any, el: any) => {
         const elementHtml = $html(el).html().trim();

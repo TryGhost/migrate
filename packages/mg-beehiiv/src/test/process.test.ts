@@ -253,6 +253,27 @@ describe('beehiiv Processor', () => {
             assert.equal(processed, '<p>Stay updated! Be sure to <a href="#/portal/signup">subscribe to our newsletter</a>.</p>');
         });
 
+        it('Updates comment links', () => {
+            const htmlContent = `<body><table><tr id="content-blocks"><p>Hello <a href="https://example.beehiiv.com/p/post-slug?comments=true">Make a comment</a></p></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
+                url: 'https://example.beehiiv.com',
+                comments: true,
+                commentLink: '#ghost-comments-root'
+            }});
+
+            assert.equal(processed, '<p>Hello <a href="#ghost-comments-root">Make a comment</a></p>');
+        });
+
+        it('Removes comment links', () => {
+            const htmlContent = `<body><table><tr id="content-blocks"><p>Hello <a href="https://example.beehiiv.com/p/post-slug?comments=true">Make a comment</a></p></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
+                url: 'https://example.beehiiv.com',
+                comments: false
+            }});
+
+            assert.equal(processed, '<p>Hello </p>');
+        });
+
         it('Wraps images in figure tags with alt text', () => {
             const htmlContent = `<body><table><tr id="content-blocks">
             <td>
