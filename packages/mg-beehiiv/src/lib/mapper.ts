@@ -51,7 +51,7 @@ const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?
         }
     };
 
-    if (theAudience === 'premium' || theAudience === 'All premium subscribers') {
+    if (theAudience === 'premium' || theAudience === 'All premium subscribers' || theAudience === 'All paid subscribers') {
         mappedData.data.visibility = 'paid';
     } else if (theAudience === 'both') {
         mappedData.data.visibility = 'members';

@@ -10,7 +10,7 @@ type beehiivPostDataObject = {
     web_title: string;
     status: 'archived' | 'confirmed' | 'draft'
     audience?: 'both' | 'free' | 'premium'
-    web_audiences?: 'All free subscribers, All premium subscribers' | 'All free subscribers' | 'All premium subscribers'
+    web_audiences?: 'All free subscribers, All premium subscribers' | 'All free subscribers, All paid subscribers' | 'All free subscribers' | 'All premium subscribers' | 'All paid subscribers'
     content_tags: string;
     url: string;
     web_subtitle?: string;
