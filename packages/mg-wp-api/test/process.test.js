@@ -59,6 +59,19 @@ describe('Process WordPress REST API JSON', function () {
         expect(data.profile_image).toEqual('https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=3000&d=mm&r=g');
         expect(data.website).toEqual('https://example.com');
     });
+    
+    test('Will not add invalid user website URL', function () {
+        const user = processor.processAuthor({
+            id: 29,
+            name: 'Example User',
+            url: 'https://#'
+        });
+
+        expect(user).toBeObject();
+        expect(user.data).toHaveProperty('id');
+        expect(user.data).toHaveProperty('name');
+        expect(user.data).not.toHaveProperty('website');
+    });
 
     test('Can convert a multiple users', function () {
         const users = processor.processAuthors(multipleUsersfixture);

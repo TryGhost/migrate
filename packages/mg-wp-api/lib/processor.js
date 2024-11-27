@@ -66,7 +66,7 @@ const processAuthor = (wpAuthor) => {
     let profileImage = wpAuthor.avatar_urls && wpAuthor.avatar_urls['96'];
     profileImage = profileImage ? profileImage.replace(/s=96/, 's=3000') : undefined;
 
-    return {
+    let authorObject = {
         url: wpAuthor.link,
         data: {
             id: wpAuthor.id && wpAuthor.id,
@@ -74,10 +74,21 @@ const processAuthor = (wpAuthor) => {
             name: wpAuthor.name,
             bio: wpAuthor.description,
             profile_image: profileImage,
-            email: wpAuthor.email && wpAuthor.email,
-            website: wpAuthor.url && wpAuthor.url
+            email: wpAuthor.email && wpAuthor.email
         }
     };
+
+    if (wpAuthor.url) {
+        try {
+            new URL(wpAuthor.url);
+            authorObject.data.website = wpAuthor.url;
+        } catch (error) {
+            // Just silently fail
+            // console.log(error);
+        }
+    }
+
+    return authorObject;
 };
 
 const processTerm = (wpTerm) => {
