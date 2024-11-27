@@ -7,7 +7,7 @@ type memberObject = {
     subscribed_to_emails: boolean;
     stripe_customer_id: string;
     complimentary_plan: boolean;
-    labels: string[] | null;
+    labels: string[];
     created_at: Date;
 };
 
@@ -30,16 +30,29 @@ const processCsv = async ({csvPath}: {csvPath: string}) => {
             created_at: createdAt
         };
 
+        if (member.status) {
+            newMember.labels.push(`beehiiv-status-${member.status}`);
+        }
+
         if (member.status === 'active') {
             newMember.subscribed_to_emails = true;
         }
 
-        if (member.tier === 'premium') {
+        if (member.stripe_customer_id) {
+            newMember.stripe_customer_id = member.stripe_customer_id;
+        } else if (member.tier === 'premium') {
             newMember.stripe_customer_id = 'auto';
         }
 
-        if (newMember.labels) {
-            newMember.labels.push(`beehiiv-status-${member.status}`);
+        if (member['Free Tier'] === 'Yes') {
+            newMember.labels.push(`beehiiv-tier-free`);
+        }
+
+        if (member['Premium Tier'] === 'Yes') {
+            newMember.labels.push(`beehiiv-premium-free`);
+        }
+
+        if (member.tier) {
             newMember.labels.push(`beehiiv-tier-${member.tier}`);
         }
 

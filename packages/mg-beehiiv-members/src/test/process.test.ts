@@ -9,26 +9,32 @@ describe('beehiiv Members', () => {
     it('Can parse CSV', async () => {
         const processed = await processCsv({csvPath: join(fixturesPath, 'members.csv')});
 
-        assert.equal(processed.length, 5);
+        assert.equal(processed.length, 6);
     });
 
     it('Finds correct number of paid members', async () => {
         const processed = await processCsv({csvPath: join(fixturesPath, 'members.csv')});
 
         const paid = processed.filter((member) => {
-            return member.stripe_customer_id === 'auto';
+            return member.stripe_customer_id.length > 0;
         });
 
-        assert.equal(paid.length, 2);
+        assert.equal(paid.length, 3);
     });
 
     it('Finds correct number of free members', async () => {
         const processed = await processCsv({csvPath: join(fixturesPath, 'members.csv')});
 
         const paid = processed.filter((member) => {
-            return member.stripe_customer_id !== 'auto';
+            return member.stripe_customer_id.length === 0;
         });
 
         assert.equal(paid.length, 3);
+    });
+
+    it('Uses Stripe customer ID is present', async () => {
+        const processed = await processCsv({csvPath: join(fixturesPath, 'members.csv')});
+
+        assert.equal(processed[5].stripe_customer_id, 'cus_1234');
     });
 });
