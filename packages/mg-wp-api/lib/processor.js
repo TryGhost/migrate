@@ -63,9 +63,6 @@ const largerSrc = (imageSrc) => {
 };
 
 const processAuthor = (wpAuthor) => {
-    let profileImage = wpAuthor.avatar_urls && wpAuthor.avatar_urls['96'];
-    profileImage = profileImage ? profileImage.replace(/s=96/, 's=3000') : undefined;
-
     let authorObject = {
         url: wpAuthor.link,
         data: {
@@ -73,10 +70,20 @@ const processAuthor = (wpAuthor) => {
             slug: wpAuthor.slug,
             name: wpAuthor.name,
             bio: wpAuthor.description,
-            profile_image: profileImage,
             email: wpAuthor.email && wpAuthor.email
         }
     };
+
+    let profileImage = wpAuthor.avatar_urls && wpAuthor.avatar_urls['96'];
+    if (profileImage) {
+        const imgUrl = new URL(profileImage);
+        const params = new URLSearchParams(imgUrl.search);
+        params.set('d', 'blank');
+        params.set('r', 'g');
+        params.set('s', '500');
+        imgUrl.search = params.toString();
+        authorObject.data.profile_image = imgUrl.href;
+    }
 
     if (wpAuthor.url) {
         try {

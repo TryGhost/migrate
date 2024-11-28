@@ -56,7 +56,7 @@ describe('Process WordPress REST API JSON', function () {
         expect(data.slug).toEqual('example');
         expect(data.name).toEqual('Example User');
         expect(data.bio).toEqual('Lorem ipsum small bio.\r\n\r\nAnd emoji 🤓 on the second line.');
-        expect(data.profile_image).toEqual('https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=3000&d=mm&r=g');
+        expect(data.profile_image).toEqual('https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=500&d=blank&r=g');
         expect(data.website).toEqual('https://example.com');
     });
     
@@ -71,6 +71,20 @@ describe('Process WordPress REST API JSON', function () {
         expect(user.data).toHaveProperty('id');
         expect(user.data).toHaveProperty('name');
         expect(user.data).not.toHaveProperty('website');
+    });
+    
+    test('Will scale user avatars', function () {
+        const user = processor.processAuthor({
+            id: 29,
+            name: 'Example User',
+            avatar_urls: {
+                24: 'https://secure.gravatar.com/avatar/cb8419c1d471d55fbca0d63d1fb2b6ac?s=24&d=wp_user_avatar&r=g',
+                48: 'https://secure.gravatar.com/avatar/cb8419c1d471d55fbca0d63d1fb2b6ac?s=48&d=wp_user_avatar&r=g',
+                96: 'https://secure.gravatar.com/avatar/cb8419c1d471d55fbca0d63d1fb2b6ac?s=96&d=wp_user_avatar&r=g'
+            }
+        });
+
+        expect(user.data.profile_image).toEqual('https://secure.gravatar.com/avatar/cb8419c1d471d55fbca0d63d1fb2b6ac?s=500&d=blank&r=g');
     });
 
     test('Can convert a multiple users', function () {
@@ -95,7 +109,7 @@ describe('Process WordPress REST API JSON', function () {
         expect(data.slug).toEqual('another-user');
         expect(data.name).toEqual('Another User');
         expect(data.bio).toEqual('A different user bio');
-        expect(data.profile_image).toEqual('https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=3000&d=mm&r=g');
+        expect(data.profile_image).toEqual('https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=500&d=blank&r=g');
         expect(data.website).toEqual('https://anothersite.com');
     });
 
