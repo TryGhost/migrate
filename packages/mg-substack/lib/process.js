@@ -423,7 +423,7 @@ const processContent = (post, siteUrl, options) => {
         const postCaption = attrs.caption;
         const postImage = attrs.cover_image;
         const postIcon = attrs.publication_logo_url;
-        const postAuthor = attrs.publishedBylines[0].name;
+        const postAuthor = attrs?.publishedBylines[0]?.name ?? null;
         const postPubName = attrs.publication_name;
 
         let cardOpts = {
