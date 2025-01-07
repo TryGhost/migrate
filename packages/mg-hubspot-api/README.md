@@ -104,4 +104,4 @@ yarn dev hubspot --url https://example.com --hapikey 1234abcd
 
 # Copyright & License
 
-Copyright (c) 2013-2023 Ghost Foundation - Released under the [MIT license](LICENSE).
+Copyright (c) 2013-2025 Ghost Foundation - Released under the [MIT license](LICENSE).
