@@ -1,6 +1,6 @@
 const processCompGift = (member, {thresholdYearOrDate, beforeThreshold}) => {
     const sType = member.type;
-    const thresholdDate = (typeof thresholdYearOrDate.getMonth === 'function') ? thresholdYearOrDate : new Date().setFullYear(new Date().getFullYear() + thresholdYearOrDate);
+    const thresholdDate = (typeof thresholdYearOrDate?.getMonth === 'function') ? thresholdYearOrDate : new Date().setFullYear(new Date().getFullYear() + thresholdYearOrDate);
 
     if (new Date(member.expiry) > thresholdDate) {
         member.type = 'comp',
