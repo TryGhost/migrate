@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-squarespace-xml",
-  "version": "0.3.29",
+  "version": "0.3.30",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-squarespace-xml",
   "author": "Ghost Foundation",
   "license": "MIT",
