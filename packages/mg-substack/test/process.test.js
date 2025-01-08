@@ -1169,6 +1169,23 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         expect(processed.data.html).not.toInclude('<div class="digest-post-embed"');
         expect(processed.data.html).toInclude('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://www.exampe.com/p/the-link"><div class="kg-bookmark-content"><div class="kg-bookmark-title">The Title</div><div class="kg-bookmark-description">The caption</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1234-9772-40c8-bc77-0ae3e6ec4774_205x205.png" alt><span class="kg-bookmark-author">Pub Name</span><span class="kg-bookmark-publisher">Author Name</span></div></div><div class="kg-bookmark-thumbnail"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1234-1a48-4dd3-ac53-06900dc9a92d_1200x800.jpeg" alt></div></a></figure>');
     });
+
+    test('Skips post embed if JSON is invalid', async function () {
+        const post = {
+            data: {
+                html: `<p>Lorem ipsum.</p><div class="digest-post-embed" data-attrs="{&quot;no"></div><p>Dolore magna.</p>`,
+                title: 'My embed post'
+            }
+        };
+        const url = 'https://example.com';
+        const options = {
+            useFirstImage: false
+        };
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).toEqual('<p>Lorem ipsum.</p><div class="digest-post-embed" data-attrs="{&quot;no"></div><p>Dolore magna.</p>');
+    });
 });
 
 describe('Image handling', function () {

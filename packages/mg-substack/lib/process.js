@@ -416,7 +416,15 @@ const processContent = (post, siteUrl, options) => {
 
     $html('.digest-post-embed').each((i, el) => {
         const attrsRaw = $(el).attr('data-attrs');
-        const attrs = JSON.parse(attrsRaw);
+
+        let attrs;
+
+        // Return early if JSON is invalid
+        try {
+            attrs = JSON.parse(attrsRaw);
+        } catch (error) {
+            return;
+        }
 
         const postUrl = attrs.canonical_url;
         const postTitle = attrs.title;
