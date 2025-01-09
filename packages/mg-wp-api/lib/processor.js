@@ -11,6 +11,7 @@ import {htmlToText} from 'html-to-text';
 import {_base as debugFactory} from '@tryghost/debug';
 import SimpleDom from 'simple-dom';
 import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
+import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
@@ -405,6 +406,35 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
                 $(el).remove();
             }
         }
+    });
+
+    $html('div.wp-caption').each((i, el) => {
+        const hasImage = $(el).find('img').length > 0;
+
+        if (!hasImage) {
+            return;
+        }
+
+        const imgSrc = $(el).find('img').attr('src');
+        const imgAlt = $(el).find('img').attr('alt');
+
+        const hasCaption = $(el).find('.wp-caption-text').length > 0;
+        const imgCaption = hasCaption ? $(el).find('.wp-caption-text').text() : '';
+
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: imgSrc,
+                alt: imgAlt,
+                caption: imgCaption
+            }
+        };
+
+        if (hasCaption) {
+            cardOpts.payload.caption = imgCaption;
+        }
+
+        $(el).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
     $html('img').each((i, img) => {

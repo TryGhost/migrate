@@ -59,7 +59,7 @@ describe('Process WordPress REST API JSON', function () {
         expect(data.profile_image).toEqual('https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=500&d=blank&r=g');
         expect(data.website).toEqual('https://example.com');
     });
-    
+
     test('Will not add invalid user website URL', function () {
         const user = processor.processAuthor({
             id: 29,
@@ -72,7 +72,7 @@ describe('Process WordPress REST API JSON', function () {
         expect(user.data).toHaveProperty('name');
         expect(user.data).not.toHaveProperty('website');
     });
-    
+
     test('Will scale user avatars', function () {
         const user = processor.processAuthor({
             id: 29,
@@ -401,6 +401,14 @@ describe('Process WordPress HTML', function () {
         const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/another-image.png">');
+    });
+
+    test('Can handle images in .wp-caption div', async function () {
+        const html = `<div id="attachment_437" style="width: 510px" class="wp-caption aligncenter"><a href="http:/example.com/wp-content/uploads/2015/04/photo.jpg"><img aria-describedby="caption-attachment-437" class="wp-image-437" src="http:/example.com/wp-content/uploads/2015/04/photo.jpg" alt="My photo alt" width="500" height="355" data-wp-pid="437" /></a><p id="caption-attachment-437" class="wp-caption-text">My photo caption</p></div>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption"><img src="http:/example.com/wp-content/uploads/2015/04/photo.jpg" class="kg-image" alt="My photo alt" loading="lazy"><figcaption>My photo caption</figcaption></figure>');
     });
 
     test('Can find & remove links around images that link to the same image', async function () {
