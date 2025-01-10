@@ -3,7 +3,10 @@ import $ from 'cheerio';
 import {slugify} from '@tryghost/string';
 import SimpleDom from 'simple-dom';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
+import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 import errors from '@tryghost/errors';
+
+const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
 const htmlToTextTrimmed = (html, max) => {
     let noHtml = html.replace(/<[^>]+>/g, ' ').replace(/\r?\n|\r/g, ' ').replace(/ {2,}/, ' ').trim();
@@ -33,6 +36,14 @@ const processContent = (html) => {
         scriptingEnabled: false
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
+    $html('.sqs-html-content').each((i, el) => {
+        $(el).replaceWith($(el).html());
+    });
+   
+    $html('p[style]').each((i, el) => {
+        $(el).removeAttr('style');
+    });
+   
     $html('.sqs-audio-embed').each((i, el) => {
         let audioSrc = $(el).attr('data-url');
         let audioTitle = $(el).attr('data-title');
@@ -67,6 +78,26 @@ const processContent = (html) => {
         } else {
             $(img).attr('src', $(img).attr('data-src'));
         }
+    });
+
+    $html('.image-block-outer-wrapper').each((i, el) => {
+        let imgSrc = $(el).find('img').attr('src');
+        let imgAlt = $(el).find('img').attr('alt');
+        
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: imgSrc,
+                alt: imgAlt
+            }
+        };
+        
+        const hasLink = $(el).find('a.sqs-block-image-link').length;
+        if (hasLink) {
+            cardOpts.payload.href = $(el).find('a.sqs-block-image-link').attr('href');
+        }
+
+        $(el).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
     // TODO: this should be a parser plugin

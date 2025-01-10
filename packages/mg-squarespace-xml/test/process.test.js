@@ -48,16 +48,7 @@ describe('Process', function () {
         expect(data.updated_at).toEqual(new Date('2013-06-07T03:00:44.000Z'));
         expect(data.feature_image).toEqual('https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1268&q=80');
         expect(data.type).toEqual('post');
-        expect(data.html).toEqual('<div class="image-block-outer-wrapper layout-caption-below design-layout-inline" data-test="image-block-inline-outer-wrapper">\n' +
-        '        <figure class="sqs-block-image-figure intrinsic" style="max-width:409.0px;">\n' +
-        '          <a class="sqs-block-image-link" href="https://anothersite.co.uk" target="_blank">\n' +
-        '            <div style="padding-bottom:37.4083137512207%;" lass="image-block-wrapper" data-animation-role="image" data-animation-override>\n' +
-        '                <noscript><img src="https://images.unsplash.com/photo-1601275225755-f6a6c1730cb1?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=crop&amp;w=2765&amp;q=80"></noscript>\n' +
-        '                \n' +
-        '            </div>\n' +
-        '          </a>\n' +
-        '        </figure>\n' +
-        '        </div>\n' +
+        expect(data.html).toEqual('<figure class="kg-card kg-image-card"><a href="https://anothersite.co.uk"><img src="https://images.unsplash.com/photo-1601275225755-f6a6c1730cb1?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=crop&amp;w=2765&amp;q=80" class="kg-image" alt loading="lazy"></a></figure>\n' +
         '        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris pellentesque nisi sed neque vestibulum pulvinar.</p>\n' +
         '        <p>Integer iaculis ac elit a bibendum. Suspendisse rhoncus vitae dui vitae ultrices.</p>\n' +
         '        <table>\n' +
