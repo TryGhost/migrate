@@ -1,4 +1,5 @@
 import processor from '../lib/processor.js';
+import {processAuthor, processAuthors} from '../lib/utils.js';
 
 // Import our fixtures
 import singlePostFixture from './fixtures/single-post.json';
@@ -41,7 +42,7 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     test('Can convert a single user', function () {
-        const user = processor.processAuthor(singleUserfixture);
+        const user = processAuthor(singleUserfixture);
 
         expect(user).toBeObject();
         expect(user).toHaveProperty('url');
@@ -61,7 +62,7 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     test('Will not add invalid user website URL', function () {
-        const user = processor.processAuthor({
+        const user = processAuthor({
             id: 29,
             name: 'Example User',
             url: 'https://#'
@@ -74,7 +75,7 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     test('Will scale user avatars', function () {
-        const user = processor.processAuthor({
+        const user = processAuthor({
             id: 29,
             name: 'Example User',
             avatar_urls: {
@@ -88,7 +89,7 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     test('Can convert a multiple users', function () {
-        const users = processor.processAuthors(multipleUsersfixture);
+        const users = processAuthors(multipleUsersfixture);
 
         expect(users).toBeArrayOfSize(2);
 
@@ -291,34 +292,6 @@ describe('Process WordPress REST API JSON', function () {
         const posts = await processor.processPosts(datedPosts, users, options);
 
         expect(posts).toBeArrayOfSize(3);
-    });
-});
-
-describe('Process excerpt text handling', function () {
-    test('Basic text', function () {
-        let processed = processor.processExcerpt('Hello');
-        expect(processed).toEqual('Hello');
-    });
-
-    test('Basic text in <p> tags', function () {
-        let processed = processor.processExcerpt('<p>Hello world</p>');
-        expect(processed).toEqual('Hello world');
-    });
-
-    test('Text with formatting tags', function () {
-        let processed = processor.processExcerpt('<p><p>Hello <b>world</b><br>\n\n\t\t\r\r <u>this</u>\r\n is my <span><em>excerpt</em></span></p></p>');
-        expect(processed).toEqual('Hello world this is my excerpt');
-    });
-
-    test('Removes excess spaces', function () {
-        let processed = processor.processExcerpt('<p> Hello     world</p>');
-        expect(processed).toEqual('Hello world');
-    });
-
-    test('Does not trim very long string', function () {
-        let theString = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum tempus ut massa at cursus. Donec at sapien felis. Pellentesque rutrum arcu velit, eu pulvinar lorem consectetur porta. Nulla elementum dapibus ornare. Fusce in imperdiet nisl. Nulla viverra dapibus sapien id consectetur. Duis pharetra tempor ante, vel bibendum felis blandit non. Duis ut sem ac ligula finibus mattis vitae eget turpis. Praesent a dictum diam, ut pretium arcu. Aenean venenatis, sapien et euismod tincidunt, ex massa venenatis ex, non pellentesque nibh augue ac dolor. In at commodo orci, ut viverra purus. Maecenas at leo rhoncus tellus aliquet porta eu ac libero. Maecenas sagittis quis enim sed bibendum. Praesent mi nunc, mattis eu mattis ut, porta rhoncus felis. Phasellus elit est, vehicula non elit sed, tempor elementum felis. Nullam imperdiet porttitor enim non ultrices. Pellentesque dignissim sem sed tempus lacinia. Proin gravida mollis justo sed convallis. Morbi mattis est tincidunt est pharetra pulvinar. Vivamus scelerisque gravida cursus. Pellentesque non lorem ultrices, eleifend enim sed, gravida erat. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque faucibus eget magna at facilisis. Praesent feugiat lacinia sem, eu blandit ipsum fermentum eu.';
-        let processed = processor.processExcerpt(`<p><p>${theString}</p></p>`);
-        expect(processed).toEqual(theString);
     });
 });
 
@@ -606,22 +579,5 @@ describe('Process WordPress HTML', function () {
         const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo1.jpg" width="500" height="375" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo2.jpg" width="500" height="375" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo4.jpg" width="500" height="375" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo3.jpg" width="500" height="375" loading="lazy" alt></div></div></div></figure>');
-    });
-});
-
-describe('wpCDNToLocal', function () {
-    test('Does not amend non-CDN URLs', function () {
-        const updated = processor.wpCDNToLocal('http://test.com/image.jpg?this-should=stay&and=this');
-        expect(updated).toEqual('http://test.com/image.jpg?this-should=stay&and=this');
-    });
-
-    test('Updated simple CDN URL', function () {
-        const updated = processor.wpCDNToLocal('https://i0.wp.com/example.com/wp-content/uploads/2021/02photo.jpg?resize=200%2C300&amp;ssl=1');
-        expect(updated).toEqual('https://example.com/wp-content/uploads/2021/02photo.jpg');
-    });
-
-    test('Updated long & subdirectory CDN URL', function () {
-        const updated = processor.wpCDNToLocal('https://i0.wp.com/this-is-a-long-one.com/subdir/wp-content/uploads/2021/02photo.jpg?resize=200%2C300&amp;ssl=1');
-        expect(updated).toEqual('https://this-is-a-long-one.com/subdir/wp-content/uploads/2021/02photo.jpg');
     });
 });
