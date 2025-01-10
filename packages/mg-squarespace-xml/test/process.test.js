@@ -232,7 +232,7 @@ describe('Process', function () {
             data-color-theme="dark"
         ></div>`;
 
-        let processed = process.processContent(audioBlock);
+        let processed = await process.processContent(audioBlock);
 
         expect(processed).toContain('<div class="kg-card kg-audio-card">');
         expect(processed).toContain('<audio src="http://example.com/auio-file.mp3"');

@@ -12,6 +12,7 @@ import {_base as debugFactory} from '@tryghost/debug';
 import SimpleDom from 'simple-dom';
 import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
+import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
@@ -372,6 +373,10 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         $(el).removeAttr('style');
     });
 
+    $html('p[style="white-space:pre-wrap;"]').each((i, el) => {
+        $(el).removeAttr('style');
+    });
+
     // Normalize image elements
     $html('.wp-block-jetpack-tiled-gallery').each((i, gal) => {
         $(gal).replaceWith($(gal).html());
@@ -406,6 +411,41 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
                 $(el).remove();
             }
         }
+    });
+
+    // squarespace images without src
+    $html('img[data-src]').each((i, img) => {
+        const src = $(img).attr('data-src');
+        if ($(img).hasClass('thumb-image')) {
+            // images with the `thumb-image` class might be a duplicate
+            // to prevent migrating two images, we have to remove the false node
+            if ($($(img).prev('noscript').children('img').get(0)).attr('src') === src) {
+                $(img).remove();
+            }
+        } else {
+            $(img).attr('src', $(img).attr('data-src'));
+        }
+    });
+
+    // Squarespace image blocks
+    $html('.image-block-outer-wrapper').each((i, el) => {
+        let imgSrc = $(el).find('img').attr('src');
+        let imgAlt = $(el).find('img').attr('alt');
+
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: imgSrc,
+                alt: imgAlt
+            }
+        };
+
+        const hasLink = $(el).find('a.sqs-block-image-link').length;
+        if (hasLink) {
+            cardOpts.payload.href = $(el).find('a.sqs-block-image-link').attr('href');
+        }
+
+        $(el).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
     $html('div.wp-caption').each((i, el) => {
@@ -747,6 +787,25 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         }
     });
 
+    // Squarespace audio embed
+    $html('.sqs-audio-embed').each((i, el) => {
+        let audioSrc = $(el).attr('data-url');
+        let audioTitle = $(el).attr('data-title');
+
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: audioSrc,
+                title: audioTitle
+            }
+        };
+
+        const buildCard = audioCard.render(cardOpts);
+        const cardHTML = buildCard.nodeValue;
+
+        $(el).replaceWith(cardHTML);
+    });
+
     $html('audio').each((i, el) => {
         const isInFigure = el?.parent?.name === 'figure' || false;
 
@@ -788,6 +847,14 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
             $(img).wrap($figure);
         }
+    });
+
+    $html('.sqs-html-content').each((i, el) => {
+        $(el).replaceWith($(el).html());
+    });
+
+    $html('.newsletter-form-wrapper').each((i, form) => {
+        $(form).remove();
     });
 
     // convert HTML back to a string

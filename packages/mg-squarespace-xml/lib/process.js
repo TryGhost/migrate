@@ -1,12 +1,8 @@
 import {extname} from 'path';
 import $ from 'cheerio';
 import {slugify} from '@tryghost/string';
-import SimpleDom from 'simple-dom';
-import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
-import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
+import MgWpAPI from '@tryghost/mg-wp-api';
 import errors from '@tryghost/errors';
-
-const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
 const htmlToTextTrimmed = (html, max) => {
     let noHtml = html.replace(/<[^>]+>/g, ' ').replace(/\r?\n|\r/g, ' ').replace(/ {2,}/, ' ').trim();
@@ -26,98 +22,17 @@ const processUser = ($sqUser) => {
     };
 };
 
-const processContent = (html) => {
+const processContent = async (html, options) => {
     if (!html) {
         return '';
     }
 
-    const $html = $.load(html, {
-        decodeEntities: false,
-        scriptingEnabled: false
-    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
-
-    $html('.sqs-html-content').each((i, el) => {
-        $(el).replaceWith($(el).html());
-    });
-   
-    $html('p[style]').each((i, el) => {
-        $(el).removeAttr('style');
-    });
-   
-    $html('.sqs-audio-embed').each((i, el) => {
-        let audioSrc = $(el).attr('data-url');
-        let audioTitle = $(el).attr('data-title');
-
-        let cardOpts = {
-            env: {dom: new SimpleDom.Document()},
-            payload: {
-                src: audioSrc,
-                title: audioTitle
-            }
-        };
-
-        const buildCard = audioCard.render(cardOpts);
-        const cardHTML = buildCard.nodeValue;
-
-        $(el).replaceWith(cardHTML);
+    let processedContent = await MgWpAPI.process.processContent({
+        html: html,
+        options: options
     });
 
-    $html('.newsletter-form-wrapper').each((i, form) => {
-        $(form).remove();
-    });
-
-    // squarespace images without src
-    $html('img[data-src]').each((i, img) => {
-        const src = $(img).attr('data-src');
-        if ($(img).hasClass('thumb-image')) {
-            // images with the `thumb-image` class might be a duplicate
-            // to prevent migrating two images, we have to remove the false node
-            if ($($(img).prev('noscript').children('img').get(0)).attr('src') === src) {
-                $(img).remove();
-            }
-        } else {
-            $(img).attr('src', $(img).attr('data-src'));
-        }
-    });
-
-    $html('.image-block-outer-wrapper').each((i, el) => {
-        let imgSrc = $(el).find('img').attr('src');
-        let imgAlt = $(el).find('img').attr('alt');
-        
-        let cardOpts = {
-            env: {dom: new SimpleDom.Document()},
-            payload: {
-                src: imgSrc,
-                alt: imgAlt
-            }
-        };
-        
-        const hasLink = $(el).find('a.sqs-block-image-link').length;
-        if (hasLink) {
-            cardOpts.payload.href = $(el).find('a.sqs-block-image-link').attr('href');
-        }
-
-        $(el).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
-    });
-
-    // TODO: this should be a parser plugin
-    // Wrap nested lists in HTML card
-    $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {
-        let $parent = $(nestedList).parentsUntil('ul, ol').parent();
-        $parent.before('<!--kg-card-begin: html-->');
-        $parent.after('<!--kg-card-end: html-->');
-    });
-
-    // Convert HTML back to a string
-    html = $html.html();
-
-    // Remove empty attributes
-    html = html.replace(/=""/g, '');
-
-    // Trim whitespace
-    html = html.trim();
-
-    return html;
+    return processedContent;
 };
 
 // The feature images is not "connected" to the post, other than it's located
@@ -165,7 +80,7 @@ const processTags = ($sqCategories, fetchTags) => {
     return categories.concat(tags);
 };
 
-const processPost = ($sqPost, users, options) => {
+const processPost = async ($sqPost, users, options) => {
     const {addTag, tags: fetchTags, url} = options;
     const postType = $($sqPost).children('wp\\:post_type').text();
 
@@ -203,7 +118,7 @@ const processPost = ($sqPost, users, options) => {
             }
         };
 
-        post.data.html = processContent($($sqPost).children('content\\:encoded').text());
+        post.data.html = await processContent($($sqPost).children('content\\:encoded').text(), options);
 
         if ($($sqPost).children('category').length >= 1) {
             post.data.tags = processTags($($sqPost).children('category'), fetchTags);
@@ -249,12 +164,14 @@ const processPost = ($sqPost, users, options) => {
     }
 };
 
-const processPosts = ($xml, users, options) => {
+const processPosts = async ($xml, users, options) => {
     const postsOutput = [];
 
-    $xml('item').each((i, sqPost) => {
-        postsOutput.push(processPost(sqPost, users, options));
-    });
+    const allProcessed = $xml('item').map(async (i, sqPost) => {
+        postsOutput.push(await processPost(sqPost, users, options));
+    }).get();
+
+    await Promise.all(allProcessed);
 
     // don't return empty post objects
     return postsOutput.filter(post => post);
@@ -296,7 +213,7 @@ const all = async (input, {options}) => {
     // to populate the author data for posts
     output.users = processUsers($xml);
 
-    output.posts = processPosts($xml, output.users, options);
+    output.posts = await processPosts($xml, output.users, options);
 
     if (!drafts) {
         // remove draft posts
