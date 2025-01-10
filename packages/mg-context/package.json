@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@tryghost/html-to-mobiledoc": "3.1.6",
-    "@tryghost/kg-html-to-lexical": "1.1.22",
+    "@tryghost/kg-html-to-lexical": "1.1.23",
     "@tryghost/listr-smart-renderer": "0.5.16",
     "@tryghost/validator": "0.2.15"
   }
