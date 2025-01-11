@@ -4,304 +4,19 @@ import {basename} from 'node:path';
 import _ from 'lodash';
 import $ from 'cheerio';
 import MgWebScraper from '@tryghost/mg-webscraper';
-import Shortcodes from '@tryghost/mg-shortcodes';
 import {slugify} from '@tryghost/string';
 import MgFsUtils from '@tryghost/mg-fs-utils';
-import {htmlToText} from 'html-to-text';
 import {_base as debugFactory} from '@tryghost/debug';
 import SimpleDom from 'simple-dom';
 import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
+import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
+import {processShortcodes} from './process-shortcodes.js';
+import {stripHtml, getYouTubeID, wpCDNToLocal, largerSrc, processAuthor, processAuthors, processTerms, processExcerpt} from './utils.js';
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
 const debug = debugFactory('migrate:wp-api:processor');
-
-const stripHtml = (html) => {
-    // Remove HTML tags, new line characters, and trim white-space
-    return html.replace(/<[^>]+>/g, '').replace(/\r?\n|\r/g, ' ').trim();
-};
-
-const getYouTubeID = (videoUrl) => {
-    const arr = videoUrl.split(/(vi\/|v%3D|v=|\/v\/|youtu\.be\/|\/embed\/)/);
-    return undefined !== arr[2] ? arr[2].split(/[^\w-]/i)[0] : arr[0];
-};
-
-const wpCDNToLocal = (imgUrl) => {
-    if (!imgUrl) {
-        return imgUrl;
-    }
-
-    if (!imgUrl.match(/i[0-9]+.wp.com/g)) {
-        return imgUrl;
-    }
-
-    imgUrl = imgUrl.replace(/i[0-9]+.wp.com\//, '');
-
-    const newUrl = new URL(imgUrl);
-    newUrl.searchParams.delete('resize');
-
-    const updatedUrl = `${newUrl.origin}${newUrl.pathname}`;
-
-    return updatedUrl;
-};
-
-const largerSrc = (imageSrc) => {
-    if (!imageSrc) {
-        return imageSrc;
-    }
-
-    let newSrc = imageSrc;
-
-    const fileSizeRegExp = new RegExp('-([0-9]+x[0-9]+).([a-zA-Z]{2,4})$');
-    const fileSizeMatches = imageSrc.match(fileSizeRegExp);
-
-    if (fileSizeMatches) {
-        newSrc = imageSrc.replace(fileSizeRegExp, '.$2');
-    }
-
-    return newSrc;
-};
-
-const processAuthor = (wpAuthor) => {
-    let authorObject = {
-        url: wpAuthor.link,
-        data: {
-            id: wpAuthor.id && wpAuthor.id,
-            slug: wpAuthor.slug,
-            name: wpAuthor.name,
-            bio: wpAuthor.description,
-            email: wpAuthor.email && wpAuthor.email
-        }
-    };
-
-    let profileImage = wpAuthor.avatar_urls && wpAuthor.avatar_urls['96'];
-    if (profileImage) {
-        const imgUrl = new URL(profileImage);
-        const params = new URLSearchParams(imgUrl.search);
-        params.set('d', 'blank');
-        params.set('r', 'g');
-        params.set('s', '500');
-        imgUrl.search = params.toString();
-        authorObject.data.profile_image = imgUrl.href;
-    }
-
-    if (wpAuthor.url) {
-        try {
-            new URL(wpAuthor.url);
-            authorObject.data.website = wpAuthor.url;
-        } catch (error) {
-            // Just silently fail
-            // console.log(error);
-        }
-    }
-
-    return authorObject;
-};
-
-const processTerm = (wpTerm) => {
-    return {
-        url: wpTerm.link,
-        data: {
-            slug: wpTerm.slug,
-            name: _.unescape(wpTerm.name)
-        }
-    };
-};
-
-const processTerms = (wpTerms, fetchTags) => {
-    let categories = [];
-    let tags = [];
-
-    wpTerms.forEach((taxonomy) => {
-        taxonomy.forEach((term) => {
-            if (term.taxonomy === 'category') {
-                categories.push(processTerm(term));
-            }
-
-            if (fetchTags && term.taxonomy === 'post_tag') {
-                tags.push(processTerm(term));
-            }
-        });
-    });
-
-    return categories.concat(tags);
-};
-
-// Sometimes, the custom excerpt can be part of the post content. If the flag with an selector for the
-// custom excerpt class is passed, we use this one to populate the custom excerpt and remove it from the post content
-const processExcerpt = (html, excerptSelector = false) => {
-    if (!html) {
-        return '';
-    }
-
-    let excerptText;
-
-    // Set the text to convert to either be the supplied string or found text in the supplied HTML chunk
-    if (excerptSelector) {
-        // TODO: this should be possible by using a pseudo selector as a passed `excerptSelector`, e. g. `h2.excerpt:first-of-type`,
-        const $html = $.load(html, {
-            decodeEntities: false,
-            scriptingEnabled: false
-        }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
-
-        excerptText = $html(excerptSelector).first().html();
-    } else {
-        excerptText = html;
-    }
-
-    // Clean up the given text to contain no HTML
-    let excerpt = htmlToText(excerptText);
-
-    // Combine lines & trim excess white space
-    excerpt = excerpt.split('\n').join(' ').trim();
-
-    // which is officially supported by the underlying css-select library, but not working.
-    if (excerpt.length > 0) {
-        return excerpt;
-    } else {
-        return null;
-    }
-};
-
-const processShortcodes = async ({html}) => {
-    const shortcodes = new Shortcodes();
-
-    shortcodes.add('vc_btn', ({attrs}) => {
-        let buttonHref = attrs?.link ?? false;
-
-        if (!buttonHref) {
-            return;
-        }
-
-        // Sometimes URLs have a `url:` prefix which we don't want
-        if (buttonHref.startsWith('url:')) {
-            buttonHref = buttonHref.slice(4);
-        }
-
-        buttonHref = decodeURIComponent(buttonHref);
-
-        return `<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="${buttonHref}">${attrs.title}</a></div></div>`;
-    });
-
-    shortcodes.add('vc_cta', ({attrs}) => {
-        let buttonHref = attrs?.btn_link ?? false;
-
-        if (!buttonHref) {
-            return;
-        }
-
-        // Sometimes URLs have a `url:` prefix which we don't want
-        if (buttonHref.startsWith('url:')) {
-            buttonHref = buttonHref.slice(4);
-        }
-
-        buttonHref = decodeURIComponent(buttonHref);
-
-        return `<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="${buttonHref}">${attrs.btn_title}</a></div></div>`;
-    });
-
-    shortcodes.add('caption', ({content}) => {
-        const $html = $.load(content, {
-            decodeEntities: false,
-            scriptingEnabled: false
-        }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
-
-        let theImage = $html('img');
-        let theCaption = $html.text().trim();
-
-        let $figure = $('<figure class="wp-block-image"></figure>');
-
-        $figure.append(theImage);
-
-        if (theCaption && theCaption.length) {
-            $figure.append(`<figcaption>${theCaption.trim()}</figcaption>`);
-        }
-
-        return $.html($figure);
-    });
-
-    shortcodes.add('vc_separator', () => {
-        return '<hr>';
-    });
-
-    shortcodes.add('gravityform', () => {
-        return '';
-    });
-
-    shortcodes.add('et_pb_text', ({content}) => {
-        // CASE: Divi Blog Extras uses these shortcodes for settings with text wrapped in `@ET-DC@..==@`, which should be removed if found
-        // Else return the contents
-        if (/^@ET-DC@.*==@$/.exec(content)) {
-            return ' ';
-        } else {
-            return content;
-        }
-    });
-
-    shortcodes.add('advanced_iframe', ({attrs}) => {
-        return `<iframe src="${attrs.src}" height="${attrs.height}" style="border:0; width: 100%;" loading="lazy"></iframe>`;
-    });
-
-    shortcodes.add('sourcecode', ({attrs, content}) => {
-        let captionString = (attrs?.title) ? `<figcaption>${attrs.title}</figcaption>` : '';
-        let classString = (attrs?.language) ? `language-${attrs.language}` : '';
-        let theContent = content.trim();
-        return `<figure><pre class="${classString}"><code>${theContent}</code></pre>${captionString}</figure>`;
-    });
-
-    shortcodes.add('audio', ({attrs}) => {
-        const sourceSrc = attrs?.src ?? null;
-        const sourceMp3 = attrs?.mp3 ?? null;
-        const sourceM4a = attrs?.m4a ?? null;
-        const sourceOgg = attrs?.ogg ?? null;
-        const sourceWav = attrs?.wav ?? null;
-        const sourceWma = attrs?.wma ?? null;
-
-        const firstAudioSrc = sourceSrc || sourceMp3 || sourceM4a || sourceOgg || sourceWav || sourceWma;
-
-        if (firstAudioSrc) {
-            return `<!--kg-card-begin: html--><audio controls src="${firstAudioSrc}" preload="metadata"></audio><!--kg-card-end: html-->`;
-        }
-    });
-
-    shortcodes.add('code', ({attrs, content}) => {
-        let captionString = (attrs?.title) ? `<figcaption>${attrs.title}</figcaption>` : '';
-        let classString = (attrs?.language) ? `language-${attrs.language}` : '';
-        let theContent = content.trim();
-        return `<figure><pre class="${classString}"><code>${theContent}</code></pre>${captionString}</figure>`;
-    });
-
-    shortcodes.add('vc_custom_heading', ({attrs}) => {
-        if (attrs?.font_container.includes('tag:h1')) {
-            return `<h1>${attrs.text}</h1>`;
-        } else if (attrs?.font_container.includes('tag:h2')) {
-            return `<h2>${attrs.text}</h2>`;
-        } else if (attrs?.font_container.includes('tag:h3')) {
-            return `<h3>${attrs.text}</h3>`;
-        }
-    });
-
-    shortcodes.add('vc_empty_space', () => {
-        return `<br></br>`;
-    });
-
-    // We don't want to change these, but only retain what's inside.
-    shortcodes.unwrap('row');
-    shortcodes.unwrap('column');
-    shortcodes.unwrap('vc_row');
-    shortcodes.unwrap('vc_row_inner');
-    shortcodes.unwrap('vc_column');
-    shortcodes.unwrap('vc_column_inner');
-    shortcodes.unwrap('vc_column_text');
-    shortcodes.unwrap('vc_basic_grid');
-    shortcodes.unwrap('et_pb_code_builder_version');
-    shortcodes.unwrap('et_pb_section');
-    shortcodes.unwrap('et_pb_column');
-    shortcodes.unwrap('et_pb_row');
-
-    return shortcodes.parse(html);
-};
 
 /**
  * The rationale behind transforming the content is to allow `mg-html-mobiledoc` to do its best job
@@ -372,6 +87,10 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         $(el).removeAttr('style');
     });
 
+    $html('p[style="white-space:pre-wrap;"]').each((i, el) => {
+        $(el).removeAttr('style');
+    });
+
     // Normalize image elements
     $html('.wp-block-jetpack-tiled-gallery').each((i, gal) => {
         $(gal).replaceWith($(gal).html());
@@ -406,6 +125,41 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
                 $(el).remove();
             }
         }
+    });
+
+    // squarespace images without src
+    $html('img[data-src]').each((i, img) => {
+        const src = $(img).attr('data-src');
+        if ($(img).hasClass('thumb-image')) {
+            // images with the `thumb-image` class might be a duplicate
+            // to prevent migrating two images, we have to remove the false node
+            if ($($(img).prev('noscript').children('img').get(0)).attr('src') === src) {
+                $(img).remove();
+            }
+        } else {
+            $(img).attr('src', $(img).attr('data-src'));
+        }
+    });
+
+    // Squarespace image blocks
+    $html('.image-block-outer-wrapper').each((i, el) => {
+        let imgSrc = $(el).find('img').attr('src');
+        let imgAlt = $(el).find('img').attr('alt');
+
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: imgSrc,
+                alt: imgAlt
+            }
+        };
+
+        const hasLink = $(el).find('a.sqs-block-image-link').length;
+        if (hasLink) {
+            cardOpts.payload.href = $(el).find('a.sqs-block-image-link').attr('href');
+        }
+
+        $(el).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
     $html('div.wp-caption').each((i, el) => {
@@ -747,6 +501,25 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         }
     });
 
+    // Squarespace audio embed
+    $html('.sqs-audio-embed').each((i, el) => {
+        let audioSrc = $(el).attr('data-url');
+        let audioTitle = $(el).attr('data-title');
+
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: audioSrc,
+                title: audioTitle
+            }
+        };
+
+        const buildCard = audioCard.render(cardOpts);
+        const cardHTML = buildCard.nodeValue;
+
+        $(el).replaceWith(cardHTML);
+    });
+
     $html('audio').each((i, el) => {
         const isInFigure = el?.parent?.name === 'figure' || false;
 
@@ -788,6 +561,14 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
             $(img).wrap($figure);
         }
+    });
+
+    $html('.sqs-html-content').each((i, el) => {
+        $(el).replaceWith($(el).html());
+    });
+
+    $html('.newsletter-form-wrapper').each((i, form) => {
+        $(form).remove();
     });
 
     // convert HTML back to a string
@@ -952,10 +733,6 @@ const processPosts = async (posts, users, options, errors, fileCache) => { // es
     return Promise.all(posts.map(post => processPost(post, users, options, errors, fileCache)));
 };
 
-const processAuthors = (authors) => {
-    return authors.map(author => processAuthor(author));
-};
-
 const all = async (ctx) => {
     let {result: input, usersJSON, options, errors, fileCache} = ctx; // eslint-disable-line no-shadow
 
@@ -994,15 +771,13 @@ const all = async (ctx) => {
 };
 
 export default {
-    wpCDNToLocal,
-    processAuthor,
-    processTerm,
-    processTerms,
-    processExcerpt,
-    processShortcodes,
+    // wpCDNToLocal,
+    // processAuthor,
+    // processTerm,
+    // processTerms,
+    // processExcerpt,
     processContent,
     processPost,
     processPosts,
-    processAuthors,
     all
 };

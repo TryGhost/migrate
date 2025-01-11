@@ -125,8 +125,8 @@ const preProcessContent = async ({html}) => { // eslint-disable-line no-shadow
     // convert HTML back to a string
     html = $html.html();
 
-    // Convert shortcodes here to that they don't accidently get wrapped in <p> tags by MarkdownIt
-    html = await MgWpAPI.process.processShortcodes({html});
+    // Convert shortcodes here to that they don't accidentally get wrapped in <p> tags by MarkdownIt
+    html = await MgWpAPI.processShortcodes({html});
 
     return html;
 };
@@ -192,9 +192,9 @@ const processPost = async ($post, users, options) => {
 
     if (excerpt && !excerptSelector) {
         const excerptText = $($post).children('excerpt\\:encoded').text();
-        post.data.custom_excerpt = MgWpAPI.process.processExcerpt(excerptText);
+        post.data.custom_excerpt = MgWpAPI.utils.processExcerpt(excerptText);
     } else if (!excerpt && excerptSelector) {
-        post.data.custom_excerpt = MgWpAPI.process.processExcerpt(post.data.html, excerptSelector);
+        post.data.custom_excerpt = MgWpAPI.utils.processExcerpt(post.data.html, excerptSelector);
     }
 
     post.data.html = await processHTMLContent({
