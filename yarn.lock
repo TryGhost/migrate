@@ -3441,13 +3441,6 @@
     "@types/node" "*"
     "@types/responselike" "^1.0.0"
 
-"@types/cheerio@^0.22.31":
-  version "0.22.35"
-  resolved "https://registry.yarnpkg.com/@types/cheerio/-/cheerio-0.22.35.tgz#0d16dc1f24d426231c181b9c31847f673867595f"
-  integrity sha512-yD57BchKRvTV+JD53UZ6PD8KWY5g5rvvMLRnZR3EQBCZXiDT/HR+pKpMzFGlWNhFrXlo7VPZXtKvIEwZkAWOIA==
-  dependencies:
-    "@types/node" "*"
-
 "@types/graceful-fs@^4.1.3":
   version "4.1.9"
   resolved "https://registry.yarnpkg.com/@types/graceful-fs/-/graceful-fs-4.1.9.tgz#2a06bc0f68a20ab37b3e36aa238be6abdf49e8b4"
@@ -4870,7 +4863,7 @@ cheerio@^0.22.0:
     lodash.reject "^4.4.0"
     lodash.some "^4.4.0"
 
-cheerio@^1.0.0-rc.12, cheerio@^1.0.0-rc.5:
+cheerio@^1.0.0, cheerio@^1.0.0-rc.12, cheerio@^1.0.0-rc.5:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/cheerio/-/cheerio-1.0.0.tgz#1ede4895a82f26e8af71009f961a9b8cb60d6a81"
   integrity sha512-quS9HgjQpdaXOvsZz82Oz7uxtXiy6UIsIQcpBj7HRw2M63Skasm9qlDocAM7jNuaxdhpPU7c4kJN+gA5MCu4ww==
@@ -10343,13 +10336,13 @@ scrape-it-core@^1.0.0:
     obj-def "^1.0.9"
     typpy "^2.3.13"
 
-scrape-it@6.1.2:
-  version "6.1.2"
-  resolved "https://registry.yarnpkg.com/scrape-it/-/scrape-it-6.1.2.tgz#1dc7d1537dfbc8d4a913541847bd6a3ab3773df6"
-  integrity sha512-58DMh1/I68d49wP3By+9ulwy6Nwy52iix13m+gB1KjkIpREa8cyqMXTHffgn1BWgHUFHr5ON9SNbcoMSuCFmXA==
+scrape-it@6.1.3:
+  version "6.1.3"
+  resolved "https://registry.yarnpkg.com/scrape-it/-/scrape-it-6.1.3.tgz#e3cdce9ef6a3b2249fb2c5959ade1d40944b31c9"
+  integrity sha512-EDbsIK09ChAUjQs4f3++5D77dsRKm7OECMCFKET6TmUuIB6F6YuSXaNx79MmlwetnSZmBhoJDSfIoJCmcrgX+g==
   dependencies:
-    "@types/cheerio" "^0.22.31"
     assured "^1.0.15"
+    cheerio "^1.0.0"
     cheerio-req "^2.0.0"
     scrape-it-core "^1.0.0"
     typpy "^2.3.13"
