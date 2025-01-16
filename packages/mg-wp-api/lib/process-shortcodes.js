@@ -110,11 +110,11 @@ const processShortcodes = async ({html}) => {
     });
 
     shortcodes.add('vc_custom_heading', ({attrs}) => {
-        if (attrs?.font_container.includes('tag:h1')) {
+        if (attrs?.font_container?.includes('tag:h1')) {
             return `<h1>${attrs.text}</h1>`;
-        } else if (attrs?.font_container.includes('tag:h2')) {
+        } else if (attrs?.font_container?.includes('tag:h2')) {
             return `<h2>${attrs.text}</h2>`;
-        } else if (attrs?.font_container.includes('tag:h3')) {
+        } else if (attrs?.font_container?.includes('tag:h3')) {
             return `<h3>${attrs.text}</h3>`;
         }
     });
