@@ -30,8 +30,8 @@ const memberStats = async (args = {}) => {
 
     let csvData = await parseCSV(csvPath);
 
-    const hasSubscription = csvData.filter(value => value.active_subscription === 'true').length;
-    const noSubscription = csvData.filter(value => value.active_subscription !== 'true').length;
+    const hasSubscription = csvData.filter(value => value.active_subscription.toLowerCase() === 'true').length;
+    const noSubscription = csvData.filter(value => value.active_subscription.toLowerCase() !== 'true').length;
 
     return {
         allMembers: csvData.length,
