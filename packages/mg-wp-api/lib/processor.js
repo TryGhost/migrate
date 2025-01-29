@@ -70,10 +70,15 @@ const processAuthor = (wpAuthor) => {
             id: wpAuthor.id && wpAuthor.id,
             slug: wpAuthor.slug,
             name: wpAuthor.name,
-            bio: wpAuthor.description,
             email: wpAuthor.email && wpAuthor.email
         }
     };
+
+    if (wpAuthor?.description) {
+        authorObject.data.bio = htmlToText(wpAuthor.description, {
+            wordwrap: false
+        });
+    }
 
     let profileImage = wpAuthor.avatar_urls && wpAuthor.avatar_urls['96'];
     if (profileImage) {

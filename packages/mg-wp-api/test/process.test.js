@@ -55,7 +55,7 @@ describe('Process WordPress REST API JSON', function () {
         expect(data.id).toEqual(29);
         expect(data.slug).toEqual('example');
         expect(data.name).toEqual('Example User');
-        expect(data.bio).toEqual('Lorem ipsum small bio.\r\n\r\nAnd emoji 🤓 on the second line.');
+        expect(data.bio).toEqual('Lorem ipsum small bio. And emoji 🤓 on the second line.');
         expect(data.profile_image).toEqual('https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=500&d=blank&r=g');
         expect(data.website).toEqual('https://example.com');
     });
