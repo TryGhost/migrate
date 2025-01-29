@@ -267,7 +267,7 @@ describe('Process WordPress REST API JSON', function () {
 
         const data = post.data;
 
-        expect(data.custom_excerpt).toEqual('This is my strong headline thing. Here we have some excerpt content […]');
+        expect(data.custom_excerpt).toEqual('This is my strong headline thing. Here we have some excerpt content');
     });
 
     test('Does not filter posts by date of options not present', async function () {

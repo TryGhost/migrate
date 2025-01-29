@@ -140,6 +140,10 @@ const processExcerpt = (html, excerptSelector = false) => {
         return '';
     }
 
+    if (html.indexOf('[&hellip;]') > -1) {
+        return '';
+    }
+
     let excerptText;
 
     // Set the text to convert to either be the supplied string or found text in the supplied HTML chunk
