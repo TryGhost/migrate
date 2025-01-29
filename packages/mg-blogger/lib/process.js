@@ -356,7 +356,12 @@ const processPost = async (postData, options) => {
 };
 
 const processPosts = async (posts, options) => {
-    return Promise.all(posts.map(post => processPost(post, options)));
+    // Filter out falsy items in the post list
+    posts = posts.filter(i => i);
+
+    return Promise.all(posts.map((post) => {
+        return processPost(post, options);
+    }));
 };
 
 const all = async (input, {options}) => {
