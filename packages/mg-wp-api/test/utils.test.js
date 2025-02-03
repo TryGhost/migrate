@@ -1,5 +1,5 @@
 // import processor from '../lib/processor.js';
-import {wpCDNToLocal, processExcerpt} from '../lib/utils.js';
+import {wpCDNToLocal, processExcerpt, makeInlinerUrls} from '../lib/utils.js';
 
 describe('Process excerpt text handling', function () {
     test('Basic text', function () {
@@ -43,5 +43,20 @@ describe('wpCDNToLocal', function () {
     test('Updated long & subdirectory CDN URL', function () {
         const updated = wpCDNToLocal('https://i0.wp.com/this-is-a-long-one.com/subdir/wp-content/uploads/2021/02photo.jpg?resize=200%2C300&amp;ssl=1');
         expect(updated).toEqual('https://this-is-a-long-one.com/subdir/wp-content/uploads/2021/02photo.jpg');
+    });
+});
+
+describe('Inliner domain list generator', function () {
+    test('does the thing', () => {
+        const domains = makeInlinerUrls({domain: 'https://hello.example.com'});
+
+        expect(domains).toBeArrayOfSize(4);
+
+        expect(domains).toEqual([
+            'http://example.com',
+            'https://example.com',
+            'http://hello.example.com',
+            'https://hello.example.com'
+        ]);
     });
 });
