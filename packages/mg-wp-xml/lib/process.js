@@ -71,12 +71,7 @@ const processTags = ($wpTerms) => {
     const tags = [];
 
     let allowedTerms = [
-        'post_tag',
-        'organization',
-        'policy',
-        'treaty',
-        'region',
-        'legal_regulatory'
+        'post_tag'
     ];
 
     $wpTerms.each((i, taxonomy) => {
