@@ -1,0 +1,935 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import fs, {rmSync} from 'node:fs';
+import {join} from 'node:path';
+import nock from 'nock';
+import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
+import fsUtils from '@tryghost/mg-fs-utils';
+import AssetScraper from '../index.js';
+
+const __dirname = new URL('.', import.meta.url).pathname;
+const fixturesPath = join(__dirname, '../../src/test/fixtures');
+
+describe('Asset Scraper', () => {
+    let fileCache: any;
+    let jpgImageBuffer: Buffer;
+    let mp4VideoBuffer: Buffer;
+    let mp3AudioBuffer: Buffer;
+
+    beforeAll(async () => {
+        jpgImageBuffer = await readFile(join(fixturesPath, '/image.jpg'));
+        mp4VideoBuffer = await readFile(join(fixturesPath, '/video.mp4'));
+        mp3AudioBuffer = await readFile(join(fixturesPath, '/audio.mp3'));
+    });
+
+    beforeEach(async () => {
+        fileCache = new fsUtils.FileCache('assetscraper-tests');
+    });
+
+    afterEach(async () => {
+        await fileCache.emptyCurrentCacheDir();
+    });
+
+    it('Runs tasks for a whole file', async () => {
+        const requestMock = nock('https://example.com')
+            .get('/image.jpg')
+            .reply(200, jpgImageBuffer);
+
+        const options = {
+            domains: [
+                'https://example.com'
+            ]
+        };
+        const ctx: any = {
+            posts: [
+                {
+                    id: 123,
+                    lexical: '{"root":{"children":[{"type":"image","version":1,"src":"https://example.com/image.jpg","width":1480,"height":486,"title":"","alt":"","caption":"","cardWidth":"regular","href":""}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
+                }
+            ],
+            posts_meta: [
+                {
+                    id: 123,
+                    og_image: 'https://example.com/image.jpg',
+                    twitter_image: 'https://example.com/image.jpg'
+                }
+            ],
+            tags: [
+                {
+                    id: 123,
+                    feature_image: 'https://example.com/image.jpg',
+                    og_image: 'https://example.com/image.jpg',
+                    twitter_image: 'https://example.com/image.jpg',
+                    codeinjection_head: '<style>.block {background: url(https://example.com/image.jpg);}</style>',
+                    codeinjection_foot: '<style>.block {background: url(https://example.com/image.jpg);}</style>'
+                }
+            ],
+            users: [
+                {
+                    id: 123,
+                    profile_image: 'https://example.com/image.jpg',
+                    cover_image: 'https://example.com/image.jpg'
+                }
+            ],
+            settings: [
+                {
+                    key: 'og_image',
+                    value: 'https://example.com/image.jpg'
+                },
+                {
+                    key: 'twitter_image',
+                    value: 'https://example.com/image.jpg'
+                },
+                {
+                    key: 'codeinjection_head',
+                    value: '<style>.block {background: url(https://example.com/image.jpg);}</style>'
+                },
+                {
+                    key: 'codeinjection_foot',
+                    value: '<style>.block {background: url(https://example.com/image.jpg);}</style>'
+                }
+            ]
+        };
+
+        const assetScraper = new AssetScraper(fileCache, options, ctx);
+        await assetScraper.init();
+
+        const tasks = assetScraper.getTasks();
+
+        const taskRunner = makeTaskRunner(tasks, {renderer: 'silent', concurrent: false, topLevel: true});
+        await taskRunner.run();
+
+        assert.ok(requestMock.isDone());
+        assert.deepEqual(ctx, {
+            posts: [
+                {
+                    id: 123,
+                    lexical: '{"root":{"children":[{"type":"image","version":1,"src":"__GHOST_URL__/content/images/image.jpg","width":1480,"height":486,"title":"","alt":"","caption":"","cardWidth":"regular","href":""}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
+                }
+            ],
+            posts_meta: [
+                {
+                    id: 123,
+                    og_image: '__GHOST_URL__/content/images/image.jpg',
+                    twitter_image: '__GHOST_URL__/content/images/image.jpg'
+                }
+            ],
+            tags: [
+                {
+                    id: 123,
+                    feature_image: '__GHOST_URL__/content/images/image.jpg',
+                    og_image: '__GHOST_URL__/content/images/image.jpg',
+                    twitter_image: '__GHOST_URL__/content/images/image.jpg',
+                    codeinjection_head: '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>',
+                    codeinjection_foot: '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>'
+                }
+            ],
+            users: [
+                {
+                    id: 123,
+                    profile_image: '__GHOST_URL__/content/images/image.jpg',
+                    cover_image: '__GHOST_URL__/content/images/image.jpg'
+                }
+            ],
+            settings: [
+                {
+                    key: 'og_image',
+                    value: '__GHOST_URL__/content/images/image.jpg'
+                },
+                {
+                    key: 'twitter_image',
+                    value: '__GHOST_URL__/content/images/image.jpg'
+                },
+                {
+                    key: 'codeinjection_head',
+                    value: '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>'
+                },
+                {
+                    key: 'codeinjection_foot',
+                    value: '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>'
+                }
+            ]
+        });
+    });
+
+    it('Finds in Lexical', async () => {
+        const requestMock = nock('https://example.com')
+            .get('/image.jpg')
+            .reply(200, jpgImageBuffer);
+
+        const options = {
+            domains: [
+                'https://example.com',
+                'https://video-service.com'
+            ]
+        };
+        const postObj = {
+            id: 123,
+            lexical: '{"root":{"children":[{"type":"image","version":1,"src":"https://example.com/image.jpg","width":322,"height":272,"title":"","alt":"","caption":"","cardWidth":"regular","href":""},{"type":"image","version":1,"src":"https://example.com/image.jpg","width":322,"height":272,"title":"","alt":"","caption":"","cardWidth":"regular","href":""},{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
+        };
+
+        const assetScraper = new AssetScraper(fileCache, options, {});
+        await assetScraper.init();
+
+        // await assetScraper.doPostObject(postObj);
+        await assetScraper.inlinePostTagUserObject(postObj);
+
+        assert.equal(postObj.lexical, '{"root":{"children":[{"type":"image","version":1,"src":"__GHOST_URL__/content/images/image.jpg","width":322,"height":272,"title":"","alt":"","caption":"","cardWidth":"regular","href":""},{"type":"image","version":1,"src":"__GHOST_URL__/content/images/image.jpg","width":322,"height":272,"title":"","alt":"","caption":"","cardWidth":"regular","href":""},{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}');
+
+        assert.ok(requestMock.isDone());
+    });
+
+    it('Finds in a Lexical HTML card', async () => {
+        const requestMock = nock('https://example.com')
+            .get('/image.jpg')
+            .reply(200, jpgImageBuffer);
+
+        const options = {
+            domains: [
+                'https://example.com'
+            ]
+        };
+        const postObj = {
+            id: 123,
+            lexical: '{"root":{"children":[{"type":"html","version":1,"html":"<a href="https://example.com/image.jpg">Image</a><img src="https://example.com/image.jpg" /><img data-src="https://example.com/image.jpg" /><picture><source srcset="https://example.com/image.jpg, https://example.com/image.jpg 1.5x"><source srcset="https://example.com/image.jpg, https://example.com/image.jpg 2x"><img src="https://example.com/image.jpg"></picture><video poster="https://example.com/image.jpg" src="https://example.com/image.jpg"></video><video"><source src="https://example.com/image.jpg"><source src="https://example.com/image.jpg"></video><audio src="https://example.com/image.jpg"></audio><audio><source src="https://example.com/image.jpg"><source src="https://example.com/image.jpg"></audio><p style="background: url(https://example.com/image.jpg);"></p><p style="background: url(\'https://example.com/image.jpg\');"></p><p style="background-image: url(https://example.com/image.jpg);"></p><p style="background-image: url(\'https://example.com/image.jpg\');"></p>","visibility":{"showOnEmail":true,"showOnWeb":true,"segment":""}},{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
+        };
+
+        const assetScraper = new AssetScraper(fileCache, options, {});
+        await assetScraper.init();
+
+        // await assetScraper.doPostObject(postObj);
+        await assetScraper.inlinePostTagUserObject(postObj);
+
+        assert.ok(requestMock.isDone());
+        assert.equal(postObj.lexical, '{"root":{"children":[{"type":"html","version":1,"html":"<a href="__GHOST_URL__/content/images/image.jpg">Image</a><img src="__GHOST_URL__/content/images/image.jpg" /><img data-src="__GHOST_URL__/content/images/image.jpg" /><picture><source srcset="__GHOST_URL__/content/images/image.jpg, __GHOST_URL__/content/images/image.jpg 1.5x"><source srcset="__GHOST_URL__/content/images/image.jpg, __GHOST_URL__/content/images/image.jpg 2x"><img src="__GHOST_URL__/content/images/image.jpg"></picture><video poster="__GHOST_URL__/content/images/image.jpg" src="__GHOST_URL__/content/images/image.jpg"></video><video"><source src="__GHOST_URL__/content/images/image.jpg"><source src="__GHOST_URL__/content/images/image.jpg"></video><audio src="__GHOST_URL__/content/images/image.jpg"></audio><audio><source src="__GHOST_URL__/content/images/image.jpg"><source src="__GHOST_URL__/content/images/image.jpg"></audio><p style="background: url(__GHOST_URL__/content/images/image.jpg);"></p><p style="background: url(\'__GHOST_URL__/content/images/image.jpg\');"></p><p style="background-image: url(__GHOST_URL__/content/images/image.jpg);"></p><p style="background-image: url(\'__GHOST_URL__/content/images/image.jpg\');"></p>","visibility":{"showOnEmail":true,"showOnWeb":true,"segment":""}},{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}');
+    });
+
+    it('Finds in a Lexical Markdown card', async () => {
+        const requestMock = nock('https://example.com')
+            .get('/image.jpg')
+            .reply(200, jpgImageBuffer);
+
+        const options = {
+            domains: [
+                'https://example.com'
+            ]
+        };
+        const postObj = {
+            id: 123,
+            lexical: '{"root":{"children":[{"type":"markdown","version":1,"markdown":"[Image](https://example.com/image.jpg)\n![](https://example.com/image.jpg)\n<a href="https://example.com/image.jpg">Image</a>\n<img src="https://example.com/image.jpg" />"},{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
+        };
+
+        const assetScraper = new AssetScraper(fileCache, options, {});
+        await assetScraper.init();
+
+        // await assetScraper.doPostObject(postObj);
+        await assetScraper.inlinePostTagUserObject(postObj);
+
+        assert.ok(requestMock.isDone());
+        assert.equal(postObj.lexical, '{"root":{"children":[{"type":"markdown","version":1,"markdown":"[Image](__GHOST_URL__/content/images/image.jpg)\n![](__GHOST_URL__/content/images/image.jpg)\n<a href="__GHOST_URL__/content/images/image.jpg">Image</a>\n<img src="__GHOST_URL__/content/images/image.jpg" />"},{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}');
+    });
+
+    it('Does other post object', async () => {
+        const requestMock = nock('https://example.com')
+            .get('/image.jpg')
+            .reply(200, jpgImageBuffer)
+            .get('/other.jpg')
+            .reply(200, jpgImageBuffer);
+
+        const options = {
+            domains: [
+                'https://example.com'
+            ]
+        };
+        const postObj = {
+            feature_image: 'https://example.com/image.jpg',
+            codeinjection_head: '<style>.block {background: url(https://example.com/other.jpg);}</style>'
+        };
+
+        const assetScraper = new AssetScraper(fileCache, options, {});
+        await assetScraper.init();
+
+        // await assetScraper.doPostObject(postObj);
+        await assetScraper.inlinePostTagUserObject(postObj);
+
+        assert.ok(requestMock.isDone());
+        assert.equal(postObj.feature_image, '__GHOST_URL__/content/images/image.jpg');
+        assert.equal(postObj.codeinjection_head, '<style>.block {background: url(__GHOST_URL__/content/images/other.jpg);}</style>');
+    });
+
+    it('Does post meta', async () => {
+        const requestMock = nock('https://example.com')
+            .get('/image.jpg')
+            .reply(200, jpgImageBuffer);
+
+        const options = {
+            domains: [
+                'https://example.com'
+            ]
+        };
+        const postObj = {
+            id: 123,
+            og_image: 'https://example.com/image.jpg',
+            twitter_image: 'https://example.com/image.jpg'
+        };
+
+        const assetScraper = new AssetScraper(fileCache, options, {});
+        await assetScraper.init();
+
+        // await assetScraper.doPostObject(postObj);
+        await assetScraper.inlinePostTagUserObject(postObj);
+
+        assert.ok(requestMock.isDone());
+        assert.equal(postObj.og_image, '__GHOST_URL__/content/images/image.jpg');
+        assert.equal(postObj.twitter_image, '__GHOST_URL__/content/images/image.jpg');
+    });
+
+    it('Does users', async () => {
+        const requestMock = nock('https://example.com')
+            .get('/image.jpg')
+            .reply(200, jpgImageBuffer);
+
+        const options = {
+            domains: [
+                'https://example.com'
+            ]
+        };
+        const usersObj = {
+            id: 123,
+            profile_image: 'https://example.com/image.jpg',
+            cover_image: 'https://example.com/image.jpg'
+        };
+
+        const assetScraper = new AssetScraper(fileCache, options, {});
+        await assetScraper.init();
+
+        // await assetScraper.doUserObject(usersObj);
+        await assetScraper.inlinePostTagUserObject(usersObj);
+
+        assert.ok(requestMock.isDone());
+        assert.equal(usersObj.profile_image, '__GHOST_URL__/content/images/image.jpg');
+        assert.equal(usersObj.cover_image, '__GHOST_URL__/content/images/image.jpg');
+    });
+
+    it('Does tags', async () => {
+        const requestMock = nock('https://example.com')
+            .get('/image.jpg')
+            .reply(200, jpgImageBuffer);
+
+        const options = {
+            domains: [
+                'https://example.com'
+            ]
+        };
+
+        const tagsObj = {
+            id: 123,
+            feature_image: 'https://example.com/image.jpg',
+            og_image: 'https://example.com/image.jpg',
+            twitter_image: 'https://example.com/image.jpg',
+            codeinjection_head: '<style>.block {background: url(https://example.com/image.jpg);}</style>',
+            codeinjection_foot: '<style>.block {background: url(https://example.com/image.jpg);}</style>'
+        };
+
+        const assetScraper = new AssetScraper(fileCache, options, {});
+        await assetScraper.init();
+
+        // await assetScraper.doTagObject(tagsObj);
+        await assetScraper.inlinePostTagUserObject(tagsObj);
+
+        assert.ok(requestMock.isDone());
+        assert.equal(tagsObj.feature_image, '__GHOST_URL__/content/images/image.jpg');
+        assert.equal(tagsObj.og_image, '__GHOST_URL__/content/images/image.jpg');
+        assert.equal(tagsObj.twitter_image, '__GHOST_URL__/content/images/image.jpg');
+        assert.equal(tagsObj.codeinjection_head, '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>');
+        assert.equal(tagsObj.codeinjection_foot, '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>');
+    });
+
+    it('Does settings', async () => {
+        const requestMock = nock('https://example.com')
+            .get('/image.jpg')
+            .reply(200, jpgImageBuffer);
+
+        const options = {
+            domains: [
+                'https://example.com'
+            ]
+        };
+        const settingsObj = [
+            {
+                key: 'codeinjection_head',
+                value: '<style>.block {background: url(https://example.com/image.jpg);}</style>'
+            },
+            {
+                key: 'codeinjection_foot',
+                value: '<style>.block {background: url(https://example.com/image.jpg);}</style>'
+            },
+            {
+                key: 'og_image',
+                value: 'https://example.com/image.jpg'
+            },
+            {
+                key: 'twitter_image',
+                value: 'https://example.com/image.jpg'
+            }
+        ];
+
+        const assetScraper = new AssetScraper(fileCache, options, {});
+        await assetScraper.init();
+
+        await assetScraper.doSettingsObject(settingsObj);
+
+        assert.ok(requestMock.isDone());
+        assert.deepEqual(settingsObj, [
+            {
+                key: 'codeinjection_head',
+                value: '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>'
+            },
+            {
+                key: 'codeinjection_foot',
+                value: '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>'
+            },
+            {
+                key: 'og_image',
+                value: '__GHOST_URL__/content/images/image.jpg'
+            },
+            {
+                key: 'twitter_image',
+                value: '__GHOST_URL__/content/images/image.jpg'
+            }
+        ]);
+    });
+
+    // it('Does newsletter settings', async () => {
+    //     // "newsletters": [
+    //     //     {
+    //     //         "header_image": null,
+    //     //     }
+    //     // ]
+    // });
+
+    it('Does custom theme settings', async () => {
+        const requestMock = nock('https://example.com')
+            .get('/logo.jpg')
+            .reply(200, jpgImageBuffer);
+
+        const options = {
+            domains: [
+                'https://example.com'
+            ],
+            baseUrl: 'https://example.com'
+        };
+        const settingsObj = [
+            {
+                id: '123456783969a0004d9d3722',
+                theme: 'dawn',
+                key: 'white_logo_for_dark_mode',
+                type: 'image',
+                value: '__GHOST_URL__/logo.jpg'
+            }
+        ];
+
+        const assetScraper = new AssetScraper(fileCache, options, {});
+        await assetScraper.init();
+
+        await assetScraper.doCustomThemeSettingsObject(settingsObj);
+
+        assert.ok(requestMock.isDone());
+        assert.equal(settingsObj[0].value, '__GHOST_URL__/content/images/logo.jpg');
+    });
+
+    it('Does snippets', async () => {
+        const requestMock = nock('https://example.com')
+            .get('/image.jpg')
+            .reply(200, jpgImageBuffer);
+
+        const options = {
+            domains: [
+                'https://example.com'
+            ]
+        };
+        const snippetObj = {
+            id: '6238521c2b4615001234abcd',
+            name: 'My Image Snippet',
+            mobiledoc: '{"version":"0.3.2","atoms":[],"cards":[["image",{"src":"https://example.com/image.jpg","width":367,"height":790}]],"markups":[],"sections":[[10,0]]}',
+            created_at: '2022-03-21T10:23:24.000Z',
+            updated_at: '2023-06-07T10:37:07.000Z',
+            lexical: '{"namespace":"KoenigEditor","nodes":[{"type":"image","src":"https://example.com/image.jpg","width":367,"height":790}],"syncedAt":"2023-06-07T10:37:07.233Z"}'
+        };
+
+        const assetScraper = new AssetScraper(fileCache, options, {});
+        await assetScraper.init();
+
+        // await assetScraper.doUserObject(snippetObj);
+        await assetScraper.inlinePostTagUserObject(snippetObj);
+
+        assert.ok(requestMock.isDone());
+        assert.equal(snippetObj.lexical, '{"namespace":"KoenigEditor","nodes":[{"type":"image","src":"__GHOST_URL__/content/images/image.jpg","width":367,"height":790}],"syncedAt":"2023-06-07T10:37:07.233Z"}');
+    });
+
+    describe('File name handling', () => {
+        it('Moves query params before extension', async () => {
+            const assetScraper = new AssetScraper(fileCache, {}, {});
+            await assetScraper.init();
+
+            let result = await assetScraper.resolveFileName('https://example.com/path/to/photo.jpg?w=100&h=100', 'images');
+
+            assert.equal(result.filename, '/photo-w-100-h-100.jpg');
+        });
+
+        it('Moves hash before extension', async () => {
+            const assetScraper = new AssetScraper(fileCache, {}, {});
+            await assetScraper.init();
+
+            let result = await assetScraper.resolveFileName('https://example.com/path/to/photo.jpg#lorem=ipsum', 'images');
+
+            assert.equal(result.filename, '/photo-lorem-ipsum.jpg');
+        });
+
+        it('Will transform relative to absolute', async () => {
+            const assetScraper = new AssetScraper(fileCache, {
+                baseUrl: 'https://example.com'
+            }, {});
+            await assetScraper.init();
+
+            const result = await assetScraper.normalizeUrl('/content/images/photo.jpg');
+
+            assert.equal(result, 'https://example.com/content/images/photo.jpg');
+        });
+
+        it('Will transform protocolless to absolute', async () => {
+            const assetScraper = new AssetScraper(fileCache, {
+                baseUrl: 'https://example.com'
+            }, {});
+            await assetScraper.init();
+
+            const result = await assetScraper.normalizeUrl('//example.com/content/images/photo.jpg');
+
+            assert.equal(result, 'https://example.com/content/images/photo.jpg');
+        });
+
+        it('Will transform __GHOST_URL__ to absolute', async () => {
+            const assetScraper = new AssetScraper(fileCache, {
+                baseUrl: 'https://example.com'
+            }, {});
+            await assetScraper.init();
+
+            const result = await assetScraper.normalizeUrl('__GHOST_URL__/content/images/photo.jpg');
+
+            assert.equal(result, 'https://example.com/content/images/photo.jpg');
+        });
+
+        it('Will transform __GHOST_URL__ to absolute with a sub domain', async () => {
+            const assetScraper = new AssetScraper(fileCache, {
+                baseUrl: 'https://sub.example.com'
+            }, {});
+            await assetScraper.init();
+
+            const result = await assetScraper.normalizeUrl('__GHOST_URL__/content/images/photo.jpg');
+
+            assert.equal(result, 'https://sub.example.com/content/images/photo.jpg');
+        });
+
+        it('Will transform __GHOST_URL__ to absolute with a subdirectory', async () => {
+            const assetScraper = new AssetScraper(fileCache, {
+                baseUrl: 'https://example.com/dir/'
+            }, {});
+            await assetScraper.init();
+
+            const result = await assetScraper.normalizeUrl('__GHOST_URL__/content/images/photo.jpg');
+
+            assert.equal(result, 'https://example.com/dir/content/images/photo.jpg');
+        });
+
+        it('Accepts URls with encoded characters', async () => {
+            const assetScraper = new AssetScraper(fileCache, {}, {});
+            await assetScraper.init();
+
+            const result = await assetScraper.resolveFileName('https://example.com/path/to/你好.jpg', 'images');
+
+            assert.equal(result.filename, '/path/to/ni-hao.jpg');
+        });
+
+        it.todo('test replaceSrc else');
+    });
+
+    describe('Local file system', () => {
+        it.todo('test storeMediaLocally to return null if no media or mime');
+        it.todo('test storeMediaLocally to set `folder` if matches files mime');
+        it.todo('test storeMediaLocally to return null if no folder set');
+    });
+
+    describe('Fetching methods', () => {
+        it('getRemoteMedia', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/image.jpg')
+                .replyWithError('a bad thing happened');
+
+            const assetScraper = new AssetScraper(fileCache, {}, {});
+            await assetScraper.init();
+
+            await assert.rejects(
+                async () => {
+                    await assetScraper.getRemoteMedia('https://example.com/image.jpg');
+                },
+                {
+                    name: 'InternalServerError',
+                    message: 'Failed to get remote media'
+                }
+            );
+            assert.ok(requestMock.isDone());
+        });
+
+        it('extractFileDataFromResponse', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/image.jpg')
+                .reply(200, jpgImageBuffer);
+
+            const assetScraper = new AssetScraper(fileCache, {}, {});
+            await assetScraper.init();
+
+            const response = await assetScraper.getRemoteMedia('https://example.com/image.jpg');
+
+            const responseData: any = await assetScraper.extractFileDataFromResponse('https://example.com/image.jpg', response);
+
+            assert.ok(requestMock.isDone());
+            assert.equal(responseData.fileBuffer.constructor.name, 'Buffer');
+            assert.equal(responseData.fileName, 'image.jpg');
+            assert.equal(responseData.fileMime, 'image/jpeg');
+            assert.equal(responseData.extension, '.jpg');
+        });
+
+        it.todo('Will follow redirects');
+        it.todo('test extractFileDataFromResponse to get data from the header is buffer fails');
+        it.todo('test extractFileDataFromResponse to return null if no extension or mime');
+        it.todo('test downloadExtractSave if no response');
+        it.todo('test downloadExtractSave if no file path');
+    });
+
+    describe('Finds in Post HTML', () => {
+        it('a href', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/image.jpg')
+                .reply(200, jpgImageBuffer);
+
+            const options = {
+                domains: [
+                    'https://example.com',
+                    'https://video-service.com'
+                ]
+            };
+            const postObj = {
+                html: '<a href="https://example.com/image.jpg">Image</a>'
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.equal(postObj.html, '<a href="__GHOST_URL__/content/images/image.jpg">Image</a>');
+
+            assert.ok(requestMock.isDone());
+        });
+
+        it('img src', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/image.jpg')
+                .reply(200, jpgImageBuffer);
+
+            const options = {
+                domains: [
+                    'https://example.com',
+                    'https://video-service.com'
+                ]
+            };
+            const postObj = {
+                html: '<img src="https://example.com/image.jpg" />'
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.equal(postObj.html, '<img src="__GHOST_URL__/content/images/image.jpg" />');
+
+            assert.ok(requestMock.isDone());
+        });
+
+        it('img data-src', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/image.jpg')
+                .reply(200, jpgImageBuffer);
+
+            const options = {
+                domains: [
+                    'https://example.com',
+                    'https://video-service.com'
+                ]
+            };
+            const postObj = {
+                html: '<img data-src="https://example.com/image.jpg" />'
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.equal(postObj.html, '<img data-src="__GHOST_URL__/content/images/image.jpg" />');
+
+            assert.ok(requestMock.isDone());
+        });
+
+        it('picture source data-src', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/image-768.jpg')
+                .reply(200, jpgImageBuffer)
+                .get('/image-768-1.5x.jpg')
+                .reply(200, jpgImageBuffer)
+                .get('/image-480.jpg')
+                .reply(200, jpgImageBuffer)
+                .get('/image-480-2x.jpg')
+                .reply(200, jpgImageBuffer)
+                .get('/image-320.jpg')
+                .reply(200, jpgImageBuffer);
+
+            const options = {
+                domains: [
+                    'https://example.com'
+                ]
+            };
+            const postObj = {
+                html: '<picture><source srcset="https://example.com/image-768.jpg, https://example.com/image-768-1.5x.jpg 1.5x"><source srcset="https://example.com/image-480.jpg, https://example.com/image-480-2x.jpg 2x"><img src="https://example.com/image-320.jpg"></picture>'
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.equal(postObj.html, '<picture><source srcset="__GHOST_URL__/content/images/image-768.jpg, __GHOST_URL__/content/images/image-768-1.5x.jpg 1.5x"><source srcset="__GHOST_URL__/content/images/image-480.jpg, __GHOST_URL__/content/images/image-480-2x.jpg 2x"><img src="__GHOST_URL__/content/images/image-320.jpg"></picture>');
+
+            assert.ok(requestMock.isDone());
+        });
+
+        it('video src & poster', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/poster.jpg')
+                .reply(200, jpgImageBuffer)
+                .get('/flowers.mp4')
+                .reply(200, mp4VideoBuffer);
+
+            const options = {
+                domains: [
+                    'https://example.com'
+                ]
+            };
+            const postObj = {
+                html: '<video poster="https://example.com/poster.jpg" src="https://example.com/flowers.mp4"></video>'
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.equal(postObj.html, '<video poster="__GHOST_URL__/content/images/poster.jpg" src="__GHOST_URL__/content/media/flowers.mp4"></video>');
+
+            assert.ok(requestMock.isDone());
+        });
+
+        it('video source', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/one.mp4')
+                .reply(200, mp4VideoBuffer)
+                .get('/two.mp4')
+                .reply(200, mp4VideoBuffer);
+
+            const options = {
+                domains: [
+                    'https://example.com'
+                ]
+            };
+            const postObj = {
+                html: '<video"><source src="https://example.com/one.mp4"><source src="https://example.com/two.mp4"></video>'
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.equal(postObj.html, '<video"><source src="__GHOST_URL__/content/media/one.mp4"><source src="__GHOST_URL__/content/media/two.mp4"></video>');
+
+            assert.ok(requestMock.isDone());
+        });
+
+        it('audio src', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/podcast.mp3')
+                .reply(200, mp3AudioBuffer);
+
+            const options = {
+                domains: [
+                    'https://example.com'
+                ]
+            };
+            const postObj = {
+                html: '<audio src="https://example.com/podcast.mp3"></audio>'
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.equal(postObj.html, '<audio src="__GHOST_URL__/content/media/podcast.mp3"></audio>');
+
+            assert.ok(requestMock.isDone());
+        });
+
+        it('audio source', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/one.mp3')
+                .reply(200, mp3AudioBuffer)
+                .get('/two.mp3')
+                .reply(200, mp3AudioBuffer);
+
+            const options = {
+                domains: [
+                    'https://example.com'
+                ]
+            };
+            const postObj = {
+                html: '<audio><source src="https://example.com/one.mp3"><source src="https://example.com/two.mp3"></audio>'
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.equal(postObj.html, '<audio><source src="__GHOST_URL__/content/media/one.mp3"><source src="__GHOST_URL__/content/media/two.mp3"></audio>');
+
+            assert.ok(requestMock.isDone());
+        });
+
+        it('background', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/image.jpg')
+                .reply(200, jpgImageBuffer)
+                .get('/other.jpg')
+                .reply(200, jpgImageBuffer);
+
+            const options = {
+                domains: [
+                    'https://example.com'
+                ]
+            };
+            const postObj = {
+                html: '<p style="background: url(https://example.com/image.jpg);"></p><p style="background: url(\'https://example.com/other.jpg\');"></p>'
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.equal(postObj.html, '<p style="background: url(__GHOST_URL__/content/images/image.jpg);"></p><p style="background: url(\'__GHOST_URL__/content/images/other.jpg\');"></p>');
+
+            assert.ok(requestMock.isDone());
+        });
+
+        it('background-image', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/image.jpg')
+                .reply(200, jpgImageBuffer)
+                .get('/other.jpg')
+                .reply(200, jpgImageBuffer);
+
+            const options = {
+                domains: [
+                    'https://example.com'
+                ]
+            };
+            const postObj = {
+                html: `<p style="background-image: url(https://example.com/image.jpg);"></p><p style="background-image: url('https://example.com/other.jpg');"></p>`
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.equal(postObj.html, `<p style="background-image: url(__GHOST_URL__/content/images/image.jpg);"></p><p style="background-image: url('__GHOST_URL__/content/images/other.jpg');"></p>`);
+
+            assert.ok(requestMock.isDone());
+        });
+
+        it('Does links in content', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/image.jpg')
+                .reply(200, jpgImageBuffer);
+
+            const options = {
+                domains: [
+                    'https://example.com'
+                ]
+            };
+
+            // https://nerdschalk.com/wp-content/uploads/2024/09/turn-on-music-haptics-on-ios-18-on-iphone.mp4</a></video><!--kg-card-end:
+            const postObj = {
+                html: `<a href="https://example.com/image.jpg">https://example.com/image.jpg</a>`
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.equal(postObj.html, `<a href="__GHOST_URL__/content/images/image.jpg">__GHOST_URL__/content/images/image.jpg</a>`);
+
+            assert.ok(requestMock.isDone());
+        });
+    });
+
+    describe('findMatchesInString', () => {
+        it('Handle quotes around URLs', async () => {
+            const options = {
+                domains: [
+                    'https://example.com'
+                ]
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            const matches = await assetScraper.findMatchesInString('background: url(&quot;https://example.com/path/to/imahe-300x160.jpg&quot;);');
+
+            assert.equal(matches.length, 1);
+            assert.equal(matches[0], 'https://example.com/path/to/imahe-300x160.jpg');
+        });
+    });
+
+    /**
+     * [ ] Finds all images in listed object names (settings, post HTML, Lexical - don't support Mobiledoc)
+     * [ ] Can add allowed domains=
+     * [ ] Will skip if the file size is too big
+     * [ ] Will follow redirects
+     * [ ] Will skip blocked file types (e.g. .html)
+     * [x] Will look at srcset, common data attributes, links, window.open(), background images, picture elements, video elements, audio elements
+     * [x] Will look at markdown cards in lexical
+     * [x] Will look at HTML cards un lexical
+     * [x] Finds single image in object
+     * [x] Replaces a found image with an updated src
+     * [x] Replaces multiple occurrences of a single asset correctly
+     * [x] Does not add the same image to the cache twice
+     * [x] Rejects invalid URLs
+     * [x] Will read image file type data from a buffer
+     * [x] Will read video file type data from a buffer
+     * [x] Will move images & media to correct folders, and any other file (in the allow-list) to the files folder
+     * [x] Will use AssetCache
+     */
+});
