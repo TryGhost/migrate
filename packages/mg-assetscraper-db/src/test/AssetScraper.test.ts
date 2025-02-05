@@ -906,10 +906,29 @@ describe('Asset Scraper', () => {
             const assetScraper = new AssetScraper(fileCache, options, {});
             await assetScraper.init();
 
-            const matches = await assetScraper.findMatchesInString('background: url(&quot;https://example.com/path/to/imahe-300x160.jpg&quot;);');
+            const matches = await assetScraper.findMatchesInString('background: url(&quot;https://example.com/path/to/image-300x160.jpg&quot;);');
 
             assert.equal(matches.length, 1);
-            assert.equal(matches[0], 'https://example.com/path/to/imahe-300x160.jpg');
+            assert.equal(matches[0], 'https://example.com/path/to/image-300x160.jpg');
+        });
+
+        it('Handle srcset', async () => {
+            const options = {
+                domains: [
+                    'https://example.com'
+                ]
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            const matches = await assetScraper.findMatchesInString('<img srcset="https://example.com/path/to/landscape-320w.jpg, https://example.com/path/to/landscape-480w.jpg 1.5x, https://example.com/path/to/landscape-640w.jpg 2x" src="https://example.com/path/to/landscape-640w.jpg" />');
+
+            assert.equal(matches.length, 4);
+            assert.equal(matches[0], 'https://example.com/path/to/landscape-320w.jpg');
+            assert.equal(matches[1], 'https://example.com/path/to/landscape-480w.jpg');
+            assert.equal(matches[2], 'https://example.com/path/to/landscape-640w.jpg');
+            assert.equal(matches[3], 'https://example.com/path/to/landscape-640w.jpg');
         });
     });
 
@@ -919,17 +938,5 @@ describe('Asset Scraper', () => {
      * [ ] Will skip if the file size is too big
      * [ ] Will follow redirects
      * [ ] Will skip blocked file types (e.g. .html)
-     * [x] Will look at srcset, common data attributes, links, window.open(), background images, picture elements, video elements, audio elements
-     * [x] Will look at markdown cards in lexical
-     * [x] Will look at HTML cards un lexical
-     * [x] Finds single image in object
-     * [x] Replaces a found image with an updated src
-     * [x] Replaces multiple occurrences of a single asset correctly
-     * [x] Does not add the same image to the cache twice
-     * [x] Rejects invalid URLs
-     * [x] Will read image file type data from a buffer
-     * [x] Will read video file type data from a buffer
-     * [x] Will move images & media to correct folders, and any other file (in the allow-list) to the files folder
-     * [x] Will use AssetCache
      */
 });
