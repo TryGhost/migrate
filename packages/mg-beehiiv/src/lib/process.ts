@@ -3,6 +3,7 @@ import sanitizeHtml from 'sanitize-html';
 import SimpleDom from 'simple-dom';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 import embedCard from '@tryghost/kg-default-cards/lib/cards/embed.js';
+import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
@@ -31,6 +32,7 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
     // https://support.beehiiv.com/hc/en-us/articles/7606088263191
     html = html.replace(/{{subscriber_id}}/g, '#');
     html = html.replace(/{{rp_refer_url}}/g, '#');
+    html = html.replace(/{{rp_refer_url_no_params}}/g, '#');
 
     const $allHtml: any = $.load(html, {
         xmlMode: true,
@@ -64,12 +66,80 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         });
     }
 
+    $html('table.j').each((i: any, el: any) => {
+        const tdContent = $html(el).find('td').html().trim();
+
+        if (tdContent === '&nbsp;') {
+            $(el).replaceWith('<hr>');
+        }
+    });
+
+    // Galleries
+    $html('table.mob-w-full').each((i: any, el: any) => {
+        let allImages: string[] = [];
+
+        $(el).find('td.mob-stack').each((ii, ell) => {
+            const img = $(ell).find('img');
+            const pText = $(ell).find('p').text().trim();
+
+            let cardOpts: any = {
+                env: {dom: new SimpleDom.Document()},
+                payload: {
+                    src: img.attr('src'),
+                    alt: img.attr('alt')
+                }
+            };
+
+            if (pText && pText.length > 0) {
+                cardOpts.payload.caption = pText;
+            }
+
+            allImages.push(serializer.serialize(imageCard.render(cardOpts)));
+        });
+
+        $(el).replaceWith(allImages.join(''));
+    });
+
+    // Embeds
+    $html('td.embed-img.mob-stack').each((i: any, el: any) => {
+        const parent = $(el).parent().parent();
+
+        const href = $(parent).find('a').attr('href');
+        const image = $(parent).find('img').attr('src');
+        const title = $(parent).find('p').eq(0).text();
+        const description = $(parent).find('p').eq(1).text();
+
+        const parentTable = $(parent).parent().parent().parent().parent().parent();
+
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                url: href,
+                metadata: {
+                    url: href,
+                    title: title,
+                    description: description,
+                    icon: null,
+                    thumbnail: image,
+                    publisher: null,
+                    author: null
+                },
+                caption: null
+            }
+        };
+
+        $(parentTable).replaceWith(serializer.serialize(bookmarkCard.render(cardOpts)));
+    });
+
     // Remove hidden elements
     $html('[style*="display:none"]').remove();
     $html('[style*="display: none"]').remove();
 
     // Remove the share links at the top
     $html('table.mob-block').remove();
+
+    // Remove sponsor blocks
+    $html('table.rec__content').remove();
 
     // Remove the open tracking pixel element
     $html('div[data-open-tracking="true"]:contains("{{OPEN_TRACKING_PIXEL}}")').remove();
@@ -89,6 +159,15 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         $html(`h1:contains("${postData.data.title}")`).parentsUntil('table').remove();
     }
 
+    // Remove cells that only contain a non-breaking space
+    $html('td').each((i: any, el: any) => {
+        const text = $html(el).html().trim();
+
+        if (text === '&nbsp;') {
+            $(el).remove();
+        }
+    });
+
     // Convert '...' to <hr />
     $html('p').each((i: any, el: any) => {
         const text = $html(el).text().trim();
@@ -98,6 +177,7 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         }
     });
 
+    // Convert linked YouTube thumbnails to embeds
     $html('a[href*="youtube.com"], a[href*="youtu.be"]').each((i: any, el: any) => {
         const imageCount = $html(el).find('img').length;
         const hasPlayIcon = $html(el).find('img[src*="youtube_play_icon.png"]').length;
@@ -120,12 +200,18 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
             if (captionText && captionText.length > 0) {
                 cardOpts.payload.caption = captionHtml;
             }
-    
+
             $html(el).replaceWith(serializer.serialize(embedCard.render(cardOpts)));
         }
     });
 
     $html('img').each((i: any, el: any) => {
+        // Skip if the image is in a figure
+        const isInFigure = $(el).parents('figure').length;
+        if (isInFigure) {
+            return;
+        }
+
         const parentTable = $html(el).parent().parent().parent();
 
         const theSrc = $html(el).attr('src');
@@ -165,6 +251,35 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         });
     }
 
+    if (options?.url && options?.comments && options?.commentLink) {
+        $html('a[href*="comments=true"]').each((i: any, el: any) => {
+            const href = $html(el).attr('href');
+
+            if (href.includes(options.url)) {
+                $html(el).attr('href', options.commentLink);
+                $html(el).removeAttr('target');
+                $html(el).removeAttr('rel');
+            }
+        });
+    } else if (options?.url && options?.comments === false) {
+        $html('a[href*="comments=true"]').each((i: any, el: any) => {
+            const href = $html(el).attr('href');
+
+            if (href.includes(options.url)) {
+                $html(el).remove();
+            }
+        });
+    }
+
+    // Remove empty tags
+    $html('p, figure').each((i: any, el: any) => {
+        const elementHtml = $html(el).html().trim();
+
+        if (elementHtml === '') {
+            $(el).remove();
+        }
+    });
+
     // Get the cleaned HTML
     let bodyHtml = $html.html();
 
@@ -173,18 +288,17 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         allowedTags: [
             'b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'blockquote',
             'figure', 'figcaption', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-            'div', 'hr', 'iframe'
+            'div', 'hr', 'iframe', 'span'
         ],
         allowedAttributes: {
             a: ['href', 'title', 'rel', 'target', 'class'],
-            img: ['src', 'alt', 'title'],
+            img: ['src', 'alt', 'title', 'class', 'width', 'height'],
             iframe: ['width', 'height', 'src', 'title', 'frameborder', 'allow', 'allowfullscreen'],
             figure: ['class'],
             div: ['class']
         },
         allowedClasses: {
-            a: ['kg-btn', 'kg-btn-accent'],
-            div: ['kg-card', 'kg-button-card', 'kg-align-center', 'kg-card-hascaption']
+            '*': ['kg-*']
         }
     });
 
@@ -202,6 +316,14 @@ const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string, featureS
     if (($(firstElement).get(0) && $(firstElement).get(0).name === 'img') || $(firstElement).find('img').length) {
         let theElementItself = $(firstElement).get(0).name === 'img' ? firstElement : $(firstElement).find('img');
         let firstImgSrc: any = $(theElementItself).attr('src');
+
+        // Both images usually end in the same way, so we can split the URL and compare the last part
+        const firstImageSplit = firstImgSrc.split('/uploads/asset/');
+        const featureImageSplit = featureSrc.split('/uploads/asset/');
+
+        if (firstImageSplit[1] === featureImageSplit[1]) {
+            $(theElementItself).remove();
+        }
 
         if (featureSrc.length > 0 && firstImgSrc) {
             let normalizedFirstSrc = firstImgSrc.replace('fit=scale-down,format=auto,onerror=redirect,quality=80', 'quality=100');

@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';
 import beehiivIngest from '@tryghost/mg-beehiiv';
 import {toGhostJSON} from '@tryghost/mg-json';
-import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
+import mgHtmlLexical from '@tryghost/mg-html-lexical';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import MgAssetScraper from '@tryghost/mg-assetscraper';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
@@ -32,27 +32,65 @@ const scrapeConfig = {
             selector: 'meta[property="twitter:description"]',
             attr: 'content'
         },
-        author: {
-            selector: 'meta[name="author"]',
-            attr: 'content'
+        authors: {
+            // We cannot rely on tags being available as HTML elements because of gating. They are available
+            // as JSON, but the script tag they're in has no ID, so we need to look at all script tags, and
+            // only process the tag that contains `window.__remixContext`.
+            listItem: 'script',
+            data: {
+                authors: {
+                    how: 'html',
+                    convert: (x) => {
+                        if (x && x.includes('window.__remixContext')) {
+                            let theAuthors = [];
+
+                            let remixContent = x.replace('window.__remixContext =', '');
+                            remixContent = remixContent.replace(/;$/, '');
+
+                            const parsed = JSON.parse(remixContent);
+
+                            const parsedAuthors = parsed.state.loaderData['routes/p/$slug'].post.authors;
+
+                            parsedAuthors.forEach((person) => {
+                                theAuthors.push(person.name);
+                            });
+
+                            return theAuthors;
+                        } else {
+                            return;
+                        }
+                    }
+                }
+            }
         }
     }
 };
 
 const postProcessor = (scrapedData, data, options) => { // eslint-disable-line no-unused-vars
-    if (scrapedData.author && scrapedData.author.length > 0) {
-        const authorSlug = slugify(scrapedData.author);
-        const authorEmail = `${authorSlug}@example.com`;
+    if (scrapedData.authors && scrapedData.authors.length > 0) {
+        let realAuthors = [];
 
-        scrapedData.authors = [{
-            data: {
-                slug: authorSlug,
-                name: scrapedData.author,
-                email: authorEmail
+        scrapedData.authors.forEach((block) => {
+            if (!block.authors) {
+                return;
             }
-        }];
+
+            block.authors.forEach((author) => {
+                const authorSlug = slugify(author);
+                const authorEmail = `${authorSlug}@example.com`;
+
+                realAuthors.push({
+                    data: {
+                        slug: authorSlug,
+                        name: author,
+                        email: authorEmail
+                    }
+                });
+            });
+        });
 
         delete scrapedData.author;
+        scrapedData.authors = realAuthors;
     } else {
         const defaultAuthorName = options.defaultAuthorName ?? 'Author';
         const defaultAuthorSlug = slugify(defaultAuthorName);
@@ -110,7 +148,7 @@ const initialize = (options, logger) => {
                 formatDataAsGhost: false,
                 assetScraper: false,
                 linkFixer: false,
-                htmlToMobiledoc: false,
+                htmlToLexical: false,
                 writeJSON: false,
                 writeZip: false,
                 clearCache: false
@@ -253,15 +291,15 @@ const getFullTaskList = (options, logger) => {
             }
         },
         {
-            title: 'Convert HTML -> MobileDoc',
+            title: 'Convert HTML -> Lexical',
             task: (ctx) => {
-                // 8. Convert post HTML -> MobileDoc
-                ctx.timings.htmlToMobiledoc = Date.now();
+                // 8. Convert post HTML -> Lexical
+                ctx.timings.htmlToLexical = Date.now();
                 try {
-                    let tasks = mgHtmlMobiledoc.convert(ctx);
+                    let tasks = mgHtmlLexical.convert(ctx);
                     return makeTaskRunner(tasks, options);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to convert HTML -> MobileDoc', error});
+                    ctx.logger.error({message: 'Failed to convert HTML -> Lexical', error});
                     throw error;
                 }
             }
@@ -269,8 +307,8 @@ const getFullTaskList = (options, logger) => {
         {
             task: (ctx) => {
                 ctx.logger.info({
-                    message: 'Convert HTML -> MobileDoc',
-                    duration: Date.now() - ctx.timings.htmlToMobiledoc
+                    message: 'Convert HTML -> Lexical',
+                    duration: Date.now() - ctx.timings.htmlToLexical
                 });
             }
         },

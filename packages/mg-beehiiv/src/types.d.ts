@@ -1,5 +1,6 @@
 declare module '@tryghost/kg-default-cards/lib/cards/image.js';
 declare module '@tryghost/kg-default-cards/lib/cards/embed.js';
+declare module '@tryghost/kg-default-cards/lib/cards/bookmark.js';
 declare module '@tryghost/mg-fs-utils';
 declare module '@tryghost/string';
 declare module 'sanitize-html';
@@ -9,7 +10,7 @@ type beehiivPostDataObject = {
     web_title: string;
     status: 'archived' | 'confirmed' | 'draft'
     audience?: 'both' | 'free' | 'premium'
-    web_audiences?: 'All free subscribers, All premium subscribers' | 'All free subscribers' | 'All premium subscribers'
+    web_audiences?: 'All free subscribers, All premium subscribers' | 'All free subscribers, All paid subscribers' | 'All free subscribers' | 'All premium subscribers' | 'All paid subscribers'
     content_tags: string;
     url: string;
     web_subtitle?: string;

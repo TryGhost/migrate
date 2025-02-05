@@ -55,9 +55,36 @@ describe('Process WordPress REST API JSON', function () {
         expect(data.id).toEqual(29);
         expect(data.slug).toEqual('example');
         expect(data.name).toEqual('Example User');
-        expect(data.bio).toEqual('Lorem ipsum small bio.\r\n\r\nAnd emoji 🤓 on the second line.');
-        expect(data.profile_image).toEqual('https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=3000&d=mm&r=g');
+        expect(data.bio).toEqual('Lorem ipsum small bio. And emoji 🤓 on the second line.');
+        expect(data.profile_image).toEqual('https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=500&d=blank&r=g');
         expect(data.website).toEqual('https://example.com');
+    });
+
+    test('Will not add invalid user website URL', function () {
+        const user = processor.processAuthor({
+            id: 29,
+            name: 'Example User',
+            url: 'https://#'
+        });
+
+        expect(user).toBeObject();
+        expect(user.data).toHaveProperty('id');
+        expect(user.data).toHaveProperty('name');
+        expect(user.data).not.toHaveProperty('website');
+    });
+
+    test('Will scale user avatars', function () {
+        const user = processor.processAuthor({
+            id: 29,
+            name: 'Example User',
+            avatar_urls: {
+                24: 'https://secure.gravatar.com/avatar/cb8419c1d471d55fbca0d63d1fb2b6ac?s=24&d=wp_user_avatar&r=g',
+                48: 'https://secure.gravatar.com/avatar/cb8419c1d471d55fbca0d63d1fb2b6ac?s=48&d=wp_user_avatar&r=g',
+                96: 'https://secure.gravatar.com/avatar/cb8419c1d471d55fbca0d63d1fb2b6ac?s=96&d=wp_user_avatar&r=g'
+            }
+        });
+
+        expect(user.data.profile_image).toEqual('https://secure.gravatar.com/avatar/cb8419c1d471d55fbca0d63d1fb2b6ac?s=500&d=blank&r=g');
     });
 
     test('Can convert a multiple users', function () {
@@ -82,7 +109,7 @@ describe('Process WordPress REST API JSON', function () {
         expect(data.slug).toEqual('another-user');
         expect(data.name).toEqual('Another User');
         expect(data.bio).toEqual('A different user bio');
-        expect(data.profile_image).toEqual('https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=3000&d=mm&r=g');
+        expect(data.profile_image).toEqual('https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=500&d=blank&r=g');
         expect(data.website).toEqual('https://anothersite.com');
     });
 
@@ -240,7 +267,7 @@ describe('Process WordPress REST API JSON', function () {
 
         const data = post.data;
 
-        expect(data.custom_excerpt).toEqual('This is my strong headline thing. Here we have some excerpt content […]');
+        expect(data.custom_excerpt).toEqual('This is my strong headline thing. Here we have some excerpt content');
     });
 
     test('Does not filter posts by date of options not present', async function () {
@@ -374,6 +401,14 @@ describe('Process WordPress HTML', function () {
         const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/another-image.png">');
+    });
+
+    test('Can handle images in .wp-caption div', async function () {
+        const html = `<div id="attachment_437" style="width: 510px" class="wp-caption aligncenter"><a href="http:/example.com/wp-content/uploads/2015/04/photo.jpg"><img aria-describedby="caption-attachment-437" class="wp-image-437" src="http:/example.com/wp-content/uploads/2015/04/photo.jpg" alt="My photo alt" width="500" height="355" data-wp-pid="437" /></a><p id="caption-attachment-437" class="wp-caption-text">My photo caption</p></div>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption"><img src="http:/example.com/wp-content/uploads/2015/04/photo.jpg" class="kg-image" alt="My photo alt" loading="lazy"><figcaption>My photo caption</figcaption></figure>');
     });
 
     test('Can find & remove links around images that link to the same image', async function () {

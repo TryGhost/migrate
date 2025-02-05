@@ -18,6 +18,11 @@ export default class MigrateBase {
         const maxLength = this.schema[key].maxLength ?? null;
         const choices = this.schema[key].choices ?? null;
 
+        // Use validation method from schema if available
+        if (this?.schema[key]?.validate) {
+            value = this.schema[key].validate(value);
+        }
+
         if (maxLength && value?.length > maxLength) {
             throw new errors.InternalServerError({
                 message: `(${this.#context}) Value for "${key}" is too long. Currently ${value.length} characters, Max ${maxLength}.`,

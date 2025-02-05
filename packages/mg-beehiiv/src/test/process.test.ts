@@ -47,6 +47,26 @@ describe('beehiiv Processor', () => {
             assert.equal(processed, '<p>Hello</p>');
         });
 
+        it('Can remove empty p tags', () => {
+            const processed = processHTML({html: '<table><tr id="content-blocks"><p>Hello</p><p></p></tr></table>'});
+            assert.equal(processed, '<p>Hello</p>');
+        });
+
+        it('Can remove empty figure tags', () => {
+            const processed = processHTML({html: '<table><tr id="content-blocks"><figure class="kg-card" /><p>Hello</p></tr></table>'});
+            assert.equal(processed, '<p>Hello</p>');
+        });
+
+        it('Can convert HRs', () => {
+            const processed = processHTML({html: '<table><tr id="content-blocks"><td align="center" valign="top" style="font-size:0px;line-height:0px;padding:20px 0px;" class="dd"><table class="j" role="none" width="50%" border="0" cellspacing="0" cellpadding="0" align="center"><tr><td> &nbsp; </td></tr></table></td><p>Hello</p></tr></table>'});
+            assert.equal(processed, '<hr /><p>Hello</p>');
+        });
+
+        it('Can remove empty cells', () => {
+            const processed = processHTML({html: '<table><tr id="content-blocks"><td align="center" valign="top" style="font-size:0px;line-height:0px;padding:20px 0px;" class="dd"><table role="none" width="50%" border="0" cellspacing="0" cellpadding="0" align="center"><tr><td> &nbsp; </td></tr></table></td><p>Hello</p></tr></table>'});
+            assert.equal(processed, '<p>Hello</p>');
+        });
+
         // Remove hidden elements
         it('Remove hidden elements', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><div style="display:none">Hide 1</div><div style="display: none">Hide 2</div><div style="display: none ">Hide 3</div><div style="display: none;">Hide 4</div><div style="display:none; color: red;">Hide 5</div><p>Visible</p></tr></table></body>`;
@@ -177,6 +197,52 @@ describe('beehiiv Processor', () => {
           '                <p><a href="https://youtube.com/watch?v=1234ABCD123">Regular YouTube link</a></p>');
         });
 
+        it('Converts bookmarks', () => {
+            const htmlContent = `<body><table><tr id="content-blocks"><td><tr>
+    <td align="center" valign="top" style="padding:14px 19px 14px 19px;" class="dd"><a href="https://example.com/p/hello-world" style="text-decoration:none;" target="_blank">
+            <table role="none" width="100%" border="0" cellspacing="0" cellpadding="0" align="center">
+                <tr>
+                    <td align="center" valign="top" class="o" style="padding:12px 12px;">
+                        <table role="none" border="0" cellspacing="0" cellpadding="0" align="right" width="100%">
+                            <tr><!--[if mso]><td width="0"><table cellpadding="0" cellspacing="0" border="0" role="presentation" style="display:none;"><tr><![endif]-->
+                                <td class="embed-img mob-stack" align="center" valign="top" style="width:35%;min-height:100px;vertical-align:middle;display:none;"><a href="https://example.com/p/hello-world" style="text-decoration:none;" target="_blank"><img src="https://beehiiv-images-production.s3.amazonaws.com/uploads/asset/file/12345678-1234-1234-92a5-d51e635d588c/photo.jpg?t=1723045443" width="100%" style="display:block;" /></a></td><!--[if mso]></tr></table></td><![endif]-->
+                            </tr>
+                            <tr>
+                                <td align="center" valign="top" class="cc">
+                                    <table role="none" width="100%" border="0" cellspacing="0" cellpadding="0" align="center">
+                                        <tr>
+                                            <td align="left" valign="top" class="l">
+                                                <p>Hello world</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="left" valign="top" class="m">
+                                                <p>And other text</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td align="left" valign="bottom" class="n" style="vertical-align:bottom;padding-top:12px;">
+                                                <p style="word-break:break-word;">example.com/p/hello-world</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td><!--[if mso]><td width="0"><table cellpadding="0" cellspacing="0" border="0" role="presentation" style="display:none;"><tr><![endif]-->
+                                <td class="mob-hide" align="center" valign="top" style="width:35%;min-height:100px;padding:0px 0px 0px 12px;vertical-align:middle;"><img src="https://beehiiv-images-production.s3.amazonaws.com/uploads/asset/file/12345678-1234-1234-92a5-d51e635d588c/photo.jpg?t=1723045443" width="100%" style="display:block;" /></td><!--[if mso]></tr></table></td><![endif]-->
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </a></td>
+</tr></td></tr></table></body>`;
+
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
+                url: 'https://example.beehiiv.com'
+            }});
+
+            assert.equal(processed, '<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.com/p/hello-world"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Hello world</div><div class="kg-bookmark-description">And other text</div><div class="kg-bookmark-metadata"></div><div class="kg-bookmark-thumbnail"><img src="https://beehiiv-images-production.s3.amazonaws.com/uploads/asset/file/12345678-1234-1234-92a5-d51e635d588c/photo.jpg?t=1723045443" alt="" /></div></div></a></figure>');
+        });
+
         it('Updates subscribe links', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><p>Stay updated! Be sure to <a class="link" href="https://example.beehiiv.com/subscribe?utm_source=example.beehiiv.com&utm_medium=newsletter" target="_blank" rel="noopener noreferrer nofollow">subscribe to our newsletter</a>.</p></tr></table></body>`;
             const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
@@ -185,6 +251,27 @@ describe('beehiiv Processor', () => {
             }});
 
             assert.equal(processed, '<p>Stay updated! Be sure to <a href="#/portal/signup">subscribe to our newsletter</a>.</p>');
+        });
+
+        it('Updates comment links', () => {
+            const htmlContent = `<body><table><tr id="content-blocks"><p>Hello <a href="https://example.beehiiv.com/p/post-slug?comments=true">Make a comment</a></p></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
+                url: 'https://example.beehiiv.com',
+                comments: true,
+                commentLink: '#ghost-comments-root'
+            }});
+
+            assert.equal(processed, '<p>Hello <a href="#ghost-comments-root">Make a comment</a></p>');
+        });
+
+        it('Removes comment links', () => {
+            const htmlContent = `<body><table><tr id="content-blocks"><p>Hello <a href="https://example.beehiiv.com/p/post-slug?comments=true">Make a comment</a></p></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
+                url: 'https://example.beehiiv.com',
+                comments: false
+            }});
+
+            assert.equal(processed, '<p>Hello </p>');
         });
 
         it('Wraps images in figure tags with alt text', () => {
@@ -199,7 +286,22 @@ describe('beehiiv Processor', () => {
         </tr></table></body>`;
             const processed = processHTML({html: htmlContent, postData: mappedObject});
 
-            assert.match(processed, /<figure class="kg-card kg-image-card"><img src="https:\/\/example.com\/image.jpg" alt="My alt text" \/><\/figure>/);
+            assert.equal(processed, '<figure class="kg-card kg-image-card"><img src="https://example.com/image.jpg" class="kg-image" alt="My alt text" /></figure>');
+        });
+
+        it('Skips wrapping images in figure tags if already a figure', () => {
+            const htmlContent = `<body><table><tr id="content-blocks">
+            <td>
+                <table>
+                    <tr>
+                        <td><figure><img src="https://example.com/image.jpg" alt="My alt text" /></figure></td>
+                    </tr>
+                </table>
+            </td>
+        </tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
+
+            assert.match(processed, /<figure><img src="https:\/\/example.com\/image.jpg" alt="My alt text" \/><\/figure>/);
         });
 
         it('Wraps images in figure tags and use caption as alt text', () => {
@@ -219,7 +321,7 @@ describe('beehiiv Processor', () => {
         </tr></table></body>`;
             const processed = processHTML({html: htmlContent, postData: mappedObject});
 
-            assert.match(processed, /<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https:\/\/example.com\/image.jpg" alt="Image caption" \/><figcaption>Image caption<\/figcaption><\/figure>/);
+            assert.equal(processed, '<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://example.com/image.jpg" class="kg-image" alt="Image caption" /><figcaption>Image caption</figcaption></figure>');
         });
 
         it('Wraps images in figure tags with caption', () => {
@@ -239,7 +341,7 @@ describe('beehiiv Processor', () => {
         </tr></table></body>`;
             const processed = processHTML({html: htmlContent, postData: mappedObject});
 
-            assert.match(processed, /<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https:\/\/example.com\/image.jpg" alt="My alt text" \/><figcaption>Image caption<\/figcaption><\/figure>/);
+            assert.equal(processed, '<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://example.com/image.jpg" class="kg-image" alt="My alt text" /><figcaption>Image caption</figcaption></figure>');
         });
 
         it('Wraps images in figure tags with missing caption text', () => {
@@ -255,7 +357,87 @@ describe('beehiiv Processor', () => {
         </tr></table></body>`;
             const processed = processHTML({html: htmlContent, postData: mappedObject});
 
-            assert.match(processed, /<figure class="kg-card kg-image-card"><img src="https:\/\/example.com\/image.jpg" alt="My alt text" \/><\/figure>/);
+            assert.equal(processed, '<figure class="kg-card kg-image-card"><img src="https://example.com/image.jpg" class="kg-image" alt="My alt text" /></figure>');
+        });
+
+        it('Converts galleries with captions to figures with figcaptions', () => {
+            const htmlContent = `<body><table><tr id="content-blocks">
+                <td width="100%">
+                    <table class="mob-w-full">
+                        <tr>
+                            <td class="mob-stack">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <table>
+                                                    <tr>
+                                                        <td>
+                                                            <img src="https://example.com/image1.jpg" alt="" height="auto" width="210" />
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <p>Caption one</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                            <td class="mob-stack">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <table>
+                                                    <tr>
+                                                        <td>
+                                                            <img src="https://example.com/image2.jpg" alt="" height="auto" width="220" />
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <p>Caption 2</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                            <td class="mob-stack">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <table>
+                                                    <tr>
+                                                        <td>
+                                                            <img src="https://example.com/image3.jpg" alt="" height="auto" width="230" />
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <p></p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
+
+            assert.equal(processed, '<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://example.com/image1.jpg" class="kg-image" alt="" /><figcaption>Caption one</figcaption></figure><figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://example.com/image2.jpg" class="kg-image" alt="" /><figcaption>Caption 2</figcaption></figure><figure class="kg-card kg-image-card"><img src="https://example.com/image3.jpg" class="kg-image" alt="" /></figure>');
         });
 
         it('Keep buttons as buttons', () => {
@@ -365,13 +547,22 @@ describe('beehiiv Processor', () => {
             assert.equal(newHtml, '<div><figure/></div><p>Hi</p>');
         });
 
-        it('Does not remove first image if is not a match', () => {
+        it('Does remove first image if it is a match 5', () => {
             const newHtml = removeDuplicateFeatureImage({
-                html: '<img src="https://example.com/not-a-match.png" /><p>Hi</p>',
-                featureSrc: 'https://example.com/the-target.png'
+                html: '<div><figure><img src="https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=auto,onerror=redirect,quality=80/uploads/asset/file/12345678-1234-5678-abcd-fc76ef777f64/photo.png?t=1234994175" /></figure></div><p>Hi</p>',
+                featureSrc: 'https://beehiiv-images-production.s3.amazonaws.com/uploads/asset/file/12345678-1234-5678-abcd-fc76ef777f64/photo.png?t=1234994175'
             });
 
-            assert.equal(newHtml, '<img src="https://example.com/not-a-match.png"/><p>Hi</p>');
+            assert.equal(newHtml, '<div><figure/></div><p>Hi</p>');
+        });
+
+        it('Changes image size & quality attributes', () => {
+            const newHtml = removeDuplicateFeatureImage({
+                html: '<div><figure><img src="https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=auto,onerror=redirect,quality=80/uploads/asset/file/12345678/image.png" /></figure></div><p>Hi</p>',
+                featureSrc: 'https://media.beehiiv.com/cdn-cgi/image/quality=100/uploads/asset/file/12345678/image.png'
+            });
+
+            assert.equal(newHtml, '<div><figure/></div><p>Hi</p>');
         });
     });
 });

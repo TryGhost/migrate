@@ -1,3 +1,5 @@
+import errors from '@tryghost/errors';
+import ghValidate from '@tryghost/validator';
 import MigrateBase from './MigrateBase.js';
 
 export type AuthorObject = {
@@ -39,9 +41,24 @@ export default class AuthorContext extends MigrateBase {
 
         // Define what fields are allowed, their types, validations, and defaults
         this.#schema = {
-            name: {require: true, type: 'string', maxLength: 191},
-            slug: {require: true, type: 'string', maxLength: 191},
-            email: {require: true, type: 'string', maxLength: 191},
+            name: {required: true, type: 'string', maxLength: 191},
+            slug: {required: true, type: 'string', maxLength: 191},
+            email: {
+                required: true,
+                type: 'string',
+                maxLength: 191,
+                validate: (val: any) => {
+                    if (!ghValidate.isEmail(val)) {
+                        throw new errors.InternalServerError({
+                            message: `(Author) Invalid email address`,
+                            context: val
+                        });
+                    }
+
+                    return val;
+                    // return `${val}-special`;
+                }
+            }, // TODO: The bit before @ is limited to 64 chars, so this needs validating separately to length alone
             profile_image: {type: 'string', maxLength: 2000},
             cover_image: {type: 'string', maxLength: 2000},
             bio: {type: 'text', maxLength: 200},

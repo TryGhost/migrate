@@ -10,7 +10,7 @@ export type postOptions = {
 }
 
 const convertPost = (post: postOptions, htmlCard = false, logger?: any) => { // TODO: Add type for `logger` when available
-    if (typeof post.html === 'undefined' || !post.html || post.html === 'undefined') {
+    if (typeof post.html === 'undefined' || post.html === 'undefined') {
         throw new errors.InternalServerError({message: 'Post has no html field to convert'});
     }
 

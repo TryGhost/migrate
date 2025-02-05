@@ -11,6 +11,7 @@ import {htmlToText} from 'html-to-text';
 import {_base as debugFactory} from '@tryghost/debug';
 import SimpleDom from 'simple-dom';
 import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
+import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
@@ -63,21 +64,44 @@ const largerSrc = (imageSrc) => {
 };
 
 const processAuthor = (wpAuthor) => {
-    let profileImage = wpAuthor.avatar_urls && wpAuthor.avatar_urls['96'];
-    profileImage = profileImage ? profileImage.replace(/s=96/, 's=3000') : undefined;
-
-    return {
+    let authorObject = {
         url: wpAuthor.link,
         data: {
             id: wpAuthor.id && wpAuthor.id,
             slug: wpAuthor.slug,
             name: wpAuthor.name,
-            bio: wpAuthor.description,
-            profile_image: profileImage,
-            email: wpAuthor.email && wpAuthor.email,
-            website: wpAuthor.url && wpAuthor.url
+            email: wpAuthor.email && wpAuthor.email
         }
     };
+
+    if (wpAuthor?.description) {
+        authorObject.data.bio = htmlToText(wpAuthor.description, {
+            wordwrap: false
+        });
+    }
+
+    let profileImage = wpAuthor.avatar_urls && wpAuthor.avatar_urls['96'];
+    if (profileImage) {
+        const imgUrl = new URL(profileImage);
+        const params = new URLSearchParams(imgUrl.search);
+        params.set('d', 'blank');
+        params.set('r', 'g');
+        params.set('s', '500');
+        imgUrl.search = params.toString();
+        authorObject.data.profile_image = imgUrl.href;
+    }
+
+    if (wpAuthor.url) {
+        try {
+            new URL(wpAuthor.url);
+            authorObject.data.website = wpAuthor.url;
+        } catch (error) {
+            // Just silently fail
+            // console.log(error);
+        }
+    }
+
+    return authorObject;
 };
 
 const processTerm = (wpTerm) => {
@@ -113,6 +137,10 @@ const processTerms = (wpTerms, fetchTags) => {
 // custom excerpt class is passed, we use this one to populate the custom excerpt and remove it from the post content
 const processExcerpt = (html, excerptSelector = false) => {
     if (!html) {
+        return '';
+    }
+
+    if (html.indexOf('[&hellip;]') > -1) {
         return '';
     }
 
@@ -254,11 +282,11 @@ const processShortcodes = async ({html}) => {
     });
 
     shortcodes.add('vc_custom_heading', ({attrs}) => {
-        if (attrs?.font_container.includes('tag:h1')) {
+        if (attrs?.font_container?.includes('tag:h1')) {
             return `<h1>${attrs.text}</h1>`;
-        } else if (attrs?.font_container.includes('tag:h2')) {
+        } else if (attrs?.font_container?.includes('tag:h2')) {
             return `<h2>${attrs.text}</h2>`;
-        } else if (attrs?.font_container.includes('tag:h3')) {
+        } else if (attrs?.font_container?.includes('tag:h3')) {
             return `<h3>${attrs.text}</h3>`;
         }
     });
@@ -387,6 +415,35 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
                 $(el).remove();
             }
         }
+    });
+
+    $html('div.wp-caption').each((i, el) => {
+        const hasImage = $(el).find('img').length > 0;
+
+        if (!hasImage) {
+            return;
+        }
+
+        const imgSrc = $(el).find('img').attr('src');
+        const imgAlt = $(el).find('img').attr('alt');
+
+        const hasCaption = $(el).find('.wp-caption-text').length > 0;
+        const imgCaption = hasCaption ? $(el).find('.wp-caption-text').text() : '';
+
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: imgSrc,
+                alt: imgAlt,
+                caption: imgCaption
+            }
+        };
+
+        if (hasCaption) {
+            cardOpts.payload.caption = imgCaption;
+        }
+
+        $(el).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
     $html('img').each((i, img) => {

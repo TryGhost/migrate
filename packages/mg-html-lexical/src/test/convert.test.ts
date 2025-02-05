@@ -249,4 +249,35 @@ describe('Convert', function () {
 
         assert.equal(ctx.result.db[0].data.posts.length, 1);
     });
+
+    test('Handles empty content', async function () {
+        let theFakeLogger = new fakeLoggerClass();
+
+        const ctx: any = {
+            logger: theFakeLogger,
+            options: {
+                fallBackHTMLCard: false
+            },
+            result: {
+                posts: [
+                    {
+                        title: 'Title 1',
+                        slug: 'slug-1',
+                        html: ''
+                    }
+                ]
+            }
+        };
+
+        const tasks = convert(ctx, false);
+
+        const taskRunner = makeTaskRunner(tasks, {
+            renderer: 'silent'
+        });
+
+        await taskRunner.run();
+
+        assert.deepEqual(Object.keys(ctx.result.posts[0]), ['title', 'slug', 'lexical']);
+        assert.equal(ctx.result.posts[0].lexical, '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}');
+    });
 });

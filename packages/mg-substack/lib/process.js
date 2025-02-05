@@ -7,6 +7,7 @@ import SimpleDom from 'simple-dom';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
+import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
 import {decode} from 'html-entities';
 import {parseSrcset} from 'srcset';
 import {_base as debugFactory} from '@tryghost/debug';
@@ -110,6 +111,11 @@ const processContent = (post, siteUrl, options) => {
         decodeEntities: false,
         scriptingEnabled: false
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+
+    // Change paywall card to comment
+    $html('.paywall-jump').each((i, el) => {
+        $(el).replaceWith('<!--members-only-->');
+    });
 
     // Convert bucketeer image paths
     $html('a[href^="https://bucketeer-"], img[src^="https://bucketeer-"]').each((i, el) => {
@@ -410,78 +416,44 @@ const processContent = (post, siteUrl, options) => {
 
     $html('.digest-post-embed').each((i, el) => {
         const attrsRaw = $(el).attr('data-attrs');
-        const attrs = JSON.parse(attrsRaw);
 
-        let theHtml = [];
+        let attrs;
 
-        if (attrs.section_name) {
-            theHtml.push(`<h6>${attrs.section_name}</h6>`);
+        // Return early if JSON is invalid
+        try {
+            attrs = JSON.parse(attrsRaw);
+        } catch (error) {
+            return;
         }
 
-        if (attrs.title) {
-            theHtml.push(`<h3>`);
+        const postUrl = attrs.canonical_url;
+        const postTitle = attrs.title;
+        const postCaption = attrs.caption;
+        const postImage = attrs.cover_image;
+        const postIcon = attrs.publication_logo_url;
+        const postAuthor = attrs?.publishedBylines[0]?.name ?? null;
+        const postPubName = attrs.publication_name;
 
-            if (attrs.canonical_url) {
-                theHtml.push(`<a href="${attrs.canonical_url}">`);
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                url: postUrl,
+                metadata: {
+                    url: postUrl,
+                    title: postTitle,
+                    description: postCaption,
+                    icon: postIcon,
+                    thumbnail: postImage,
+                    publisher: postPubName,
+                    author: postAuthor
+                },
+                caption: null
             }
+        };
 
-            theHtml.push(attrs.title);
+        const bookmarkHtml = serializer.serialize(bookmarkCard.render(cardOpts));
 
-            if (attrs.canonical_url) {
-                theHtml.push(`</a>`);
-            }
-
-            theHtml.push(`</h3>`);
-        }
-
-        if (attrs.publishedBylines.length || attrs.post_date) {
-            theHtml.push(`<p>`);
-
-            if (attrs.publishedBylines) {
-                let bylines = [];
-
-                attrs.publishedBylines.forEach((byline) => {
-                    bylines.push(byline.name);
-                });
-
-                theHtml.push(bylines.join(', '));
-            }
-
-            if (attrs.publishedBylines.length && attrs.post_date) {
-                theHtml.push(` &bull; `);
-            }
-
-            if (attrs.post_date) {
-                theHtml.push(new Date(attrs.post_date).toLocaleString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}));
-            }
-
-            theHtml.push(`</p>`);
-        }
-
-        if (attrs.cover_image) {
-            if (attrs.canonical_url) {
-                theHtml.push(`<a href="${attrs.canonical_url}">`);
-            }
-
-            theHtml.push(`<img src="${attrs.cover_image}" alt="${attrs.cover_image_alt || ''}">`);
-
-            if (attrs.canonical_url) {
-                theHtml.push(`</a>`);
-            }
-        }
-
-        if (attrs.caption) {
-            theHtml.push(`<p>`);
-            theHtml.push(attrs.caption);
-
-            if (attrs.canonical_url) {
-                theHtml.push(`<br><br><a href="${attrs.canonical_url}">Read full story &rarr;</a>`);
-            }
-
-            theHtml.push(`</p>`);
-        }
-
-        $(el).replaceWith(theHtml.join(''));
+        $(el).replaceWith(bookmarkHtml);
     });
 
     $html('a > style').each((i, style) => {

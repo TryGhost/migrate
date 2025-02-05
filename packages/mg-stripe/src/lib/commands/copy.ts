@@ -48,7 +48,9 @@ export async function copy(options: Options) {
         // Get delay
         const delay = (options.dryRun) ? 1 : (await new DelayPrompt().ask(options.delay));
 
-        Logger.shared.startSpinner('');
+        if (!options.dryRun) {
+            Logger.shared.startSpinner('');
+        }
 
         if (!options.dryRun) {
             Logger.shared.succeed(`No payments will be collected for the next ${chalk.green(delay)} hour(s)`);
