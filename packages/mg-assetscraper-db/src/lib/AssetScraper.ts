@@ -463,26 +463,63 @@ export default class AssetScraper {
             });
         };
 
+        const addSubTasks = (items: any, type: string) => {
+            let subTasks: any = [];
+
+            items.forEach((item: any) => {
+                subTasks.push({
+                    title: `Assets for ${type} ${item?.slug ?? item?.name ?? item.id ?? item.post_id}`,
+                    task: async () => {
+                        item = await this.inlinePostTagUserObject(item);
+                    }
+                });
+            });
+
+            return makeTaskRunner(subTasks, {
+                concurrent: false
+            });
+        };
+
         // Posts
         const thePosts = this.#ctx?.posts ?? this.#ctx?.result?.data?.posts ?? [];
-        addTasks(thePosts, 'post');
+        tasks.push({
+            title: `Posts`,
+            task: async () => {
+                return addSubTasks(thePosts, 'posts');
+            }
+        });
 
         // Posts Meta
         const thePostMeta = this.#ctx?.posts_meta ?? this.#ctx?.result?.data?.posts_meta ?? [];
-        addTasks(thePostMeta, 'posts meta');
+        tasks.push({
+            title: `Posts Meta`,
+            task: async () => {
+                return addSubTasks(thePostMeta, 'posts meta');
+            }
+        });
 
         // Tags
         const theTags = this.#ctx?.tags ?? this.#ctx?.result?.data?.tags ?? [];
-        addTasks(theTags, 'tags');
+        tasks.push({
+            title: `Tags`,
+            task: async () => {
+                return addSubTasks(theTags, 'tags');
+            }
+        });
 
         // Users
         const theUsers = this.#ctx?.users ?? this.#ctx?.result?.data?.users ?? [];
-        addTasks(theUsers, 'users');
+        tasks.push({
+            title: `Users`,
+            task: async () => {
+                return addSubTasks(theUsers, 'users');
+            }
+        });
 
         // Settings
         const theSettings = this.#ctx?.settings ?? this.#ctx?.result?.data?.settings ?? [];
         tasks.push({
-            title: `Assets for settings`,
+            title: `Settings`,
             task: async () => {
                 await this.doSettingsObject(theSettings);
             }
@@ -491,7 +528,7 @@ export default class AssetScraper {
         // Custom theme settings
         const customThemeSettings = this.#ctx?.custom_theme_settings ?? this.#ctx?.result?.data?.custom_theme_settings ?? [];
         tasks.push({
-            title: `Assets for custom theme settings`,
+            title: `Custom theme settings`,
             task: async () => {
                 await this.doCustomThemeSettingsObject(customThemeSettings);
             }
@@ -500,7 +537,7 @@ export default class AssetScraper {
         // Snippets
         const theSnippets = this.#ctx?.snippets ?? this.#ctx?.result?.data?.snippets ?? [];
         tasks.push({
-            title: `Assets for snippets`,
+            title: `Snippets`,
             task: async () => {
                 // await this.doCustomThemeSettingsObject(customThemeSettings);
                 // inlinePostTagUserObject
