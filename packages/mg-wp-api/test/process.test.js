@@ -618,6 +618,14 @@ describe('Process WordPress HTML', function () {
 
         expect(processed).toEqual('<figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.org/wp-content/uploads/2021/01/landscape.jpg" width="1000" height="667" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.org/wp-content/uploads/2020/12/portrait.jpg" width="1000" height="750" loading="lazy" alt></div></div></div></figure>');
     });
+
+    test('Outputs unchanged HTML is `rawHtml` option is set', async function () {
+        const html = `<p style="font-weight: 400;">Hello</p><img data-src="https://example.com/image.jpg" />`;
+
+        const processed = await processor.processContent({html, options: {rawHtml: true}});
+
+        expect(processed).toEqual('<!--kg-card-begin: html--><p style="font-weight: 400;">Hello</p><img data-src="https://example.com/image.jpg" /><!--kg-card-end: html-->');
+    });
 });
 
 describe('Process shortcodes', function () {

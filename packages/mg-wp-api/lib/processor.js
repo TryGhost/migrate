@@ -332,6 +332,11 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         return '';
     }
 
+    // If rawHtml is set, don't process the HTML and wrap content in a HTML card
+    if (options?.rawHtml) {
+        return `<!--kg-card-begin: html-->${html}<!--kg-card-end: html-->`;
+    }
+
     const $html = $.load(html, {
         decodeEntities: false,
         scriptingEnabled: false

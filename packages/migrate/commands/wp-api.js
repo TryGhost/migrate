@@ -78,6 +78,10 @@ const setup = (sywac) => {
         defaultValue: true,
         desc: 'Import pages'
     });
+    sywac.boolean('--rawHtml', {
+        defaultValue: false,
+        desc: 'Don\'t process HTML and wrap in a HTML card'
+    });
     sywac.boolean('--fallBackHTMLCard', {
         defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
