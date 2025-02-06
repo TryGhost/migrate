@@ -682,7 +682,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     });
 
     // Handle list-based galleries
-    $html('ul.wp-block-gallery').each((i, el) => {
+    $html('.wp-block-gallery').each((i, el) => {
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
             payload: {

@@ -473,14 +473,6 @@ describe('Process WordPress HTML', function () {
         expect(processed).toEqual('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sagittis vel purus sed placerat.</p><p>Proin est justo, mollis non turpis et, suscipit consequat orci.</p>');
     });
 
-    test('Can remove elements by CSS selector', async function () {
-        const html = `<figure class="is-layout-flex wp-block-gallery-1 wp-block-gallery has-nested-images columns-default is-cropped"><figure class="wp-block-image size-large"><img src="https://example.com/wp-content/uploads/2022/08/1.jpg" alt="" /></figure><figure class="wp-block-image size-large"><img src="https://example.com/wp-content/uploads/2022/08/2.jpg" /></figure><figure class="wp-block-image size-large"><img src="https://example.com/wp-content/uploads/2022/08/3.jpg" alt="" /><figcaption class="wp-element-caption">My caption</figcaption></figure></figure>`;
-
-        const processed = await processor.processContent({html});
-
-        expect(processed).toEqual('<figure class="wp-block-image size-large"><img src="https://example.com/wp-content/uploads/2022/08/1.jpg" alt></figure><figure class="wp-block-image size-large"><img src="https://example.com/wp-content/uploads/2022/08/2.jpg"></figure><figure class="wp-block-image size-large"><img src="https://example.com/wp-content/uploads/2022/08/3.jpg" alt><figcaption class="wp-element-caption">My caption</figcaption></figure>');
-    });
-
     test('Can change image data-gif to src', async function () {
         const html = '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-gif="https://example.com/wp-content/uploads/2022/08/3.gif" />';
 
@@ -606,6 +598,25 @@ describe('Process WordPress HTML', function () {
         const processed = await processor.processContent({html});
 
         expect(processed).toEqual('<figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo1.jpg" width="500" height="375" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo2.jpg" width="500" height="375" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo4.jpg" width="500" height="375" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo3.jpg" width="500" height="375" loading="lazy" alt></div></div></div></figure>');
+    });
+
+    test('Can convert a figure-based gallery', async function () {
+        const html = `<figure class="wp-block-gallery has-nested-images columns-default is-cropped wp-block-gallery-1 is-layout-flex wp-block-gallery-is-layout-flex">
+                <figure class="wp-block-image size-large">
+                    <a href="https://example.org/wp-content/uploads/2021/01/landscape.jpg">
+                        <img width="1000"  height="667"  class="wp-image-24259" src="https://example.org/wp-content/uploads/2021/01/landscape.jpg">
+                    </a>
+                </figure>
+                <figure class="wp-block-image size-large">
+                    <a href="https://example.org/wp-content/uploads/2020/12/portrait.jpg">
+                        <img width="1000"  height="750"  class="wp-image-24166" src="https://example.org/wp-content/uploads/2020/12/portrait.jpg"  >
+                    </a>
+                </figure>
+            </figure>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.org/wp-content/uploads/2021/01/landscape.jpg" width="1000" height="667" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.org/wp-content/uploads/2020/12/portrait.jpg" width="1000" height="750" loading="lazy" alt></div></div></div></figure>');
     });
 });
 
