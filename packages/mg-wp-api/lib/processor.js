@@ -53,7 +53,7 @@ const largerSrc = (imageSrc) => {
 
     let newSrc = imageSrc;
 
-    const fileSizeRegExp = new RegExp('-([0-9]+x[0-9]+).([a-zA-Z]{2,4})$');
+    const fileSizeRegExp = new RegExp('-([0-9]{2,}x[0-9]{2,}).([a-zA-Z]{2,4})$');
     const fileSizeMatches = imageSrc.match(fileSizeRegExp);
 
     if (fileSizeMatches) {
