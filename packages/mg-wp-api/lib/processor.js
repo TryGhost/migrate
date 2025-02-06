@@ -369,6 +369,11 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         $(toc).remove();
     });
 
+    // <style> blocks don't belong in content - codeinjection_head is the place for these
+    $html('style').each((i, el) => {
+        $(el).remove();
+    });
+
     if (excerptSelector) {
         $html(excerptSelector).first().each((i, excerpt) => {
             $(excerpt).remove();
