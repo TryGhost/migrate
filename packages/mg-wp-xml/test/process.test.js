@@ -1,4 +1,3 @@
-import {jest} from '@jest/globals';
 import path from 'node:path';
 import {promises as fs} from 'node:fs';
 import $ from 'cheerio';
@@ -12,12 +11,6 @@ const readSync = async (name) => {
 };
 
 describe('Process', function () {
-    beforeEach(function () {
-        process.processHTMLContent = jest.fn(() => {
-            return 'Example content';
-        });
-    });
-
     test('Can get site URL from XML file', async function () {
         let ctx = {
             options: {}
@@ -441,5 +434,15 @@ describe('Process', function () {
             _et_dynamic_cached_shortcodes: [],
             _et_dynamic_cached_attributes: []
         });
+    });
+});
+
+describe('HTML Processing', function () {
+    test('Outputs unchanged HTML is `rawHtml` option is set', async function () {
+        const html = `<p style="font-weight: 400;">Hello</p><img data-src="https://example.com/image.jpg" />`;
+
+        const processed = await process.processHTMLContent({html, options: {rawHtml: true}});
+
+        expect(processed).toEqual('<!--kg-card-begin: html--><p style="font-weight: 400;">Hello</p><img data-src="https://example.com/image.jpg" /><!--kg-card-end: html-->');
     });
 });

@@ -98,6 +98,12 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--rawHtml',
+        defaultValue: false,
+        desc: 'Don\'t process HTML and wrap in a HTML card'
+    },
+    {
+        type: 'boolean',
         flags: '--fallBackHTMLCard',
         defaultValue: true,
         desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'

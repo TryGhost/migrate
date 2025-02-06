@@ -132,6 +132,11 @@ const preProcessContent = async ({html}) => { // eslint-disable-line no-shadow
 };
 
 const processHTMLContent = async (args) => {
+    // If rawHtml is set, don't process the HTML and wrap content in a HTML card
+    if (args?.options?.rawHtml) {
+        return `<!--kg-card-begin: html-->${args.html}<!--kg-card-end: html-->`;
+    }
+
     return await MgWpAPI.process.processContent({
         html: args.html,
         excerptSelector: args.excerptSelector,
