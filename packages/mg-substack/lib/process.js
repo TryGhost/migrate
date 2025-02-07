@@ -414,6 +414,10 @@ const processContent = (post, siteUrl, options) => {
         $(anchor).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
+    $html('.comment').each((i, el) => {
+        $(el).remove();
+    });
+
     $html('.digest-post-embed').each((i, el) => {
         const attrsRaw = $(el).attr('data-attrs');
 
