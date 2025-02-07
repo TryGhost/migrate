@@ -838,7 +838,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         expect(processed.data.html).toEqual('<p>Lorem ipsum</p>\n' +
         '\n' +
-        '                <!--kg-card-begin: html--><figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.substack.com/p/example-post"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Lorem ipsum, This is the Title I’m Showing You</div><div class="kg-bookmark-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad it’s veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat …</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://bucketeer-1234.s3.amazonaws.com/public/images/5678_680x680.png"><span class="kg-bookmark-author">Example Site</span></div></div></a></figure><!--kg-card-end: html-->\n' +
+        '                <!--kg-card-begin: html--><figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.substack.com/p/example-post"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Lorem ipsum, This is the Title I’m Showing You</div><div class="kg-bookmark-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad it’s veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat …</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://substack-post-media.s3.amazonaws.com/public/images/5678_680x680.png"><span class="kg-bookmark-author">Example Site</span></div></div></a></figure><!--kg-card-end: html-->\n' +
         '\n' +
         '                <p>Dolor Simet</p>');
     });
@@ -950,7 +950,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        expect(processed.data.html).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-abcd1234-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2Fefgh5678-fad6-49df-b659-b16976e1ce59_1024x683.jpeg" class="kg-image" alt loading="lazy"><figcaption>My image</figcaption></figure><p>Hello</p>');
+        expect(processed.data.html).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://substack-post-media.s3.amazonaws.com/public/images/efgh5678-fad6-49df-b659-b16976e1ce59_1024x683.jpeg" class="kg-image" alt loading="lazy"><figcaption>My image</figcaption></figure><p>Hello</p>');
     });
 
     test('Converts galleries', async function () {
@@ -1042,7 +1042,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const processed = await processContent(post, url, options);
 
         expect(processed.data.html).not.toInclude('<figure class="frontend-components-ImageGallery-module__imageGallery--shoTe">');
-        expect(processed.data.html).toInclude('<figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1234-2021-4a0e-b815-90b9ae74d5a0_7008x4672.jpeg" width="7008" height="4672" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabc1235-6563-4aa8-bde7-e5b3ddcd2729_4000x6000.jpeg" width="4000" height="6000" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1236-c233-4e0d-87c0-6a0d128bc07d_3600x2025.jpeg" width="3600" height="2025" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1237-2469-4db8-874b-36ad8733bd97_8048x5368.jpeg" width="8048" height="5368" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1238-2236-442c-9d9a-b0387c946a18_4032x3024.jpeg" width="4032" height="3024" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1239-e31d-401c-b94f-ceae393d95f6_9504x6336.jpeg" width="9504" height="6336" loading="lazy" alt></div></div></div><figcaption>My caption</figcaption></figure>');
+        expect(processed.data.html).toInclude('<figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-2021-4a0e-b815-90b9ae74d5a0_7008x4672.jpeg" width="7008" height="4672" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abc1235-6563-4aa8-bde7-e5b3ddcd2729_4000x6000.jpeg" width="4000" height="6000" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1236-c233-4e0d-87c0-6a0d128bc07d_3600x2025.jpeg" width="3600" height="2025" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1237-2469-4db8-874b-36ad8733bd97_8048x5368.jpeg" width="8048" height="5368" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1238-2236-442c-9d9a-b0387c946a18_4032x3024.jpeg" width="4032" height="3024" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1239-e31d-401c-b94f-ceae393d95f6_9504x6336.jpeg" width="9504" height="6336" loading="lazy" alt></div></div></div><figcaption>My caption</figcaption></figure>');
     });
 
     test('Converts embeded galleries', async function () {
@@ -1167,7 +1167,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const processed = await processContent(post, url, options);
 
         expect(processed.data.html).not.toInclude('<div class="digest-post-embed"');
-        expect(processed.data.html).toInclude('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://www.exampe.com/p/the-link"><div class="kg-bookmark-content"><div class="kg-bookmark-title">The Title</div><div class="kg-bookmark-description">The caption</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1234-9772-40c8-bc77-0ae3e6ec4774_205x205.png" alt><span class="kg-bookmark-author">Pub Name</span><span class="kg-bookmark-publisher">Author Name</span></div></div><div class="kg-bookmark-thumbnail"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fabcd1234-1a48-4dd3-ac53-06900dc9a92d_1200x800.jpeg" alt></div></a></figure>');
+        expect(processed.data.html).toInclude('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://www.exampe.com/p/the-link"><div class="kg-bookmark-content"><div class="kg-bookmark-title">The Title</div><div class="kg-bookmark-description">The caption</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-9772-40c8-bc77-0ae3e6ec4774_205x205.png" alt><span class="kg-bookmark-author">Pub Name</span><span class="kg-bookmark-publisher">Author Name</span></div></div><div class="kg-bookmark-thumbnail"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-1a48-4dd3-ac53-06900dc9a92d_1200x800.jpeg" alt></div></a></figure>');
     });
 
     test('Skips post embed if JSON is invalid', async function () {
@@ -1201,7 +1201,7 @@ describe('Image handling', function () {
 
         const processed = await processContent(post, 'https://example.com', {});
 
-        expect(processed.data.html).toEqual('<figure class="kg-card kg-image-card"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-abcdabcd-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2F12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png" class="kg-image" alt loading="lazy"></figure>');
+        expect(processed.data.html).toEqual('<figure class="kg-card kg-image-card"><img src="https://substack-post-media.s3.amazonaws.com/public/images/12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png" class="kg-image" alt loading="lazy"></figure>');
     });
 
     test('Handle images that link to themselves with no srcset', async function () {
@@ -1216,7 +1216,7 @@ describe('Image handling', function () {
 
         const processed = await processContent(post, 'https://example.com', {});
 
-        expect(processed.data.html).toEqual('<figure class="kg-card kg-image-card"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https://bucketeer-abcdabcd-baa3-437e-9518-adb32be77984.s3.amazonaws.com/public/images/12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png" class="kg-image" alt loading="lazy"></figure>');
+        expect(processed.data.html).toEqual('<figure class="kg-card kg-image-card"><img src="https://substack-post-media.s3.amazonaws.com/public/images/12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png" class="kg-image" alt loading="lazy"></figure>');
     });
 
     test('Handle images with external links', async function () {
@@ -1231,7 +1231,7 @@ describe('Image handling', function () {
 
         const processed = await processContent(post, 'https://example.com', {});
 
-        expect(processed.data.html).toEqual('<figure class="kg-card kg-image-card"><a href="https://ghost.org"><img src="https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-abcdabcd-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2F12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png" class="kg-image" alt loading="lazy"></a></figure>');
+        expect(processed.data.html).toEqual('<figure class="kg-card kg-image-card"><a href="https://ghost.org"><img src="https://substack-post-media.s3.amazonaws.com/public/images/12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png" class="kg-image" alt loading="lazy"></a></figure>');
     });
 
     test('Handles images with no src attribute', async function () {
@@ -1282,6 +1282,14 @@ describe('Image handling', function () {
 
         let larger = largeImageUrl(originalSrc);
 
-        expect(larger).toEqual('https://substackcdn.com/image/fetch/w_2000,h_2000,f_jpg,q_auto:good,fl_progressive:steep,g_auto/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F3c4b3aa9-abcd-efgh-1234-1234567891234_4368x2151.png');
+        expect(larger).toEqual('https://substack-post-media.s3.amazonaws.com/public/images/3c4b3aa9-abcd-efgh-1234-1234567891234_4368x2151.png');
+    });
+
+    test('Skips upscale images and remove crop if image doesn\'t need it', async () => {
+        let originalSrc = 'https://substack-post-media.s3.amazonaws.com/public/images/db9ef48f-933f-48f0-a6c4-1234567891234_4368x2151.png';
+
+        let larger = largeImageUrl(originalSrc);
+
+        expect(larger).toEqual('https://substack-post-media.s3.amazonaws.com/public/images/db9ef48f-933f-48f0-a6c4-1234567891234_4368x2151.png');
     });
 });

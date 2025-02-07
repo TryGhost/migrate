@@ -36,10 +36,16 @@ const readFiles = async (files, postsDir) => {
     return postContent;
 };
 
-const largeImageUrl = (src) => {
-    src = src.replace(/w_[0-9]{2,5},h_[0-9]{2,5}/, 'w_2000,h_2000');
-    src = src.replace(',c_fill,', ',');
-    return src;
+const largeImageUrl = (path) => {
+    if (path.includes('https://substackcdn.com/image/fetch/')) {
+        path = decodeURIComponent(path.split('/').pop());
+    }
+
+    if (path.includes('https://bucketeer-')) {
+        path = path.replace(/https:\/\/.*.s3.amazonaws.com/gmi, 'https://substack-post-media.s3.amazonaws.com');
+    }
+
+    return path;
 };
 
 const getUnsizedImageName = (str) => {
@@ -117,22 +123,6 @@ const processContent = (post, siteUrl, options) => {
         $(el).replaceWith('<!--members-only-->');
     });
 
-    // Convert bucketeer image paths
-    $html('a[href^="https://bucketeer-"], img[src^="https://bucketeer-"]').each((i, el) => {
-        const href = $(el).attr('href') ?? false;
-        const src = $(el).attr('src') ?? false;
-
-        const prependString = 'https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/';
-
-        if (href) {
-            $(el).attr('href', `${prependString}${encodeURI(href)}`);
-        }
-
-        if (src) {
-            $(el).attr('src', `${prependString}${encodeURI(src)}`);
-        }
-    });
-
     // Empty text elements are commonplace and are not needed
     $html('p').each((i, el) => {
         let content = $(el).html().trim();
@@ -149,7 +139,7 @@ const processContent = (post, siteUrl, options) => {
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
             payload: {
-                src: attrsObj.src,
+                src: largeImageUrl(attrsObj.src),
                 alt: attrsObj.title,
                 caption: attrsObj.title
             }
@@ -305,7 +295,7 @@ const processContent = (post, siteUrl, options) => {
 
             items.push({
                 fileName: basename(item.src),
-                src: item.src,
+                src: largeImageUrl(item.src),
                 width: (dimensions) ? dimensions.width : '100',
                 height: (dimensions) ? dimensions.height : '100'
             });
@@ -446,7 +436,7 @@ const processContent = (post, siteUrl, options) => {
                     url: postUrl,
                     title: postTitle,
                     description: postCaption,
-                    icon: postIcon,
+                    icon: largeImageUrl(postIcon),
                     thumbnail: postImage,
                     publisher: postPubName,
                     author: postAuthor
@@ -651,6 +641,20 @@ const processContent = (post, siteUrl, options) => {
         $figure.append($script);
 
         $(el).replaceWith($figure);
+    });
+
+    // For each image and link, alter the path to remove cropping & sizing for image paths
+    $html('img[src], a[href]').each((i, el) => {
+        const src = $(el).attr('src');
+        const href = $(el).attr('href');
+
+        if (src) {
+            $(el).attr('src', largeImageUrl(src));
+        }
+
+        if (href) {
+            $(el).attr('href', largeImageUrl(href));
+        }
     });
 
     // convert HTML back to a string
