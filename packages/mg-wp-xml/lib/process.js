@@ -174,6 +174,7 @@ const processPost = async ($post, users, options) => {
         data: {
             slug: $($post).children('wp\\:post_name').text().replace(/(\.html)/i, ''),
             title: $($post).children('title').text(),
+            comment_id: $($post)?.find('wp\\:post_id')?.text() ?? null,
             status: $($post).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
             published_at: postDate,
             created_at: postDate,

@@ -42,6 +42,7 @@ describe('Process', function () {
         expect(data).toBeObject();
         expect(data.slug).toEqual('basic-post');
         expect(data.title).toEqual('Basic Post');
+        expect(data.comment_id).toEqual('4');
         expect(data.status).toEqual('published');
         expect(data.published_at).toEqual(new Date('2013-06-07T03:00:44.000Z'));
         expect(data.created_at).toEqual(new Date('2013-06-07T03:00:44.000Z'));
