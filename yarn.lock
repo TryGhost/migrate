@@ -3133,12 +3133,12 @@
   resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-4.2.0.tgz#f585749cc03879de0912cf0068872cf068adc8a3"
   integrity sha512-WXKWtcMwF6lEJNrHyaZoGLsufFcfqER3dx6d4o9gbJ2m3WY/Xgq9J/GJWaUgxVzHU0IsPbwCSEtYlUEiTCgXPA==
 
-"@tryghost/kg-default-cards@10.0.10":
-  version "10.0.10"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-default-cards/-/kg-default-cards-10.0.10.tgz#e5d1524cf4036ffbb6b84f416a30c6955c60fae5"
-  integrity sha512-+UooaAvNtpm5kSkNW3rUsD7lEAna7QXnhGEWbCn8eVfFvrmEHXaCrLBNtSqOcEa5RwJHri+Ex67so1gVzaGJzw==
+"@tryghost/kg-default-cards@10.1.0":
+  version "10.1.0"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-default-cards/-/kg-default-cards-10.1.0.tgz#c069c892face23dcac8f2c14cfb671aa7b7b33b3"
+  integrity sha512-M38c0CUKmgkHAi71+r6t1OZ9tI8sdA7Vl6ujgbS5kKkZ2Lri7TUmjUSZpBWM+PlyzVtL8iaXq3/lGrUwrbKfng==
   dependencies:
-    "@tryghost/kg-markdown-html-renderer" "7.0.8"
+    "@tryghost/kg-markdown-html-renderer" "7.1.0"
     "@tryghost/string" "0.2.12"
     "@tryghost/url-utils" "4.4.8"
     handlebars "^4.7.6"
@@ -3194,6 +3194,21 @@
   version "7.0.8"
   resolved "https://registry.yarnpkg.com/@tryghost/kg-markdown-html-renderer/-/kg-markdown-html-renderer-7.0.8.tgz#98312ac373d2d9f9509cefdd2dfe9642e0b18a1e"
   integrity sha512-B8vny0XLgN82r2A6sO5SBNq0Dy42ZI+MCgKAoAz3dFmQTS9zi2MyHEPzb1K5JsaTApD3PP384kdH/F4aRDkEoQ==
+  dependencies:
+    "@tryghost/kg-utils" "1.0.29"
+    markdown-it "^14.0.0"
+    markdown-it-footnote "^4.0.0"
+    markdown-it-image-lazy-loading "^2.0.0"
+    markdown-it-lazy-headers "^0.1.3"
+    markdown-it-mark "^4.0.0"
+    markdown-it-sub "^2.0.0"
+    markdown-it-sup "^2.0.0"
+    semver "^7.6.2"
+
+"@tryghost/kg-markdown-html-renderer@7.1.0":
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-markdown-html-renderer/-/kg-markdown-html-renderer-7.1.0.tgz#f0815c9bcef48e5a4eab79e65b29b17befb39be6"
+  integrity sha512-q2vMsQ4XAqhBmuSJJ1hqiDMFT5Km/oOjcHIVSfkUAmf5zX7bHKWxrgt4acoAfRubRChwmwRyP6/GMiSRw4xW0g==
   dependencies:
     "@tryghost/kg-utils" "1.0.29"
     markdown-it "^14.0.0"
