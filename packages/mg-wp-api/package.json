@@ -35,7 +35,7 @@
     "cheerio": "1.0.0-rc.12",
     "html-to-text": "9.0.5",
     "simple-dom": "1.4.0",
-    "tldts": "6.1.77",
+    "tldts": "6.1.78",
     "wpapi": "1.2.2"
   }
 }
