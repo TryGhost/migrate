@@ -6,14 +6,17 @@ import {slugify} from '@tryghost/string';
 import SmartRenderer, {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {fileTypeFromBuffer} from 'file-type';
 import transliterate from 'transliteration';
+import sharp from 'sharp';
 import AssetCache from './AssetCache.js';
 
 // Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/shared/config/overrides.json
-const knownImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/webp'];
+const knownImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/webp', 'image/avif', 'image/heif'];
 const knownMediaTypes = ['video/mp4', 'video/webm', 'video/ogg', 'audio/mpeg', 'audio/vnd.wav', 'audio/wave', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/mp4', 'audio/x-m4a'];
 const knownFileTypes = ['application/pdf', 'application/json', 'application/ld+json', 'application/vnd.oasis.opendocument.presentation', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.text', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/rtf', 'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/xml', 'application/atom+xml'
 ];
 const knownTypes = [...knownImageTypes, ...knownMediaTypes, ...knownFileTypes];
+
+const needsConverting = ['image/avif', 'image/heif'];
 
 export default class AssetScraper {
     /**
@@ -151,11 +154,12 @@ export default class AssetScraper {
     async extractFileDataFromResponse(requestURL: any, response: any) {
         let extension;
         let fileMime;
+        let body = response.body;
 
         // Attempt to get the file extension from the file itself
         // If that fails, or if `.ext` is undefined, get the extension from the file path in the catch
         try {
-            const fileInfo: any = await fileTypeFromBuffer(response.body);
+            const fileInfo: any = await fileTypeFromBuffer(body);
             // console.log({fileInfo});
             extension = fileInfo.ext;
             fileMime = fileInfo.mime;
@@ -164,6 +168,16 @@ export default class AssetScraper {
             fileMime = headers['content-type'];
             // const extensionFromPath = parse(requestURL).ext.split(/[^a-z]/i).filter(Boolean)[0];
             // extension = mime.extension(contentType) || extensionFromPath;
+        }
+
+        // If mime is in array, it needs converting to a supported image format.
+        // To do that, convert the inout buffer to a webp buffer.
+        if (needsConverting.includes(fileMime)) {
+            body = await sharp(body).webp({lossless: true}).toBuffer();
+
+            const newFileInfo: any = await fileTypeFromBuffer(body);
+            extension = newFileInfo.ext;
+            fileMime = newFileInfo.mime;
         }
 
         if (!extension && !fileMime) {
@@ -182,7 +196,7 @@ export default class AssetScraper {
         }).slice(-248).replace(/^-|-$/, '');
 
         return {
-            fileBuffer: response.body,
+            fileBuffer: body,
             fileName: `${fileName}.${extension}`,
             fileMime: fileMime,
             extension: `.${extension}`
@@ -245,6 +259,11 @@ export default class AssetScraper {
             // console.log(`No storage folder found for file mime: ${media.fileMime}`);
             return null;
         }
+
+        // Overwrite the pathname wit the fileName from the downloaded asset, as the format & ext may be different
+        let newSrc = new URL(src);
+        newSrc.pathname = media.fileName;
+        src = newSrc.toString();
 
         const assetFile = await this.resolveFileName(src, folder);
 

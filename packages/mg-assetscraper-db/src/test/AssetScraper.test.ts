@@ -13,11 +13,13 @@ const fixturesPath = join(__dirname, '../../src/test/fixtures');
 describe('Asset Scraper', () => {
     let fileCache: any;
     let jpgImageBuffer: Buffer;
+    let avifImageBuffer: Buffer;
     let mp4VideoBuffer: Buffer;
     let mp3AudioBuffer: Buffer;
 
     beforeAll(async () => {
         jpgImageBuffer = await readFile(join(fixturesPath, '/image.jpg'));
+        avifImageBuffer = await readFile(join(fixturesPath, '/image.avif'));
         mp4VideoBuffer = await readFile(join(fixturesPath, '/video.mp4'));
         mp3AudioBuffer = await readFile(join(fixturesPath, '/audio.mp3'));
     });
@@ -599,6 +601,25 @@ describe('Asset Scraper', () => {
             assert.equal(responseData.extension, '.jpg');
         });
 
+        it('extractFileDataFromResponse avif to webp', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/image.avif')
+                .reply(200, avifImageBuffer);
+
+            const assetScraper = new AssetScraper(fileCache, {}, {});
+            await assetScraper.init();
+
+            const response = await assetScraper.getRemoteMedia('https://example.com/image.avif');
+
+            const responseData: any = await assetScraper.extractFileDataFromResponse('https://example.com/image.avif', response);
+
+            assert.ok(requestMock.isDone());
+            assert.equal(responseData.fileBuffer.constructor.name, 'Buffer');
+            assert.equal(responseData.fileName, 'image-avif.webp');
+            assert.equal(responseData.fileMime, 'image/webp');
+            assert.equal(responseData.extension, '.webp');
+        });
+
         it.todo('Will follow redirects');
         it.todo('test extractFileDataFromResponse to get data from the header is buffer fails');
         it.todo('test extractFileDataFromResponse to return null if no extension or mime');
@@ -709,7 +730,7 @@ describe('Asset Scraper', () => {
 
             await assetScraper.inlinePostTagUserObject(postObj);
 
-            assert.equal(postObj.html, '<picture><source srcset="__GHOST_URL__/content/images/image-768.jpg, __GHOST_URL__/content/images/image-768-1.5x.jpg 1.5x"><source srcset="__GHOST_URL__/content/images/image-480.jpg, __GHOST_URL__/content/images/image-480-2x.jpg 2x"><img src="__GHOST_URL__/content/images/image-320.jpg"></picture>');
+            assert.equal(postObj.html, '<picture><source srcset="__GHOST_URL__/content/images/image-768.jpg, __GHOST_URL__/content/images/image-768-1-5x.jpg 1.5x"><source srcset="__GHOST_URL__/content/images/image-480.jpg, __GHOST_URL__/content/images/image-480-2x.jpg 2x"><img src="__GHOST_URL__/content/images/image-320.jpg"></picture>');
 
             assert.ok(requestMock.isDone());
         });
