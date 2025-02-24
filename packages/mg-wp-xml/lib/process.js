@@ -103,7 +103,7 @@ const processTags = ($wpTerms) => {
     return categories.concat(tags);
 };
 
-const preProcessContent = async ({html}) => { // eslint-disable-line no-shadow
+const preProcessContent = async ({html, options}) => { // eslint-disable-line no-shadow
     // Drafts can have empty post bodies
     if (!html) {
         return html;
@@ -126,7 +126,7 @@ const preProcessContent = async ({html}) => { // eslint-disable-line no-shadow
     html = $html.html();
 
     // Convert shortcodes here to that they don't accidently get wrapped in <p> tags by MarkdownIt
-    html = await MgWpAPI.process.processShortcodes({html});
+    html = await MgWpAPI.process.processShortcodes({html, options});
 
     return html;
 };
@@ -187,7 +187,8 @@ const processPost = async ($post, users, options) => {
     };
 
     post.data.html = await preProcessContent({
-        html: $($post).children('content\\:encoded').text()
+        html: $($post).children('content\\:encoded').text(),
+        options
     });
 
     const mdParser = new MarkdownIt({
@@ -291,6 +292,8 @@ const processAttachment = async ($post) => {
     let attachmentDesc = $($post).find('content\\:encoded').text() || null;
     let attachmentAlt = null;
 
+    let meta = await processWPMeta($post);
+
     $($post).find('wp\\:postmeta').each((i, row) => {
         let metaKey = $(row).find('wp\\:meta_key').text();
         let metaVal = $(row).find('wp\\:meta_value').text();
@@ -304,7 +307,9 @@ const processAttachment = async ($post) => {
         id: attachmentKey,
         url: attachmentUrl,
         description: attachmentDesc,
-        alt: attachmentAlt
+        alt: attachmentAlt,
+        width: meta?._wp_attachment_metadata?.width,
+        height: meta?._wp_attachment_metadata?.height
     };
 };
 

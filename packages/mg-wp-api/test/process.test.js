@@ -766,6 +766,63 @@ const hello () => {
 
         expect(convertedHtml).toEqual('<!--kg-card-begin: html--><audio controls src="/path/to/file.mp3" preload="metadata"></audio><!--kg-card-end: html--> <!--kg-card-begin: html--><audio controls src="/path/to/file.ogg" preload="metadata"></audio><!--kg-card-end: html-->');
     });
+
+    test('Can handle gallery shortcodes', async function () {
+        let html = `[gallery ids="123,234,345,456" columns="4" size="full"]`;
+
+        let options = {
+            attachments: [
+                {
+                    id: '123',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/123.jpg',
+                    description: null,
+                    alt: 'Image 123 alt text',
+                    width: 1200,
+                    height: 800
+                },
+                {
+                    id: '234',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/234.jpg',
+                    description: null,
+                    alt: '',
+                    width: 1200,
+                    height: 800
+                },
+                {
+                    id: '345',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/345.jpg',
+                    description: null,
+                    alt: '',
+                    width: 1200,
+                    height: 800
+                },
+                {
+                    id: '456',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/456.jpg',
+                    description: null,
+                    alt: '',
+                    width: 1200,
+                    height: 800
+                }
+            ]
+        };
+
+        let convertedHtml = await processor.processShortcodes({html, options});
+
+        expect(convertedHtml).toEqual('<figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/123.jpg" width="1200" height="800" loading="lazy" alt="Image 123 alt text"></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/234.jpg" width="1200" height="800" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/345.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/456.jpg" width="1200" height="800" loading="lazy" alt></div></div></div></figure>');
+    });
+
+    test('Will skip gallery shortcodes if no attachments avaliable', async function () {
+        let html = `[gallery ids="123,234,345,456" columns="4" size="full"]`;
+
+        let options = {
+            attachments: []
+        };
+
+        let convertedHtml = await processor.processShortcodes({html, options});
+
+        expect(convertedHtml).toEqual('[gallery ids="123,234,345,456" columns="4" size="full"]');
+    });
 });
 
 describe('wpCDNToLocal', function () {

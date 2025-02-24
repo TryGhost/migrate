@@ -173,8 +173,9 @@ const processExcerpt = (html, excerptSelector = false) => {
     }
 };
 
-const processShortcodes = async ({html}) => {
+const processShortcodes = async ({html, options}) => {
     const shortcodes = new Shortcodes();
+    const attachments = options?.attachments ?? null;
 
     shortcodes.add('vc_btn', ({attrs}) => {
         let buttonHref = attrs?.link ?? false;
@@ -252,6 +253,47 @@ const processShortcodes = async ({html}) => {
         return `<iframe src="${attrs.src}" height="${attrs.height}" style="border:0; width: 100%;" loading="lazy"></iframe>`;
     });
 
+    if (attachments && attachments.length) {
+        shortcodes.add('gallery', ({attrs}) => {
+            // Convert `ids` param to array of images
+            const images = attrs?.ids.split(',').map((i) => {
+                let idInt = parseInt(i.trim());
+                let foundAttachment = _.find(attachments, (item) => {
+                    return parseInt(item.id) === idInt;
+                });
+                return foundAttachment;
+            });
+
+            let items = [];
+
+            images.forEach((item) => {
+                items.push({
+                    fileName: basename(item.url),
+                    src: item.url,
+                    alt: item.alt,
+                    width: item.width,
+                    height: item.height
+                });
+            });
+
+            items = items.map((item, index) => {
+                return {
+                    ...item,
+                    row: Math.floor(index / 3)
+                };
+            });
+
+            let cardOpts = {
+                env: {dom: new SimpleDom.Document()},
+                payload: {
+                    images: items
+                }
+            };
+
+            return serializer.serialize(galleryCard.render(cardOpts));
+        });
+    }
+
     shortcodes.add('sourcecode', ({attrs, content}) => {
         let captionString = (attrs?.title) ? `<figcaption>${attrs.title}</figcaption>` : '';
         let classString = (attrs?.language) ? `language-${attrs.language}` : '';
@@ -325,7 +367,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         allowRemoteScraping = true;
     }
 
-    html = await processShortcodes({html});
+    html = await processShortcodes({html, options});
 
     // Drafts can have empty post bodies
     if (!html) {
