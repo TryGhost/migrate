@@ -48,6 +48,7 @@
     "file-type": "19.6.0",
     "fs-extra": "11.2.0",
     "sequelize": "6.37.5",
+    "sharp": "0.33.5",
     "sqlite3": "5.1.7",
     "transliteration": "2.3.5",
     "uuid": "11.0.2"
