@@ -103,11 +103,38 @@ const processTags = ($wpTerms) => {
     return categories.concat(tags);
 };
 
+const getYouTubeID = (videoUrl) => {
+    const arr = videoUrl.split(/(vi\/|v%3D|v=|\/v\/|youtu\.be\/|\/embed\/)/);
+    return undefined !== arr[2] ? arr[2].split(/[^\w-]/i)[0] : arr[0];
+};
+
 const preProcessContent = async ({html, options}) => { // eslint-disable-line no-shadow
     // Drafts can have empty post bodies
     if (!html) {
         return html;
     }
+
+    // Split content by line
+    const splitIt = html.split(/\r?\n/);
+
+    // Regexp to find lines that only contain a YouTube link
+    const youTubeLine = new RegExp('^((?:https?:)?\\/\\/)?((?:www|m)\\.)?((?:youtube(?:-nocookie)?\\.com|youtu.be))(\\/(?:[\\w\\-]+\\?v=|embed\\/|live\\/|v\\/)?)([\\w\\-]+)(\\S+)?$');
+
+    // For each line, test against the regexp above
+    splitIt.forEach((line, index, theArray) => {
+        if (youTubeLine.test(line.trim())) {
+            const theId = getYouTubeID(line);
+
+            const replaceWith = `<iframe loading="lazy" title="" width="160" height="9" src="https://www.youtube.com/embed/${theId}?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>`;
+
+            return theArray[index] = replaceWith;
+        }
+
+        return theArray[index] = line;
+    });
+
+    // Join the separated lines
+    html = splitIt.join('\n');
 
     const $html = $.load(html, {
         decodeEntities: false

@@ -446,4 +446,40 @@ describe('HTML Processing', function () {
 
         expect(processed).toEqual('<!--kg-card-begin: html--><p style="font-weight: 400;">Hello</p><img data-src="https://example.com/image.jpg" /><!--kg-card-end: html-->');
     });
+
+    test('Converts YouTube line to embed', async function () {
+        const html = `Hello world
+https://www.youtube.com/watch?v=ABCD1234xYz
+Lorem Ipsum`;
+
+        const processed = await process.preProcessContent({html});
+
+        expect(processed).toEqual('<html><head></head><body>Hello world\n' +
+        '<iframe loading="lazy" title="" width="160" height="9" src="https://www.youtube.com/embed/ABCD1234xYz?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>\n' +
+        'Lorem Ipsum</body></html>');
+    });
+
+    test('Converts YouTube line with spaces to embed', async function () {
+        const html = `Hello world
+            https://www.youtube.com/watch?v=ABCD1234xYz
+Lorem Ipsum`;
+
+        const processed = await process.preProcessContent({html});
+
+        expect(processed).toEqual('<html><head></head><body>Hello world\n' +
+        '<iframe loading="lazy" title="" width="160" height="9" src="https://www.youtube.com/embed/ABCD1234xYz?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>\n' +
+        'Lorem Ipsum</body></html>');
+    });
+
+    test('Does not convert YouTube line to embed if line has other text', async function () {
+        const html = `Hello world
+Watch https://www.youtube.com/watch?v=ABCD1234xYz this
+Lorem Ipsum`;
+
+        const processed = await process.preProcessContent({html});
+
+        expect(processed).toEqual('<html><head></head><body>Hello world\n' +
+        'Watch https://www.youtube.com/watch?v=ABCD1234xYz this\n' +
+        'Lorem Ipsum</body></html>');
+    });
 });
