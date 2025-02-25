@@ -119,13 +119,13 @@ export default class AssetScraper {
      */
     async getRemoteMedia(requestURL: string) {
         // Enforce http - http > https redirects are commonplace
-        requestURL = requestURL.replace(/^\/\//g, 'http://');
+        const updatedRequestURL = requestURL.replace(/^\/\//g, 'http://');
 
         // Encode to handle special characters in URLs
-        const encodedRequestURL = encodeURI(requestURL);
+        const encodedRequestURL = encodeURI(updatedRequestURL);
 
         try {
-            const response = await request(requestURL, {
+            const response = await request(updatedRequestURL, {
                 followRedirect: true,
                 responseType: 'buffer'
             });
@@ -140,10 +140,11 @@ export default class AssetScraper {
 
                 return responseWithEncodedUrl;
             } catch (err: any) {
-                // console.log(err);
-                throw new errors.InternalServerError({message: 'Failed to get remote media', err});
+                // Silently fail so we return false later
             }
         }
+
+        return false;
     }
 
     /**
@@ -476,7 +477,11 @@ export default class AssetScraper {
                 tasks.push({
                     title: `Assets for ${type} ${item?.slug ?? item?.name ?? item.id ?? item.post_id}`,
                     task: async () => {
-                        item = await this.inlinePostTagUserObject(item);
+                        try {
+                            item = await this.inlinePostTagUserObject(item);
+                        } catch (err: any) {
+                            throw new errors.InternalServerError({message: 'Failed to inline object', err});
+                        }
                     }
                 });
             });
@@ -489,7 +494,11 @@ export default class AssetScraper {
                 subTasks.push({
                     title: `Assets for ${type} ${item?.slug ?? item?.name ?? item.id ?? item.post_id}`,
                     task: async () => {
-                        item = await this.inlinePostTagUserObject(item);
+                        try {
+                            item = await this.inlinePostTagUserObject(item);
+                        } catch (err: any) {
+                            throw new errors.InternalServerError({message: 'Failed to inline object', err});
+                        }
                     }
                 });
             });
