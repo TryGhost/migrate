@@ -6274,10 +6274,10 @@ file-entry-cache@^6.0.1:
   dependencies:
     flat-cache "^3.0.4"
 
-file-type@20.1.0:
-  version "20.1.0"
-  resolved "https://registry.yarnpkg.com/file-type/-/file-type-20.1.0.tgz#adeeb3c798d343ecc35ac85404bba52989143f68"
-  integrity sha512-XoxU+lETfCf+bYK3SXkxFusAvmtYQl1u/ZC4zw1DBLEsHUvh339uwYucgQnnSMz1mRCWYJrCzsbJJ95hsQbZ8A==
+file-type@20.3.0:
+  version "20.3.0"
+  resolved "https://registry.yarnpkg.com/file-type/-/file-type-20.3.0.tgz#8cb2e83dbea979bddb22ff53d4de4bebed736a66"
+  integrity sha512-7eYG8OCoBNNf7179DmAUA6HyXYfJO8CQnZkgusRIDKCHQBbYU5rqJC0k2yr0c+C22v4bFfKL+DKuOPSU78uuTA==
   dependencies:
     "@tokenizer/inflate" "^0.2.6"
     strtok3 "^10.2.0"
