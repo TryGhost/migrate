@@ -16,7 +16,7 @@ const knownFileTypes = ['application/pdf', 'application/json', 'application/ld+j
 ];
 const knownTypes = [...knownImageTypes, ...knownMediaTypes, ...knownFileTypes];
 
-const needsConverting = ['image/avif', 'image/heif'];
+const needsConverting = ['image/avif', 'image/heif', 'image/heic'];
 
 export default class AssetScraper {
     /**
