@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/migrate",
-  "version": "0.47.0",
+  "version": "0.47.1",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/migrate",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -33,7 +33,7 @@
   "dependencies": {
     "@tryghost/listr-smart-renderer": "0.5.16",
     "@tryghost/logging": "2.4.21",
-    "@tryghost/mg-assetscraper": "0.4.23",
+    "@tryghost/mg-assetscraper": "0.4.24",
     "@tryghost/mg-beehiiv": "0.3.5",
     "@tryghost/mg-beehiiv-members": "0.1.16",
     "@tryghost/mg-blogger": "0.1.22",
@@ -60,8 +60,8 @@
     "@tryghost/mg-tinynews": "0.0.22",
     "@tryghost/mg-tinynews-members": "0.0.11",
     "@tryghost/mg-webscraper": "0.9.25",
-    "@tryghost/mg-wp-api": "0.11.0",
-    "@tryghost/mg-wp-xml": "0.5.0",
+    "@tryghost/mg-wp-api": "0.11.1",
+    "@tryghost/mg-wp-xml": "0.5.1",
     "@tryghost/pretty-cli": "1.2.46",
     "@tryghost/string": "0.2.12",
     "cheerio": "1.0.0-rc.12",
