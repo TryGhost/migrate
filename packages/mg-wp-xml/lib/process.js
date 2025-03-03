@@ -138,7 +138,7 @@ const preProcessContent = async ({html, options}) => { // eslint-disable-line no
 
     const $html = $.load(html, {
         decodeEntities: false
-    });
+    }, false);
 
     // 👀 If any XML-specific processing needs to be done, this is the place to do it.
 
