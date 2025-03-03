@@ -626,6 +626,34 @@ describe('Process WordPress HTML', function () {
 
         expect(processed).toEqual('<!--kg-card-begin: html--><p style="font-weight: 400;">Hello</p><img data-src="https://example.com/image.jpg" /><!--kg-card-end: html-->');
     });
+
+    test('Adds a <code> tag to syntax highlighted code', async function () {
+        const html = `<pre class="wp-block-syntaxhighlighter-code">config:
+  color:
+    green:
+      sage: true</pre>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<pre class="wp-block-syntaxhighlighter-code"><code>config:\n' +
+        '  color:\n' +
+        '    green:\n' +
+        '      sage: true</code></pre>');
+    });
+
+    test('Does not add a <code> tag to syntax highlighted code', async function () {
+        const html = `<pre class="wp-block-syntaxhighlighter-code"><code>config:
+  color:
+    green:
+      sage: true</code></pre>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<pre class="wp-block-syntaxhighlighter-code"><code>config:\n' +
+        '  color:\n' +
+        '    green:\n' +
+        '      sage: true</code></pre>');
+    });
 });
 
 describe('Process shortcodes', function () {

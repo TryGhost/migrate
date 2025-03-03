@@ -595,6 +595,14 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     await Promise.all(libsynPodcasts);
 
+    $html('.wp-block-syntaxhighlighter-code').each((i, el) => {
+        const hasCodeElem = $(el).find('code').length;
+
+        if (!hasCodeElem) {
+            $(el).html(`<code>${$(el).html()}</code>`);
+        }
+    });
+
     $html('figure.wp-block-embed.is-provider-twitter').each((i, el) => {
         $(el).replaceWith(`<blockquote class="twitter-tweet"><a href="${$(el).text()}"></a></blockquote>`);
     });
