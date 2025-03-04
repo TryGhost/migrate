@@ -187,18 +187,21 @@ export default class AssetScraper {
         }
 
         const removeExtRegExp = new RegExp(`.${extension}`, '');
-        const fileNameNoExt = parse(requestURL).base.replace(removeExtRegExp, '');
+        const fileName = parse(requestURL).base;
+        const fileNameNoExt = fileName.replace(removeExtRegExp, '');
+
+        const filePathNoFileName = new URL(requestURL).pathname.replace(/^\//, '').replace(fileName, '');
 
         // CASE: Query strings _can_ form part of the unique image URL, so rather that strip them include the in the file name
         // Then trim to last 248 chars (this will be more unique than the first 248), and trim leading & trailing dashes.
         // 248 is on the lower end of limits from various OSes and file systems
-        const fileName = slugify(parse(fileNameNoExt).base, {
+        const newFileName = slugify(parse(fileNameNoExt).base, {
             requiredChangesOnly: true
         }).slice(-248).replace(/^-|-$/, '');
 
         return {
             fileBuffer: body,
-            fileName: `${fileName}.${extension}`,
+            fileName: join(filePathNoFileName, `${newFileName}.${extension}`),
             fileMime: fileMime,
             extension: `.${extension}`
         };
