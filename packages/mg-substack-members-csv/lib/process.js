@@ -70,6 +70,7 @@ const processMember = (sMember, options) => {
     // possible group members with type `paid`, but no Stripe ID
     if (member.type === 'paid' && !member.stripe_customer_id) {
         member.type = 'free';
+        member.labels.push('Possible Group Membership');
         member.info = `possible group membership: ${member.email}`;
     }
 
