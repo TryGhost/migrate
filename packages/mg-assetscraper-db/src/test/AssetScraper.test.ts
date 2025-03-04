@@ -603,19 +603,19 @@ describe('Asset Scraper', () => {
 
         it('extractFileDataFromResponse avif to webp', async () => {
             const requestMock = nock('https://example.com')
-                .get('/image.avif')
+                .get('/assets/2025/03/image.avif')
                 .reply(200, avifImageBuffer);
 
             const assetScraper = new AssetScraper(fileCache, {}, {});
             await assetScraper.init();
 
-            const response = await assetScraper.getRemoteMedia('https://example.com/image.avif');
+            const response = await assetScraper.getRemoteMedia('https://example.com/assets/2025/03/image.avif');
 
-            const responseData: any = await assetScraper.extractFileDataFromResponse('https://example.com/image.avif', response);
+            const responseData: any = await assetScraper.extractFileDataFromResponse('https://example.com/assets/2025/03/image.avif', response);
 
             assert.ok(requestMock.isDone());
             assert.equal(responseData.fileBuffer.constructor.name, 'Buffer');
-            assert.equal(responseData.fileName, 'image-avif.webp');
+            assert.equal(responseData.fileName, 'assets/2025/03/image-avif.webp');
             assert.equal(responseData.fileMime, 'image/webp');
             assert.equal(responseData.extension, '.webp');
         });
