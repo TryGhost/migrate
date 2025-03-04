@@ -191,7 +191,7 @@ export default class AssetScraper {
 
         const searchParams = (new URL(requestURL).search) ? slugify(new URL(requestURL).search) : null;
 
-        const filePathNoFileName = new URL(requestURL).pathname.replace(/^\//, '').replace(fileName, '');
+        const filePathNoFileName = new URL(requestURL).pathname.replace(/^\//, '').replace(fileName, '').replace(/\./gm, '-');
 
         // CASE: Query strings _can_ form part of the unique image URL, so rather that strip them include the in the file name
         // Then trim to last 248 chars (this will be more unique than the first 248), and trim leading & trailing dashes.
