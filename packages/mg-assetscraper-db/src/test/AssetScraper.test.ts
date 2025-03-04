@@ -634,7 +634,7 @@ describe('Asset Scraper', () => {
 
             assert.ok(requestMock.isDone());
             assert.equal(responseData.fileBuffer.constructor.name, 'Buffer');
-            assert.equal(responseData.fileName, 'example.com/wp-content/uploads/2024/06/photo-w-937-ssl-1.jpg');
+            assert.equal(responseData.fileName, 'example-com/wp-content/uploads/2024/06/photo-w-937-ssl-1.jpg');
             assert.equal(responseData.fileMime, 'image/jpeg');
             assert.equal(responseData.extension, '.jpg');
         });
