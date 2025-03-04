@@ -186,9 +186,10 @@ export default class AssetScraper {
             return null;
         }
 
-        const removeExtRegExp = new RegExp(`.${extension}`, '');
-        const fileName = parse(requestURL).base;
-        const fileNameNoExt = fileName.replace(removeExtRegExp, '');
+        const fileName = parse(requestURL).name + '.' + requestURL.split(/[#?]/)[0].split('.').pop().trim();
+        const fileNameNoExt = parse(requestURL).name;
+
+        const searchParams = (new URL(requestURL).search) ? slugify(new URL(requestURL).search) : null;
 
         const filePathNoFileName = new URL(requestURL).pathname.replace(/^\//, '').replace(fileName, '');
 
@@ -201,7 +202,7 @@ export default class AssetScraper {
 
         return {
             fileBuffer: body,
-            fileName: join(filePathNoFileName, `${newFileName}.${extension}`),
+            fileName: join(filePathNoFileName, `${[newFileName, searchParams].filter(Boolean).join('-')}.${extension}`),
             fileMime: fileMime,
             extension: `.${extension}`
         };
