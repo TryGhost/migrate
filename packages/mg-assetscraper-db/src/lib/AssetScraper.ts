@@ -186,12 +186,8 @@ export default class AssetScraper {
             return null;
         }
 
-        const fileName = parse(requestURL).name + '.' + requestURL.split(/[#?]/)[0].split('.').pop().trim();
+        // const fileName = parse(requestURL).name + '.' + requestURL.split(/[#?]/)[0].split('.').pop().trim();
         const fileNameNoExt = parse(requestURL).name;
-
-        const searchParams = (new URL(requestURL).search) ? slugify(new URL(requestURL).search) : null;
-
-        const filePathNoFileName = new URL(requestURL).pathname.replace(/^\//, '').replace(fileName, '').replace(/\./gm, '-');
 
         // CASE: Query strings _can_ form part of the unique image URL, so rather that strip them include the in the file name
         // Then trim to last 248 chars (this will be more unique than the first 248), and trim leading & trailing dashes.
@@ -202,7 +198,7 @@ export default class AssetScraper {
 
         return {
             fileBuffer: body,
-            fileName: join(filePathNoFileName, `${[newFileName, searchParams].filter(Boolean).join('-')}.${extension}`),
+            fileName: `${newFileName}.${extension}`,
             fileMime: fileMime,
             extension: `.${extension}`
         };
@@ -210,30 +206,50 @@ export default class AssetScraper {
 
     async resolveFileName(src: string, folder: string) {
         const assetUrl = new URL(src);
+        const parsedSrc = parse(src);
 
-        const fileExtension = extname(assetUrl.pathname);
-        const nameNoExtension = basename(assetUrl.pathname, fileExtension);
+        // Get the dir (all of the URL up until the file name) with no scheme, so `example.com/path/to`
+        const dirNoScheme = parsedSrc.dir.replace(assetUrl.protocol, '').replace(/^\/?\/?/, '').replace(/\./gm, '-');
+
+        // Get the file name with no extension or search
+        const fileNameNoExtOrSearch = parsedSrc.name;
+
+        // And get the extension, and remove the search & hash
+        const fileExtension = parsedSrc.ext.replace(assetUrl.search, '').replace(assetUrl.hash, '');
 
         // Decode the path, transliterate it, slugify it, then replace the encoded basename with that
-        const decodedPathname = decodeURI(nameNoExtension);
+        const decodedPathname = decodeURI(fileNameNoExtOrSearch);
         const transliteratedBasename = transliterate.slugify(basename(decodedPathname, fileExtension), {
             separator: '-'
         });
-        assetUrl.pathname = assetUrl.pathname.replace(nameNoExtension, `${transliteratedBasename}`);
+        assetUrl.pathname = assetUrl.pathname.replace(fileNameNoExtOrSearch, `${transliteratedBasename}`);
 
-        // If there is a search string, slugify it and add it before the extension
+        // Start an array of final file name parts, starting with the raw name itself
+        const fileNameParts = [fileNameNoExtOrSearch];
+
+        // Add slugified search params if available
         if (assetUrl.search) {
-            assetUrl.pathname = assetUrl.pathname.replace(assetUrl.pathname, `${nameNoExtension}-${slugify(assetUrl.search)}${fileExtension}`);
-            assetUrl.search = '';
+            fileNameParts.push(slugify(assetUrl.search));
         }
 
-        // If there is a hash, slugify it and add it before the extension
+        // Add a slugified hash if available
         if (assetUrl.hash) {
-            assetUrl.pathname = assetUrl.pathname.replace(assetUrl.pathname, `${nameNoExtension}-${slugify(assetUrl.hash)}${fileExtension}`);
-            assetUrl.hash = '';
+            fileNameParts.push(slugify(assetUrl.hash));
         }
 
-        const assetFile = this.fileCache.resolveFileName(assetUrl.pathname, folder);
+        // Combine parts into a new string
+        const theNewFileName = `${fileNameParts.filter(Boolean).join('-')}${fileExtension}`;
+
+        // COmbine with the dir ath we made at start of this function
+        const finalBasePath = join(...[dirNoScheme, theNewFileName].filter(Boolean));
+
+        // And now pass this to the file cache, which returns:
+        // {
+        //     filename: 'path/to/photo.jpg',
+        //     storagePath: '/content/images/path/to/photo.jpg',
+        //     outputPath: 'the-temp-dir/1234/abcd//content/images/path/to/photo.jpg'
+        // }
+        const assetFile = this.fileCache.resolveFileName(finalBasePath, folder);
 
         return assetFile;
     }
@@ -264,11 +280,6 @@ export default class AssetScraper {
             // console.log(`No storage folder found for file mime: ${media.fileMime}`);
             return null;
         }
-
-        // Overwrite the pathname wit the fileName from the downloaded asset, as the format & ext may be different
-        let newSrc = new URL(src);
-        newSrc.pathname = media.fileName;
-        src = newSrc.toString();
 
         const assetFile = await this.resolveFileName(src, folder);
 
