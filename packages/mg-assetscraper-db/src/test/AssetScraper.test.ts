@@ -106,49 +106,49 @@ describe('Asset Scraper', () => {
             posts: [
                 {
                     id: 123,
-                    lexical: '{"root":{"children":[{"type":"image","version":1,"src":"__GHOST_URL__/content/images/image.jpg","width":1480,"height":486,"title":"","alt":"","caption":"","cardWidth":"regular","href":""}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
+                    lexical: '{"root":{"children":[{"type":"image","version":1,"src":"__GHOST_URL__/content/images/example-com/image.jpg","width":1480,"height":486,"title":"","alt":"","caption":"","cardWidth":"regular","href":""}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
                 }
             ],
             posts_meta: [
                 {
                     id: 123,
-                    og_image: '__GHOST_URL__/content/images/image.jpg',
-                    twitter_image: '__GHOST_URL__/content/images/image.jpg'
+                    og_image: '__GHOST_URL__/content/images/example-com/image.jpg',
+                    twitter_image: '__GHOST_URL__/content/images/example-com/image.jpg'
                 }
             ],
             tags: [
                 {
                     id: 123,
-                    feature_image: '__GHOST_URL__/content/images/image.jpg',
-                    og_image: '__GHOST_URL__/content/images/image.jpg',
-                    twitter_image: '__GHOST_URL__/content/images/image.jpg',
-                    codeinjection_head: '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>',
-                    codeinjection_foot: '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>'
+                    feature_image: '__GHOST_URL__/content/images/example-com/image.jpg',
+                    og_image: '__GHOST_URL__/content/images/example-com/image.jpg',
+                    twitter_image: '__GHOST_URL__/content/images/example-com/image.jpg',
+                    codeinjection_head: '<style>.block {background: url(__GHOST_URL__/content/images/example-com/image.jpg);}</style>',
+                    codeinjection_foot: '<style>.block {background: url(__GHOST_URL__/content/images/example-com/image.jpg);}</style>'
                 }
             ],
             users: [
                 {
                     id: 123,
-                    profile_image: '__GHOST_URL__/content/images/image.jpg',
-                    cover_image: '__GHOST_URL__/content/images/image.jpg'
+                    profile_image: '__GHOST_URL__/content/images/example-com/image.jpg',
+                    cover_image: '__GHOST_URL__/content/images/example-com/image.jpg'
                 }
             ],
             settings: [
                 {
                     key: 'og_image',
-                    value: '__GHOST_URL__/content/images/image.jpg'
+                    value: '__GHOST_URL__/content/images/example-com/image.jpg'
                 },
                 {
                     key: 'twitter_image',
-                    value: '__GHOST_URL__/content/images/image.jpg'
+                    value: '__GHOST_URL__/content/images/example-com/image.jpg'
                 },
                 {
                     key: 'codeinjection_head',
-                    value: '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>'
+                    value: '<style>.block {background: url(__GHOST_URL__/content/images/example-com/image.jpg);}</style>'
                 },
                 {
                     key: 'codeinjection_foot',
-                    value: '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>'
+                    value: '<style>.block {background: url(__GHOST_URL__/content/images/example-com/image.jpg);}</style>'
                 }
             ]
         });
@@ -176,7 +176,7 @@ describe('Asset Scraper', () => {
         // await assetScraper.doPostObject(postObj);
         await assetScraper.inlinePostTagUserObject(postObj);
 
-        assert.equal(postObj.lexical, '{"root":{"children":[{"type":"image","version":1,"src":"__GHOST_URL__/content/images/image.jpg","width":322,"height":272,"title":"","alt":"","caption":"","cardWidth":"regular","href":""},{"type":"image","version":1,"src":"__GHOST_URL__/content/images/image.jpg","width":322,"height":272,"title":"","alt":"","caption":"","cardWidth":"regular","href":""},{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}');
+        assert.equal(postObj.lexical, '{"root":{"children":[{"type":"image","version":1,"src":"__GHOST_URL__/content/images/example-com/image.jpg","width":322,"height":272,"title":"","alt":"","caption":"","cardWidth":"regular","href":""},{"type":"image","version":1,"src":"__GHOST_URL__/content/images/example-com/image.jpg","width":322,"height":272,"title":"","alt":"","caption":"","cardWidth":"regular","href":""},{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}');
 
         assert.ok(requestMock.isDone());
     });
@@ -203,7 +203,7 @@ describe('Asset Scraper', () => {
         await assetScraper.inlinePostTagUserObject(postObj);
 
         assert.ok(requestMock.isDone());
-        assert.equal(postObj.lexical, '{"root":{"children":[{"type":"html","version":1,"html":"<a href="__GHOST_URL__/content/images/image.jpg">Image</a><img src="__GHOST_URL__/content/images/image.jpg" /><img data-src="__GHOST_URL__/content/images/image.jpg" /><picture><source srcset="__GHOST_URL__/content/images/image.jpg, __GHOST_URL__/content/images/image.jpg 1.5x"><source srcset="__GHOST_URL__/content/images/image.jpg, __GHOST_URL__/content/images/image.jpg 2x"><img src="__GHOST_URL__/content/images/image.jpg"></picture><video poster="__GHOST_URL__/content/images/image.jpg" src="__GHOST_URL__/content/images/image.jpg"></video><video"><source src="__GHOST_URL__/content/images/image.jpg"><source src="__GHOST_URL__/content/images/image.jpg"></video><audio src="__GHOST_URL__/content/images/image.jpg"></audio><audio><source src="__GHOST_URL__/content/images/image.jpg"><source src="__GHOST_URL__/content/images/image.jpg"></audio><p style="background: url(__GHOST_URL__/content/images/image.jpg);"></p><p style="background: url(\'__GHOST_URL__/content/images/image.jpg\');"></p><p style="background-image: url(__GHOST_URL__/content/images/image.jpg);"></p><p style="background-image: url(\'__GHOST_URL__/content/images/image.jpg\');"></p>","visibility":{"showOnEmail":true,"showOnWeb":true,"segment":""}},{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}');
+        assert.equal(postObj.lexical, `{"root":{"children":[{"type":"html","version":1,"html":"<a href="__GHOST_URL__/content/images/example-com/image.jpg">Image</a><img src="__GHOST_URL__/content/images/example-com/image.jpg" /><img data-src="__GHOST_URL__/content/images/example-com/image.jpg" /><picture><source srcset="__GHOST_URL__/content/images/example-com/image.jpg, __GHOST_URL__/content/images/example-com/image.jpg 1.5x"><source srcset="__GHOST_URL__/content/images/example-com/image.jpg, __GHOST_URL__/content/images/example-com/image.jpg 2x"><img src="__GHOST_URL__/content/images/example-com/image.jpg"></picture><video poster="__GHOST_URL__/content/images/example-com/image.jpg" src="__GHOST_URL__/content/images/example-com/image.jpg"></video><video"><source src="__GHOST_URL__/content/images/example-com/image.jpg"><source src="__GHOST_URL__/content/images/example-com/image.jpg"></video><audio src="__GHOST_URL__/content/images/example-com/image.jpg"></audio><audio><source src="__GHOST_URL__/content/images/example-com/image.jpg"><source src="__GHOST_URL__/content/images/example-com/image.jpg"></audio><p style="background: url(__GHOST_URL__/content/images/example-com/image.jpg);"></p><p style="background: url('__GHOST_URL__/content/images/example-com/image.jpg');"></p><p style="background-image: url(__GHOST_URL__/content/images/example-com/image.jpg);"></p><p style="background-image: url('__GHOST_URL__/content/images/example-com/image.jpg');"></p>","visibility":{"showOnEmail":true,"showOnWeb":true,"segment":""}},{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}`);
     });
 
     it('Finds in a Lexical Markdown card', async () => {
@@ -228,7 +228,7 @@ describe('Asset Scraper', () => {
         await assetScraper.inlinePostTagUserObject(postObj);
 
         assert.ok(requestMock.isDone());
-        assert.equal(postObj.lexical, '{"root":{"children":[{"type":"markdown","version":1,"markdown":"[Image](__GHOST_URL__/content/images/image.jpg)\n![](__GHOST_URL__/content/images/image.jpg)\n<a href="__GHOST_URL__/content/images/image.jpg">Image</a>\n<img src="__GHOST_URL__/content/images/image.jpg" />"},{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}');
+        assert.equal(postObj.lexical, '{"root":{"children":[{"type":"markdown","version":1,"markdown":"[Image](__GHOST_URL__/content/images/example-com/image.jpg)\n![](__GHOST_URL__/content/images/example-com/image.jpg)\n<a href="__GHOST_URL__/content/images/example-com/image.jpg">Image</a>\n<img src="__GHOST_URL__/content/images/example-com/image.jpg" />"},{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}');
     });
 
     it('Does other post object', async () => {
@@ -255,8 +255,8 @@ describe('Asset Scraper', () => {
         await assetScraper.inlinePostTagUserObject(postObj);
 
         assert.ok(requestMock.isDone());
-        assert.equal(postObj.feature_image, '__GHOST_URL__/content/images/image.jpg');
-        assert.equal(postObj.codeinjection_head, '<style>.block {background: url(__GHOST_URL__/content/images/other.jpg);}</style>');
+        assert.equal(postObj.feature_image, '__GHOST_URL__/content/images/example-com/image.jpg');
+        assert.equal(postObj.codeinjection_head, '<style>.block {background: url(__GHOST_URL__/content/images/example-com/other.jpg);}</style>');
     });
 
     it('Does post meta', async () => {
@@ -282,8 +282,8 @@ describe('Asset Scraper', () => {
         await assetScraper.inlinePostTagUserObject(postObj);
 
         assert.ok(requestMock.isDone());
-        assert.equal(postObj.og_image, '__GHOST_URL__/content/images/image.jpg');
-        assert.equal(postObj.twitter_image, '__GHOST_URL__/content/images/image.jpg');
+        assert.equal(postObj.og_image, '__GHOST_URL__/content/images/example-com/image.jpg');
+        assert.equal(postObj.twitter_image, '__GHOST_URL__/content/images/example-com/image.jpg');
     });
 
     it('Does users', async () => {
@@ -309,8 +309,8 @@ describe('Asset Scraper', () => {
         await assetScraper.inlinePostTagUserObject(usersObj);
 
         assert.ok(requestMock.isDone());
-        assert.equal(usersObj.profile_image, '__GHOST_URL__/content/images/image.jpg');
-        assert.equal(usersObj.cover_image, '__GHOST_URL__/content/images/image.jpg');
+        assert.equal(usersObj.profile_image, '__GHOST_URL__/content/images/example-com/image.jpg');
+        assert.equal(usersObj.cover_image, '__GHOST_URL__/content/images/example-com/image.jpg');
     });
 
     it('Does tags', async () => {
@@ -340,11 +340,11 @@ describe('Asset Scraper', () => {
         await assetScraper.inlinePostTagUserObject(tagsObj);
 
         assert.ok(requestMock.isDone());
-        assert.equal(tagsObj.feature_image, '__GHOST_URL__/content/images/image.jpg');
-        assert.equal(tagsObj.og_image, '__GHOST_URL__/content/images/image.jpg');
-        assert.equal(tagsObj.twitter_image, '__GHOST_URL__/content/images/image.jpg');
-        assert.equal(tagsObj.codeinjection_head, '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>');
-        assert.equal(tagsObj.codeinjection_foot, '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>');
+        assert.equal(tagsObj.feature_image, '__GHOST_URL__/content/images/example-com/image.jpg');
+        assert.equal(tagsObj.og_image, '__GHOST_URL__/content/images/example-com/image.jpg');
+        assert.equal(tagsObj.twitter_image, '__GHOST_URL__/content/images/example-com/image.jpg');
+        assert.equal(tagsObj.codeinjection_head, '<style>.block {background: url(__GHOST_URL__/content/images/example-com/image.jpg);}</style>');
+        assert.equal(tagsObj.codeinjection_foot, '<style>.block {background: url(__GHOST_URL__/content/images/example-com/image.jpg);}</style>');
     });
 
     it('Does settings', async () => {
@@ -385,19 +385,19 @@ describe('Asset Scraper', () => {
         assert.deepEqual(settingsObj, [
             {
                 key: 'codeinjection_head',
-                value: '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>'
+                value: '<style>.block {background: url(__GHOST_URL__/content/images/example-com/image.jpg);}</style>'
             },
             {
                 key: 'codeinjection_foot',
-                value: '<style>.block {background: url(__GHOST_URL__/content/images/image.jpg);}</style>'
+                value: '<style>.block {background: url(__GHOST_URL__/content/images/example-com/image.jpg);}</style>'
             },
             {
                 key: 'og_image',
-                value: '__GHOST_URL__/content/images/image.jpg'
+                value: '__GHOST_URL__/content/images/example-com/image.jpg'
             },
             {
                 key: 'twitter_image',
-                value: '__GHOST_URL__/content/images/image.jpg'
+                value: '__GHOST_URL__/content/images/example-com/image.jpg'
             }
         ]);
     });
@@ -437,7 +437,7 @@ describe('Asset Scraper', () => {
         await assetScraper.doCustomThemeSettingsObject(settingsObj);
 
         assert.ok(requestMock.isDone());
-        assert.equal(settingsObj[0].value, '__GHOST_URL__/content/images/logo.jpg');
+        assert.equal(settingsObj[0].value, '__GHOST_URL__/content/images/example-com/logo.jpg');
     });
 
     it('Does snippets', async () => {
@@ -466,7 +466,7 @@ describe('Asset Scraper', () => {
         await assetScraper.inlinePostTagUserObject(snippetObj);
 
         assert.ok(requestMock.isDone());
-        assert.equal(snippetObj.lexical, '{"namespace":"KoenigEditor","nodes":[{"type":"image","src":"__GHOST_URL__/content/images/image.jpg","width":367,"height":790}],"syncedAt":"2023-06-07T10:37:07.233Z"}');
+        assert.equal(snippetObj.lexical, '{"namespace":"KoenigEditor","nodes":[{"type":"image","src":"__GHOST_URL__/content/images/example-com/image.jpg","width":367,"height":790}],"syncedAt":"2023-06-07T10:37:07.233Z"}');
     });
 
     describe('File name handling', () => {
@@ -476,7 +476,18 @@ describe('Asset Scraper', () => {
 
             let result = await assetScraper.resolveFileName('https://example.com/path/to/photo.jpg?w=100&h=100', 'images');
 
-            assert.equal(result.filename, '/photo-w-100-h-100.jpg');
+            assert.equal(result.filename, 'example-com/path/to/photo-w-100-h-100.jpg');
+            assert.equal(result.outputPath, '/content/images/example-com/path/to/photo-w-100-h-100.jpg');
+        });
+
+        it('Moves query params before extension', async () => {
+            const assetScraper = new AssetScraper(fileCache, {}, {});
+            await assetScraper.init();
+
+            let result = await assetScraper.resolveFileName('https://i0.wp.com/abcd1234.example.com/wp/2022/06/1234_photo-01.jpg?ssl=1&w=200#anchor', 'images');
+
+            assert.equal(result.filename, 'i0-wp-com/abcd1234-example-com/wp/2022/06/1234_photo-01-ssl-1-w-200-anchor.jpg');
+            assert.equal(result.outputPath, '/content/images/i0-wp-com/abcd1234-example-com/wp/2022/06/1234_photo-01-ssl-1-w-200-anchor.jpg');
         });
 
         it('Moves hash before extension', async () => {
@@ -485,7 +496,7 @@ describe('Asset Scraper', () => {
 
             let result = await assetScraper.resolveFileName('https://example.com/path/to/photo.jpg#lorem=ipsum', 'images');
 
-            assert.equal(result.filename, '/photo-lorem-ipsum.jpg');
+            assert.equal(result.filename, 'example-com/path/to/photo-lorem-ipsum.jpg');
         });
 
         it('Will transform relative to absolute', async () => {
@@ -549,7 +560,7 @@ describe('Asset Scraper', () => {
 
             const result = await assetScraper.resolveFileName('https://example.com/path/to/你好.jpg', 'images');
 
-            assert.equal(result.filename, '/path/to/ni-hao.jpg');
+            assert.equal(result.filename, 'example-com/path/to/ni-hao.jpg');
         });
 
         it.todo('test replaceSrc else');
@@ -615,28 +626,9 @@ describe('Asset Scraper', () => {
 
             assert.ok(requestMock.isDone());
             assert.equal(responseData.fileBuffer.constructor.name, 'Buffer');
-            assert.equal(responseData.fileName, 'assets/2025/03/photo.webp');
+            assert.equal(responseData.fileName, 'photo.webp');
             assert.equal(responseData.fileMime, 'image/webp');
             assert.equal(responseData.extension, '.webp');
-        });
-
-        it('Handles query params in path names', async () => {
-            const requestMock = nock('https://i0.wp.com')
-                .get('/example.com/wp-content/uploads/2024/06/photo.jpg?w=937&ssl=1')
-                .reply(200, jpgImageBuffer);
-
-            const assetScraper = new AssetScraper(fileCache, {}, {});
-            await assetScraper.init();
-
-            const response = await assetScraper.getRemoteMedia('https://i0.wp.com/example.com/wp-content/uploads/2024/06/photo.jpg?w=937&ssl=1');
-
-            const responseData: any = await assetScraper.extractFileDataFromResponse('https://i0.wp.com/example.com/wp-content/uploads/2024/06/photo.jpg?w=937&ssl=1', response);
-
-            assert.ok(requestMock.isDone());
-            assert.equal(responseData.fileBuffer.constructor.name, 'Buffer');
-            assert.equal(responseData.fileName, 'example-com/wp-content/uploads/2024/06/photo-w-937-ssl-1.jpg');
-            assert.equal(responseData.fileMime, 'image/jpeg');
-            assert.equal(responseData.extension, '.jpg');
         });
 
         it.todo('Will follow redirects');
@@ -667,7 +659,7 @@ describe('Asset Scraper', () => {
 
             await assetScraper.inlinePostTagUserObject(postObj);
 
-            assert.equal(postObj.html, '<a href="__GHOST_URL__/content/images/image.jpg">Image</a>');
+            assert.equal(postObj.html, '<a href="__GHOST_URL__/content/images/example-com/image.jpg">Image</a>');
 
             assert.ok(requestMock.isDone());
         });
@@ -692,7 +684,7 @@ describe('Asset Scraper', () => {
 
             await assetScraper.inlinePostTagUserObject(postObj);
 
-            assert.equal(postObj.html, '<img src="__GHOST_URL__/content/images/image.jpg" />');
+            assert.equal(postObj.html, '<img src="__GHOST_URL__/content/images/example-com/image.jpg" />');
 
             assert.ok(requestMock.isDone());
         });
@@ -717,7 +709,7 @@ describe('Asset Scraper', () => {
 
             await assetScraper.inlinePostTagUserObject(postObj);
 
-            assert.equal(postObj.html, '<img data-src="__GHOST_URL__/content/images/image.jpg" />');
+            assert.equal(postObj.html, '<img data-src="__GHOST_URL__/content/images/example-com/image.jpg" />');
 
             assert.ok(requestMock.isDone());
         });
@@ -749,14 +741,14 @@ describe('Asset Scraper', () => {
 
             await assetScraper.inlinePostTagUserObject(postObj);
 
-            assert.equal(postObj.html, '<picture><source srcset="__GHOST_URL__/content/images/image-768.jpg, __GHOST_URL__/content/images/image-768-1-5x.jpg 1.5x"><source srcset="__GHOST_URL__/content/images/image-480.jpg, __GHOST_URL__/content/images/image-480-2x.jpg 2x"><img src="__GHOST_URL__/content/images/image-320.jpg"></picture>');
+            assert.equal(postObj.html, '<picture><source srcset="__GHOST_URL__/content/images/example-com/image-768.jpg, __GHOST_URL__/content/images/example-com/image-768-1.5x.jpg 1.5x"><source srcset="__GHOST_URL__/content/images/example-com/image-480.jpg, __GHOST_URL__/content/images/example-com/image-480-2x.jpg 2x"><img src="__GHOST_URL__/content/images/example-com/image-320.jpg"></picture>');
 
             assert.ok(requestMock.isDone());
         });
 
         it('video src & poster', async () => {
             const requestMock = nock('https://example.com')
-                .get('/poster.jpg')
+                .get('/path/to/poster.jpg')
                 .reply(200, jpgImageBuffer)
                 .get('/flowers.mp4')
                 .reply(200, mp4VideoBuffer);
@@ -767,7 +759,7 @@ describe('Asset Scraper', () => {
                 ]
             };
             const postObj = {
-                html: '<video poster="https://example.com/poster.jpg" src="https://example.com/flowers.mp4"></video>'
+                html: '<video poster="https://example.com/path/to/poster.jpg" src="https://example.com/flowers.mp4"></video>'
             };
 
             const assetScraper = new AssetScraper(fileCache, options, {});
@@ -775,7 +767,7 @@ describe('Asset Scraper', () => {
 
             await assetScraper.inlinePostTagUserObject(postObj);
 
-            assert.equal(postObj.html, '<video poster="__GHOST_URL__/content/images/poster.jpg" src="__GHOST_URL__/content/media/flowers.mp4"></video>');
+            assert.equal(postObj.html, '<video poster="__GHOST_URL__/content/images/example-com/path/to/poster.jpg" src="__GHOST_URL__/content/media/example-com/flowers.mp4"></video>');
 
             assert.ok(requestMock.isDone());
         });
@@ -801,7 +793,7 @@ describe('Asset Scraper', () => {
 
             await assetScraper.inlinePostTagUserObject(postObj);
 
-            assert.equal(postObj.html, '<video"><source src="__GHOST_URL__/content/media/one.mp4"><source src="__GHOST_URL__/content/media/two.mp4"></video>');
+            assert.equal(postObj.html, '<video"><source src="__GHOST_URL__/content/media/example-com/one.mp4"><source src="__GHOST_URL__/content/media/example-com/two.mp4"></video>');
 
             assert.ok(requestMock.isDone());
         });
@@ -825,7 +817,7 @@ describe('Asset Scraper', () => {
 
             await assetScraper.inlinePostTagUserObject(postObj);
 
-            assert.equal(postObj.html, '<audio src="__GHOST_URL__/content/media/podcast.mp3"></audio>');
+            assert.equal(postObj.html, '<audio src="__GHOST_URL__/content/media/example-com/podcast.mp3"></audio>');
 
             assert.ok(requestMock.isDone());
         });
@@ -851,7 +843,7 @@ describe('Asset Scraper', () => {
 
             await assetScraper.inlinePostTagUserObject(postObj);
 
-            assert.equal(postObj.html, '<audio><source src="__GHOST_URL__/content/media/one.mp3"><source src="__GHOST_URL__/content/media/two.mp3"></audio>');
+            assert.equal(postObj.html, '<audio><source src="__GHOST_URL__/content/media/example-com/one.mp3"><source src="__GHOST_URL__/content/media/example-com/two.mp3"></audio>');
 
             assert.ok(requestMock.isDone());
         });
@@ -877,7 +869,7 @@ describe('Asset Scraper', () => {
 
             await assetScraper.inlinePostTagUserObject(postObj);
 
-            assert.equal(postObj.html, '<p style="background: url(__GHOST_URL__/content/images/image.jpg);"></p><p style="background: url(\'__GHOST_URL__/content/images/other.jpg\');"></p>');
+            assert.equal(postObj.html, '<p style="background: url(__GHOST_URL__/content/images/example-com/image.jpg);"></p><p style="background: url(\'__GHOST_URL__/content/images/example-com/other.jpg\');"></p>');
 
             assert.ok(requestMock.isDone());
         });
@@ -903,7 +895,7 @@ describe('Asset Scraper', () => {
 
             await assetScraper.inlinePostTagUserObject(postObj);
 
-            assert.equal(postObj.html, `<p style="background-image: url(__GHOST_URL__/content/images/image.jpg);"></p><p style="background-image: url('__GHOST_URL__/content/images/other.jpg');"></p>`);
+            assert.equal(postObj.html, `<p style="background-image: url(__GHOST_URL__/content/images/example-com/image.jpg);"></p><p style="background-image: url('__GHOST_URL__/content/images/example-com/other.jpg');"></p>`);
 
             assert.ok(requestMock.isDone());
         });
@@ -919,7 +911,6 @@ describe('Asset Scraper', () => {
                 ]
             };
 
-            // https://nerdschalk.com/wp-content/uploads/2024/09/turn-on-music-haptics-on-ios-18-on-iphone.mp4</a></video><!--kg-card-end:
             const postObj = {
                 html: `<a href="https://example.com/image.jpg">https://example.com/image.jpg</a>`
             };
@@ -929,7 +920,7 @@ describe('Asset Scraper', () => {
 
             await assetScraper.inlinePostTagUserObject(postObj);
 
-            assert.equal(postObj.html, `<a href="__GHOST_URL__/content/images/image.jpg">__GHOST_URL__/content/images/image.jpg</a>`);
+            assert.equal(postObj.html, `<a href="__GHOST_URL__/content/images/example-com/image.jpg">__GHOST_URL__/content/images/example-com/image.jpg</a>`);
 
             assert.ok(requestMock.isDone());
         });
