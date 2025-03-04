@@ -603,21 +603,40 @@ describe('Asset Scraper', () => {
 
         it('extractFileDataFromResponse avif to webp', async () => {
             const requestMock = nock('https://example.com')
-                .get('/assets/2025/03/image.avif')
+                .get('/assets/2025/03/photo.avif')
                 .reply(200, avifImageBuffer);
 
             const assetScraper = new AssetScraper(fileCache, {}, {});
             await assetScraper.init();
 
-            const response = await assetScraper.getRemoteMedia('https://example.com/assets/2025/03/image.avif');
+            const response = await assetScraper.getRemoteMedia('https://example.com/assets/2025/03/photo.avif');
 
-            const responseData: any = await assetScraper.extractFileDataFromResponse('https://example.com/assets/2025/03/image.avif', response);
+            const responseData: any = await assetScraper.extractFileDataFromResponse('https://example.com/assets/2025/03/photo.avif', response);
 
             assert.ok(requestMock.isDone());
             assert.equal(responseData.fileBuffer.constructor.name, 'Buffer');
-            assert.equal(responseData.fileName, 'assets/2025/03/image-avif.webp');
+            assert.equal(responseData.fileName, 'assets/2025/03/photo.webp');
             assert.equal(responseData.fileMime, 'image/webp');
             assert.equal(responseData.extension, '.webp');
+        });
+
+        it('Handles query params in path names', async () => {
+            const requestMock = nock('https://i0.wp.com')
+                .get('/example.com/wp-content/uploads/2024/06/photo.jpg?w=937&ssl=1')
+                .reply(200, jpgImageBuffer);
+
+            const assetScraper = new AssetScraper(fileCache, {}, {});
+            await assetScraper.init();
+
+            const response = await assetScraper.getRemoteMedia('https://i0.wp.com/example.com/wp-content/uploads/2024/06/photo.jpg?w=937&ssl=1');
+
+            const responseData: any = await assetScraper.extractFileDataFromResponse('https://i0.wp.com/example.com/wp-content/uploads/2024/06/photo.jpg?w=937&ssl=1', response);
+
+            assert.ok(requestMock.isDone());
+            assert.equal(responseData.fileBuffer.constructor.name, 'Buffer');
+            assert.equal(responseData.fileName, 'example.com/wp-content/uploads/2024/06/photo-w-937-ssl-1.jpg');
+            assert.equal(responseData.fileMime, 'image/jpeg');
+            assert.equal(responseData.extension, '.jpg');
         });
 
         it.todo('Will follow redirects');
