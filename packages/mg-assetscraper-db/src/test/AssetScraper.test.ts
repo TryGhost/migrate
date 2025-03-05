@@ -470,6 +470,16 @@ describe('Asset Scraper', () => {
     });
 
     describe('File name handling', () => {
+        it('Handled extension change by supplying a new extension', async () => {
+            const assetScraper = new AssetScraper(fileCache, {}, {});
+            await assetScraper.init();
+
+            let result = await assetScraper.resolveFileName('https://example.com/path/to/photo.jpg?w=100&h=100', 'images', '.webp');
+
+            assert.equal(result.filename, 'example-com/path/to/photo-w-100-h-100.webp');
+            assert.equal(result.outputPath, '/content/images/example-com/path/to/photo-w-100-h-100.webp');
+        });
+
         it('Moves query params before extension', async () => {
             const assetScraper = new AssetScraper(fileCache, {}, {});
             await assetScraper.init();
