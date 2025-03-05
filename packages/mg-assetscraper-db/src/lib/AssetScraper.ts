@@ -204,7 +204,7 @@ export default class AssetScraper {
         };
     }
 
-    async resolveFileName(src: string, folder: string) {
+    async resolveFileName(src: string, folder: string, newExtension?: string) {
         const assetUrl = new URL(src);
         const parsedSrc = parse(src);
 
@@ -238,9 +238,9 @@ export default class AssetScraper {
         }
 
         // Combine parts into a new string
-        const theNewFileName = `${fileNameParts.filter(Boolean).join('-')}${fileExtension}`;
+        const theNewFileName = `${fileNameParts.filter(Boolean).join('-')}${newExtension ?? fileExtension}`;
 
-        // COmbine with the dir ath we made at start of this function
+        // Combine with the dir ath we made at start of this function
         const finalBasePath = join(...[dirNoScheme, theNewFileName].filter(Boolean));
 
         // And now pass this to the file cache, which returns:
@@ -281,7 +281,7 @@ export default class AssetScraper {
             return null;
         }
 
-        const assetFile = await this.resolveFileName(src, folder);
+        const assetFile = await this.resolveFileName(src, folder, media.extension);
 
         let imageOptions = Object.assign(assetFile, {optimize: this.defaultOptions.optimize});
 
