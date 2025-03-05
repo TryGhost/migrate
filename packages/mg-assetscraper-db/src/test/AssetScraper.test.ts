@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import fs, {rmSync} from 'node:fs';
+import fs, {chownSync, rmSync} from 'node:fs';
 import {join} from 'node:path';
 import nock from 'nock';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
@@ -474,6 +474,16 @@ describe('Asset Scraper', () => {
             const assetScraper = new AssetScraper(fileCache, {}, {});
             await assetScraper.init();
 
+            let result = await assetScraper.resolveFileName('https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F3daf5acd-abcd-1234-efgh-56784b5435ef_3024x4032.heic', 'images', '.webp');
+
+            assert.equal(result.filename, 'substackcdn-com/image/fetch/f_auto-q_auto-good-fl_progressive-steep/https-/substack-post-media-s3-amazonaws-com/public/images/3daf5acd-abcd-1234-efgh-56784b5435ef_3024x4032.webp');
+            assert.equal(result.outputPath, '/content/images/substackcdn-com/image/fetch/f_auto-q_auto-good-fl_progressive-steep/https-/substack-post-media-s3-amazonaws-com/public/images/3daf5acd-abcd-1234-efgh-56784b5435ef_3024x4032.webp');
+        });
+
+        it('Handled extension change by supplying a new extension', async () => {
+            const assetScraper = new AssetScraper(fileCache, {}, {});
+            await assetScraper.init();
+
             let result = await assetScraper.resolveFileName('https://example.com/path/to/photo.jpg?w=100&h=100', 'images', '.webp');
 
             assert.equal(result.filename, 'example-com/path/to/photo-w-100-h-100.webp');
@@ -751,7 +761,7 @@ describe('Asset Scraper', () => {
 
             await assetScraper.inlinePostTagUserObject(postObj);
 
-            assert.equal(postObj.html, '<picture><source srcset="__GHOST_URL__/content/images/example-com/image-768.jpg, __GHOST_URL__/content/images/example-com/image-768-1.5x.jpg 1.5x"><source srcset="__GHOST_URL__/content/images/example-com/image-480.jpg, __GHOST_URL__/content/images/example-com/image-480-2x.jpg 2x"><img src="__GHOST_URL__/content/images/example-com/image-320.jpg"></picture>');
+            assert.equal(postObj.html, '<picture><source srcset="__GHOST_URL__/content/images/example-com/image-768.jpg, __GHOST_URL__/content/images/example-com/image-768-1-5x.jpg 1.5x"><source srcset="__GHOST_URL__/content/images/example-com/image-480.jpg, __GHOST_URL__/content/images/example-com/image-480-2x.jpg 2x"><img src="__GHOST_URL__/content/images/example-com/image-320.jpg"></picture>');
 
             assert.ok(requestMock.isDone());
         });
@@ -937,6 +947,38 @@ describe('Asset Scraper', () => {
     });
 
     describe('findMatchesInString', () => {
+        it('Handle complex URLs', async () => {
+            const options = {
+                domains: [
+                    'https://example.com'
+                ]
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            const matches = await assetScraper.findMatchesInString('<img src="https://example.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F62224b9e-abcd-1234-5678-abc1234efgh_4032x3024.heic" />');
+
+            assert.equal(matches.length, 1);
+            assert.equal(matches[0], 'https://example.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F62224b9e-abcd-1234-5678-abc1234efgh_4032x3024.heic');
+        });
+
+        it('Handle more complex URLs', async () => {
+            const options = {
+                domains: [
+                    'https://example.com'
+                ]
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            const matches = await assetScraper.findMatchesInString('<img src="https://example.com/image/fetch/h_600,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-abcd1234-1234-5678-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2Fe4f4ffa1-abcd-efgh-1234-7bb7221fd38f_750x424.jpeg" />');
+
+            assert.equal(matches.length, 1);
+            assert.equal(matches[0], 'https://example.com/image/fetch/h_600,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-abcd1234-1234-5678-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2Fe4f4ffa1-abcd-efgh-1234-7bb7221fd38f_750x424.jpeg');
+        });
+
         it('Handle quotes around URLs', async () => {
             const options = {
                 domains: [
