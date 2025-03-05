@@ -209,7 +209,7 @@ export default class AssetScraper {
         const parsedSrc = parse(src);
 
         // Get the dir (all of the URL up until the file name) with no scheme, so `example.com/path/to`
-        const dirNoScheme = parsedSrc.dir.replace(assetUrl.protocol, '').replace(/^\/?\/?/, '').replace(/\./gm, '-');
+        const dirNoScheme = parsedSrc.dir.replace(assetUrl.protocol, '').replace(/^\/?\/?/, '').replace(/\./gm, '-').replace(/,/gm, '-').replace(/:/gm, '-');
 
         // Get the file name with no extension or search
         const fileNameNoExtOrSearch = parsedSrc.name;
@@ -224,8 +224,14 @@ export default class AssetScraper {
         });
         assetUrl.pathname = assetUrl.pathname.replace(fileNameNoExtOrSearch, `${transliteratedBasename}`);
 
+        // Decode the file name, as it can sometimes be an encoded URL if used with a CDN or image manipulation service
+        let decodedFileName = decodeURIComponent(fileNameNoExtOrSearch);
+        decodedFileName = decodedFileName.replace(/\./g, '-');
+        decodedFileName = decodedFileName.replace(/,/g, '-');
+        decodedFileName = decodedFileName.replace(/:/g, '-');
+
         // Start an array of final file name parts, starting with the raw name itself
-        const fileNameParts = [fileNameNoExtOrSearch];
+        const fileNameParts = [decodedFileName];
 
         // Add slugified search params if available
         if (assetUrl.search) {
@@ -364,12 +370,19 @@ export default class AssetScraper {
 
         for (const domain of this.allowedDomains) {
             // NOTE: the src could end with a quote, apostrophe or double-backslash, comma, space, or ) - hence the termination symbols
-            const srcTerminationSymbols = `"|\\)|'| |,|<|\\\\|&quot;`;
+            const srcTerminationSymbols = `("|\\)|'|(?=(?:,https?))| |<|\\\\|&quot;|$)`;
             const regex = new RegExp(`(${domain}.*?)(${srcTerminationSymbols})`, 'igm');
-            const matchResult = content.matchAll(regex);
-            const matches: any = Array.from(matchResult, (match: any) => match[1]);
+            const matches = content.matchAll(regex);
 
-            theMatches.push(...matches);
+            // Simplify the matches so we only get the result needed
+            let matchesArray = Array.from(matches, (m: any) => m[1]);
+
+            // Trim trailing commas from each match
+            matchesArray = matchesArray.map((item) => {
+                return item.replace(/,$/, '');
+            });
+
+            theMatches.push(...matchesArray);
         }
 
         return theMatches;
