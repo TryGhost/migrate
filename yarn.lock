@@ -9579,10 +9579,10 @@ performance-now@^2.1.0:
   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
   integrity sha512-7EAHlyLHI56VEIdK57uwHdHKIaAGbnXPiw0yWbarQZOKaKpvUIgW0jWRVLiatnM+XXlSwsanIBH/hzGMJulMow==
 
-php-serialize@5.1.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/php-serialize/-/php-serialize-5.1.0.tgz#6657d5778bd2667f423dbc256afa4647bd7da590"
-  integrity sha512-ktoyGkzmw9l5t3H5oMwWR4bDwFF72Cr3rmQ7lv1BGowAbn90hLj00qWudn3i1ocwpoSJPY4ZG9yzso2UbedMzw==
+php-serialize@5.1.2:
+  version "5.1.2"
+  resolved "https://registry.yarnpkg.com/php-serialize/-/php-serialize-5.1.2.tgz#605b0681ebde49c823f998709ab7e84453c4d07e"
+  integrity sha512-oGgVOs7ZGg1if6CH+no+aoU0fKZxiB7W8kp/3lJqR/hCc4LrjRBNKi5UXaGDe/TgZrVzlBOmhI6VAsVhRpSx/w==
 
 picocolors@^1.0.0, picocolors@^1.1.1:
   version "1.1.1"
