@@ -432,6 +432,44 @@ describe('Process', function () {
                 '//example1234com.s3.ca-central-1.amazonaws.com/wp-content/uploads/2019/05/26182814/abcdefg-12345-logo.png': {id: '7050', source_type: 'media-library'},
                 '//abcdefg1234.com/wp-content/uploads/2019/05/abcdefg-12345-logo.png': {id: '7050', source_type: 'media-library'}
             },
+            _wp_attachment_metadata: {
+                width: 3510,
+                height: 1974,
+                file: '2014/10/IMG_2347.jpg',
+                sizes: {
+                    large: {
+                        file: 'IMG_2347-1024x575.jpg',
+                        height: 575,
+                        'mime-type': 'image/jpeg',
+                        width: 1024
+                    },
+                    medium: {
+                        file: 'IMG_2347-300x168.jpg',
+                        height: 168,
+                        'mime-type': 'image/jpeg',
+                        width: 300
+                    },
+                    thumbnail: {
+                        file: 'IMG_2347-150x150.jpg',
+                        height: 150,
+                        'mime-type': 'image/jpeg',
+                        width: 150
+                    }
+                },
+                image_meta: {
+                    aperture: 7.1,
+                    credit: '',
+                    camera: 'Canon EOS DIGITAL REBEL XSi',
+                    caption: '',
+                    created_timestamp: 1224982961,
+                    copyright: '',
+                    focal_length: '135',
+                    iso: '200',
+                    shutter_speed: '0.005',
+                    title: '',
+                    orientation: 1
+                }
+            },
             _et_dynamic_cached_shortcodes: [],
             _et_dynamic_cached_attributes: []
         });
