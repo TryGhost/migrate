@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-wp-api",
-  "version": "0.11.3",
+  "version": "0.11.4",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-api",
   "author": "Ghost Foundation",
   "license": "MIT",
