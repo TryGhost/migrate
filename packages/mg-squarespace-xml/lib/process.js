@@ -69,6 +69,16 @@ const processContent = (html) => {
         }
     });
 
+    $html('figure blockquote').each((i, el) => {
+        const nextIsCaption = $(el).next('figcaption').length;
+        let captionText = '';
+        if (nextIsCaption) {
+            captionText = `<br><br>${$(el).next('figcaption').html()}`;
+            $(el).next('figcaption').remove();
+        }
+        $(el).html(`<p>${$(el).html()}${captionText}</p>`);
+    });
+
     // TODO: this should be a parser plugin
     // Wrap nested lists in HTML card
     $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {

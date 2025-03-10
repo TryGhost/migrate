@@ -248,6 +248,27 @@ describe('Process', function () {
         expect(processed).not.toContain('<div class="sqs-audio-embed"');
     });
 
+    test('Can convert blockquotes', async function () {
+        let blockquote = `<p>Hello</p>
+<figure class="block-animation-none">
+  <blockquote data-animation-role="quote">
+    <span>“</span>Lorem ipsum<br><br>dolor simet.<span>”</span>
+  </blockquote>
+  <figcaption class="source">— Lipsum</figcaption>
+</figure>
+<p>World</p>`;
+
+        let processed = process.processContent(blockquote);
+
+        expect(processed).toEqual('<p>Hello</p>\n' +
+        '<figure class="block-animation-none">\n' +
+        '  <blockquote data-animation-role="quote"><p>\n' +
+        '    <span>“</span>Lorem ipsum<br><br>dolor simet.<span>”</span>\n' +
+        '  <br><br>— Lipsum</p></blockquote>\n' +
+        '  \n' +
+        '</figure>\n' +
+        '<p>World</p>');    });
+
     test('Can handle posts with no title', async function () {
         let ctx = {
             options: {
