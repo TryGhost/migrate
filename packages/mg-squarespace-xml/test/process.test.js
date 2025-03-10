@@ -267,7 +267,8 @@ describe('Process', function () {
         '  <br><br>— Lipsum</p></blockquote>\n' +
         '  \n' +
         '</figure>\n' +
-        '<p>World</p>');    });
+        '<p>World</p>');
+    });
 
     test('Can handle posts with no title', async function () {
         let ctx = {
