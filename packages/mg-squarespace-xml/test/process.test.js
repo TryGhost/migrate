@@ -270,6 +270,16 @@ describe('Process', function () {
         '<p>World</p>');
     });
 
+    test('Can conremove elements', async function () {
+        let blockquote = `<p>Hello</p><div class="custom-subscribe-form"></div><p>World</p>`;
+
+        let processed = process.processContent(blockquote, {
+            removeSelectors: '.custom-subscribe-form'
+        });
+
+        expect(processed).toEqual('<p>Hello</p><p>World</p>');
+    });
+
     test('Can handle posts with no title', async function () {
         let ctx = {
             options: {

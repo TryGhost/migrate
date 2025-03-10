@@ -23,7 +23,7 @@ const processUser = ($sqUser) => {
     };
 };
 
-const processContent = (html) => {
+const processContent = (html, options) => {
     if (!html) {
         return '';
     }
@@ -32,6 +32,12 @@ const processContent = (html) => {
         decodeEntities: false,
         scriptingEnabled: false
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+
+    if (options?.removeSelectors) {
+        $html(options.removeSelectors).each((i, el) => {
+            $(el).remove();
+        });
+    }
 
     $html('.sqs-audio-embed').each((i, el) => {
         let audioSrc = $(el).attr('data-url');
@@ -182,7 +188,7 @@ const processPost = ($sqPost, users, options) => {
             }
         };
 
-        post.data.html = processContent($($sqPost).children('content\\:encoded').text());
+        post.data.html = processContent($($sqPost).children('content\\:encoded').text(), options);
 
         if ($($sqPost).children('category').length >= 1) {
             post.data.tags = processTags($($sqPost).children('category'), fetchTags);

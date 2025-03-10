@@ -61,6 +61,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--addTag`**
     - string - default: `null`
     - Provide a tag name which should be added to every post in this migration
+- **`--removeSelectors`** 
+    - `Pass in a string of CSS selectors for elements that will be removed, e.g. '.ads, script[src*="adnetwork.com"]'`
+    - string - default: `null`
 - **`--fallBackHTMLCard`**
     - bool - default: `true`
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
