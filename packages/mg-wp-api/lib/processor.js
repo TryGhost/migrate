@@ -256,13 +256,17 @@ const processShortcodes = async ({html, options}) => {
     if (attachments && attachments.length) {
         shortcodes.add('gallery', ({attrs}) => {
             // Convert `ids` param to array of images
-            const images = attrs?.ids.split(',').map((i) => {
-                let idInt = parseInt(i.trim());
-                let foundAttachment = _.find(attachments, (item) => {
-                    return parseInt(item.id) === idInt;
+            let images = [];
+
+            if (attrs?.ids) {
+                images = attrs.ids.split(',').map((i) => {
+                    let idInt = parseInt(i.trim());
+                    let foundAttachment = _.find(attachments, (item) => {
+                        return parseInt(item.id) === idInt;
+                    });
+                    return foundAttachment;
                 });
-                return foundAttachment;
-            });
+            }
 
             let items = [];
 
