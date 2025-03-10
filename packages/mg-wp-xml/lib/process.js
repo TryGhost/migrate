@@ -26,8 +26,13 @@ const processWPMeta = async ($post) => {
         let key = $(meta).children('wp\\:meta_key').text();
         let value = $(meta).children('wp\\:meta_value').text();
 
-        if (isSerialized(value)) {
-            value = unserialize(value);
+        try {
+            if (isSerialized(value)) {
+                value = unserialize(value);
+            }
+        } catch (error) {
+            // If unserializing fails, log the error but don't throw. The serialized data is returned
+            console.log(key, value, error); // eslint-disable-line no-console
         }
 
         // Convert empty serialized arrays to empty arrays, which `php-serialize` doesn't do
