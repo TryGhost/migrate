@@ -25,8 +25,7 @@ describe('Parses Substack members files', function () {
         const ctx = {
             options: {
                 pathToFile: join(__dirname, '/fixtures/fixtures_signup_emails.csv'),
-                subs: join(__dirname, '/fixtures/fixtures_subscriber_emails.csv'),
-                hasSubscribers: true
+                subs: join(__dirname, '/fixtures/fixtures_subscriber_emails.csv')
             }
         };
 

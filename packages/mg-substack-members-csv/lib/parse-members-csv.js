@@ -4,6 +4,11 @@ const parseCSV = fsUtils.csv.parseCSV;
 
 export default async (ctx) => {
     const {options} = ctx;
+
+    if (options.subs) {
+        options.hasSubscribers = true;
+    }
+
     let subscribers = [];
 
     // Grab the main file "signups"

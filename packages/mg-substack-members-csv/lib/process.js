@@ -82,9 +82,39 @@ const processMember = (sMember, options) => {
     return processOptions(member, options);
 };
 
+export const parseCompGift = (val) => {
+    if (typeof val !== 'string') {
+        return val;
+    }
+
+    let [yearsOrDate, before] = val.split(':');
+
+    try {
+        if (yearsOrDate.length >= 4) {
+            yearsOrDate = new Date(yearsOrDate.replace(/([0-9]{4})([0-9]{2})([0-9]{2})/, `$1-$2-$3T12:00:00+0000`));
+        } else {
+            yearsOrDate = parseInt(yearsOrDate);
+        }
+    } catch (error) {
+        console.log('Failed to parse passed in date/years for threshold, falling back to 10. Ensure the correct format'); // eslint-disable-line no-console
+        yearsOrDate = 10;
+    }
+    return {
+        thresholdYearOrDate: yearsOrDate,
+        beforeThreshold: before
+    };
+};
+
 export default async (input, ctx) => {
     const {options} = ctx;
     ctx.logs = [];
+
+    if (options.subs) {
+        options.hasSubscribers = true;
+    }
+
+    options.comp = parseCompGift(options.comp);
+    options.gift = parseCompGift(options.gift);
 
     const processed = await input.map(member => processMember(member, options));
 
