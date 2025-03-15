@@ -32,7 +32,7 @@
     "@tryghost/mg-shortcodes": "0.2.19",
     "@tryghost/mg-webscraper": "0.9.25",
     "@tryghost/string": "0.2.12",
-    "cheerio": "1.0.0-rc.12",
+    "cheerio": "1.0.0",
     "html-to-text": "9.0.5",
     "simple-dom": "1.4.0",
     "tldts": "6.1.84",
