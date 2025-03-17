@@ -374,9 +374,9 @@
     tslib "^2.4.0"
 
 "@eslint-community/eslint-utils@^4.1.2", "@eslint-community/eslint-utils@^4.2.0", "@eslint-community/eslint-utils@^4.4.0":
-  version "4.5.0"
-  resolved "https://registry.yarnpkg.com/@eslint-community/eslint-utils/-/eslint-utils-4.5.0.tgz#716637f508a8add5814cc64c56e58cce57bdbe93"
-  integrity sha512-RoV8Xs9eNwiDvhv7M+xcL4PWyRyIXRY/FLp3buU4h1EYfdF7unWUy3dOjPqb3C7rMUewIcqwW850PgS8h1o1yg==
+  version "4.5.1"
+  resolved "https://registry.yarnpkg.com/@eslint-community/eslint-utils/-/eslint-utils-4.5.1.tgz#b0fc7e06d0c94f801537fd4237edc2706d3b8e4c"
+  integrity sha512-soEIOALTfTK6EjmKMMoLugwaP0rzkad90iIWd1hMO9ARkSAyjfMfkRRhLvD5qH7vvM0Cg72pieUfR6yh6XxC4w==
   dependencies:
     eslint-visitor-keys "^3.4.3"
 
@@ -4761,9 +4761,9 @@ can-symlink@^1.0.0:
     tmp "0.0.28"
 
 caniuse-lite@^1.0.30001688:
-  version "1.0.30001703"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001703.tgz#977cb4920598c158f491ecf4f4f2cfed9e354718"
-  integrity sha512-kRlAGTRWgPsOj7oARC9m1okJEXdL/8fekFVcxA8Hl7GH4r/sN4OJn/i6Flde373T50KS7Y37oFbMwlE8+F42kQ==
+  version "1.0.30001705"
+  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001705.tgz#dc3510bcdef261444ca944b7be9c8d0bb7fafeef"
+  integrity sha512-S0uyMMiYvA7CxNgomYBwwwPUnWzFD83f3B1ce5jHUfHTH//QL6hHsreI8RVC5606R4ssqravelYO5TU6t8sEyg==
 
 caseless@~0.12.0:
   version "0.12.0"
@@ -5683,9 +5683,9 @@ ejs@^3.1.10:
     jake "^10.8.5"
 
 electron-to-chromium@^1.5.73:
-  version "1.5.115"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.5.115.tgz#193dd534948b3ea77e3d95dd38ca12cdc01c76a9"
-  integrity sha512-MN1nahVHAQMOz6dz6bNZ7apgqc9InZy7Ja4DBEVCTdeiUcegbyOYE9bi/f2Z/z6ZxLi0RxLpyJ3EGe+4h3w73A==
+  version "1.5.119"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.5.119.tgz#4e105e419209b33e1c44b4d1b5fc6fb27fac0209"
+  integrity sha512-Ku4NMzUjz3e3Vweh7PhApPrZSS4fyiCIbcIrG9eKrriYVLmbMepETR/v6SU7xPm98QTqMSYiCwfO89QNjXLkbQ==
 
 elegant-spinner@3.0.0:
   version "3.0.0"
@@ -9093,9 +9093,9 @@ nan@^2.14.0, nan@^2.19.0:
   integrity sha512-DANghxFkS1plDdRsX0X9pm0Z6SJNN6gBdtXfanwoZ8hooC5gosGFSBGRYHUVPz1asKA/kMRqDRdHrluZ61SpBQ==
 
 nanoid@^3.3.8:
-  version "3.3.9"
-  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.9.tgz#e0097d8e026b3343ff053e9ccd407360a03f503a"
-  integrity sha512-SppoicMGpZvbF1l3z4x7No3OlIjP7QJvC9XR7AhZr1kL133KHnKPztkKDc+Ir4aJ/1VhTySrtKhrsycmrMQfvg==
+  version "3.3.10"
+  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.10.tgz#7bc882237698ef787d5cbba109e3b0168ba6e7b1"
+  integrity sha512-vSJJTG+t/dIKAUhUDw/dLdZ9s//5OxcHqLaDWWrW4Cdq7o6tdLIczUkMXt2MBNmk6sJRZBZRXVixs7URY1CmIg==
 
 napi-build-utils@^2.0.0:
   version "2.0.0"
@@ -11240,10 +11240,10 @@ tough-cookie@~2.5.0:
     psl "^1.1.28"
     punycode "^2.1.1"
 
-tr46@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/tr46/-/tr46-5.0.0.tgz#3b46d583613ec7283020d79019f1335723801cec"
-  integrity sha512-tk2G5R2KRwBd+ZN0zaEXpmzdKyOYksXwywulIX95MBODjSzMIuQnQ3m8JxgbhnL1LeVo7lqQKsYa1O3Htl7K5g==
+tr46@^5.1.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/tr46/-/tr46-5.1.0.tgz#4a077922360ae807e172075ce5beb79b36e4a101"
+  integrity sha512-IUWnUK7ADYR5Sl1fZlO1INDUhVhatWl7BtJWsIhwJ0UAK7ilzzIa8uIqOO/aYVWHZPJkKbEL+362wrzoeRF7bw==
   dependencies:
     punycode "^2.3.1"
 
@@ -11506,9 +11506,9 @@ undici@^5.22.1:
     "@fastify/busboy" "^2.0.0"
 
 undici@^6.19.5:
-  version "6.21.1"
-  resolved "https://registry.yarnpkg.com/undici/-/undici-6.21.1.tgz#336025a14162e6837e44ad7b819b35b6c6af0e05"
-  integrity sha512-q/1rj5D0/zayJB2FraXdaWxbhWiNKDvu8naDT2dl1yTlvJp4BLtOcp2a5BvgGNQpYYJzau7tf1WgKv3b+7mqpQ==
+  version "6.21.2"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-6.21.2.tgz#49c5884e8f9039c65a89ee9018ef3c8e2f1f4928"
+  integrity sha512-uROZWze0R0itiAKVPsYhFov9LxrPMHLMEQFszeI2gCN6bnIIZ8twzBCJcN2LJrBBLfrP0t1FW0g+JmKVl8Vk1g==
 
 unherit@^1.0.4:
   version "1.1.3"
@@ -11834,11 +11834,11 @@ whatwg-mimetype@^4.0.0:
   integrity sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg==
 
 whatwg-url@^14.0.0:
-  version "14.1.1"
-  resolved "https://registry.yarnpkg.com/whatwg-url/-/whatwg-url-14.1.1.tgz#ce71e240c61541315833b5cdafd139a479e47058"
-  integrity sha512-mDGf9diDad/giZ/Sm9Xi2YcyzaFpbdLpJPr+E9fSkyQ7KpQD4SdFcugkRQYzhmfI4KeV4Qpnn2sKPdo+kmsgRQ==
+  version "14.2.0"
+  resolved "https://registry.yarnpkg.com/whatwg-url/-/whatwg-url-14.2.0.tgz#4ee02d5d725155dae004f6ae95c73e7ef5d95663"
+  integrity sha512-De72GdQZzNTUBBChsXueQUnPKDkg/5A5zp7pFDuQAj5UFoENpiACU0wlCvzpAGnTkj++ihpKwKyYewn/XNUbKw==
   dependencies:
-    tr46 "^5.0.0"
+    tr46 "^5.1.0"
     webidl-conversions "^7.0.0"
 
 whatwg-url@^5.0.0:
