@@ -30,7 +30,7 @@
     "@tryghost/kg-default-cards": "10.1.1",
     "@tryghost/string": "0.2.12",
     "cheerio": "1.0.0-rc.12",
-    "sanitize-html": "2.14.0",
+    "sanitize-html": "2.15.0",
     "simple-dom": "1.4.0"
   }
 }
