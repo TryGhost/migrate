@@ -662,7 +662,7 @@ describe('Process shortcodes', function () {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        expect(convertedHtml).toEqual('Hello <figure class="wp-block-image"><img src="http://example.com/wp-content/uploads/2010/07/image.jpg" alt="Image of a thing" title="The Great Image" width="300" height="205" class="size-medium wp-image-6"></figure> World');
+        expect(convertedHtml).toEqual('Hello <figure class="kg-card kg-image-card"><img src="http://example.com/wp-content/uploads/2010/07/image.jpg" class="kg-image" alt="Image of a thing" loading="lazy" title="The Great Image" width="300" height="205"></figure> World');
     });
 
     test('Convert convert a caption shortcode with text to a WP image figure', async function () {
@@ -670,7 +670,19 @@ describe('Process shortcodes', function () {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        expect(convertedHtml).toEqual('Hello <figure class="wp-block-image"><img src="http://example.com/wp-content/uploads/2010/07/image.jpg" alt="Image of a thing" title="The Great Image" width="300" height="205" class="size-medium wp-image-6"><figcaption>The Great Image</figcaption></figure> World');
+        expect(convertedHtml).toEqual('Hello <figure class="kg-card kg-image-card kg-card-hascaption"><img src="http://example.com/wp-content/uploads/2010/07/image.jpg" class="kg-image" alt="Image of a thing" loading="lazy" title="The Great Image" width="300" height="205"><figcaption>The Great Image</figcaption></figure> World');
+    });
+
+    test('Will convert $ to entity in caption shortcode', async function () {
+        let html = `[caption id="attachment_60523" align="aligncenter" width="680"]<a href="https://example.com/image.jpg"><img src="https://example.com/image.jpg" alt="Lorem ipsum &quot;dolor $$$&quot;" width="680" height="355" class="size-full wp-image-60523" /></a> Person Name[/caption]`;
+
+        let options = {
+            attachments: []
+        };
+
+        let convertedHtml = await processor.processShortcodes({html, options});
+
+        expect(convertedHtml).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://example.com/image.jpg" class="kg-image" alt="Lorem ipsum &quot;dolor &amp;#36;&amp;#36;&amp;#36;&quot;" loading="lazy" width="680" height="355"><figcaption>Person Name</figcaption></figure>');
     });
 
     test('Can convert vc_separator to <hr>', async function () {

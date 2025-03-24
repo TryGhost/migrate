@@ -217,18 +217,34 @@ const processShortcodes = async ({html, options}) => {
             scriptingEnabled: false
         }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
-        let theImage = $html('img');
+        let theImageSrc = $html('img').attr('src') ?? '';
+        let theImageWidth = $html('img').attr('width') ?? '';
+        let theImageHeight = $html('img').attr('height') ?? '';
+        let theImageAlt = $html('img').attr('alt') ?? '';
+        let theImageTitle = $html('img').attr('title') ?? '';
+
+        // Convert $ to entity
+        theImageAlt = theImageAlt.replace(/\$/gm, '&#36;');
+        theImageTitle = theImageTitle.replace(/\$/gm, '&#36;');
+
         let theCaption = $html.text().trim();
 
-        let $figure = $('<figure class="wp-block-image"></figure>');
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: theImageSrc,
+                width: theImageWidth,
+                height: theImageHeight,
+                alt: theImageAlt,
+                title: theImageTitle
+            }
+        };
 
-        $figure.append(theImage);
-
-        if (theCaption && theCaption.length) {
-            $figure.append(`<figcaption>${theCaption.trim()}</figcaption>`);
+        if (theCaption.length) {
+            cardOpts.payload.caption = theCaption;
         }
 
-        return $.html($figure);
+        return serializer.serialize(imageCard.render(cardOpts));
     });
 
     shortcodes.add('vc_separator', () => {
