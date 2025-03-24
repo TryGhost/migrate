@@ -284,7 +284,7 @@ describe('MigrateContext', () => {
     });
 
     test('Can return Ghost JSON', async () => {
-        const ghostJSON = reusedInstance.ghostJson;
+        const ghostJSON = await reusedInstance.ghostJson;
 
         assert.deepEqual(Object.keys(ghostJSON), ['meta', 'data']);
         assert.deepEqual(Object.keys(ghostJSON.data), ['posts', 'users', 'tags', 'posts_authors', 'posts_tags', 'posts_meta']);

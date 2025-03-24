@@ -66,7 +66,7 @@ describe('MigrateContext as tasks', () => {
         tasks.push({
             title: 'Get JSON',
             task: async (ctx: any) => {
-                ctx.json = ctx.MGContext.ghostJson;
+                ctx.json = await ctx.MGContext.ghostJson;
             }
         });
 
