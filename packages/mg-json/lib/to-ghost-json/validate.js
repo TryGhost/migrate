@@ -1,4 +1,7 @@
-export default (json, ctx = null) => {
+import {slugify} from '@tryghost/string';
+import emailValidator from 'node-email-verifier';
+
+export default async (json, ctx = null) => {
     if (!json.posts) {
         return json;
     }
@@ -35,6 +38,18 @@ export default (json, ctx = null) => {
 
         json.posts[index].data = input;
     });
+
+    if (json?.users?.length) {
+        for await (const [index, item] of json.users.entries()) {
+            const isEmailValid = await emailValidator(item.data.email);
+
+            if (!isEmailValid) {
+                item.data.email = `${slugify(item?.data?.slug || item?.data?.name || 'author')}@example.com`;
+            }
+
+            json.users[index] = item;
+        }
+    }
 
     return json;
 };

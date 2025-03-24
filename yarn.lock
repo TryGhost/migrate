@@ -5989,7 +5989,6 @@ eslint-plugin-es-x@^7.1.0:
 
 eslint-plugin-filenames@allouis/eslint-plugin-filenames#15dc354f4e3d155fc2d6ae082dbfc26377539a18:
   version "1.3.2"
-  uid "15dc354f4e3d155fc2d6ae082dbfc26377539a18"
   resolved "https://codeload.github.com/allouis/eslint-plugin-filenames/tar.gz/15dc354f4e3d155fc2d6ae082dbfc26377539a18"
   dependencies:
     lodash.camelcase "4.3.0"
@@ -9175,6 +9174,14 @@ node-domexception@^1.0.0:
   resolved "https://registry.yarnpkg.com/node-domexception/-/node-domexception-1.0.0.tgz#6888db46a1f71c0b76b3f7555016b63fe64766e5"
   integrity sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==
 
+node-email-verifier@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/node-email-verifier/-/node-email-verifier-2.0.0.tgz#fc0b1ced84b6e19593f5809c379d28bb9d361a8b"
+  integrity sha512-AHcppjOH2KT0mxakrxFMOMjV/gOVMRpYvnJUkNfgF9oJ3INdVmqcMFJ5TlM8elpTPwt6A7bSp1IMnnWcxGom/Q==
+  dependencies:
+    ms "^2.1.3"
+    validator "^13.11.0"
+
 node-expat@^2.3.18:
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/node-expat/-/node-expat-2.4.1.tgz#1e0848084d46457195967766c29be0cdbb6e2698"
@@ -11723,6 +11730,11 @@ validator@7.2.0:
   version "7.2.0"
   resolved "https://registry.yarnpkg.com/validator/-/validator-7.2.0.tgz#a63dcbaba51d4350bf8df20988e0d5a54d711791"
   integrity sha512-c8NGTUYeBEcUIGeMppmNVKHE7wwfm3mYbNZxV+c5mlv9fDHI7Ad3p07qfNrn/CvpdkK2k61fOLRO2sTEhgQXmg==
+
+validator@^13.11.0:
+  version "13.12.0"
+  resolved "https://registry.yarnpkg.com/validator/-/validator-13.12.0.tgz#7d78e76ba85504da3fee4fd1922b385914d4b35f"
+  integrity sha512-c1Q0mCiPlgdTVVVIJIrBuxNicYE+t/7oKeI9MWLj3fh/uq2Pxh/3eeWbVZ4OcGW1TUf53At0njHw5SMdA3tmMg==
 
 verror@1.10.0:
   version "1.10.0"

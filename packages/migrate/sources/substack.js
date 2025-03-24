@@ -322,11 +322,11 @@ const getTaskRunner = (options, logger) => {
         },
         {
             title: 'Format data as Ghost JSON',
-            task: (ctx) => {
+            task: async (ctx) => {
                 // 5. Format the data as a valid Ghost JSON file
                 ctx.timings.formatDataAsGhost = Date.now();
                 try {
-                    ctx.result = toGhostJSON(ctx.result, ctx.options, ctx);
+                    ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
                 } catch (error) {
                     ctx.logger.error({message: 'Failed to format data as Ghost JSON', error});
                     throw error;
