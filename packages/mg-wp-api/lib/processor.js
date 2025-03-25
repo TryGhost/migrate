@@ -780,13 +780,16 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
         $(el).find('figure').each((iii, elll) => { // eslint-disable-line no-shadow
             let img = $(elll).find('img');
-            cardOpts.payload.images.push({
-                row: 0,
-                fileName: basename(img.attr('src')),
-                src: img.attr('data-full') ?? img.attr('src'),
-                width: img.attr('width'),
-                height: img.attr('height')
-            });
+
+            if (img && img.attr('src')) {
+                cardOpts.payload.images.push({
+                    row: 0,
+                    fileName: basename(img.attr('src')),
+                    src: img.attr('data-full') ?? img.attr('src'),
+                    width: img.attr('width'),
+                    height: img.attr('height')
+                });
+            }
         });
 
         const galleryHtml = serializer.serialize(galleryCard.render(cardOpts));
