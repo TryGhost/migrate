@@ -282,35 +282,48 @@ const processShortcodes = async ({html, options}) => {
                     });
                     return foundAttachment;
                 });
+
+                // Filter out any undefined values
+                images = images.filter((item) => {
+                    return item !== undefined;
+                });
             }
 
-            let items = [];
+            const imageChunks = _.chunk(images, 9);
 
-            images.forEach((item) => {
-                items.push({
-                    fileName: basename(item.url),
-                    src: item.url,
-                    alt: item.alt,
-                    width: item.width,
-                    height: item.height
+            let galleryHtmlChunks = [];
+
+            imageChunks.forEach((chunk) => {
+                let items = [];
+
+                chunk.forEach((item) => {
+                    items.push({
+                        fileName: basename(item.url),
+                        src: item.url,
+                        alt: item.alt,
+                        width: item.width,
+                        height: item.height
+                    });
                 });
-            });
 
-            items = items.map((item, index) => {
-                return {
-                    ...item,
-                    row: Math.floor(index / 3)
+                items = items.map((item, index) => {
+                    return {
+                        ...item,
+                        row: Math.floor(index / 3)
+                    };
+                });
+
+                let cardOpts = {
+                    env: {dom: new SimpleDom.Document()},
+                    payload: {
+                        images: items
+                    }
                 };
+
+                galleryHtmlChunks.push(serializer.serialize(galleryCard.render(cardOpts)));
             });
 
-            let cardOpts = {
-                env: {dom: new SimpleDom.Document()},
-                payload: {
-                    images: items
-                }
-            };
-
-            return serializer.serialize(galleryCard.render(cardOpts));
+            return galleryHtmlChunks.join('');
         });
     }
 
