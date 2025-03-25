@@ -32,7 +32,7 @@
     "@tryghost/string": "0.2.12",
     "cheerio": "1.0.0-rc.12",
     "he": "1.2.0",
-    "html-entities": "2.5.2",
+    "html-entities": "2.5.3",
     "lodash": "4.17.21",
     "simple-dom": "1.4.0",
     "srcset": "5.0.1"
