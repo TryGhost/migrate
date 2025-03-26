@@ -98,8 +98,8 @@ describe('PostContext', function () {
 
             const final = instance.getFinal;
 
-            assert.deepEqual(final.data.html, '<p>Hello world</p>');
-            assert.deepEqual(typeof final.data.mobiledoc, 'object');
+            assert.deepEqual(final.data.html, null);
+            assert.deepEqual(typeof final.data.mobiledoc, 'string');
             assert.deepEqual(final.data.lexical, null);
         });
 
@@ -114,8 +114,8 @@ describe('PostContext', function () {
 
             const final = instance.getFinal;
 
-            assert.deepEqual(final.data.html, '<p>Hello world</p>');
-            assert.deepEqual(typeof final.data.lexical, 'object');
+            assert.deepEqual(final.data.html, null);
+            assert.deepEqual(typeof final.data.lexical, 'string');
             assert.deepEqual(final.data.mobiledoc, null);
         });
 
@@ -131,8 +131,8 @@ describe('PostContext', function () {
 
             const final = instance.getFinal;
 
-            assert.deepEqual(final.data.html, '<p>Hello world</p>');
-            assert.deepEqual(typeof final.data.lexical, 'object');
+            assert.deepEqual(final.data.html, null);
+            assert.deepEqual(typeof final.data.lexical, 'string');
             assert.deepEqual(final.data.mobiledoc, null);
         });
 
