@@ -4,6 +4,7 @@ import {slugify} from '@tryghost/string';
 import SimpleDom from 'simple-dom';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 import errors from '@tryghost/errors';
+import {decode} from 'html-entities';
 
 const htmlToTextTrimmed = (html, max) => {
     let noHtml = html.replace(/<[^>]+>/g, ' ').replace(/\r?\n|\r/g, ' ').replace(/ {2,}/, ' ').trim();
@@ -176,7 +177,7 @@ const processPost = ($sqPost, users, options) => {
             url: `${url}${$($sqPost).children('link').text()}`,
             data: {
                 slug: postSlug,
-                title: postTitle,
+                title: decode(postTitle),
                 status: $($sqPost).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
                 published_at: postDate,
                 created_at: postDate,

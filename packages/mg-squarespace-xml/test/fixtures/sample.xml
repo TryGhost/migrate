@@ -29,7 +29,7 @@
       <wp:category_parent />
     </wp:category>
     <item>
-      <title>Draft Post</title>
+      <title>Draft & Post &amp; More&mdash;More</title>
       <link>/draft-post</link>
       <content:encoded><![CDATA[<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. </p>]]></content:encoded>
       <excerpt:encoded />

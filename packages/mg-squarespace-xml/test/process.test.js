@@ -130,7 +130,7 @@ describe('Process', function () {
 
         expect(data).toBeObject();
         expect(data.slug).toEqual('draft-post');
-        expect(data.title).toEqual('Draft Post');
+        expect(data.title).toEqual('Draft & Post & More—More');
         expect(data.status).toEqual('draft');
         expect(data.published_at).toEqual(new Date('2013-11-02T23:02:32.000Z'));
         expect(data.created_at).toEqual(new Date('2013-11-02T23:02:32.000Z'));
