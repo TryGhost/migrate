@@ -3076,10 +3076,10 @@
     "@stdlib/utils-copy" "^0.2.0"
     uuid "^9.0.0"
 
-"@tryghost/html-to-mobiledoc@3.2.0":
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-3.2.0.tgz#18d3a0a38ee5a1bb1866f67082632d36fb4e02b1"
-  integrity sha512-0ArJzz9L+MCufnhxBYwygTRFcJ1aG1hC47S6Od5mvtBOF3/4pS8v5iEBovNJSB8T3+0lk/xIIhidBKBv607WMw==
+"@tryghost/html-to-mobiledoc@3.2.1":
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-3.2.1.tgz#09f02e0401c06369ac0b84c4f34d6e9d3bad7a65"
+  integrity sha512-pp7mlDajjwqdndcIIS8kq0zqZaWd2lQzjbNhFwKeBL1D/LK4vGifgXil1ctTkfVlH+Mbktgpv/LZv/5zLLws/g==
   dependencies:
     "@tryghost/kg-parser-plugins" "4.2.0"
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
