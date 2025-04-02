@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import {slugify} from '@tryghost/string';
-import Entities from 'html-entities';
+import {decode} from 'html-entities';
 /**
  * Hydrate Ghost objects
  * Extend object with the minimum data needed for an import to succeed
@@ -91,7 +91,7 @@ const hydratePost = (input, options) => {
     }
 
     // Cleanup titles
-    input.title = Entities.decode(input.title);
+    input.title = decode(input.title);
 
     // @TODO: log some sort of warning for things like this?
     if (!_.includes(['published', 'draft', 'scheduled'], input.status)) {
