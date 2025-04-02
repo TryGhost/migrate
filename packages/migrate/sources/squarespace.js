@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import {toGhostJSON} from '@tryghost/mg-json';
 import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
 import MgWebScraper from '@tryghost/mg-webscraper';
@@ -87,7 +88,11 @@ const getTaskRunner = (options, logger) => {
                 };
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-                ctx.fileCache = new fsUtils.FileCache(ctx.options.pathToFile);
+                ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(options.pathToFile);
+                ctx.fileCache = new fsUtils.FileCache(`squarespace-${ctx.options.cacheName}`, {
+                    tmpPath: ctx.options.tmpPath
+                });
+
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, null, skipScrape);
                 ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
                     sizeLimit: ctx.options.sizeLimit,
@@ -201,12 +206,29 @@ const getTaskRunner = (options, logger) => {
             skip: () => !options.zip,
             task: async (ctx, task) => {
                 // 9. Write a valid Ghost import zip
+                const isStorage = (options?.outputStorage && typeof options.outputStorage === 'object') ?? false;
+
                 try {
                     let timer = Date.now();
-                    ctx.outputFile = await fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+                    const zipFinalPath = options.outputPath || process.cwd();
+                    // zip the file and save it temporarily
+                    ctx.outputFile = await fsUtils.zip.write(zipFinalPath, ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+
+                    if (isStorage) {
+                        const storage = options.outputStorage;
+                        const localFilePath = ctx.outputFile.path;
+
+                        // read the file buffer
+                        const fileBuffer = await readFileSync(ctx.outputFile.path);
+                        // Upload the file to the storage
+                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-wordpress-${ctx.options.cacheName}.zip`});
+                        // now that the file is uploaded to the storage, delete the local zip file
+                        await fsUtils.zip.deleteFile(localFilePath);
+                    }
+
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
-                    ctx.errors.push(error);
+                    ctx.logger.error({message: 'Failed to write and upload ZIP file', error});
                     throw error;
                 }
             }
