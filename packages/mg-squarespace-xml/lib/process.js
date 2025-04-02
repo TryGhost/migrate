@@ -12,14 +12,18 @@ const htmlToTextTrimmed = (html, max) => {
 };
 
 const processUser = ($sqUser) => {
-    const authorSlug = slugify($($sqUser).children('wp\\:author_login').text());
+    const login = $($sqUser).children('wp\\:author_login').text();
+    const slug = slugify(login);
+    const email = $($sqUser).children('wp\\:author_email').text();
+    const name = $($sqUser).children('wp\\:author_display_name').text();
 
     return {
-        url: authorSlug,
+        url: slug,
+        login: login,
         data: {
-            slug: authorSlug,
-            name: $($sqUser).children('wp\\:author_display_name').text(),
-            email: $($sqUser).children('wp\\:author_email').text()
+            slug: slug,
+            name: name,
+            email: (email.length) ? email : `${slug}@example.com`
         }
     };
 };
@@ -158,7 +162,10 @@ const processPost = ($sqPost, users, options) => {
     // only grab posts and pages
     if (postType !== 'attachment') {
         const featureImage = processFeatureImage($sqPost);
-        const authorSlug = slugify($($sqPost).children('dc\\:creator').text());
+        // const authorSlug = slugify($($sqPost).children('dc\\:creator').text());
+        const creator = $($sqPost).children('dc\\:creator').text();
+        const creatorSlug = slugify(creator);
+
         let postSlug = $($sqPost).children('link').text();
         postSlug = postSlug.replace(/(\.html)/i, '');
         postSlug = postSlug.split('/').pop();
@@ -184,11 +191,9 @@ const processPost = ($sqPost, users, options) => {
                 updated_at: postDate,
                 feature_image: featureImage,
                 type: postType,
-                author: users ? users.find(user => user.data.slug === authorSlug) : null,
                 tags: []
             }
         };
-
         post.data.html = processContent($($sqPost).children('content\\:encoded').text(), options);
 
         if ($($sqPost).children('category').length >= 1) {
@@ -213,22 +218,42 @@ const processPost = ($sqPost, users, options) => {
             post.data.title = htmlToTextTrimmed(post.data.html, 50);
         }
 
-        if (!post.data.author) {
-            if ($($sqPost).children('dc\\:creator').length >= 1) {
-                post.data.author = {
-                    url: authorSlug,
-                    data: {
-                        slug: authorSlug
-                    }
-                };
-            } else {
-                post.data.author = {
-                    url: 'migrator-added-author',
-                    data: {
-                        slug: 'migrator-added-author'
-                    }
-                };
+        if (users) {
+            const foundUser = users.find((user) => {
+                if (creator === user.login) {
+                    return user;
+                } else if (creator === user.data.name) {
+                    return user;
+                } else if (creator === user.data.email) {
+                    return user;
+                }
+
+                return false;
+            });
+
+            if (foundUser) {
+                post.data.author = foundUser;
             }
+        } else if (creator) {
+            post.data.author = {
+                url: creatorSlug,
+                data: {
+                    name: creator,
+                    slug: creatorSlug,
+                    email: `${creatorSlug}@example.com`
+                }
+            };
+        }
+
+        if (!post?.data?.author) {
+            post.data.author = {
+                url: 'migrator-added-author',
+                data: {
+                    slug: 'migrator-added-author',
+                    name: 'Migrator Added Author',
+                    email: 'migrator-added-author@example.com'
+                }
+            };
         }
 
         return post;

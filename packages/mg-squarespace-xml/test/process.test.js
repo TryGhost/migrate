@@ -151,10 +151,10 @@ describe('Process', function () {
         const author = data.author;
 
         expect(author).toBeObject();
-        expect(author.url).toEqual('harry-example-com');
-        expect(author.data.slug).toEqual('harry-example-com');
-        expect(author.data.name).toEqual('Harry Potter');
-        expect(author.data.email).toEqual('harry@example.com');
+        expect(author.url).toEqual('harrysquatter');
+        expect(author.data.slug).toEqual('harrysquatter');
+        expect(author.data.name).toEqual('Harry Squatter');
+        expect(author.data.email).toEqual('harrysquatter@example.com');
     });
 
     it('Can convert a published page', async function () {

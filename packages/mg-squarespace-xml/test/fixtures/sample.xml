@@ -14,14 +14,15 @@
       <wp:author_display_name><![CDATA[Hermione Granger]]></wp:author_display_name>
       <wp:author_first_name><![CDATA[Hermione]]></wp:author_first_name>
       <wp:author_last_name><![CDATA[Granger]]></wp:author_last_name>
+
     </wp:author>
     <wp:author>
       <wp:author_id>-31071980</wp:author_id>
-      <wp:author_login>harry@example.com</wp:author_login>
-      <wp:author_email>harry@example.com</wp:author_email>
-      <wp:author_display_name><![CDATA[Harry Potter]]></wp:author_display_name>
-      <wp:author_first_name><![CDATA[Harry]]></wp:author_first_name>
-      <wp:author_last_name><![CDATA[Potter]]></wp:author_last_name>
+        <wp:author_login>HarrySquatter</wp:author_login>
+        <wp:author_email />
+        <wp:author_display_name><![CDATA[Harry Squatter]]></wp:author_display_name>
+        <wp:author_first_name><![CDATA[Harry]]></wp:author_first_name>
+        <wp:author_last_name><![CDATA[Squatter]]></wp:author_last_name>
     </wp:author>
     <wp:category>
       <wp:cat_name><![CDATA[Company News]]></wp:cat_name>
@@ -42,7 +43,7 @@
       <wp:post_date_gmt>2013-11-02 23:02:32</wp:post_date_gmt>
       <category domain="post_tag" nicename="programming"><![CDATA[Programming]]></category>
       <category domain="category" nicename="company-news"><![CDATA[Company News]]></category>
-      <dc:creator>harry@example.com</dc:creator>
+      <dc:creator>HarrySquatter</dc:creator>
       <wp:comment_status>open</wp:comment_status>
     </item>
     <item>
