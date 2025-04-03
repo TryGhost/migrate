@@ -34,7 +34,7 @@
     "typescript": "5.5.4"
   },
   "dependencies": {
-    "@tryghost/html-to-mobiledoc": "3.2.0",
+    "@tryghost/html-to-mobiledoc": "3.2.1",
     "@tryghost/kg-html-to-lexical": "1.2.5",
     "@tryghost/listr-smart-renderer": "0.5.16",
     "@tryghost/validator": "0.2.15"
