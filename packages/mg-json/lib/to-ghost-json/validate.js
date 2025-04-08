@@ -41,7 +41,14 @@ export default async (json, ctx = null) => {
 
     if (json?.users?.length) {
         for await (const [index, item] of json.users.entries()) {
-            const isEmailValid = await emailValidator(item.data.email);
+            let isEmailValid = false;
+
+            try {
+                isEmailValid = await emailValidator(item.data.email);
+            } catch (error) {
+                // Silently fail here as we don't want to break the migration
+                // Just fall back to the <user-slug>@example.com
+            }
 
             if (!isEmailValid) {
                 item.data.email = `${slugify(item?.data?.slug || item?.data?.name || 'author')}@example.com`;
