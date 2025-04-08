@@ -473,14 +473,6 @@ describe('Process WordPress HTML', function () {
         expect(processed).toEqual('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sagittis vel purus sed placerat.</p><p>Proin est justo, mollis non turpis et, suscipit consequat orci.</p>');
     });
 
-    test('Can remove elements by CSS selector', async function () {
-        const html = `<figure class="is-layout-flex wp-block-gallery-1 wp-block-gallery has-nested-images columns-default is-cropped"><figure class="wp-block-image size-large"><img src="https://example.com/wp-content/uploads/2022/08/1.jpg" alt="" /></figure><figure class="wp-block-image size-large"><img src="https://example.com/wp-content/uploads/2022/08/2.jpg" /></figure><figure class="wp-block-image size-large"><img src="https://example.com/wp-content/uploads/2022/08/3.jpg" alt="" /><figcaption class="wp-element-caption">My caption</figcaption></figure></figure>`;
-
-        const processed = await processor.processContent({html});
-
-        expect(processed).toEqual('<figure class="wp-block-image size-large"><img src="https://example.com/wp-content/uploads/2022/08/1.jpg" alt></figure><figure class="wp-block-image size-large"><img src="https://example.com/wp-content/uploads/2022/08/2.jpg"></figure><figure class="wp-block-image size-large"><img src="https://example.com/wp-content/uploads/2022/08/3.jpg" alt><figcaption class="wp-element-caption">My caption</figcaption></figure>');
-    });
-
     test('Can change image data-gif to src', async function () {
         const html = '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-gif="https://example.com/wp-content/uploads/2022/08/3.gif" />';
 
@@ -607,6 +599,61 @@ describe('Process WordPress HTML', function () {
 
         expect(processed).toEqual('<figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo1.jpg" width="500" height="375" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo2.jpg" width="500" height="375" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo4.jpg" width="500" height="375" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo3.jpg" width="500" height="375" loading="lazy" alt></div></div></div></figure>');
     });
+
+    test('Can convert a figure-based gallery', async function () {
+        const html = `<figure class="wp-block-gallery has-nested-images columns-default is-cropped wp-block-gallery-1 is-layout-flex wp-block-gallery-is-layout-flex">
+                <figure class="wp-block-image size-large">
+                    <a href="https://example.org/wp-content/uploads/2021/01/landscape.jpg">
+                        <img width="1000"  height="667"  class="wp-image-24259" src="https://example.org/wp-content/uploads/2021/01/landscape.jpg">
+                    </a>
+                </figure>
+                <figure class="wp-block-image size-large">
+                    <a href="https://example.org/wp-content/uploads/2020/12/portrait.jpg">
+                        <img width="1000"  height="750"  class="wp-image-24166" src="https://example.org/wp-content/uploads/2020/12/portrait.jpg"  >
+                    </a>
+                </figure>
+            </figure>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.org/wp-content/uploads/2021/01/landscape.jpg" width="1000" height="667" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.org/wp-content/uploads/2020/12/portrait.jpg" width="1000" height="750" loading="lazy" alt></div></div></div></figure>');
+    });
+
+    test('Outputs unchanged HTML is `rawHtml` option is set', async function () {
+        const html = `<p style="font-weight: 400;">Hello</p><img data-src="https://example.com/image.jpg" />`;
+
+        const processed = await processor.processContent({html, options: {rawHtml: true}});
+
+        expect(processed).toEqual('<!--kg-card-begin: html--><p style="font-weight: 400;">Hello</p><img data-src="https://example.com/image.jpg" /><!--kg-card-end: html-->');
+    });
+
+    test('Adds a <code> tag to syntax highlighted code', async function () {
+        const html = `<pre class="wp-block-syntaxhighlighter-code">config:
+  color:
+    green:
+      sage: true</pre>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<pre class="wp-block-syntaxhighlighter-code"><code>config:\n' +
+        '  color:\n' +
+        '    green:\n' +
+        '      sage: true</code></pre>');
+    });
+
+    test('Does not add a <code> tag to syntax highlighted code', async function () {
+        const html = `<pre class="wp-block-syntaxhighlighter-code"><code>config:
+  color:
+    green:
+      sage: true</code></pre>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<pre class="wp-block-syntaxhighlighter-code"><code>config:\n' +
+        '  color:\n' +
+        '    green:\n' +
+        '      sage: true</code></pre>');
+    });
 });
 
 describe('Process shortcodes', function () {
@@ -615,7 +662,7 @@ describe('Process shortcodes', function () {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        expect(convertedHtml).toEqual('Hello <figure class="wp-block-image"><img src="http://example.com/wp-content/uploads/2010/07/image.jpg" alt="Image of a thing" title="The Great Image" width="300" height="205" class="size-medium wp-image-6"></figure> World');
+        expect(convertedHtml).toEqual('Hello <figure class="kg-card kg-image-card"><img src="http://example.com/wp-content/uploads/2010/07/image.jpg" class="kg-image" alt="Image of a thing" loading="lazy" title="The Great Image" width="300" height="205"></figure> World');
     });
 
     test('Convert convert a caption shortcode with text to a WP image figure', async function () {
@@ -623,7 +670,19 @@ describe('Process shortcodes', function () {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        expect(convertedHtml).toEqual('Hello <figure class="wp-block-image"><img src="http://example.com/wp-content/uploads/2010/07/image.jpg" alt="Image of a thing" title="The Great Image" width="300" height="205" class="size-medium wp-image-6"><figcaption>The Great Image</figcaption></figure> World');
+        expect(convertedHtml).toEqual('Hello <figure class="kg-card kg-image-card kg-card-hascaption"><img src="http://example.com/wp-content/uploads/2010/07/image.jpg" class="kg-image" alt="Image of a thing" loading="lazy" title="The Great Image" width="300" height="205"><figcaption>The Great Image</figcaption></figure> World');
+    });
+
+    test('Will convert $ to entity in caption shortcode', async function () {
+        let html = `[caption id="attachment_60523" align="aligncenter" width="680"]<a href="https://example.com/image.jpg"><img src="https://example.com/image.jpg" alt="Lorem ipsum &quot;dolor $$$&quot;" width="680" height="355" class="size-full wp-image-60523" /></a> Person Name[/caption]`;
+
+        let options = {
+            attachments: []
+        };
+
+        let convertedHtml = await processor.processShortcodes({html, options});
+
+        expect(convertedHtml).toEqual('<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://example.com/image.jpg" class="kg-image" alt="Lorem ipsum &quot;dolor &amp;#36;&amp;#36;&amp;#36;&quot;" loading="lazy" width="680" height="355"><figcaption>Person Name</figcaption></figure>');
     });
 
     test('Can convert vc_separator to <hr>', async function () {
@@ -746,6 +805,127 @@ const hello () => {
         let convertedHtml = await processor.processShortcodes({html});
 
         expect(convertedHtml).toEqual('<!--kg-card-begin: html--><audio controls src="/path/to/file.mp3" preload="metadata"></audio><!--kg-card-end: html--> <!--kg-card-begin: html--><audio controls src="/path/to/file.ogg" preload="metadata"></audio><!--kg-card-end: html-->');
+    });
+
+    test('Can handle gallery shortcodes', async function () {
+        let html = `[gallery ids="1,2,3,4,5,6,7,8,9,10,11,12" columns="4" size="full"]`;
+
+        let options = {
+            attachments: [
+                {
+                    id: '1',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/1.jpg',
+                    description: null,
+                    alt: 'Image 123 alt text',
+                    width: 1200,
+                    height: 800
+                },
+                {
+                    id: '2',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/2.jpg',
+                    description: null,
+                    alt: '',
+                    width: 1200,
+                    height: 800
+                },
+                {
+                    id: '3',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/3.jpg',
+                    description: null,
+                    alt: '',
+                    width: 1200,
+                    height: 800
+                },
+                {
+                    id: '4',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/4.jpg',
+                    description: null,
+                    alt: '',
+                    width: 1200,
+                    height: 800
+                },
+                {
+                    id: '5',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/5.jpg',
+                    description: null,
+                    alt: '',
+                    width: 1200,
+                    height: 800
+                },
+                {
+                    id: '6',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/6.jpg',
+                    description: null,
+                    alt: '',
+                    width: 1200,
+                    height: 800
+                },
+                {
+                    id: '7',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/7.jpg',
+                    description: null,
+                    alt: '',
+                    width: 1200,
+                    height: 800
+                },
+                {
+                    id: '8',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/8.jpg',
+                    description: null,
+                    alt: '',
+                    width: 1200,
+                    height: 800
+                },
+                {
+                    id: '9',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/9.jpg',
+                    description: null,
+                    alt: '',
+                    width: 1200,
+                    height: 800
+                },
+                {
+                    id: '10',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/10.jpg',
+                    description: null,
+                    alt: '',
+                    width: 1200,
+                    height: 800
+                },
+                {
+                    id: '11',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/11.jpg',
+                    description: null,
+                    alt: '',
+                    width: 1200,
+                    height: 800
+                },
+                {
+                    id: '12',
+                    url: 'https://example.com.com/wp-content/uploads/2025/02/24/12.jpg',
+                    description: null,
+                    alt: '',
+                    width: 1200,
+                    height: 800
+                }
+            ]
+        };
+
+        let convertedHtml = await processor.processShortcodes({html, options});
+
+        expect(convertedHtml).toEqual('<figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/1.jpg" width="1200" height="800" loading="lazy" alt="Image 123 alt text"></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/2.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/3.jpg" width="1200" height="800" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/4.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/5.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/6.jpg" width="1200" height="800" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/7.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/8.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/9.jpg" width="1200" height="800" loading="lazy" alt></div></div></div></figure><figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/10.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/11.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/12.jpg" width="1200" height="800" loading="lazy" alt></div></div></div></figure>');
+    });
+
+    test('Will skip gallery shortcodes if no attachments avaliable', async function () {
+        let html = `[gallery ids="123,234,345,456" columns="4" size="full"]`;
+
+        let options = {
+            attachments: []
+        };
+
+        let convertedHtml = await processor.processShortcodes({html, options});
+
+        expect(convertedHtml).toEqual('[gallery ids="123,234,345,456" columns="4" size="full"]');
     });
 });
 

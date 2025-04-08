@@ -4,6 +4,7 @@ import {slugify} from '@tryghost/string';
 import SimpleDom from 'simple-dom';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 import errors from '@tryghost/errors';
+import {decode} from 'html-entities';
 
 const htmlToTextTrimmed = (html, max) => {
     let noHtml = html.replace(/<[^>]+>/g, ' ').replace(/\r?\n|\r/g, ' ').replace(/ {2,}/, ' ').trim();
@@ -11,19 +12,23 @@ const htmlToTextTrimmed = (html, max) => {
 };
 
 const processUser = ($sqUser) => {
-    const authorSlug = slugify($($sqUser).children('wp\\:author_login').text());
+    const login = $($sqUser).children('wp\\:author_login').text();
+    const slug = slugify(login);
+    const email = $($sqUser).children('wp\\:author_email').text();
+    const name = $($sqUser).children('wp\\:author_display_name').text();
 
     return {
-        url: authorSlug,
+        url: slug,
+        login: login,
         data: {
-            slug: authorSlug,
-            name: $($sqUser).children('wp\\:author_display_name').text(),
-            email: $($sqUser).children('wp\\:author_email').text()
+            slug: slug,
+            name: name,
+            email: (email.length) ? email : `${slug}@example.com`
         }
     };
 };
 
-const processContent = (html) => {
+const processContent = (html, options) => {
     if (!html) {
         return '';
     }
@@ -32,6 +37,12 @@ const processContent = (html) => {
         decodeEntities: false,
         scriptingEnabled: false
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+
+    if (options?.removeSelectors) {
+        $html(options.removeSelectors).each((i, el) => {
+            $(el).remove();
+        });
+    }
 
     $html('.sqs-audio-embed').each((i, el) => {
         let audioSrc = $(el).attr('data-url');
@@ -67,6 +78,16 @@ const processContent = (html) => {
         } else {
             $(img).attr('src', $(img).attr('data-src'));
         }
+    });
+
+    $html('figure blockquote').each((i, el) => {
+        const nextIsCaption = $(el).next('figcaption').length;
+        let captionText = '';
+        if (nextIsCaption) {
+            captionText = `<br><br>${$(el).next('figcaption').html()}`;
+            $(el).next('figcaption').remove();
+        }
+        $(el).html(`<p>${$(el).html()}${captionText}</p>`);
     });
 
     // TODO: this should be a parser plugin
@@ -141,7 +162,10 @@ const processPost = ($sqPost, users, options) => {
     // only grab posts and pages
     if (postType !== 'attachment') {
         const featureImage = processFeatureImage($sqPost);
-        const authorSlug = slugify($($sqPost).children('dc\\:creator').text());
+        // const authorSlug = slugify($($sqPost).children('dc\\:creator').text());
+        const creator = $($sqPost).children('dc\\:creator').text();
+        const creatorSlug = slugify(creator);
+
         let postSlug = $($sqPost).children('link').text();
         postSlug = postSlug.replace(/(\.html)/i, '');
         postSlug = postSlug.split('/').pop();
@@ -160,19 +184,17 @@ const processPost = ($sqPost, users, options) => {
             url: `${url}${$($sqPost).children('link').text()}`,
             data: {
                 slug: postSlug,
-                title: postTitle,
+                title: decode(postTitle),
                 status: $($sqPost).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
                 published_at: postDate,
                 created_at: postDate,
                 updated_at: postDate,
                 feature_image: featureImage,
                 type: postType,
-                author: users ? users.find(user => user.data.slug === authorSlug) : null,
                 tags: []
             }
         };
-
-        post.data.html = processContent($($sqPost).children('content\\:encoded').text());
+        post.data.html = processContent($($sqPost).children('content\\:encoded').text(), options);
 
         if ($($sqPost).children('category').length >= 1) {
             post.data.tags = processTags($($sqPost).children('category'), fetchTags);
@@ -196,22 +218,42 @@ const processPost = ($sqPost, users, options) => {
             post.data.title = htmlToTextTrimmed(post.data.html, 50);
         }
 
-        if (!post.data.author) {
-            if ($($sqPost).children('dc\\:creator').length >= 1) {
-                post.data.author = {
-                    url: authorSlug,
-                    data: {
-                        slug: authorSlug
-                    }
-                };
-            } else {
-                post.data.author = {
-                    url: 'migrator-added-author',
-                    data: {
-                        slug: 'migrator-added-author'
-                    }
-                };
+        if (users) {
+            const foundUser = users.find((user) => {
+                if (creator === user.login) {
+                    return user;
+                } else if (creator === user.data.name) {
+                    return user;
+                } else if (creator === user.data.email) {
+                    return user;
+                }
+
+                return false;
+            });
+
+            if (foundUser) {
+                post.data.author = foundUser;
             }
+        } else if (creator) {
+            post.data.author = {
+                url: creatorSlug,
+                data: {
+                    name: creator,
+                    slug: creatorSlug,
+                    email: `${creatorSlug}@example.com`
+                }
+            };
+        }
+
+        if (!post?.data?.author) {
+            post.data.author = {
+                url: 'migrator-added-author',
+                data: {
+                    slug: 'migrator-added-author',
+                    name: 'Migrator Added Author',
+                    email: 'migrator-added-author@example.com'
+                }
+            };
         }
 
         return post;

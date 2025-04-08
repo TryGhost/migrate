@@ -83,6 +83,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--excerptSelector`**
     - string - default: `null`
     - Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`
+- **`--rawHtml`** 
+    - Don't process HTML and wrap in a HTML card
+    - bool - default: `false`
 - **`--fallBackHTMLCard`**
     - bool - default: `true`
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails

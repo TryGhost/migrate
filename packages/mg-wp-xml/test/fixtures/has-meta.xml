@@ -68,6 +68,10 @@
                 <wp:meta_value><![CDATA[a:2:{s:105:"//example1234com.s3.ca-central-1.amazonaws.com/wp-content/uploads/2019/05/26182814/abcdefg-12345-logo.png";a:2:{s:2:"id";s:4:"7050";s:11:"source_type";s:13:"media-library";}s:67:"//abcdefg1234.com/wp-content/uploads/2019/05/abcdefg-12345-logo.png";a:2:{s:2:"id";s:4:"7050";s:11:"source_type";s:13:"media-library";}}]]></wp:meta_value>
             </wp:postmeta>
             <wp:postmeta>
+                <wp:meta_key><![CDATA[_wp_attachment_metadata]]></wp:meta_key>
+                <wp:meta_value><![CDATA[a:5:{s:5:"width";i:3510;s:6:"height";i:1974;s:4:"file";s:20:"2014/10/IMG_2347.jpg";s:5:"sizes";a:3:{s:9:"thumbnail";a:4:{s:4:"file";s:20:"IMG_2347-150x150.jpg";s:5:"width";i:150;s:6:"height";i:150;s:9:"mime-type";s:10:"image/jpeg";}s:6:"medium";a:4:{s:4:"file";s:20:"IMG_2347-300x168.jpg";s:5:"width";i:300;s:6:"height";i:168;s:9:"mime-type";s:10:"image/jpeg";}s:5:"large";a:4:{s:4:"file";s:21:"IMG_2347-1024x575.jpg";s:5:"width";i:1024;s:6:"height";i:575;s:9:"mime-type";s:10:"image/jpeg";}}s:10:"image_meta";a:11:{s:8:"aperture";d:7.0999999999999996;s:6:"credit";s:0:"";s:6:"camera";s:27:"Canon EOS DIGITAL REBEL XSi";s:7:"caption";s:0:"";s:17:"created_timestamp";i:1224982961;s:9:"copyright";s:0:"";s:12:"focal_length";s:3:"135";s:3:"iso";s:3:"200";s:13:"shutter_speed";s:5:"0.005";s:5:"title";s:0:"";s:11:"orientation";i:1;}}]]></wp:meta_value>
+            </wp:postmeta>
+            <wp:postmeta>
                 <wp:meta_key><![CDATA[_et_dynamic_cached_shortcodes]]></wp:meta_key>
                 <wp:meta_value><![CDATA[a:0:{}]]></wp:meta_value>
             </wp:postmeta>

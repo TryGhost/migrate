@@ -53,7 +53,7 @@ const largerSrc = (imageSrc) => {
 
     let newSrc = imageSrc;
 
-    const fileSizeRegExp = new RegExp('-([0-9]+x[0-9]+).([a-zA-Z]{2,4})$');
+    const fileSizeRegExp = new RegExp('-([0-9]{2,}x[0-9]{2,}).([a-zA-Z]{2,4})$');
     const fileSizeMatches = imageSrc.match(fileSizeRegExp);
 
     if (fileSizeMatches) {
@@ -173,8 +173,9 @@ const processExcerpt = (html, excerptSelector = false) => {
     }
 };
 
-const processShortcodes = async ({html}) => {
+const processShortcodes = async ({html, options}) => {
     const shortcodes = new Shortcodes();
+    const attachments = options?.attachments ?? null;
 
     shortcodes.add('vc_btn', ({attrs}) => {
         let buttonHref = attrs?.link ?? false;
@@ -216,18 +217,34 @@ const processShortcodes = async ({html}) => {
             scriptingEnabled: false
         }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
-        let theImage = $html('img');
+        let theImageSrc = $html('img').attr('src') ?? '';
+        let theImageWidth = $html('img').attr('width') ?? '';
+        let theImageHeight = $html('img').attr('height') ?? '';
+        let theImageAlt = $html('img').attr('alt') ?? '';
+        let theImageTitle = $html('img').attr('title') ?? '';
+
+        // Convert $ to entity
+        theImageAlt = theImageAlt.replace(/\$/gm, '&#36;');
+        theImageTitle = theImageTitle.replace(/\$/gm, '&#36;');
+
         let theCaption = $html.text().trim();
 
-        let $figure = $('<figure class="wp-block-image"></figure>');
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: theImageSrc,
+                width: theImageWidth,
+                height: theImageHeight,
+                alt: theImageAlt,
+                title: theImageTitle
+            }
+        };
 
-        $figure.append(theImage);
-
-        if (theCaption && theCaption.length) {
-            $figure.append(`<figcaption>${theCaption.trim()}</figcaption>`);
+        if (theCaption.length) {
+            cardOpts.payload.caption = theCaption;
         }
 
-        return $.html($figure);
+        return serializer.serialize(imageCard.render(cardOpts));
     });
 
     shortcodes.add('vc_separator', () => {
@@ -251,6 +268,64 @@ const processShortcodes = async ({html}) => {
     shortcodes.add('advanced_iframe', ({attrs}) => {
         return `<iframe src="${attrs.src}" height="${attrs.height}" style="border:0; width: 100%;" loading="lazy"></iframe>`;
     });
+
+    if (attachments && attachments.length) {
+        shortcodes.add('gallery', ({attrs}) => {
+            // Convert `ids` param to array of images
+            let images = [];
+
+            if (attrs?.ids) {
+                images = attrs.ids.split(',').map((i) => {
+                    let idInt = parseInt(i.trim());
+                    let foundAttachment = _.find(attachments, (item) => {
+                        return parseInt(item.id) === idInt;
+                    });
+                    return foundAttachment;
+                });
+
+                // Filter out any undefined values
+                images = images.filter((item) => {
+                    return item !== undefined;
+                });
+            }
+
+            const imageChunks = _.chunk(images, 9);
+
+            let galleryHtmlChunks = [];
+
+            imageChunks.forEach((chunk) => {
+                let items = [];
+
+                chunk.forEach((item) => {
+                    items.push({
+                        fileName: basename(item.url),
+                        src: item.url,
+                        alt: item.alt,
+                        width: item.width,
+                        height: item.height
+                    });
+                });
+
+                items = items.map((item, index) => {
+                    return {
+                        ...item,
+                        row: Math.floor(index / 3)
+                    };
+                });
+
+                let cardOpts = {
+                    env: {dom: new SimpleDom.Document()},
+                    payload: {
+                        images: items
+                    }
+                };
+
+                galleryHtmlChunks.push(serializer.serialize(galleryCard.render(cardOpts)));
+            });
+
+            return galleryHtmlChunks.join('');
+        });
+    }
 
     shortcodes.add('sourcecode', ({attrs, content}) => {
         let captionString = (attrs?.title) ? `<figcaption>${attrs.title}</figcaption>` : '';
@@ -325,11 +400,16 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         allowRemoteScraping = true;
     }
 
-    html = await processShortcodes({html});
+    html = await processShortcodes({html, options});
 
     // Drafts can have empty post bodies
     if (!html) {
         return '';
+    }
+
+    // If rawHtml is set, don't process the HTML and wrap content in a HTML card
+    if (options?.rawHtml) {
+        return `<!--kg-card-begin: html-->${html}<!--kg-card-end: html-->`;
     }
 
     const $html = $.load(html, {
@@ -367,6 +447,11 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     $html('#toc_container').each((i, toc) => {
         $(toc).remove();
+    });
+
+    // <style> blocks don't belong in content - codeinjection_head is the place for these
+    $html('style').each((i, el) => {
+        $(el).remove();
     });
 
     if (excerptSelector) {
@@ -543,6 +628,14 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     await Promise.all(libsynPodcasts);
 
+    $html('.wp-block-syntaxhighlighter-code').each((i, el) => {
+        const hasCodeElem = $(el).find('code').length;
+
+        if (!hasCodeElem) {
+            $(el).html(`<code>${$(el).html()}</code>`);
+        }
+    });
+
     $html('figure.wp-block-embed.is-provider-twitter').each((i, el) => {
         $(el).replaceWith(`<blockquote class="twitter-tweet"><a href="${$(el).text()}"></a></blockquote>`);
     });
@@ -677,7 +770,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     });
 
     // Handle list-based galleries
-    $html('ul.wp-block-gallery').each((i, el) => {
+    $html('.wp-block-gallery').each((i, el) => {
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
             payload: {
@@ -687,13 +780,16 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
         $(el).find('figure').each((iii, elll) => { // eslint-disable-line no-shadow
             let img = $(elll).find('img');
-            cardOpts.payload.images.push({
-                row: 0,
-                fileName: basename(img.attr('src')),
-                src: img.attr('data-full') ?? img.attr('src'),
-                width: img.attr('width'),
-                height: img.attr('height')
-            });
+
+            if (img && img.attr('src')) {
+                cardOpts.payload.images.push({
+                    row: 0,
+                    fileName: basename(img.attr('src')),
+                    src: img.attr('data-full') ?? img.attr('src'),
+                    width: img.attr('width'),
+                    height: img.attr('height')
+                });
+            }
         });
 
         const galleryHtml = serializer.serialize(galleryCard.render(cardOpts));

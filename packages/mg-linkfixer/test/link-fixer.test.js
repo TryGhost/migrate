@@ -31,7 +31,7 @@ const getPosts = async (options = {}) => {
     ctx.linkFixer = new linkFixer();
     ctx.linkFixer.buildMap(ctx);
 
-    ctx.result = toGhostJSON(ctx.result, ctx.options);
+    ctx.result = await toGhostJSON(ctx.result, ctx.options);
 
     let tasks = ctx.linkFixer.fix(ctx, []);
 

@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-json",
-  "version": "0.11.4",
+  "version": "0.11.6",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-json",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -27,7 +27,8 @@
   "dependencies": {
     "@tryghost/string": "0.2.12",
     "bson-objectid": "2.0.4",
-    "html-entities": "2.5.2",
-    "lodash": "4.17.21"
+    "html-entities": "2.5.5",
+    "lodash": "4.17.21",
+    "node-email-verifier": "2.0.0"
   }
 }

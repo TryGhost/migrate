@@ -26,8 +26,13 @@ const processWPMeta = async ($post) => {
         let key = $(meta).children('wp\\:meta_key').text();
         let value = $(meta).children('wp\\:meta_value').text();
 
-        if (isSerialized(value)) {
-            value = unserialize(value);
+        try {
+            if (isSerialized(value)) {
+                value = unserialize(value);
+            }
+        } catch (error) {
+            // If unserializing fails, log the error but don't throw. The serialized data is returned
+            console.log(key, value, error); // eslint-disable-line no-console
         }
 
         // Convert empty serialized arrays to empty arrays, which `php-serialize` doesn't do
@@ -103,15 +108,42 @@ const processTags = ($wpTerms) => {
     return categories.concat(tags);
 };
 
-const preProcessContent = async ({html}) => { // eslint-disable-line no-shadow
+const getYouTubeID = (videoUrl) => {
+    const arr = videoUrl.split(/(vi\/|v%3D|v=|\/v\/|youtu\.be\/|\/embed\/)/);
+    return undefined !== arr[2] ? arr[2].split(/[^\w-]/i)[0] : arr[0];
+};
+
+const preProcessContent = async ({html, options}) => { // eslint-disable-line no-shadow
     // Drafts can have empty post bodies
     if (!html) {
         return html;
     }
 
+    // Split content by line
+    const splitIt = html.split(/\r?\n/);
+
+    // Regexp to find lines that only contain a YouTube link
+    const youTubeLine = new RegExp('^((?:https?:)?\\/\\/)?((?:www|m)\\.)?((?:youtube(?:-nocookie)?\\.com|youtu.be))(\\/(?:[\\w\\-]+\\?v=|embed\\/|live\\/|v\\/)?)([\\w\\-]+)(\\S+)?$');
+
+    // For each line, test against the regexp above
+    splitIt.forEach((line, index, theArray) => {
+        if (youTubeLine.test(line.trim())) {
+            const theId = getYouTubeID(line);
+
+            const replaceWith = `<iframe loading="lazy" title="" width="160" height="9" src="https://www.youtube.com/embed/${theId}?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>`;
+
+            return theArray[index] = replaceWith;
+        }
+
+        return theArray[index] = line;
+    });
+
+    // Join the separated lines
+    html = splitIt.join('\n');
+
     const $html = $.load(html, {
         decodeEntities: false
-    });
+    }, false);
 
     // 👀 If any XML-specific processing needs to be done, this is the place to do it.
 
@@ -126,12 +158,17 @@ const preProcessContent = async ({html}) => { // eslint-disable-line no-shadow
     html = $html.html();
 
     // Convert shortcodes here to that they don't accidently get wrapped in <p> tags by MarkdownIt
-    html = await MgWpAPI.process.processShortcodes({html});
+    html = await MgWpAPI.process.processShortcodes({html, options});
 
     return html;
 };
 
 const processHTMLContent = async (args) => {
+    // If rawHtml is set, don't process the HTML and wrap content in a HTML card
+    if (args?.options?.rawHtml) {
+        return `<!--kg-card-begin: html-->${args.html}<!--kg-card-end: html-->`;
+    }
+
     return await MgWpAPI.process.processContent({
         html: args.html,
         excerptSelector: args.excerptSelector,
@@ -169,6 +206,7 @@ const processPost = async ($post, users, options) => {
         data: {
             slug: $($post).children('wp\\:post_name').text().replace(/(\.html)/i, ''),
             title: $($post).children('title').text(),
+            comment_id: $($post)?.find('wp\\:post_id')?.text() ?? null,
             status: $($post).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
             published_at: postDate,
             created_at: postDate,
@@ -181,7 +219,8 @@ const processPost = async ($post, users, options) => {
     };
 
     post.data.html = await preProcessContent({
-        html: $($post).children('content\\:encoded').text()
+        html: $($post).children('content\\:encoded').text(),
+        options
     });
 
     const mdParser = new MarkdownIt({
@@ -285,6 +324,8 @@ const processAttachment = async ($post) => {
     let attachmentDesc = $($post).find('content\\:encoded').text() || null;
     let attachmentAlt = null;
 
+    let meta = await processWPMeta($post);
+
     $($post).find('wp\\:postmeta').each((i, row) => {
         let metaKey = $(row).find('wp\\:meta_key').text();
         let metaVal = $(row).find('wp\\:meta_value').text();
@@ -298,7 +339,9 @@ const processAttachment = async ($post) => {
         id: attachmentKey,
         url: attachmentUrl,
         description: attachmentDesc,
-        alt: attachmentAlt
+        alt: attachmentAlt,
+        width: meta?._wp_attachment_metadata?.width,
+        height: meta?._wp_attachment_metadata?.height
     };
 };
 

@@ -94,6 +94,24 @@ const options = [
         flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
+    },
+    {
+        type: 'string',
+        flags: '--tmpPath',
+        defaultValue: null,
+        desc: 'Specify the full path where the temporary files will be stored (Defaults a hidden tmp dir)'
+    },
+    {
+        type: 'string',
+        flags: '--outputPath',
+        defaultValue: null,
+        desc: 'Specify the full path where the final zip file will be saved to (Defaults to CWD)'
+    },
+    {
+        type: 'string',
+        flags: '--cacheName',
+        defaultValue: null,
+        desc: 'Provide a unique name for the cache directory (defaults to a UUID)'
     }
 ];
 

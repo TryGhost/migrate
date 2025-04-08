@@ -40,10 +40,10 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Format data as Ghost JSON',
-            task: (ctx) => {
+            task: async (ctx) => {
                 // 4. Format the data as a valid Ghost JSON file
                 try {
-                    ctx.result = toGhostJSON(ctx.result, ctx.options, ctx);
+                    ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
                 } catch (error) {
                     ctx.errors.push(error);
                     throw error;

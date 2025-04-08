@@ -102,6 +102,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--cpt`** 
     - A comma-separated list of custom post type slugs e.g. `resources,newsletters`
     - array - default: `null`
+- **`--rawHtml`** 
+    - Don't process HTML and wrap in a HTML card
+    - bool - default: `false`
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
     - bool - default: `true`

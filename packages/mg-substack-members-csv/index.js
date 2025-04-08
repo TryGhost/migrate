@@ -1,5 +1,5 @@
 import parse from './lib/parse-members-csv.js';
-import process from './lib/process.js';
+import process, {parseCompGift} from './lib/process.js';
 import {memberStats} from './lib/read-csv.js';
 
 export default async (ctx) => {
@@ -10,5 +10,6 @@ export default async (ctx) => {
 };
 
 export {
+    parseCompGift,
     memberStats
 };

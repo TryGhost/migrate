@@ -2,6 +2,7 @@ import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import substackMembers from '../sources/substack-members.js';
 import {GhostLogger} from '@tryghost/logging';
+import {parseCompGift} from '@tryghost/mg-substack-members-csv';
 import logConfig from '../lib/loggingrc.js';
 import {showLogs} from '../lib/utilties/cli-log-display.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
@@ -134,25 +135,6 @@ const defaults = convertOptionsToDefaults(options);
 // Convert `options` into a list of Sywac types
 const setup = sywac => convertOptionsToSywac(options, sywac);
 
-const parseCompGift = (val) => {
-    let [yearsOrDate, before] = val.split(':');
-
-    try {
-        if (yearsOrDate.length >= 4) {
-            yearsOrDate = new Date(yearsOrDate.replace(/([0-9]{4})([0-9]{2})([0-9]{2})/, `$1-$2-$3T12:00:00+0000`));
-        } else {
-            yearsOrDate = parseInt(yearsOrDate);
-        }
-    } catch (error) {
-        ui.log.info('Failed to parse passed in date/years for threshold, falling back to 10. Ensure the correct format');
-        yearsOrDate = 10;
-    }
-    return {
-        thresholdYearOrDate: yearsOrDate,
-        beforeThreshold: before
-    };
-};
-
 // What to do when this command is executed
 const run = async (argv) => {
     let context = {
@@ -162,16 +144,9 @@ const run = async (argv) => {
 
     const startMigrationTime = Date.now();
 
-    if (argv.subs) {
-        argv.hasSubscribers = true;
-    }
-
     if (argv.verbose) {
         ui.log.info(`Migrating from export at ${argv.pathToFile}${argv.subs ? ` and ${argv.subs}` : ``}`);
     }
-
-    argv.comp = parseCompGift(argv.comp);
-    argv.gift = parseCompGift(argv.gift);
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in

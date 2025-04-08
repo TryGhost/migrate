@@ -3,6 +3,7 @@ import toGhostJSON from '../lib/to-ghost-json/index.js';
 import singlePostOnlyFixture from './fixtures/single-post-only.json';
 import singlePostWithEmptyTagFixture from './fixtures/single-post-with-empty-tag.json';
 import singlePostAuthorFixture from './fixtures/single-post-author.json';
+import singlePostAuthorBadEmailFixture from './fixtures/single-post-author-bad-email.json';
 import multiPostOnlyFixture from './fixtures/multi-post-only.json';
 import singlePostWithBadTagOrderFixture from './fixtures/single-post-with-bad-tag-order.json';
 import singlePostOnlyLongMetaFixture from './fixtures/single-post-only-long-meta.json';
@@ -103,8 +104,8 @@ expect.extend({
 });
 
 describe('toGhostJSON', function () {
-    test('Calculates relations when it only has a post', function () {
-        const output = toGhostJSON(singlePostOnlyFixture);
+    test('Calculates relations when it only has a post', async function () {
+        const output = await toGhostJSON(singlePostOnlyFixture);
 
         expect(output).toBeGhostJSON();
         expect(output.data.posts).toBeArrayOfSize(1);
@@ -126,7 +127,7 @@ describe('toGhostJSON', function () {
 
     // @TODO: make it so that this test doesn't need a post slug or an author
     // Hydrator should be able to cope with absolutely minimal data
-    test('Correctly decodes titles', function () {
+    test('Correctly decodes titles', async function () {
         const input = {
             posts: [{
                 url: 'https://mysite.com',
@@ -145,27 +146,27 @@ describe('toGhostJSON', function () {
                 }
             }]
         };
-        const output = toGhostJSON(input);
+        const output = await toGhostJSON(input);
 
         expect(output).toBeGhostJSON();
         expect(output.data.posts).toBeArrayOfSize(1);
         expect(output.data.posts[0].title).toEqual('This shit’s cool');
     });
 
-    test('Calculates relations with both post and users', function () {
-        const output = toGhostJSON(singlePostAuthorFixture);
+    test('Calculates relations with both post and users', async function () {
+        const output = await toGhostJSON(singlePostAuthorFixture);
 
         expect(output).toBeGhostJSON();
     });
 
-    test('Calculates relations across multiple posts', function () {
-        const output = toGhostJSON(multiPostOnlyFixture);
+    test('Calculates relations across multiple posts', async function () {
+        const output = await toGhostJSON(multiPostOnlyFixture);
 
         expect(output).toBeGhostJSON();
     });
 
-    test('Ensures internal tags are listed last', function () {
-        const output = toGhostJSON(singlePostWithBadTagOrderFixture);
+    test('Ensures internal tags are listed last', async function () {
+        const output = await toGhostJSON(singlePostWithBadTagOrderFixture);
 
         expect(output.data.tags).toBeArrayOfSize(3);
         expect(output.data.tags[0].name).toEqual('Things');
@@ -173,24 +174,24 @@ describe('toGhostJSON', function () {
         expect(output.data.tags[2].name).toEqual('#internal');
     });
 
-    test('Filters out empty tags ', function () {
-        const output = toGhostJSON(singlePostWithEmptyTagFixture);
+    test('Filters out empty tags ', async function () {
+        const output = await toGhostJSON(singlePostWithEmptyTagFixture);
 
         expect(output.data.tags).toBeArrayOfSize(2);
         expect(output.data.tags[0].name).toEqual('Things');
         expect(output.data.tags[1].name).toEqual('Stuff');
     });
 
-    test('Trims strings that are too long', function () {
-        const output = toGhostJSON(singlePostOnlyLongMetaFixture);
+    test('Trims strings that are too long', async function () {
+        const output = await toGhostJSON(singlePostOnlyLongMetaFixture);
 
         expect(output.data.posts[0].custom_excerpt.length).toBeLessThanOrEqual(300);
         expect(output.data.posts_meta[0].meta_description.length).toBeLessThanOrEqual(500);
         expect(output.data.posts_meta[0].feature_image_alt.length).toBeLessThanOrEqual(125);
     });
 
-    test('Moves meta data to posts_meta object', function () {
-        const output = toGhostJSON(singlePostOnlyMetaFixture);
+    test('Moves meta data to posts_meta object', async function () {
+        const output = await toGhostJSON(singlePostOnlyMetaFixture);
 
         // Data should be in `posts_meta[0]`
         expect(output.data.posts_meta[0].meta_title).toEqual('This is my Blog Post Title');
@@ -207,5 +208,11 @@ describe('toGhostJSON', function () {
         expect(output.data.posts[0].feature_image_alt).not.toBeDefined();
         // should.not.exist(output.data.posts[0].feature_image_caption);
         expect(output.data.posts[0].feature_image_caption).not.toBeDefined();
+    });
+
+    test('Falls back to fake email if provided email is not valid', async function () {
+        const output = await toGhostJSON(singlePostAuthorBadEmailFixture);
+
+        expect(output.data.users[0].email).toEqual('joe@example.com');
     });
 });

@@ -130,7 +130,7 @@ describe('Process', function () {
 
         expect(data).toBeObject();
         expect(data.slug).toEqual('draft-post');
-        expect(data.title).toEqual('Draft Post');
+        expect(data.title).toEqual('Draft & Post & More—More');
         expect(data.status).toEqual('draft');
         expect(data.published_at).toEqual(new Date('2013-11-02T23:02:32.000Z'));
         expect(data.created_at).toEqual(new Date('2013-11-02T23:02:32.000Z'));
@@ -151,10 +151,10 @@ describe('Process', function () {
         const author = data.author;
 
         expect(author).toBeObject();
-        expect(author.url).toEqual('harry-example-com');
-        expect(author.data.slug).toEqual('harry-example-com');
-        expect(author.data.name).toEqual('Harry Potter');
-        expect(author.data.email).toEqual('harry@example.com');
+        expect(author.url).toEqual('harrysquatter');
+        expect(author.data.slug).toEqual('harrysquatter');
+        expect(author.data.name).toEqual('Harry Squatter');
+        expect(author.data.email).toEqual('harrysquatter@example.com');
     });
 
     it('Can convert a published page', async function () {
@@ -246,6 +246,38 @@ describe('Process', function () {
         expect(processed).toContain('<div class="kg-card kg-audio-card">');
         expect(processed).toContain('<audio src="http://example.com/auio-file.mp3"');
         expect(processed).not.toContain('<div class="sqs-audio-embed"');
+    });
+
+    test('Can convert blockquotes', async function () {
+        let blockquote = `<p>Hello</p>
+<figure class="block-animation-none">
+  <blockquote data-animation-role="quote">
+    <span>“</span>Lorem ipsum<br><br>dolor simet.<span>”</span>
+  </blockquote>
+  <figcaption class="source">— Lipsum</figcaption>
+</figure>
+<p>World</p>`;
+
+        let processed = process.processContent(blockquote);
+
+        expect(processed).toEqual('<p>Hello</p>\n' +
+        '<figure class="block-animation-none">\n' +
+        '  <blockquote data-animation-role="quote"><p>\n' +
+        '    <span>“</span>Lorem ipsum<br><br>dolor simet.<span>”</span>\n' +
+        '  <br><br>— Lipsum</p></blockquote>\n' +
+        '  \n' +
+        '</figure>\n' +
+        '<p>World</p>');
+    });
+
+    test('Can conremove elements', async function () {
+        let blockquote = `<p>Hello</p><div class="custom-subscribe-form"></div><p>World</p>`;
+
+        let processed = process.processContent(blockquote, {
+            removeSelectors: '.custom-subscribe-form'
+        });
+
+        expect(processed).toEqual('<p>Hello</p><p>World</p>');
     });
 
     test('Can handle posts with no title', async function () {
