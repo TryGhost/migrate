@@ -7,10 +7,11 @@ import SmartRenderer, {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {fileTypeFromBuffer} from 'file-type';
 import transliterate from 'transliteration';
 import sharp from 'sharp';
+import convert from 'heic-convert';
 import AssetCache from './AssetCache.js';
 
 // Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/shared/config/overrides.json
-const knownImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/webp', 'image/avif', 'image/heif'];
+const knownImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/webp', 'image/avif', 'image/heif', 'image/heic'];
 const knownMediaTypes = ['video/mp4', 'video/webm', 'video/ogg', 'audio/mpeg', 'audio/vnd.wav', 'audio/wave', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/mp4', 'audio/x-m4a'];
 const knownFileTypes = ['application/pdf', 'application/json', 'application/ld+json', 'application/vnd.oasis.opendocument.presentation', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.text', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/rtf', 'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/xml', 'application/atom+xml'
 ];
@@ -172,7 +173,14 @@ export default class AssetScraper {
         // If mime is in array, it needs converting to a supported image format.
         // To do that, convert the inout buffer to a webp buffer.
         if (needsConverting.includes(fileMime)) {
-            body = await sharp(body).webp({lossless: true}).toBuffer();
+            if (fileMime === 'image/heic' || fileMime === 'image/heif') {
+                body = await convert({
+                    buffer: body,
+                    format: 'JPEG'
+                });
+            } else {
+                body = await sharp(body).webp({lossless: true}).toBuffer();
+            }
 
             const newFileInfo: any = await fileTypeFromBuffer(body);
             extension = newFileInfo.ext;

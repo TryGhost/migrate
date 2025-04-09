@@ -4,3 +4,4 @@ declare module 'AsakaDB';
 declare module 'fs-extra/esm';
 declare module '@tryghost/request';
 declare module '@tryghost/listr-smart-renderer';
+declare module 'heic-convert';
