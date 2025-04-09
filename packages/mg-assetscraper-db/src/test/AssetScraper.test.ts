@@ -14,12 +14,14 @@ describe('Asset Scraper', () => {
     let fileCache: any;
     let jpgImageBuffer: Buffer;
     let avifImageBuffer: Buffer;
+    let heicImageBuffer: Buffer;
     let mp4VideoBuffer: Buffer;
     let mp3AudioBuffer: Buffer;
 
     beforeAll(async () => {
         jpgImageBuffer = await readFile(join(fixturesPath, '/image.jpg'));
         avifImageBuffer = await readFile(join(fixturesPath, '/image.avif'));
+        heicImageBuffer = await readFile(join(fixturesPath, '/image.heic'));
         mp4VideoBuffer = await readFile(join(fixturesPath, '/video.mp4'));
         mp3AudioBuffer = await readFile(join(fixturesPath, '/audio.mp3'));
     });
@@ -649,6 +651,25 @@ describe('Asset Scraper', () => {
             assert.equal(responseData.fileName, 'photo.webp');
             assert.equal(responseData.fileMime, 'image/webp');
             assert.equal(responseData.extension, '.webp');
+        });
+
+        it('extractFileDataFromResponse heic to jpg', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/assets/2025/03/photo.heic')
+                .reply(200, heicImageBuffer);
+
+            const assetScraper = new AssetScraper(fileCache, {}, {});
+            await assetScraper.init();
+
+            const response = await assetScraper.getRemoteMedia('https://example.com/assets/2025/03/photo.heic');
+
+            const responseData: any = await assetScraper.extractFileDataFromResponse('https://example.com/assets/2025/03/photo.heic', response);
+
+            assert.ok(requestMock.isDone());
+            assert.equal(responseData.fileBuffer.constructor.name, 'Buffer');
+            assert.equal(responseData.fileName, 'photo.jpg');
+            assert.equal(responseData.fileMime, 'image/jpeg');
+            assert.equal(responseData.extension, '.jpg');
         });
 
         it.todo('Will follow redirects');
