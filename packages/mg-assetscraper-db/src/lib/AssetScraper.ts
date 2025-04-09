@@ -140,11 +140,9 @@ export default class AssetScraper {
 
                 return responseWithEncodedUrl;
             } catch (err: any) {
-                // Silently fail so we return false later
+                throw new errors.InternalServerError({message: 'Failed to get remote media', err});
             }
         }
-
-        return false;
     }
 
     /**
