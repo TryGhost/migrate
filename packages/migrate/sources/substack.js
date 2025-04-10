@@ -2,7 +2,7 @@ import {readFileSync} from 'node:fs';
 import {toGhostJSON} from '@tryghost/mg-json';
 import mgHtmlLexical from '@tryghost/mg-html-lexical';
 import MgWebScraper from '@tryghost/mg-webscraper';
-import MgAssetScraper from '@tryghost/mg-assetscraper';
+import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import zipIngest from '@tryghost/mg-substack';
@@ -186,7 +186,7 @@ const getTaskRunner = (options, logger) => {
     let runnerTasks = [
         {
             title: 'Initializing',
-            task: (ctx, task) => {
+            task: async (ctx, task) => {
                 ctx.options = options;
                 ctx.logger = logger;
                 ctx.allowScrape = {
@@ -209,11 +209,16 @@ const getTaskRunner = (options, logger) => {
                 });
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor, skipScrape);
                 ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
-                    sizeLimit: ctx.options.sizeLimit,
-                    allowImages: ctx.allowScrape.images,
-                    allowMedia: ctx.allowScrape.media,
-                    allowFiles: ctx.allowScrape.files
+                    domains: [
+                        'https://substackcdn.com',
+                        'https://substack-post-media.s3.amazonaws.com'
+                    ]
+                    // sizeLimit: ctx.options.sizeLimit,
+                    // allowImages: ctx.allowScrape.images,
+                    // allowMedia: ctx.allowScrape.media,
+                    // allowFiles: ctx.allowScrape.files
                 }, ctx);
+                await ctx.assetScraper.init();
                 ctx.linkFixer = new MgLinkFixer();
 
                 ctx.timings = {
@@ -349,7 +354,7 @@ const getTaskRunner = (options, logger) => {
             task: async (ctx) => {
                 // 6. Format the data as a valid Ghost JSON file
                 ctx.timings.assetScraper = Date.now();
-                let tasks = ctx.assetScraper.fetch(ctx);
+                let tasks = ctx.assetScraper.getTasks(ctx);
                 return makeTaskRunner(tasks, {
                     verbose: options.verbose,
                     exitOnError: false,
