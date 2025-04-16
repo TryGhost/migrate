@@ -1,12 +1,7 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import mailchimpMembers from '../sources/mailchimp-members.js';
-import {GhostLogger} from '@tryghost/logging';
-import logConfig from '../lib/loggingrc.js';
-import {showLogs} from '../lib/utilties/cli-log-display.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
-
-const logger = new GhostLogger(logConfig);
 
 // Internal ID in case we need one.
 const id = 'mailchimp-members';
@@ -98,35 +93,22 @@ const run = async (argv) => {
         warnings: []
     };
 
-    const startMigrationTime = Date.now();
-
     // Remove any empty paths cause my spaces in the `pathToCsv` argument string
     argv.pathToCsv = argv.pathToCsv.filter(path => path);
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = mailchimpMembers.getTaskRunner(argv, logger);
+        let migrate = mailchimpMembers.getTaskRunner(argv);
 
         // Run the migration
         await migrate.run(context);
-
-        logger.info({
-            message: 'Migration finished',
-            duration: Date.now() - startMigrationTime
-        });
 
         if (argv.verbose && context.result) {
             ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
-        logger.info({
-            message: 'Migration finished but with errors',
-            error,
-            duration: Date.now() - startMigrationTime
-        });
+        ui.error(error);
     }
-
-    showLogs(logger, startMigrationTime);
 };
 
 export default {

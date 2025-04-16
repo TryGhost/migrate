@@ -1,12 +1,7 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import letterdrop from '../sources/letterdrop.js';
-import {GhostLogger} from '@tryghost/logging';
-import logConfig from '../lib/loggingrc.js';
-import {showLogs} from '../lib/utilties/cli-log-display.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
-
-const logger = new GhostLogger(logConfig);
 
 // Internal ID in case we need one.
 const id = 'letterdrop';
@@ -135,8 +130,6 @@ const run = async (argv) => {
         warnings: []
     };
 
-    const startMigrationTime = Date.now();
-
     // Remove trailing slash from URL
     if (argv.url.endsWith('/')) {
         argv.url = argv.url.slice(0, -1);
@@ -148,7 +141,7 @@ const run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = letterdrop.getTaskRunner(argv, logger);
+        let migrate = letterdrop.getTaskRunner(argv);
 
         // Run the migration
         await migrate.run(context);
@@ -157,23 +150,12 @@ const run = async (argv) => {
             ui.log.info(`Fetched ${context.info.totals.posts} posts.`);
         }
 
-        logger.info({
-            message: 'Migration finished',
-            duration: Date.now() - startMigrationTime
-        });
-
         if (argv.verbose && context.result) {
             ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
-        logger.info({
-            message: 'Migration finished but with errors',
-            error,
-            duration: Date.now() - startMigrationTime
-        });
+        ui.error(error);
     }
-
-    showLogs(logger, startMigrationTime);
 };
 
 export default {

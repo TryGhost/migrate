@@ -61,8 +61,6 @@ export default class AssetScraper {
 
         this.warnings = (ctx.warnings) ? ctx.warnings : [];
 
-        this.logger = ctx.logger;
-
         // Convert MB to bytes for file size comparison
         if (this.defaultOptions.sizeLimit) {
             this.defaultOptions.sizeLimit = (this.defaultOptions.sizeLimit * 1000000);
@@ -342,7 +340,7 @@ export default class AssetScraper {
             const mdTokens = md.parse(string, {});
             markdownTokenLooper(mdTokens, postContext);
         } catch (error) {
-            this.logger.error({message: 'Failed to parse Markdown string', markdown: string});
+            console.error(`Failed to parse Markdown string`, error); // eslint-disable-line no-console
             throw error;
         }
     }
@@ -708,7 +706,7 @@ export default class AssetScraper {
                         newCache.skipReason = (error && error.code) ? error.code : 'Undefined error';
                         this.AssetCache.add(newCache);
 
-                        this.logger.debug({message: `Failed to fetch asset ${item.remote}`, src: item.remote, error});
+                        console.debug(`Failed to fetch asset ${item.remote}`, error); // eslint-disable-line no-console
                     }
                 }
             });
@@ -762,7 +760,7 @@ export default class AssetScraper {
 
             return response;
         } catch (error) {
-            this.logger.error({message: `Failed to download asset ${src}`, src, error});
+            console.error(`Failed to download asset ${src}`, error); // eslint-disable-line no-console
         }
     }
 
@@ -783,7 +781,7 @@ export default class AssetScraper {
                 fileData
             };
         } catch (error) {
-            this.logger.error({message: `Failed to get data from file buffer ${src}`, src, error});
+            console.error(`Failed to get data from file buffer ${src}`, error); // eslint-disable-line no-console
         }
     }
 
@@ -832,7 +830,7 @@ export default class AssetScraper {
                     details: `This file size is ${prettyBytes(obj.head.contentLength)}, the maximum file size is ${prettyBytes(this.defaultOptions.sizeLimit)}`
                 });
 
-                this.logger.warn({message: `File is larger than allowed ${obj.newRemote} (This bytes: ${obj.head.contentLength} / Max bytes: ${this.defaultOptions.sizeLimit})`});
+                console.warn(`File is larger than allowed ${obj.newRemote} (This bytes: ${obj.head.contentLength} / Max bytes: ${this.defaultOptions.sizeLimit})`); // eslint-disable-line no-console
 
                 return false;
             }
@@ -939,7 +937,7 @@ export default class AssetScraper {
                                     details: `This file size is ${prettyBytes(bufferSize)}, the maximum file size is ${prettyBytes(this.defaultOptions.sizeLimit)}`
                                 });
 
-                                this.logger.warn({message: `File is larger than allowed ${src} (This bytes: ${bufferSize} / Max bytes: ${this.defaultOptions.sizeLimit})`});
+                                console.error(`File is larger than allowed ${src} (This bytes: ${bufferSize} / Max bytes: ${this.defaultOptions.sizeLimit})`); // eslint-disable-line no-console
 
                                 return false;
                             }
@@ -950,7 +948,7 @@ export default class AssetScraper {
                             this.AssetCache.add(item);
                         }
                     } catch (error) {
-                        this.logger.error({message: `Failed to save file ${src}`, src, error});
+                        console.error(`Failed to save file ${src}`, error); // eslint-disable-line no-console
                     }
                 }
             });

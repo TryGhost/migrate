@@ -544,12 +544,6 @@ describe('AssetScraper', function () {
     test('Will skip downloading large assets if a filesize is defined', function () {
         const assetScraper = new AssetScraper(mockFileCache, {
             sizeLimit: 2 // 2 MB,
-        }, {
-            logger: {
-                warn: () => {},
-                error: () => {},
-                debug: () => {}
-            }
         });
 
         const sizeAllowed1 = assetScraper.isWithinSizeLimit(cachedJSON[0]);
@@ -559,11 +553,6 @@ describe('AssetScraper', function () {
         expect(sizeAllowed1).toBeFalsy();
         expect(sizeAllowed2).toBeFalsy();
         expect(sizeAllowed3).toBeTruthy();
-
-        expect(assetScraper.warnings).toBeArrayOfSize(2);
-
-        expect(assetScraper.warnings[0].slug).toEqual('new-media');
-        expect(assetScraper.warnings[1].slug).toEqual('new-media');
     });
 
     test('Will convert sizeLimit unit from 0.5MB to bytes', function () {

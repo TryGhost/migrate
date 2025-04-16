@@ -5,11 +5,6 @@ import {readJSON} from 'fs-extra/esm';
 import {ui} from '@tryghost/pretty-cli';
 import xml2json from 'xml2json';
 import wpAPISource from '../sources/wp-api.js';
-import {GhostLogger} from '@tryghost/logging';
-import logConfig from '../lib/loggingrc.js';
-import {showLogs} from '../lib/utilties/cli-log-display.js';
-
-const logger = new GhostLogger(logConfig);
 
 // Internal ID in case we need one.
 const id = 'wp-api';
@@ -149,8 +144,6 @@ const run = async (argv) => {
         warnings: []
     };
 
-    const startMigrationTime = Date.now();
-
     // Remove trailing slash from URL
     if (argv.url.endsWith('/')) {
         argv.url = argv.url.slice(0, -1);
@@ -208,7 +201,7 @@ const run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = wpAPISource.getTaskRunner(argv, logger);
+        let migrate = wpAPISource.getTaskRunner(argv);
 
         // Run the migration
         await migrate.run(context);
@@ -218,23 +211,12 @@ const run = async (argv) => {
             ui.log.info(`Batch info: ${context.info.totals.posts} posts, ${context.info.totals.pages} pages, ${batches} batches.`);
         }
 
-        logger.info({
-            message: 'Migration finished',
-            duration: Date.now() - startMigrationTime
-        });
-
         if (argv.verbose) {
             ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
-        logger.info({
-            message: 'Migration finished but with errors',
-            error,
-            duration: Date.now() - startMigrationTime
-        });
+        ui.error(error);
     }
-
-    showLogs(logger, startMigrationTime);
 };
 
 export default {

@@ -214,7 +214,7 @@ const EntrySpotifyEmbed = (block) => {
     return blockHtml;
 };
 
-const jsonToHtml = (blocks, logger) => {
+const jsonToHtml = (blocks) => {
     let html = [];
 
     if (typeof blocks === 'string') {
@@ -237,8 +237,8 @@ const jsonToHtml = (blocks, logger) => {
             } else if (itemStyle === 'NORMAL_TEXT') {
                 html.push(EntryText(block));
             } else {
-                logger.error({
-                    message: `Unhandled text type: ${itemType} - Unhandled style: ${itemStyle}`,
+                // eslint-disable-next-line no-console
+                console.error(`Unhandled text type: ${itemType} - Unhandled style: ${itemStyle}`, {
                     context: block
                 });
             }
@@ -272,14 +272,14 @@ const jsonToHtml = (blocks, logger) => {
             } else if (block.link.includes('https://docs.google.com')) {
                 html.push(EntryGoogleDocsEmbed(block));
             } else {
-                logger.error({
-                    message: `Unhandled embed: ${block.link}`,
+                // eslint-disable-next-line no-console
+                console.error(`Unhandled embed: ${block.link}`, {
                     context: block
                 });
             }
         } else {
-            logger.error({
-                message: `Unhandled type: ${itemType} - Unhandled style: ${itemStyle}`,
+            // eslint-disable-next-line no-console
+            console.error(`Unhandled type: ${itemType} - Unhandled style: ${itemStyle}`, {
                 context: block
             });
         }
