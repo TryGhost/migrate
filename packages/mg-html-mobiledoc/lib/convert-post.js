@@ -2,15 +2,15 @@ import converter from '@tryghost/html-to-mobiledoc';
 import errors from '@tryghost/errors';
 import {convertToHTMLCard} from './convert-to-html-card.js';
 
-const convertPost = (post, htmlCard = false, logger) => {
+const convertPost = (post, htmlCard = false) => {
     if (typeof post.html === 'undefined') {
         throw new errors.InternalServerError({message: 'Post has no html field to convert'});
     }
 
     if (htmlCard) {
         post.mobiledoc = JSON.stringify(convertToHTMLCard(post.html));
-        logger.warn({
-            message: `Post converted to HTML Card "${post.title}"`,
+        // eslint-disable-next-line no-console
+        console.warn(`Post converted to HTML Card "${post.title}"`, {
             src: post.slug,
             reference: post.title,
             html: post.html

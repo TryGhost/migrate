@@ -96,7 +96,7 @@ const cachedFetch = async (fileCache, api, type, options, page) => {
     return response;
 };
 
-const buildTasks = (fileCache, tasks, api, type, options, logger) => {
+const buildTasks = (fileCache, tasks, api, type, options) => {
     for (let page = 1; page <= api.batches[type]; page++) {
         tasks.push({
             title: `Fetching ${type}, page ${page} of ${api.batches[type]}`,
@@ -109,7 +109,7 @@ const buildTasks = (fileCache, tasks, api, type, options, logger) => {
 
                     ctx.result[type] = ctx.result[type].concat(response);
                 } catch (error) {
-                    logger.error({message: `Failed to fetch ${type}, page ${page} of ${api.batches[type]}`, error});
+                    console.error(`Failed to fetch ${type}, page ${page} of ${api.batches[type]}`, error); // eslint-disable-line no-console
                     throw error;
                 }
             }
@@ -119,7 +119,6 @@ const buildTasks = (fileCache, tasks, api, type, options, logger) => {
 
 const tasks = async (options, ctx) => {
     const {limit} = ctx.options;
-    const {logger} = ctx;
 
     const api = await discover(options, {limit});
 
@@ -130,9 +129,9 @@ const tasks = async (options, ctx) => {
         users: []
     };
 
-    buildTasks(ctx.fileCache, tasks, api, 'posts', options, logger);
-    buildTasks(ctx.fileCache, tasks, api, 'pages', options, logger);
-    buildTasks(ctx.fileCache, tasks, api, 'users', options, logger);
+    buildTasks(ctx.fileCache, tasks, api, 'posts', options);
+    buildTasks(ctx.fileCache, tasks, api, 'pages', options);
+    buildTasks(ctx.fileCache, tasks, api, 'users', options);
 
     return tasks;
 };

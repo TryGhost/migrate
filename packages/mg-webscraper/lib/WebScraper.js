@@ -170,7 +170,7 @@ export default class WebScraper {
                         let {responseData} = await this.scrapeUrl(url, this.config.posts, filename, ctx.options.wait_after_scrape);
                         this.processScrapedData(responseData, data, ctx.options);
                     } catch (err) {
-                        ctx.logger.error({message: `Error hydrating metadata for ${url}`, err});
+                        ctx.errors.push({message: `Error hydrating metadata for ${url}`, err});
                         throw err;
                     }
                 }

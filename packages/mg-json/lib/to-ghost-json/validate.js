@@ -1,7 +1,7 @@
 import {slugify} from '@tryghost/string';
 import emailValidator from 'node-email-verifier';
 
-export default async (json, ctx = null) => {
+export default async (json) => {
     if (!json.posts) {
         return json;
     }
@@ -28,9 +28,8 @@ export default async (json, ctx = null) => {
             if (input[propKey] && input[propKey].length > propValue) {
                 let truncated = input[propKey].substring(0, propValue).trim();
 
-                if (ctx && ctx.logger) {
-                    ctx.logger.warn({message: `${propKey} for slug "${item.data.slug}" is too long.\nOriginal: "${input[propKey]}"\nTruncated to: "${truncated}"`});
-                }
+                // eslint-disable-next-line no-console
+                console.warn(`${propKey} for slug "${item.data.slug}" is too long.\nOriginal: "${input[propKey]}"\nTruncated to: "${truncated}"`);
 
                 input[propKey] = truncated;
             }

@@ -55,7 +55,7 @@ const processAuthor = (author, authorsData) => {
     return authorObject;
 };
 
-const mapPostPageConfig = (args, logger) => {
+const mapPostPageConfig = (args) => {
     const {postData, authorsData, postType} = args;
 
     debug(`Mapping data for ${postData.slug}`);
@@ -86,7 +86,7 @@ const mapPostPageConfig = (args, logger) => {
     };
 
     if (postType !== 'newsletter' && postData.translations[0].content) {
-        mappedData.data.html = jsonToHtml(postData.translations[0].content, logger);
+        mappedData.data.html = jsonToHtml(postData.translations[0].content);
     }
 
     if (mappedData.data.html.includes('class="fb-post')) {
@@ -222,7 +222,7 @@ const processNewsletterContent = (html, options) => { // eslint-disable-line no-
     return `<!--kg-card-begin: html-->${cleanedHTML}<!--kg-card-end: html-->`;
 };
 
-const mapNewsletterConfig = (args, logger) => { // eslint-disable-line no-unused-vars
+const mapNewsletterConfig = (args) => { // eslint-disable-line no-unused-vars
     const {postData, options} = args;
 
     debug(`Mapping data for ${postData.slug}`);
@@ -276,7 +276,7 @@ const mapNewsletterConfig = (args, logger) => { // eslint-disable-line no-unused
     return mappedData;
 };
 
-const mapContent = async (args, logger) => {
+const mapContent = async (args) => {
     const {options} = args;
     const {articles, pages, newsletters, authors} = options;
 
@@ -302,7 +302,7 @@ const mapContent = async (args, logger) => {
                 authorsData: authorDataJSON,
                 postType: 'post',
                 options
-            }, logger));
+            }));
         });
     }
 
@@ -317,7 +317,7 @@ const mapContent = async (args, logger) => {
                 authorsData: authorDataJSON,
                 postType: 'page',
                 options
-            }, logger));
+            }));
         });
     }
 
@@ -330,7 +330,7 @@ const mapContent = async (args, logger) => {
             output.posts.push(mapNewsletterConfig({
                 postData: data,
                 options
-            }, logger));
+            }));
         });
     }
 

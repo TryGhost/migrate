@@ -5,13 +5,12 @@ import csvIngest from '@tryghost/mg-beehiiv-members';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import prettyMilliseconds from 'pretty-ms';
 
-const getTaskRunner = (options, logger) => {
+const getTaskRunner = (options) => {
     let tasks = [
         {
             title: 'Initializing',
             task: (ctx, task) => {
                 ctx.options = options;
-                ctx.logger = logger;
 
                 // 0. Prep a file cache for the work we are about to do.
                 ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(options.pathToCsv);
@@ -33,7 +32,7 @@ const getTaskRunner = (options, logger) => {
                     });
                     await ctx.fileCache.writeTmpFile(ctx.result, 'csv-members-data.json', true);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to read CSV file', error});
+                    ctx.errors.push('Failed to read CSV file', error);
                     throw error;
                 }
             }
@@ -71,7 +70,7 @@ const getTaskRunner = (options, logger) => {
 
                     task.output = `Successfully written output to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to write and upload output file', error});
+                    ctx.errors.push('Failed to write and upload output file', error);
                     throw error;
                 }
             }
@@ -83,7 +82,7 @@ const getTaskRunner = (options, logger) => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to clear cache', error});
+                    ctx.errors.push('Failed to clear cache', error);
                     throw error;
                 }
             }

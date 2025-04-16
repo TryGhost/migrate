@@ -182,13 +182,13 @@ const skipScrape = (post) => {
  *
  * @param {Object} options
  */
-const getTaskRunner = (options, logger) => {
+const getTaskRunner = (options) => {
     let runnerTasks = [
         {
             title: 'Initializing',
             task: (ctx, task) => {
                 ctx.options = options;
-                ctx.logger = logger;
+
                 ctx.allowScrape = {
                     all: ctx.options.scrape.includes('all'),
                     images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),
@@ -216,20 +216,6 @@ const getTaskRunner = (options, logger) => {
                 }, ctx);
                 ctx.linkFixer = new MgLinkFixer();
 
-                ctx.timings = {
-                    readContent: false,
-                    processContent: false,
-                    webScraper: false,
-                    buildLinkMap: false,
-                    formatDataAsGhost: false,
-                    assetScraper: false,
-                    linkFixer: false,
-                    htmlToLexical: false,
-                    writeJSON: false,
-                    writeZip: false,
-                    clearCache: false
-                };
-
                 task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
             }
         },
@@ -237,22 +223,13 @@ const getTaskRunner = (options, logger) => {
             title: 'Read csv file',
             task: async (ctx) => {
                 // 1. Read the csv file
-                ctx.timings.readContent = Date.now();
                 try {
                     ctx.result = await zipIngest.ingest(ctx);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'zip-export-mapped.json');
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to read CSV', error});
+                    ctx.errors.push({message: 'Failed to read CSV', error});
                     throw error;
                 }
-            }
-        },
-        {
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Read csv file',
-                    duration: Date.now() - ctx.timings.readContent
-                });
             }
         },
         {
@@ -260,7 +237,6 @@ const getTaskRunner = (options, logger) => {
             skip: ctx => !ctx.allowScrape.web,
             task: (ctx) => {
                 // 2. Pass the results through the web scraper to get any missing data
-                ctx.timings.webScraper = Date.now();
                 let tasks = ctx.webScraper.hydrate(ctx);
 
                 let webScraperOptions = options;
@@ -269,76 +245,40 @@ const getTaskRunner = (options, logger) => {
             }
         },
         {
-            skip: ctx => !ctx.allowScrape.web,
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Fetch missing data via WebScraper',
-                    duration: Date.now() - ctx.timings.webScraper
-                });
-            }
-        },
-        {
             title: 'Process content',
             task: async (ctx) => {
                 // 3. Pass the results through the processor to change the HTML structure
-                ctx.timings.processContent = Date.now();
                 try {
                     ctx.result = await zipIngest.process(ctx.result, ctx);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'csv-export-data.json');
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to process content', error});
+                    ctx.errors.push({message: 'Failed to process content', error});
                     throw error;
                 }
-            }
-        },
-        {
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Process content',
-                    duration: Date.now() - ctx.timings.processContent
-                });
             }
         },
         {
             title: 'Build Link Map',
             task: async (ctx) => {
                 // 4. Create a map of all known links for use later
-                ctx.timings.buildLinkMap = Date.now();
                 try {
                     ctx.linkFixer.buildMap(ctx);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to build link map', error});
+                    ctx.errors.push({message: 'Failed to build link map', error});
                     throw error;
                 }
-            }
-        },
-        {
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Build Link Map',
-                    duration: Date.now() - ctx.timings.buildLinkMap
-                });
             }
         },
         {
             title: 'Format data as Ghost JSON',
             task: async (ctx) => {
                 // 5. Format the data as a valid Ghost JSON file
-                ctx.timings.formatDataAsGhost = Date.now();
                 try {
                     ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to format data as Ghost JSON', error});
+                    ctx.errors.push({message: 'Failed to format data as Ghost JSON', error});
                     throw error;
                 }
-            }
-        },
-        {
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Format data as Ghost JSON',
-                    duration: Date.now() - ctx.timings.formatDataAsGhost
-                });
             }
         },
         {
@@ -348,7 +288,6 @@ const getTaskRunner = (options, logger) => {
             },
             task: async (ctx) => {
                 // 6. Format the data as a valid Ghost JSON file
-                ctx.timings.assetScraper = Date.now();
                 let tasks = ctx.assetScraper.fetch(ctx);
                 return makeTaskRunner(tasks, {
                     verbose: options.verbose,
@@ -358,31 +297,11 @@ const getTaskRunner = (options, logger) => {
             }
         },
         {
-            skip: (ctx) => {
-                return [ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false);
-            },
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Fetch images via AssetScraper',
-                    duration: Date.now() - ctx.timings.assetScraper
-                });
-            }
-        },
-        {
             title: 'Update links in content via LinkFixer',
             task: async (ctx, task) => {
                 // 7. Process the content looking for known links, and update them to new links
-                ctx.timings.linkFixer = Date.now();
                 let tasks = ctx.linkFixer.fix(ctx, task); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
-            }
-        },
-        {
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Update links in content via LinkFixer',
-                    duration: Date.now() - ctx.timings.linkFixer
-                });
             }
         },
         {
@@ -390,44 +309,26 @@ const getTaskRunner = (options, logger) => {
             title: 'Convert HTML -> Lexical',
             task: (ctx) => {
                 // 8. Convert post HTML -> Lexical
-                ctx.timings.htmlToLexical = Date.now();
                 try {
                     let tasks = mgHtmlLexical.convert(ctx); // eslint-disable-line no-shadow
                     return makeTaskRunner(tasks, options);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to convert HTML to Lexical', error});
+                    ctx.errors.push({message: 'Failed to convert HTML to Lexical', error});
                     throw error;
                 }
-            }
-        },
-        {
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Convert HTML -> Lexical',
-                    duration: Date.now() - ctx.timings.htmlToLexical
-                });
             }
         },
         {
             title: 'Write Ghost import JSON File',
             task: async (ctx) => {
                 // 9. Write a valid Ghost import zip
-                ctx.timings.writeJSON = Date.now();
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
                     await ctx.fileCache.writeErrorJSONFile(ctx.errors);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to write Ghost import JSON file', error});
+                    ctx.errors.push({message: 'Failed to write Ghost import JSON file', error});
                     throw error;
                 }
-            }
-        },
-        {
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Write Ghost import JSON File',
-                    duration: Date.now() - ctx.timings.writeJSON
-                });
             }
         },
         {
@@ -435,7 +336,6 @@ const getTaskRunner = (options, logger) => {
             skip: () => !options.zip,
             task: async (ctx, task) => {
                 // 10. Write a valid Ghost import zip
-                ctx.timings.writeZip = Date.now();
                 const isStorage = (options?.outputStorage && typeof options.outputStorage === 'object') ?? false;
 
                 try {
@@ -458,40 +358,21 @@ const getTaskRunner = (options, logger) => {
 
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to write and upload ZIP file', error});
+                    ctx.errors.push({message: 'Failed to write and upload ZIP file', error});
                     throw error;
                 }
-            }
-        },
-        {
-            skip: () => !options.zip,
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Write Ghost import zip',
-                    duration: Date.now() - ctx.timings.writeZip
-                });
             }
         },
         {
             title: 'Clearing cached files',
             enabled: () => !options.cache && options.zip,
             task: async (ctx) => {
-                ctx.timings.clearCache = Date.now();
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to clear cache', error});
+                    ctx.errors.push('Failed to clear cache', error);
                     throw error;
                 }
-            }
-        },
-        {
-            enabled: () => !options.cache && options.zip,
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Clearing cached files',
-                    duration: Date.now() - ctx.timings.clearCache
-                });
             }
         }
     ];

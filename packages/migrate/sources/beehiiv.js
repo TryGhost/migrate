@@ -112,13 +112,11 @@ const skipScrape = (post) => {
     return post.data.status === 'draft' || post.url === '';
 };
 
-const initialize = (options, logger) => {
-    logger.info({message: 'Initialize migration'});
+const initialize = (options) => {
     return {
         title: 'Initializing Workspace',
         task: (ctx, task) => {
             ctx.options = options;
-            ctx.logger = logger;
             ctx.allowScrape = {
                 all: ctx.options.scrape.includes('all'),
                 images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),
@@ -141,48 +139,26 @@ const initialize = (options, logger) => {
             }, ctx);
             ctx.linkFixer = new MgLinkFixer();
 
-            ctx.timings = {
-                readContent: false,
-                webScraper: false,
-                buildLinkMap: false,
-                formatDataAsGhost: false,
-                assetScraper: false,
-                linkFixer: false,
-                htmlToLexical: false,
-                writeJSON: false,
-                writeZip: false,
-                clearCache: false
-            };
-
             task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
         }
     };
 };
 
-const getFullTaskList = (options, logger) => {
+const getFullTaskList = (options) => {
     return [
-        initialize(options, logger),
+        initialize(options),
         {
             title: 'Read beehiiv content',
             task: async (ctx) => {
-                ctx.timings.readContent = Date.now();
                 try {
                     ctx.result = await beehiivIngest({
                         options
-                    }, ctx.logger);
+                    });
                     await ctx.fileCache.writeTmpFile(ctx.result, 'beehiiv-export-data.json');
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to read beehiiv content', error});
+                    ctx.errors.push('Failed to read beehiiv content', error); // eslint-disable-line no-console
                     throw error;
                 }
-            }
-        },
-        {
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Read beehiiv content',
-                    duration: Date.now() - ctx.timings.readContent
-                });
             }
         },
         {
@@ -190,60 +166,32 @@ const getFullTaskList = (options, logger) => {
             skip: ctx => !ctx.allowScrape.web,
             task: (ctx) => {
                 // 2. Pass the results through the web scraper to get any missing data
-                ctx.timings.webScraper = Date.now();
                 let tasks = ctx.webScraper.hydrate(ctx); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
-            }
-        },
-        {
-            skip: ctx => !ctx.allowScrape.web,
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Fetch missing data via WebScraper',
-                    duration: Date.now() - ctx.timings.webScraper
-                });
             }
         },
         {
             title: 'Build Link Map',
             task: async (ctx) => {
                 // 4. Create a map of all known links for use later
-                ctx.timings.buildLinkMap = Date.now();
                 try {
                     ctx.linkFixer.buildMap(ctx);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to build link map', error});
+                    ctx.errors.push('Failed to build link map', error); // eslint-disable-line no-console
                     throw error;
                 }
-            }
-        },
-        {
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Build Link Map',
-                    duration: Date.now() - ctx.timings.buildLinkMap
-                });
             }
         },
         {
             title: 'Format data as Ghost JSON',
             task: async (ctx) => {
                 // 5. Format the data as a valid Ghost JSON file
-                ctx.timings.formatDataAsGhost = Date.now();
                 try {
                     ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to format data as Ghost JSON', error});
+                    ctx.errors.push('Failed to format data as Ghost JSON', error); // eslint-disable-line no-console
                     throw error;
                 }
-            }
-        },
-        {
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Format data as Ghost JSON',
-                    duration: Date.now() - ctx.timings.formatDataAsGhost
-                });
             }
         },
         {
@@ -253,7 +201,6 @@ const getFullTaskList = (options, logger) => {
             },
             task: async (ctx) => {
                 // 6. Format the data as a valid Ghost JSON file
-                ctx.timings.assetScraper = Date.now();
                 let tasks = ctx.assetScraper.fetch(ctx);
                 return makeTaskRunner(tasks, {
                     verbose: options.verbose,
@@ -263,74 +210,36 @@ const getFullTaskList = (options, logger) => {
             }
         },
         {
-            skip: (ctx) => {
-                return [ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false);
-            },
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Fetch images via AssetScraper',
-                    duration: Date.now() - ctx.timings.assetScraper
-                });
-            }
-        },
-        {
             title: 'Update links in content via LinkFixer',
             task: async (ctx, task) => {
                 // 7. Process the content looking for known links, and update them to new links
-                ctx.timings.linkFixer = Date.now();
                 let tasks = ctx.linkFixer.fix(ctx, task);
                 return makeTaskRunner(tasks, options);
-            }
-        },
-        {
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Update links in content via LinkFixer',
-                    duration: Date.now() - ctx.timings.linkFixer
-                });
             }
         },
         {
             title: 'Convert HTML -> Lexical',
             task: (ctx) => {
                 // 8. Convert post HTML -> Lexical
-                ctx.timings.htmlToLexical = Date.now();
                 try {
                     let tasks = mgHtmlLexical.convert(ctx);
                     return makeTaskRunner(tasks, options);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to convert HTML -> Lexical', error});
+                    ctx.errors.push('Failed to convert HTML -> Lexical', error); // eslint-disable-line no-console
                     throw error;
                 }
-            }
-        },
-        {
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Convert HTML -> Lexical',
-                    duration: Date.now() - ctx.timings.htmlToLexical
-                });
             }
         },
         {
             title: 'Write Ghost import JSON File',
             task: async (ctx) => {
                 // 9. Write a valid Ghost import zip
-                ctx.timings.writeJSON = Date.now();
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to write Ghost import JSON File', error});
+                    ctx.errors.push('Failed to write Ghost import JSON File', error); // eslint-disable-line no-console
                     throw error;
                 }
-            }
-        },
-        {
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Write Ghost import JSON File',
-                    duration: Date.now() - ctx.timings.writeJSON
-                });
             }
         },
         {
@@ -338,7 +247,6 @@ const getFullTaskList = (options, logger) => {
             skip: () => !options.zip,
             task: async (ctx, task) => {
                 // 10. Write a valid Ghost import zip
-                ctx.timings.writeZip = Date.now();
                 const isStorage = (options?.outputStorage && typeof options.outputStorage === 'object') ?? false;
 
                 try {
@@ -361,49 +269,30 @@ const getFullTaskList = (options, logger) => {
 
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to write and upload ZIP file', error});
+                    ctx.errors.push('Failed to write and upload ZIP file', error); // eslint-disable-line no-console
                     throw error;
                 }
-            }
-        },
-        {
-            skip: () => !options.zip,
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Write Ghost import zip',
-                    duration: Date.now() - ctx.timings.writeZip
-                });
             }
         },
         {
             title: 'Clearing cached files',
             enabled: () => !options.cache && options.zip,
             task: async (ctx) => {
-                ctx.timings.clearCache = Date.now();
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to clear temporary cached files', error});
+                    ctx.errors.push('Failed to clear temporary cached files', error); // eslint-disable-line no-console
                     throw error;
                 }
-            }
-        },
-        {
-            enabled: () => !options.cache && options.zip,
-            task: (ctx) => {
-                ctx.logger.info({
-                    message: 'Clearing cached files',
-                    duration: Date.now() - ctx.timings.clearCache
-                });
             }
         }
     ];
 };
 
-const getTaskRunner = (options, logger) => {
+const getTaskRunner = (options) => {
     let tasks = [];
 
-    tasks = getFullTaskList(options, logger);
+    tasks = getFullTaskList(options);
 
     // Configure a new Listr task manager, we can use different renderers for different configs
     return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
