@@ -30,7 +30,7 @@
     </wp:category>
     <item>
       <title>Draft Post</title>
-      <link>/draft-post</link>
+      <link></link>
       <content:encoded><![CDATA[<p>We're not testing HTML output here. That happens in @tryghost/mg-wp-api</p>]]></content:encoded>
       <excerpt:encoded />
       <wp:post_name></wp:post_name>
@@ -47,7 +47,7 @@
     </item>
     <item>
       <title>Basic Post</title>
-      <link>/blog/basic-post.html</link>
+      <link></link>
       <content:encoded><![CDATA[<h2>My excerpt in content</h2><p>We're not testing HTML output here. That happens in @tryghost/mg-wp-api</p>]]></content:encoded>
       <excerpt:encoded><![CDATA[<p>We're not testing HTML output here. That happens in @tryghost/mg-wp-api</p>]]></excerpt:encoded>
       <wp:post_name></wp:post_name>
@@ -69,7 +69,7 @@
     </item>
     <item>
       <title>Another Post</title>
-      <link>/blog/another-post.html</link>
+      <link></link>
       <content:encoded><![CDATA[<h2>My excerpt in content</h2><p>We're not testing HTML output here. That happens in @tryghost/mg-wp-api</p>]]></content:encoded>
       <excerpt:encoded><![CDATA[<p>We're not testing HTML output here. That happens in @tryghost/mg-wp-api</p>]]></excerpt:encoded>
       <wp:post_name></wp:post_name>
@@ -91,7 +91,7 @@
     </item>
     <item>
       <title>My CPT Post</title>
-      <link>/mycpt/amazing-article</link>
+      <link></link>
       <content:encoded><![CDATA[<h2>My excerpt in content</h2><p>We're not testing HTML output here. That happens in @tryghost/mg-wp-api</p>]]></content:encoded>
       <excerpt:encoded><![CDATA[<p>We're not testing HTML output here. That happens in @tryghost/mg-wp-api</p>]]></excerpt:encoded>
       <wp:post_name></wp:post_name>
@@ -122,7 +122,7 @@
       <dc:creator>hermione@example.com</dc:creator>
     </item>
     <item>
-      <link>https://example.com/services</link>
+      <link></link>
       <title>Services</title>
       <pubDate>Sat, 27 May 2017 11:33:38 +0000</pubDate>
       <content:encoded><![CDATA[<p>We're not testing HTML output here. That happens in @tryghost/mg-wp-api</p>]]></content:encoded>
