@@ -183,11 +183,6 @@ const processPost = async ($post, users, options) => {
     const postType = (postTypeVal === 'page') ? 'page' : 'post';
     const featureImage = processFeatureImage($post, options.attachments);
     const authorSlug = slugify($($post).children('dc\\:creator').text());
-    let postSlug = $($post).children('link').text();
-
-    if (!postSlug || postSlug.indexOf('null') >= 0) {
-        postSlug = 'untitled';
-    }
 
     // WP XML only provides a published date, we let's use that all dates Ghost expects
     const postDate = new Date($($post).children('pubDate').text());
@@ -205,7 +200,7 @@ const processPost = async ($post, users, options) => {
         wpPostType: postTypeVal,
         data: {
             slug: $($post).children('wp\\:post_name').text().replace(/(\.html)/i, ''),
-            title: $($post).children('title').text(),
+            title: $($post).children('title').text().substring(0, 255),
             comment_id: $($post)?.find('wp\\:post_id')?.text() ?? null,
             status: $($post).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
             published_at: postDate,
@@ -217,6 +212,10 @@ const processPost = async ($post, users, options) => {
             tags: []
         }
     };
+
+    if (post.data.slug.trim().length === 0) {
+        post.data.slug = slugify(post.data.title).substring(0, 191);
+    }
 
     post.data.html = await preProcessContent({
         html: $($post).children('content\\:encoded').text(),
