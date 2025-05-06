@@ -3,7 +3,6 @@ import type {postOptions} from './convert-post.js';
 
 // TODO: Add proper types
 const convert = (ctx: any, htmlCard: boolean) => {
-    const {logger} = ctx;
     let {options} = ctx;
     let res = ctx.result;
     let posts = res.posts;
@@ -24,14 +23,14 @@ const convert = (ctx: any, htmlCard: boolean) => {
             title: `Converting ${post.title}`,
             task: async () => {
                 try {
-                    convertPost(post, htmlCard, logger);
+                    convertPost(post, htmlCard);
                 } catch (error) {
                     if (options.fallBackHTMLCard) {
                         try {
-                            convertPost(post, true, logger);
+                            convertPost(post, true);
                         } catch (err) {
-                            logger.warn({
-                                message: `Unable to convert post HTMLCard "${post.title}"`,
+                            // eslint-disable-next-line no-console
+                            console.warn(`Unable to convert post HTMLCard "${post.title}"`, {
                                 src: post.slug,
                                 reference: post.title,
                                 originalError: err,
@@ -41,8 +40,8 @@ const convert = (ctx: any, htmlCard: boolean) => {
                             throw err;
                         }
                     } else {
-                        logger.warn({
-                            message: `Unable to convert post to Lexical "${post.title}"`,
+                        // eslint-disable-next-line no-console
+                        console.warn(`Unable to convert post to Lexical "${post.title}"`, {
                             src: post.slug,
                             reference: post.title,
                             originalError: error,

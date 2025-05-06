@@ -90,7 +90,7 @@ const cachedFetch = async (fileCache, api, type, limit, page, isAuthRequest, pos
     return response;
 };
 
-const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest, postsBefore, postsAfter, logger) => {
+const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest, postsBefore, postsAfter) => {
     for (let page = 1; page <= api.batches[type]; page++) {
         tasks.push({
             title: `Fetching ${type}, page ${page} of ${api.batches[type]}`,
@@ -103,7 +103,8 @@ const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest, postsBefo
 
                     ctx.result[resultType] = ctx.result[resultType].concat(response);
                 } catch (err) {
-                    logger.error({message: `Failed to fetch ${type}, page ${page} of ${api.batches[type]}`, err});
+                    // eslint-disable-next-line no-console
+                    console.error(`Failed to fetch ${type}, page ${page} of ${api.batches[type]}`, err);
                     throw err;
                 }
             }
@@ -112,7 +113,6 @@ const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest, postsBefo
 };
 
 const tasks = async (url, ctx) => {
-    const {logger} = ctx;
     const {apiUser} = ctx || {};
     const {pages, posts, limit, cpt, postsBefore, postsAfter} = ctx.options;
     const {usersJSON} = ctx || null;
@@ -135,20 +135,20 @@ const tasks = async (url, ctx) => {
         users: []
     };
 
-    buildTasks(ctx.fileCache, theTasks, api, 'posts', limit, isAuthRequest, postsBefore, postsAfter, logger);
+    buildTasks(ctx.fileCache, theTasks, api, 'posts', limit, isAuthRequest, postsBefore, postsAfter);
 
     if (pages) {
-        buildTasks(ctx.fileCache, theTasks, api, 'pages', limit, isAuthRequest, logger);
+        buildTasks(ctx.fileCache, theTasks, api, 'pages', limit, isAuthRequest);
     }
 
     // If users were already supplied, don't fetch them
     if (!usersJSON) {
-        buildTasks(ctx.fileCache, theTasks, api, 'users', limit, isAuthRequest, logger);
+        buildTasks(ctx.fileCache, theTasks, api, 'users', limit, isAuthRequest);
     }
 
     if (cpt) {
         cpt.forEach((cptSlug) => {
-            buildTasks(ctx.fileCache, theTasks, api, `${cptSlug}`, limit, isAuthRequest, logger);
+            buildTasks(ctx.fileCache, theTasks, api, `${cptSlug}`, limit, isAuthRequest);
         });
     }
 

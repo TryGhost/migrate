@@ -2,12 +2,6 @@ import assert from 'assert/strict';
 import {convertPost} from '../index.js';
 import type {postOptions} from '../lib/convert-post.js';
 
-let fakeLogger = {
-    warn: () => {},
-    error: () => {},
-    debug: () => {}
-};
-
 // Extend the postOptions interface to allow for testing with a wrong key
 interface postOptionsTest extends postOptions {
     wrong_key?: any // Used to test for catching errors
@@ -21,7 +15,7 @@ describe('Convert Tasks', function () {
             html: '<h2>Good stuff here</h2>'
         };
 
-        convertPost(post, true, fakeLogger);
+        convertPost(post, true);
 
         const lexical = JSON.parse(post.lexical ? post.lexical : '');
 

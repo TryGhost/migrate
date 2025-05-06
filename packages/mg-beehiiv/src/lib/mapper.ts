@@ -127,7 +127,7 @@ const mapPosts = async ({pathToFile, options}: {pathToFile: string, options: any
     return mappedPosts;
 };
 
-const mapContent = async (args: {options: any}, logger?: any) => {
+const mapContent = async (args: {options: any}) => {
     const output = {
         posts: []
     };
