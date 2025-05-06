@@ -1,5 +1,6 @@
 {
   "private": true,
+  "version": "0.0.0",
   "repository": "https://github.com/TryGhost/migrate",
   "author": "Ghost Foundation",
   "license": "MIT",

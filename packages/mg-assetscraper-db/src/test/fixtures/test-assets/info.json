@@ -1,0 +1,18 @@
+{
+  "data_base_name": "test-assets",
+  "data_base_path": "/Users/example/migrate/packages/mg-assetscraper/test-assets",
+  "tables": [
+    {
+      "name": "assets",
+      "full_path": "/Users/example/migrate/packages/mg-assetscraper/test-assets/assets",
+      "files_number": 1,
+      "files": [
+        {
+          "file_name": "data1.json",
+          "size": 175780,
+          "to_insert": true
+        }
+      ]
+    }
+  ]
+}

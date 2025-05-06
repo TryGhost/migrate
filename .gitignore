@@ -79,3 +79,4 @@ tmp/
 # TypeScript
 packages/**/build/
 tsconfig.tsbuildinfo
+packages/mg-assetscraper-db/assets.sqlite
