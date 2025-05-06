@@ -1,7 +1,3 @@
-## Asset Cache
+## WIP Asset Scraper
 
-```js
-assetCache = new AssetCache();
-const newItem = await assetCache.add('Hello');
-newItem.name = 'yoyoyo';
-```
+Readme coming soon…
