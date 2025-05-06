@@ -42,7 +42,7 @@
     "@tryghost/listr-smart-renderer": "0.5.15",
     "@tryghost/mg-fs-utils": "0.12.14",
     "@tryghost/request": "1.0.9",
-    "@tryghost/string": "0.2.12",
+    "@tryghost/string": "0.2.13",
     "asakadb": "1.0.1",
     "cheerio": "1.0.0-rc.12",
     "file-type": "20.4.0",
