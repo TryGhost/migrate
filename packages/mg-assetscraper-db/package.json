@@ -52,6 +52,6 @@
     "sharp": "0.33.5",
     "sqlite3": "5.1.7",
     "transliteration": "2.3.5",
-    "uuid": "11.0.2"
+    "uuid": "11.1.0"
   }
 }
