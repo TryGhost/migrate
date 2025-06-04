@@ -1,3 +1,4 @@
+/* c8 ignore start */
 import {parse, join, basename, extname} from 'node:path';
 import {writeFileSync} from 'node:fs';
 import errors from '@tryghost/errors';

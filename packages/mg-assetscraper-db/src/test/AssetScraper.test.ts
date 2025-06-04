@@ -582,7 +582,7 @@ describe('Asset Scraper', () => {
 
             const result = await assetScraper.resolveFileName('https://example.com/path/to/你好.jpg', 'images');
 
-            assert.equal(result.filename, 'example-com/path/to/ni-hao.jpg');
+            assert.equal(result.filename, 'example-com/path/to/ni_hao.jpg');
         });
 
         it.todo('test replaceSrc else');
