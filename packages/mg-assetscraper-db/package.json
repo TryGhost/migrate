@@ -44,7 +44,7 @@
     "@tryghost/string": "0.2.12",
     "asakadb": "1.0.1",
     "cheerio": "1.0.0-rc.12",
-    "file-type": "20.4.0",
+    "file-type": "21.0.0",
     "fs-extra": "11.2.0",
     "heic-convert": "2.1.0",
     "sequelize": "6.37.5",
