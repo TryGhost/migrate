@@ -3278,10 +3278,10 @@
   optionalDependencies:
     sharp "^0.32.0"
 
-"@tryghost/image-transform@1.4.1":
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.4.1.tgz#bc3775fec1896a3b6924a61edfe25b020408251a"
-  integrity sha512-Y4/Y9ISImDVJfwyINowFZPCyN+zWo3iNcYbD8OZiOUK7eS6Yg087Q+DcQYSPJ77OQrVHw5slxAjSWsw4Cuzq9g==
+"@tryghost/image-transform@1.4.4":
+  version "1.4.4"
+  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.4.4.tgz#a36c4b088c608b88059708ee5f29a1d88bf43a5d"
+  integrity sha512-T/eaQN3XVJDB3+O0xdos46E3GmjGWfhtLaq6Ui1ap0M5ub+3H/wkoT4rWzket9mLLr9C/M/2ypxjyIyWx96BCg==
   dependencies:
     "@tryghost/errors" "^1.2.26"
     fs-extra "^11.0.0"
