@@ -30,7 +30,7 @@
     "@tryghost/logging": "2.4.21",
     "@tryghost/string": "0.2.12",
     "cheerio": "1.0.0-rc.12",
-    "fast-replaceall": "1.0.2",
+    "fast-replaceall": "2.0.2",
     "file-type": "21.0.0",
     "fs-extra": "11.3.0",
     "got": "11.8.6",
