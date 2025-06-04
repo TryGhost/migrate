@@ -63,7 +63,7 @@
     "@tryghost/mg-wp-api": "0.11.7",
     "@tryghost/mg-wp-xml": "0.5.7",
     "@tryghost/pretty-cli": "1.2.47",
-    "@tryghost/string": "0.2.12",
+    "@tryghost/string": "0.2.16",
     "cheerio": "1.0.0-rc.12",
     "fs-extra": "11.3.0",
     "listr": "0.14.3",

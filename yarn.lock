@@ -3398,6 +3398,13 @@
   dependencies:
     unidecode "^0.1.8"
 
+"@tryghost/string@0.2.16":
+  version "0.2.16"
+  resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.2.16.tgz#eaf7e14d9f4c00dfdc4b7e648e366d65e3c9f8cb"
+  integrity sha512-WbshTmmJQViKeRVMFXw3pnIzloMUrloyhCbiV0Tfe4E7dkQ1jvZFvMGCttqZYMSSNsU9dhmBVMpT1HcX+EpifQ==
+  dependencies:
+    unidecode "^0.1.8"
+
 "@tryghost/string@0.2.7":
   version "0.2.7"
   resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.2.7.tgz#5ffecde3960b38ec403ca6b3b884beb54cda510c"
