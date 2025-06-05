@@ -3126,15 +3126,15 @@
   optionalDependencies:
     sharp "^0.32.0"
 
-"@tryghost/image-transform@1.4.4":
-  version "1.4.4"
-  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.4.4.tgz#a36c4b088c608b88059708ee5f29a1d88bf43a5d"
-  integrity sha512-T/eaQN3XVJDB3+O0xdos46E3GmjGWfhtLaq6Ui1ap0M5ub+3H/wkoT4rWzket9mLLr9C/M/2ypxjyIyWx96BCg==
+"@tryghost/image-transform@1.4.5":
+  version "1.4.5"
+  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.4.5.tgz#3000eb32b2b71517be31e3c2a0b4eba8b3ceeb08"
+  integrity sha512-eFeF1/40izJNjIann2Hn1EcXAXvqHh/XWrVdg9oq3GTAHiP1pI0P9fAjHUttYDUKqoX9asRTh9SMhTo3r+0+3A==
   dependencies:
     "@tryghost/errors" "^1.2.26"
     fs-extra "^11.0.0"
   optionalDependencies:
-    sharp "^0.34.0"
+    sharp "^0.34.2"
 
 "@tryghost/kg-clean-basic-html@4.2.5":
   version "4.2.5"
@@ -10971,7 +10971,7 @@ sharp@0.32.1:
     tar-fs "^2.1.1"
     tunnel-agent "^0.6.0"
 
-sharp@0.34.2, sharp@^0.34.0:
+sharp@0.34.2, sharp@^0.34.2:
   version "0.34.2"
   resolved "https://registry.yarnpkg.com/sharp/-/sharp-0.34.2.tgz#648bd639854dbe48047b0b420213c186d036b32d"
   integrity sha512-lszvBmB9QURERtyKT2bNmsgxXK0ShJrL/fvqlonCo7e6xBF8nT8xU6pW+PMIbLsz0RxQk3rgH9kd8UmvOzlMJg==
