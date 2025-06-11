@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-ghost-api",
-  "version": "0.4.20",
+  "version": "0.4.21",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-ghost-api",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -25,6 +25,6 @@
     "jest-extended": "4.0.2"
   },
   "dependencies": {
-    "@tryghost/admin-api": "1.13.12"
+    "@tryghost/admin-api": "1.13.16"
   }
 }

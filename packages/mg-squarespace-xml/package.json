@@ -25,8 +25,8 @@
     "jest-extended": "4.0.2"
   },
   "dependencies": {
-    "@tryghost/errors": "1.3.6",
-    "@tryghost/kg-default-cards": "10.1.1",
+    "@tryghost/errors": "1.3.8",
+    "@tryghost/kg-default-cards": "10.1.3",
     "cheerio": "1.0.0-rc.12",
     "html-entities": "2.6.0",
     "simple-dom": "1.4.0"

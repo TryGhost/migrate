@@ -225,6 +225,25 @@ describe('Process', function () {
         expect(author.data.slug).toEqual('hermione-example-com');
     });
 
+    test('Can handle empty post slugs', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                posts: true,
+                excerpt: false,
+                excerptSelector: 'h2'
+            }
+        };
+        const input = await readSync('sample-no-slug.xml');
+        const processed = await process.all(input, ctx);
+
+        expect(processed.posts[0].data.slug).toEqual('draft-post');
+        expect(processed.posts[1].data.slug).toEqual('basic-post');
+        expect(processed.posts[2].data.slug).toEqual('another-post');
+        expect(processed.posts[3].data.slug).toEqual('services');
+    });
+
     test('Can use excerpt selector and remove from content', async function () {
         let ctx = {
             options: {
