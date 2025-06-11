@@ -9,15 +9,15 @@ export type postOptions = {
     html?: string;
 }
 
-const convertPost = (post: postOptions, htmlCard = false, logger?: any) => { // TODO: Add type for `logger` when available
+const convertPost = (post: postOptions, htmlCard = false) => {
     if (typeof post.html === 'undefined' || post.html === 'undefined') {
         throw new errors.InternalServerError({message: 'Post has no html field to convert'});
     }
 
     if (htmlCard) {
         post.lexical = JSON.stringify(convertToHTMLCard(post.html));
-        logger.warn({
-            message: `Post converted to HTML Card "${post.title}"`,
+        // eslint-disable-next-line no-console
+        console.warn(`Post converted to HTML Card "${post.title}"`, {
             src: post.slug,
             reference: post.title,
             html: post.html

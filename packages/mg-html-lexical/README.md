@@ -23,7 +23,6 @@ Data structure passed in can be either
 
 ```js
 let myData = {
-    logger: yourLoggingInstance,
     posts: [
         {
             html: '<h2>Good stuff here</h2>'
@@ -36,7 +35,6 @@ or
 
 ```js
 let myData = {
-    logger: yourLoggingInstance,
     data: {
         posts: [
             {

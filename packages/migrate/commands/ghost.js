@@ -1,12 +1,7 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import ghost from '../sources/ghost.js';
-import {GhostLogger} from '@tryghost/logging';
-import logConfig from '../lib/loggingrc.js';
-import {showLogs} from '../lib/utilties/cli-log-display.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
-
-const logger = new GhostLogger(logConfig);
 
 // Internal ID in case we need one.
 const id = 'ghost';
@@ -141,8 +136,6 @@ const run = async (argv) => {
         warnings: []
     };
 
-    const startMigrationTime = Date.now();
-
     if (argv.verbose) {
         ui.log.info(`Migrating from Ghost at ${argv.url}`);
     }
@@ -153,15 +146,10 @@ const run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = ghost.getTaskRunner(argv, logger);
+        let migrate = ghost.getTaskRunner(argv);
 
         // Run the migration
         await migrate.run(context);
-
-        logger.info({
-            message: 'Migration finished',
-            duration: Date.now() - startMigrationTime
-        });
 
         if (argv.info && context.info) {
             let batches = context.info.batches.posts;
@@ -172,14 +160,8 @@ const run = async (argv) => {
             ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
-        logger.info({
-            message: 'Migration finished but with errors',
-            error,
-            duration: Date.now() - startMigrationTime
-        });
+        ui.error(error);
     }
-
-    showLogs(logger, startMigrationTime);
 };
 
 export default {

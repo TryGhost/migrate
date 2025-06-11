@@ -72,13 +72,13 @@ const skipScrape = (post) => {
  * @param {String} pathToFile
  * @param {Object} options
  */
-const getTaskRunner = (options, logger) => {
+const getTaskRunner = (options) => {
     let runnerTasks = [
         {
             title: 'Initializing',
             task: (ctx, task) => {
                 ctx.options = options;
-                ctx.logger = logger;
+
                 ctx.allowScrape = {
                     all: ctx.options.scrape.includes('all'),
                     images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),
@@ -228,7 +228,7 @@ const getTaskRunner = (options, logger) => {
 
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to write and upload ZIP file', error});
+                    ctx.errors.push({message: 'Failed to write and upload ZIP file', error});
                     throw error;
                 }
             }

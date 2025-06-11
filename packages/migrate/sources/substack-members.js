@@ -23,13 +23,13 @@ const MEMBERS_IMPORT_FIELDS = [
  *
  * @param {Object} options
  */
-const getTaskRunner = (options, logger) => {
+const getTaskRunner = (options) => {
     let tasks = [
         {
             title: 'Initializing',
             task: (ctx, task) => {
                 ctx.options = options;
-                ctx.logger = logger;
+
                 ctx.allMembers = [];
 
                 // 0. Prep a file cache for the work we are about to do.
@@ -50,7 +50,7 @@ const getTaskRunner = (options, logger) => {
                     ctx.result = await csvIngest(ctx);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'csv-members-data.json', true);
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to read CSV file', error});
+                    ctx.errors.push('Failed to read CSV file', error);
                     throw error;
                 }
             }
@@ -95,7 +95,7 @@ const getTaskRunner = (options, logger) => {
                         await ctx.fileCache.writeErrorJSONFile(ctx.logs, {filename: `gh-members-updated-${Date.now()}.logs.json`});
                     }
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to batch files', error});
+                    ctx.errors.push({message: 'Failed to batch files', error});
                     throw error;
                 }
             }
@@ -142,7 +142,7 @@ const getTaskRunner = (options, logger) => {
 
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to write and upload ZIP file', error});
+                    ctx.errors.push({message: 'Failed to write and upload ZIP file', error});
                     throw error;
                 }
             }
@@ -181,7 +181,7 @@ const getTaskRunner = (options, logger) => {
 
                     task.output = `Successfully written output to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to write and upload output file', error});
+                    ctx.errors.push('Failed to write and upload output file', error);
                     throw error;
                 }
             }
@@ -193,7 +193,7 @@ const getTaskRunner = (options, logger) => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {
-                    ctx.logger.error({message: 'Failed to clear cache', error});
+                    ctx.errors.push('Failed to clear cache', error);
                     throw error;
                 }
             }

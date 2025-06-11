@@ -1,12 +1,7 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import substack from '../sources/substack.js';
-import {GhostLogger} from '@tryghost/logging';
-import logConfig from '../lib/loggingrc.js';
-import {showLogs} from '../lib/utilties/cli-log-display.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
-
-const logger = new GhostLogger(logConfig);
 
 // Internal ID in case we need one.
 const id = 'substack';
@@ -219,8 +214,6 @@ const run = async (argv) => {
         warnings: []
     };
 
-    const startMigrationTime = Date.now();
-
     // Remove trailing slash from URL
     if (argv.url.endsWith('/')) {
         argv.url = argv.url.slice(0, -1);
@@ -232,32 +225,21 @@ const run = async (argv) => {
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = substack.getTaskRunner(argv, logger);
+        let migrate = substack.getTaskRunner(argv);
 
         // Run the migration
         await migrate.run(context);
-
-        logger.info({
-            message: 'Migration finished',
-            duration: Date.now() - startMigrationTime
-        });
 
         if (argv.verbose) {
             ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
-        logger.info({
-            message: 'Migration finished but with errors',
-            error,
-            duration: Date.now() - startMigrationTime
-        });
+        ui.error(error);
     }
 
     if (argv.verbose) {
         ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
     }
-
-    showLogs(logger, startMigrationTime);
 };
 
 export default {

@@ -1,12 +1,7 @@
 import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import squarespace from '../sources/squarespace.js';
-import {GhostLogger} from '@tryghost/logging';
-import logConfig from '../lib/loggingrc.js';
-import {showLogs} from '../lib/utilties/cli-log-display.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
-
-const logger = new GhostLogger(logConfig);
 
 // Internal ID in case we need one.
 const id = 'squarespace';
@@ -128,15 +123,13 @@ const run = async (argv) => {
         warnings: []
     };
 
-    const startMigrationTime = Date.now();
-
     if (argv.verbose) {
         ui.log.info(`Migrating from export at ${argv.pathToFile}`);
     }
 
     try {
         // Fetch the tasks, configured correctly according to the options passed in
-        let migrate = squarespace.getTaskRunner(argv, logger);
+        let migrate = squarespace.getTaskRunner(argv);
 
         // Run the migration
         await migrate.run(context);
@@ -145,7 +138,7 @@ const run = async (argv) => {
             ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
-        ui.log.info('Done with errors', context.errors);
+        ui.error(error);
     }
 
     if (argv.verbose) {
@@ -155,8 +148,6 @@ const run = async (argv) => {
     if (context.warnings.length > 0) {
         ui.log.warn(context.warnings);
     }
-
-    showLogs(logger, startMigrationTime);
 };
 
 export default {
