@@ -207,6 +207,8 @@ const processPost = async ($post, users, options) => {
             created_at: postDate,
             updated_at: postDate,
             feature_image: featureImage?.url ?? null,
+            feature_image_alt: featureImage?.alt ?? null,
+            feature_image_caption: featureImage?.description ?? featureImage?.title ?? null,
             type: postType,
             author: users ? users.find(user => user.data.slug === authorSlug) : null,
             tags: []
@@ -321,6 +323,7 @@ const processAttachment = async ($post) => {
     let attachmentKey = $($post).find('wp\\:post_id').text();
     let attachmentUrl = $($post).find('wp\\:attachment_url').text() || null;
     let attachmentDesc = $($post).find('content\\:encoded').text() || null;
+    let attachmentTitle = $($post).find('title').text() || null;
     let attachmentAlt = null;
 
     let meta = await processWPMeta($post);
@@ -338,6 +341,7 @@ const processAttachment = async ($post) => {
         id: attachmentKey,
         url: attachmentUrl,
         description: attachmentDesc,
+        title: attachmentTitle,
         alt: attachmentAlt,
         width: meta?._wp_attachment_metadata?.width,
         height: meta?._wp_attachment_metadata?.height

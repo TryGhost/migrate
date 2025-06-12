@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:wp="http://wordpress.org/export/1.2/">
+  <channel>
+    <title>Acme Company</title>
+    <link>https://example.com</link>
+    <pubDate>Tue, 02 Apr 2013 05:16:20 +0000</pubDate>
+    <description />
+    <language>en-US</language>
+    <wp:wxr_version>1.2</wp:wxr_version>
+    <wp:author>
+      <wp:author_id>-19091979</wp:author_id>
+      <wp:author_login>hermione@example.com</wp:author_login>
+      <wp:author_email>hermione@example.com</wp:author_email>
+      <wp:author_display_name><![CDATA[Hermione Granger]]></wp:author_display_name>
+      <wp:author_first_name><![CDATA[Hermione]]></wp:author_first_name>
+      <wp:author_last_name><![CDATA[Granger]]></wp:author_last_name>
+    </wp:author>
+    <wp:category>
+      <wp:cat_name><![CDATA[Company News]]></wp:cat_name>
+      <wp:category_nicename>Company News</wp:category_nicename>
+      <wp:category_parent />
+    </wp:category>
+    <item>
+      <title>Post with Featured Image Alt Text</title>
+      <link>/blog/post-with-featured-image-alt.html</link>
+      <content:encoded><![CDATA[<p>This post has a featured image with alt text and caption.</p>]]></content:encoded>
+      <excerpt:encoded><![CDATA[<p>This post has a featured image with alt text and caption.</p>]]></excerpt:encoded>
+      <wp:post_name>post-with-featured-image-alt.html</wp:post_name>
+      <wp:post_type>post</wp:post_type>
+      <wp:post_id>10</wp:post_id>
+      <wp:status>publish</wp:status>
+      <pubDate>Fri, 07 Jun 2013 03:00:44 +0000</pubDate>
+      <wp:post_date>2013-06-07 03:00:44</wp:post_date>
+      <wp:post_date_gmt>2013-06-07 03:00:44</wp:post_date_gmt>
+      <category domain="post_tag" nicename="has-images"><![CDATA[Has Images]]></category>
+      <category domain="category" nicename="company-news"><![CDATA[Company News]]></category>
+      <dc:creator>hermione@example.com</dc:creator>
+      <wp:comment_status>open</wp:comment_status>
+      <wp:postmeta>
+        <wp:meta_key>_thumbnail_id</wp:meta_key>
+        <wp:meta_value><![CDATA[15]]></wp:meta_value>
+      </wp:postmeta>
+    </item>
+    <item>
+      <wp:attachment_url>https://example.com/wp-content/uploads/2013/06/featured-image.jpg</wp:attachment_url>
+      <link>https://example.com/wp-content/uploads/2013/06/featured-image.jpg</link>
+      <title>Beautiful Sunset</title>
+      <wp:post_name>featured-image-jpg</wp:post_name>
+      <wp:post_type>attachment</wp:post_type>
+      <wp:post_id>15</wp:post_id>
+      <wp:post_parent>10</wp:post_parent>
+      <wp:status>inherit</wp:status>
+      <content:encoded><![CDATA[A gorgeous sunset over the mountains with vibrant orange and pink colors.]]></content:encoded>
+      <excerpt:encoded><![CDATA[]]></excerpt:encoded>
+      <pubDate>Mon, 09 Oct 2017 01:30:56 +0000</pubDate>
+      <wp:post_date>2017-10-09 01:30:56</wp:post_date>
+      <wp:post_date_gmt>2017-10-09 01:30:56</wp:post_date_gmt>
+      <dc:creator>hermione@example.com</dc:creator>
+      <wp:postmeta>
+        <wp:meta_key>_wp_attachment_image_alt</wp:meta_key>
+        <wp:meta_value><![CDATA[Sunset over mountains with orange and pink sky]]></wp:meta_value>
+      </wp:postmeta>
+    </item>
+  </channel>
+</rss> 

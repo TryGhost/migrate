@@ -225,6 +225,32 @@ describe('Process', function () {
         expect(author.data.slug).toEqual('hermione-example-com');
     });
 
+    test('Can extract featured image alt text and caption', async function () {
+        let ctx = {
+            options: {
+                drafts: false,
+                pages: false,
+                posts: true
+            }
+        };
+        const input = await readSync('sample-with-alt.xml');
+        const processed = await process.all(input, ctx);
+
+        const post = processed.posts[0];
+
+        expect(post).toBeObject();
+        expect(post.url).toEqual('https://example.com/blog/post-with-featured-image-alt.html');
+
+        const data = post.data;
+
+        expect(data).toBeObject();
+        expect(data.slug).toEqual('post-with-featured-image-alt');
+        expect(data.title).toEqual('Post with Featured Image Alt Text');
+        expect(data.feature_image).toEqual('https://example.com/wp-content/uploads/2013/06/featured-image.jpg');
+        expect(data.feature_image_alt).toEqual('Sunset over mountains with orange and pink sky');
+        expect(data.feature_image_caption).toEqual('A gorgeous sunset over the mountains with vibrant orange and pink colors.');
+    });
+
     test('Can handle empty post slugs', async function () {
         let ctx = {
             options: {
