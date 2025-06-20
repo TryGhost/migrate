@@ -12,7 +12,7 @@ export default async (json) => {
         // String length data from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/server/data/schema/schema.js
         let properties = {
             title: 255,
-            slug: 191,
+            slug: 185,
             custom_excerpt: 300,
             og_title: 300,
             og_description: 500,

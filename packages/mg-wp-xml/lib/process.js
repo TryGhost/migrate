@@ -214,7 +214,7 @@ const processPost = async ($post, users, options) => {
     };
 
     if (post.data.slug.trim().length === 0) {
-        post.data.slug = slugify(post.data.title).substring(0, 191);
+        post.data.slug = slugify(post.data.title).substring(0, 185);
     }
 
     post.data.html = await preProcessContent({
