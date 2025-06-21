@@ -123,6 +123,22 @@ export default class PostContext extends MigrateBase {
         return this.#meta;
     }
 
+    get getFinal(): any {
+        if (this.#contentFormat === 'mobiledoc') {
+            this.data.mobiledoc = JSON.stringify(this.data.mobiledoc);
+            this.data.lexical = null;
+            this.data.html = null;
+        }
+
+        if (this.#contentFormat === 'lexical') {
+            this.data.lexical = JSON.stringify(this.data.lexical);
+            this.data.mobiledoc = null;
+            this.data.html = null;
+        }
+
+        return super.getFinal;
+    }
+
     set(prop: string, value: any) {
         if (prop === 'html') {
             if (this.#contentFormat === 'mobiledoc') {
