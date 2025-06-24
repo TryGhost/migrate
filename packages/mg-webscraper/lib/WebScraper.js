@@ -167,7 +167,7 @@ export default class WebScraper {
                 },
                 task: async (ctx) => { // eslint-disable-line no-shadow
                     try {
-                        let {responseData} = await this.scrapeUrl(url, this.config.posts, filename, ctx.options.wait_after_scrape);
+                        let {responseData} = await this.scrapeUrl(url, this.config.posts, filename, ctx?.options?.wait_after_scrape || 100);
                         this.processScrapedData(responseData, data, ctx.options);
                     } catch (err) {
                         ctx.errors.push({message: `Error hydrating metadata for ${url}`, err});

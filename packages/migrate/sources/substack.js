@@ -140,7 +140,7 @@ const scrapeConfig = {
 };
 
 const postProcessor = (scrapedData, data, options) => {
-    if (options.useMetaAuthor && scrapedData.authors) {
+    if (options?.useMetaAuthor && scrapedData.authors) {
         let usersArray = [];
 
         scrapedData.authors.forEach((user) => {
@@ -383,4 +383,10 @@ const getTaskRunner = (options) => {
 
 export default {
     getTaskRunner
+};
+
+export {
+    scrapeConfig,
+    postProcessor,
+    skipScrape
 };
