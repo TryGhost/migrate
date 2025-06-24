@@ -69,36 +69,17 @@ const scrapeConfig = {
                 let ldJSON = JSON.parse(x);
                 let theAuthors = [];
 
-                if (ldJSON.author.length > 1) {
-                    ldJSON.author.forEach((person) => {
-                        theAuthors.push({
-                            url: slugify(person.url),
-                            data: {
-                                name: person.name,
-                                slug: slugify(person.name),
-                                email: `${slugify(person.name)}@example.com`
-                            }
-                        });
+                ldJSON.author.forEach((person) => {
+                    const personNameSlug = slugify(person.name);
+                    theAuthors.push({
+                        url: slugify(person.url),
+                        data: {
+                            name: person.name,
+                            slug: personNameSlug,
+                            email: `${personNameSlug}@example.com`
+                        }
                     });
-                } else {
-                    let author = (ldJSON.author[0]) ? ldJSON.author[0].name : ldJSON.author.name;
-
-                    // Split string by ['and', '&', ','], trim white space from the resulting array items, and remove empty items
-                    let authorSplit = author.split(/\s*(?:,\s| and | & )\s*/).map(function (item) {
-                        return item.trim();
-                    }).filter(i => i);
-
-                    authorSplit.forEach((item) => {
-                        theAuthors.push({
-                            url: slugify(item),
-                            data: {
-                                name: item,
-                                slug: slugify(item),
-                                email: `${slugify(item)}@example.com`
-                            }
-                        });
-                    });
-                }
+                });
 
                 return theAuthors;
             }

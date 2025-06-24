@@ -56,10 +56,18 @@ describe('Web Scrap Config & Post Processor', function () {
         assert.equal(scrapedData.twitter_image, 'https://substackcdn.com/image/fetch/$s_!4VJW!,f_auto,q_auto:best,fl_progressive:steep/https%3A%2F%2Fexample.substack.com%2Fapi%2Fv1%2Fpost_preview%2F151282645%2Ftwitter.jpg%3Fversion%3D4');
         assert.equal(scrapedData.twitter_title, 'Social header');
         assert.equal(scrapedData.twitter_description, 'Ah, a social preview!');
-        assert.equal(scrapedData.authors[0].url, 'author-name');
+
+        assert.equal(scrapedData.authors.length, 2);
+
+        assert.equal(scrapedData.authors[0].url, 'https-substack-com-example');
         assert.equal(scrapedData.authors[0].data.data.name, 'Author Name');
         assert.equal(scrapedData.authors[0].data.data.slug, 'author-name');
         assert.equal(scrapedData.authors[0].data.data.email, 'author-name@example.com');
+
+        assert.equal(scrapedData.authors[1].url, 'https-substack-com-other');
+        assert.equal(scrapedData.authors[1].data.data.name, 'Other Name');
+        assert.equal(scrapedData.authors[1].data.data.slug, 'other-name');
+        assert.equal(scrapedData.authors[1].data.data.email, 'other-name@example.com');
     });
 
     test('Scrapes a podcast', async function () {
@@ -104,7 +112,7 @@ describe('Web Scrap Config & Post Processor', function () {
         assert.equal(scrapedData.twitter_image, 'https://substackcdn.com/image/fetch/$s_!H502!,f_auto,q_auto:best,fl_progressive:steep/https%3A%2F%2Fexample.substack.com%2Fapi%2Fv1%2Fpost_preview%2F166728633%2Ftwitter.jpg%3Fversion%3D4');
         assert.equal(scrapedData.twitter_title, 'An audio episode');
         assert.equal(scrapedData.twitter_description, 'And a subtitle for it');
-        assert.equal(scrapedData.authors[0].url, 'author-name');
+        assert.equal(scrapedData.authors[0].url, 'https-substack-com-example');
         assert.equal(scrapedData.authors[0].data.data.name, 'Author Name');
         assert.equal(scrapedData.authors[0].data.data.slug, 'author-name');
         assert.equal(scrapedData.authors[0].data.data.email, 'author-name@example.com');
