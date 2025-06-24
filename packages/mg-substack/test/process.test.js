@@ -1186,6 +1186,34 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         expect(processed.data.html).toEqual('<p>Lorem ipsum.</p><div class="digest-post-embed" data-attrs="{&quot;no"></div><p>Dolore magna.</p>');
     });
+
+    test('Handle files cards', async function () {
+        const post = {
+            data: {
+                html: `<p>Lorem ipsum.</p><div class="file-embed-wrapper" data-component-name="FileToDOM">
+    <div class="file-embed-container-reader">
+        <div class="file-embed-container-top">
+            <image class="file-embed-thumbnail-default" src="https://substack.com/img/attachment_icon.svg"></image>
+            <div class="file-embed-details">
+                <div class="file-embed-details-h1">Information Document</div>
+                <div class="file-embed-details-h2">31.6KB ∙ PDF file</div>
+            </div><a class="file-embed-button wide" href="https://example.com/api/v1/file/1234-abcd.pdf"><span class="file-embed-button-text">Download</span></a>
+        </div><a class="file-embed-button narrow" href="https://example.com/api/v1/file/1234-abcd.pdf"><span class="file-embed-button-text">Download</span></a>
+    </div>
+</div><p>Dolore magna.</p>`,
+                title: 'My embed post'
+            }
+        };
+        const url = 'https://example.com';
+        const options = {
+            useFirstImage: false
+        };
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).toInclude('<a class="kg-file-card-container" href="https://example.com/api/v1/file/1234-abcd.pdf" title="Download" download>');
+        expect(processed.data.html).not.toInclude('<a class="file-embed-button wide" href="https://example.com/api/v1/file/1234-abcd.pdf"><span class="file-embed-button-text">Download</span></a>');
+    });
 });
 
 describe('Image handling', function () {

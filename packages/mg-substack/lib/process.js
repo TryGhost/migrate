@@ -8,6 +8,7 @@ import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
 import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
+import fileCard from '@tryghost/kg-default-cards/lib/cards/file.js';
 import {decode} from 'html-entities';
 import {parseSrcset} from 'srcset';
 import {_base as debugFactory} from '@tryghost/debug';
@@ -404,6 +405,49 @@ const processContent = (post, siteUrl, options) => {
         $(anchor).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
+    $html('.file-embed-wrapper').each((i, el) => {
+        const fileSrc = $(el).find('.file-embed-button').attr('href');
+        const fileTitle = $(el).find('.file-embed-details-h1').text();
+        const fileDetails = $(el).find('.file-embed-details-h2').text();
+        
+        const fileSizeMatch = fileDetails.match(/([\d.]+)([KMGT]B)/i);
+        let fileSizeBytes = 0;
+        
+        if (fileSizeMatch) {
+            const size = parseFloat(fileSizeMatch[1]);
+            const unit = fileSizeMatch[2].toUpperCase();
+            
+            switch (unit) {
+            case 'KB':
+                fileSizeBytes = size * 1024;
+                break;
+            case 'MB':
+                fileSizeBytes = size * 1024 * 1024;
+                break;
+            case 'GB':
+                fileSizeBytes = size * 1024 * 1024 * 1024;
+                break;
+            case 'TB':
+                fileSizeBytes = size * 1024 * 1024 * 1024 * 1024;
+                break;
+            default:
+                fileSizeBytes = size;
+            }
+        }
+
+        const cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: fileSrc,
+                fileTitle: fileTitle,
+                fileName: fileTitle,
+                fileSize: fileSizeBytes
+            }
+        };
+
+        $(el).replaceWith(serializer.serialize(fileCard.render(cardOpts)));
+    });
+    
     $html('.comment').each((i, el) => {
         $(el).remove();
     });
