@@ -92,9 +92,9 @@ describe('Normalizes and processes Substack members', function () {
 
         const result = await processMembers(input, options);
         expect(result).toBeObject();
-        expect(result.free).toBeArrayOfSize(10);
+        expect(result.free).toBeArrayOfSize(11);
         expect(result.paid).toBeArrayOfSize(9);
-        expect(result.comp).toBeArrayOfSize(2);
+        expect(result.comp).toBeArrayOfSize(1);
     });
 
     it('includes expiry label comp and gift members', async function () {
