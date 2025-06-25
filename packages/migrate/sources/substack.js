@@ -9,7 +9,6 @@ import zipIngest from '@tryghost/mg-substack';
 import {slugify} from '@tryghost/string';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import prettyMilliseconds from 'pretty-ms';
-import $ from 'cheerio';
 
 const scrapeConfig = {
     posts: {
@@ -84,33 +83,12 @@ const scrapeConfig = {
                 return theAuthors;
             }
         },
-        tags: {
-            selector: '.post-header > .post-label',
-            how: 'html',
-            convert: (x) => {
-                if (!x) {
-                    return;
+        scripts: {
+            listItem: 'script',
+            data: {
+                content: {
+                    how: 'html'
                 }
-
-                let tags = [];
-
-                const $tags = $.load(x, {
-                    decodeEntities: false,
-                    scriptingEnabled: false
-                }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
-
-                $tags('a').each((i, el) => {
-                    const urlParts = $(el).attr('href').match(/.*\/s\/([a-zA-Z0-9-_]{1,})(\/.*)?/);
-
-                    tags.push({
-                        data: {
-                            name: $(el).text(),
-                            slug: urlParts[1]
-                        }
-                    });
-                });
-
-                return tags;
             }
         },
         podcast_audio_src: {
@@ -135,6 +113,37 @@ const postProcessor = (scrapedData, data, options) => {
         });
 
         scrapedData.authors = usersArray;
+    }
+
+    if (scrapedData.scripts) {
+        scrapedData.scripts.forEach((script) => {
+            if (script.content.includes('window._preloads')) {
+                let tags = [];
+
+                try {
+                    let theContent = script.content.trim();
+                    theContent = theContent.replace(/^window\._preloads[ ]+=[ ]+JSON\.parse\(/, '');
+                    theContent = theContent.replace(/\)$/, '');
+                    theContent = JSON.parse(JSON.parse(theContent));
+
+                    theContent.post.postTags.forEach((tag) => {
+                        tags.push({
+                            url: `/substack-tag/${tag.slug.trim()}`,
+                            data: {
+                                name: tag.name.trim(),
+                                slug: tag.slug.trim()
+                            }
+                        });
+                    });
+                } catch (error) {
+                    console.log('Error parsing tags', script.content, error); // eslint-disable-line no-console
+                }
+
+                scrapedData.tags = tags;
+            }
+        });
+
+        delete scrapedData.scripts;
     }
 
     if (scrapedData?.og_image?.includes('2Ftwitter%2Fsubscribe-card.jpg')) {

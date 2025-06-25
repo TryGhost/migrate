@@ -68,6 +68,14 @@ describe('Web Scrap Config & Post Processor', function () {
         assert.equal(scrapedData.authors[1].data.data.name, 'Other Name');
         assert.equal(scrapedData.authors[1].data.data.slug, 'other-name');
         assert.equal(scrapedData.authors[1].data.data.email, 'other-name@example.com');
+
+        assert.equal(scrapedData.tags.length, 2);
+        assert.equal(scrapedData.tags[0].url, '/substack-tag/blogging');
+        assert.equal(scrapedData.tags[0].data.data.name, 'Blogging');
+        assert.equal(scrapedData.tags[0].data.data.slug, 'blogging');
+        assert.equal(scrapedData.tags[1].url, '/substack-tag/news');
+        assert.equal(scrapedData.tags[1].data.data.name, 'News');
+        assert.equal(scrapedData.tags[1].data.data.slug, 'news');
     });
 
     test('Scrapes a podcast', async function () {
