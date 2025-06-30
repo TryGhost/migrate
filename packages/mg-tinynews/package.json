@@ -22,7 +22,7 @@
   "devDependencies": {
     "eslint": "8.57.0",
     "jest": "29.7.0",
-    "jest-extended": "4.0.2"
+    "jest-extended": "6.0.0"
   },
   "dependencies": {
     "@tryghost/debug": "0.1.35",
