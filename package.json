@@ -5,6 +5,9 @@
   "author": "Ghost Foundation",
   "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": ">=22.13.1"
+  },
   "workspaces": [
     "packages/*"
   ],
