@@ -4946,11 +4946,6 @@ ccount@^1.0.0:
   resolved "https://registry.yarnpkg.com/ccount/-/ccount-1.1.0.tgz#246687debb6014735131be8abab2d93898f8d043"
   integrity sha512-vlNK021QdI7PNeiUh/lKkC/mNHHfV0m/Ad5JoI0TYtlBnJAslM/JIkm/tGC88bkLIwO6OQ5uV6ztS6kVAtCDlg==
 
-celia@^8.0.2:
-  version "8.0.4"
-  resolved "https://registry.yarnpkg.com/celia/-/celia-8.0.4.tgz#501b4d9f91147979ebfff81fab16acbcf2823d4d"
-  integrity sha512-XwPKQgxQ5Dr+lIbsFSBzf9U/u9vnh5pPLbbEEeFPPS7Jgw0bMXmuKUs2sJvAlr/noLeaDIYVLnGi8fsjATP7gg==
-
 chalk@5.3.0:
   version "5.3.0"
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-5.3.0.tgz#67c20a7ebef70e7f3970a01f90fa210cb6860385"
@@ -6535,12 +6530,10 @@ fast-ordered-set@^1.0.0:
   dependencies:
     blank-object "^1.0.1"
 
-fast-replaceall@1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/fast-replaceall/-/fast-replaceall-1.0.2.tgz#0318755df9dcbf81a82b806fb2e3a249fb2d302a"
-  integrity sha512-m0bqgZM0aR22nbRG2Lh2w9rR/jlpC8xHizCTkvgZq8uZ1BrVzcVNWX/Jl+PLbcti0Cxb4AAB3Gz1YUntkeX/2A==
-  dependencies:
-    celia "^8.0.2"
+fast-replaceall@2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/fast-replaceall/-/fast-replaceall-2.0.2.tgz#c1194cd7d339929c3b875b9b92da1e0ca8bdf82d"
+  integrity sha512-3SSuNJlk+WAWvU+wmLoqMm2mwZBhB5q6VWgDC24APtkBAb/zfkoqWdrTwteMSNmVOs6ZDfErLdqsmwcYxyNV1A==
 
 fastq@^1.6.0:
   version "1.19.1"
