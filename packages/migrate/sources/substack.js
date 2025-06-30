@@ -117,7 +117,7 @@ const postProcessor = (scrapedData, data, options) => {
 
     if (scrapedData.scripts) {
         scrapedData.scripts.forEach((script) => {
-            if (script.content.includes('window._preloads')) {
+            if (script.content.trim().startsWith('window._preloads')) {
                 let tags = [];
 
                 try {
