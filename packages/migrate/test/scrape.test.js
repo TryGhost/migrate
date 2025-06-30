@@ -60,22 +60,22 @@ describe('Web Scrap Config & Post Processor', function () {
         assert.equal(scrapedData.authors.length, 2);
 
         assert.equal(scrapedData.authors[0].url, 'https-substack-com-example');
-        assert.equal(scrapedData.authors[0].data.data.name, 'Author Name');
-        assert.equal(scrapedData.authors[0].data.data.slug, 'author-name');
-        assert.equal(scrapedData.authors[0].data.data.email, 'author-name@example.com');
+        assert.equal(scrapedData.authors[0].data.name, 'Author Name');
+        assert.equal(scrapedData.authors[0].data.slug, 'author-name');
+        assert.equal(scrapedData.authors[0].data.email, 'author-name@example.com');
 
         assert.equal(scrapedData.authors[1].url, 'https-substack-com-other');
-        assert.equal(scrapedData.authors[1].data.data.name, 'Other Name');
-        assert.equal(scrapedData.authors[1].data.data.slug, 'other-name');
-        assert.equal(scrapedData.authors[1].data.data.email, 'other-name@example.com');
+        assert.equal(scrapedData.authors[1].data.name, 'Other Name');
+        assert.equal(scrapedData.authors[1].data.slug, 'other-name');
+        assert.equal(scrapedData.authors[1].data.email, 'other-name@example.com');
 
         assert.equal(scrapedData.tags.length, 2);
         assert.equal(scrapedData.tags[0].url, '/substack-tag/blogging');
-        assert.equal(scrapedData.tags[0].data.data.name, 'Blogging');
-        assert.equal(scrapedData.tags[0].data.data.slug, 'blogging');
+        assert.equal(scrapedData.tags[0].data.name, 'Blogging');
+        assert.equal(scrapedData.tags[0].data.slug, 'blogging');
         assert.equal(scrapedData.tags[1].url, '/substack-tag/news');
-        assert.equal(scrapedData.tags[1].data.data.name, 'News');
-        assert.equal(scrapedData.tags[1].data.data.slug, 'news');
+        assert.equal(scrapedData.tags[1].data.name, 'News');
+        assert.equal(scrapedData.tags[1].data.slug, 'news');
     });
 
     test('Scrapes a podcast', async function () {
@@ -121,9 +121,9 @@ describe('Web Scrap Config & Post Processor', function () {
         assert.equal(scrapedData.twitter_title, 'An audio episode');
         assert.equal(scrapedData.twitter_description, 'And a subtitle for it');
         assert.equal(scrapedData.authors[0].url, 'https-substack-com-example');
-        assert.equal(scrapedData.authors[0].data.data.name, 'Author Name');
-        assert.equal(scrapedData.authors[0].data.data.slug, 'author-name');
-        assert.equal(scrapedData.authors[0].data.data.email, 'author-name@example.com');
+        assert.equal(scrapedData.authors[0].data.name, 'Author Name');
+        assert.equal(scrapedData.authors[0].data.slug, 'author-name');
+        assert.equal(scrapedData.authors[0].data.email, 'author-name@example.com');
         assert.equal(scrapedData.podcast_audio_src, 'https://api.substack.com/api/v1/audio/upload/92883946-10da-4958-93e3-0dcddb733b51/src?token=462fde6a-20c4-4eb6-af74-0c2461536ad7');
     });
 });

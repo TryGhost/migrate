@@ -12,7 +12,14 @@ const makeMetaObject = (item) => {
     // Always strip any query params (maybe need to only do this for medium in future?)
     let newItem = {url: item.url.replace(/\?.*$/, '')};
     delete item.url;
-    newItem.data = item;
+
+    // If item already has a data property, use that directly to avoid double nesting
+    if (item.data) {
+        newItem.data = item.data;
+    } else {
+        newItem.data = item;
+    }
+
     return newItem;
 };
 
@@ -99,6 +106,8 @@ export default class WebScraper {
                 resource[key] = value;
             }
         });
+
+        // resource.scrapedData = scrapedData;
 
         return resource;
     }
