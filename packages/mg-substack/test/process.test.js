@@ -289,6 +289,69 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         expect(mapped.posts).toBeArrayOfSize(4);
     });
 
+    test('Can use scraped tags', async function () {
+        const ctx = {
+            options: {
+                url: 'https://example.substack.com',
+                addTag: 'Hello World',
+                posts: true,
+                podcasts: true,
+                pages: false,
+                addPlatformTag: false,
+                addTypeTag: false,
+                addAccessTag: false
+            }
+        };
+
+        const mapped = await map(postDataFromFixtures, ctx.options);
+
+        // Simulate the data added by scraping
+        mapped.posts[0].data.tags = [
+            {
+                url: '/scraped-tag/season-1',
+                data: {
+                    name: 'Season #1',
+                    slug: 'season-1'
+                }
+            },
+            {
+                url: '/scraped-tag/exclusive',
+                data: {
+                    name: 'Exclusive',
+                    slug: 'exclusive'
+                }
+            }
+        ];
+
+        const processed = await process(mapped, ctx);
+
+        const post = processed.posts[0];
+
+        const tags = post.data.tags;
+
+        expect(tags).toBeArrayOfSize(4);
+
+        const tag1 = tags[0];
+        expect(tag1.url).toEqual('/scraped-tag/season-1');
+        expect(tag1.data.name).toEqual('Season #1');
+        expect(tag1.data.slug).toEqual('season-1');
+
+        const tag2 = tags[1];
+        expect(tag2.url).toEqual('/scraped-tag/exclusive');
+        expect(tag2.data.name).toEqual('Exclusive');
+        expect(tag2.data.slug).toEqual('exclusive');
+
+        const tag3 = tags[2];
+        expect(tag3.url).toEqual('https://example.substack.com/tag/newsletter');
+        expect(tag3.data.name).toEqual('Newsletter');
+        expect(tag3.data.slug).toEqual('newsletter');
+
+        const tag4 = tags[3];
+        expect(tag4.url).toEqual('https://example.substack.com/tag/hello-world');
+        expect(tag4.data.name).toEqual('Hello World');
+        expect(tag4.data.slug).toEqual('hello-world');
+    });
+
     test('Can optionally add custom tag', async function () {
         const ctx = {
             options: {
@@ -303,8 +366,9 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
             }
         };
         const mapped = await map(postDataFromFixtures, ctx.options);
+        const processed = await process(mapped, ctx);
 
-        const post = mapped.posts[0];
+        const post = processed.posts[0];
 
         const tag1 = post.data.tags[0];
         expect(tag1.url).toEqual('https://example.substack.com/tag/newsletter');
@@ -335,8 +399,9 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
             }
         };
         const mapped = await map(postDataFromFixtures, ctx.options);
+        const processed = await process(mapped, ctx);
 
-        const post = mapped.posts[0];
+        const post = processed.posts[0];
 
         const tag1 = post.data.tags[0];
         expect(tag1.url).toEqual('https://example.substack.com/tag/newsletter');
@@ -367,8 +432,9 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
             }
         };
         const mapped = await map(postDataFromFixtures, ctx.options);
+        const processed = await process(mapped, ctx);
 
-        const post = mapped.posts[0];
+        const post = processed.posts[0];
 
         const tag1 = post.data.tags[0];
         expect(tag1.url).toEqual('https://example.substack.com/tag/newsletter');
@@ -399,8 +465,9 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
             }
         };
         const mapped = await map(postDataFromFixtures, ctx.options);
+        const processed = await process(mapped, ctx);
 
-        const post = mapped.posts[0];
+        const post = processed.posts[0];
 
         const tag1 = post.data.tags[0];
         expect(tag1.url).toEqual('https://example.substack.com/tag/newsletter');
@@ -431,8 +498,9 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
             }
         };
         const mapped = await map(postDataFromFixtures, ctx.options);
+        const processed = await process(mapped, ctx);
 
-        const post = mapped.posts[0];
+        const post = processed.posts[0];
 
         const tag1 = post.data.tags[0];
         expect(tag1.url).toEqual('https://example.substack.com/tag/newsletter');

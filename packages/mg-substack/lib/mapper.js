@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import errors from '@tryghost/errors';
 import {slugify} from '@tryghost/string';
 import {_base as debugFactory} from '@tryghost/debug';
@@ -7,13 +6,12 @@ import he from 'he';
 const debug = debugFactory('migrate:substack:mapper');
 
 const mapConfig = (data, options) => {
-    const {url, email, useMetaAuthor, addTag, addPlatformTag, addTypeTag, addAccessTag} = options;
+    const {url, email, useMetaAuthor} = options;
     const slug = data.post_id.replace(/^(?:\d{1,10}\.)(\S*)/gm, '$1');
 
     const dateNow = new Date();
 
     const typeSlug = slugify(data.type);
-    const visibilitySlug = slugify(data.audience);
 
     const contentType = (typeSlug === 'page') ? 'page' : 'post';
 
@@ -21,6 +19,7 @@ const mapConfig = (data, options) => {
         url: `${url}/p/${slug}`,
         substackId: data.post_id,
         substackPodcastURL: data.podcast_url || false,
+        substackData: data,
         data: {
             slug: slug,
             published_at: data.post_date || dateNow,
@@ -35,59 +34,6 @@ const mapConfig = (data, options) => {
             tags: []
         }
     };
-
-    let typeSlugSlugify = slugify(typeSlug);
-    mappedData.data.tags.push({
-        url: `${url}/tag/${typeSlugSlugify}`,
-        data: {
-            slug: typeSlugSlugify,
-            name: _.startCase(typeSlug)
-        }
-    });
-
-    if (addTag) {
-        let trimmedTag = addTag.trim();
-        let trimmedTagSlug = slugify(trimmedTag);
-        mappedData.data.tags.push({
-            url: `${url}/tag/${trimmedTagSlug}`,
-            data: {
-                slug: trimmedTagSlug,
-                name: trimmedTag
-            }
-        });
-    }
-
-    if (addPlatformTag) {
-        mappedData.data.tags.push({
-            url: `migrator-added-tag`,
-            data: {
-                slug: `hash-substack`,
-                name: `#substack`
-            }
-        });
-    }
-
-    // Add an internal tag based on the type of post
-    if (addTypeTag) {
-        mappedData.data.tags.push({
-            url: `migrator-added-tag-substack-type-${typeSlug}`,
-            data: {
-                slug: `hash-substack-type-${typeSlug}`,
-                name: `#substack-type-${typeSlug}`
-            }
-        });
-    }
-
-    // Add tags based on post visibility
-    if (addAccessTag) {
-        mappedData.data.tags.push({
-            url: `migrator-added-tag-substack-access-${visibilitySlug}`,
-            data: {
-                slug: `hash-substack-access-${visibilitySlug}`,
-                name: `#substack-access-${visibilitySlug}`
-            }
-        });
-    }
 
     if (email && !useMetaAuthor) {
         const authorSlug = email.replace(/(^[\w_-]*)(@[\w_-]*\.\w*(?:\.\w{0,2})?)/, '$1');

@@ -12,6 +12,8 @@ import fileCard from '@tryghost/kg-default-cards/lib/cards/file.js';
 import {decode} from 'html-entities';
 import {parseSrcset} from 'srcset';
 import {_base as debugFactory} from '@tryghost/debug';
+import {slugify} from '@tryghost/string';
+import _ from 'lodash';
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 const debug = debugFactory('migrate:substack:process');
@@ -409,14 +411,14 @@ const processContent = (post, siteUrl, options) => {
         const fileSrc = $(el).find('.file-embed-button').attr('href');
         const fileTitle = $(el).find('.file-embed-details-h1').text();
         const fileDetails = $(el).find('.file-embed-details-h2').text();
-        
+
         const fileSizeMatch = fileDetails.match(/([\d.]+)([KMGT]B)/i);
         let fileSizeBytes = 0;
-        
+
         if (fileSizeMatch) {
             const size = parseFloat(fileSizeMatch[1]);
             const unit = fileSizeMatch[2].toUpperCase();
-            
+
             switch (unit) {
             case 'KB':
                 fileSizeBytes = size * 1024;
@@ -447,7 +449,7 @@ const processContent = (post, siteUrl, options) => {
 
         $(el).replaceWith(serializer.serialize(fileCard.render(cardOpts)));
     });
-    
+
     $html('.comment').each((i, el) => {
         $(el).remove();
     });
@@ -714,6 +716,68 @@ const processContent = (post, siteUrl, options) => {
 };
 
 const processPost = (post, siteUrl, options) => {
+    // Add tags to the post
+    const typeSlug = slugify(post.substackData.type);
+    const visibilitySlug = slugify(post.substackData.audience);
+    const {addTag, addPlatformTag, addTypeTag, addAccessTag} = options;
+
+    // Add a type tag, e.g. Newsletter, Podcast, etc.
+    const typeSlugSlugify = slugify(typeSlug);
+    post.data.tags.push({
+        url: `${siteUrl}/tag/${typeSlugSlugify}`,
+        data: {
+            slug: typeSlugSlugify,
+            name: _.startCase(typeSlug)
+        }
+    });
+
+    // Add a custom tag if one is provided
+    if (addTag) {
+        let trimmedTag = addTag.trim();
+        let trimmedTagSlug = slugify(trimmedTag);
+        post.data.tags.push({
+            url: `${siteUrl}/tag/${trimmedTagSlug}`,
+            data: {
+                slug: trimmedTagSlug,
+                name: trimmedTag
+            }
+        });
+    }
+
+    // Add a platform tag
+    if (addPlatformTag) {
+        post.data.tags.push({
+            url: `migrator-added-tag`,
+            data: {
+                slug: `hash-substack`,
+                name: `#substack`
+            }
+        });
+    }
+
+    // Add an internal tag based on the type of post
+    if (addTypeTag) {
+        post.data.tags.push({
+            url: `migrator-added-tag-substack-type-${typeSlug}`,
+            data: {
+                slug: `hash-substack-type-${typeSlug}`,
+                name: `#substack-type-${typeSlug}`
+            }
+        });
+    }
+
+    // Add tags based on post visibility
+    if (addAccessTag) {
+        post.data.tags.push({
+            url: `migrator-added-tag-substack-access-${visibilitySlug}`,
+            data: {
+                slug: `hash-substack-access-${visibilitySlug}`,
+                name: `#substack-access-${visibilitySlug}`
+            }
+        });
+    }
+
+    // And now process the HTML
     post = processContent(post, siteUrl, options);
 
     return post;
@@ -723,6 +787,9 @@ export default async (input, ctx) => {
     let {postsDir, options} = ctx;
     let {url: siteUrl} = options;
     const output = {};
+
+    // console.log('in default');
+    // console.log(input.posts);
 
     if (postsDir) {
         try {
