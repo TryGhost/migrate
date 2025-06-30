@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@tryghost/mg-fs-utils": "0.15.5",
-    "@tryghost/string": "0.2.16",
+    "@tryghost/string": "0.2.17",
     "cheerio": "1.0.0-rc.12"
   }
 }
