@@ -138,7 +138,7 @@ const run = async (argv) => {
             ui.log.info('Done', inspect(context.result.data, false, 2));
         }
     } catch (error) {
-        ui.error(error);
+        ui.log.error(error);
     }
 
     if (argv.verbose) {
