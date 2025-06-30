@@ -56,6 +56,25 @@ const scrapeConfig = {
             convert: (x) => {
                 return x.slice(0, 499);
             }
+        },
+        feature_image_alt: {
+            selector: 'img[class*="wp-post-image"], .post-thumbnail img, .featured-image img',
+            attr: 'alt',
+            convert: (x) => {
+                if (!x || x.trim() === '') {
+                    return null;
+                }
+                return x.slice(0, 125);
+            }
+        },
+        feature_image_caption: {
+            selector: '.wp-caption-text, .featured-image figcaption, .post-thumbnail figcaption',
+            convert: (x) => {
+                if (!x || x.trim() === '') {
+                    return null;
+                }
+                return x;
+            }
         }
     }
 };
