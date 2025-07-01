@@ -6,6 +6,14 @@ const convertToHTMLCard = (htmlString: string) => {
                     type: 'html',
                     version: 1,
                     html: htmlString
+                },
+                {
+                    children: [],
+                    direction: null,
+                    format: '',
+                    indent: 0,
+                    type: 'paragraph',
+                    version: 1
                 }
             ],
             direction: null,

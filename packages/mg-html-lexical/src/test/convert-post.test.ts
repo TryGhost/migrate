@@ -25,9 +25,17 @@ describe('Convert Tasks', function () {
             root: {
                 children: [
                     {
+                        html: '<h2>Good stuff here</h2>',
                         type: 'html',
-                        version: 1,
-                        html: '<h2>Good stuff here</h2>'
+                        version: 1
+                    },
+                    {
+                        children: [],
+                        direction: null,
+                        format: '',
+                        indent: 0,
+                        type: 'paragraph',
+                        version: 1
                     }
                 ],
                 direction: null,
@@ -39,7 +47,7 @@ describe('Convert Tasks', function () {
         });
     });
 
-    test('Covert to Lexical section', function () {
+    test('Convert to Lexical section', function () {
         let post: postOptions = {
             title: 'title',
             slug: 'slug',
@@ -98,7 +106,67 @@ describe('Convert Tasks', function () {
 });
 
 describe('HTML handling', function () {
-    test('Covert full content to Lexical', function () {
+    test('Convert empty HTML to Lexical', function () {
+        let post: postOptions = {
+            title: 'Title',
+            slug: 'slug',
+            html: ''
+        };
+
+        convertPost(post, false);
+
+        const lexical = JSON.parse(post.lexical!);
+
+        assert.deepEqual(lexical, {
+            root: {
+                children: [{
+                    children: [],
+                    direction: null,
+                    format: '',
+                    indent: 0,
+                    type: 'paragraph',
+                    version: 1
+                }],
+                direction: null,
+                format: '',
+                indent: 0,
+                type: 'root',
+                version: 1
+            }
+        });
+    });
+
+    test('Convert HTML with only spaces to Lexical', function () {
+        let post: postOptions = {
+            title: 'Title',
+            slug: 'slug',
+            html: '  ' // 2 spaces
+        };
+
+        convertPost(post, false);
+
+        const lexical = JSON.parse(post.lexical!);
+
+        assert.deepEqual(lexical, {
+            root: {
+                children: [{
+                    children: [],
+                    direction: null,
+                    format: '',
+                    indent: 0,
+                    type: 'paragraph',
+                    version: 1
+                }],
+                direction: null,
+                format: '',
+                indent: 0,
+                type: 'root',
+                version: 1
+            }
+        });
+    });
+
+    test('Convert full content to Lexical', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',

@@ -14,6 +14,8 @@ const convertPost = (post: postOptions, htmlCard = false) => {
         throw new errors.InternalServerError({message: 'Post has no html field to convert'});
     }
 
+    post.html = post.html.trim();
+
     if (htmlCard) {
         post.lexical = JSON.stringify(convertToHTMLCard(post.html));
         // eslint-disable-next-line no-console
