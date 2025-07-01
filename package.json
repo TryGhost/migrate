@@ -37,6 +37,6 @@
     "eslint": "8.57.0",
     "eslint-plugin-ghost": "3.4.3",
     "jest": "29.7.0",
-    "jest-extended": "4.0.2"
+    "jest-extended": "6.0.0"
   }
 }
