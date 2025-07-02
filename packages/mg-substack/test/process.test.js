@@ -1282,6 +1282,23 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         expect(processed.data.html).toInclude('<a class="kg-file-card-container" href="https://example.com/api/v1/file/1234-abcd.pdf" title="Download" download>');
         expect(processed.data.html).not.toInclude('<a class="file-embed-button wide" href="https://example.com/api/v1/file/1234-abcd.pdf"><span class="file-embed-button-text">Download</span></a>');
     });
+
+    test('Handle latex cards', async function () {
+        const post = {
+            data: {
+                html: `<p>Lorem ipsum.</p><div class="latex-rendered" data-attrs="{&quot;persistentExpression&quot;:&quot;ABC_{\\text{Terminal}}ABCTerminal​&quot;,&quot;id&quot;:&quot;ACASDWEARE&quot;}" data-component-name="LatexBlockToDOM"></div><p>Dolore magna.</p>`,
+                title: 'My embed post'
+            }
+        };
+        const url = 'https://example.com';
+        const options = {
+            useFirstImage: false
+        };
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).toEqual('<p>Lorem ipsum.</p><!--kg-card-begin: html--><div class="latex-rendered" data-attrs="{&quot;persistentExpression&quot;:&quot;ABC_{\\text{Terminal}}ABCTerminal​&quot;,&quot;id&quot;:&quot;ACASDWEARE&quot;}" data-component-name="LatexBlockToDOM"></div><!--kg-card-end: html--><p>Dolore magna.</p>');
+    });
 });
 
 describe('Image handling', function () {

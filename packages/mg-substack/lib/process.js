@@ -135,6 +135,12 @@ const processContent = (post, siteUrl, options) => {
         }
     });
 
+    // Wrap these in a HTML card so they can be handled by publishers as needed
+    $html('div.latex-rendered').each((i, el) => {
+        $(el).before('<!--kg-card-begin: html-->');
+        $(el).after('<!--kg-card-end: html-->');
+    });
+
     $html('.image3').each((i, el) => {
         const attrs = $(el).attr('data-attrs');
         const attrsObj = JSON.parse(attrs);
