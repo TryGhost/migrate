@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/migrate",
-  "version": "0.50.0",
+  "version": "0.50.1",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/migrate",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -42,7 +42,7 @@
     "@tryghost/mg-curated-members-csv": "0.4.28",
     "@tryghost/mg-fs-utils": "0.15.6",
     "@tryghost/mg-ghost-api": "0.4.22",
-    "@tryghost/mg-html-lexical": "0.0.24",
+    "@tryghost/mg-html-lexical": "0.0.25",
     "@tryghost/mg-html-mobiledoc": "0.9.35",
     "@tryghost/mg-hubspot-api": "0.4.25",
     "@tryghost/mg-jekyll-export": "0.3.35",
