@@ -1286,7 +1286,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
     test('Handle latex cards', async function () {
         const post = {
             data: {
-                html: `<p>Lorem ipsum.</p><div class="latex-rendered" data-attrs="{&quot;persistentExpression&quot;:&quot;ABC_{\\text{Terminal}}ABCTerminal​&quot;,&quot;id&quot;:&quot;ACASDWEARE&quot;}" data-component-name="LatexBlockToDOM"></div><p>Dolore magna.</p>`,
+                html: `<p>Lorem ipsum.</p><div class="latex-rendered" data-attrs="{&quot;persistentExpression&quot;:&quot;ABC_{\\text{Terminal}}ABCTerminal&quot;,&quot;id&quot;:&quot;ACASDWEARE&quot;}" data-component-name="LatexBlockToDOM"></div><p>Dolore magna.</p>`,
                 title: 'My embed post'
             }
         };
@@ -1297,7 +1297,7 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        expect(processed.data.html).toEqual('<p>Lorem ipsum.</p><!--kg-card-begin: html--><div class="latex-rendered" data-attrs="{&quot;persistentExpression&quot;:&quot;ABC_{\\text{Terminal}}ABCTerminal​&quot;,&quot;id&quot;:&quot;ACASDWEARE&quot;}" data-component-name="LatexBlockToDOM"></div><!--kg-card-end: html--><p>Dolore magna.</p>');
+        expect(processed.data.html).toEqual('<p>Lorem ipsum.</p><!--kg-card-begin: html--><div class="latex-rendered" data-attrs="{&quot;persistentExpression&quot;:&quot;ABC_{\\text{Terminal}}ABCTerminal&quot;,&quot;id&quot;:&quot;ACASDWEARE&quot;}" data-component-name="LatexBlockToDOM"></div><!--kg-card-end: html--><p>Dolore magna.</p>');
     });
 });
 
