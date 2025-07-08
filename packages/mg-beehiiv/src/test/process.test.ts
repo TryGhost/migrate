@@ -57,6 +57,26 @@ describe('beehiiv Processor', () => {
             assert.equal(processed, '<p>Hello</p>');
         });
 
+        it('Can remove strong & bold tags from headers', () => {
+            const processedH1 = processHTML({html: '<table><tr id="content-blocks"><h2><strong>Hello</strong> <b>Happy</b> World</h2></tr></table>'});
+            assert.equal(processedH1, '<h2>Hello Happy World</h2>');
+
+            const processedH2 = processHTML({html: '<table><tr id="content-blocks"><h2><strong>Hello</strong> <b>Happy</b> World</h2></tr></table>'});
+            assert.equal(processedH2, '<h2>Hello Happy World</h2>');
+
+            const processedH3 = processHTML({html: '<table><tr id="content-blocks"><h3><strong>Hello</strong> <b>Happy</b> World</h3></tr></table>'});
+            assert.equal(processedH3, '<h3>Hello Happy World</h3>');
+
+            const processedH4 = processHTML({html: '<table><tr id="content-blocks"><h4><strong>Hello</strong> <b>Happy</b> World</h4></tr></table>'});
+            assert.equal(processedH4, '<h4>Hello Happy World</h4>');
+
+            const processedH5 = processHTML({html: '<table><tr id="content-blocks"><h5><strong>Hello</strong> <b>Happy</b> World</h5></tr></table>'});
+            assert.equal(processedH5, '<h5>Hello Happy World</h5>');
+
+            const processedH6 = processHTML({html: '<table><tr id="content-blocks"><h6><strong>Hello</strong> <b>Happy</b> World</h6></tr></table>'});
+            assert.equal(processedH6, '<h6>Hello Happy World</h6>');
+        });
+
         it('Can convert HRs', () => {
             const processed = processHTML({html: '<table><tr id="content-blocks"><td align="center" valign="top" style="font-size:0px;line-height:0px;padding:20px 0px;" class="dd"><table class="j" role="none" width="50%" border="0" cellspacing="0" cellpadding="0" align="center"><tr><td> &nbsp; </td></tr></table></td><p>Hello</p></tr></table>'});
             assert.equal(processed, '<hr /><p>Hello</p>');

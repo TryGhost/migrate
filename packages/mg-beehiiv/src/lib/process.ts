@@ -66,6 +66,11 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         });
     }
 
+    $html('h1 strong, h1 b, h2 strong, h2 b, h3 strong, h3 b, h4 strong, h4 b, h5 strong, h5 b, h6 strong, h6 b').each((i: any, el: any) => {
+        const text = $html(el).html().trim();
+        $(el).replaceWith(text);
+    });
+
     $html('table.j').each((i: any, el: any) => {
         const tdContent = $html(el).find('td').html().trim();
 
