@@ -9,32 +9,23 @@ describe('beehiiv Members', () => {
     it('Can parse CSV', async () => {
         const processed = await processCsv({csvPath: join(fixturesPath, 'members.csv')});
 
-        assert.equal(processed.length, 6);
+        assert.equal(processed.free.length, 4);
+        assert.equal(processed.paid.length, 1);
     });
 
-    it('Finds correct number of paid members', async () => {
+    it('Uses Stripe customer ID if present', async () => {
         const processed = await processCsv({csvPath: join(fixturesPath, 'members.csv')});
 
-        const paid = processed.filter((member) => {
-            return member.stripe_customer_id.length > 0;
-        });
-
-        assert.equal(paid.length, 3);
+        assert.equal(processed.paid[0].stripe_customer_id, 'cus_1234');
     });
 
-    it('Finds correct number of free members', async () => {
+    it('Uses names is present', async () => {
         const processed = await processCsv({csvPath: join(fixturesPath, 'members.csv')});
 
-        const paid = processed.filter((member) => {
-            return member.stripe_customer_id.length === 0;
-        });
-
-        assert.equal(paid.length, 3);
-    });
-
-    it('Uses Stripe customer ID is present', async () => {
-        const processed = await processCsv({csvPath: join(fixturesPath, 'members.csv')});
-
-        assert.equal(processed[5].stripe_customer_id, 'cus_1234');
+        assert.equal(processed.free[0].name, 'Lorem Name');
+        assert.equal(processed.free[1].name, 'Ipsum Name');
+        assert.equal(processed.free[2].name, null);
+        assert.equal(processed.free[3].name, 'Last Only');
+        assert.equal(processed.paid[0].name, null);
     });
 });

@@ -12,9 +12,25 @@ type memberObject = {
 };
 
 const processCsv = async ({csvPath}: {csvPath: string}) => {
-    const csvData = await fsUtils.csv.parseCSV(csvPath);
+    let csvData = await fsUtils.csv.parseCSV(csvPath);
 
-    const newObj: memberObject[] = [];
+    // Filter out unsubscribed members
+    csvData = csvData.filter((member: any) => {
+        return member.unsubscribed_at === null || member.unsubscribed_at.length === 0;
+    });
+
+    // Filter out inactive members
+    csvData = csvData.filter((member: any) => {
+        return member.status !== 'inactive';
+    });
+
+    const allMembers: {
+        free: memberObject[];
+        paid: memberObject[];
+    } = {
+        free: [],
+        paid: []
+    };
 
     csvData.forEach((member: any) => {
         const createdAt = new Date(member.created_at);
@@ -29,6 +45,17 @@ const processCsv = async ({csvPath}: {csvPath: string}) => {
             labels: [],
             created_at: createdAt
         };
+
+        // First Name,Last Name
+
+        if (member['First Name'] || member['Last Name']) {
+            const firstName = member?.['First Name']?.trim() || '';
+            const lastName = member?.['Last Name']?.trim() || '';
+
+            const combinedName = [firstName, lastName].filter(name => name.length > 0).join(' ');
+
+            newMember.name = combinedName;
+        }
 
         if (member.status) {
             newMember.labels.push(`beehiiv-status-${member.status}`);
@@ -56,10 +83,14 @@ const processCsv = async ({csvPath}: {csvPath: string}) => {
             newMember.labels.push(`beehiiv-tier-${member.tier}`);
         }
 
-        newObj.push(newMember);
+        if (member.stripe_customer_id) {
+            allMembers.paid.push(newMember);
+        } else {
+            allMembers.free.push(newMember);
+        }
     });
 
-    return newObj;
+    return allMembers;
 };
 
 export {
