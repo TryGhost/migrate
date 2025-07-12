@@ -86,7 +86,7 @@ arrayOfPostData.forEach((row) => {
 ### Get a Ghost JSON string
 
 ```js
-const json = context.ghostJson;
+const json = await context.json();
 // `json` is a JSON string. Save it to a `.json` file and import it into Ghost
 ```
 
@@ -110,7 +110,7 @@ This is the main class that manages all the other classes. It has methods for ad
 - `await context.forEachPost(callback)`
 - `context.forEachPostSync(callback)`
 - `context.allPosts`
-- `context.ghostJson`
+- `context.json()`
 
 ### `PostContext`
 
