@@ -9,7 +9,7 @@ const convert = (ctx, htmlCard) => {
         posts = res.data.posts;
     }
 
-    if (!posts && res.db && res.db[0] && res.db[0].data && res.db[0].data.posts) {
+    if ((!posts || posts.length === 0) && res.db && res.db[0] && res.db[0].data && res.db[0].data.posts) {
         posts = res.db[0].data.posts;
     }
 
