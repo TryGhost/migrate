@@ -5249,6 +5249,23 @@ cheerio@1.0.0-rc.12:
     parse5 "^7.0.0"
     parse5-htmlparser2-tree-adapter "^7.0.0"
 
+cheerio@1.1.0, cheerio@^1.0.0-rc.12, cheerio@^1.0.0-rc.5:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/cheerio/-/cheerio-1.1.0.tgz#87b9bec6dd3696e405ea79da7d2749d8308b0953"
+  integrity sha512-+0hMx9eYhJvWbgpKV9hN7jg0JcwydpopZE4hgi+KvQtByZXPp04NiCWU0LzcAbP63abZckIHkTQaXVF52mX3xQ==
+  dependencies:
+    cheerio-select "^2.1.0"
+    dom-serializer "^2.0.0"
+    domhandler "^5.0.3"
+    domutils "^3.2.2"
+    encoding-sniffer "^0.2.0"
+    htmlparser2 "^10.0.0"
+    parse5 "^7.3.0"
+    parse5-htmlparser2-tree-adapter "^7.1.0"
+    parse5-parser-stream "^7.1.2"
+    undici "^7.10.0"
+    whatwg-mimetype "^4.0.0"
+
 cheerio@^0.22.0:
   version "0.22.0"
   resolved "https://registry.yarnpkg.com/cheerio/-/cheerio-0.22.0.tgz#a9baa860a3f9b595a6b81b1a86873121ed3a269e"
@@ -5270,23 +5287,6 @@ cheerio@^0.22.0:
     lodash.reduce "^4.4.0"
     lodash.reject "^4.4.0"
     lodash.some "^4.4.0"
-
-cheerio@^1.0.0-rc.12, cheerio@^1.0.0-rc.5:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/cheerio/-/cheerio-1.1.0.tgz#87b9bec6dd3696e405ea79da7d2749d8308b0953"
-  integrity sha512-+0hMx9eYhJvWbgpKV9hN7jg0JcwydpopZE4hgi+KvQtByZXPp04NiCWU0LzcAbP63abZckIHkTQaXVF52mX3xQ==
-  dependencies:
-    cheerio-select "^2.1.0"
-    dom-serializer "^2.0.0"
-    domhandler "^5.0.3"
-    domutils "^3.2.2"
-    encoding-sniffer "^0.2.0"
-    htmlparser2 "^10.0.0"
-    parse5 "^7.3.0"
-    parse5-htmlparser2-tree-adapter "^7.1.0"
-    parse5-parser-stream "^7.1.2"
-    undici "^7.10.0"
-    whatwg-mimetype "^4.0.0"
 
 child_process@1.0.2:
   version "1.0.2"
