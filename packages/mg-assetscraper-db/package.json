@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-assetscraper-db",
-  "version": "0.2.0-alpha.0",
+  "version": "0.2.1-alpha.0",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-assetscraper-db",
   "author": "Ghost Foundation",
   "license": "MIT",
