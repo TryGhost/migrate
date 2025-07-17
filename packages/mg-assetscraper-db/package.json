@@ -48,7 +48,7 @@
     "fs-extra": "11.3.0",
     "heic-convert": "2.1.0",
     "sequelize": "6.37.7",
-    "sharp": "0.34.2",
+    "sharp": "0.34.3",
     "sqlite3": "5.1.7",
     "transliteration": "2.3.5",
     "uuid": "11.1.0"
