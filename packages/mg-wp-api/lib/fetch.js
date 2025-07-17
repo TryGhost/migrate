@@ -156,17 +156,17 @@ const tasks = async (url, ctx) => {
     buildTasks(ctx.fileCache, theTasks, api, 'posts', limit, isAuthRequest, postsBefore, postsAfter, maxPosts);
 
     if (pages) {
-        buildTasks(ctx.fileCache, theTasks, api, 'pages', limit, isAuthRequest, postsBefore, postsAfter, maxPosts);
+        buildTasks(ctx.fileCache, theTasks, api, 'pages', limit, isAuthRequest);
     }
 
     // If users were already supplied, don't fetch them
     if (!usersJSON) {
-        buildTasks(ctx.fileCache, theTasks, api, 'users', limit, isAuthRequest, postsBefore, postsAfter);
+        buildTasks(ctx.fileCache, theTasks, api, 'users', limit, isAuthRequest);
     }
 
     if (cpt) {
         cpt.forEach((cptSlug) => {
-            buildTasks(ctx.fileCache, theTasks, api, `${cptSlug}`, limit, isAuthRequest, postsBefore, postsAfter, maxPosts);
+            buildTasks(ctx.fileCache, theTasks, api, `${cptSlug}`, limit, isAuthRequest);
         });
     }
 
