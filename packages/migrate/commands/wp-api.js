@@ -57,6 +57,10 @@ const setup = (sywac) => {
         defaultValue: 100,
         desc: 'Number of items fetched in a batch i.e. batch size'
     });
+    sywac.number('--maxPosts', {
+        defaultValue: 0,
+        desc: 'Maximum number of posts to return (defaults to not limit)'
+    });
     sywac.string('-a, --auth', {
         defaultValue: null,
         desc: 'Provide a user and password to authenticate the WordPress API (<user>:<password>)'

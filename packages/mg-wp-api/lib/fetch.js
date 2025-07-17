@@ -90,13 +90,31 @@ const cachedFetch = async (fileCache, api, type, limit, page, isAuthRequest, pos
     return response;
 };
 
-const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest, postsBefore, postsAfter) => {
-    for (let page = 1; page <= api.batches[type]; page++) {
+const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest, postsBefore, postsAfter, maxPosts) => {
+    let totalPages = api.batches[type];
+
+    // If maxPosts is specified and this is posts, calculate how many pages we need
+    if (maxPosts && type === 'posts') {
+        totalPages = Math.ceil(Math.min(maxPosts, api.totals[type]) / limit);
+    }
+
+    for (let page = 1; page <= totalPages; page++) {
         tasks.push({
-            title: `Fetching ${type}, page ${page} of ${api.batches[type]}`,
+            title: `Fetching ${type}, page ${page} of ${totalPages}`,
             task: async (ctx) => {
                 try {
                     let response = await cachedFetch(fileCache, api, type, limit, page, isAuthRequest, postsBefore, postsAfter);
+
+                    // If maxPosts is specified and this is posts, limit the response based on current total
+                    if (maxPosts && type === 'posts') {
+                        let resultType = (type !== 'users') ? 'posts' : type;
+                        let currentTotal = ctx.result[resultType].length;
+                        let remainingPosts = maxPosts - currentTotal;
+
+                        if (remainingPosts > 0 && response.length > remainingPosts) {
+                            response = response.slice(0, remainingPosts);
+                        }
+                    }
 
                     // Treat all types as posts, except users
                     let resultType = (type !== 'users') ? 'posts' : type;
@@ -104,7 +122,7 @@ const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest, postsBefo
                     ctx.result[resultType] = ctx.result[resultType].concat(response);
                 } catch (err) {
                     // eslint-disable-next-line no-console
-                    console.error(`Failed to fetch ${type}, page ${page} of ${api.batches[type]}`, err);
+                    console.error(`Failed to fetch ${type}, page ${page} of ${totalPages}`, err);
                     throw err;
                 }
             }
@@ -114,7 +132,7 @@ const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest, postsBefo
 
 const tasks = async (url, ctx) => {
     const {apiUser} = ctx || {};
-    const {pages, posts, limit, cpt, postsBefore, postsAfter} = ctx.options;
+    const {pages, posts, limit, cpt, postsBefore, postsAfter, maxPosts} = ctx.options;
     const {usersJSON} = ctx || null;
     let isAuthRequest = false;
 
@@ -135,20 +153,20 @@ const tasks = async (url, ctx) => {
         users: []
     };
 
-    buildTasks(ctx.fileCache, theTasks, api, 'posts', limit, isAuthRequest, postsBefore, postsAfter);
+    buildTasks(ctx.fileCache, theTasks, api, 'posts', limit, isAuthRequest, postsBefore, postsAfter, maxPosts);
 
     if (pages) {
-        buildTasks(ctx.fileCache, theTasks, api, 'pages', limit, isAuthRequest);
+        buildTasks(ctx.fileCache, theTasks, api, 'pages', limit, isAuthRequest, postsBefore, postsAfter, maxPosts);
     }
 
     // If users were already supplied, don't fetch them
     if (!usersJSON) {
-        buildTasks(ctx.fileCache, theTasks, api, 'users', limit, isAuthRequest);
+        buildTasks(ctx.fileCache, theTasks, api, 'users', limit, isAuthRequest, postsBefore, postsAfter);
     }
 
     if (cpt) {
         cpt.forEach((cptSlug) => {
-            buildTasks(ctx.fileCache, theTasks, api, `${cptSlug}`, limit, isAuthRequest);
+            buildTasks(ctx.fileCache, theTasks, api, `${cptSlug}`, limit, isAuthRequest, postsBefore, postsAfter, maxPosts);
         });
     }
 

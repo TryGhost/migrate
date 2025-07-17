@@ -58,6 +58,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`-l` `--limit`**
     - number - default: `15`
     - Number of items fetched in a batch i.e. batch size
+- **`--maxPosts`**
+    - number - default: `0`
+    - 'Maximum number of posts to return (defaults to not limit)
 - **`-a` `--auth`**
     - string - default: `null`
     - Provide a user and password to authenticate the WordPress API (<user>:<password>)
