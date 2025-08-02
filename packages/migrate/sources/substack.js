@@ -116,10 +116,29 @@ const postProcessor = (scrapedData, data, options) => {
     }
 
     if (scrapedData.scripts) {
-        scrapedData.scripts.forEach((script) => {
-            if (script.content.trim().startsWith('window._preloads')) {
-                let tags = [];
+        let tags = [];
 
+        scrapedData.scripts.forEach((script) => {
+            if (script.content.trim().startsWith('window._analyticsConfig')) {
+                try {
+                    let theContent = script.content.trim();
+                    theContent = theContent.replace(/^window\._analyticsConfig[ ]+=[ ]+JSON\.parse\(/, '');
+                    theContent = theContent.replace(/\)$/, '');
+                    theContent = JSON.parse(JSON.parse(theContent));
+
+                    if (theContent?.properties?.section_slug && theContent?.properties?.section_name) {
+                        tags.push({
+                            url: `/substack-section/${theContent.properties.section_slug.trim()}`,
+                            data: {
+                                name: theContent.properties.section_name.trim(),
+                                slug: theContent.properties.section_slug.trim()
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.log('Error parsing tags', script.content, error); // eslint-disable-line no-console
+                }
+            } else if (script.content.trim().startsWith('window._preloads')) {
                 try {
                     let theContent = script.content.trim();
                     theContent = theContent.replace(/^window\._preloads[ ]+=[ ]+JSON\.parse\(/, '');
@@ -138,10 +157,17 @@ const postProcessor = (scrapedData, data, options) => {
                 } catch (error) {
                     console.log('Error parsing tags', script.content, error); // eslint-disable-line no-console
                 }
-
-                scrapedData.tags = tags;
             }
         });
+
+        scrapedData.tags = tags;
+
+        // If the tags array has a section tag, move it to the top of the array
+        if (tags.some(tag => tag.url.includes('/substack-section/'))) {
+            tags = tags.sort((a, b) => { // eslint-disable-line no-unused-vars
+                return a.url.includes('/substack-section/') ? -1 : 1;
+            });
+        }
 
         delete scrapedData.scripts;
     }

@@ -69,13 +69,16 @@ describe('Web Scrap Config & Post Processor', function () {
         assert.equal(scrapedData.authors[1].data.slug, 'other-name');
         assert.equal(scrapedData.authors[1].data.email, 'other-name@example.com');
 
-        assert.equal(scrapedData.tags.length, 2);
-        assert.equal(scrapedData.tags[0].url, '/substack-tag/blogging');
-        assert.equal(scrapedData.tags[0].data.name, 'Blogging');
-        assert.equal(scrapedData.tags[0].data.slug, 'blogging');
-        assert.equal(scrapedData.tags[1].url, '/substack-tag/news');
-        assert.equal(scrapedData.tags[1].data.name, 'News');
-        assert.equal(scrapedData.tags[1].data.slug, 'news');
+        assert.equal(scrapedData.tags.length, 3);
+        assert.equal(scrapedData.tags[0].url, '/substack-section/world-sports-cricket');
+        assert.equal(scrapedData.tags[0].data.name, 'World Sports: Cricket');
+        assert.equal(scrapedData.tags[0].data.slug, 'world-sports-cricket');
+        assert.equal(scrapedData.tags[1].url, '/substack-tag/blogging');
+        assert.equal(scrapedData.tags[1].data.name, 'Blogging');
+        assert.equal(scrapedData.tags[1].data.slug, 'blogging');
+        assert.equal(scrapedData.tags[2].url, '/substack-tag/news');
+        assert.equal(scrapedData.tags[2].data.name, 'News');
+        assert.equal(scrapedData.tags[2].data.slug, 'news');
     });
 
     test('Scrapes a podcast', async function () {
