@@ -212,6 +212,10 @@ const processShortcodes = async ({html, options}) => {
     });
 
     shortcodes.add('caption', ({content}) => {
+        if (!content) {
+            return '';
+        }
+
         const $html = $.load(content, {
             decodeEntities: false,
             scriptingEnabled: false
