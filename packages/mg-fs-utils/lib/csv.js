@@ -10,7 +10,7 @@ import errors from '@tryghost/errors';
  * @param {String} filePath - name of file to write
  * @param {Object} options - optional options to pass to `csv-parse`
  */
-const parseCSV = (filePath, options = {skip_lines_with_error: true, columns: true, skip_empty_lines: true}) => {
+const parseCSV = (filePath, options = {skip_lines_with_error: true, columns: true, skip_empty_lines: true, trim: true}) => {
     const parser = parse(options);
     const data = [];
     return new Promise((resolve, reject) => {
@@ -32,7 +32,7 @@ const parseCSV = (filePath, options = {skip_lines_with_error: true, columns: tru
  * @param {String} csvString - CSV as a string
  * @param {Object} options - optional options to pass to `csv-parse`
  */
-const parseString = (csvString, options = {skip_lines_with_error: true, columns: true, skip_empty_lines: true}) => {
+const parseString = (csvString, options = {skip_lines_with_error: true, columns: true, skip_empty_lines: true, trim: true}) => {
     const data = parseSync(csvString, options);
 
     return data;
