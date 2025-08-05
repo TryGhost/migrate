@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-substack-members-csv",
-  "version": "0.4.31",
+  "version": "0.4.32",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-substack-members-csv",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@tryghost/errors": "1.3.8",
-    "@tryghost/mg-fs-utils": "0.15.7",
+    "@tryghost/mg-fs-utils": "0.16.0",
     "bluebird": "3.7.2",
     "csv-parser": "3.2.0",
     "ghost-ignition": "4.6.3",
