@@ -81,6 +81,48 @@ describe('Web Scrap Config & Post Processor', function () {
         assert.equal(scrapedData.tags[2].data.slug, 'news');
     });
 
+    test('Scrapes a text post with a single author', async function () {
+        const singleAuthordHTML = await readFile(new URL('./fixtures/substack-single-author.html', import.meta.url));
+
+        nock('https://example.substack.com')
+            .get('/p/hello-world')
+            .reply(200, singleAuthordHTML, {
+                'Content-Type': 'text/html'
+            });
+
+        const ctx = {
+            fileCache: mockFileCache,
+            errors: [],
+            options: {},
+            result: {
+                posts: [
+                    {
+                        url: 'https://example.substack.com/p/hello-world',
+                        data: {}
+                    }
+                ]
+            }
+        };
+
+        const webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor, skipScrape);
+
+        const tasks = webScraper.hydrate(ctx);
+        const runner = makeTaskRunner(tasks, {
+            concurrent: 1,
+            renderer: 'silent'
+        });
+        await runner.run(ctx);
+
+        const scrapedData = ctx.result.posts[0].data;
+
+        assert.equal(scrapedData.authors.length, 1);
+
+        assert.equal(scrapedData.authors[0].url, 'https-exaple-org');
+        assert.equal(scrapedData.authors[0].data.name, 'Example Org');
+        assert.equal(scrapedData.authors[0].data.slug, 'example-org');
+        assert.equal(scrapedData.authors[0].data.email, 'example-org@example.com');
+    });
+
     test('Scrapes a podcast', async function () {
         const podcastHTML = await readFile(new URL('./fixtures/substack-podcast.html', import.meta.url));
 

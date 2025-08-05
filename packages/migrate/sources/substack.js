@@ -68,6 +68,11 @@ const scrapeConfig = {
                 let ldJSON = JSON.parse(x);
                 let theAuthors = [];
 
+                // Ensure ldJSON.author is an array
+                if (ldJSON.author && !Array.isArray(ldJSON.author)) {
+                    ldJSON.author = [ldJSON.author];
+                }
+
                 ldJSON.author.forEach((person) => {
                     const personNameSlug = slugify(person.name);
                     theAuthors.push({
