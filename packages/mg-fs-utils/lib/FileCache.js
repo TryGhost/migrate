@@ -158,7 +158,8 @@ export default class FileCache {
         let fileNameExt = extname(src);
 
         let safeFileNameNoExt = transliterate.slugify(fileNameNoExt, {
-            separator: '_'
+            separator: '_',
+            lowercase: false
         });
 
         let result = src.replace(`${fileNameNoExt}${fileNameExt}`, `${safeFileNameNoExt}${fileNameExt}`);
