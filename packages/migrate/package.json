@@ -29,7 +29,7 @@
     "eslint": "8.57.0",
     "jest": "30.0.5",
     "jest-extended": "6.0.0",
-    "nock": "14.0.8"
+    "nock": "14.0.9"
   },
   "dependencies": {
     "@tryghost/listr-smart-renderer": "0.5.19",
