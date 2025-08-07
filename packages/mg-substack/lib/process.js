@@ -141,6 +141,11 @@ const processContent = (post, siteUrl, options) => {
         $(el).after('<!--kg-card-end: html-->');
     });
 
+    // We don't currently handle these, so remove them to clean up the document
+    $html('div.native-video-embed').each((i, el) => {
+        $(el).remove();
+    });
+
     $html('.image3').each((i, el) => {
         const attrs = $(el).attr('data-attrs');
         const attrsObj = JSON.parse(attrs);
