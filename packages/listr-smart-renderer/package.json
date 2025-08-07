@@ -30,7 +30,7 @@
     "jest-extended": "6.0.0"
   },
   "dependencies": {
-    "chalk": "5.4.1",
+    "chalk": "5.5.0",
     "cli-truncate": "4.0.0",
     "elegant-spinner": "3.0.0",
     "indent-string": "5.0.0",
