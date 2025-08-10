@@ -356,7 +356,7 @@ const processShortcodes = async ({html, options}) => {
     shortcodes.add('code', ({attrs, content}) => {
         let captionString = (attrs?.title) ? `<figcaption>${attrs.title}</figcaption>` : '';
         let classString = (attrs?.language) ? `language-${attrs.language}` : '';
-        let theContent = content.trim();
+        let theContent = content?.trim();
         return `<figure><pre class="${classString}"><code>${theContent}</code></pre>${captionString}</figure>`;
     });
 
