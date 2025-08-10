@@ -279,6 +279,11 @@ const processShortcodes = async ({html, options}) => {
             let images = [];
 
             if (attrs?.ids) {
+                // Coerce attrs.ids to string if it isnt a string already
+                if (typeof attrs.ids !== 'string') {
+                    attrs.ids = attrs.ids.toString();
+                }
+
                 images = attrs.ids.split(',').map((i) => {
                     let idInt = parseInt(i.trim());
                     let foundAttachment = _.find(attachments, (item) => {
