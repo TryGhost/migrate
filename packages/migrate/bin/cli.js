@@ -11,6 +11,7 @@ const packageJSON = JSON.parse(readFileSync(join(__dirname, '../package.json'), 
 import beehiivCommands from '../commands/beehiiv.js';
 import beehiivMembersCommands from '../commands/beehiiv-members.js';
 import bloggerCommands from '../commands/blogger.js';
+import buttondownCommands from '../commands/buttondown.js';
 import cacheCommands from '../commands/cache.js';
 import chorusCommands from '../commands/chorus.js';
 import curatedMembersCommands from '../commands/curated-members.js';
@@ -50,6 +51,7 @@ prettyCLI.preface('Command line utilities for migrating content to Ghost.');
 prettyCLI.command(beehiivCommands);
 prettyCLI.command(beehiivMembersCommands);
 prettyCLI.command(bloggerCommands);
+prettyCLI.command(buttondownCommands);
 prettyCLI.command(cacheCommands);
 prettyCLI.command(chorusCommands);
 prettyCLI.command(curatedMembersCommands);
