@@ -28,6 +28,12 @@ export class Options {
             desc: 'Only migrate a specific subscription id (optional)'
         },
         {
+            type: 'string',
+            flags: '--subscriptions-csv',
+            defaultValue: false,
+            desc: 'Path to CSV file containing subscription IDs to migrate (optional)'
+        },
+        {
             type: 'number',
             flags: '--delay',
             defaultValue: null,
@@ -63,6 +69,7 @@ export class Options {
     forceRecreate: boolean;
     delay: number | null;
     subscription: string | null;
+    subscriptionsCsv: string | null;
 
     static shared: Options;
 
@@ -76,6 +83,7 @@ export class Options {
         this.forceRecreate = argv['force-recreate'] ?? false;
         this.delay = argv.delay ?? null;
         this.subscription = argv.subscription ?? null;
+        this.subscriptionsCsv = argv['subscriptions-csv'] ?? null;
     }
 
     static init(argv: any) {

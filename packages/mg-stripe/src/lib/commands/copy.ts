@@ -10,6 +10,7 @@ import {confirm} from '@inquirer/prompts';
 import {DelayPrompt} from '../DelayPrompt.js';
 import {Reporter, ReportingCategory} from '../importers/Reporter.js';
 import {isWarning} from '../helpers.js';
+import {readSubscriptionIdsFromCsv} from '../csvReader.js';
 
 export async function copy(options: Options) {
     const reporter = new Reporter(new ReportingCategory('', {skipTitle: true}));
@@ -38,9 +39,22 @@ export async function copy(options: Options) {
         Logger.shared.succeed(`Running ${chalk.green('copy')} command...`);
     }
 
+    let subscriptionIds: string[] | null = null;
+    
+    if (options.subscription && options.subscriptionsCsv) {
+        Logger.shared.fail('Cannot use both --subscription and --subscriptions-csv options at the same time');
+        process.exit(1);
+    }
+    
     if (options.subscription) {
+        subscriptionIds = [options.subscription];
         Logger.shared.newline();
         Logger.shared.warn(`Migration is limited to subscription with ID ${options.subscription}`);
+        Logger.shared.newline();
+    } else if (options.subscriptionsCsv) {
+        subscriptionIds = readSubscriptionIdsFromCsv(options.subscriptionsCsv);
+        Logger.shared.newline();
+        Logger.shared.warn(`Migration is limited to ${subscriptionIds.length} subscription(s) from CSV file`);
         Logger.shared.newline();
     }
 
@@ -104,15 +118,17 @@ export async function copy(options: Options) {
             delay
         });
 
-        if (options.subscription) {
-            try {
-                await subscriptionImporter.recreateByID(options.subscription);
-            } catch (e: any) {
-                if (isWarning(e)) {
-                    // Only log warnings immediately in verbose mode
-                    Logger.shared.warn(e.toString());
-                } else {
-                    Logger.shared.error(e.toString());
+        if (subscriptionIds) {
+            for (const subscriptionId of subscriptionIds) {
+                try {
+                    await subscriptionImporter.recreateByID(subscriptionId);
+                } catch (e: any) {
+                    if (isWarning(e)) {
+                        // Only log warnings immediately in verbose mode
+                        Logger.shared.warn(e.toString());
+                    } else {
+                        Logger.shared.error(e.toString());
+                    }
                 }
             }
         } else {
