@@ -3,7 +3,7 @@ import beehiivIngest from '@tryghost/mg-beehiiv';
 import {toGhostJSON} from '@tryghost/mg-json';
 import mgHtmlLexical from '@tryghost/mg-html-lexical';
 import MgWebScraper from '@tryghost/mg-webscraper';
-import MgAssetScraper from '@tryghost/mg-assetscraper';
+import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
@@ -115,7 +115,7 @@ const skipScrape = (post) => {
 const initialize = (options) => {
     return {
         title: 'Initializing Workspace',
-        task: (ctx, task) => {
+        task: async (ctx, task) => {
             ctx.options = options;
             ctx.allowScrape = {
                 all: ctx.options.scrape.includes('all'),
@@ -132,11 +132,12 @@ const initialize = (options) => {
             });
             ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor, skipScrape);
             ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
-                sizeLimit: ctx.options.sizeLimit,
-                allowImages: ctx.allowScrape.images,
-                allowMedia: ctx.allowScrape.media,
-                allowFiles: ctx.allowScrape.files
+                domains: [
+                    'http://media.beehiiv.com',
+                    'https://media.beehiiv.com'
+                ]
             }, ctx);
+            await ctx.assetScraper.init();
             ctx.linkFixer = new MgLinkFixer();
 
             task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
@@ -201,7 +202,7 @@ const getFullTaskList = (options) => {
             },
             task: async (ctx) => {
                 // 6. Format the data as a valid Ghost JSON file
-                let tasks = ctx.assetScraper.fetch(ctx);
+                let tasks = ctx.assetScraper.getTasks(ctx);
                 return makeTaskRunner(tasks, {
                     verbose: options.verbose,
                     exitOnError: false,
