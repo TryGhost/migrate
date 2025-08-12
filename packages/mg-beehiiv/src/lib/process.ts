@@ -79,6 +79,12 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         }
     });
 
+    $html('table.d3[align="center"]').each((i: any, el: any) => {
+        const parent = $(el).parent('td[align="center"]');
+        const text = $html(el).text().replace(/(\r\n|\n|\r|&nbsp;)/gm, ' ').replace(/(\s{2,})/gm, ' ').trim();
+        $(parent).replaceWith(`<div class="kg-card kg-quote-card kg-align-center"><blockquote class="kg-blockquote"><p>${text}</p></blockquote></div>`);
+    });
+
     // Galleries
     $html('table.mob-w-full').each((i: any, el: any) => {
         let allImages: string[] = [];
