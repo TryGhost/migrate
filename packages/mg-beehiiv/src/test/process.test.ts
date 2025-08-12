@@ -380,6 +380,37 @@ describe('beehiiv Processor', () => {
             assert.equal(processed, '<figure class="kg-card kg-image-card"><img src="https://example.com/image.jpg" class="kg-image" alt="My alt text" /></figure>');
         });
 
+        it('Keeps images with wrapping links', () => {
+            const htmlContent = `<body><table><tr id="content-blocks">
+            <td>
+                <table">
+                    <tr>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td class="dd">
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <a href="https://example.com/destination" rel="noopener noreferrer nofollow" style="text-decoration:none;" target="_blank">
+                                                        <img src="https://example.com/image.jpg" alt="" />
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
+
+            assert.equal(processed, '<figure class="kg-card kg-image-card"><a href="https://example.com/destination"><img src="https://example.com/image.jpg" class="kg-image" alt="" /></a></figure>');
+        });
+
         it('Converts galleries with captions to figures with figcaptions', () => {
             const htmlContent = `<body><table><tr id="content-blocks">
                 <td width="100%">

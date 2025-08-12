@@ -229,7 +229,7 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
             theAlt = $(secondTr)?.text()?.trim();
         }
 
-        let cardOpts = {
+        let cardOpts: any = {
             env: {dom: new SimpleDom.Document()},
             payload: {
                 src: theSrc,
@@ -237,6 +237,13 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
                 caption: theText
             }
         };
+
+        // Check if the parent element to this is a <a> tag
+        const isInLink = $(el).parents('a').length;
+
+        if (isInLink) {
+            cardOpts.payload.href = $(el).parents('a').attr('href');
+        }
 
         $(parentTable).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
