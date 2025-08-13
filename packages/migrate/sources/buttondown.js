@@ -99,18 +99,18 @@ const getFullTaskList = (options) => {
                 return makeTaskRunner(tasks, options);
             }
         },
-        // {
-        //     title: 'Convert HTML -> Lexical',
-        //     task: (ctx) => {
-        //         try {
-        //             let tasks = mgHtmlLexical.convert(ctx);
-        //             return makeTaskRunner(tasks, options);
-        //         } catch (error) {
-        //             ctx.errors.push('Failed to convert HTML -> Lexical', error); // eslint-disable-line no-console
-        //             throw error;
-        //         }
-        //     }
-        // },
+        {
+            title: 'Convert HTML -> Lexical',
+            task: (ctx) => {
+                try {
+                    let tasks = mgHtmlLexical.convert(ctx);
+                    return makeTaskRunner(tasks, options);
+                } catch (error) {
+                    ctx.errors.push('Failed to convert HTML -> Lexical', error); // eslint-disable-line no-console
+                    throw error;
+                }
+            }
+        },
         {
             title: 'Write Ghost import JSON File',
             task: async (ctx) => {
