@@ -270,7 +270,7 @@ describe('Process', function () {
         '<p>World</p>');
     });
 
-    test('Can conremove elements', async function () {
+    test('Can remove elements', async function () {
         let blockquote = `<p>Hello</p><div class="custom-subscribe-form"></div><p>World</p>`;
 
         let processed = process.processContent(blockquote, {
@@ -278,6 +278,23 @@ describe('Process', function () {
         });
 
         expect(processed).toEqual('<p>Hello</p><p>World</p>');
+    });
+
+    test('Can handle YouTube embeds', async function () {
+        let video = `<div class="sqs-html-content" data-sqsp-text-block-content><p>Hello world</p></div>
+            <div class="intrinsic" style="max-width:100%">
+                <div class="embed-block-wrapper" style="padding-bottom:56.5%;">
+                    <div class="sqs-video-wrapper" data-provider-name="YouTube" data-html="&lt;iframe width=&quot;200&quot; height=&quot;113&quot; src=&quot;https://www.youtube.com/embed/lqCmETMKzA8?feature=oembed&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen title=&quot;The Video Title&quot;&gt;&lt;/iframe&gt;">
+                    </div>
+                </div>
+            </div>`;
+
+        let processed = process.processContent(video, {
+            removeSelectors: '.custom-subscribe-form'
+        });
+
+        expect(processed).toEqual('<div class="sqs-html-content" data-sqsp-text-block-content><p>Hello world</p></div>\n' +
+        '            <figure class="kg-card kg-embed-card"><iframe width="200" height="113" src="https://www.youtube.com/embed/lqCmETMKzA8?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen title="The Video Title"></iframe></figure>');
     });
 
     test('Can handle posts with no title', async function () {

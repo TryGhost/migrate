@@ -90,6 +90,13 @@ const processContent = (html, options) => {
         $(el).html(`<p>${$(el).html()}${captionText}</p>`);
     });
 
+    $html('.sqs-video-wrapper').each((i, el) => {
+        const theHtml = $(el).attr('data-html');
+        const parent = $(el).parent('.embed-block-wrapper').parent('.intrinsic');
+
+        $(parent).replaceWith(`<figure class="kg-card kg-embed-card">${theHtml}</figure>`);
+    });
+
     // TODO: this should be a parser plugin
     // Wrap nested lists in HTML card
     $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {
