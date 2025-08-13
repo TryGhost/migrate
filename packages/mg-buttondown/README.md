@@ -28,12 +28,6 @@ To run a basic Buttondown migration, the required command is this:
 migrate buttondown --pathToZip /path/to/export.zip --url https://example.com
 ```
 
-A more complex command for a Buttondown migration looks like this:
-
-```sh
-migrate buttondown --pathToZip /path/to/export.zip --url https://example.com --default_author_name 'Author Name' --subscribeLink '/join'
-```
-
 It's possible to pass more options, in order to achieve a better migration file for Ghost:
 
 - **`--pathToZip`** (required)
@@ -42,16 +36,10 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--url`** (required)
     - Site URL
     - string - default: `null`  
-<!-- - **`--defaultAuthorName`** 
-    - The name to use where no author is specified. Names with spaces should be quoted.
-    - string - default: `null` -->
 - **`-s` `--scrape`** 
     - Configure scraping tasks
     - string - default: `all` 
     - Choices: `all`, `img`, `web`, `media`, `files`, `none`
-<!-- - **`--subscribeLink`** 
-    - Provide a path that existing `/subscribe` anchors will link to e.g. `/join-us` or `#/portal/signup` (`#` characters need to be escaped with a `\`)
-    - string - default: `#/portal/signup` -->
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
     - bool - default: `true`     
