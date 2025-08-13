@@ -36,6 +36,7 @@
     "@tryghost/mg-assetscraper": "0.4.29",
     "@tryghost/mg-beehiiv": "0.3.10",
     "@tryghost/mg-beehiiv-members": "0.1.19",
+    "@tryghost/mg-buttondown": "0.1.0",
     "@tryghost/mg-blogger": "0.1.26",
     "@tryghost/mg-chorus": "0.1.26",
     "@tryghost/mg-curated-export": "0.3.38",

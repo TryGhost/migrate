@@ -1,0 +1,18 @@
+[
+    {
+        "id": "abcd1234-7fee-4942-a9cf-0de5d4ebb255",
+        "secondary_id": "1",
+        "subject": "This is a Plain Post",
+        "publish_date": "2023-01-02 16:55:00+00:00",
+        "source": "app",
+        "slug": "plain-post"
+    },
+    {
+        "id": "efab5678-16d8-4e02-979f-38fdfbe04624",
+        "secondary_id": "2",
+        "subject": "This is a Fancy Post",
+        "publish_date": "2023-01-05 13:00:00+00:00",
+        "source": "app",
+        "slug": "fancy-post"
+    }
+]
