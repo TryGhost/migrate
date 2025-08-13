@@ -263,6 +263,38 @@ describe('beehiiv Processor', () => {
             assert.equal(processed, '<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.com/p/hello-world"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Hello world</div><div class="kg-bookmark-description">And other text</div><div class="kg-bookmark-metadata"></div><div class="kg-bookmark-thumbnail"><img src="https://beehiiv-images-production.s3.amazonaws.com/uploads/asset/file/12345678-1234-1234-92a5-d51e635d588c/photo.jpg?t=1723045443" alt="" /></div></div></a></figure>');
         });
 
+        it('Converts pull quotes', () => {
+            const htmlContent = `<body><table><tr id="content-blocks"><td><tr>
+                <td align="center">
+                    <table align="center" class="d3">
+                        <tr>
+                            <td>
+                                <table>
+                                    <tr>
+                                        <td> ❝ </td>
+                                    </tr>
+                                    <tr>
+                                        <td>&nbsp;</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <p>The quote text</p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+</tr></td></tr></table></body>`;
+
+            const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
+                url: 'https://example.beehiiv.com'
+            }});
+
+            assert.equal(processed, '<div class="kg-card kg-quote-card kg-align-center"><blockquote class="kg-blockquote"><p>❝ The quote text</p></blockquote></div>');
+        });
+
         it('Updates subscribe links', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><p>Stay updated! Be sure to <a class="link" href="https://example.beehiiv.com/subscribe?utm_source=example.beehiiv.com&utm_medium=newsletter" target="_blank" rel="noopener noreferrer nofollow">subscribe to our newsletter</a>.</p></tr></table></body>`;
             const processed = processHTML({html: htmlContent, postData: mappedObject, options: {
@@ -378,6 +410,37 @@ describe('beehiiv Processor', () => {
             const processed = processHTML({html: htmlContent, postData: mappedObject});
 
             assert.equal(processed, '<figure class="kg-card kg-image-card"><img src="https://example.com/image.jpg" class="kg-image" alt="My alt text" /></figure>');
+        });
+
+        it('Keeps images with wrapping links', () => {
+            const htmlContent = `<body><table><tr id="content-blocks">
+            <td>
+                <table">
+                    <tr>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td class="dd">
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <a href="https://example.com/destination" rel="noopener noreferrer nofollow" style="text-decoration:none;" target="_blank">
+                                                        <img src="https://example.com/image.jpg" alt="" />
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
+
+            assert.equal(processed, '<figure class="kg-card kg-image-card"><a href="https://example.com/destination"><img src="https://example.com/image.jpg" class="kg-image" alt="" /></a></figure>');
         });
 
         it('Converts galleries with captions to figures with figcaptions', () => {
