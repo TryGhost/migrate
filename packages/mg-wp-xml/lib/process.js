@@ -90,16 +90,16 @@ const processTags = ($wpTerms) => {
             categories.push({
                 url: `/tag/${$(taxonomy).attr('nicename')}`,
                 data: {
-                    slug: $(taxonomy).attr('nicename'),
-                    name: $(taxonomy).text().replace('&amp;', '&')
+                    slug: $(taxonomy).attr('nicename').substring(0, 190),
+                    name: $(taxonomy).text().replace('&amp;', '&').substring(0, 190)
                 }
             });
         } else if (allowedTerms.includes($(taxonomy).attr('domain'))) {
             tags.push({
                 url: `/tag/${$(taxonomy).attr('nicename')}`,
                 data: {
-                    slug: $(taxonomy).attr('nicename'),
-                    name: $(taxonomy).text().replace('&amp;', '&')
+                    slug: $(taxonomy).attr('nicename').substring(0, 190),
+                    name: $(taxonomy).text().replace('&amp;', '&').substring(0, 190)
                 }
             });
         }
