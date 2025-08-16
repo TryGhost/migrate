@@ -10344,10 +10344,10 @@ prelude-ls@^1.2.1:
   resolved "https://registry.yarnpkg.com/prelude-ls/-/prelude-ls-1.2.1.tgz#debc6489d7a6e6b0e7611888cec880337d316396"
   integrity sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==
 
-pretty-bytes@7.0.0:
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/pretty-bytes/-/pretty-bytes-7.0.0.tgz#8652cbf0aa81daeeaf72802e0fd059e5e1046cdb"
-  integrity sha512-U5otLYPR3L0SVjHGrkEUx5mf7MxV2ceXeE7VwWPk+hyzC5drNohsOGNPDZqxCqyX1lkbEN4kl1LiI8QFd7r0ZA==
+pretty-bytes@7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/pretty-bytes/-/pretty-bytes-7.0.1.tgz#24100e03ff1cd911900bf0149183e49e58a737d8"
+  integrity sha512-285/jRCYIbMGDciDdrw0KPNC4LKEEwz/bwErcYNxSJOi4CpGUuLpb9gQpg3XJP0XYj9ldSRluXxih4lX2YN8Xw==
 
 pretty-format@30.0.5, pretty-format@^30.0.0:
   version "30.0.5"
