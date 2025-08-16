@@ -37,7 +37,7 @@
     "listr": "0.14.3",
     "markdown-it": "14.1.0",
     "mime-types": "3.0.1",
-    "pretty-bytes": "7.0.0",
+    "pretty-bytes": "7.0.1",
     "srcset": "5.0.1"
   }
 }
