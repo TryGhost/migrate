@@ -9,7 +9,7 @@ describe('beehiiv Members', () => {
     it('Can parse CSV', async () => {
         const processed = await processCsv({csvPath: join(fixturesPath, 'members.csv')});
 
-        assert.equal(processed.free.length, 4);
+        assert.equal(processed.free.length, 5);
         assert.equal(processed.paid.length, 1);
     });
 
@@ -27,5 +27,12 @@ describe('beehiiv Members', () => {
         assert.equal(processed.free[2].name, null);
         assert.equal(processed.free[3].name, 'Last Only');
         assert.equal(processed.paid[0].name, null);
+    });
+
+    it('Uses Substack subscription date if present', async () => {
+        const processed = await processCsv({csvPath: join(fixturesPath, 'members.csv')});
+
+        assert.equal(processed.free[4].email, 'fromsubstack@example.com');
+        assert.equal(processed.free[4].created_at.toISOString(), new Date('2022-03-12T11:43:23.000Z').toISOString());
     });
 });

@@ -33,7 +33,7 @@ const processCsv = async ({csvPath}: {csvPath: string}) => {
     };
 
     csvData.forEach((member: any) => {
-        const createdAt = new Date(member.created_at);
+        const createdAt = (member['Subscription Date (Substack)']) ? new Date(member['Subscription Date (Substack)']) : new Date(member.created_at);
 
         let newMember: memberObject = {
             email: member.email,
