@@ -1,10 +1,10 @@
-email,First Name,Last Name,status,tier,created_at,stripe_customer_id,Free Tier,Premium Tier,unsubscribed_at,Subscription Date (Substack)
-lorem@example.com, Lorem Name  ,,active,free,2023-03-24 10:23:10 UTC,,Yes,No,,
-ipsum@example.com,  Ipsum  , Name ,active,premium,2023-03-24 10:36:47 UTC,,No,Yes,,
-dolor@example.com, , Dolor Name   ,inactive,free,2023-03-24 10:36:48 UTC,,Yes,No,,
-simet@example.com,,,inactive,premium,2023-03-24 10:37:04 UTC,,No,Yes,,
-amett@example.com,,,pending,free,2023-04-11 14:02:46 UTC,,Yes,No,,
-elit@example.com,,,active,premium,2023-04-11 14:02:46 UTC,cus_1234,No,Yes,,
-nullfirst@example.com,, Last Only ,active,free,2023-04-11 14:02:47 UTC,,Yes,No,,
-unsublit@example.com,,,active,premium,2023-04-11 14:02:46 UTC,cus_1234,No,Yes,2024-03-13 11:33:53 UTC,
-fromsubstack@example.com,,,active,free,2023-04-11 14:02:46 UTC,,Yes,No,,2022-03-12 11:43:23 UTC
+email,First Name,Last Name,status,tier,created_at,stripe_customer_id,Free Tier,Bronze Tier,Silver Tier,Gold Tier,unsubscribed_at,Subscription Date (Substack)
+lorem@example.com, Lorem Name  ,,active,free,2023-03-24 10:23:10 UTC,,Yes,No,No,No,,
+ipsum@example.com,  Ipsum  , Name ,active,premium,2023-03-24 10:36:47 UTC,,No,No,Yes,No,,
+dolor@example.com, , Dolor Name   ,inactive,free,2023-03-24 10:36:48 UTC,,Yes,No,No,No,,
+simet@example.com,,,inactive,premium,2023-03-24 10:37:04 UTC,,No,No,No,No,,
+amett@example.com,,,pending,free,2023-04-11 14:02:46 UTC,,Yes,No,No,No,,
+elit@example.com,,,active,premium,2023-04-11 14:02:46 UTC,cus_1234,No,Yes,No,No,,
+nullfirst@example.com,, Last Only ,active,free,2023-04-11 14:02:47 UTC,,No,No,No,Yes,,
+unsublit@example.com,,,active,premium,2023-04-11 14:02:46 UTC,cus_1234,No,Yes,No,No,2024-03-13 11:33:53 UTC,
+fromsubstack@example.com,,,active,free,2023-04-11 14:02:46 UTC,,Yes,No,No,No,,2022-03-12 11:43:23 UTC

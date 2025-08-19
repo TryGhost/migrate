@@ -1,4 +1,5 @@
 import fsUtils from '@tryghost/mg-fs-utils';
+import {slugify} from '@tryghost/string';
 
 type memberObject = {
     email: string;
@@ -47,7 +48,6 @@ const processCsv = async ({csvPath}: {csvPath: string}) => {
         };
 
         // First Name,Last Name
-
         if (member['First Name'] || member['Last Name']) {
             const firstName = member?.['First Name']?.trim() || '';
             const lastName = member?.['Last Name']?.trim() || '';
@@ -71,17 +71,13 @@ const processCsv = async ({csvPath}: {csvPath: string}) => {
             newMember.stripe_customer_id = 'auto';
         }
 
-        if (member['Free Tier'] === 'Yes') {
-            newMember.labels.push(`beehiiv-tier-free`);
-        }
-
-        if (member['Premium Tier'] === 'Yes') {
-            newMember.labels.push(`beehiiv-premium-free`);
-        }
-
-        if (member.tier) {
-            newMember.labels.push(`beehiiv-tier-${member.tier}`);
-        }
+        const tierKeys = Object.keys(member).filter(key => key.endsWith('Tier'));
+        tierKeys.forEach((key: string) => {
+            if (member[key] === 'Yes') {
+                const slugifiedTier = slugify(key);
+                newMember.labels.push(`beehiiv-tier-${slugifiedTier}`);
+            }
+        });
 
         if (member.stripe_customer_id) {
             allMembers.paid.push(newMember);
