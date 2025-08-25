@@ -27,7 +27,7 @@
     "listr": "0.14.3"
   },
   "dependencies": {
-    "cheerio": "1.0.0-rc.12",
+    "cheerio": "1.1.2",
     "lodash": "4.17.21"
   }
 }
