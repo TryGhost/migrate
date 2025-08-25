@@ -27,6 +27,13 @@ const processMeta = ({name, $post, options}) => {
         post.data.updated_at = dateNow;
     } else {
         urlInfo = post.url.match(/([^/]*?)-([0-9a-f]+)$/);
+
+        // urlInfo can be null if the canonical url is a profile url followed by ID, without a post title slug
+        // i.e. https://medium.com/@username/1234567890, instead of https://medium.com/@username/post-title-1234567890
+        if (urlInfo === null) {
+            urlInfo = name.match(/_(.*?)-([0-9a-f]+)\.html/);
+        }
+
         post.data.status = 'published';
         post.data.created_at = $post('.dt-published').attr('datetime') || dateNow;
         post.data.published_at = $post('.dt-published').attr('datetime') || dateNow;
