@@ -188,6 +188,9 @@ describe('toGhostJSON', function () {
         expect(output.data.posts[0].custom_excerpt.length).toBeLessThanOrEqual(300);
         expect(output.data.posts_meta[0].meta_description.length).toBeLessThanOrEqual(500);
         expect(output.data.posts_meta[0].feature_image_alt.length).toBeLessThanOrEqual(125);
+
+        expect(output.data.tags[2].name.length).toBeLessThanOrEqual(185);
+        expect(output.data.tags[2].slug.length).toBeLessThanOrEqual(185);
     });
 
     test('Moves meta data to posts_meta object', async function () {

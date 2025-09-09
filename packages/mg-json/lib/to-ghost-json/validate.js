@@ -24,16 +24,34 @@ export default async (json) => {
             feature_image_alt: 125
         };
 
+        let tagProperties = {
+            name: 185,
+            slug: 185
+        };
+
         for (const [propKey, propValue] of Object.entries(properties)) {
             if (input[propKey] && input[propKey].length > propValue) {
                 let truncated = input[propKey].substring(0, propValue).trim();
 
                 // eslint-disable-next-line no-console
-                console.warn(`${propKey} for slug "${item.data.slug}" is too long.\nOriginal: "${input[propKey]}"\nTruncated to: "${truncated}"`);
+                console.warn(`${propKey} for post slug "${item.data.slug}" is too long.\nOriginal: "${input[propKey]}"\nTruncated to: "${truncated}"`);
 
                 input[propKey] = truncated;
             }
         }
+
+        input?.tags?.forEach((tag, iindex) => {
+            for (const [propKey, propValue] of Object.entries(tagProperties)) {
+                if (tag.data[propKey] && tag.data[propKey].length > propValue) {
+                    let truncated = tag.data[propKey].substring(0, propValue).trim();
+    
+                    // eslint-disable-next-line no-console
+                    console.warn(`${propKey} for tag slug "${input.tags[iindex].data.slug}" is too long.\nOriginal: "${input.tags[iindex].data[propKey]}"\nTruncated to: "${truncated}"`);
+    
+                    input.tags[iindex].data[propKey] = truncated;
+                }
+            }
+        });
 
         json.posts[index].data = input;
     });
