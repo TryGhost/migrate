@@ -146,6 +146,10 @@ const processContent = (post, siteUrl, options) => {
         $(el).remove();
     });
 
+    $html('div.poll-embed').each((i, el) => {
+        $(el).remove();
+    });
+
     $html('.image3').each((i, el) => {
         const attrs = $(el).attr('data-attrs');
         const attrsObj = JSON.parse(attrs);
