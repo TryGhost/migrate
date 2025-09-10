@@ -2,7 +2,9 @@ import errors from '@tryghost/errors';
 import fetch from 'node-fetch';
 
 const getSiteContent = async (apiKey, blogID, type = 'posts') => {
-    let response = null;
+    let response = {
+        nextPageToken: true
+    };
     let results = [];
     let pageToken = false;
 
@@ -16,7 +18,9 @@ const getSiteContent = async (apiKey, blogID, type = 'posts') => {
                 searchParams.set('pageToken', pageToken);
             }
 
-            let request = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogID}/${type}?` + searchParams);
+            let reqUrl = `https://www.googleapis.com/blogger/v3/blogs/${blogID}/${type}?` + searchParams;
+
+            let request = await fetch(reqUrl);
 
             response = await request.json();
             results = results.concat(response.items);
@@ -65,8 +69,6 @@ const tasks = async ({apiKey, blogID}, ctx) => {
             }
         });
     });
-
-    // console.log({blogID});
 
     return tasks;
 };
