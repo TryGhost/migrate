@@ -7,6 +7,12 @@
   "type": "module",
   "main": "build/index.js",
   "types": "build/types.d.ts",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "default": "./build/index.js"
+    }
+  },
   "scripts": {
     "dev": "./cli.js stripe",
     "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",

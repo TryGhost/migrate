@@ -15,11 +15,9 @@
     "**/node_modules/**"
   ],
   "scripts": {
-    "predev": "yarn build",
-    "dev": "NODE_ENV=development migrate",
-    "dev:morememory": "NODE_OPTIONS=\"--max-old-space-size=8192\" NODE_ENV=development migrate",
-    "dev:debug": "DEBUG_COLORS=true DEBUG=@tryghost*,migrate:* NODE_ENV=development migrate",
-    "premigrate": "yarn build",
+    "dev": "NODE_ENV=development NODE_OPTIONS='--import tsx --conditions=development' migrate",
+    "dev:morememory": "NODE_OPTIONS=\"--max-old-space-size=8192 --import tsx --conditions=development\" NODE_ENV=development migrate",
+    "dev:debug": "DEBUG_COLORS=true DEBUG=@tryghost*,migrate:* NODE_ENV=development NODE_OPTIONS='--import tsx --conditions=development' migrate",
     "migrate": "migrate",
     "presetup": "yarn",
     "setup": "yarn install",
@@ -37,6 +35,7 @@
     "eslint": "8.57.0",
     "eslint-plugin-ghost": "3.4.3",
     "jest": "30.0.5",
-    "jest-extended": "6.0.0"
+    "jest-extended": "6.0.0",
+    "tsx": "^4.19.2"
   }
 }
