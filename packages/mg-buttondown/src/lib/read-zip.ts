@@ -30,6 +30,12 @@ const readZip = (zipPath: string) => {
         }
     });
 
+    content.posts.sort((a: any, b: any) => a.name.localeCompare(b.name));
+
+    if (content.json && Array.isArray(content.json)) {
+        content.json.sort((a: any, b: any) => a.slug.localeCompare(b.slug));
+    }
+
     return content;
 };
 

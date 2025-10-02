@@ -32,10 +32,10 @@ describe('Buttondown Zip Reader', () => {
     it('Reads ZIP and combine contents', async function () {
         const data = await readZip(inputZipPath);
         assert.equal(data.json.length, 2);
-        assert.equal(data.json[0].subject, 'This is a Plain Post');
-        assert.equal(data.json[0].slug, 'plain-post');
+        assert.equal(data.json[0].subject, 'This is a Fancy Post');
+        assert.equal(data.json[0].slug, 'fancy-post');
         assert.equal(data.posts.length, 2);
-        assert.equal(data.posts[0].name, 'plain-post.md');
+        assert.equal(data.posts[0].name, 'fancy-post.md');
     });
 
     it('Reads ZIP and maps', async function () {
@@ -47,6 +47,6 @@ describe('Buttondown Zip Reader', () => {
         });
 
         assert.equal(data.posts.length, 2);
-        assert.equal(data.posts[0].url, 'https://example.com/plain-post');
+        assert.equal(data.posts[0].url, 'https://example.com/fancy-post');
     });
 });
