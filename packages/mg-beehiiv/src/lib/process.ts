@@ -1,4 +1,4 @@
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import sanitizeHtml from 'sanitize-html';
 import SimpleDom from 'simple-dom';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
@@ -34,12 +34,12 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
     html = html.replace(/{{rp_refer_url}}/g, '#');
     html = html.replace(/{{rp_refer_url_no_params}}/g, '#');
 
-    const $allHtml: any = $.load(html, {
+    const $allHtml: any = cheerio.load(html, {
         xmlMode: true,
         decodeEntities: false
     });
 
-    const $html: any = $.load($allHtml('#content-blocks').html(), {
+    const $html: any = cheerio.load($allHtml('#content-blocks').html(), {
         xmlMode: true,
         decodeEntities: false
     });
@@ -66,32 +66,43 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         });
     }
 
+    // Polls
+    $html('td[class="e"], td[class="ee e "]').each((i: any, el: any) => {
+        $html(el).remove();
+    });
+
+    // FInd <p> tag which contains {{rp_personalized_text}} and find the parent table to remove the whole section
+    $html('p:contains("{{rp_personalized_text}}")').each((i: any, el: any) => {
+        const parentTable = $html(el).parents('table').first();
+        $html(parentTable).remove();
+    });
+
     $html('h1 strong, h1 b, h2 strong, h2 b, h3 strong, h3 b, h4 strong, h4 b, h5 strong, h5 b, h6 strong, h6 b').each((i: any, el: any) => {
         const text = $html(el).html().trim();
-        $(el).replaceWith(text);
+        $html(el).replaceWith(text);
     });
 
     $html('table.j').each((i: any, el: any) => {
         const tdContent = $html(el).find('td').html().trim();
 
         if (tdContent === '&nbsp;') {
-            $(el).replaceWith('<hr>');
+            $html(el).replaceWith('<hr>');
         }
     });
 
     $html('table.d3[align="center"]').each((i: any, el: any) => {
-        const parent = $(el).parent('td[align="center"]');
+        const parent = $html(el).parent('td[align="center"]');
         const text = $html(el).text().replace(/(\r\n|\n|\r|&nbsp;)/gm, ' ').replace(/(\s{2,})/gm, ' ').trim();
-        $(parent).replaceWith(`<div class="kg-card kg-quote-card kg-align-center"><blockquote class="kg-blockquote"><p>${text}</p></blockquote></div>`);
+        $html(parent).replaceWith(`<div class="kg-card kg-quote-card kg-align-center"><blockquote class="kg-blockquote"><p>${text}</p></blockquote></div>`);
     });
 
     // Galleries
     $html('table.mob-w-full').each((i: any, el: any) => {
         let allImages: string[] = [];
 
-        $(el).find('td.mob-stack').each((ii, ell) => {
-            const img = $(ell).find('img');
-            const pText = $(ell).find('p').text().trim();
+        $html(el).find('td.mob-stack').each((ii: any, ell: any) => {
+            const img = $html(ell).find('img');
+            const pText = $html(ell).find('p').text().trim();
 
             let cardOpts: any = {
                 env: {dom: new SimpleDom.Document()},
@@ -105,22 +116,28 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
                 cardOpts.payload.caption = pText;
             }
 
+            const isInLink = $html(img).parents('a').length;
+
+            if (isInLink) {
+                cardOpts.payload.href = $html(img).parents('a').attr('href');
+            }
+
             allImages.push(serializer.serialize(imageCard.render(cardOpts)));
         });
 
-        $(el).replaceWith(allImages.join(''));
+        $html(el).replaceWith(allImages.join(''));
     });
 
     // Embeds
     $html('td.embed-img.mob-stack').each((i: any, el: any) => {
-        const parent = $(el).parent().parent();
+        const parent = $html(el).parent().parent();
 
-        const href = $(parent).find('a').attr('href');
-        const image = $(parent).find('img').attr('src');
-        const title = $(parent).find('p').eq(0).text();
-        const description = $(parent).find('p').eq(1).text();
+        const href = $html(parent).find('a').attr('href');
+        const image = $html(parent).find('img').attr('src');
+        const title = $html(parent).find('p').eq(0).text();
+        const description = $html(parent).find('p').eq(1).text();
 
-        const parentTable = $(parent).parent().parent().parent().parent().parent();
+        const parentTable = $html(parent).parent().parent().parent().parent().parent();
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
@@ -139,7 +156,7 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
             }
         };
 
-        $(parentTable).replaceWith(serializer.serialize(bookmarkCard.render(cardOpts)));
+        $html(parentTable).replaceWith(serializer.serialize(bookmarkCard.render(cardOpts)));
     });
 
     // Remove hidden elements
@@ -175,7 +192,7 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         const text = $html(el).html().trim();
 
         if (text === '&nbsp;') {
-            $(el).remove();
+            $html(el).remove();
         }
     });
 
@@ -188,12 +205,22 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         }
     });
 
+    // If the iframe has no inner HTML, add a non-breaking space so it doesn't get removed later
+    // Case: There's a bug somewhere in the chain that causes iframes to become self-closing, and this prevents that.
+    $html('iframe').each((i: any, el: any) => {
+        const innerHtml = $html(el).html().length;
+
+        if (innerHtml === 0) {
+            $html(el).html('&nbsp;');
+        }
+    });
+
     // Convert linked YouTube thumbnails to embeds
     $html('a[href*="youtube.com"], a[href*="youtu.be"]').each((i: any, el: any) => {
         const imageCount = $html(el).find('img').length;
         const hasPlayIcon = $html(el).find('img[src*="youtube_play_icon.png"]').length;
         const hasThumbnail = $html(el).find('img[src*="i.ytimg.com/vi"]').length;
-        const src = $html(el).attr('href');
+        const src = $html(el)?.attr('href');
         const captionText = $html(el).find('p')?.text()?.trim() || false;
         const captionHtml = $html(el).find('p')?.html()?.trim() || false;
 
@@ -218,7 +245,7 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
 
     $html('img').each((i: any, el: any) => {
         // Skip if the image is in a figure
-        const isInFigure = $(el).parents('figure').length;
+        const isInFigure = $html(el).parents('figure').length;
         if (isInFigure) {
             return;
         }
@@ -228,11 +255,11 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         const theSrc = $html(el).attr('src');
         let theAlt = $html(el).attr('alt');
 
-        const secondTr = ($(parentTable).find('tr').eq(1).find('p').length) ? $(parentTable).find('tr').eq(1).find('p') : false;
-        const theText = $(secondTr)?.html()?.trim() ?? false;
+        const secondTr = ($html(parentTable).find('tr').eq(1).find('p').length) ? $html(parentTable).find('tr').eq(1).find('p') : false;
+        const theText = $html(secondTr)?.html()?.trim() ?? false;
 
         if (!theAlt) {
-            theAlt = $(secondTr)?.text()?.trim();
+            theAlt = $html(secondTr)?.text()?.trim();
         }
 
         let cardOpts: any = {
@@ -245,20 +272,20 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         };
 
         // Check if the parent element to this is a <a> tag
-        const isInLink = $(el).parents('a').length;
+        const isInLink = $html(el).parents('a').length;
 
         if (isInLink) {
-            cardOpts.payload.href = $(el).parents('a').attr('href');
+            cardOpts.payload.href = $html(el).parents('a').attr('href');
         }
 
-        $(parentTable).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
+        $html(parentTable).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
     // Convert buttons to Ghost buttons
     $html('a[style="color:#FFFFFF;font-size:18px;padding:0px 14px;text-decoration:none;"]').each((i: any, el: any) => {
         const buttonText = $html(el).text();
         const buttonHref = $html(el).attr('href');
-        $(el).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+        $html(el).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
     });
 
     if (options?.url && options?.subscribeLink) {
@@ -294,12 +321,16 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         const elementHtml = $html(el).html().trim();
 
         if (elementHtml === '') {
-            $(el).remove();
+            $html(el).remove();
         }
     });
 
     // Get the cleaned HTML
-    let bodyHtml = $html.html();
+    let bodyHtml = $html.html({
+        selfClosingTags: false
+    });
+
+    // return bodyHtml;
 
     // Pass the cleaned HTML through the sanitizer to only include specific elements
     const sanitizedHtml = sanitizeHtml(bodyHtml, {
@@ -324,30 +355,30 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
 };
 
 const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string, featureSrc: string}) => {
-    let $html = $.load(html, {
+    let $html = cheerio.load(html, {
         xmlMode: true,
         decodeEntities: false
     });
 
     let firstElement = $html('*').first();
 
-    if (($(firstElement).get(0) && $(firstElement).get(0).name === 'img') || $(firstElement).find('img').length) {
-        let theElementItself = $(firstElement).get(0).name === 'img' ? firstElement : $(firstElement).find('img');
-        let firstImgSrc: any = $(theElementItself).attr('src');
+    if (($html(firstElement).get(0) && $html(firstElement).get(0).name === 'img') || $html(firstElement).find('img').length) {
+        let theElementItself = $html(firstElement).get(0).name === 'img' ? firstElement : $html(firstElement).find('img');
+        let firstImgSrc: any = $html(theElementItself).attr('src');
 
         // Both images usually end in the same way, so we can split the URL and compare the last part
         const firstImageSplit = firstImgSrc.split('/uploads/asset/');
         const featureImageSplit = featureSrc.split('/uploads/asset/');
 
         if (firstImageSplit[1] === featureImageSplit[1]) {
-            $(theElementItself).remove();
+            $html(theElementItself).remove();
         }
 
         if (featureSrc.length > 0 && firstImgSrc) {
             let normalizedFirstSrc = firstImgSrc.replace('fit=scale-down,format=auto,onerror=redirect,quality=80', 'quality=100');
 
             if (featureSrc === normalizedFirstSrc) {
-                $(theElementItself).remove();
+                $html(theElementItself).remove();
             }
         }
     }

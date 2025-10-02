@@ -144,6 +144,182 @@ describe('beehiiv Processor', () => {
             assert.equal(processed, '<p>Real content</p>');
         });
 
+        it('Removes polls', () => {
+            const htmlContent = `<body><table><tr id="content-blocks"><td><table>
+                    <tr>
+                        <td class="e">
+                            <h3>Do you like it?</h3>
+                            <p>Leave a comment!</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="ee e ">
+                            This all gets removed
+                        </td>
+                    </tr>
+                </table>
+                <p>Real content</p>
+            </td></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
+
+            assert.equal(processed, '<p>Real content</p>');
+        });
+
+        it('Removes share form', () => {
+            const htmlContent = `<body><table><tr id="content-blocks"><td><table>
+                    <tr>
+                        <td align=" center" valign=" top">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <table>
+                                            <tr>
+                                                <td> &nbsp; </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <h2> Share This </h2>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <p> Help me grow! </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <p> {{rp_personalized_text}} </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <table>
+                                            <tr>
+                                                <td><a href=" {{rp_referral_hub_url}}" rel=" noopener noreferrer nofollow" target=" _blank"><img src=" {{rp_next_milestone_image_url}}" alt=" {{rp_next_milestone_name}}" height=" auto" /></a></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr class=" btn_row">
+                                    <td>
+                                        <table>
+                                            <tr>
+                                                <td >
+                                                    <table>
+                                                        <tr>
+                                                            <td> Click to Share </a></td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <p> Or copy and paste this link to others: <a class=" link" href=" {{rp_refer_url_with_params}}" target=" _blank" rel=" noopener noreferrer nofollow" clicktracking=" off"><span>{{rp_refer_url_no_params}}</span></a></p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <table>
+                                            <tr>
+                                                <td> &nbsp; </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                <p>Real content</p>
+            </td></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
+
+            assert.equal(processed, '<p>Real content</p>');
+        });
+
+        it('iframe tag', () => {
+            const htmlContent = `<body><table><tr id="content-blocks"><td><table>
+                    <tr>
+                        <td class="e">
+                            <h3>Do you like it?</h3>
+                            <p>Leave a comment!</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="ee e ">
+                            This all gets removed
+                        </td>
+                    </tr>
+                </table>
+                <iframe src="https://example.com" width="600" height="400" style="border:none;"></iframe><p>Real content</p>
+            </td></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
+
+            assert.equal(processed, '<iframe src="https://example.com" width="600" height="400"> </iframe><p>Real content</p>');
+        });
+
+        it('Linked images', () => {
+            const htmlContent = `<body><table><tr id="content-blocks"><td><table role=" none" width=" 100%" class=" mob-w-full" border=" 0" cellspacing=" 0" cellpadding=" 0">
+                    <tr>
+                        <td width=" 33%" style=" vertical-align:top;" class=" mob-stack">
+                            <table role=" none" width=" 100%" border=" 0" cellspacing=" 0" cellpadding=" 0">
+                                <tbody>
+                                    <tr>
+                                        <td align=" center" valign=" top" style=" padding-bottom:20px;padding-left:15px;padding-right:15px;padding-top:20px; " class=" dd">
+                                            <table role=" none" border=" 0" cellspacing=" 0" cellpadding=" 0" style=" margin:0 auto 0 auto;">
+                                                <tr>
+                                                    <td align=" center" valign=" top" style=" width:207px;"><a href=" https://open.spotify.com/episode/abcd1234" rel=" noopener noreferrer nofollow" style=" text-decoration:none;" target=" _blank"><img src=" https://media.beehiiv.com/image.jpg" alt=" Spotify" height=" auto" width=" 207" style=" display:block;width:100%;" border=" 0" /></a></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                        <td width=" 33%" style=" vertical-align:top;" class=" mob-stack">
+                            <table role=" none" width=" 100%" border=" 0" cellspacing=" 0" cellpadding=" 0">
+                                <tbody>
+                                    <tr>
+                                        <td align=" center" valign=" top" style=" padding-bottom:20px;padding-left:15px;padding-right:15px;padding-top:20px; " class=" dd">
+                                            <table role=" none" border=" 0" cellspacing=" 0" cellpadding=" 0" style=" margin:0 auto 0 auto;">
+                                                <tr>
+                                                    <td align=" center" valign=" top" style=" width:207px;"><a href=" https://podcasts.apple.com/us/podcast/example-show" rel=" noopener noreferrer nofollow" style=" text-decoration:none;" target=" _blank"><img src=" https://media.beehiiv.com/image.jpg" alt=" Apple Podcasts" height=" auto" width=" 207" style=" display:block;width:100%;" border=" 0" /></a></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                        <td width=" 33%" style=" vertical-align:top;" class=" mob-stack">
+                            <table role=" none" width=" 100%" border=" 0" cellspacing=" 0" cellpadding=" 0">
+                                <tbody>
+                                    <tr>
+                                        <td align=" center" valign=" top" style=" padding-bottom:20px;padding-left:15px;padding-right:15px;padding-top:20px; " class=" dd">
+                                            <table role=" none" border=" 0" cellspacing=" 0" cellpadding=" 0" style=" margin:0 auto 0 auto;">
+                                                <tr>
+                                                    <td align=" center" valign=" top" style=" width:207px;"><a href=" https://youtu.be/abcd1234?si=1234" rel=" noopener noreferrer nofollow" style=" text-decoration:none;" target=" _blank"><img src=" https://media.beehiiv.com/image.jpg" alt=" YouTube" height=" auto" width=" 207" style=" display:block;width:100%;" border=" 0" /></a></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </table><p>Real content</p>
+            </td></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
+
+            assert.equal(processed, '<figure class="kg-card kg-image-card"><a href=" https://open.spotify.com/episode/abcd1234"><img src=" https://media.beehiiv.com/image.jpg" class="kg-image" alt=" Spotify" /></a></figure><figure class="kg-card kg-image-card"><a href=" https://podcasts.apple.com/us/podcast/example-show"><img src=" https://media.beehiiv.com/image.jpg" class="kg-image" alt=" Apple Podcasts" /></a></figure><figure class="kg-card kg-image-card"><a href=" https://youtu.be/abcd1234?si=1234"><img src=" https://media.beehiiv.com/image.jpg" class="kg-image" alt=" YouTube" /></a></figure><p>Real content</p>');
+        });
+
         // Convert '...' to <hr />
         it('Convert ... to <hr />', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><p>...</p><p>…</p><p>&hellip;</p></tr></table></body>`;
@@ -213,7 +389,7 @@ describe('beehiiv Processor', () => {
             </tr></table></body>`;
             const processed = processHTML({html: htmlContent, postData: mappedObject});
 
-            assert.equal(processed, '<figure class="kg-card kg-embed-card kg-card-hascaption"><iframe src="https://www.youtube.com/embed/1234ABCD123?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen width="160" height="90"><figcaption>Example YouTube caption. Watch <a href="https://youtube.com/watch?v=1234ABCD123">here</a></figcaption></iframe></figure>\n' +
+            assert.equal(processed, '<figure class="kg-card kg-embed-card kg-card-hascaption"><iframe src="https://www.youtube.com/embed/1234ABCD123?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen width="160" height="90"></iframe><figcaption>Example YouTube caption. Watch <a href="https://youtube.com/watch?v=1234ABCD123">here</a></figcaption></figure>\n' +
           '                <p><a href="https://youtube.com/watch?v=1234ABCD123">Regular YouTube link</a></p>');
         });
 
@@ -260,7 +436,7 @@ describe('beehiiv Processor', () => {
                 url: 'https://example.beehiiv.com'
             }});
 
-            assert.equal(processed, '<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.com/p/hello-world"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Hello world</div><div class="kg-bookmark-description">And other text</div><div class="kg-bookmark-metadata"></div><div class="kg-bookmark-thumbnail"><img src="https://beehiiv-images-production.s3.amazonaws.com/uploads/asset/file/12345678-1234-1234-92a5-d51e635d588c/photo.jpg?t=1723045443" alt="" /></div></div></a></figure>');
+            assert.equal(processed, '<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.com/p/hello-world"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Hello world</div><div class="kg-bookmark-description">And other text</div><div class="kg-bookmark-metadata"></div></div><div class="kg-bookmark-thumbnail"><img src="https://beehiiv-images-production.s3.amazonaws.com/uploads/asset/file/12345678-1234-1234-92a5-d51e635d588c/photo.jpg?t=1723045443" alt="" /></div></a></figure>');
         });
 
         it('Converts pull quotes', () => {
