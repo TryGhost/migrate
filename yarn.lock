@@ -12217,10 +12217,10 @@ stubborn-fs@^1.2.5:
   resolved "https://registry.yarnpkg.com/stubborn-fs/-/stubborn-fs-1.2.5.tgz#e5e244223166921ddf66ed5e062b6b3bf285bfd2"
   integrity sha512-H2N9c26eXjzL/S/K+i/RHHcFanE74dptvvjM8iwzwbVcWY/zjBbgRqF3K0DY4+OD+uTTASTBvDoxPDaPN02D7g==
 
-style-to-object@1.0.9:
-  version "1.0.9"
-  resolved "https://registry.yarnpkg.com/style-to-object/-/style-to-object-1.0.9.tgz#35c65b713f4a6dba22d3d0c61435f965423653f0"
-  integrity sha512-G4qppLgKu/k6FwRpHiGiKPaPTFcG3g4wNVX/Qsfu+RqQM30E7Tyu/TEgxcL9PNLF5pdRLwQdE3YKKf+KF2Dzlw==
+style-to-object@1.0.11:
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/style-to-object/-/style-to-object-1.0.11.tgz#cf252c4051758b7acb18a5efb296f91fb79bb9c4"
+  integrity sha512-5A560JmXr7wDyGLK12Nq/EYS38VkGlglVzkis1JEdbGWSnbQIEhZzTJhzURXN5/8WwwFCs/f/VVcmkTppbXLow==
   dependencies:
     inline-style-parser "0.2.4"
 
