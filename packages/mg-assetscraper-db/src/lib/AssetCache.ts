@@ -35,7 +35,8 @@ export default class AssetCache {
         const Asset = sequelize.define('Asset', {
             src: DataTypes.STRING,
             status: DataTypes.NUMBER,
-            localPath: DataTypes.STRING
+            localPath: DataTypes.STRING,
+            skip: DataTypes.STRING
         });
 
         this.sequelize = sequelize;
@@ -44,7 +45,9 @@ export default class AssetCache {
     }
 
     async init() {
-        await this.sequelize.sync();
+        // Use alter: true to automatically update the schema if columns are added
+        // This will add missing columns like 'skip' to existing databases
+        await this.sequelize.sync({alter: true});
     }
 
     /**

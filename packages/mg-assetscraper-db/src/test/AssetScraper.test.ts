@@ -1285,6 +1285,180 @@ describe('Asset Scraper', () => {
         });
     });
 
+    describe('Error handling', () => {
+        it('continues processing when single image fails with multiple images', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/working-image.jpg')
+                .reply(200, jpgImageBuffer)
+                .get('/failing-image.jpg')
+                .replyWithError('Network error: Connection timeout')
+                .get('/another-working.jpg')
+                .reply(200, jpgImageBuffer);
+
+            const options = {
+                domains: ['https://example.com']
+            };
+
+            const postObj = {
+                html: '<img src="https://example.com/working-image.jpg" /><img src="https://example.com/failing-image.jpg" /><img src="https://example.com/another-working.jpg" />'
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            // Check that successful images were processed
+            assert.ok(postObj.html.includes('__GHOST_URL__/content/images/example-com/working-image.jpg'));
+            assert.ok(postObj.html.includes('__GHOST_URL__/content/images/example-com/another-working.jpg'));
+
+            // Check that failed image retains original URL
+            assert.ok(postObj.html.includes('https://example.com/failing-image.jpg'));
+
+            // Check that the failure was tracked
+            assert.equal(assetScraper.failedDownloads.length, 1);
+            assert.equal(assetScraper.failedDownloads[0].url, 'https://example.com/failing-image.jpg');
+            assert.ok(assetScraper.failedDownloads[0].error.includes('Failed to get remote media'));
+
+            assert.ok(requestMock.isDone());
+        });
+
+        it('handles all images failing gracefully', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/image1.jpg')
+                .replyWithError('Network error')
+                .get('/image2.jpg')
+                .replyWithError('Network error')
+                .get('/image3.jpg')
+                .replyWithError('Network error');
+
+            const options = {
+                domains: ['https://example.com']
+            };
+
+            const postObj = {
+                html: '<img src="https://example.com/image1.jpg" /><img src="https://example.com/image2.jpg" /><img src="https://example.com/image3.jpg" />'
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            // All images should retain original URLs
+            assert.ok(postObj.html.includes('https://example.com/image1.jpg'));
+            assert.ok(postObj.html.includes('https://example.com/image2.jpg'));
+            assert.ok(postObj.html.includes('https://example.com/image3.jpg'));
+
+            // All failures should be tracked
+            assert.equal(assetScraper.failedDownloads.length, 3);
+
+            assert.ok(requestMock.isDone());
+        });
+
+        it('handles mixed success and failure in Lexical content', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/success.jpg')
+                .reply(200, jpgImageBuffer)
+                .get('/failure.jpg')
+                .reply(500, 'Internal Server Error');
+
+            const options = {
+                domains: ['https://example.com']
+            };
+
+            const postObj = {
+                id: 123,
+                lexical: '{"root":{"children":[{"type":"image","src":"https://example.com/success.jpg"},{"type":"image","src":"https://example.com/failure.jpg"}]}}'
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            // Success image should be processed
+            assert.ok(postObj.lexical.includes('__GHOST_URL__/content/images/example-com/success.jpg'));
+
+            // Failed image should retain original URL
+            assert.ok(postObj.lexical.includes('https://example.com/failure.jpg'));
+
+            // Check failure tracking
+            assert.equal(assetScraper.failedDownloads.length, 1);
+            assert.equal(assetScraper.failedDownloads[0].url, 'https://example.com/failure.jpg');
+
+            assert.ok(requestMock.isDone());
+        });
+
+        it('handles feature image failure without affecting other properties', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/feature.jpg')
+                .replyWithError('Connection refused')
+                .get('/content-image.jpg')
+                .reply(200, jpgImageBuffer);
+
+            const options = {
+                domains: ['https://example.com']
+            };
+
+            const postObj = {
+                feature_image: 'https://example.com/feature.jpg',
+                html: '<img src="https://example.com/content-image.jpg" />'
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            // Feature image should retain original URL
+            assert.equal(postObj.feature_image, 'https://example.com/feature.jpg');
+
+            // Content image should be processed
+            assert.ok(postObj.html.includes('__GHOST_URL__/content/images/example-com/content-image.jpg'));
+
+            // Check failure tracking
+            assert.equal(assetScraper.failedDownloads.length, 1);
+            assert.equal(assetScraper.failedDownloads[0].url, 'https://example.com/feature.jpg');
+
+            assert.ok(requestMock.isDone());
+        });
+
+        it('uses cache for previously failed downloads', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/cached-fail.jpg')
+                .replyWithError('First failure');
+
+            const options = {
+                domains: ['https://example.com']
+            };
+
+            const assetScraper = new AssetScraper(fileCache, options, {});
+            await assetScraper.init();
+
+            // First attempt
+            const postObj1 = {
+                html: '<img src="https://example.com/cached-fail.jpg" />'
+            };
+            await assetScraper.inlinePostTagUserObject(postObj1);
+
+            // Second attempt (should use cache, not make another request)
+            const postObj2 = {
+                html: '<img src="https://example.com/cached-fail.jpg" />'
+            };
+            await assetScraper.inlinePostTagUserObject(postObj2);
+
+            // Both should retain original URL
+            assert.equal(postObj1.html, '<img src="https://example.com/cached-fail.jpg" />');
+            assert.equal(postObj2.html, '<img src="https://example.com/cached-fail.jpg" />');
+
+            // Only one failure should be recorded (from first attempt)
+            assert.equal(assetScraper.failedDownloads.length, 1);
+
+            assert.ok(requestMock.isDone());
+        });
+    });
+
     /**
      * [ ] Finds all images in listed object names (settings, post HTML, Lexical - don't support Mobiledoc)
      * [ ] Can add allowed domains=

@@ -54,6 +54,7 @@ export default class AssetScraper {
     #ctx: any;
 
     #foundItems: string[];
+    #failedDownloads: Array<{url: string; error: string}>;
 
     constructor(fileCache: any, options: any, ctx: any = {}) {
         this.fileCache = fileCache;
@@ -104,6 +105,7 @@ export default class AssetScraper {
         ];
 
         this.#foundItems = [];
+        this.#failedDownloads = [];
 
         // TODO: Custom theme settings
         // Any objects where `"type": "image"`, look for assets in `value`
@@ -359,7 +361,8 @@ export default class AssetScraper {
 
     async downloadExtractSave(src: string, content: string) {
         // Create a cache item, or find a existing item
-        const {id: cacheId, localPath} = await this.assetCache.add(src);
+        const cacheEntry: any = await this.assetCache.add(src);
+        const {id: cacheId, localPath, skip} = cacheEntry;
 
         // Check the cache to see if we have a local src. If we do, use that to replace the found src
         if (localPath) {
@@ -370,41 +373,65 @@ export default class AssetScraper {
             };
         }
 
-        // Get the file
-        const response = await this.getRemoteMedia(src);
-
-        if (!response) {
-            // logging.warn(`Failed to download remote media: ${src}`);
-            await this.assetCache.update(cacheId, 'skip', 'no response');
+        // Check if this was previously attempted and failed
+        if (skip) {
+            // Don't try again, and don't add another failure record
             return {
                 path: src,
                 content
             };
         }
 
-        // Update the cache with the status code (for fault-finding later on)
-        await this.assetCache.update(cacheId, 'status', response?.statusCode);
+        try {
+            // Get the file
+            const response = await this.getRemoteMedia(src);
 
-        const fileData = await this.extractFileDataFromResponse(src, response);
+            if (!response) {
+                // logging.warn(`Failed to download remote media: ${src}`);
+                await this.assetCache.update(cacheId, 'skip', 'no response');
+                this.#failedDownloads.push({url: src, error: 'No response from server'});
+                return {
+                    path: src,
+                    content
+                };
+            }
 
-        // Store the file locally
-        const filePath = await this.storeMediaLocally(src, fileData);
-        if (!filePath) {
-            await this.assetCache.update(cacheId, 'skip', 'no storage found');
-            // logging.warn(`Failed to store media locally: ${src}`);
+            // Update the cache with the status code (for fault-finding later on)
+            await this.assetCache.update(cacheId, 'status', response?.statusCode);
+
+            const fileData = await this.extractFileDataFromResponse(src, response);
+
+            // Store the file locally
+            const filePath = await this.storeMediaLocally(src, fileData);
+            if (!filePath) {
+                await this.assetCache.update(cacheId, 'skip', 'no storage found');
+                this.#failedDownloads.push({url: src, error: 'Failed to store media locally'});
+                // logging.warn(`Failed to store media locally: ${src}`);
+                return {
+                    path: src,
+                    content
+                };
+            }
+
+            // Store the local path in the cache
+            await this.assetCache.update(cacheId, 'localPath', filePath);
+
+            return {
+                path: filePath,
+                content
+            };
+        } catch (error: any) {
+            // Log the error and continue with other assets
+            const errorMessage = error?.message || 'Unknown error';
+            await this.assetCache.update(cacheId, 'skip', errorMessage);
+            this.#failedDownloads.push({url: src, error: errorMessage});
+
+            // Return original src so the content remains valid
             return {
                 path: src,
                 content
             };
         }
-
-        // Store the local path in the cache
-        await this.assetCache.update(cacheId, 'localPath', filePath);
-
-        return {
-            path: filePath,
-            content
-        };
     }
 
     async downloadExtractSaveBase64(dataUri: string, content: string) {
@@ -697,6 +724,10 @@ export default class AssetScraper {
 
     get foundItems() {
         return this.#foundItems;
+    }
+
+    get failedDownloads() {
+        return this.#failedDownloads;
     }
 
     getTasks() {
