@@ -1,6 +1,7 @@
 /* c8 ignore start */
 import {parse, join, basename, extname} from 'node:path';
 import {writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 import errors from '@tryghost/errors';
 import request from '@tryghost/request';
 import {slugify} from '@tryghost/string';
@@ -43,6 +44,7 @@ export default class AssetScraper {
     logger: any;
     allowedDomains: string[];
     assetCache: AssetCache;
+    processBase64Images: boolean;
 
     #settingsKeys: string[];
     #keys: string[];
@@ -70,6 +72,8 @@ export default class AssetScraper {
         this.findOnlyMode = options?.findOnlyMode ?? false;
 
         this.allowedDomains = options?.domains ?? [];
+
+        this.processBase64Images = options?.processBase64Images ?? false;
 
         this.warnings = (ctx.warnings) ? ctx.warnings : [];
 
@@ -303,6 +307,37 @@ export default class AssetScraper {
         return newLocal;
     }
 
+    async storeBase64MediaLocally(media: any) {
+        let folder = null;
+
+        if (!media || !media.fileMime) {
+            return null;
+        }
+
+        if (knownImageTypes.includes(media.fileMime)) {
+            folder = 'images';
+        } else if (knownMediaTypes.includes(media.fileMime)) {
+            folder = 'media';
+        } else if (knownFileTypes.includes(media.fileMime)) {
+            folder = 'files';
+        }
+
+        if (!folder) {
+            return null;
+        }
+
+        // For base64 images, use the filename directly without resolving URLs
+        const imageOptions = {
+            filename: media.fileName,
+            outputPath: `/content/${folder}/${media.fileName}`,
+            optimize: this.defaultOptions.optimize
+        };
+
+        let newLocal = await this.fileCache.writeContentFile(media.fileBuffer, imageOptions);
+
+        return newLocal;
+    }
+
     async replaceSrc(src: string, inlinedSrc: string, content: string) {
         if (inlinedSrc.startsWith('/content/')) {
             const theRealSrc = this.localizeSrc(inlinedSrc);
@@ -372,6 +407,56 @@ export default class AssetScraper {
         };
     }
 
+    async downloadExtractSaveBase64(dataUri: string, content: string) {
+        // Create a hash of the data URI to use as cache key
+        const hash = createHash('md5').update(dataUri).digest('hex');
+        const cacheKey = `base64-${hash}`;
+
+        // Create a cache item, or find an existing item
+        const {id: cacheId, localPath} = await this.assetCache.add(cacheKey);
+
+        // Check the cache to see if we have a local src. If we do, use that to replace the found src
+        if (localPath) {
+            content = content.replace(dataUri, localPath);
+            return {
+                path: localPath,
+                content
+            };
+        }
+
+        // Extract file data from base64
+        const fileData = await this.extractFileDataFromBase64(dataUri);
+
+        if (!fileData) {
+            await this.assetCache.update(cacheId, 'skip', 'invalid base64 data');
+            return {
+                path: dataUri,
+                content
+            };
+        }
+
+        // Store the file locally without calling resolveFileName for base64
+        const filePath = await this.storeBase64MediaLocally(fileData);
+        if (!filePath) {
+            await this.assetCache.update(cacheId, 'skip', 'no storage found');
+            return {
+                path: dataUri,
+                content
+            };
+        }
+
+        // Store the local path in the cache
+        await this.assetCache.update(cacheId, 'localPath', filePath);
+
+        // Replace the data URI with the local path
+        content = await this.replaceSrc(dataUri, filePath, content);
+
+        return {
+            path: filePath,
+            content
+        };
+    }
+
     async findMatchesInString(content: any) {
         const theMatches: string[] = [];
 
@@ -395,6 +480,99 @@ export default class AssetScraper {
         return theMatches;
     }
 
+    async findBase64ImagesInString(content: any) {
+        const theMatches: string[] = [];
+
+        // Match data URI scheme for images: data:image/[mime-type];base64,[base64-data]
+        // Termination symbols similar to URL matching
+        const base64Regex = /data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/gi;
+        const matches = content.matchAll(base64Regex);
+
+        // Extract the full data URI from each match
+        for (const match of matches) {
+            theMatches.push(match[0]);
+        }
+
+        return theMatches;
+    }
+
+    /**
+     * Extract file data from a base64 data URI
+     * @param {string} dataUri - The base64 data URI (e.g., data:image/png;base64,...)
+     * @returns {Object} File data similar to extractFileDataFromResponse
+     */
+    async extractFileDataFromBase64(dataUri: string) {
+        // Parse the data URI to extract mime type and base64 data
+        const matches = dataUri.match(/^data:image\/([^;]+);base64,(.+)$/);
+
+        if (!matches) {
+            return null;
+        }
+
+        const mimeType = `image/${matches[1]}`;
+        const base64Data = matches[2];
+
+        // Decode base64 to buffer
+        let body = Buffer.from(base64Data, 'base64');
+
+        // Generate a hash of the buffer for a consistent filename (for deduplication)
+        const hash = createHash('md5').update(body).digest('hex');
+
+        // Get file type from buffer
+        let extension;
+        let fileMime = mimeType;
+
+        try {
+            const fileInfo: any = await fileTypeFromBuffer(body);
+            extension = fileInfo.ext;
+            fileMime = fileInfo.mime;
+        } catch {
+            // Fallback to the mime from the data URI
+            const mimeToExtMap: any = {
+                'image/jpeg': 'jpg',
+                'image/jpg': 'jpg',
+                'image/png': 'png',
+                'image/gif': 'gif',
+                'image/webp': 'webp',
+                'image/svg+xml': 'svg',
+                'image/avif': 'avif',
+                'image/heif': 'heif',
+                'image/heic': 'heic'
+            };
+            extension = mimeToExtMap[mimeType] || 'jpg';
+        }
+
+        // If mime is in array, it needs converting to a supported image format
+        if (needsConverting.includes(fileMime)) {
+            if (fileMime === 'image/heic' || fileMime === 'image/heif') {
+                body = await convert({
+                    buffer: body,
+                    format: 'JPEG'
+                });
+            } else {
+                body = await sharp(body).webp({lossless: true}).toBuffer();
+            }
+
+            const newFileInfo: any = await fileTypeFromBuffer(body);
+            extension = newFileInfo.ext;
+            fileMime = newFileInfo.mime;
+        }
+
+        if (!extension && !fileMime) {
+            return null;
+        }
+
+        // Use hash as filename for deduplication
+        const fileName = `base64-${hash}.${extension}`;
+
+        return {
+            fileBuffer: body,
+            fileName: fileName,
+            fileMime: fileMime,
+            extension: `.${extension}`
+        };
+    }
+
     async normalizeUrl(src: string) {
         // Replace the Ghost URL placeholder with the actual URL
         if (src.includes('__GHOST_URL__') && this.baseUrl && typeof this.baseUrl === 'string') {
@@ -415,6 +593,23 @@ export default class AssetScraper {
     }
 
     async inlineContent(content: any) {
+        // Process base64 images first if enabled
+        if (this.processBase64Images) {
+            const base64Matches = await this.findBase64ImagesInString(content);
+
+            for await (const dataUri of base64Matches) {
+                // If in findOnlyMode, just push data URIs to an array and continue
+                if (this.findOnlyMode) {
+                    this.#foundItems.push(dataUri);
+                    continue;
+                }
+
+                const result = await this.downloadExtractSaveBase64(dataUri, content);
+                content = result.content;
+            }
+        }
+
+        // Then process domain-based images
         const matches = await this.findMatchesInString(content);
 
         for await (const src of matches) {
@@ -539,7 +734,7 @@ export default class AssetScraper {
             });
 
             return makeTaskRunner(subTasks, {
-                concurrent: false
+                concurrent: 5
             });
         };
 

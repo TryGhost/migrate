@@ -967,6 +967,255 @@ describe('Asset Scraper', () => {
         });
     });
 
+    describe('Base64 image processing', () => {
+        let base64PngImage: string;
+        let base64JpgImage: string;
+
+        beforeAll(() => {
+            // Small 1x1 pixel PNG base64 image
+            base64PngImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+            // Small 1x1 pixel JPEG base64 image
+            base64JpgImage = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFwAAEQEBAAAAAAAAAAAAAAAAAAECA//EABUBAQEAAAAAAAAAAAAAAAAAAAAC/9oACAEBAAA/AI==';
+        });
+
+        describe('findBase64ImagesInString', () => {
+            it('finds single base64 image', async () => {
+                const assetScraper = new AssetScraper(fileCache, {}, {});
+                await assetScraper.init();
+
+                const content = `<img src="${base64PngImage}" />`;
+                const matches = await assetScraper.findBase64ImagesInString(content);
+
+                assert.equal(matches.length, 1);
+                assert.equal(matches[0], base64PngImage);
+            });
+
+            it('finds multiple base64 images', async () => {
+                const assetScraper = new AssetScraper(fileCache, {}, {});
+                await assetScraper.init();
+
+                const content = `<img src="${base64PngImage}" /> <img src="${base64JpgImage}" />`;
+                const matches = await assetScraper.findBase64ImagesInString(content);
+
+                assert.equal(matches.length, 2);
+                assert.equal(matches[0], base64PngImage);
+                assert.equal(matches[1], base64JpgImage);
+            });
+
+            it('finds base64 images in various HTML contexts', async () => {
+                const assetScraper = new AssetScraper(fileCache, {}, {});
+                await assetScraper.init();
+
+                const content = `
+                    <img src="${base64PngImage}" />
+                    <div style="background-image: url(${base64JpgImage});">
+                    <a href="${base64PngImage}">Link</a>
+                `;
+                const matches = await assetScraper.findBase64ImagesInString(content);
+
+                assert.equal(matches.length, 3);
+            });
+
+            it('finds base64 images in Lexical content', async () => {
+                const assetScraper = new AssetScraper(fileCache, {}, {});
+                await assetScraper.init();
+
+                const lexicalContent = JSON.stringify({
+                    root: {
+                        children: [{
+                            type: 'image',
+                            src: base64PngImage
+                        }]
+                    }
+                });
+                const matches = await assetScraper.findBase64ImagesInString(lexicalContent);
+
+                assert.equal(matches.length, 1);
+                assert.equal(matches[0], base64PngImage);
+            });
+
+            it('does not match non-base64 URLs', async () => {
+                const assetScraper = new AssetScraper(fileCache, {}, {});
+                await assetScraper.init();
+
+                const content = '<img src="https://example.com/image.jpg" />';
+                const matches = await assetScraper.findBase64ImagesInString(content);
+
+                assert.equal(matches.length, 0);
+            });
+        });
+
+        describe('extractFileDataFromBase64', () => {
+            it('extracts PNG data from base64 data URI', async () => {
+                const assetScraper = new AssetScraper(fileCache, {}, {});
+                await assetScraper.init();
+
+                const fileData = await assetScraper.extractFileDataFromBase64(base64PngImage);
+
+                assert.ok(fileData);
+                assert.ok(fileData.fileBuffer);
+                assert.ok(fileData.fileName.includes('base64-'));
+                assert.ok(fileData.fileName.endsWith('.png'));
+                assert.equal(fileData.fileMime, 'image/png');
+                assert.equal(fileData.extension, '.png');
+            });
+
+            it('extracts JPEG data from base64 data URI', async () => {
+                const assetScraper = new AssetScraper(fileCache, {}, {});
+                await assetScraper.init();
+
+                const fileData = await assetScraper.extractFileDataFromBase64(base64JpgImage);
+
+                assert.ok(fileData);
+                assert.ok(fileData.fileBuffer);
+                assert.ok(fileData.fileName.includes('base64-'));
+                assert.ok(fileData.fileName.endsWith('.jpg'));
+                assert.equal(fileData.fileMime, 'image/jpeg');
+                assert.equal(fileData.extension, '.jpg');
+            });
+
+            it('returns null for invalid base64 data', async () => {
+                const assetScraper = new AssetScraper(fileCache, {}, {});
+                await assetScraper.init();
+
+                const fileData = await assetScraper.extractFileDataFromBase64('not-a-data-uri');
+
+                assert.equal(fileData, null);
+            });
+
+            it('returns null for non-image data URIs', async () => {
+                const assetScraper = new AssetScraper(fileCache, {}, {});
+                await assetScraper.init();
+
+                const fileData = await assetScraper.extractFileDataFromBase64('data:text/plain;base64,SGVsbG8gV29ybGQh');
+
+                assert.equal(fileData, null);
+            });
+
+            it('generates consistent filenames for same base64 data', async () => {
+                const assetScraper = new AssetScraper(fileCache, {}, {});
+                await assetScraper.init();
+
+                const fileData1 = await assetScraper.extractFileDataFromBase64(base64PngImage);
+                const fileData2 = await assetScraper.extractFileDataFromBase64(base64PngImage);
+
+                assert.ok(fileData1);
+                assert.ok(fileData2);
+                assert.equal(fileData1.fileName, fileData2.fileName);
+            });
+        });
+
+        describe('downloadExtractSaveBase64', () => {
+            it('processes and saves base64 image', async () => {
+                const assetScraper = new AssetScraper(fileCache, {}, {});
+                await assetScraper.init();
+
+                const content = `<img src="${base64PngImage}" />`;
+                const result = await assetScraper.downloadExtractSaveBase64(base64PngImage, content);
+
+                assert.ok(result.path.includes('/content/images/'));
+                assert.ok(result.path.endsWith('.png'));
+                assert.notEqual(result.content.indexOf(result.path), -1);
+                assert.equal(result.content.indexOf(base64PngImage), -1);
+            });
+
+            it('uses cache for duplicate base64 images', async () => {
+                const assetScraper = new AssetScraper(fileCache, {}, {});
+                await assetScraper.init();
+
+                const content1 = `<img src="${base64PngImage}" />`;
+                const result1 = await assetScraper.downloadExtractSaveBase64(base64PngImage, content1);
+
+                const content2 = `<img src="${base64PngImage}" />`;
+                const result2 = await assetScraper.downloadExtractSaveBase64(base64PngImage, content2);
+
+                assert.equal(result1.path, result2.path);
+            });
+
+            it('handles invalid base64 data gracefully', async () => {
+                const assetScraper = new AssetScraper(fileCache, {}, {});
+                await assetScraper.init();
+
+                // Test with malformed data URI (missing base64 prefix)
+                const invalidBase64 = 'data:image/png;invaliddata';
+                const content = `<img src="${invalidBase64}" />`;
+                const result = await assetScraper.downloadExtractSaveBase64(invalidBase64, content);
+
+                assert.equal(result.path, invalidBase64); // Should return original data URI
+                assert.equal(result.content, content); // Content should be unchanged
+            });
+        });
+
+        describe('inlineContent with base64 images', () => {
+            it('processes base64 images when processBase64Images is true', async () => {
+                const options = {
+                    processBase64Images: true
+                };
+                const assetScraper = new AssetScraper(fileCache, options, {});
+                await assetScraper.init();
+
+                const content = `<img src="${base64PngImage}" />`;
+                const result = await assetScraper.inlineContent(content);
+
+                assert.notEqual(result.indexOf('__GHOST_URL__/content/images/'), -1);
+                assert.equal(result.indexOf(base64PngImage), -1);
+            });
+
+            it('ignores base64 images when processBase64Images is false', async () => {
+                const options = {
+                    processBase64Images: false
+                };
+                const assetScraper = new AssetScraper(fileCache, options, {});
+                await assetScraper.init();
+
+                const content = `<img src="${base64PngImage}" />`;
+                const result = await assetScraper.inlineContent(content);
+
+                assert.equal(result, content); // Content should be unchanged
+            });
+
+            it('processes multiple base64 images in content', async () => {
+                const options = {
+                    processBase64Images: true
+                };
+                const assetScraper = new AssetScraper(fileCache, options, {});
+                await assetScraper.init();
+
+                const content = `
+                    <img src="${base64PngImage}" />
+                    <img src="${base64JpgImage}" />
+                `;
+                const result = await assetScraper.inlineContent(content);
+
+                assert.equal(result.match(/data:image/g), null); // No base64 images should remain
+                assert.equal(result.match(/__GHOST_URL__\/content\/images\//g).length, 2); // Should have 2 local image paths
+            });
+
+            it('processes base64 images alongside regular URLs', async () => {
+                const requestMock = nock('https://example.com')
+                    .get('/regular.jpg')
+                    .reply(200, jpgImageBuffer);
+
+                const options = {
+                    processBase64Images: true,
+                    domains: ['https://example.com']
+                };
+                const assetScraper = new AssetScraper(fileCache, options, {});
+                await assetScraper.init();
+
+                const content = `
+                    <img src="${base64PngImage}" />
+                    <img src="https://example.com/regular.jpg" />
+                `;
+                const result = await assetScraper.inlineContent(content);
+
+                assert.ok(requestMock.isDone());
+                assert.equal(result.match(/data:image/g), null); // No base64 images should remain
+                assert.equal(result.match(/__GHOST_URL__\/content\/images\//g).length, 2); // Should have 2 local image paths
+            });
+        });
+    });
+
     describe('findMatchesInString', () => {
         it('Handle complex URLs', async () => {
             const options = {
