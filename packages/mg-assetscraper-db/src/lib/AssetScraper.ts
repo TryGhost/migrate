@@ -227,8 +227,8 @@ export default class AssetScraper {
         // Get the file name with no extension or search
         const fileNameNoExtOrSearch = parsedSrc.name;
 
-        // And get the extension, and remove the search & hash
-        const fileExtension = parsedSrc.ext.replace(assetUrl.search, '').replace(assetUrl.hash, '');
+        // And get the extension
+        const fileExtension = extname(assetUrl.pathname);
 
         // Decode the path, transliterate it, slugify it, then replace the encoded basename with that
         const decodedPathname = decodeURI(fileNameNoExtOrSearch);
@@ -260,7 +260,8 @@ export default class AssetScraper {
         const theNewFileName = `${fileNameParts.filter(Boolean).join('-')}${newExtension ?? fileExtension}`;
 
         // Combine with the dir ath we made at start of this function
-        const finalBasePath = join(...[dirNoScheme, theNewFileName].filter(Boolean));
+        let finalBasePath = join(...[dirNoScheme, theNewFileName].filter(Boolean));
+        finalBasePath = finalBasePath.replace(/\?/g, '/');
 
         // And now pass this to the file cache, which returns:
         // {

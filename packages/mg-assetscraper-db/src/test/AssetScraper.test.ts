@@ -512,6 +512,15 @@ describe('Asset Scraper', () => {
             assert.equal(result.outputPath, '/content/images/i0-wp-com/abcd1234-example-com/wp/2022/06/1234_photo-01-ssl-1-w-200-anchor.jpg');
         });
 
+        it('Converts ? into slash', async () => {
+            const assetScraper = new AssetScraper(fileCache, {}, {});
+            await assetScraper.init();
+
+            const result = await assetScraper.resolveFileName('https://example.com/wp-content/uploads/2022/08/fdda1c2647f448219b8abb28a3892df6.jpg?imageView2/1/w/1080/h/720/format/jpg', 'images');
+
+            assert.equal(result.filename, 'example-com/wp-content/uploads/2022/08/fdda1c2647f448219b8abb28a3892df6/imageView2/1/w/1080/h/720/format-imageview2-1-w-1080-h-720-format.jpg');
+        });
+
         it('Moves hash before extension', async () => {
             const assetScraper = new AssetScraper(fileCache, {}, {});
             await assetScraper.init();
