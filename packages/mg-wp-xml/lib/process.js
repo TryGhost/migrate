@@ -178,7 +178,7 @@ const processHTMLContent = async (args) => {
 };
 
 const processPost = async ($post, users, options) => {
-    const {addTag, url, excerpt, excerptSelector} = options;
+    const {addTag, url, excerpt, excerptSelector, featureImageCaption} = options;
     const postTypeVal = $($post).children('wp\\:post_type').text();
     const postType = (postTypeVal === 'page') ? 'page' : 'post';
     const featureImage = processFeatureImage($post, options.attachments);
@@ -208,7 +208,7 @@ const processPost = async ($post, users, options) => {
             updated_at: postDate,
             feature_image: featureImage?.url ?? null,
             feature_image_alt: featureImage?.alt ?? null,
-            feature_image_caption: featureImage?.description ?? featureImage?.title ?? null,
+            feature_image_caption: (featureImageCaption !== false) ? (featureImage?.description ?? featureImage?.title ?? null) : null,
             type: postType,
             author: users ? users.find(user => user.data.slug === authorSlug) : null,
             tags: []

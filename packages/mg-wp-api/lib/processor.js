@@ -928,7 +928,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
  * }
  */
 const processPost = async (wpPost, users, options = {}, errors, fileCache) => { // eslint-disable-line no-shadow
-    let {tags: fetchTags, addTag, excerptSelector, excerpt} = options;
+    let {tags: fetchTags, addTag, excerptSelector, excerpt, featureImageCaption} = options;
 
     let slug = wpPost.slug;
     let titleText = $.load(wpPost.title.rendered).text();
@@ -959,7 +959,7 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
         try {
             post.data.feature_image = wpCDNToLocal(wpImage.source_url);
             post.data.feature_image_alt = wpImage.alt_text || null;
-            post.data.feature_image_caption = (wpImage.caption) ? stripHtml(wpImage.caption.rendered) : null;
+            post.data.feature_image_caption = (featureImageCaption !== false && wpImage.caption) ? stripHtml(wpImage.caption.rendered) : null;
         } catch (error) {
             console.log(error, wpPost); // eslint-disable-line no-console
         }

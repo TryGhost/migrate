@@ -122,6 +122,12 @@ const options = [
         desc: 'Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`'
     },
     {
+        type: 'boolean',
+        flags: '--featureImageCaption',
+        defaultValue: true,
+        desc: 'Include featured image captions'
+    },
+    {
         type: 'string',
         flags: '--removeSelectors',
         defaultValue: null,
