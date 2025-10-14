@@ -91,6 +91,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--excerptSelector`**
     - string - default: `null`
     - Pass in a valid selector to grab a custom excerpt from the post content, e. g. `h2.excerpt`
+- **`--featureImageCaption`**
+    - bool - default: `true`
+    - Include featured image captions
 - **`--datedPermalinks`** 
     - Set the dated permalink structure. `/*/` matches any prefix, such as `/articles/2018/05/` or `/blog-posts/2018/05/`
     - string - default: `none` 
