@@ -44,7 +44,7 @@
     "typescript": "5.8.3"
   },
   "dependencies": {
-    "@inquirer/input": "4.2.4",
+    "@inquirer/input": "4.2.5",
     "@inquirer/prompts": "7.8.6",
     "@inquirer/select": "4.3.4",
     "@tryghost/debug": "0.1.35",
