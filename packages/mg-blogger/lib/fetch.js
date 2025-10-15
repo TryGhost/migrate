@@ -14,6 +14,9 @@ const getSiteContent = async (apiKey, blogID, type = 'posts') => {
                 key: apiKey
             });
 
+            // Wait fot 500ms to prevent rate limiting
+            await new Promise(resolve => setTimeout(resolve, 500)); // eslint-disable-line no-promise-executor-return
+
             if (pageToken) {
                 searchParams.set('pageToken', pageToken);
             }
