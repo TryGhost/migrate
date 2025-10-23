@@ -38,6 +38,9 @@ const processOptions = (member, options) => {
         member.labels.push(options.giftLabel);
     } else if (member.type === 'paid') {
         member.labels.push(options.paidLabel);
+    } else if (member.type === 'ios_app') {
+        member = processCompGift(member, comp);
+        member.labels.push('substack-ios');
     } else {
         member.labels.push(options.freeLabel);
     }
