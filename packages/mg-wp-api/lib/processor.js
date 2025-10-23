@@ -705,7 +705,12 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         let $script = $('<script async="" src="//www.instagram.com/embed.js"></script>');
         let $figure = $('<figure class="instagram"></figure>');
 
-        $iframe.attr('src', `${src}embed/captioned/`);
+        // Trim the trailing slash from src if it exists
+        if (src.endsWith('/')) {
+            src = src.slice(0, -1);
+        }
+
+        $iframe.attr('src', `${src}/embed/captioned/`);
         $figure.append($iframe);
         $figure.append($script);
 

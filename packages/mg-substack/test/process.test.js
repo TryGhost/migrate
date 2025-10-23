@@ -1374,7 +1374,7 @@ describe('Image handling', function () {
 
         const processed = await processContent(post, 'https://example.com', {});
 
-        expect(processed.data.html).toEqual('<figure class="instagram"><iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;" src="https://instagram.com/p/QWERTYNgZO8embed/captioned/"></iframe><script async src="//www.instagram.com/embed.js"></script></figure>');
+        expect(processed.data.html).toEqual('<figure class="instagram"><iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;" src="https://instagram.com/p/QWERTYNgZO8/embed/captioned/"></iframe><script async src="//www.instagram.com/embed.js"></script></figure>');
     });
 
     test('Can get dimensions from images', () => {
