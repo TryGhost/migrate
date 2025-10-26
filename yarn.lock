@@ -8102,10 +8102,10 @@ ini@^2.0.0:
   resolved "https://registry.yarnpkg.com/ini/-/ini-2.0.0.tgz#e5fd556ecdd5726be978fa1001862eacb0a94bc5"
   integrity sha512-7PnF4oN3CvZF23ADhA5wRaYEQpJ8qygSkbtTXWBeXWXmEVRXK+1ITciHWwHhsjv1TmW0MgacIv6hEi5pX5NQdA==
 
-inline-style-parser@0.2.4:
-  version "0.2.4"
-  resolved "https://registry.yarnpkg.com/inline-style-parser/-/inline-style-parser-0.2.4.tgz#f4af5fe72e612839fcd453d989a586566d695f22"
-  integrity sha512-0aO8FkhNZlj/ZIbNi7Lxxr12obT7cL1moPfE4tg1LkX7LlLfC6DeX4l2ZEud1ukP9jNQyNnfzQVqwbwmAATY4Q==
+inline-style-parser@0.2.6:
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/inline-style-parser/-/inline-style-parser-0.2.6.tgz#e6bbb5288a635f6284a6249ce754da55c4bd1ff5"
+  integrity sha512-gtGXVaBdl5mAes3rPcMedEBm12ibjt1kDMFfheul1wUAOVEJW60voNdMVzVkfLN06O7ZaD/rxhfKgtlgtTbMjg==
 
 inquirer@12.10.0:
   version "12.10.0"
@@ -12217,12 +12217,12 @@ stubborn-fs@^1.2.5:
   resolved "https://registry.yarnpkg.com/stubborn-fs/-/stubborn-fs-1.2.5.tgz#e5e244223166921ddf66ed5e062b6b3bf285bfd2"
   integrity sha512-H2N9c26eXjzL/S/K+i/RHHcFanE74dptvvjM8iwzwbVcWY/zjBbgRqF3K0DY4+OD+uTTASTBvDoxPDaPN02D7g==
 
-style-to-object@1.0.11:
-  version "1.0.11"
-  resolved "https://registry.yarnpkg.com/style-to-object/-/style-to-object-1.0.11.tgz#cf252c4051758b7acb18a5efb296f91fb79bb9c4"
-  integrity sha512-5A560JmXr7wDyGLK12Nq/EYS38VkGlglVzkis1JEdbGWSnbQIEhZzTJhzURXN5/8WwwFCs/f/VVcmkTppbXLow==
+style-to-object@1.0.12:
+  version "1.0.12"
+  resolved "https://registry.yarnpkg.com/style-to-object/-/style-to-object-1.0.12.tgz#03a30e7f4e555bf50845f8b55c7d5bc2248e03f0"
+  integrity sha512-ddJqYnoT4t97QvN2C95bCgt+m7AAgXjVnkk/jxAfmp7EAB8nnqqZYEbMd3em7/vEomDb2LAQKAy1RFfv41mdNw==
   dependencies:
-    inline-style-parser "0.2.4"
+    inline-style-parser "0.2.6"
 
 superagent@^4.0.0:
   version "4.1.0"
