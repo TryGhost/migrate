@@ -135,7 +135,10 @@ export default class AssetScraper {
         try {
             const response = await request(updatedRequestURL, {
                 followRedirect: true,
-                responseType: 'buffer'
+                responseType: 'buffer',
+                timeout: {
+                    request: 60000
+                }
             });
 
             return response;
