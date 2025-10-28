@@ -113,6 +113,11 @@ const getYouTubeID = (videoUrl) => {
     return undefined !== arr[2] ? arr[2].split(/[^\w-]/i)[0] : arr[0];
 };
 
+const stripHtml = (html) => {
+    // Remove HTML tags, new line characters, and trim white-space
+    return html.replace(/<[^>]+>/g, '').replace(/\r?\n|\r/g, ' ').trim();
+};
+
 const preProcessContent = async ({html, options}) => { // eslint-disable-line no-shadow
     // Drafts can have empty post bodies
     if (!html) {
@@ -200,7 +205,7 @@ const processPost = async ($post, users, options) => {
         wpPostType: postTypeVal,
         data: {
             slug: $($post).children('wp\\:post_name').text().replace(/(\.html)/i, ''),
-            title: $($post).children('title').text().substring(0, 255),
+            title: stripHtml($($post).children('title').text().substring(0, 255)),
             comment_id: $($post)?.find('wp\\:post_id')?.text() ?? null,
             status: $($post).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
             published_at: postDate,
