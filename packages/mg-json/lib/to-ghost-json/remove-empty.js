@@ -12,7 +12,9 @@ const removeEmptyUsers = (data) => {
     );
 
     data.users = data?.users?.filter(user => userIdsWithPosts.has(user.id)) || [];
-    data.roles_users = data?.roles_users?.filter(ru => userIdsWithPosts.has(ru.user_id)) || [];
+    if (data?.roles_users) {
+        data.roles_users = data?.roles_users?.filter(ru => userIdsWithPosts.has(ru.user_id)) || [];
+    }
 
     return data;
 };
