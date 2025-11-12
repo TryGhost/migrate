@@ -906,7 +906,7 @@
   resolved "https://registry.yarnpkg.com/@img/sharp-win32-x64/-/sharp-win32-x64-0.34.4.tgz#b19f1f88ace8bfc20784a0ad31767f3438e025d1"
   integrity sha512-xIyj4wpYs8J18sVN3mSQjwrw7fKUqRw+Z5rnHNCy5fYTxigBz81u5mOMPmFumwjcn8+ld1ppptMBCLic1nz6ig==
 
-"@inquirer/ansi@^1.0.1", "@inquirer/ansi@^1.0.2":
+"@inquirer/ansi@^1.0.2":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@inquirer/ansi/-/ansi-1.0.2.tgz#674a4c4d81ad460695cb2a1fc69d78cd187f337e"
   integrity sha512-S8qNSZiYzFd0wAcyG5AXCvUHC5Sr7xpZ9wZ2py9XR88jUz8wooStVx5M6dRzczbBWjic9NP7+rY0Xi7qqK/aMQ==
@@ -930,7 +930,7 @@
     "@inquirer/core" "^10.3.1"
     "@inquirer/type" "^3.0.10"
 
-"@inquirer/core@^10.3.0", "@inquirer/core@^10.3.1":
+"@inquirer/core@^10.3.1":
   version "10.3.1"
   resolved "https://registry.yarnpkg.com/@inquirer/core/-/core-10.3.1.tgz#09bba1c6e0c45cfd3975c0c85c784c61b916baa8"
   integrity sha512-hzGKIkfomGFPgxKmnKEKeA+uCYBqC+TKtRx5LgyHRCrF6S2MliwRIjp3sUaWwVzMp7ZXVs8elB0Tfe682Rpg4w==
@@ -1000,7 +1000,7 @@
     "@inquirer/core" "^10.3.1"
     "@inquirer/type" "^3.0.10"
 
-"@inquirer/prompts@7.10.0", "@inquirer/prompts@^7.9.0":
+"@inquirer/prompts@7.10.0", "@inquirer/prompts@^7.10.0":
   version "7.10.0"
   resolved "https://registry.yarnpkg.com/@inquirer/prompts/-/prompts-7.10.0.tgz#5d9e00b562e335b732c2f682a066d2529ecb6902"
   integrity sha512-X2HAjY9BClfFkJ2RP3iIiFxlct5JJVdaYYXhA7RKxsbc9KL+VbId79PSoUGH/OLS011NFbHHDMDcBKUj3T89+Q==
@@ -1046,7 +1046,7 @@
     "@inquirer/type" "^3.0.10"
     yoctocolors-cjs "^2.1.3"
 
-"@inquirer/type@^3.0.10", "@inquirer/type@^3.0.9":
+"@inquirer/type@^3.0.10":
   version "3.0.10"
   resolved "https://registry.yarnpkg.com/@inquirer/type/-/type-3.0.10.tgz#11ed564ec78432a200ea2601a212d24af8150d50"
   integrity sha512-BvziSRxfz5Ov8ch0z/n3oijRSEcEsHnhggm4xFZe93DHcUCTlutlq9Ox4SVENAfcRD22UQq7T/atg9Wr3k09eA==
@@ -8107,17 +8107,17 @@ inline-style-parser@0.2.6:
   resolved "https://registry.yarnpkg.com/inline-style-parser/-/inline-style-parser-0.2.6.tgz#e6bbb5288a635f6284a6249ce754da55c4bd1ff5"
   integrity sha512-gtGXVaBdl5mAes3rPcMedEBm12ibjt1kDMFfheul1wUAOVEJW60voNdMVzVkfLN06O7ZaD/rxhfKgtlgtTbMjg==
 
-inquirer@12.10.0:
-  version "12.10.0"
-  resolved "https://registry.yarnpkg.com/inquirer/-/inquirer-12.10.0.tgz#2cf96f42f6a56307aa4fceb5462719f7de3e81cb"
-  integrity sha512-K/epfEnDBZj2Q3NMDcgXWZye3nhSPeoJnOh8lcKWrldw54UEZfS4EmAMsAsmVbl7qKi+vjAsy39Sz4fbgRMewg==
+inquirer@12.11.0:
+  version "12.11.0"
+  resolved "https://registry.yarnpkg.com/inquirer/-/inquirer-12.11.0.tgz#8bbc27d72da6e824f102fe6d046bd722536d9bd6"
+  integrity sha512-E5oT7r+NxIxTuZsl/2Hg76kdT57DGc5mn5pCEz0LqZjR8hN7prgMXhUZ6A7rj/qL3X4P5lToIWNkO10uZJSzdA==
   dependencies:
-    "@inquirer/ansi" "^1.0.1"
-    "@inquirer/core" "^10.3.0"
-    "@inquirer/prompts" "^7.9.0"
-    "@inquirer/type" "^3.0.9"
-    mute-stream "^2.0.0"
-    run-async "^4.0.5"
+    "@inquirer/ansi" "^1.0.2"
+    "@inquirer/core" "^10.3.1"
+    "@inquirer/prompts" "^7.10.0"
+    "@inquirer/type" "^3.0.10"
+    mute-stream "^3.0.0"
+    run-async "^4.0.6"
     rxjs "^7.8.2"
 
 internal-slot@^1.1.0:
@@ -10067,11 +10067,6 @@ ms@^2.0.0, ms@^2.1.1, ms@^2.1.3:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"
   integrity sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==
 
-mute-stream@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-2.0.0.tgz#a5446fc0c512b71c83c44d908d5c7b7b4c493b2b"
-  integrity sha512-WWdIxpyjEn+FhQJQQv9aQAYlHoNVdzIzUySNV1gHUPDSdZJ3yZn7pAAbQcV7B56Mvu881q9FZV+0Vx2xC44VWA==
-
 mute-stream@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-3.0.0.tgz#cd8014dd2acb72e1e91bb67c74f0019e620ba2d1"
@@ -11347,7 +11342,7 @@ rsvp@~3.2.1:
   resolved "https://registry.yarnpkg.com/rsvp/-/rsvp-3.2.1.tgz#07cb4a5df25add9e826ebc67dcc9fd89db27d84a"
   integrity sha512-Rf4YVNYpKjZ6ASAmibcwTNciQ5Co5Ztq6iZPEykHpkoflnD/K5ryE/rHehFsTm4NJj8nKDhbi3eKBWGogmNnkg==
 
-run-async@^4.0.5:
+run-async@^4.0.6:
   version "4.0.6"
   resolved "https://registry.yarnpkg.com/run-async/-/run-async-4.0.6.tgz#d53b86acb71f42650fe23de2b3c1b6b6b34b9294"
   integrity sha512-IoDlSLTs3Yq593mb3ZoKWKXMNu3UpObxhgA/Xuid5p4bbfi2jdY1Hj0m1K+0/tEuQTxIGMhQDqGjKb7RuxGpAQ==
