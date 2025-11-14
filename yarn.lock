@@ -930,16 +930,16 @@
     "@inquirer/core" "^10.3.1"
     "@inquirer/type" "^3.0.10"
 
-"@inquirer/core@^10.3.1":
-  version "10.3.1"
-  resolved "https://registry.yarnpkg.com/@inquirer/core/-/core-10.3.1.tgz#09bba1c6e0c45cfd3975c0c85c784c61b916baa8"
-  integrity sha512-hzGKIkfomGFPgxKmnKEKeA+uCYBqC+TKtRx5LgyHRCrF6S2MliwRIjp3sUaWwVzMp7ZXVs8elB0Tfe682Rpg4w==
+"@inquirer/core@^10.3.1", "@inquirer/core@^10.3.2":
+  version "10.3.2"
+  resolved "https://registry.yarnpkg.com/@inquirer/core/-/core-10.3.2.tgz#535979ff3ff4fe1e7cc4f83e2320504c743b7e20"
+  integrity sha512-43RTuEbfP8MbKzedNqBrlhhNKVwoK//vUFNW3Q3vZ88BLcrs4kYpGg+B2mm5p2K/HfygoCxuKwJJiv8PbGmE0A==
   dependencies:
     "@inquirer/ansi" "^1.0.2"
     "@inquirer/figures" "^1.0.15"
     "@inquirer/type" "^3.0.10"
     cli-width "^4.1.0"
-    mute-stream "^3.0.0"
+    mute-stream "^2.0.0"
     signal-exit "^4.1.0"
     wrap-ansi "^6.2.0"
     yoctocolors-cjs "^2.1.3"
@@ -975,12 +975,12 @@
   resolved "https://registry.yarnpkg.com/@inquirer/figures/-/figures-1.0.15.tgz#dbb49ed80df11df74268023b496ac5d9acd22b3a"
   integrity sha512-t2IEY+unGHOzAaVM5Xx6DEWKeXlDDcNPeDyUpsRc6CUhBfU3VQOEl+Vssh7VNp1dR8MdUJBWhuObjXCsVpjN5g==
 
-"@inquirer/input@4.3.0", "@inquirer/input@^4.3.0":
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/@inquirer/input/-/input-4.3.0.tgz#e31ad67f7f625063a3a6c562075b9feab1afeaa6"
-  integrity sha512-h4fgse5zeGsBSW3cRQqu9a99OXRdRsNCvHoBqVmz40cjYjYFzcfwD0KA96BHIPlT7rZw0IpiefQIqXrjbzjS4Q==
+"@inquirer/input@4.3.1", "@inquirer/input@^4.3.0":
+  version "4.3.1"
+  resolved "https://registry.yarnpkg.com/@inquirer/input/-/input-4.3.1.tgz#778683b4c4c4d95d05d4b05c4a854964b73565b4"
+  integrity sha512-kN0pAM4yPrLjJ1XJBjDxyfDduXOuQHrBB8aLDMueuwUGn+vNpF7Gq7TvyVxx8u4SHlFFj4trmj+a2cbpG4Jn1g==
   dependencies:
-    "@inquirer/core" "^10.3.1"
+    "@inquirer/core" "^10.3.2"
     "@inquirer/type" "^3.0.10"
 
 "@inquirer/number@^3.0.22":
@@ -10066,6 +10066,11 @@ ms@^2.0.0, ms@^2.1.1, ms@^2.1.3:
   version "2.1.3"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"
   integrity sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==
+
+mute-stream@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-2.0.0.tgz#a5446fc0c512b71c83c44d908d5c7b7b4c493b2b"
+  integrity sha512-WWdIxpyjEn+FhQJQQv9aQAYlHoNVdzIzUySNV1gHUPDSdZJ3yZn7pAAbQcV7B56Mvu881q9FZV+0Vx2xC44VWA==
 
 mute-stream@^3.0.0:
   version "3.0.0"
