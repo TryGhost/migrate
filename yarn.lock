@@ -10182,13 +10182,13 @@ node-domexception@^1.0.0:
   resolved "https://registry.yarnpkg.com/node-domexception/-/node-domexception-1.0.0.tgz#6888db46a1f71c0b76b3f7555016b63fe64766e5"
   integrity sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==
 
-node-email-verifier@2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/node-email-verifier/-/node-email-verifier-2.0.0.tgz#fc0b1ced84b6e19593f5809c379d28bb9d361a8b"
-  integrity sha512-AHcppjOH2KT0mxakrxFMOMjV/gOVMRpYvnJUkNfgF9oJ3INdVmqcMFJ5TlM8elpTPwt6A7bSp1IMnnWcxGom/Q==
+node-email-verifier@3.4.1:
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/node-email-verifier/-/node-email-verifier-3.4.1.tgz#08d445a47af34e33332447489bc0360ce55f8019"
+  integrity sha512-69JMeWgEUrCji+dOLULirdSoosRxgAq2y+imfmHHBGvgTwyTKqvm65Ls3+W30DCIWMrYj5kKVb/DHTQDK7OVwQ==
   dependencies:
     ms "^2.1.3"
-    validator "^13.11.0"
+    validator "^13.15.15"
 
 node-expat@^2.3.18:
   version "2.4.1"
@@ -13011,10 +13011,10 @@ validator@7.2.0:
   resolved "https://registry.yarnpkg.com/validator/-/validator-7.2.0.tgz#a63dcbaba51d4350bf8df20988e0d5a54d711791"
   integrity sha512-c8NGTUYeBEcUIGeMppmNVKHE7wwfm3mYbNZxV+c5mlv9fDHI7Ad3p07qfNrn/CvpdkK2k61fOLRO2sTEhgQXmg==
 
-validator@^13.11.0, validator@^13.9.0:
-  version "13.15.15"
-  resolved "https://registry.yarnpkg.com/validator/-/validator-13.15.15.tgz#246594be5671dc09daa35caec5689fcd18c6e7e4"
-  integrity sha512-BgWVbCI72aIQy937xbawcs+hrVaN/CZ2UwutgaJ36hGqRrLNM+f5LUT/YPRbo8IV/ASeFzXszezV+y2+rq3l8A==
+validator@^13.15.15, validator@^13.9.0:
+  version "13.15.23"
+  resolved "https://registry.yarnpkg.com/validator/-/validator-13.15.23.tgz#59a874f84e4594588e3409ab1edbe64e96d0c62d"
+  integrity sha512-4yoz1kEWqUjzi5zsPbAS/903QXSYp0UOtHsPpp7p9rHAw/W+dkInskAE386Fat3oKRROwO98d9ZB0G4cObgUyw==
 
 verror@1.10.0:
   version "1.10.0"
