@@ -3518,10 +3518,10 @@
   optionalDependencies:
     sharp "^0.32.0"
 
-"@tryghost/image-transform@1.4.6":
-  version "1.4.6"
-  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.4.6.tgz#389b81b6bec8b03bcea4660fce0e0a4a5da2506a"
-  integrity sha512-s3C1kT/ZRiRaYLfpMHoRVblLaZ1lDcak6RDc2IYXX7cRIG9sMCMqWTH6kOCbbbyRnL1JvURwWtpdrCdDJeRR/A==
+"@tryghost/image-transform@1.4.8":
+  version "1.4.8"
+  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.4.8.tgz#6287c5c17dc1fc6ef8bcca7301d49367434c84d0"
+  integrity sha512-DcIH5JfM6ttR877EFMY3SEV/gXn1JKpE96rYIgF9wy467zd+l8xAojlayi7GxfTS+pQzn0ZiDMFL3MRTyKdWfw==
   dependencies:
     "@tryghost/errors" "^1.2.26"
     fs-extra "^11.0.0"
