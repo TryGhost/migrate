@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-linkfixer",
-  "version": "0.5.28",
+  "version": "0.5.29",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-linkfixer",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -20,7 +20,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@tryghost/listr-smart-renderer": "0.5.20",
+    "@tryghost/listr-smart-renderer": "0.5.21",
     "eslint": "8.57.0",
     "jest": "30.0.5",
     "jest-extended": "6.0.0",
