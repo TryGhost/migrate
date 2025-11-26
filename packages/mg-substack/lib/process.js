@@ -640,7 +640,7 @@ const processContent = (post, siteUrl, options) => {
 
     // Replace any signup forms with a Portal signup button
     if (options.subscribeLink) {
-        $html('.subscription-widget-wrap').each((i, div) => {
+        $html('.subscription-widget-wrap, .subscription-widget-wrap-editor').each((i, div) => {
             const hasForm = $(div).find('form');
 
             if (hasForm.length) {
