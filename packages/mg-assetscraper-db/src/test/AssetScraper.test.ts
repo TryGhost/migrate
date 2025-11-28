@@ -404,13 +404,30 @@ describe('Asset Scraper', () => {
         ]);
     });
 
-    // it('Does newsletter settings', async () => {
-    //     // "newsletters": [
-    //     //     {
-    //     //         "header_image": null,
-    //     //     }
-    //     // ]
-    // });
+    it('Does newsletter settings', async () => {
+        const requestMock = nock('https://example.com')
+            .get('/header.jpg')
+            .reply(200, jpgImageBuffer);
+
+        const options = {
+            domains: [
+                'https://example.com'
+            ]
+        };
+        const newslettersObj = [
+            {
+                header_image: 'https://example.com/header.jpg'
+            }
+        ];
+
+        const assetScraper = new AssetScraper(fileCache, options, {});
+        await assetScraper.init();
+
+        await assetScraper.doNewslettersObject(newslettersObj);
+
+        assert.ok(requestMock.isDone());
+        assert.equal(newslettersObj[0].header_image, '__GHOST_URL__/content/images/example-com/header.jpg');
+    });
 
     it('Does custom theme settings', async () => {
         const requestMock = nock('https://example.com')

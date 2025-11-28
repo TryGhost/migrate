@@ -726,6 +726,19 @@ export default class AssetScraper {
         }
     }
 
+    async doNewslettersObject(settings: any) {
+        for await (const newsletter of settings) {
+            for await (const item of this.#keys) {
+                if (!newsletter[item]) {
+                    continue;
+                }
+
+                const newSrc = await this.downloadExtractSave(newsletter[item], newsletter[item]);
+                newsletter[item] = this.localizeSrc(newSrc.path);
+            }
+        }
+    }
+
     get foundItems() {
         return this.#foundItems;
     }
@@ -832,9 +845,16 @@ export default class AssetScraper {
         tasks.push({
             title: `Snippets`,
             task: async () => {
-                // await this.doCustomThemeSettingsObject(customThemeSettings);
-                // inlinePostTagUserObject
                 addTasks(theSnippets, 'snippets');
+            }
+        });
+
+        // Newsletters
+        const theNewsletters = this.#ctx?.newsletters ?? this.#ctx?.result?.data?.newsletters ?? [];
+        tasks.push({
+            title: `Newsletters`,
+            task: async () => {
+                await this.doNewslettersObject(theNewsletters);
             }
         });
 
