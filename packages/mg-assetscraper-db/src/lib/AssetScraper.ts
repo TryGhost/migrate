@@ -32,6 +32,8 @@ export default class AssetScraper {
     warnings: any;
     logger: any;
     allowedDomains: string[];
+    allowAllDomains: boolean;
+    blockedDomains: string[];
     assetCache: AssetCache;
     processBase64Images: boolean;
 
@@ -62,6 +64,9 @@ export default class AssetScraper {
         this.findOnlyMode = options?.findOnlyMode ?? false;
 
         this.allowedDomains = options?.domains ?? [];
+
+        this.allowAllDomains = options?.allowAllDomains ?? false;
+        this.blockedDomains = options?.blockedDomains ?? [];
 
         this.processBase64Images = options?.processBase64Images ?? false;
 
@@ -450,6 +455,13 @@ export default class AssetScraper {
     }
 
     async findMatchesInString(content: any) {
+        if (this.allowAllDomains) {
+            return this.findAllUrlsExceptBlocked(content);
+        }
+        return this.findUrlsFromAllowedDomains(content);
+    }
+
+    private findUrlsFromAllowedDomains(content: string): string[] {
         const theMatches: string[] = [];
 
         for (const domain of this.allowedDomains) {
@@ -470,6 +482,40 @@ export default class AssetScraper {
         }
 
         return theMatches;
+    }
+
+    private findAllUrlsExceptBlocked(content: string): string[] {
+        // Match any http/https URL with same termination symbols as allowedDomains matching
+        const srcTerminationSymbols = `("|\\)|'|(?=(?:,https?))| |<|\\\\|&quot;|$)`;
+        const urlRegex = new RegExp(`(https?://[^\\s"'<>)\\\\,]+?)(${srcTerminationSymbols})`, 'igm');
+        const matches = content.matchAll(urlRegex);
+
+        let matchesArray = Array.from(matches, (m: any) => m[1]);
+
+        // Trim trailing commas from each match
+        matchesArray = matchesArray.map((item) => {
+            return item.replace(/,$/, '');
+        });
+
+        // Filter out blocked domains
+        return matchesArray.filter(url => !this.isBlockedDomain(url));
+    }
+
+    private isBlockedDomain(url: string): boolean {
+        // Exact domain match only (no subdomain matching)
+        // blockedDomains are full URLs (for API consistency), extract hostname for comparison
+        try {
+            const urlHostname = new URL(url).hostname;
+            return this.blockedDomains.some((blocked) => {
+                try {
+                    return new URL(blocked).hostname === urlHostname;
+                } catch {
+                    return false;
+                }
+            });
+        } catch {
+            return false; // Invalid URL, don't block
+        }
     }
 
     async findBase64ImagesInString(content: any) {

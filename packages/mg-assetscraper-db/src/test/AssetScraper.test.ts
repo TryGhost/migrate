@@ -1022,6 +1022,169 @@ describe('Asset Scraper', () => {
         });
     });
 
+    describe('allowAllDomains mode', () => {
+        it('scrapes URLs from any domain when allowAllDomains is true', async () => {
+            const requestMock = nock('https://random-domain.com')
+                .get('/image.jpg').reply(200, jpgImageBuffer);
+
+            const postObj = {
+                html: '<img src="https://random-domain.com/image.jpg" />'
+            };
+
+            const assetScraper = await createScraper({allowAllDomains: true, domains: []});
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.ok(requestMock.isDone());
+            assert.ok(postObj.html.includes('__GHOST_URL__/content/images/random-domain-com/image.jpg'));
+        });
+
+        it('scrapes URLs from multiple different domains', async () => {
+            const requestMock = nock('https://domain-one.com')
+                .get('/image1.jpg').reply(200, jpgImageBuffer);
+            const requestMock2 = nock('https://domain-two.org')
+                .get('/image2.jpg').reply(200, jpgImageBuffer);
+
+            const postObj = {
+                html: '<img src="https://domain-one.com/image1.jpg" /><img src="https://domain-two.org/image2.jpg" />'
+            };
+
+            const assetScraper = await createScraper({allowAllDomains: true, domains: []});
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.ok(requestMock.isDone());
+            assert.ok(requestMock2.isDone());
+            assert.ok(postObj.html.includes('__GHOST_URL__/content/images/domain-one-com/image1.jpg'));
+            assert.ok(postObj.html.includes('__GHOST_URL__/content/images/domain-two-org/image2.jpg'));
+        });
+
+        it('blocks URLs from blockedDomains', async () => {
+            const requestMock = nock('https://allowed-domain.com')
+                .get('/image.jpg').reply(200, jpgImageBuffer);
+
+            const postObj = {
+                html: '<img src="https://allowed-domain.com/image.jpg" /><img src="https://blocked-domain.com/blocked.jpg" />'
+            };
+
+            const assetScraper = await createScraper({
+                allowAllDomains: true,
+                blockedDomains: ['https://blocked-domain.com']
+            });
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.ok(requestMock.isDone());
+            assert.ok(postObj.html.includes('__GHOST_URL__/content/images/allowed-domain-com/image.jpg'));
+            assert.ok(postObj.html.includes('https://blocked-domain.com/blocked.jpg')); // Blocked URL should remain unchanged
+        });
+
+        it('blocks multiple domains from blockedDomains', async () => {
+            const requestMock = nock('https://good-domain.com')
+                .get('/image.jpg').reply(200, jpgImageBuffer);
+
+            const postObj = {
+                html: '<img src="https://good-domain.com/image.jpg" /><img src="https://blocked-one.com/a.jpg" /><img src="https://blocked-two.com/b.jpg" />'
+            };
+
+            const assetScraper = await createScraper({
+                allowAllDomains: true,
+                blockedDomains: ['https://blocked-one.com', 'https://blocked-two.com']
+            });
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.ok(requestMock.isDone());
+            assert.ok(postObj.html.includes('__GHOST_URL__/content/images/good-domain-com/image.jpg'));
+            assert.ok(postObj.html.includes('https://blocked-one.com/a.jpg')); // Blocked
+            assert.ok(postObj.html.includes('https://blocked-two.com/b.jpg')); // Blocked
+        });
+
+        it('uses exact domain matching (subdomains are not blocked)', async () => {
+            const requestMock = nock('https://sub.blocked-domain.com')
+                .get('/image.jpg').reply(200, jpgImageBuffer);
+
+            const postObj = {
+                html: '<img src="https://sub.blocked-domain.com/image.jpg" />'
+            };
+
+            const assetScraper = await createScraper({
+                allowAllDomains: true,
+                blockedDomains: ['https://blocked-domain.com'] // Only exact match blocked
+            });
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.ok(requestMock.isDone());
+            // Subdomain should NOT be blocked
+            assert.ok(postObj.html.includes('__GHOST_URL__/content/images/sub-blocked-domain-com/image.jpg'));
+        });
+
+        it('ignores domains option when allowAllDomains is true', async () => {
+            const requestMock = nock('https://other-domain.com')
+                .get('/image.jpg').reply(200, jpgImageBuffer);
+
+            const postObj = {
+                html: '<img src="https://other-domain.com/image.jpg" />'
+            };
+
+            // domains is set but should be ignored when allowAllDomains is true
+            const assetScraper = await createScraper({
+                allowAllDomains: true,
+                domains: ['https://example.com']
+            });
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.ok(requestMock.isDone());
+            assert.ok(postObj.html.includes('__GHOST_URL__/content/images/other-domain-com/image.jpg'));
+        });
+
+        it('defaults to false for allowAllDomains (backwards compatibility)', async () => {
+            // When allowAllDomains is not specified, it should default to false
+            // meaning only URLs from the domains list are scraped
+            const postObj = {
+                html: '<img src="https://random-domain.com/image.jpg" />'
+            };
+
+            const assetScraper = await createScraper({domains: ['https://example.com']});
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            // URL should remain unchanged since random-domain.com is not in domains list
+            assert.ok(postObj.html.includes('https://random-domain.com/image.jpg'));
+        });
+
+        it('handles blockedDomains with paths (extracts hostname only)', async () => {
+            const requestMock = nock('https://allowed.com')
+                .get('/image.jpg').reply(200, jpgImageBuffer);
+
+            const postObj = {
+                html: '<img src="https://allowed.com/image.jpg" /><img src="https://blocked.com/some/path/image.jpg" />'
+            };
+
+            // Blocklist URL has a path, but we should extract hostname for comparison
+            const assetScraper = await createScraper({
+                allowAllDomains: true,
+                blockedDomains: ['https://blocked.com/different/path']
+            });
+            await assetScraper.inlinePostTagUserObject(postObj);
+
+            assert.ok(requestMock.isDone());
+            assert.ok(postObj.html.includes('__GHOST_URL__/content/images/allowed-com/image.jpg'));
+            assert.ok(postObj.html.includes('https://blocked.com/some/path/image.jpg')); // Blocked by hostname
+        });
+
+        it('works with findMatchesInString directly', async () => {
+            const assetScraper = await createScraper({
+                allowAllDomains: true,
+                blockedDomains: ['https://blocked.com']
+            });
+
+            const matches = await assetScraper.findMatchesInString(
+                '<img src="https://allowed.com/a.jpg" /><img src="https://blocked.com/b.jpg" /><img src="https://another.org/c.jpg" />'
+            );
+
+            assert.equal(matches.length, 2);
+            assert.ok(matches.includes('https://allowed.com/a.jpg'));
+            assert.ok(matches.includes('https://another.org/c.jpg'));
+            assert.ok(!matches.includes('https://blocked.com/b.jpg'));
+        });
+    });
+
     /**
      * [ ] Finds all images in listed object names (settings, post HTML, Lexical - don't support Mobiledoc)
      * [ ] Can add allowed domains=
