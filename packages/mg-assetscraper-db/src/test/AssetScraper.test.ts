@@ -864,7 +864,7 @@ describe('Asset Scraper', () => {
                 const result = await assetScraper.inlineContent(content);
 
                 assert.equal(result.match(/data:image/g), null);
-                assert.equal(result.match(/__GHOST_URL__\/content\/images\//g).length, 2);
+                assert.equal(result.match(/__GHOST_URL__\/content\/images\//g)?.length, 2);
             });
 
             it('processes base64 images alongside regular URLs', async () => {
@@ -878,7 +878,7 @@ describe('Asset Scraper', () => {
 
                 assert.ok(requestMock.isDone());
                 assert.equal(result.match(/data:image/g), null); // No base64 images should remain
-                assert.equal(result.match(/__GHOST_URL__\/content\/images\//g).length, 2); // Should have 2 local image paths
+                assert.equal(result.match(/__GHOST_URL__\/content\/images\//g)?.length, 2); // Should have 2 local image paths
             });
         });
     });

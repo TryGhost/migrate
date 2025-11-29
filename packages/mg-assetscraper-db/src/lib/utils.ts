@@ -30,7 +30,10 @@ export async function convertImageBuffer(buffer: Buffer, fileMime: string): Prom
         convertedBuffer = await sharp(buffer).webp({lossless: true}).toBuffer();
     }
 
-    const newFileInfo: any = await fileTypeFromBuffer(convertedBuffer);
+    const newFileInfo = await fileTypeFromBuffer(convertedBuffer);
+    if (!newFileInfo) {
+        throw new Error('Could not determine file type after conversion');
+    }
 
     return {
         buffer: convertedBuffer,

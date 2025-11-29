@@ -1,14 +1,23 @@
 import {join} from 'node:path';
-import {Sequelize, DataTypes} from 'sequelize';
+import {Sequelize, DataTypes, Model, ModelStatic} from 'sequelize';
+import type {FileCache, AssetCacheEntry} from './types.js';
+
+interface AssetAttributes {
+    id?: number;
+    src: string;
+    status?: number;
+    localPath?: string;
+    skip?: string;
+}
+
+interface AssetModel extends Model<AssetAttributes>, AssetAttributes {}
 
 export default class AssetCache {
-    // db: any;
-    sequelize: any;
-    Asset: any;
-    assets: any;
-    fileCache: any;
+    sequelize: Sequelize;
+    Asset: ModelStatic<AssetModel>;
+    fileCache: FileCache;
 
-    constructor({fileCache}: {fileCache: any}) {
+    constructor({fileCache}: {fileCache: FileCache}) {
         this.fileCache = fileCache;
 
         const theCachePath = join(this.fileCache.tmpDir, 'assets-cache');
@@ -40,21 +49,16 @@ export default class AssetCache {
         });
 
         this.sequelize = sequelize;
-        this.Asset = Asset;
-        // this.db = db;
+        this.Asset = Asset as ModelStatic<AssetModel>;
     }
 
-    async init() {
+    async init(): Promise<void> {
         // Use alter: true to automatically update the schema if columns are added
         // This will add missing columns like 'skip' to existing databases
         await this.sequelize.sync({alter: true});
     }
 
-    /**
-     * Add an item to the asset cache list
-     * TODO: findOrCreate might make sense here
-     */
-    async add(src: string) {
+    async add(src: string): Promise<AssetModel> {
         // Check if it exists first, and return that if so
         const existingAsset = await this.Asset.findOne({where: {src: src}});
 
@@ -70,9 +74,7 @@ export default class AssetCache {
         return newAsset;
     }
 
-    async update(id: string, key: any, value: any) {
-        // this.db.update((item: any) => item.uuid === uuid, (item: any) => ({...item, [key]: value}));
-
+    async update(id: number, key: keyof AssetAttributes, value: string | number): Promise<[affectedCount: number]> {
         return this.Asset.update({
             [key]: value
         },
@@ -83,42 +85,19 @@ export default class AssetCache {
         });
     }
 
-    /**
-     * Get all the items from the asset cache list
-     */
-    async getAll() {
-        // TODO: Add pagination
-        // return this.db.get();
+    async getAll(): Promise<AssetModel[]> {
         return this.Asset.findAll();
     }
 
-    /**
-     * Find an individual item form the asset cache list
-     */
-    // async find(clauses: any) {
-    //     return this.db.get((item: any) => clauses(item));
-    // }
-
-    /**
-     * A common method to find an item by its src
-     */
-    async findBySrc(src: string) {
-        // return this.db.getOne((item: any) => item.src === src); // Returns the record with id 1
+    async findBySrc(src: string): Promise<AssetModel | null> {
         const existingAsset = await this.Asset.findOne({where: {src: src}});
         return existingAsset;
     }
 
     /**
-     * Delete an item from the asset cache list
-     */
-    // async deleteBySrc(src: string) {
-    //     this.db.delete((item: any) => item.src === src);
-    // }
-
-    /**
      * Used in tests, not intended for general use
      */
-    async _reset() {
+    async _reset(): Promise<void> {
         /* c8 ignore next 3 */
         if (process.env.NODE_ENV !== 'test') {
             throw new Error('This method is only for use in tests');

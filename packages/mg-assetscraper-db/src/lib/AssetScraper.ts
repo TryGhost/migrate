@@ -9,6 +9,22 @@ import {fileTypeFromBuffer} from 'file-type';
 import transliterate from 'transliteration';
 import AssetCache from './AssetCache.js';
 import {needsConverting, convertImageBuffer, getFolderForMimeType, sanitizePathSegment} from './utils.js';
+import type {ListrTask} from 'listr2';
+import type {
+    FileCache,
+    AssetScraperOptions,
+    AssetScraperContext,
+    RemoteMediaResponse,
+    MediaData,
+    Logger,
+    GhostContentObject,
+    SettingsItem,
+    CustomThemeSettingsItem,
+    NewsletterItem,
+    DownloadResult,
+    FailedDownload,
+    AssetCacheEntry
+} from './types.js';
 
 export default class AssetScraper {
     /**
@@ -25,12 +41,12 @@ export default class AssetScraper {
      * Take inspiration from the external media inliner, as some of this may make sense there too
      */
 
-    fileCache: any;
-    findOnlyMode: Boolean;
-    baseUrl: string | Boolean;
-    defaultOptions: any;
-    warnings: any;
-    logger: any;
+    fileCache: FileCache;
+    findOnlyMode: boolean;
+    baseUrl: string | false;
+    defaultOptions: Required<Pick<AssetScraperOptions, 'optimize' | 'allowImages' | 'allowMedia' | 'allowFiles'>>;
+    warnings: string[];
+    logger: Logger | undefined;
     allowedDomains: string[];
     allowAllDomains: boolean;
     blockedDomains: string[];
@@ -38,28 +54,28 @@ export default class AssetScraper {
     processBase64Images: boolean;
 
     #settingsKeys: string[];
-    #keys: string[];
+    #keys: Array<keyof GhostContentObject>;
     // #postObjectKeys: string[];
     // #userObjectKeys: string[];
     // #tagObjectKeys: string[];
-    #ctx: any;
+    #ctx: AssetScraperContext;
 
     #foundItems: string[];
-    #failedDownloads: Array<{url: string; error: string}>;
+    #failedDownloads: FailedDownload[];
 
-    constructor(fileCache: any, options: any, ctx: any = {}) {
+    constructor(fileCache: FileCache, options: AssetScraperOptions = {}, ctx: AssetScraperContext = {}) {
         this.fileCache = fileCache;
 
-        this.defaultOptions = Object.assign({
-            optimize: true,
+        this.defaultOptions = {
+            optimize: options.optimize ?? true,
             // sizeLimit: false,
-            allowImages: true,
-            allowMedia: true,
-            allowFiles: true
-        }, options);
+            allowImages: options.allowImages ?? true,
+            allowMedia: options.allowMedia ?? true,
+            allowFiles: options.allowFiles ?? true
+        };
 
         // Set the  base URL, but also trim thr trailing slash
-        this.baseUrl = (options?.baseUrl) ? options.baseUrl.replace(/\/$/, '') : false;
+        this.baseUrl = options.baseUrl ? options.baseUrl.replace(/\/$/, '') : false;
 
         this.findOnlyMode = options?.findOnlyMode ?? false;
 
@@ -114,12 +130,7 @@ export default class AssetScraper {
         await this.assetCache.init();
     }
 
-    /**
-     *
-     * @param {string} requestURL - url of remote media
-     * @returns {Promise<Object>}
-     */
-    async getRemoteMedia(requestURL: string) {
+    async getRemoteMedia(requestURL: string): Promise<RemoteMediaResponse> {
         // Enforce http - http > https redirects are commonplace
         const updatedRequestURL = requestURL.replace(/^\/\//g, 'http://');
 
@@ -150,23 +161,19 @@ export default class AssetScraper {
         }
     }
 
-    /**
-     *
-     * @param {Object} response - response from request
-     * @returns {Object}
-     */
-    async extractFileDataFromResponse(requestURL: any, response: any) {
-        let extension;
-        let fileMime;
+    async extractFileDataFromResponse(requestURL: string, response: RemoteMediaResponse): Promise<MediaData | null> {
+        let extension: string | undefined;
+        let fileMime: string | undefined;
         let body = response.body;
 
         // Attempt to get the file extension from the file itself
         // If that fails, or if `.ext` is undefined, get the extension from the file path in the catch
         try {
-            const fileInfo: any = await fileTypeFromBuffer(body);
-            // console.log({fileInfo});
-            extension = fileInfo.ext;
-            fileMime = fileInfo.mime;
+            const fileInfo = await fileTypeFromBuffer(body);
+            if (fileInfo) {
+                extension = fileInfo.ext;
+                fileMime = fileInfo.mime;
+            }
         } catch {
             const headers = response.headers;
             fileMime = headers['content-type'];
@@ -175,14 +182,14 @@ export default class AssetScraper {
         }
 
         // If mime is in array, it needs converting to a supported image format.
-        if (needsConverting.includes(fileMime)) {
+        if (fileMime && needsConverting.includes(fileMime)) {
             const converted = await convertImageBuffer(body, fileMime);
             body = converted.buffer;
             extension = converted.extension;
             fileMime = converted.mime;
         }
 
-        if (!extension && !fileMime) {
+        if (!extension || !fileMime) {
             // console.log(`No file extension or mime found in response for file: ${requestURL}`);
             return null;
         }
@@ -259,13 +266,7 @@ export default class AssetScraper {
         return assetFile;
     }
 
-    /**
-     *
-     * @param {String} src - The image src, used for the file name
-     * @param {Object} media - media to store locally
-     * @returns {Promise<string>} - path to stored media
-     */
-    async storeMediaLocally(src: string, media: any) {
+    async storeMediaLocally(src: string, media: MediaData | null): Promise<string | null> {
         if (!media || !media.fileMime) {
             // console.log(`No file mime found for file: ${src}`);
             return null;
@@ -287,7 +288,7 @@ export default class AssetScraper {
         return newLocal;
     }
 
-    async storeBase64MediaLocally(media: any) {
+    async storeBase64MediaLocally(media: MediaData | null): Promise<string | null> {
         if (!media || !media.fileMime) {
             return null;
         }
@@ -305,12 +306,12 @@ export default class AssetScraper {
             optimize: this.defaultOptions.optimize
         };
 
-        let newLocal = await this.fileCache.writeContentFile(media.fileBuffer, imageOptions);
+        const newLocal = await this.fileCache.writeContentFile(media.fileBuffer, imageOptions);
 
         return newLocal;
     }
 
-    async replaceSrc(src: string, inlinedSrc: string, content: string) {
+    async replaceSrc(src: string, inlinedSrc: string, content: string): Promise<string> {
         if (inlinedSrc.startsWith('/content/')) {
             const theRealSrc = this.localizeSrc(inlinedSrc);
             content = content.replace(src, theRealSrc);
@@ -329,9 +330,9 @@ export default class AssetScraper {
         return src;
     }
 
-    async downloadExtractSave(src: string, content: string) {
+    async downloadExtractSave(src: string, content: string): Promise<DownloadResult> {
         // Create a cache item, or find a existing item
-        const cacheEntry: any = await this.assetCache.add(src);
+        const cacheEntry = await this.assetCache.add(src) as AssetCacheEntry;
         const {id: cacheId, localPath, skip} = cacheEntry;
 
         // Check the cache to see if we have a local src. If we do, use that to replace the found src
@@ -404,13 +405,14 @@ export default class AssetScraper {
         }
     }
 
-    async downloadExtractSaveBase64(dataUri: string, content: string) {
+    async downloadExtractSaveBase64(dataUri: string, content: string): Promise<DownloadResult> {
         // Create a hash of the data URI to use as cache key
         const hash = createHash('md5').update(dataUri).digest('hex');
         const cacheKey = `base64-${hash}`;
 
         // Create a cache item, or find an existing item
-        const {id: cacheId, localPath} = await this.assetCache.add(cacheKey);
+        const cacheEntry = await this.assetCache.add(cacheKey) as AssetCacheEntry;
+        const {id: cacheId, localPath} = cacheEntry;
 
         // Check the cache to see if we have a local src. If we do, use that to replace the found src
         if (localPath) {
@@ -454,7 +456,7 @@ export default class AssetScraper {
         };
     }
 
-    async findMatchesInString(content: any) {
+    async findMatchesInString(content: string): Promise<string[]> {
         if (this.allowAllDomains) {
             return this.findAllUrlsExceptBlocked(content);
         }
@@ -518,7 +520,7 @@ export default class AssetScraper {
         }
     }
 
-    async findBase64ImagesInString(content: any) {
+    async findBase64ImagesInString(content: string): Promise<string[]> {
         const theMatches: string[] = [];
 
         // Match data URI scheme for images: data:image/[mime-type];base64,[base64-data]
@@ -534,12 +536,7 @@ export default class AssetScraper {
         return theMatches;
     }
 
-    /**
-     * Extract file data from a base64 data URI
-     * @param {string} dataUri - The base64 data URI (e.g., data:image/png;base64,...)
-     * @returns {Object} File data similar to extractFileDataFromResponse
-     */
-    async extractFileDataFromBase64(dataUri: string) {
+    async extractFileDataFromBase64(dataUri: string): Promise<MediaData | null> {
         // Parse the data URI to extract mime type and base64 data
         const matches = dataUri.match(/^data:image\/([^;]+);base64,(.+)$/);
 
@@ -561,12 +558,14 @@ export default class AssetScraper {
         let fileMime = mimeType;
 
         try {
-            const fileInfo: any = await fileTypeFromBuffer(body);
-            extension = fileInfo.ext;
-            fileMime = fileInfo.mime;
+            const fileInfo = await fileTypeFromBuffer(body);
+            if (fileInfo) {
+                extension = fileInfo.ext;
+                fileMime = fileInfo.mime;
+            }
         } catch {
             // Fallback to the mime from the data URI
-            const mimeToExtMap: any = {
+            const mimeToExtMap: Record<string, string> = {
                 'image/jpeg': 'jpg',
                 'image/jpg': 'jpg',
                 'image/png': 'png',
@@ -603,7 +602,7 @@ export default class AssetScraper {
         };
     }
 
-    async normalizeUrl(src: string) {
+    async normalizeUrl(src: string): Promise<string> {
         // Replace the Ghost URL placeholder with the actual URL
         if (src.includes('__GHOST_URL__') && this.baseUrl && typeof this.baseUrl === 'string') {
             src = src.replace('__GHOST_URL__', this.baseUrl);
@@ -622,7 +621,7 @@ export default class AssetScraper {
         return src;
     }
 
-    async inlineContent(content: any) {
+    async inlineContent(content: string): Promise<string> {
         // Process base64 images first if enabled
         if (this.processBase64Images) {
             const base64Matches = await this.findBase64ImagesInString(content);
@@ -664,7 +663,7 @@ export default class AssetScraper {
         return content;
     }
 
-    async inlinePostTagUserObject(post: any) {
+    async inlinePostTagUserObject(post: GhostContentObject): Promise<void> {
         if (post.lexical) {
             post.lexical = await this.inlineContent(post.lexical);
         }
@@ -682,17 +681,17 @@ export default class AssetScraper {
         }
 
         for await (const item of this.#keys) {
-            if (!post[item]) {
+            const value = post[item];
+            if (!value || typeof value !== 'string') {
                 continue;
             }
 
-            const newSrc = await this.downloadExtractSave(post[item], post[item]);
+            const newSrc = await this.downloadExtractSave(value, value);
             post[item] = this.localizeSrc(newSrc.path);
         }
     }
 
-    // TODO: Come up with a better name for these methods
-    async doSettingsObject(settings: any) {
+    async doSettingsObject(settings: SettingsItem[]): Promise<void> {
         for await (const [index, {key, value}] of settings.entries()) {
             if (settings[index].key === 'codeinjection_head') {
                 settings[index].value = await this.inlineContent(settings[index].value);
@@ -711,7 +710,7 @@ export default class AssetScraper {
         }
     }
 
-    async doCustomThemeSettingsObject(settings: any) {
+    async doCustomThemeSettingsObject(settings: CustomThemeSettingsItem[]): Promise<void> {
         for await (const [index, {type, key, value}] of settings.entries()) {
             if (settings[index].type === 'image') {
                 const absoluteSrc = await this.normalizeUrl(settings[index].value);
@@ -725,15 +724,16 @@ export default class AssetScraper {
         }
     }
 
-    async doNewslettersObject(settings: any) {
-        for await (const newsletter of settings) {
+    async doNewslettersObject(newsletters: NewsletterItem[]): Promise<void> {
+        for await (const newsletter of newsletters) {
             for await (const item of this.#keys) {
-                if (!newsletter[item]) {
+                const value = newsletter[item as keyof NewsletterItem] as string | undefined;
+                if (!value) {
                     continue;
                 }
 
-                const newSrc = await this.downloadExtractSave(newsletter[item], newsletter[item]);
-                newsletter[item] = this.localizeSrc(newSrc.path);
+                const newSrc = await this.downloadExtractSave(value, value);
+                (newsletter as Record<string, string>)[item] = this.localizeSrc(newSrc.path);
             }
         }
     }
@@ -746,35 +746,35 @@ export default class AssetScraper {
         return this.#failedDownloads;
     }
 
-    getTasks() {
-        const tasks: any = [];
+    getTasks(): ListrTask[] {
+        const tasks: ListrTask[] = [];
 
-        const addTasks = (items: any, type: string) => {
-            items.forEach((item: any) => {
+        const addTasks = (items: GhostContentObject[], type: string): void => {
+            items.forEach((item: GhostContentObject) => {
                 tasks.push({
                     title: `Assets for ${type} ${item?.slug ?? item?.name ?? item.id ?? item.post_id}`,
                     task: async () => {
                         try {
-                            item = await this.inlinePostTagUserObject(item);
-                        } catch (err: any) {
-                            throw new errors.InternalServerError({message: 'Failed to inline object', err});
+                            await this.inlinePostTagUserObject(item);
+                        } catch (err) {
+                            throw new errors.InternalServerError({message: 'Failed to inline object', err: err instanceof Error ? err : undefined});
                         }
                     }
                 });
             });
         };
 
-        const addSubTasks = (items: any, type: string) => {
-            let subTasks: any = [];
+        const addSubTasks = (items: GhostContentObject[], type: string) => {
+            const subTasks: ListrTask[] = [];
 
-            items.forEach((item: any) => {
+            items.forEach((item: GhostContentObject) => {
                 subTasks.push({
                     title: `Assets for ${type} ${item?.slug ?? item?.name ?? item.id ?? item.post_id}`,
                     task: async () => {
                         try {
-                            item = await this.inlinePostTagUserObject(item);
-                        } catch (err: any) {
-                            throw new errors.InternalServerError({message: 'Failed to inline object', err});
+                            await this.inlinePostTagUserObject(item);
+                        } catch (err) {
+                            throw new errors.InternalServerError({message: 'Failed to inline object', err: err instanceof Error ? err : undefined});
                         }
                     }
                 });
