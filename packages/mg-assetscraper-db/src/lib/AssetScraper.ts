@@ -27,20 +27,6 @@ import type {
 } from './types.js';
 
 export default class AssetScraper {
-    /**
-     * The idea is:
-     *
-     * - Loop over posts, meta, tags, settings, one by one. Any object that _could_ have an image src in it, loop over that as a single task.
-     *  - When an asset is found, do the file type check and download right then, don't just add to the cache and move on
-     *  - Save the result (response status, new URL is applicable, etc) to the cache
-     * - When an asset is found, check the cache first as the asset might be downloaded already
-     *
-     * This will be more difficult to show a number of tasks, but the number of posts will have to do.
-     * Don't deviate from this, because complexity will grow massively
-     *
-     * Take inspiration from the external media inliner, as some of this may make sense there too
-     */
-
     fileCache: FileCache;
     findOnlyMode: boolean;
     baseUrl: string | false;
@@ -55,11 +41,7 @@ export default class AssetScraper {
 
     #settingsKeys: string[];
     #keys: Array<keyof GhostContentObject>;
-    // #postObjectKeys: string[];
-    // #userObjectKeys: string[];
-    // #tagObjectKeys: string[];
     #ctx: AssetScraperContext;
-
     #foundItems: string[];
     #failedDownloads: FailedDownload[];
 
@@ -68,7 +50,6 @@ export default class AssetScraper {
 
         this.defaultOptions = {
             optimize: options.optimize ?? true,
-            // sizeLimit: false,
             allowImages: options.allowImages ?? true,
             allowMedia: options.allowMedia ?? true,
             allowFiles: options.allowFiles ?? true
@@ -76,22 +57,14 @@ export default class AssetScraper {
 
         // Set the  base URL, but also trim thr trailing slash
         this.baseUrl = options.baseUrl ? options.baseUrl.replace(/\/$/, '') : false;
-
         this.findOnlyMode = options?.findOnlyMode ?? false;
-
         this.allowedDomains = options?.domains ?? [];
-
         this.allowAllDomains = options?.allowAllDomains ?? false;
         this.blockedDomains = options?.blockedDomains ?? [];
-
         this.processBase64Images = options?.processBase64Images ?? false;
-
         this.warnings = (ctx.warnings) ? ctx.warnings : [];
-
         this.logger = ctx.logger;
-
         this.#ctx = ctx;
-
         this.#settingsKeys = [
             'logo',
             'cover_image',
@@ -100,7 +73,6 @@ export default class AssetScraper {
             'twitter_image',
             'portal_button_icon'
         ];
-
         this.#keys = [
             'src',
             'feature_image',
@@ -113,15 +85,9 @@ export default class AssetScraper {
             'customThumbnailSrc',
             'productImageSrc'
         ];
-
         this.#foundItems = [];
         this.#failedDownloads = [];
-
-        // TODO: Custom theme settings
-        // Any objects where `"type": "image"`, look for assets in `value`
-
         this.assetCache = new AssetCache({
-            // folderPath: options.assetCachePath
             fileCache: this.fileCache
         });
     }
@@ -548,7 +514,7 @@ export default class AssetScraper {
         const base64Data = matches[2];
 
         // Decode base64 to buffer
-        let body = Buffer.from(base64Data, 'base64');
+        let body: Buffer = Buffer.from(base64Data, 'base64');
 
         // Generate a hash of the buffer for a consistent filename (for deduplication)
         const hash = createHash('md5').update(body).digest('hex');
@@ -856,51 +822,6 @@ export default class AssetScraper {
                 await this.doNewslettersObject(theNewsletters);
             }
         });
-
-        // tasks.push({
-        //     title: 'Fetching assets in posts',
-        //     task: async (ctx: any, task: any) => { // eslint-disable-line no-shadow
-        //         let subTasks: any = [];
-
-        //         let postsToLoopOver: any = null;
-
-        //         if (this.#ctx.posts && this.#ctx.posts.length) {
-        //             postsToLoopOver = this.#ctx.posts;
-        //         } else if (this.#ctx.result.data.posts) {
-        //             postsToLoopOver = this.#ctx.result.data.posts;
-        //         } else {
-        //             // this.logger.error('No data to loop over');
-        //             throw new Error('No data to loop over');
-        //         }
-
-        //         postsToLoopOver.forEach((post: any) => {
-        //             subTasks.push({
-        //                 title: `Assets for post ${post?.slug ?? post.id}`,
-        //                 task: async () => {
-        //                     post = await this.doPostObject(post);
-        //                 }
-        //             });
-        //         });
-
-        //         // TODO: Also loop over these
-        //         // users
-        //         // tags
-
-        //         // And the settings too, in its own special way
-
-        //         // And custom_theme_settings
-
-        //         return makeTaskRunner(subTasks, {
-        //             concurrent: 5
-        //         });
-
-        //         // return task.newListr(subTasks, {
-        //         //     // renderer: (ctx.options.verbose) ? 'verbose' : SmartRenderer,
-        //         //     // renderer: SmartRenderer,
-        //         //     concurrent: 5
-        //         // });
-        //     }
-        // });
 
         return tasks;
     }
