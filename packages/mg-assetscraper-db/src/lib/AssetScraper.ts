@@ -616,7 +616,7 @@ export default class AssetScraper {
         if (this.processBase64Images) {
             const base64Matches = await this.findBase64ImagesInString(content);
 
-            for await (const dataUri of base64Matches) {
+            for (const dataUri of base64Matches) {
                 // If in findOnlyMode, just push data URIs to an array and continue
                 if (this.findOnlyMode) {
                     this.#foundItems.push(dataUri);
@@ -631,7 +631,7 @@ export default class AssetScraper {
         // Then process domain-based images
         const matches = await this.findMatchesInString(content);
 
-        for await (const src of matches) {
+        for (const src of matches) {
             // If in findOnlyMode, just puch srcs to an array and continue
             if (this.findOnlyMode) {
                 this.#foundItems.push(src);
@@ -670,7 +670,7 @@ export default class AssetScraper {
             post.codeinjection_foot = await this.inlineContent(post.codeinjection_foot);
         }
 
-        for await (const item of this.#keys) {
+        for (const item of this.#keys) {
             const value = post[item];
             if (!value || typeof value !== 'string') {
                 continue;
@@ -682,7 +682,7 @@ export default class AssetScraper {
     }
 
     async doSettingsObject(settings: SettingsItem[]): Promise<void> {
-        for await (const [index, {key, value}] of settings.entries()) {
+        for (const [index, {key, value}] of settings.entries()) {
             if (settings[index].key === 'codeinjection_head') {
                 settings[index].value = await this.inlineContent(settings[index].value);
             }
@@ -712,8 +712,8 @@ export default class AssetScraper {
     }
 
     async doNewslettersObject(newsletters: NewsletterItem[]): Promise<void> {
-        for await (const newsletter of newsletters) {
-            for await (const item of this.#keys) {
+        for (const newsletter of newsletters) {
+            for (const item of this.#keys) {
                 const value = newsletter[item as keyof NewsletterItem] as string | undefined;
                 if (!value) {
                     continue;
