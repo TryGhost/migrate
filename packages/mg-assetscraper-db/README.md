@@ -52,32 +52,33 @@ console.log(scraper.failedDownloads);
 
 ### Scrape from all domains
 
-Use `allowAllDomains` to scrape assets from any domain, optionally excluding specific ones:
+Use `allowAllDomains` to scrape assets from any domain, optionally excluding specific ones. You can also supple a regular expression (as a literal or object)
 
 ```javascript
 const scraper = new AssetScraper(fileCache, {
     allowAllDomains: true,
     blockedDomains: [
         'https://ads.example.com',
-        'https://tracking.example.com'
+        /https?:\/\/[a-z0-9-]+.example.com/,
+        new Regexp('https?://[a-z0-9-]+.other-example.com')
     ]
 }, ctx);
 ```
 
 ## Options
 
-| Option                | Type       | Default     | Description                                                            |
-|-----------------------|------------|-------------|------------------------------------------------------------------------|
-| `domains`             | `string[]` | `[]`        | Whitelist of allowed domains to scrape from (include protocol)         |
-| `allowAllDomains`     | `boolean`  | `false`     | Scrape from any domain instead of using whitelist                      |
-| `blockedDomains`      | `string[]` | `[]`        | Domains to exclude when `allowAllDomains` is `true`                    |
-| `optimize`            | `boolean`  | `true`      | Optimize images using sharp                                            |
-| `findOnlyMode`        | `boolean`  | `false`     | Only discover assets, don't download (access via `scraper.foundItems`) |
-| `baseUrl`             | `string`   | `undefined` | Base URL for resolving relative URLs (only needed for Ghost JSON exports) |
-| `processBase64Images` | `boolean`  | `false`     | Extract embedded base64 images and save as files                       |
-| `allowImages`         | `boolean`  | `true`      | Process image files                                                    |
-| `allowMedia`          | `boolean`  | `true`      | Process audio/video files                                              |
-| `allowFiles`          | `boolean`  | `true`      | Process documents (PDF, etc.)                                          |
+| Option                | Type                   | Default     | Description                                                               |
+|-----------------------|------------------------|-------------|---------------------------------------------------------------------------|
+| `domains`             | `string[]`             | `[]`        | Whitelist of allowed domains to scrape from (include protocol)            |
+| `allowAllDomains`     | `boolean`              | `false`     | Scrape from any domain instead of using whitelist                         |
+| `blockedDomains`      | `(string \| RegExp)[]` | `[]`        | Domains to exclude when `allowAllDomains` is `true`                       |
+| `optimize`            | `boolean`              | `true`      | Optimize images using sharp                                               |
+| `findOnlyMode`        | `boolean`              | `false`     | Only discover assets, don't download (access via `scraper.foundItems`)    |
+| `baseUrl`             | `string`               | `undefined` | Base URL for resolving relative URLs (only needed for Ghost JSON exports) |
+| `processBase64Images` | `boolean`              | `false`     | Extract embedded base64 images and save as files                          |
+| `allowImages`         | `boolean`              | `true`      | Process image files                                                       |
+| `allowMedia`          | `boolean`              | `true`      | Process audio/video files                                                 |
+| `allowFiles`          | `boolean`              | `true`      | Process documents (PDF, etc.)                                             |
 
 ## Context Object
 

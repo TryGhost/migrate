@@ -9,6 +9,7 @@ import {fileTypeFromBuffer} from 'file-type';
 import transliterate from 'transliteration';
 import AssetCache from './AssetCache.js';
 import {needsConverting, convertImageBuffer, getFolderForMimeType, sanitizePathSegment} from './utils.js';
+
 import type {ListrTask} from 'listr2';
 import type {
     FileCache,
@@ -26,6 +27,26 @@ import type {
     AssetCacheEntry
 } from './types.js';
 
+const DEFAULT_BLOCKED_DOMAINS: (string | RegExp)[] = [
+    'https://images.unsplash.com', // Unsplash
+    'https://www.gravatar.com', // Gravatar
+    new RegExp('^https?://([a-z0-9-]+.)?cdninstagram.com'), // Instagram CDN
+    new RegExp('^https?://(www.)?instagram.com'), // Instagram website
+    new RegExp('^https?://([a-z0-9-]+.)?([a-z]+.)?fbcdn.net'), // Facebook CDN
+    new RegExp('^https?://(www.)?facebook.com'), // Facebook website
+    new RegExp('/^https?://([a-z0-9+]+.)?ytimg.com/'), // YouTube images
+    new RegExp('^https?://(www.)?(youtube.com|youtu.be)'), // YouTube website
+    new RegExp('^https?://([a-z0-9-]+.)?twitter.com'), // Twitter website
+    new RegExp('^https?://([a-z0-9-]+.)?x.com'), // Worse Twitter
+    new RegExp('^https?://([a-z0-9-]+.)?twimg.com'), // Twitter images
+    new RegExp('^https?://(www.)?amazon.[a-z]{2,}'), // Amazon website, across all locales
+    new RegExp('^https?://([a-z]+.)?media-amazon.com'), // Amazon images
+    new RegExp('^https?://(www.)?ebay.[a-z]{2,}'), // EBay website, across all locales
+    new RegExp('https?://i.ebayimg.com'), // EBay images
+    new RegExp('^https?://(www.)?etsy.[a-z]{2,}'), // Etsy website, across all locales
+    new RegExp('https?://i.etsystatic.com') // Etsy images
+];
+
 export default class AssetScraper {
     fileCache: FileCache;
     findOnlyMode: boolean;
@@ -35,7 +56,7 @@ export default class AssetScraper {
     logger: Logger | undefined;
     allowedDomains: string[];
     allowAllDomains: boolean;
-    blockedDomains: string[];
+    blockedDomains: (string | RegExp)[];
     assetCache: AssetCache;
     processBase64Images: boolean;
 
@@ -60,7 +81,7 @@ export default class AssetScraper {
         this.findOnlyMode = options?.findOnlyMode ?? false;
         this.allowedDomains = options?.domains ?? [];
         this.allowAllDomains = options?.allowAllDomains ?? false;
-        this.blockedDomains = options?.blockedDomains ?? [];
+        this.blockedDomains = [...DEFAULT_BLOCKED_DOMAINS, ...(options?.blockedDomains ?? [])];
         this.processBase64Images = options?.processBase64Images ?? false;
         this.warnings = (ctx.warnings) ? ctx.warnings : [];
         this.logger = ctx.logger;
@@ -470,20 +491,23 @@ export default class AssetScraper {
     }
 
     private isBlockedDomain(url: string): boolean {
-        // Exact domain match only (no subdomain matching)
-        // blockedDomains are full URLs (for API consistency), extract hostname for comparison
-        try {
-            const urlHostname = new URL(url).hostname;
-            return this.blockedDomains.some((blocked) => {
-                try {
-                    return new URL(blocked).hostname === urlHostname;
-                } catch {
-                    return false;
-                }
-            });
-        } catch {
-            return false; // Invalid URL, don't block
+        if (this.blockedDomains.length === 0) {
+            return false;
         }
+
+        for (const blocked of this.blockedDomains) {
+            if (blocked instanceof RegExp) {
+                if (blocked.test(url)) {
+                    return true;
+                }
+            } else {
+                // Prefix match for plain URLs
+                if (url.startsWith(blocked)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     async findBase64ImagesInString(content: string): Promise<string[]> {

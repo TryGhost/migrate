@@ -1183,6 +1183,56 @@ describe('Asset Scraper', () => {
             assert.ok(matches.includes('https://another.org/c.jpg'));
             assert.ok(!matches.includes('https://blocked.com/b.jpg'));
         });
+
+        it('uses default blocked domains list', async () => {
+            const assetScraper = await createScraper({
+                allowAllDomains: true
+            });
+
+            const matches = await assetScraper.findMatchesInString(
+                '<img src="https://youtube.com/image.jpg" /><img src="https://www.youtube.com/image.jpg" /><img src="https://allowed.com/a.jpg" />'
+            );
+
+            assert.equal(matches.length, 1);
+            assert.ok(matches.includes('https://allowed.com/a.jpg'));
+            assert.ok(!matches.includes('https://youtube.com/image.jpg'));
+            assert.ok(!matches.includes('https://www.youtube.com/image.jpg'));
+        });
+
+        it('supports RegExp patterns', async () => {
+            const assetScraper = await createScraper({
+                allowAllDomains: true,
+                blockedDomains: [/^https:\/\/(www\.)?another\.com/]
+            });
+
+            const matches = await assetScraper.findMatchesInString(
+                '<img src="https://another.com/image.jpg" /><img src="https://www.another.com/image.jpg" /><img src="https://allowed.com/a.jpg" />'
+            );
+
+            assert.equal(matches.length, 1);
+            assert.ok(matches.includes('https://allowed.com/a.jpg'));
+            assert.ok(!matches.includes('https://another.com/image.jpg'));
+            assert.ok(!matches.includes('https://www.another.com/image.jpg'));
+        });
+
+        it('supports mix of strings and RegExp', async () => {
+            const assetScraper = await createScraper({
+                allowAllDomains: true,
+                blockedDomains: [
+                    'https://images.another.com', // plain string
+                    /^https:\/\/(www\.)?service\.com/ // RegExp
+                ]
+            });
+
+            const matches = await assetScraper.findMatchesInString(
+                '<img src="https://images.another.com/photo.jpg" />' +
+                '<img src="https://www.service.com/thumb.jpg" />' +
+                '<img src="https://allowed.com/a.jpg" />'
+            );
+
+            assert.equal(matches.length, 1);
+            assert.ok(matches.includes('https://allowed.com/a.jpg'));
+        });
     });
 
     /**

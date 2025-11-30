@@ -39,7 +39,7 @@ export interface AssetScraperOptions {
     findOnlyMode?: boolean;
     domains?: string[];
     allowAllDomains?: boolean;
-    blockedDomains?: string[];
+    blockedDomains?: (string | RegExp)[];
     processBase64Images?: boolean;
 }
 
