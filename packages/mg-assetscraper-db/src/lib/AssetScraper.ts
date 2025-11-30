@@ -701,14 +701,11 @@ export default class AssetScraper {
     }
 
     async doCustomThemeSettingsObject(settings: CustomThemeSettingsItem[]): Promise<void> {
-        for await (const [index, {type, key, value}] of settings.entries()) {
-            if (settings[index].type === 'image') {
-                const absoluteSrc = await this.normalizeUrl(settings[index].value);
-                settings[index].value = await this.inlineContent(absoluteSrc);
+        for (const [index, {type, value}] of settings.entries()) {
+            if (type !== 'image' || !value) {
+                continue;
             }
-
             const absoluteSrc = await this.normalizeUrl(value);
-
             const newSrc = await this.downloadExtractSave(absoluteSrc, absoluteSrc);
             settings[index].value = this.localizeSrc(newSrc.path);
         }
