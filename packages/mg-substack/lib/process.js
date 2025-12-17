@@ -630,6 +630,10 @@ const processContent = (post, siteUrl, options) => {
             let href = $(anchor).attr('href');
             let linkRegex = new RegExp(`^(${siteUrl})?(/subscribe)(.*)`, 'gi');
 
+            if (!href) {
+                return;
+            }
+
             let matches = href.replace(linkRegex, '$2');
 
             if (matches === '/subscribe') {
