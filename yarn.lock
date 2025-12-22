@@ -3772,6 +3772,13 @@
   dependencies:
     unidecode "^0.1.8"
 
+"@tryghost/string@0.2.20":
+  version "0.2.20"
+  resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.2.20.tgz#edf17bcdc84ade451c81c9e693e4fb64254b8932"
+  integrity sha512-igBnbvwsn+WSpWETuVN0aklqaaVz0S5DGJEkL/CrXkUwBw6VOkjmz5RI56q1yRw/tU/zHBQObbncJPr/KcBQxA==
+  dependencies:
+    unidecode "^0.1.8"
+
 "@tryghost/string@0.2.7":
   version "0.2.7"
   resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.2.7.tgz#5ffecde3960b38ec403ca6b3b884beb54cda510c"
