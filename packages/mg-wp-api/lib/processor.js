@@ -774,12 +774,13 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     $html('.wp-block-embed.is-provider-youtube').each((i, el) => {
         const videoUrl = $(el).find('iframe').attr('src') ?? $(el).text();
         const videoID = getYouTubeID(videoUrl);
+        const videoCaption = $(el).find('figcaption')?.text()?.trim() ?? false;
 
         if (videoUrl && videoID && videoID.length) {
             $(el).replaceWith(`<figure class="kg-card kg-embed-card"><iframe width="160" height="90"
             src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen=""></iframe></figure>`);
+            allowfullscreen=""></iframe>${videoCaption ? `<figcaption>${videoCaption}</figcaption>` : ''}</figure>`);
         }
     });
 
@@ -907,6 +908,19 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
             $(img).wrap($figure);
         }
+    });
+
+    $html('img').each((i, img) => {
+        const oldBase = /https?:\/\/deceleration.news\/wp-content\//;
+        const newBase = 'https://d3l0i86vhnepo5.cloudfront.net/wp-content/';
+        const currentSrc = $(img).attr('src');
+
+        if (!currentSrc) {
+            return;
+        }
+
+        const updatedSrc = currentSrc.replace(oldBase, newBase);
+        $(img).attr('src', updatedSrc);
     });
 
     // convert HTML back to a string
