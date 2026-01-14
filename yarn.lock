@@ -11012,10 +11012,10 @@ sqlite3@5.1.7:
   optionalDependencies:
     node-gyp "8.x"
 
-srcset@5.0.2:
-  version "5.0.2"
-  resolved "https://registry.yarnpkg.com/srcset/-/srcset-5.0.2.tgz#153f05c66b818f787ac51a30ea63c1062f29081a"
-  integrity sha512-pucR5KmXL7uWI59sXE2nuodomLsfnIQDa5Fck0TooiyxsIx+JYGiFm+wFO7aaDvvl/43ipjUjAb5je7dcAwlzQ==
+srcset@5.0.3:
+  version "5.0.3"
+  resolved "https://registry.yarnpkg.com/srcset/-/srcset-5.0.3.tgz#4d174bcff89a4ac995ec3d23b213bf8661bbc8ca"
+  integrity sha512-AZswtOXIsu0LeHdo6YY7d0r2pCH2Rl1D8ae1utvXUX4GxG3RggsVUAOFX1r8RI4YHFMYb4g89+UBPBv3mNUU2g==
 
 sshpk@^1.7.0:
   version "1.18.0"
