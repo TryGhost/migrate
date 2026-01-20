@@ -1,4 +1,4 @@
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import string from '@tryghost/string';
 import processContent from './process-content.js';
 
@@ -75,8 +75,8 @@ const processAuthor = ({$author}) => {
 
 const processTags = ({$tags}) => {
     const tags = [];
-    $tags.each((i, tag) => {
-        let $tag = $(tag);
+    $tags.each((i) => {
+        let $tag = $tags.eq(i);
         tags.push({
             url: $tag.attr('href'),
             data: {
@@ -89,7 +89,7 @@ const processTags = ({$tags}) => {
 };
 
 const processFeatureImage = ({html, post, options}) => {
-    const $html = $.load(html, {
+    const $html = cheerio.load(html, {
         decodeEntities: false
     }, false);
 
@@ -126,18 +126,18 @@ const processFeatureImage = ({html, post, options}) => {
     }
 
     if (featured) {
-        post.data.feature_image = $(featured).attr('src');
-        post.data.feature_image_alt = $(featured).attr('alt') || null;
-        post.data.feature_image_caption = $(featured).parents('figure').find('figcaption').html() || null;
+        post.data.feature_image = $html(featured).attr('src');
+        post.data.feature_image_alt = $html(featured).attr('alt') || null;
+        post.data.feature_image_caption = $html(featured).parents('figure').find('figcaption').html() || null;
 
-        $(featured).parents('figure').remove();
+        $html(featured).parents('figure').remove();
     }
 
     return $html.html().trim();
 };
 
 export default ({name, html, globalUser, options}) => {
-    const $post = $.load(html, {
+    const $post = cheerio.load(html, {
         decodeEntities: false,
         scriptingEnabled: false
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced

@@ -1,4 +1,4 @@
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import SimpleDom from 'simple-dom';
 import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
 import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
@@ -29,7 +29,9 @@ const equivalentTitles = (title1, title2) => {
 };
 
 export default ({content, post}) => {
-    let $content = $(content);
+    // Load the content HTML to get a Cheerio instance we can use
+    const $ = cheerio.load(content.html(), {decodeEntities: false}, false);
+    let $content = $.root();
 
     // Detect if post is likely to be a comment. If so, set as draft and add tag
     // Based on being published, content having 1 paragraph, and having no images
