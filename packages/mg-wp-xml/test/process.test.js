@@ -1,6 +1,6 @@
 import path from 'node:path';
 import {promises as fs} from 'node:fs';
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import process, {processWPMeta} from '../lib/process.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
@@ -455,7 +455,7 @@ describe('Process', function () {
 
     test('Can read post_meta', async function () {
         const input = await readSync('has-meta.xml');
-        const $xml = $.load(input, {
+        const $xml = cheerio.load(input, {
             decodeEntities: false,
             xmlMode: true,
             lowerCaseTags: true
@@ -468,7 +468,7 @@ describe('Process', function () {
         });
 
         const post = posts[0];
-        const metaValues = await processWPMeta(post);
+        const metaValues = await processWPMeta($xml, post);
 
         expect(metaValues).toEqual({
             lorem1234: '433',

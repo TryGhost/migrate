@@ -1,30 +1,30 @@
 import {URL} from 'node:url';
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import {slugify} from '@tryghost/string';
 import errors from '@tryghost/errors';
 import MarkdownIt from 'markdown-it';
 import MgWpAPI from '@tryghost/mg-wp-api';
 import {isSerialized, unserialize} from 'php-serialize';
 
-const processUser = ($user) => {
-    const authorSlug = slugify($($user).children('wp\\:author_login').text());
+const processUser = ($xml, $user) => {
+    const authorSlug = slugify($xml($user).children('wp\\:author_login').text());
 
     return {
         url: authorSlug,
         data: {
             slug: authorSlug,
-            name: $($user).children('wp\\:author_display_name').text(),
-            email: $($user).children('wp\\:author_email').text()
+            name: $xml($user).children('wp\\:author_display_name').text(),
+            email: $xml($user).children('wp\\:author_email').text()
         }
     };
 };
 
-const processWPMeta = async ($post) => {
+const processWPMeta = async ($xml, $post) => {
     let metaData = {};
 
-    let postMeta = $($post).children('wp\\:postmeta').map(async (i, meta) => {
-        let key = $(meta).children('wp\\:meta_key').text();
-        let value = $(meta).children('wp\\:meta_value').text();
+    let postMeta = $xml($post).children('wp\\:postmeta').map(async (i, meta) => {
+        let key = $xml(meta).children('wp\\:meta_key').text();
+        let value = $xml(meta).children('wp\\:meta_value').text();
 
         try {
             if (isSerialized(value)) {
@@ -50,12 +50,12 @@ const processWPMeta = async ($post) => {
 
 // The feature images is not "connected" to the post, other than it's located
 // in the sibling `<item>` node.
-const processFeatureImage = ($post, attachments) => {
+const processFeatureImage = ($xml, $post, attachments) => {
     let thumbnailId = null;
 
-    $($post).find('wp\\:postmeta').each((i, row) => {
-        let key = $(row).find('wp\\:meta_key').text();
-        let val = $(row).find('wp\\:meta_value').text();
+    $xml($post).find('wp\\:postmeta').each((i, row) => {
+        let key = $xml(row).find('wp\\:meta_key').text();
+        let val = $xml(row).find('wp\\:meta_value').text();
 
         if (key === '_thumbnail_id') {
             thumbnailId = val;
@@ -71,7 +71,7 @@ const processFeatureImage = ($post, attachments) => {
     return attachmentData;
 };
 
-const processTags = ($wpTerms) => {
+const processTags = ($xml, $wpTerms) => {
     const categories = [];
     const tags = [];
 
@@ -86,20 +86,20 @@ const processTags = ($wpTerms) => {
 
     $wpTerms.each((i, taxonomy) => {
         // `category` takes priority and is use as the primary tag, so gets added to the list first
-        if ($(taxonomy).attr('domain') === 'category') {
+        if ($xml(taxonomy).attr('domain') === 'category') {
             categories.push({
-                url: `/tag/${$(taxonomy).attr('nicename')}`,
+                url: `/tag/${$xml(taxonomy).attr('nicename')}`,
                 data: {
-                    slug: $(taxonomy).attr('nicename').substring(0, 190),
-                    name: $(taxonomy).text().replace('&amp;', '&').substring(0, 190)
+                    slug: $xml(taxonomy).attr('nicename').substring(0, 190),
+                    name: $xml(taxonomy).text().replace('&amp;', '&').substring(0, 190)
                 }
             });
-        } else if (allowedTerms.includes($(taxonomy).attr('domain'))) {
+        } else if (allowedTerms.includes($xml(taxonomy).attr('domain'))) {
             tags.push({
-                url: `/tag/${$(taxonomy).attr('nicename')}`,
+                url: `/tag/${$xml(taxonomy).attr('nicename')}`,
                 data: {
-                    slug: $(taxonomy).attr('nicename').substring(0, 190),
-                    name: $(taxonomy).text().replace('&amp;', '&').substring(0, 190)
+                    slug: $xml(taxonomy).attr('nicename').substring(0, 190),
+                    name: $xml(taxonomy).text().replace('&amp;', '&').substring(0, 190)
                 }
             });
         }
@@ -146,7 +146,7 @@ const preProcessContent = async ({html, options}) => { // eslint-disable-line no
     // Join the separated lines
     html = splitIt.join('\n');
 
-    const $html = $.load(html, {
+    const $html = cheerio.load(html, {
         decodeEntities: false
     }, false);
 
@@ -154,8 +154,8 @@ const preProcessContent = async ({html, options}) => { // eslint-disable-line no
 
     // Remove empty link elements, typically HTML anchors
     $html('a').each((i, el) => {
-        if ($(el).html().length === 0) {
-            $(el).remove();
+        if ($html(el).html().length === 0) {
+            $html(el).remove();
         }
     });
 
@@ -182,32 +182,32 @@ const processHTMLContent = async (args) => {
     });
 };
 
-const processPost = async ($post, users, options) => {
+const processPost = async ($xml, $post, users, options) => {
     const {addTag, url, excerpt, excerptSelector, featureImageCaption} = options;
-    const postTypeVal = $($post).children('wp\\:post_type').text();
+    const postTypeVal = $xml($post).children('wp\\:post_type').text();
     const postType = (postTypeVal === 'page') ? 'page' : 'post';
-    const featureImage = processFeatureImage($post, options.attachments);
-    const authorSlug = slugify($($post).children('dc\\:creator').text());
+    const featureImage = processFeatureImage($xml, $post, options.attachments);
+    const authorSlug = slugify($xml($post).children('dc\\:creator').text());
 
     // WP XML only provides a published date, we let's use that all dates Ghost expects
-    const postDate = new Date($($post).children('pubDate').text());
+    const postDate = new Date($xml($post).children('pubdate').text());
 
     // This should result in an absolute URL addressable in a browser
-    let postUrl = $($post).children('link').text();
+    let postUrl = $xml($post).children('link').text();
     let parsedPostUrl = new URL(postUrl, url);
     postUrl = parsedPostUrl.href;
 
     // If you need <wp:postmeta> data, access it here
-    // const postMeta = await processWPMeta($post);
+    // const postMeta = await processWPMeta($xml, $post);
 
     const post = {
         url: postUrl,
         wpPostType: postTypeVal,
         data: {
-            slug: $($post).children('wp\\:post_name').text().replace(/(\.html)/i, ''),
-            title: stripHtml($($post).children('title').text().substring(0, 255)),
-            comment_id: $($post)?.find('wp\\:post_id')?.text() ?? null,
-            status: $($post).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
+            slug: $xml($post).children('wp\\:post_name').text().replace(/(\.html)/i, ''),
+            title: stripHtml($xml($post).children('title').text().substring(0, 255)),
+            comment_id: $xml($post)?.find('wp\\:post_id')?.text() ?? null,
+            status: $xml($post).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
             published_at: postDate,
             created_at: postDate,
             updated_at: postDate,
@@ -225,7 +225,7 @@ const processPost = async ($post, users, options) => {
     }
 
     post.data.html = await preProcessContent({
-        html: $($post).children('content\\:encoded').text(),
+        html: $xml($post).children('content\\:encoded').text(),
         options
     });
 
@@ -236,7 +236,7 @@ const processPost = async ($post, users, options) => {
     post.data.html = mdParser.render(post.data.html);
 
     if (excerpt && !excerptSelector) {
-        const excerptText = $($post).children('excerpt\\:encoded').text();
+        const excerptText = $xml($post).children('excerpt\\:encoded').text();
         post.data.custom_excerpt = MgWpAPI.process.processExcerpt(excerptText);
     } else if (!excerpt && excerptSelector) {
         post.data.custom_excerpt = MgWpAPI.process.processExcerpt(post.data.html, excerptSelector);
@@ -249,8 +249,8 @@ const processPost = async ($post, users, options) => {
         options: options
     });
 
-    if ($($post).children('category').length >= 1) {
-        post.data.tags = processTags($($post).children('category'));
+    if ($xml($post).children('category').length >= 1) {
+        post.data.tags = processTags($xml, $xml($post).children('category'));
     }
 
     if (addTag) {
@@ -282,7 +282,7 @@ const processPost = async ($post, users, options) => {
     });
 
     if (!post.data.author) {
-        if ($($post).children('dc\\:creator').length >= 1) {
+        if ($xml($post).children('dc\\:creator').length >= 1) {
             post.data.author = {
                 url: authorSlug,
                 data: {
@@ -306,7 +306,7 @@ const processPosts = async ($xml, users, options) => {
     let postsOutput = [];
 
     let posts = $xml('item').map(async (i, post) => {
-        const postType = $(post).children('wp\\:post_type').text();
+        const postType = $xml(post).children('wp\\:post_type').text();
 
         let allowedTypes = ['post', 'page'];
 
@@ -315,7 +315,7 @@ const processPosts = async ($xml, users, options) => {
         }
 
         if (allowedTypes.includes(postType)) {
-            postsOutput.push(await processPost(post, users, options));
+            postsOutput.push(await processPost($xml, post, users, options));
         }
     }).get();
 
@@ -324,18 +324,18 @@ const processPosts = async ($xml, users, options) => {
     return postsOutput;
 };
 
-const processAttachment = async ($post) => {
-    let attachmentKey = $($post).find('wp\\:post_id').text();
-    let attachmentUrl = $($post).find('wp\\:attachment_url').text() || null;
-    let attachmentDesc = $($post).find('content\\:encoded').text() || null;
-    let attachmentTitle = $($post).find('title').text() || null;
+const processAttachment = async ($xml, $post) => {
+    let attachmentKey = $xml($post).find('wp\\:post_id').text();
+    let attachmentUrl = $xml($post).find('wp\\:attachment_url').text() || null;
+    let attachmentDesc = $xml($post).find('content\\:encoded').text() || null;
+    let attachmentTitle = $xml($post).find('title').text() || null;
     let attachmentAlt = null;
 
-    let meta = await processWPMeta($post);
+    let meta = await processWPMeta($xml, $post);
 
-    $($post).find('wp\\:postmeta').each((i, row) => {
-        let metaKey = $(row).find('wp\\:meta_key').text();
-        let metaVal = $(row).find('wp\\:meta_value').text();
+    $xml($post).find('wp\\:postmeta').each((i, row) => {
+        let metaKey = $xml(row).find('wp\\:meta_key').text();
+        let metaVal = $xml(row).find('wp\\:meta_value').text();
 
         if (metaKey === '_wp_attachment_image_alt') {
             attachmentAlt = metaVal;
@@ -357,10 +357,10 @@ const processAttachments = async ($xml, options) => {
     let attachmentsOutput = [];
 
     let posts = $xml('item').map(async (i, post) => {
-        const postType = $(post).children('wp\\:post_type').text();
+        const postType = $xml(post).children('wp\\:post_type').text();
 
         if (['attachment'].includes(postType)) {
-            attachmentsOutput.push(await processAttachment(post, options));
+            attachmentsOutput.push(await processAttachment($xml, post, options));
         }
     }).get();
 
@@ -373,7 +373,7 @@ const processUsers = ($xml) => {
     const usersOutput = [];
 
     $xml('wp\\:author').each((i, user) => {
-        usersOutput.push(processUser(user));
+        usersOutput.push(processUser($xml, user));
     });
 
     return usersOutput;
@@ -390,7 +390,7 @@ const all = async (input, {options}) => {
         return new errors.NoContentError({message: 'Input file is empty'});
     }
 
-    const $xml = $.load(input, {
+    const $xml = cheerio.load(input, {
         decodeEntities: false,
         xmlMode: true,
         scriptingEnabled: false,

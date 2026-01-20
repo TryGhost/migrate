@@ -1,12 +1,12 @@
 import {lstatSync} from 'node:fs';
 import {promises as fs} from 'node:fs';
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import fg from 'fast-glob';
 
 const readFile = async (path) => {
     const input = await fs.readFile(path, 'utf-8');
 
-    const $xml = $.load(input, {
+    const $xml = cheerio.load(input, {
         decodeEntities: false,
         xmlMode: true,
         lowerCaseTags: true
