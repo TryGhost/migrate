@@ -1,7 +1,7 @@
 import {promises as fs} from 'node:fs';
 import {join, basename} from 'node:path';
 import url from 'node:url';
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import errors from '@tryghost/errors';
 import SimpleDom from 'simple-dom';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
@@ -116,42 +116,42 @@ const processContent = (post, siteUrl, options) => {
     }
 
     // As there is HTML, pass it to Cheerio inside a `<div class="migrate-substack-wrapper"></div>` element so we have a global wrapper to target later on
-    const $html = $.load(`<div class="migrate-substack-wrapper">${html}</div>`, {
+    const $html = cheerio.load(`<div class="migrate-substack-wrapper">${html}</div>`, {
         decodeEntities: false,
         scriptingEnabled: false
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // Change paywall card to comment
     $html('.paywall-jump').each((i, el) => {
-        $(el).replaceWith('<!--members-only-->');
+        $html(el).replaceWith('<!--members-only-->');
     });
 
     // Empty text elements are commonplace and are not needed
     $html('p').each((i, el) => {
-        let content = $(el).html().trim();
+        let content = $html(el).html().trim();
 
         if (content.length === 0) {
-            $(el).remove();
+            $html(el).remove();
         }
     });
 
     // Wrap these in a HTML card so they can be handled by publishers as needed
     $html('div.latex-rendered').each((i, el) => {
-        $(el).before('<!--kg-card-begin: html-->');
-        $(el).after('<!--kg-card-end: html-->');
+        $html(el).before('<!--kg-card-begin: html-->');
+        $html(el).after('<!--kg-card-end: html-->');
     });
 
     // We don't currently handle these, so remove them to clean up the document
     $html('div.native-video-embed').each((i, el) => {
-        $(el).remove();
+        $html(el).remove();
     });
 
     $html('div.poll-embed').each((i, el) => {
-        $(el).remove();
+        $html(el).remove();
     });
 
     $html('.image3').each((i, el) => {
-        const attrs = $(el).attr('data-attrs');
+        const attrs = $html(el).attr('data-attrs');
         const attrsObj = JSON.parse(attrs);
 
         let cardOpts = {
@@ -163,7 +163,7 @@ const processContent = (post, siteUrl, options) => {
             }
         };
 
-        $(el).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
+        $html(el).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
     // We use the `'og:image` as the feature image. If the first item in the content is an image and is the same as the `og:image`, remove it
@@ -174,9 +174,9 @@ const processContent = (post, siteUrl, options) => {
 
         let firstElement = $html('.migrate-substack-wrapper *').first();
 
-        if (firstElement.tagName === 'img' || ($(firstElement).get(0) && $(firstElement).get(0).name === 'img') || $(firstElement).find('img').length) {
-            let theElementItself = (firstElement.tagName === 'img' || $(firstElement).get(0).name === 'img') ? firstElement : $(firstElement).find('img');
-            let firstImgSrc = $(theElementItself).attr('src');
+        if (firstElement.tagName === 'img' || ($html(firstElement).get(0) && $html(firstElement).get(0).name === 'img') || $html(firstElement).find('img').length) {
+            let theElementItself = (firstElement.tagName === 'img' || $html(firstElement).get(0).name === 'img') ? firstElement : $html(firstElement).find('img');
+            let firstImgSrc = $html(theElementItself).attr('src');
 
             if (firstImgSrc.length > 0) {
                 let unsizedFirstSrc = getUnsizedImageName(firstImgSrc);
@@ -185,11 +185,11 @@ const processContent = (post, siteUrl, options) => {
                 let unsizedOgSrc = getUnsizedImageName(ogImgSrc);
 
                 if (unsizedFirstSrc === unsizedOgSrc) {
-                    if ($(firstElement).find('figcaption').length) {
-                        post.data.feature_image_caption = $(firstElement).find('figcaption').html();
+                    if ($html(firstElement).find('figcaption').length) {
+                        post.data.feature_image_caption = $html(firstElement).find('figcaption').html();
                     }
 
-                    $(firstElement).remove();
+                    $html(firstElement).remove();
                 }
             }
         }
@@ -198,9 +198,9 @@ const processContent = (post, siteUrl, options) => {
     if (useFirstImage && !post.data.feature_image) {
         let firstElement = $html('.migrate-substack-wrapper *').first();
 
-        if (firstElement.tagName === 'img' || ($(firstElement).get(0) && $(firstElement).get(0).name === 'img') || $(firstElement).find('img').length) {
-            let theElementItself = (firstElement.tagName === 'img' || $(firstElement).get(0).name === 'img') ? firstElement : $(firstElement).find('img');
-            let firstImgSrc = $(theElementItself).attr('src');
+        if (firstElement.tagName === 'img' || ($html(firstElement).get(0) && $html(firstElement).get(0).name === 'img') || $html(firstElement).find('img').length) {
+            let theElementItself = (firstElement.tagName === 'img' || $html(firstElement).get(0).name === 'img') ? firstElement : $html(firstElement).find('img');
+            let firstImgSrc = $html(theElementItself).attr('src');
 
             if (firstImgSrc.length > 0) {
                 let unsizedFirstSrc = largeImageUrl(firstImgSrc);
@@ -208,11 +208,11 @@ const processContent = (post, siteUrl, options) => {
                 if (unsizedFirstSrc) {
                     post.data.feature_image = unsizedFirstSrc;
 
-                    if ($(firstElement).find('figcaption').length) {
-                        post.data.feature_image_caption = $(firstElement).find('figcaption').html();
+                    if ($html(firstElement).find('figcaption').length) {
+                        post.data.feature_image_caption = $html(firstElement).find('figcaption').html();
                     }
 
-                    $(firstElement).remove();
+                    $html(firstElement).remove();
                 }
             }
         }
@@ -248,7 +248,7 @@ const processContent = (post, siteUrl, options) => {
     }
 
     $html('div.tweet').each((i, el) => {
-        let src = $(el).children('a').attr('href');
+        let src = $html(el).children('a').attr('href');
         let parsed = url.parse(src);
 
         if (parsed.search) {
@@ -257,11 +257,11 @@ const processContent = (post, siteUrl, options) => {
         }
         src = url.format(parsed, {search: false});
 
-        let tweetText = $(el)?.find('.tweet-text')?.html()?.replace(/(?:\r\n|\r|\n)/g, '<br>') ?? false;
-        let tweetAuthorName = $(el)?.find('.tweet-author-name')?.html()?.trim() ?? false;
-        let tweetAuthorHandle = $(el)?.find('.tweet-author-handle')?.html()?.trim() ?? false;
-        let tweetDateTime = $(el)?.find('.tweet-date')?.text()?.trim() ?? false;
-        let tweetURL = $(el)?.find('.tweet-link-top')?.attr('href') ?? false;
+        let tweetText = $html(el)?.find('.tweet-text')?.html()?.replace(/(?:\r\n|\r|\n)/g, '<br>') ?? false;
+        let tweetAuthorName = $html(el)?.find('.tweet-author-name')?.html()?.trim() ?? false;
+        let tweetAuthorHandle = $html(el)?.find('.tweet-author-handle')?.html()?.trim() ?? false;
+        let tweetDateTime = $html(el)?.find('.tweet-date')?.text()?.trim() ?? false;
+        let tweetURL = $html(el)?.find('.tweet-link-top')?.attr('href') ?? false;
 
         let theHtml = [];
 
@@ -289,21 +289,21 @@ const processContent = (post, siteUrl, options) => {
 
         theHtml.push(`</a>`);
 
-        let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
-        let $blockquote = $(`<blockquote class="twitter-tweet">${theHtml.join(' ')}</blockquote>`);
-        let $anchor = $(`<a href="${src}"></a>`);
-        let $script = $('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
+        let $figure = $html('<figure class="kg-card kg-embed-card"></figure>');
+        let $blockquote = $html(`<blockquote class="twitter-tweet">${theHtml.join(' ')}</blockquote>`);
+        let $anchor = $html(`<a href="${src}"></a>`);
+        let $script = $html('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
 
         $blockquote.append($anchor);
 
         $figure.append($blockquote);
         $figure.append($script);
 
-        $(el).replaceWith($figure);
+        $html(el).replaceWith($figure);
     });
 
     $html('.image-gallery-embed').each((i, el) => {
-        const attrs = $(el).attr('data-attrs');
+        const attrs = $html(el).attr('data-attrs');
         const attrsObj = JSON.parse(attrs);
 
         let items = [];
@@ -334,20 +334,20 @@ const processContent = (post, siteUrl, options) => {
             }
         };
 
-        $(el).replaceWith(serializer.serialize(galleryCard.render(cardOpts)));
+        $html(el).replaceWith(serializer.serialize(galleryCard.render(cardOpts)));
     });
 
     $html('[class*="ImageGallery-module__imageGallery"]').each((i, el) => {
-        const $row = $(el).find('[class*="ImageGallery-module__imageRow"]');
-        const caption = $(el).find('figcaption').html();
+        const $row = $html(el).find('[class*="ImageGallery-module__imageRow"]');
+        const caption = $html(el).find('figcaption').html();
 
         let items = [];
 
         $row.each((ii, row) => {
-            const $pictures = $(row).find('picture');
+            const $pictures = $html(row).find('picture');
 
             $pictures.each((iii, picture) => {
-                const $img = $(picture).find('img');
+                const $img = $html(picture).find('img');
                 const src = largestSrc($img);
                 const dimensions = getImageDimensions(src);
 
@@ -375,14 +375,14 @@ const processContent = (post, siteUrl, options) => {
             }
         };
 
-        $(el).replaceWith(serializer.serialize(galleryCard.render(cardOpts)));
+        $html(el).replaceWith(serializer.serialize(galleryCard.render(cardOpts)));
     });
 
     $html('.captioned-image-container').each((i, div) => {
-        const imgAlt = $(div).find('img[alt]').attr('alt') || '';
-        const linkHref = $(div).find('a.image-link').attr('href') || false;
-        const imgCaption = $(div).find('figcaption').html() || false;
-        const imageSrc = largestSrc($(div).find('img'));
+        const imgAlt = $html(div).find('img[alt]').attr('alt') || '';
+        const linkHref = $html(div).find('a.image-link').attr('href') || false;
+        const imgCaption = $html(div).find('figcaption').html() || false;
+        const imageSrc = largestSrc($html(div).find('img'));
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
@@ -397,13 +397,13 @@ const processContent = (post, siteUrl, options) => {
             cardOpts.payload.href = linkHref;
         }
 
-        $(div).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
+        $html(div).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
     $html('.image-link').each((i, anchor) => {
-        const imgAlt = $(anchor).find('img[alt]').attr('alt') || '';
-        const linkHref = $(anchor).attr('href');
-        const imageSrc = largestSrc($(anchor).find('img'));
+        const imgAlt = $html(anchor).find('img[alt]').attr('alt') || '';
+        const linkHref = $html(anchor).attr('href');
+        const imageSrc = largestSrc($html(anchor).find('img'));
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
@@ -419,13 +419,13 @@ const processContent = (post, siteUrl, options) => {
             cardOpts.payload.href = linkHref;
         }
 
-        $(anchor).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
+        $html(anchor).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
     $html('.file-embed-wrapper').each((i, el) => {
-        const fileSrc = $(el).find('.file-embed-button').attr('href');
-        const fileTitle = $(el).find('.file-embed-details-h1').text();
-        const fileDetails = $(el).find('.file-embed-details-h2').text();
+        const fileSrc = $html(el).find('.file-embed-button').attr('href');
+        const fileTitle = $html(el).find('.file-embed-details-h1').text();
+        const fileDetails = $html(el).find('.file-embed-details-h2').text();
 
         const fileSizeMatch = fileDetails.match(/([\d.]+)([KMGT]B)/i);
         let fileSizeBytes = 0;
@@ -462,15 +462,15 @@ const processContent = (post, siteUrl, options) => {
             }
         };
 
-        $(el).replaceWith(serializer.serialize(fileCard.render(cardOpts)));
+        $html(el).replaceWith(serializer.serialize(fileCard.render(cardOpts)));
     });
 
     $html('.comment').each((i, el) => {
-        $(el).remove();
+        $html(el).remove();
     });
 
     $html('.digest-post-embed').each((i, el) => {
-        const attrsRaw = $(el).attr('data-attrs');
+        const attrsRaw = $html(el).attr('data-attrs');
 
         let attrs;
 
@@ -508,37 +508,37 @@ const processContent = (post, siteUrl, options) => {
 
         const bookmarkHtml = serializer.serialize(bookmarkCard.render(cardOpts));
 
-        $(el).replaceWith(bookmarkHtml);
+        $html(el).replaceWith(bookmarkHtml);
     });
 
     $html('a > style').each((i, style) => {
-        $(style).remove();
+        $html(style).remove();
     });
 
     $html('ul, ol').each((i, list) => {
-        if ($(list).find('img, div, figure, blockquote, .button-wrapper').length) {
-            $(list).before('<!--kg-card-begin: html-->');
-            $(list).after('<!--kg-card-end: html-->');
+        if ($html(list).find('img, div, figure, blockquote, .button-wrapper').length) {
+            $html(list).before('<!--kg-card-begin: html-->');
+            $html(list).after('<!--kg-card-end: html-->');
         }
     });
 
     // Remove Substack share buttons
     $html('p.button-wrapper').each((i, button) => {
-        let shareLinks = $(button).children('a.button');
+        let shareLinks = $html(button).children('a.button');
         if (shareLinks.length === 1 && siteUrl) {
-            let shareLink = $(shareLinks).get(0);
-            let src = $(shareLink).attr('href');
+            let shareLink = $html(shareLinks).get(0);
+            let src = $html(shareLink).attr('href');
             let parsed = url.parse(src);
 
             // If it's a share button, there's no use for it and completely remove the button
             if (parsed.search && parsed.search.indexOf('action=share') >= 0) {
-                $(button).remove();
+                $html(button).remove();
                 return;
             }
 
             // If it's a gift button, there's no use for it and completely remove the button
             if (parsed.search && parsed.search.indexOf('gift=true') >= 0) {
-                $(button).remove();
+                $html(button).remove();
                 return;
             }
         }
@@ -546,12 +546,12 @@ const processContent = (post, siteUrl, options) => {
 
     // Update button elements
     $html('p.button-wrapper').each((i, button) => {
-        let buttons = $(button).children('a.button');
+        let buttons = $html(button).children('a.button');
         if (buttons.length === 1 && siteUrl) {
             let siteRegex = new RegExp(`^(?:${siteUrl}(?:\\/?)(?:p\\/)?)([a-zA-Z-_\\d]*)(?:\\/?)`, 'gi');
-            let buttonLink = $(buttons).get(0);
-            let buttonHref = $(buttonLink).attr('href');
-            let buttonText = $(buttonLink).text();
+            let buttonLink = $html(buttons).get(0);
+            let buttonHref = $html(buttonLink).attr('href');
+            let buttonText = $html(buttonLink).text();
             let parsed = url.parse(buttonHref);
 
             // remove possible query params
@@ -571,63 +571,63 @@ const processContent = (post, siteUrl, options) => {
                 buttonHref = options.commentLink || '#ghost-comments-root';
 
                 if (!options.comments) {
-                    $(button).remove();
+                    $html(button).remove();
                     return;
                 }
             }
 
-            $(button).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+            $html(button).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
         }
     });
 
     // TODO: this should be a parser plugin
     // Wrap nested lists in HTML card
     $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {
-        let $parent = $(nestedList).parentsUntil('ul, ol').parent();
+        let $parent = $html(nestedList).parentsUntil('ul, ol').parent();
         $parent.before('<!--kg-card-begin: html-->');
         $parent.after('<!--kg-card-end: html-->');
     });
 
     // Handle footnotes
-    let footnotesMarkup = $(`<div class="footnotes"><hr><ol></ol></div>`);
+    let footnotesMarkup = $html(`<div class="footnotes"><hr><ol></ol></div>`);
     let footnotesCount = 0;
     $html('.footnote').each((i, el) => {
-        let footnoteBodyAnchor = $(el).find('a').attr('href');
+        let footnoteBodyAnchor = $html(el).find('a').attr('href');
 
         let footnoteID = null;
-        if ($(el).attr('id')) {
-            footnoteID = $(el).attr('id');
+        if ($html(el).attr('id')) {
+            footnoteID = $html(el).attr('id');
         } else {
-            footnoteID = $(el).find('a').attr('id');
+            footnoteID = $html(el).find('a').attr('id');
         }
 
         let footnoteNumber = footnoteID.replace('footnote-', '');
-        let footnoteContent = $(el).find('.footnote-content');
+        let footnoteContent = $html(el).find('.footnote-content');
 
         footnoteContent.find('p').last().append(` <a href="${footnoteBodyAnchor}" title="Jump back to footnote ${footnoteNumber} in the text.">↩</a>`);
         footnotesMarkup.find('ol').append(`<li id="${footnoteID}">${footnoteContent.html()}</li>`);
-        $(el).remove();
+        $html(el).remove();
 
         footnotesCount = footnotesCount + 1;
     });
 
     if (footnotesCount > 0) {
-        let footnotedHTML = $.html($(footnotesMarkup));
+        let footnotedHTML = $html.html($html(footnotesMarkup));
         $html('.migrate-substack-wrapper').append(`<!--kg-card-begin: html-->${footnotedHTML}<!--kg-card-end: html-->`);
     }
 
     // Wrap content that has footnote anchors in HTML tags to retain the footnote jump anchor
     $html('p, ul, ol').each((i, el) => {
-        if ($(el).find('a.footnote-anchor').length > 0) {
-            $(el).before('<!--kg-card-begin: html-->');
-            $(el).after('<!--kg-card-end: html-->');
+        if ($html(el).find('a.footnote-anchor').length > 0) {
+            $html(el).before('<!--kg-card-begin: html-->');
+            $html(el).after('<!--kg-card-end: html-->');
         }
     });
 
     // Replace any subscribe link on the same domain with a specific link
     if (options.subscribeLink) {
         $html('a').each((i, anchor) => {
-            let href = $(anchor).attr('href');
+            let href = $html(anchor).attr('href');
             let linkRegex = new RegExp(`^(${siteUrl})?(/subscribe)(.*)`, 'gi');
 
             if (!href) {
@@ -637,7 +637,7 @@ const processContent = (post, siteUrl, options) => {
             let matches = href.replace(linkRegex, '$2');
 
             if (matches === '/subscribe') {
-                $(anchor).attr('href', options.subscribeLink);
+                $html(anchor).attr('href', options.subscribeLink);
             }
         });
     }
@@ -645,17 +645,17 @@ const processContent = (post, siteUrl, options) => {
     // Replace any signup forms with a Portal signup button
     if (options.subscribeLink) {
         $html('.subscription-widget-wrap, .subscription-widget-wrap-editor').each((i, div) => {
-            const hasForm = $(div).find('form');
+            const hasForm = $html(div).find('form');
 
             if (hasForm.length) {
-                const buttonText = $(div).find('form input[type="submit"]').attr('value');
-                $(div).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+                const buttonText = $html(div).find('form input[type="submit"]').attr('value');
+                $html(div).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
             }
         });
     }
 
     $html('.embedded-post-wrap').each((i, div) => {
-        const attrs = $(div).attr('data-attrs') || false;
+        const attrs = $html(div).attr('data-attrs') || false;
 
         if (!attrs) {
             return;
@@ -670,20 +670,20 @@ const processContent = (post, siteUrl, options) => {
         let bookmarkTitle = bookmarkJSON.title;
         let bookmarkContent = bookmarkJSON.truncated_body_text;
 
-        let $bookmark = $('<figure class="kg-card kg-bookmark-card"></figure>');
-        let $link = $(`<a class="kg-bookmark-container" href="${bookmarkLink}"></a>`);
-        let $content = $(`<div class="kg-bookmark-content"><div class="kg-bookmark-title">${bookmarkTitle}</div><div class="kg-bookmark-description">${bookmarkContent}</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="${bookmarkPubIcon}"><span class="kg-bookmark-author">${bookmarkPubName}</span></div></div>`);
+        let $bookmark = $html('<figure class="kg-card kg-bookmark-card"></figure>');
+        let $link = $html(`<a class="kg-bookmark-container" href="${bookmarkLink}"></a>`);
+        let $content = $html(`<div class="kg-bookmark-content"><div class="kg-bookmark-title">${bookmarkTitle}</div><div class="kg-bookmark-description">${bookmarkContent}</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="${bookmarkPubIcon}"><span class="kg-bookmark-author">${bookmarkPubName}</span></div></div>`);
 
         $link.append($content);
         $bookmark.append($link);
 
-        $(div).replaceWith($bookmark);
+        $html(div).replaceWith($bookmark);
         $bookmark.before('<!--kg-card-begin: html-->');
         $bookmark.after('<!--kg-card-end: html-->');
     });
 
     $html('div.instagram').each((i, el) => {
-        let src = $(el).find('a.instagram-image').attr('href');
+        let src = $html(el).find('a.instagram-image').attr('href');
 
         if (!src) {
             return;
@@ -697,9 +697,9 @@ const processContent = (post, siteUrl, options) => {
         }
         src = url.format(parsed, {search: false});
 
-        let $iframe = $('<iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;"></iframe>');
-        let $script = $('<script async="" src="//www.instagram.com/embed.js"></script>');
-        let $figure = $('<figure class="instagram"></figure>');
+        let $iframe = $html('<iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;"></iframe>');
+        let $script = $html('<script async="" src="//www.instagram.com/embed.js"></script>');
+        let $figure = $html('<figure class="instagram"></figure>');
 
         // Trim the trailing slash from src if it exists
         if (src.endsWith('/')) {
@@ -710,20 +710,20 @@ const processContent = (post, siteUrl, options) => {
         $figure.append($iframe);
         $figure.append($script);
 
-        $(el).replaceWith($figure);
+        $html(el).replaceWith($figure);
     });
 
     // For each image and link, alter the path to remove cropping & sizing for image paths
     $html('img[src], a[href]').each((i, el) => {
-        const src = $(el).attr('src');
-        const href = $(el).attr('href');
+        const src = $html(el).attr('src');
+        const href = $html(el).attr('href');
 
         if (src) {
-            $(el).attr('src', largeImageUrl(src));
+            $html(el).attr('src', largeImageUrl(src));
         }
 
         if (href) {
-            $(el).attr('href', largeImageUrl(href));
+            $html(el).attr('href', largeImageUrl(href));
         }
     });
 
