@@ -2,7 +2,7 @@ import url from 'node:url';
 import {readFileSync} from 'node:fs';
 import {basename} from 'node:path';
 import _ from 'lodash';
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import Shortcodes from '@tryghost/mg-shortcodes';
 import {slugify} from '@tryghost/string';
@@ -149,12 +149,12 @@ const processExcerpt = (html, excerptSelector = false) => {
     // Set the text to convert to either be the supplied string or found text in the supplied HTML chunk
     if (excerptSelector) {
         // TODO: this should be possible by using a pseudo selector as a passed `excerptSelector`, e. g. `h2.excerpt:first-of-type`,
-        const $html = $.load(html, {
+        const $excerpt = cheerio.load(html, {
             decodeEntities: false,
             scriptingEnabled: false
         }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
-        excerptText = $html(excerptSelector).first().html();
+        excerptText = $excerpt(excerptSelector).first().html();
     } else {
         excerptText = html;
     }
@@ -216,22 +216,22 @@ const processShortcodes = async ({html, options}) => {
             return '';
         }
 
-        const $html = $.load(content, {
+        const $caption = cheerio.load(content, {
             decodeEntities: false,
             scriptingEnabled: false
         }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
-        let theImageSrc = $html('img').attr('src') ?? '';
-        let theImageWidth = $html('img').attr('width') ?? '';
-        let theImageHeight = $html('img').attr('height') ?? '';
-        let theImageAlt = $html('img').attr('alt') ?? '';
-        let theImageTitle = $html('img').attr('title') ?? '';
+        let theImageSrc = $caption('img').attr('src') ?? '';
+        let theImageWidth = $caption('img').attr('width') ?? '';
+        let theImageHeight = $caption('img').attr('height') ?? '';
+        let theImageAlt = $caption('img').attr('alt') ?? '';
+        let theImageTitle = $caption('img').attr('title') ?? '';
 
         // Convert $ to entity
         theImageAlt = theImageAlt.replace(/\$/gm, '&#36;');
         theImageTitle = theImageTitle.replace(/\$/gm, '&#36;');
 
-        let theCaption = $html.text().trim();
+        let theCaption = $caption.text().trim();
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
@@ -421,7 +421,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         return `<!--kg-card-begin: html-->${html}<!--kg-card-end: html-->`;
     }
 
-    const $html = $.load(html, {
+    const $html = cheerio.load(html, {
         decodeEntities: false,
         scriptingEnabled: false
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
@@ -430,16 +430,16 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     if (featureImageSrc) {
         let firstElement = $html('*').first();
 
-        if (firstElement.tagName === 'img' || $(firstElement).find('img').length) {
-            let theElementItself = (firstElement.tagName === 'img') ? firstElement : $(firstElement).find('img');
+        if (firstElement.tagName === 'img' || $html(firstElement).find('img').length) {
+            let theElementItself = (firstElement.tagName === 'img') ? firstElement : $html(firstElement).find('img');
 
-            if ($(theElementItself).attr('src')) {
+            if ($html(theElementItself).attr('src')) {
                 // Ensure the feature image and first image both are HTTPS with no size attributes
-                let imgSrcNoSize = $(theElementItself).attr('src').replace('http://', 'https://').replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
+                let imgSrcNoSize = $html(theElementItself).attr('src').replace('http://', 'https://').replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
                 let featureImageSrcNoSize = featureImageSrc.replace('http://', 'https://').replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
 
                 if (featureImageSrcNoSize === imgSrcNoSize) {
-                    $(firstElement).remove();
+                    $html(firstElement).remove();
                 }
             }
         }
@@ -447,7 +447,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     if (options.removeSelectors) {
         $html(options.removeSelectors).each((i, el) => {
-            $(el).remove();
+            $html(el).remove();
         });
     }
 
@@ -455,74 +455,74 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     $html('p > script[src="https://platform.twitter.com/widgets.js"]').remove();
 
     $html('#toc_container').each((i, toc) => {
-        $(toc).remove();
+        $html(toc).remove();
     });
 
     // <style> blocks don't belong in content - codeinjection_head is the place for these
     $html('style').each((i, el) => {
-        $(el).remove();
+        $html(el).remove();
     });
 
     if (excerptSelector) {
         $html(excerptSelector).first().each((i, excerpt) => {
-            $(excerpt).remove();
+            $html(excerpt).remove();
         });
     }
 
     // Basic text cleanup
     // @TODO: Expand on this
     $html('[style="font-weight: 400;"], [style="font-weight:400;"], [style="font-weight: 400"], [style="font-weight:400"]').each((i, el) => {
-        $(el).removeAttr('style');
+        $html(el).removeAttr('style');
     });
 
     // Normalize image elements
     $html('.wp-block-jetpack-tiled-gallery').each((i, gal) => {
-        $(gal).replaceWith($(gal).html());
+        $html(gal).replaceWith($html(gal).html());
     });
 
     $html('.tiled-gallery__gallery').each((i, gal) => {
-        $(gal).replaceWith($(gal).html());
+        $html(gal).replaceWith($html(gal).html());
     });
 
     $html('.tiled-gallery__row').each((i, gal) => {
-        $(gal).replaceWith($(gal).html());
+        $html(gal).replaceWith($html(gal).html());
     });
 
     $html('.tiled-gallery__col').each((i, gal) => {
-        $(gal).replaceWith($(gal).html());
+        $html(gal).replaceWith($html(gal).html());
     });
 
     $html('.tiled-gallery__item').each((i, gal) => {
-        $(gal).removeAttr('class');
+        $html(gal).removeAttr('class');
     });
 
     // Remove duplicates images in <noscript> tags that have the same src
     $html('noscript').each((i, el) => {
         if (el?.prev?.name === 'img') {
             const prevImgSrc = el.prev.attribs['data-src'] ?? el.prev.attribs.src;
-            const noScriptImgSrc = $(el).find('img').attr('src');
+            const noScriptImgSrc = $html(el).find('img').attr('src');
 
             const updatedPrevImgSrc = largerSrc(wpCDNToLocal(prevImgSrc));
             const updatedNoScriptImgSrc = largerSrc(wpCDNToLocal(noScriptImgSrc));
 
             if (updatedPrevImgSrc === updatedNoScriptImgSrc) {
-                $(el).remove();
+                $html(el).remove();
             }
         }
     });
 
     $html('div.wp-caption').each((i, el) => {
-        const hasImage = $(el).find('img').length > 0;
+        const hasImage = $html(el).find('img').length > 0;
 
         if (!hasImage) {
             return;
         }
 
-        const imgSrc = $(el).find('img').attr('src');
-        const imgAlt = $(el).find('img').attr('alt');
+        const imgSrc = $html(el).find('img').attr('src');
+        const imgAlt = $html(el).find('img').attr('alt');
 
-        const hasCaption = $(el).find('.wp-caption-text').length > 0;
-        const imgCaption = hasCaption ? $(el).find('.wp-caption-text').text() : '';
+        const hasCaption = $html(el).find('.wp-caption-text').length > 0;
+        const imgCaption = hasCaption ? $html(el).find('.wp-caption-text').text() : '';
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
@@ -537,43 +537,43 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             cardOpts.payload.caption = imgCaption;
         }
 
-        $(el).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
+        $html(el).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
     });
 
     $html('img').each((i, img) => {
-        $(img).removeAttr('decoding');
-        $(img).removeAttr('data-id');
-        $(img).removeAttr('data-link');
-        $(img).removeAttr('data-url');
-        $(img).removeAttr('data-amp-layout');
+        $html(img).removeAttr('decoding');
+        $html(img).removeAttr('data-id');
+        $html(img).removeAttr('data-link');
+        $html(img).removeAttr('data-url');
+        $html(img).removeAttr('data-amp-layout');
 
-        if ($(img).attr('data-width')) {
-            $(img).attr('width', $(img).attr('data-width'));
-            $(img).removeAttr('data-width');
+        if ($html(img).attr('data-width')) {
+            $html(img).attr('width', $html(img).attr('data-width'));
+            $html(img).removeAttr('data-width');
         }
 
-        if ($(img).attr('data-height')) {
-            $(img).attr('height', $(img).attr('data-height'));
-            $(img).removeAttr('data-height');
+        if ($html(img).attr('data-height')) {
+            $html(img).attr('height', $html(img).attr('data-height'));
+            $html(img).removeAttr('data-height');
         }
 
-        const nonCDNSrc = wpCDNToLocal($(img).attr('src'));
-        $(img).attr('src', nonCDNSrc);
+        const nonCDNSrc = wpCDNToLocal($html(img).attr('src'));
+        $html(img).attr('src', nonCDNSrc);
     });
 
     // (Some) WordPress renders gifs a different way. They use an `img` tag with a `src` for a still image,
     // and a `data-gif` attribute to reference the actual gif. We need `src` to be the actual gif.
     $html('img[data-gif]').each((i, gif) => {
-        let gifSrc = $(gif).attr('data-gif');
-        $(gif).removeAttr('data-gif');
-        $(gif).attr('src', gifSrc);
+        let gifSrc = $html(gif).attr('data-gif');
+        $html(gif).removeAttr('data-gif');
+        $html(gif).attr('src', gifSrc);
     });
 
     // Likewise some images are lazy-loaded using JavaScript & `data-src` attributes
     $html('img[data-src]').each((i, img) => {
-        let dataSrc = $(img).attr('data-src');
-        $(img).removeAttr('data-src');
-        $(img).attr('src', dataSrc);
+        let dataSrc = $html(img).attr('data-src');
+        $html(img).removeAttr('data-src');
+        $html(img).attr('src', dataSrc);
     });
 
     let libsynPodcasts = $html('iframe[src*="libsyn.com/embed/"]').map(async (i, el) => {
@@ -581,7 +581,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             return;
         }
 
-        let iframeSrc = $(el).attr('src');
+        let iframeSrc = $html(el).attr('src');
         let libsynIdRegex = new RegExp('/id/([0-9]{1,})/');
         let matches = iframeSrc.match(libsynIdRegex);
         let showId = matches[1];
@@ -632,38 +632,38 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             </div>
         `;
 
-        $(el).replaceWith(audioHTML);
+        $html(el).replaceWith(audioHTML);
     }).get();
 
     await Promise.all(libsynPodcasts);
 
     $html('.wp-block-syntaxhighlighter-code').each((i, el) => {
-        const hasCodeElem = $(el).find('code').length;
+        const hasCodeElem = $html(el).find('code').length;
 
         if (!hasCodeElem) {
-            $(el).html(`<code>${$(el).html()}</code>`);
+            $html(el).html(`<code>${$html(el).html()}</code>`);
         }
     });
 
     $html('figure.wp-block-embed.is-provider-twitter').each((i, el) => {
-        $(el).replaceWith(`<blockquote class="twitter-tweet"><a href="${$(el).text()}"></a></blockquote>`);
+        $html(el).replaceWith(`<blockquote class="twitter-tweet"><a href="${$html(el).text()}"></a></blockquote>`);
     });
 
     $html('blockquote.twitter-tweet').each((i, el) => {
-        let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
-        let $script = $('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
+        let $figure = $html('<figure class="kg-card kg-embed-card"></figure>');
+        let $script = $html('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
 
-        $(el).wrap($figure);
+        $html(el).wrap($figure);
         $figure.append($script);
         $figure.before('<!--kg-card-begin: embed-->');
         $figure.after('<!--kg-card-end: embed-->');
     });
 
     $html('blockquote.twitter-video').each((i, el) => {
-        let $figure = $('<figure class="kg-card kg-embed-card"></figure>');
-        let $script = $('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
+        let $figure = $html('<figure class="kg-card kg-embed-card"></figure>');
+        let $script = $html('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
 
-        $(el).wrap($figure);
+        $html(el).wrap($figure);
         $figure.append($script);
         $figure.before('<!--kg-card-begin: embed-->');
         $figure.after('<!--kg-card-end: embed-->');
@@ -672,21 +672,21 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     // Handle instagram embeds
     $html('script[src="//platform.instagram.com/en_US/embeds.js"]').remove();
     $html('#fb-root').each((i, el) => {
-        if ($(el).prev().get(0) && $(el).prev().get(0).name === 'script') {
-            $(el).prev().remove();
+        if ($html(el).prev().get(0) && $html(el).prev().get(0).name === 'script') {
+            $html(el).prev().remove();
         }
-        if ($(el).next().get(0) && $(el).next().get(0).name === 'script') {
-            $(el).next().remove();
+        if ($html(el).next().get(0) && $html(el).next().get(0).name === 'script') {
+            $html(el).next().remove();
         }
 
-        $(el).remove();
+        $html(el).remove();
     });
 
     $html('blockquote.instagram-media').each((i, el) => {
-        let src = $(el).find('a').attr('href');
+        let src = $html(el).find('a').attr('href');
 
         if (!src) {
-            src = $(el).attr('data-instgrm-permalink');
+            src = $html(el).attr('data-instgrm-permalink');
         }
 
         if (!src) {
@@ -701,9 +701,9 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         }
         src = url.format(parsed, {search: false});
 
-        let $iframe = $('<iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;"></iframe>');
-        let $script = $('<script async="" src="//www.instagram.com/embed.js"></script>');
-        let $figure = $('<figure class="instagram"></figure>');
+        let $iframe = $html('<iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;"></iframe>');
+        let $script = $html('<script async="" src="//www.instagram.com/embed.js"></script>');
+        let $figure = $html('<figure class="instagram"></figure>');
 
         // Trim the trailing slash from src if it exists
         if (src.endsWith('/')) {
@@ -714,37 +714,37 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         $figure.append($iframe);
         $figure.append($script);
 
-        $(el).replaceWith($figure);
+        $html(el).replaceWith($figure);
     });
 
     // Convert <blockquote>s with 2 or more <p> tags into a single <p> tag
     $html('blockquote').each((i, el) => {
-        const textElements = $(el).find('p, cite');
+        const textElements = $html(el).find('p, cite');
 
         if (textElements.length >= 2) {
-            const combinedText = textElements.map((index, element) => $(element).html()).get().join('<br><br>');
-            const newParagraph = $('<p>').html(combinedText);
-            $(el).replaceWith(`<blockquote>${newParagraph}</blockquote>`);
+            const combinedText = textElements.map((index, element) => $html(element).html()).get().join('<br><br>');
+            const newParagraph = $html('<p>').html(combinedText);
+            $html(el).replaceWith(`<blockquote>${newParagraph}</blockquote>`);
         }
     });
 
     // TODO: this should be a parser plugin
     // Wrap nested lists in HTML card
     $html('ol, ul').each((i, list) => {
-        let $parent = ($(list).parents('ul, ol').last().length) ? $(list).parents('ul, ol').last() : $(list);
+        let $parent = ($html(list).parents('ul, ol').last().length) ? $html(list).parents('ul, ol').last() : $html(list);
 
-        let hasStyle = ($($parent).attr('style') || $($parent).find('[style]').length) ? true : false;
-        let hasType = ($($parent).attr('type') || $($parent).find('[type]').length) ? true : false;
-        let hasValue = ($($parent).attr('value') || $($parent).find('[value]').length) ? true : false;
-        let hasStart = ($($parent).attr('start') || $($parent).find('[start]').length) ? true : false;
-        let hasOLList = ($($parent).find('ol').length) ? true : false;
-        let hasULList = ($($parent).find('ul').length) ? true : false;
+        let hasStyle = ($html($parent).attr('style') || $html($parent).find('[style]').length) ? true : false;
+        let hasType = ($html($parent).attr('type') || $html($parent).find('[type]').length) ? true : false;
+        let hasValue = ($html($parent).attr('value') || $html($parent).find('[value]').length) ? true : false;
+        let hasStart = ($html($parent).attr('start') || $html($parent).find('[start]').length) ? true : false;
+        let hasOLList = ($html($parent).find('ol').length) ? true : false;
+        let hasULList = ($html($parent).find('ul').length) ? true : false;
 
         if (hasStyle || hasType || hasValue || hasStart || hasOLList || hasULList) {
             // If parent is not wrapped ina  HTML card, wrap it in one
             if ($parent.get(0)?.prev?.data !== 'kg-card-begin: html') {
-                $($parent).before('<!--kg-card-begin: html-->');
-                $($parent).after('<!--kg-card-end: html-->');
+                $html($parent).before('<!--kg-card-begin: html-->');
+                $html($parent).after('<!--kg-card-end: html-->');
             }
         }
     });
@@ -752,32 +752,32 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     // Handle button elements
     $html('.wp-block-buttons').each((i, el) => {
         let buttons = [];
-        let isCentered = $(el).hasClass('is-content-justification-center');
+        let isCentered = $html(el).hasClass('is-content-justification-center');
         let positionClass = (isCentered) ? 'kg-align-center' : 'kg-align-left';
 
-        $(el).find('.wp-block-button__link').each((ii, button) => {
-            let buttonHref = $(button).attr('href');
-            let buttonText = $(button).text();
+        $html(el).find('.wp-block-button__link').each((ii, button) => {
+            let buttonHref = $html(button).attr('href');
+            let buttonText = $html(button).text();
 
             buttons.push(`<div class="kg-card kg-button-card ${positionClass}"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
         });
 
-        $(el).replaceWith(buttons.join(''));
+        $html(el).replaceWith(buttons.join(''));
     });
 
     // Replace spacers with horizontal rules
     $html('.wp-block-spacer').each((i, el) => {
-        $(el).replaceWith('<hr>');
+        $html(el).replaceWith('<hr>');
     });
 
     // Handle YouTube embeds
     $html('.wp-block-embed.is-provider-youtube').each((i, el) => {
-        const videoUrl = $(el).find('iframe').attr('src') ?? $(el).text();
+        const videoUrl = $html(el).find('iframe').attr('src') ?? $html(el).text();
         const videoID = getYouTubeID(videoUrl);
-        const videoCaption = $(el).find('figcaption')?.text()?.trim() ?? false;
+        const videoCaption = $html(el).find('figcaption')?.text()?.trim() ?? false;
 
         if (videoUrl && videoID && videoID.length) {
-            $(el).replaceWith(`<figure class="kg-card kg-embed-card"><iframe width="160" height="90"
+            $html(el).replaceWith(`<figure class="kg-card kg-embed-card"><iframe width="160" height="90"
             src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowfullscreen=""></iframe>${videoCaption ? `<figcaption>${videoCaption}</figcaption>` : ''}</figure>`);
@@ -793,8 +793,8 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             }
         };
 
-        $(el).find('figure').each((iii, elll) => { // eslint-disable-line no-shadow
-            let img = $(elll).find('img');
+        $html(el).find('figure').each((iii, elll) => { // eslint-disable-line no-shadow
+            let img = $html(elll).find('img');
 
             if (img && img.attr('src')) {
                 cardOpts.payload.images.push({
@@ -809,45 +809,45 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
         const galleryHtml = serializer.serialize(galleryCard.render(cardOpts));
 
-        $(el).replaceWith(galleryHtml);
+        $html(el).replaceWith(galleryHtml);
     });
 
     // Unwrap WP gallery blocks
     // Case: WP gallery blocks have figures in figures which trips up the HTML to mobiledoc conversion
     $html('.wp-block-gallery').each((i, el) => {
-        $(el).replaceWith($(el).html());
+        $html(el).replaceWith($html(el).html());
     });
 
     // Wrap inline styled tags in HTML card
     $html('div[style], p[style], a[style], span[style]').each((i, styled) => {
-        let imgChildren = $(styled).children('img:not([data-gif])');
+        let imgChildren = $html(styled).children('img:not([data-gif])');
 
-        if ($(imgChildren).length === 0) {
-            $(styled).before('<!--kg-card-begin: html-->');
-            $(styled).after('<!--kg-card-end: html-->');
+        if ($html(imgChildren).length === 0) {
+            $html(styled).before('<!--kg-card-begin: html-->');
+            $html(styled).after('<!--kg-card-end: html-->');
         }
     });
 
     // Remove links around images that link to the same file
     $html('a > img').each((l, img) => {
         // <img> src
-        let $image = $(img);
-        let imageSrc = $(img).attr('src');
+        let $image = $html(img);
+        let imageSrc = $html(img).attr('src');
         let largeSrc = largerSrc(imageSrc);
 
         // <a> href
-        let $link = $($image).parent('a');
-        let linkHref = $($link).attr('href');
+        let $link = $html($image).parent('a');
+        let linkHref = $html($link).attr('href');
         let largeHref = largerSrc(linkHref);
 
         if (largeSrc === largeHref) {
-            $($link).replaceWith($($link).html());
+            $html($link).replaceWith($html($link).html());
         }
     });
 
     // Some header elements contain span children to use custom inline styling. Wrap 'em in HTML cards.
     $html('h1 > span[style], h2 > span[style], h3 > span[style], h4 > span[style], h5 > span[style], h6 > span[style]').each((i, styledSpan) => {
-        let $heading = $(styledSpan).parent('h1, h2, h3, h4, h5, h6');
+        let $heading = $html(styledSpan).parent('h1, h2, h3, h4, h5, h6');
         $heading.before('<!--kg-card-begin: html-->');
         $heading.after('<!--kg-card-end: html-->');
     });
@@ -856,71 +856,71 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     $html('video').each((i, el) => {
         const isInFigure = el?.parent?.name === 'figure' || false;
 
-        $(el).css('width', '100%');
+        $html(el).css('width', '100%');
 
         if (isInFigure) {
-            $(el.parent).before('<!--kg-card-begin: html-->');
-            $(el.parent).after('<!--kg-card-end: html-->');
+            $html(el.parent).before('<!--kg-card-begin: html-->');
+            $html(el.parent).after('<!--kg-card-end: html-->');
         } else {
-            $(el).before('<!--kg-card-begin: html-->');
-            $(el).after('<!--kg-card-end: html-->');
+            $html(el).before('<!--kg-card-begin: html-->');
+            $html(el).after('<!--kg-card-end: html-->');
         }
     });
 
     $html('audio').each((i, el) => {
         const isInFigure = el?.parent?.name === 'figure' || false;
 
-        $(el).css('width', '100%');
+        $html(el).css('width', '100%');
 
         if (isInFigure) {
-            $(el.parent).before('<!--kg-card-begin: html-->');
-            $(el.parent).after('<!--kg-card-end: html-->');
+            $html(el.parent).before('<!--kg-card-begin: html-->');
+            $html(el.parent).after('<!--kg-card-end: html-->');
         } else {
-            $(el).before('<!--kg-card-begin: html-->');
-            $(el).after('<!--kg-card-end: html-->');
+            $html(el).before('<!--kg-card-begin: html-->');
+            $html(el).after('<!--kg-card-end: html-->');
         }
     });
 
     $html('img').each((i, img) => {
-        let $image = $(img);
-        $($image).removeAttr('srcset');
-        $($image).removeAttr('sizes');
-        let imageSrc = $($image).attr('src');
+        let $image = $html(img);
+        $html($image).removeAttr('srcset');
+        $html($image).removeAttr('sizes');
+        let imageSrc = $html($image).attr('src');
         let newSrc = largerSrc(imageSrc);
-        $($image).attr('src', newSrc);
+        $html($image).attr('src', newSrc);
     });
 
     // Detect full size images
     // TODO: add more classes that are used within WordPress to determine full-width images
     $html('img.full.size-full').each((i, img) => {
         // Ignore images, that are already wrapped in a figure tag or are linked
-        if ($(img).parent('figure').length <= 0 && $(img).parent('a').length <= 0) {
-            let $figure = $('<figure class="kg-card kg-image-card kg-width-wide"></figure>');
+        if ($html(img).parent('figure').length <= 0 && $html(img).parent('a').length <= 0) {
+            let $figure = $html('<figure class="kg-card kg-image-card kg-width-wide"></figure>');
 
-            $(img).addClass('kg-image');
+            $html(img).addClass('kg-image');
 
-            if ($(img).attr('srcset')) {
-                $(img).removeAttr('width');
-                $(img).removeAttr('height');
-                $(img).removeAttr('srcset');
-                $(img).removeAttr('sizes');
+            if ($html(img).attr('srcset')) {
+                $html(img).removeAttr('width');
+                $html(img).removeAttr('height');
+                $html(img).removeAttr('srcset');
+                $html(img).removeAttr('sizes');
             }
 
-            $(img).wrap($figure);
+            $html(img).wrap($figure);
         }
     });
 
     $html('img').each((i, img) => {
         const oldBase = /https?:\/\/deceleration.news\/wp-content\//;
         const newBase = 'https://d3l0i86vhnepo5.cloudfront.net/wp-content/';
-        const currentSrc = $(img).attr('src');
+        const currentSrc = $html(img).attr('src');
 
         if (!currentSrc) {
             return;
         }
 
         const updatedSrc = currentSrc.replace(oldBase, newBase);
-        $(img).attr('src', updatedSrc);
+        $html(img).attr('src', updatedSrc);
     });
 
     // convert HTML back to a string
@@ -950,7 +950,7 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
     let {tags: fetchTags, addTag, excerptSelector, excerpt, featureImageCaption} = options;
 
     let slug = wpPost.slug;
-    let titleText = $.load(wpPost.title.rendered).text();
+    let titleText = cheerio.load(wpPost.title.rendered).text();
 
     // @note: we don't copy excerpts because WP generated excerpts aren't better than Ghost ones but are often too long.
     const post = {
