@@ -46,7 +46,6 @@
     "@tryghost/mg-ghost-api": "0.4.24",
     "@tryghost/mg-html-lexical": "0.0.29",
     "@tryghost/mg-html-mobiledoc": "0.9.38",
-    "@tryghost/mg-hubspot-api": "0.4.26",
     "@tryghost/mg-jekyll-export": "0.3.39",
     "@tryghost/mg-json": "0.11.11",
     "@tryghost/mg-letterdrop": "0.2.26",
