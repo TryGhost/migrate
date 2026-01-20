@@ -1,4 +1,4 @@
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import {slugify} from '@tryghost/string';
 import {_base as debugFactory} from '@tryghost/debug';
 
@@ -15,7 +15,7 @@ const processContent = (html, postUrl, options) => {
     html = html.replace(/<p><br><\/p>/g, '');
     html = html.replace(/<li><br><\/li>/g, '');
 
-    const $html = $.load(html, {
+    const $html = cheerio.load(html, {
         decodeEntities: false,
         scriptingEnabled: false
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
@@ -23,58 +23,58 @@ const processContent = (html, postUrl, options) => {
     // Letterdrop supplies internal links in post content with `.com/c/`, but post URLs in JSON are `.com/p/`.
     // Lets normalise that
     $html('a').each((i, el) => {
-        let href = $(el).attr('href');
+        let href = $html(el).attr('href');
         let linkRegEpx = new RegExp(`${options.url}/c/`);
         let newHref = href.replace(linkRegEpx, `${options.url}/p/`);
-        $(el).attr('href', newHref);
+        $html(el).attr('href', newHref);
     });
 
     // Wrap nested lists in HTML card
     $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {
-        let $parent = $(nestedList).parentsUntil('ul, ol').parent();
+        let $parent = $html(nestedList).parentsUntil('ul, ol').parent();
         $parent.before('<!--kg-card-begin: html-->');
         $parent.after('<!--kg-card-end: html-->');
     });
 
     $html('.quill-upload-image').each((i, el) => {
-        let hasFigure = $(el).find('figure');
+        let hasFigure = $html(el).find('figure');
 
         if (hasFigure) {
-            $(el).replaceWith(hasFigure);
-            $(el).removeAttr('style');
-            $(el).find('figcaption').removeAttr('style');
+            $html(el).replaceWith(hasFigure);
+            $html(el).removeAttr('style');
+            $html(el).find('figcaption').removeAttr('style');
         }
     });
 
     $html('.letterdrop-custom-button').each((i, el) => {
-        const aHref = $(el).find('a').attr('href');
+        const aHref = $html(el).find('a').attr('href');
         const referralsRegExp = new RegExp(`${options.url}/referrals/[a-zA-Z0-9]{24}`);
 
         if (aHref.match(referralsRegExp)) {
-            $(el).remove();
+            $html(el).remove();
         } else {
-            const buttonText = $(el).find('a').html();
-            $(el).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${aHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+            const buttonText = $html(el).find('a').html();
+            $html(el).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${aHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
         }
     });
 
     $html('iframe[name="letterdrop-subscribe-input"]').each((i, el) => {
-        $(el).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${options.subscribeText}</a></div>`);
+        $html(el).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${options.subscribeText}</a></div>`);
     });
 
     $html('blockquote').each((i, el) => {
-        const classes = $(el).attr('class') ?? null;
+        const classes = $html(el).attr('class') ?? null;
         if (!classes) {
-            $(el).replaceWith(`<blockquote><p>${$(el).html()}</p></blockquote>`);
+            $html(el).replaceWith(`<blockquote><p>${$html(el).html()}</p></blockquote>`);
         }
     });
 
     $html('a').each((i, el) => {
-        const href = $(el).attr('href');
+        const href = $html(el).attr('href');
         const theDomain = options.url.replace(/(https?:\/\/)(www.)?/, '');
 
         if (href.includes(`${theDomain}/plans`) || href.includes(`${theDomain}/subscribe`) || href.includes(`${theDomain}/promo`)) {
-            $(el).attr('href', options.subscribeLink);
+            $html(el).attr('href', options.subscribeLink);
         }
     });
 
