@@ -1,4 +1,4 @@
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import process, {cleanExcerpt, slugFromURL, increaseImageSize, getAllAttributes} from '../lib/process.js';
 import response from './fixtures/response.json';
 
@@ -22,7 +22,7 @@ describe('Utils', function () {
     });
 
     test('getAllAttributes', function () {
-        const $html = $.load('<dib><img src="https://example.com" title="Image title" alt="Image alt" /></div>');
+        const $html = cheerio.load('<dib><img src="https://example.com" title="Image title" alt="Image alt" /></div>');
         const el = $html('img');
         const attrs = getAllAttributes(el[0]);
 
