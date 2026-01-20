@@ -1,4 +1,4 @@
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import {slugify, stripInvisibleChars} from '@tryghost/string';
 import SimpleDom from 'simple-dom';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
@@ -46,28 +46,28 @@ const processContent = (libsynPost, options) => { // eslint-disable-line no-shad
         return '';
     }
 
-    const $html = $.load(html, {
+    const $html = cheerio.load(html, {
         decodeEntities: false,
         scriptingEnabled: false
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     $html('p').each((i, el) => {
-        const content = $(el).html().trim();
+        const content = $html(el).html().trim();
         const noInvisibleChars = stripInvisibleChars(content);
         const noInvisibleCharsLength = noInvisibleChars.length;
 
         if (noInvisibleCharsLength === 0 || content === '&#xA0;' || content === '&nbsp;') {
-            $(el).remove();
+            $html(el).remove();
         }
     });
 
     $html('span[style="font-weight: 400;"]').each((i, el) => {
-        $(el).replaceWith($(el).html().trim());
+        $html(el).replaceWith($html(el).html().trim());
     });
 
     // Wrap nested lists in HTML card
     $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {
-        let $parent = $(nestedList).parentsUntil('ul, ol').parent();
+        let $parent = $html(nestedList).parentsUntil('ul, ol').parent();
         $parent.before('<!--kg-card-begin: html-->');
         $parent.after('<!--kg-card-end: html-->');
     });
