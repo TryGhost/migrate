@@ -203,6 +203,12 @@ const options = [
         flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
+    },
+    {
+        type: 'number',
+        flags: '--wait_after_scrape',
+        defaultValue: 0,
+        desc: 'Time in ms to wait after each web scrape request (helps avoid rate limiting)'
     }
 ];
 

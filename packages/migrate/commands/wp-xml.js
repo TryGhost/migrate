@@ -156,6 +156,12 @@ const options = [
         flags: '--cacheName',
         defaultValue: null,
         desc: 'Provide a unique name for the cache directory (defaults to a UUID)'
+    },
+    {
+        type: 'number',
+        flags: '--wait_after_scrape',
+        defaultValue: 0,
+        desc: 'Time in ms to wait after each web scrape request (helps avoid rate limiting)'
     }
 ];
 
