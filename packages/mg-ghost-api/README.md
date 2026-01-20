@@ -1,6 +1,6 @@
 # Migrate Ghost API
 
-Export content from an existing Ghost installation using the [Admin API](https://ghost.org/docs/api/v2/admin/), and generate a `zip` file you can import into a Ghost installation.
+Export content from an existing Ghost installation using the [Admin API](https://docs.ghost.org/admin-api), and generate a `zip` file you can import into a Ghost installation.
 
 
 ## Install
@@ -82,7 +82,7 @@ migrate ghost --url https://example.com --apikey 1234abcd --batch 5 --limit 10 -
 
 This will get the first 50 posts with the tag `news` or `press`, in 5 batches of 10 posts, exclude pages, and show all available output in the console.
 
-See the [Filter documentation](https://ghost.org/docs/content-api/#filtering) for more info.
+See the [Filter documentation](https://docs.ghost.org/content-api/filtering) for more info.
 
 
 ## Develop
