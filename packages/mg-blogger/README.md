@@ -100,4 +100,4 @@ yarn dev blogger --apiKey abcd --blogID 1234
 
 # Copyright & License
 
-Copyright (c) 2013-2025 Ghost Foundation - Released under the [MIT license](LICENSE).
+Copyright (c) 2013-2026 Ghost Foundation - Released under the [MIT license](LICENSE).
