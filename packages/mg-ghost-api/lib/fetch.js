@@ -3,7 +3,7 @@ import ghostAPI from '@tryghost/admin-api';
 const contentStats = async (options) => {
     const requestOptions = {
         url: options.url,
-        version: 'v2.0',
+        version: 'v6.0',
         key: options.apikey
     };
 
@@ -24,14 +24,14 @@ const contentStats = async (options) => {
 const discover = async (options) => {
     const requestOptions = {
         url: options.url,
-        version: 'v2.0',
+        version: 'v6.0',
         key: options.apikey
     };
 
     const site = new ghostAPI(requestOptions);
 
-    const posts = (options.posts) ? await site.posts.browse({limit: options.limit}) : null;
-    const pages = (options.pages) ? await site.pages.browse({limit: options.limit}) : null;
+    const posts = (options.posts) ? await site.posts.browse({limit: options.limit, filter: options?.postFilter ?? null}) : null;
+    const pages = (options.pages) ? await site.pages.browse({limit: options.limit, filter: options?.postFilter ?? null}) : null;
     const users = await site.users.browse({limit: options.limit});
 
     return {
