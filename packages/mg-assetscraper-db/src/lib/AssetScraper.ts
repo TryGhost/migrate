@@ -33,7 +33,7 @@ const DEFAULT_BLOCKED_DOMAINS: (string | RegExp)[] = [
     new RegExp('^https?://(www.)?instagram.com'), // Instagram website
     new RegExp('^https?://([a-z0-9-]+.)?([a-z]+.)?fbcdn.net'), // Facebook CDN
     new RegExp('^https?://(www.)?facebook.com'), // Facebook website
-    new RegExp('/^https?://([a-z0-9+]+.)?ytimg.com/'), // YouTube images
+    new RegExp('^https?://([a-z0-9-]+\\.)?ytimg\\.com'), // YouTube images
     new RegExp('^https?://(www.)?(youtube.com|youtu.be)'), // YouTube website
     new RegExp('^https?://([a-z0-9-]+.)?twitter.com'), // Twitter website
     new RegExp('^https?://([a-z0-9-]+.)?x.com'), // Worse Twitter
