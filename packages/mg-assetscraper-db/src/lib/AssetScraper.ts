@@ -2,7 +2,6 @@
 import {parse, join, basename, extname} from 'node:path';
 import {createHash} from 'node:crypto';
 import errors from '@tryghost/errors';
-import request from '@tryghost/request';
 import {slugify} from '@tryghost/string';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {fileTypeFromBuffer} from 'file-type';
@@ -124,24 +123,34 @@ export default class AssetScraper {
         // Encode to handle special characters in URLs
         const encodedRequestURL = encodeURI(updatedRequestURL);
 
-        try {
-            const response = await request(updatedRequestURL, {
-                followRedirect: true,
-                responseType: 'buffer',
-                timeout: {
-                    request: 60000
-                }
-            });
+        const fetchOptions = {
+            redirect: 'follow' as const,
+            signal: AbortSignal.timeout(60000)
+        };
 
-            return response;
+        try {
+            const response = await fetch(updatedRequestURL, fetchOptions);
+
+            const arrayBuffer = await response.arrayBuffer();
+            return {
+                body: Buffer.from(arrayBuffer),
+                headers: {
+                    'content-type': response.headers.get('content-type')
+                },
+                statusCode: response.status
+            };
         } catch {
             try {
-                const responseWithEncodedUrl = await request(encodedRequestURL, {
-                    followRedirect: true,
-                    responseType: 'buffer'
-                });
+                const response = await fetch(encodedRequestURL, fetchOptions);
 
-                return responseWithEncodedUrl;
+                const arrayBuffer = await response.arrayBuffer();
+                return {
+                    body: Buffer.from(arrayBuffer),
+                    headers: {
+                        'content-type': response.headers.get('content-type')
+                    },
+                    statusCode: response.status
+                };
             } catch (err: any) {
                 throw new errors.InternalServerError({message: 'Failed to get remote media', err});
             }
