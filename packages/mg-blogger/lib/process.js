@@ -45,8 +45,11 @@ const handleFirstImage = (args) => {
     let {postData, html} = args;
 
     const $html = cheerio.load(html, {
-        decodeEntities: false,
-        scriptingEnabled: false
+        xml: {
+            xmlMode: false,
+            decodeEntities: false,
+            scriptingEnabled: false
+        }
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     const firstContentElement = $html('*').first();
@@ -88,8 +91,11 @@ const processHTMLContent = async (args) => {
     html = autop(html);
 
     const $html = cheerio.load(html, {
-        decodeEntities: false,
-        scriptingEnabled: false
+        xml: {
+            xmlMode: false,
+            decodeEntities: false,
+            scriptingEnabled: false
+        }
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     $html('div.separator').each((i, el) => {

@@ -16,8 +16,10 @@ const processContent = (html, postUrl, options) => {
     html = html.replace(/<li><br><\/li>/g, '');
 
     const $html = cheerio.load(html, {
-        decodeEntities: false,
-        scriptingEnabled: false
+        xml: {
+            decodeEntities: false,
+            scriptingEnabled: false
+        }
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // Letterdrop supplies internal links in post content with `.com/c/`, but post URLs in JSON are `.com/p/`.

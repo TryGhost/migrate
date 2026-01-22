@@ -241,7 +241,10 @@ describe('Process Content', function () {
 </pre></div>`;
 
         const $post = cheerio.load(source, {
-            decodeEntities: false
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({
@@ -260,7 +263,10 @@ describe('Process Content', function () {
         const source = readSync('code-post.html');
 
         const $post = cheerio.load(source, {
-            decodeEntities: false
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({
@@ -288,7 +294,10 @@ describe('Process Content', function () {
         const source = readSync('code-post.html');
 
         const $post = cheerio.load(source, {
-            decodeEntities: false
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({
@@ -314,7 +323,10 @@ describe('Process Content', function () {
         </pre></div>`;
 
         const $post = cheerio.load(source, {
-            decodeEntities: false
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({
@@ -347,7 +359,10 @@ describe('Process Content', function () {
         </div></div>`;
 
         const $post = cheerio.load(source, {
-            decodeEntities: false
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({
@@ -382,7 +397,10 @@ describe('Process Content', function () {
         </div>`;
 
         const $post = cheerio.load(source, {
-            decodeEntities: false
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({
@@ -413,7 +431,10 @@ describe('Process Content', function () {
         </div>`;
 
         const $post = cheerio.load(source, {
-            decodeEntities: false
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({
@@ -440,7 +461,10 @@ describe('Process Content', function () {
         </div>`;
 
         const $post = cheerio.load(source, {
-            decodeEntities: false
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({

@@ -147,7 +147,10 @@ const preProcessContent = async ({html, options}) => { // eslint-disable-line no
     html = splitIt.join('\n');
 
     const $html = cheerio.load(html, {
-        decodeEntities: false
+        xml: {
+            xmlMode: false,
+            decodeEntities: false
+        }
     }, false);
 
     // 👀 If any XML-specific processing needs to be done, this is the place to do it.
@@ -391,10 +394,12 @@ const all = async (input, {options}) => {
     }
 
     const $xml = cheerio.load(input, {
-        decodeEntities: false,
-        xmlMode: true,
-        scriptingEnabled: false,
-        lowerCaseTags: true // needed to find `pubDate` tags
+        xml: {
+            decodeEntities: false,
+            xmlMode: true,
+            scriptingEnabled: false,
+            lowerCaseTags: true // needed to find `pubDate` tags
+        }
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // grab the URL of the site we're importing

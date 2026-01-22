@@ -35,13 +35,17 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
     html = html.replace(/{{rp_refer_url_no_params}}/g, '#');
 
     const $allHtml: any = cheerio.load(html, {
-        xmlMode: true,
-        decodeEntities: false
+        xml: {
+            xmlMode: true,
+            decodeEntities: false
+        }
     });
 
     const $html: any = cheerio.load($allHtml('#content-blocks').html(), {
-        xmlMode: true,
-        decodeEntities: false
+        xml: {
+            xmlMode: true,
+            decodeEntities: false
+        }
     });
 
     if (options?.url) {
@@ -356,14 +360,17 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
 
 const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string, featureSrc: string}) => {
     let $html = cheerio.load(html, {
-        xmlMode: true,
-        decodeEntities: false
+        xml: {
+            xmlMode: true,
+            decodeEntities: false
+        }
     });
 
     let firstElement = $html('*').first();
+    let firstEl: any = $html(firstElement).get(0);
 
-    if (($html(firstElement).get(0) && $html(firstElement).get(0).name === 'img') || $html(firstElement).find('img').length) {
-        let theElementItself = $html(firstElement).get(0).name === 'img' ? firstElement : $html(firstElement).find('img');
+    if ((firstEl && firstEl.name === 'img') || $html(firstElement).find('img').length) {
+        let theElementItself = firstEl?.name === 'img' ? firstElement : $html(firstElement).find('img');
         let firstImgSrc: any = $html(theElementItself).attr('src');
 
         // Both images usually end in the same way, so we can split the URL and compare the last part

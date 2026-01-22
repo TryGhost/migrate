@@ -1,6 +1,6 @@
 import {join} from 'node:path';
 import _ from 'lodash';
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 
 // @TODO: expand this list
 const htmlFields = ['html'];
@@ -129,8 +129,10 @@ export default class LinkFixer {
 
     async processHTML(html) {
         let $ = cheerio.load(html, {
-            decodeEntities: false,
-            scriptingEnabled: false
+            xml: {
+                decodeEntities: false,
+                scriptingEnabled: false
+            }
         }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
         let links = $('a').map(async (i, el) => {

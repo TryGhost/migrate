@@ -116,10 +116,7 @@ const processContent = (post, siteUrl, options) => {
     }
 
     // As there is HTML, pass it to Cheerio inside a `<div class="migrate-substack-wrapper"></div>` element so we have a global wrapper to target later on
-    const $html = cheerio.load(`<div class="migrate-substack-wrapper">${html}</div>`, {
-        decodeEntities: false,
-        scriptingEnabled: false
-    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+    const $html = cheerio.load(`<div class="migrate-substack-wrapper">${html}</div>`, {}, false);
 
     // Change paywall card to comment
     $html('.paywall-jump').each((i, el) => {

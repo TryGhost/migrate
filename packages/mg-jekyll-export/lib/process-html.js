@@ -8,8 +8,11 @@ Receives raw HTML, returns processed HTML
 
 export default (rawHtml, options = {}) => {
     const $html = cheerio.load(rawHtml, {
-        decodeEntities: false,
-        scriptingEnabled: false
+        xml: {
+            xmlMode: false,
+            decodeEntities: false,
+            scriptingEnabled: false
+        }
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // Convert relative links and image paths to absolute

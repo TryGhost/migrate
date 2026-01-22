@@ -49,7 +49,6 @@
     "@tryghost/request": "1.0.12",
     "@tryghost/string": "0.2.21",
     "asakadb": "1.0.1",
-    "cheerio": "1.0.0-rc.12",
     "file-type": "21.3.0",
     "fs-extra": "11.3.3",
     "heic-convert": "2.1.0",

@@ -34,9 +34,11 @@ const processContent = (html, options) => {
     }
 
     const $html = cheerio.load(html, {
-        decodeEntities: false,
-        scriptingEnabled: false
-    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+        xml: {
+            xmlMode: false,
+            decodeEntities: false
+        }
+    }, false);
 
     if (options?.removeSelectors) {
         $html(options.removeSelectors).each((i, el) => {
@@ -72,7 +74,9 @@ const processContent = (html, options) => {
         if ($html(img).hasClass('thumb-image')) {
             // images with the `thumb-image` class might be a duplicate
             // to prevent migrating two images, we have to remove the false node
-            if ($html($html(img).prev('noscript').children('img').get(0)).attr('src') === src) {
+            // Use prevAll to handle whitespace text nodes between elements
+            const noscriptImg = $html(img).prevAll('noscript').first().children('img').get(0);
+            if (noscriptImg && $html(noscriptImg).attr('src') === src) {
                 $html(img).remove();
             }
         } else {
@@ -91,7 +95,7 @@ const processContent = (html, options) => {
     });
 
     $html('.sqs-video-wrapper').each((i, el) => {
-        const theHtml = $html(el).attr('data-html');
+        const theHtml = decode($html(el).attr('data-html'));
         const parent = $html(el).parent('.embed-block-wrapper').parent('.intrinsic');
 
         $html(parent).replaceWith(`<figure class="kg-card kg-embed-card">${theHtml}</figure>`);
@@ -300,10 +304,12 @@ const all = async (input, {options}) => {
     }
 
     const $xml = cheerio.load(input, {
-        decodeEntities: false,
-        xmlMode: true,
-        scriptingEnabled: false,
-        lowerCaseTags: true // needed to find `pubDate` tags
+        xml: {
+            decodeEntities: false,
+            xmlMode: true,
+            scriptingEnabled: false,
+            lowerCaseTags: true // needed to find `pubDate` tags
+        }
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
     // });
 

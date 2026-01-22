@@ -5,10 +5,12 @@ const contentStats = async (xmlPath) => {
     const input = await readFile(xmlPath);
 
     const $xml = cheerio.load(input, {
-        decodeEntities: false,
-        xmlMode: true,
-        scriptingEnabled: false,
-        lowerCaseTags: true
+        xml: {
+            decodeEntities: false,
+            xmlMode: true,
+            scriptingEnabled: false,
+            lowerCaseTags: true
+        }
     }, false);
 
     let postsOutput = [];

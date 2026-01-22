@@ -328,7 +328,7 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        expect(processed).toEqual('<p>This is an example page. It’s different from a blog post.</p><ul><li>Lorem</li><li>Ipsum</li></ul><p><strong>Dolor</strong> <a href="https://ghost.org" title="Try Ghost">sit</a> <em>amet</em>.</p>');
+        expect(processed).toEqual('<p>This is an example page. It&#8217;s different from a blog post.</p><ul><li>Lorem</li><li>Ipsum</li></ul><p><strong>Dolor</strong> <a href="https://ghost.org" title="Try Ghost">sit</a> <em>amet</em>.</p>');
     });
 
     test('Can wrap a nested unordered list in a HTML card', async function () {

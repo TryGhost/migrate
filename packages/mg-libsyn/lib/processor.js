@@ -47,8 +47,11 @@ const processContent = (libsynPost, options) => { // eslint-disable-line no-shad
     }
 
     const $html = cheerio.load(html, {
-        decodeEntities: false,
-        scriptingEnabled: false
+        xml: {
+            xmlMode: false,
+            decodeEntities: false,
+            scriptingEnabled: false
+        }
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     $html('p').each((i, el) => {

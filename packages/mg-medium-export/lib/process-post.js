@@ -90,7 +90,10 @@ const processTags = ({$tags}) => {
 
 const processFeatureImage = ({html, post, options}) => {
     const $html = cheerio.load(html, {
-        decodeEntities: false
+        xml: {
+            xmlMode: false,
+            decodeEntities: false
+        }
     }, false);
 
     // Look for data-is-featured
@@ -138,8 +141,11 @@ const processFeatureImage = ({html, post, options}) => {
 
 export default ({name, html, globalUser, options}) => {
     const $post = cheerio.load(html, {
-        decodeEntities: false,
-        scriptingEnabled: false
+        xml: {
+            xmlMode: false,
+            decodeEntities: false,
+            scriptingEnabled: false
+        }
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     let post = processMeta({name, $post, options});

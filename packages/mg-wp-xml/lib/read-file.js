@@ -7,9 +7,11 @@ const readFile = async (path) => {
     const input = await fs.readFile(path, 'utf-8');
 
     const $xml = cheerio.load(input, {
-        decodeEntities: false,
-        xmlMode: true,
-        lowerCaseTags: true
+        xml: {
+            decodeEntities: false,
+            xmlMode: true,
+            lowerCaseTags: true
+        }
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     let out = $xml('channel').html();

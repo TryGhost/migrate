@@ -150,8 +150,11 @@ const processExcerpt = (html, excerptSelector = false) => {
     if (excerptSelector) {
         // TODO: this should be possible by using a pseudo selector as a passed `excerptSelector`, e. g. `h2.excerpt:first-of-type`,
         const $excerpt = cheerio.load(html, {
-            decodeEntities: false,
-            scriptingEnabled: false
+            xml: {
+                xmlMode: false,
+                decodeEntities: false,
+                scriptingEnabled: false
+            }
         }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
         excerptText = $excerpt(excerptSelector).first().html();
@@ -216,10 +219,7 @@ const processShortcodes = async ({html, options}) => {
             return '';
         }
 
-        const $caption = cheerio.load(content, {
-            decodeEntities: false,
-            scriptingEnabled: false
-        }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+        const $caption = cheerio.load(content, {}, false);
 
         let theImageSrc = $caption('img').attr('src') ?? '';
         let theImageWidth = $caption('img').attr('width') ?? '';
@@ -422,8 +422,11 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     }
 
     const $html = cheerio.load(html, {
-        decodeEntities: false,
-        scriptingEnabled: false
+        xml: {
+            xmlMode: false,
+            decodeEntities: false,
+            scriptingEnabled: false
+        }
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // If the first element in the content is an image, and is the same as the feature image, remove it

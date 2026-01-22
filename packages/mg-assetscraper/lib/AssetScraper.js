@@ -1,6 +1,6 @@
 import {URL} from 'node:url';
 import {join, dirname, basename, extname} from 'node:path';
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 import got from 'got';
 import {parseSrcset} from 'srcset';
 import {fileTypeFromBuffer, fileTypeFromStream} from 'file-type';
@@ -357,8 +357,10 @@ export default class AssetScraper {
         // Without this, `image.jpg?w=768&amp;ssl=1` gets turned into `image.jpg?w=768&ssl=1`
         // But we don't want this, we need them to be untouched
         let $ = cheerio.load(html, {
-            xmlMode: true,
-            decodeEntities: false
+            xml: {
+                xmlMode: true,
+                decodeEntities: false
+            }
         });
 
         $('a[href]').each((i, el) => {

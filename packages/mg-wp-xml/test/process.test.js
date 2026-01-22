@@ -456,9 +456,11 @@ describe('Process', function () {
     test('Can read post_meta', async function () {
         const input = await readSync('has-meta.xml');
         const $xml = cheerio.load(input, {
-            decodeEntities: false,
-            xmlMode: true,
-            lowerCaseTags: true
+            xml: {
+                decodeEntities: false,
+                xmlMode: true,
+                lowerCaseTags: true
+            }
         });
 
         let posts = [];
@@ -538,7 +540,7 @@ Lorem Ipsum`;
         const processed = await process.preProcessContent({html});
 
         expect(processed).toEqual('Hello world\n' +
-        '<iframe loading="lazy" title="" width="160" height="9" src="https://www.youtube.com/embed/ABCD1234xYz?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>\n' +
+        '<iframe loading="lazy" title width="160" height="9" src="https://www.youtube.com/embed/ABCD1234xYz?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>\n' +
         'Lorem Ipsum');
     });
 
@@ -550,7 +552,7 @@ Lorem Ipsum`;
         const processed = await process.preProcessContent({html});
 
         expect(processed).toEqual('Hello world\n' +
-        '<iframe loading="lazy" title="" width="160" height="9" src="https://www.youtube.com/embed/ABCD1234xYz?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>\n' +
+        '<iframe loading="lazy" title width="160" height="9" src="https://www.youtube.com/embed/ABCD1234xYz?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>\n' +
         'Lorem Ipsum');
     });
 

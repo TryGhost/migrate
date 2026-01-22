@@ -30,7 +30,8 @@ const equivalentTitles = (title1, title2) => {
 
 export default ({content, post}) => {
     // Load the content HTML to get a Cheerio instance we can use
-    const $ = cheerio.load(content.html(), {decodeEntities: false}, false);
+    // Uses default cheerio options (parse5) to decode entities and preserve empty attributes
+    const $ = cheerio.load(content.html(), {}, false);
     let $content = $.root();
 
     // Detect if post is likely to be a comment. If so, set as draft and add tag

@@ -203,7 +203,9 @@ const processNewsletterContent = (html, options) => { // eslint-disable-line no-
     });
 
     const $html = cheerio.load(cleanedContent, {
-        decodeEntities: false
+        xml: {
+            decodeEntities: false
+        }
     });
 
     $html('p').each((i, el) => {

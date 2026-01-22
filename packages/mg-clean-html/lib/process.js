@@ -29,7 +29,10 @@ const cleanHTML = (args) => {
     }
 
     const $html = cheerio.load(html, {
-        decodeEntities: false
+        xml: {
+            xmlMode: false,
+            decodeEntities: false
+        }
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // Remove left, center & right text alignment
