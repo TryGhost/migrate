@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-assetscraper",
-  "version": "0.4.31",
+  "version": "0.4.32",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-assetscraper",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -26,7 +26,7 @@
     "listr": "0.14.3"
   },
   "dependencies": {
-    "@tryghost/listr-smart-renderer": "0.5.21",
+    "@tryghost/listr-smart-renderer": "0.5.22",
     "@tryghost/logging": "2.5.0",
     "@tryghost/string": "0.2.21",
     "cheerio": "1.1.2",
