@@ -775,21 +775,6 @@ export default class AssetScraper {
     getTasks(): ListrTask[] {
         const tasks: ListrTask[] = [];
 
-        const addTasks = (items: GhostContentObject[], type: string): void => {
-            items.forEach((item: GhostContentObject) => {
-                tasks.push({
-                    title: `Assets for ${type} ${item?.slug ?? item?.name ?? item.id ?? item.post_id}`,
-                    task: async () => {
-                        try {
-                            await this.inlinePostTagUserObject(item);
-                        } catch (err) {
-                            throw new errors.InternalServerError({message: 'Failed to inline object', err: err instanceof Error ? err : undefined});
-                        }
-                    }
-                });
-            });
-        };
-
         const addSubTasks = (items: GhostContentObject[], type: string) => {
             const subTasks: ListrTask[] = [];
 
