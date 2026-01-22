@@ -870,7 +870,7 @@ export default class AssetScraper {
         tasks.push({
             title: `Snippets`,
             task: async () => {
-                addTasks(theSnippets, 'snippets');
+                return addSubTasks(theSnippets, 'snippets');
             }
         });
 
