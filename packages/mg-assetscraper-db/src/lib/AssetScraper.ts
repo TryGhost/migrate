@@ -80,6 +80,13 @@ export default class AssetScraper {
         this.findOnlyMode = options?.findOnlyMode ?? false;
         this.allowedDomains = options?.domains ?? [];
         this.allowAllDomains = options?.allowAllDomains ?? false;
+
+        if (this.allowedDomains.length === 0 && !this.allowAllDomains) {
+            throw new errors.ValidationError({
+                message: 'AssetScraper requires either `domains` or `allowAllDomains: true`'
+            });
+        }
+
         this.blockedDomains = [...DEFAULT_BLOCKED_DOMAINS, ...(options?.blockedDomains ?? [])];
         this.processBase64Images = options?.processBase64Images ?? false;
         this.warnings = (ctx.warnings) ? ctx.warnings : [];
