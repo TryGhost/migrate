@@ -3920,13 +3920,6 @@
     "@types/node" "*"
     "@types/responselike" "^1.0.0"
 
-"@types/cheerio@^0.22.31":
-  version "0.22.35"
-  resolved "https://registry.yarnpkg.com/@types/cheerio/-/cheerio-0.22.35.tgz#0d16dc1f24d426231c181b9c31847f673867595f"
-  integrity sha512-yD57BchKRvTV+JD53UZ6PD8KWY5g5rvvMLRnZR3EQBCZXiDT/HR+pKpMzFGlWNhFrXlo7VPZXtKvIEwZkAWOIA==
-  dependencies:
-    "@types/node" "*"
-
 "@types/debug@^4.1.8":
   version "4.1.12"
   resolved "https://registry.yarnpkg.com/@types/debug/-/debug-4.1.12.tgz#a155f21690871953410df4b6b6f53187f0500917"
@@ -4713,7 +4706,7 @@ assert-plus@1.0.0, assert-plus@^1.0.0:
   resolved "https://registry.yarnpkg.com/assert-plus/-/assert-plus-1.0.0.tgz#f12e0f3c5d77b0b1cdd9146942e4e96c1e4dd525"
   integrity sha512-NfJ4UzBCcQGLDlQq7nHxH+tv3kyZ0hHQqF5BO6J7tNJeP5do1llPr8dZ8zHonfhAu0PHAdMkSo+8o0wxg9lZWw==
 
-assured@^1.0.15:
+assured@^1.0.16:
   version "1.0.16"
   resolved "https://registry.yarnpkg.com/assured/-/assured-1.0.16.tgz#cab58d86b24ef78f95a41837f95b21ff3c7175db"
   integrity sha512-KwttBV8EIJw4/KqRFTJzKELLm9c3d1V9+fefORWv8cJNgKouuCRQ5rvCgjpBwA1AxVwqpR5Y1ePLU5SINJzhQg==
@@ -5292,7 +5285,7 @@ chardet@^2.1.1:
   resolved "https://registry.yarnpkg.com/chardet/-/chardet-2.1.1.tgz#5c75593704a642f71ee53717df234031e65373c8"
   integrity sha512-PsezH1rqdV9VvyNhxxOW32/d75r01NY7TQCmOqomRo15ZSOKbpTFVsfjghxo6JloQUCGnH4k1LGu0R4yCLlWQQ==
 
-cheerio-req@^2.0.0:
+cheerio-req@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/cheerio-req/-/cheerio-req-2.0.1.tgz#7352b4eac1e7d3077844e0585db9a03e66664a84"
   integrity sha512-F8RIupArIcgTXMvnJSYWIw9Z8Hj03ewhxWFPJNoOIJgXfhjPqLYX26SgzEgziOZxscaBCbLZGagcDs4teZWtBg==
@@ -5325,7 +5318,7 @@ cheerio@1.0.0-rc.12:
     parse5 "^7.0.0"
     parse5-htmlparser2-tree-adapter "^7.0.0"
 
-cheerio@1.1.2, cheerio@^1.0.0-rc.12, cheerio@^1.0.0-rc.5:
+cheerio@1.1.2, cheerio@^1.0.0-rc.12, cheerio@^1.0.0-rc.5, cheerio@^1.1.0:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/cheerio/-/cheerio-1.1.2.tgz#26af77e89336c81c63ea83197f868b4cbd351369"
   integrity sha512-IkxPpb5rS/d1IiLbHMgfPuS0FgiWTtFIm/Nj+2woXDLTZ7fOT2eqzgYbdMlLweqlHbsZjxEChoVK+7iph7jyQg==
@@ -10524,7 +10517,7 @@ saxes@^6.0.0:
   dependencies:
     xmlchars "^2.2.0"
 
-scrape-it-core@^1.0.0:
+scrape-it-core@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/scrape-it-core/-/scrape-it-core-1.0.2.tgz#46453cb4cfc9ec949c808ec35f4a69bf696cbcf3"
   integrity sha512-gXtUSsL/ikNMTz1678Bge++kfuV0o2fGtkMB+tRO2+J9fyZBkjvFJqjbAFYjb9SHsgb0hT0v0nWa3MVk0rvhsA==
@@ -10536,16 +10529,15 @@ scrape-it-core@^1.0.0:
     obj-def "^1.0.9"
     typpy "^2.3.13"
 
-scrape-it@6.1.2:
-  version "6.1.2"
-  resolved "https://registry.yarnpkg.com/scrape-it/-/scrape-it-6.1.2.tgz#1dc7d1537dfbc8d4a913541847bd6a3ab3773df6"
-  integrity sha512-58DMh1/I68d49wP3By+9ulwy6Nwy52iix13m+gB1KjkIpREa8cyqMXTHffgn1BWgHUFHr5ON9SNbcoMSuCFmXA==
+scrape-it@6.1.12:
+  version "6.1.12"
+  resolved "https://registry.yarnpkg.com/scrape-it/-/scrape-it-6.1.12.tgz#65fc0033017a96a19b900bab6350e1285092b734"
+  integrity sha512-z7ccxo5X16J+bV3RCqlrbyaahMxvzyuhW0VCUoYx8z1joahPkr6aJMChhxmiFE4C3ufTLJTNAOTaCE2tMjCdnw==
   dependencies:
-    "@types/cheerio" "^0.22.31"
-    assured "^1.0.15"
-    cheerio-req "^2.0.0"
-    scrape-it-core "^1.0.0"
-    typpy "^2.3.13"
+    assured "^1.0.16"
+    cheerio "^1.1.0"
+    cheerio-req "^2.0.1"
+    scrape-it-core "^1.0.2"
 
 secure-json-parse@^2.4.0:
   version "2.7.0"
