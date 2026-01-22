@@ -34,7 +34,7 @@
     "dotenv": "17.2.3",
     "fs-extra": "11.3.3",
     "lodash": "4.17.21",
-    "sharp": "0.34.3",
+    "sharp": "0.34.5",
     "transliteration": "2.6.0"
   }
 }
