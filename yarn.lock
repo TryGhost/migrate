@@ -3614,7 +3614,7 @@
     lodash "^4.17.21"
     prettyjson "^1.2.5"
 
-"@tryghost/request@1.0.12", "@tryghost/request@^1.0.12":
+"@tryghost/request@^1.0.12":
   version "1.0.12"
   resolved "https://registry.yarnpkg.com/@tryghost/request/-/request-1.0.12.tgz#642be33ca2593932af4ed68ee3eed1f58a08a3ea"
   integrity sha512-vSsyaQ06ySTkDF78JALsLMfOGTFWfRCye3s1zys3sUZy2A51YsmP7kcg5wCemgTTDnRhErOUBotUuECIyg0TGA==
