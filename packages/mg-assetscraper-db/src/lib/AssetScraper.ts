@@ -715,7 +715,8 @@ export default class AssetScraper {
                 continue;
             }
 
-            const newSrc = await this.downloadExtractSave(value, value);
+            const absoluteSrc = await this.normalizeUrl(value);
+            const newSrc = await this.downloadExtractSave(absoluteSrc, absoluteSrc);
             post[item] = this.localizeSrc(newSrc.path);
         }
     }
@@ -734,7 +735,8 @@ export default class AssetScraper {
                 continue;
             }
 
-            const newSrc = await this.downloadExtractSave(value, value);
+            const absoluteSrc = await this.normalizeUrl(value);
+            const newSrc = await this.downloadExtractSave(absoluteSrc, absoluteSrc);
             settings[index].value = this.localizeSrc(newSrc.path);
         }
     }
