@@ -6,7 +6,7 @@
  */
 import {readFileSync, writeFileSync} from 'node:fs';
 import {dirname, join} from 'node:path';
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import {slugify} from '@tryghost/string';
 
 if (!process.argv[2]) {
@@ -19,7 +19,7 @@ const destPath = join(desitnationDir, 'users.json');
 
 const html = readFileSync(process.argv[2], 'utf8');
 
-const $html = $.load(html);
+const $html = cheerio.load(html);
 
 let users = [];
 

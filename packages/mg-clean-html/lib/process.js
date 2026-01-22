@@ -1,17 +1,14 @@
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import styleToObject from 'style-to-object';
 import escapeStringRegexp from 'escape-string-regexp';
 
-$.prototype.unwrap = function () {
-    this.replaceWith(this.html());
-};
-
-const isAllowed = (el) => {
-    if ($(el).hasClass('instagram-media')) {
+const isAllowed = ($, el) => {
+    const $el = $(el);
+    if ($el.hasClass('instagram-media')) {
         return false;
     }
 
-    if ($(el).parents('.instagram-media').length) {
+    if ($el.parents('.instagram-media').length) {
         return false;
     }
 
@@ -31,31 +28,34 @@ const cleanHTML = (args) => {
         return html;
     }
 
-    const $html = $.load(html, {
-        decodeEntities: false
+    const $html = cheerio.load(html, {
+        xml: {
+            xmlMode: false,
+            decodeEntities: false
+        }
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
     // Remove left, center & right text alignment
     if (opinionated) {
         $html('p[style*="text-align"], li[style*="text-align"]').each((i, el) => {
-            if (!isAllowed(el)) {
+            if (!isAllowed($html, el)) {
                 return;
             }
 
-            let styleAttr = $(el).attr('style');
+            let styleAttr = $html(el).attr('style');
             styleAttr = styleAttr.replace(/text-align: ?(left|center|right);?/, '').trim();
-            $(el).attr('style', styleAttr);
+            $html(el).attr('style', styleAttr);
         });
     }
 
     // Change inline font-weight to <b> tag or remove altogether
     if (opinionated) {
         $html('span[style*="font-weight"]').each((i, el) => {
-            if (!isAllowed(el)) {
+            if (!isAllowed($html, el)) {
                 return;
             }
 
-            let styleAttr = $(el).attr('style');
+            let styleAttr = $html(el).attr('style');
             let styles = styleToObject(styleAttr);
             let fontWeight = styles['font-weight'];
 
@@ -66,25 +66,25 @@ const cleanHTML = (args) => {
             }
 
             let weightlessStyleAttr = styleAttr.replace(/font-weight: ?([a-zA-Z0-9-]+);?/, '');
-            $(el).attr('style', weightlessStyleAttr);
+            $html(el).attr('style', weightlessStyleAttr);
         });
     }
 
     if (opinionated) {
         $html('a[style*="font-weight"], p[style*="font-weight"], li[style*="font-weight"]').each((i, el) => {
-            if (!isAllowed(el)) {
+            if (!isAllowed($html, el)) {
                 return;
             }
 
-            let styleAttr = $(el).attr('style');
+            let styleAttr = $html(el).attr('style');
             let styles = styleToObject(styleAttr);
             let fontWeight = styles['font-weight'];
 
             let weightlessStyleAttr = styleAttr.replace(/font-weight: ?([a-zA-Z0-9-]+);?/, '');
-            $(el).attr('style', weightlessStyleAttr);
+            $html(el).attr('style', weightlessStyleAttr);
 
             if (['bold', 'bolder'].includes(fontWeight) || parseInt(fontWeight) >= 600) {
-                $(el).html(`<b>${$(el).html()}</b>`);
+                $html(el).html(`<b>${$html(el).html()}</b>`);
             }
         });
     }
@@ -92,11 +92,11 @@ const cleanHTML = (args) => {
     // Change inline font-style to <b> tag or remove altogether
     if (opinionated) {
         $html('span[style*="font-style"]').each((i, el) => {
-            if (!isAllowed(el)) {
+            if (!isAllowed($html, el)) {
                 return;
             }
 
-            let styleAttr = $(el).attr('style');
+            let styleAttr = $html(el).attr('style');
             let styles = styleToObject(styleAttr);
             let fontStyle = styles['font-style'];
 
@@ -105,25 +105,25 @@ const cleanHTML = (args) => {
             }
 
             let stylelessStyleAttr = styleAttr.replace(/font-style: ?([a-zA-Z0-9-]+);?/, '');
-            $(el).attr('style', stylelessStyleAttr);
+            $html(el).attr('style', stylelessStyleAttr);
         });
     }
 
     if (opinionated) {
         $html('a[style*="font-style"], p[style*="font-style"], li[style*="font-style"]').each((i, el) => {
-            if (!isAllowed(el)) {
+            if (!isAllowed($html, el)) {
                 return;
             }
 
-            let styleAttr = $(el).attr('style');
+            let styleAttr = $html(el).attr('style');
             let styles = styleToObject(styleAttr);
             let fontStyle = styles['font-style'];
 
             let stylelessStyleAttr = styleAttr.replace(/font-style: ?([a-zA-Z0-9-]+);?/, '');
-            $(el).attr('style', stylelessStyleAttr);
+            $html(el).attr('style', stylelessStyleAttr);
 
             if (['italic', 'oblique'].includes(fontStyle)) {
-                $(el).html(`<i>${$(el).html()}</i>`);
+                $html(el).html(`<i>${$html(el).html()}</i>`);
             }
         });
     }
@@ -131,11 +131,11 @@ const cleanHTML = (args) => {
     // Remove text color decelerations
     if (opinionated) {
         $html('[style*="color"]').each((i, el) => {
-            if (!isAllowed(el)) {
+            if (!isAllowed($html, el)) {
                 return;
             }
 
-            let styleAttr = $(el).attr('style');
+            let styleAttr = $html(el).attr('style');
             let styles = styleToObject(styleAttr);
             let color = styles?.color ?? false;
 
@@ -146,18 +146,18 @@ const cleanHTML = (args) => {
             let theReg = new RegExp(`color: ?${escapeStringRegexp(color)};?`);
             let colorlessStyleAttr = styleAttr.replace(theReg, '');
 
-            $(el).attr('style', colorlessStyleAttr);
+            $html(el).attr('style', colorlessStyleAttr);
         });
     }
 
     // Remove background decelerations
     if (opinionated) {
         $html('[style*="background"]').each((i, el) => {
-            if (!isAllowed(el)) {
+            if (!isAllowed($html, el)) {
                 return;
             }
 
-            let styleAttr = $(el).attr('style');
+            let styleAttr = $html(el).attr('style');
             let styles = styleToObject(styleAttr);
 
             let background = styles.background ?? false;
@@ -205,22 +205,22 @@ const cleanHTML = (args) => {
                 styleAttr = styleAttr.replace(new RegExp(`background-size: ?${escapeStringRegexp(backgroundSize)};?`), '');
             }
 
-            $(el).attr('style', styleAttr);
+            $html(el).attr('style', styleAttr);
         });
     }
 
     // Remove empty `style=""` tags
     if (opinionated) {
         $html('[style]').each((i, el) => {
-            if (!isAllowed(el)) {
+            if (!isAllowed($html, el)) {
                 return;
             }
 
-            let styleAttr = $(el).attr('style').trim();
+            let styleAttr = $html(el).attr('style').trim();
             let styleAttrLength = styleAttr.length;
 
             if (styleAttrLength === 0) {
-                $(el).removeAttr('style');
+                $html(el).removeAttr('style');
             }
         });
     }
@@ -228,37 +228,37 @@ const cleanHTML = (args) => {
     // Remove formatting tags from headers
     if (opinionated) {
         $html('h1, h2, h3, h4, h5, h6').each((i, el) => {
-            if (!isAllowed(el)) {
+            if (!isAllowed($html, el)) {
                 return;
             }
 
-            $(el).find('*').each((ii, ell) => {
+            $html(el).find('*').each((ii, ell) => {
                 if (['b', 'strong', 'i', 'em', 'span'].includes(ell.tagName)) {
-                    $(ell).unwrap();
+                    $html(ell).replaceWith($html(ell).contents());
                 }
             });
 
             // THis could introduce extra spaces, so trim them
-            let headerHTML = $(el).html();
+            let headerHTML = $html(el).html();
             let headerHTMLTrimmed = headerHTML.replace(/ {2,}/, '').trim();
-            $(el).html(headerHTMLTrimmed);
+            $html(el).html(headerHTMLTrimmed);
         });
     }
 
     // Remove <p> & <li> tags, and remove leading or trailing <br>'s
     if (opinionated) {
         $html('p, li').each((i, el) => {
-            if (!isAllowed(el)) {
+            if (!isAllowed($html, el)) {
                 return;
             }
 
-            let content = $(el).html().trim();
+            let content = $html(el).html().trim();
             content = content.replace(/^(<br ?\/?>){1,}|(<br ?\/?>){1,}$/gm, '');
 
             if (content.length === 0) {
-                $(el).remove();
+                $html(el).remove();
             } else {
-                $(el).html(content);
+                $html(el).html(content);
             }
         });
     }
@@ -266,20 +266,20 @@ const cleanHTML = (args) => {
     // Wrap some lists in a HTML card
     if (cards) {
         $html('ol, ul').each((i, ul) => {
-            let $parent = ($(ul).parents('ul, ol').last().length) ? $(ul).parents('ul, ol').last() : $(ul);
+            let $parent = ($html(ul).parents('ul, ol').last().length) ? $html(ul).parents('ul, ol').last() : $html(ul);
 
-            let hasStyle = ($($parent).attr('style')) ? true : false;
-            let hasType = ($($parent).attr('type') || $($parent).find('[type]').length) ? true : false;
-            let hasValue = ($($parent).attr('value') || $($parent).find('[value]').length) ? true : false;
-            let hasStart = ($($parent).attr('start') || $($parent).find('[start]').length) ? true : false;
-            let hasOLList = ($($parent).find('ol').length) ? true : false;
-            let hasULList = ($($parent).find('ul').length) ? true : false;
+            let hasStyle = ($html($parent).attr('style')) ? true : false;
+            let hasType = ($html($parent).attr('type') || $html($parent).find('[type]').length) ? true : false;
+            let hasValue = ($html($parent).attr('value') || $html($parent).find('[value]').length) ? true : false;
+            let hasStart = ($html($parent).attr('start') || $html($parent).find('[start]').length) ? true : false;
+            let hasOLList = ($html($parent).find('ol').length) ? true : false;
+            let hasULList = ($html($parent).find('ul').length) ? true : false;
 
             if (hasStyle || hasType || hasValue || hasStart || hasOLList || hasULList) {
                 // If parent is not wrapped ina  HTML card, wrap it in one
                 if ($parent.get(0)?.prev?.data !== 'kg-card-begin: html') {
-                    $($parent).before('<!--kg-card-begin: html-->');
-                    $($parent).after('<!--kg-card-end: html-->');
+                    $html($parent).before('<!--kg-card-begin: html-->');
+                    $html($parent).after('<!--kg-card-end: html-->');
                 }
             }
         });

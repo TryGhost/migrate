@@ -40,8 +40,8 @@
     "typescript": "5.8.3"
   },
   "dependencies": {
-    "@tryghost/html-to-mobiledoc": "3.2.9",
-    "@tryghost/kg-html-to-lexical": "1.2.25",
+    "@tryghost/html-to-mobiledoc": "3.2.12",
+    "@tryghost/kg-html-to-lexical": "1.2.28",
     "@tryghost/listr-smart-renderer": "0.5.21",
     "@tryghost/validator": "0.2.17"
   }

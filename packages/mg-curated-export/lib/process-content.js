@@ -1,5 +1,5 @@
 import {join} from 'node:path';
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 
 const processTextItem = (item, ctx, content) => {
     let itemHtmlChunks = [];
@@ -17,8 +17,8 @@ const processTextItem = (item, ctx, content) => {
     itemHtmlChunks.push(`<h3>${item.title}</h3>`);
     itemHtmlChunks.push(item.description);
 
-    const $ = cheerio.load(item.footer);
-    itemHtmlChunks.push(`<p><i>${$.text()}</i></p>`);
+    const $html = cheerio.load(item.footer);
+    itemHtmlChunks.push(`<p><i>${$html.text()}</i></p>`);
 
     return itemHtmlChunks.join('');
 };

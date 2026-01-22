@@ -1,6 +1,6 @@
 import {readFile} from 'node:fs/promises';
 import sanitizeHtml from 'sanitize-html';
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import {slugify} from '@tryghost/string';
 import {_base as debugFactory} from '@tryghost/debug';
 import {jsonToHtml} from './json-to-html.js';
@@ -202,19 +202,21 @@ const processNewsletterContent = (html, options) => { // eslint-disable-line no-
         }
     });
 
-    const $html = $.load(cleanedContent, {
-        decodeEntities: false
+    const $html = cheerio.load(cleanedContent, {
+        xml: {
+            decodeEntities: false
+        }
     });
 
     $html('p').each((i, el) => {
         const innerHtml = $html(el).html().trim();
         if (!innerHtml.length || innerHtml === '<br>' || innerHtml === '<br/>') {
-            $(el).remove();
+            $html(el).remove();
         }
     });
 
     $html('a:contains("Made with Letterhead")').each((i, el) => {
-        $(el).remove();
+        $html(el).remove();
     });
 
     const cleanedHTML = $html.html().trim();

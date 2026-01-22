@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import processPost from '../lib/process-post.js';
 import processContent from '../lib/process-content.js';
 
@@ -240,8 +240,11 @@ describe('Process Content', function () {
     </code>
 </pre></div>`;
 
-        const $post = $.load(source, {
-            decodeEntities: false
+        const $post = cheerio.load(source, {
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({
@@ -259,8 +262,11 @@ describe('Process Content', function () {
     it('Can process code blocks wish slashes', function () {
         const source = readSync('code-post.html');
 
-        const $post = $.load(source, {
-            decodeEntities: false
+        const $post = cheerio.load(source, {
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({
@@ -287,8 +293,11 @@ describe('Process Content', function () {
     it('Can process code blocks', function () {
         const source = readSync('code-post.html');
 
-        const $post = $.load(source, {
-            decodeEntities: false
+        const $post = cheerio.load(source, {
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({
@@ -313,8 +322,11 @@ describe('Process Content', function () {
         <span class="pre--content">wget https://example.com/package.zip</span>
         </pre></div>`;
 
-        const $post = $.load(source, {
-            decodeEntities: false
+        const $post = cheerio.load(source, {
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({
@@ -346,8 +358,11 @@ describe('Process Content', function () {
             </figure>
         </div></div>`;
 
-        const $post = $.load(source, {
-            decodeEntities: false
+        const $post = cheerio.load(source, {
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({
@@ -381,8 +396,11 @@ describe('Process Content', function () {
                  </div>
         </div>`;
 
-        const $post = $.load(source, {
-            decodeEntities: false
+        const $post = cheerio.load(source, {
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({
@@ -412,8 +430,11 @@ describe('Process Content', function () {
             </div>
         </div>`;
 
-        const $post = $.load(source, {
-            decodeEntities: false
+        const $post = cheerio.load(source, {
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({
@@ -439,8 +460,11 @@ describe('Process Content', function () {
             <blockquote name="8d9f" id="8d9f" class="graf graf--pullquote graf-after--pullquote graf--trailing">— <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></blockquote>
         </div>`;
 
-        const $post = $.load(source, {
-            decodeEntities: false
+        const $post = cheerio.load(source, {
+            xml: {
+                xmlMode: false,
+                decodeEntities: false
+            }
         }, false);
 
         const post = processContent({

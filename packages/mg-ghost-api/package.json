@@ -25,6 +25,6 @@
     "jest-extended": "6.0.0"
   },
   "dependencies": {
-    "@tryghost/admin-api": "1.14.2"
+    "@tryghost/admin-api": "1.14.4"
   }
 }

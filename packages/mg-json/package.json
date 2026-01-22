@@ -25,10 +25,10 @@
     "jest-extended": "6.0.0"
   },
   "dependencies": {
-    "@tryghost/string": "0.2.17",
+    "@tryghost/string": "0.2.21",
     "bson-objectid": "2.0.4",
     "html-entities": "2.6.0",
     "lodash": "4.17.21",
-    "node-email-verifier": "2.0.0"
+    "node-email-verifier": "4.0.0"
   }
 }

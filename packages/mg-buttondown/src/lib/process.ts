@@ -19,8 +19,10 @@ const processHTML = ({postData}: {postData?: mappedDataObject}) => {
     let renderedHtml = md.render(html);
 
     const $: any = cheerio.load(renderedHtml, {
-        xmlMode: false,
-        decodeEntities: false
+        xml: {
+            xmlMode: false,
+            decodeEntities: false
+        }
     });
 
     // Handle embeded tweets
@@ -57,7 +59,7 @@ const processHTML = ({postData}: {postData?: mappedDataObject}) => {
         }
     });
 
-    let finalHtml = $('body').html();
+    let finalHtml = $.root().html();
 
     return finalHtml;
 };

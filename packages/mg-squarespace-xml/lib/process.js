@@ -1,5 +1,5 @@
 import {extname} from 'path';
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import {slugify} from '@tryghost/string';
 import SimpleDom from 'simple-dom';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
@@ -11,11 +11,11 @@ const htmlToTextTrimmed = (html, max) => {
     return noHtml && noHtml.length > max ? noHtml.slice(0,max).split(' ').slice(0, -1).join(' ') : noHtml;
 };
 
-const processUser = ($sqUser) => {
-    const login = $($sqUser).children('wp\\:author_login').text();
+const processUser = ($xml, sqUser) => {
+    const login = $xml(sqUser).children('wp\\:author_login').text();
     const slug = slugify(login);
-    const email = $($sqUser).children('wp\\:author_email').text();
-    const name = $($sqUser).children('wp\\:author_display_name').text();
+    const email = $xml(sqUser).children('wp\\:author_email').text();
+    const name = $xml(sqUser).children('wp\\:author_display_name').text();
 
     return {
         url: slug,
@@ -33,20 +33,22 @@ const processContent = (html, options) => {
         return '';
     }
 
-    const $html = $.load(html, {
-        decodeEntities: false,
-        scriptingEnabled: false
-    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+    const $html = cheerio.load(html, {
+        xml: {
+            xmlMode: false,
+            decodeEntities: false
+        }
+    }, false);
 
     if (options?.removeSelectors) {
         $html(options.removeSelectors).each((i, el) => {
-            $(el).remove();
+            $html(el).remove();
         });
     }
 
     $html('.sqs-audio-embed').each((i, el) => {
-        let audioSrc = $(el).attr('data-url');
-        let audioTitle = $(el).attr('data-title');
+        let audioSrc = $html(el).attr('data-url');
+        let audioTitle = $html(el).attr('data-title');
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
@@ -59,48 +61,50 @@ const processContent = (html, options) => {
         const buildCard = audioCard.render(cardOpts);
         const cardHTML = buildCard.nodeValue;
 
-        $(el).replaceWith(cardHTML);
+        $html(el).replaceWith(cardHTML);
     });
 
     $html('.newsletter-form-wrapper').each((i, form) => {
-        $(form).remove();
+        $html(form).remove();
     });
 
     // squarespace images without src
     $html('img[data-src]').each((i, img) => {
-        const src = $(img).attr('data-src');
-        if ($(img).hasClass('thumb-image')) {
+        const src = $html(img).attr('data-src');
+        if ($html(img).hasClass('thumb-image')) {
             // images with the `thumb-image` class might be a duplicate
             // to prevent migrating two images, we have to remove the false node
-            if ($($(img).prev('noscript').children('img').get(0)).attr('src') === src) {
-                $(img).remove();
+            // Use prevAll to handle whitespace text nodes between elements
+            const noscriptImg = $html(img).prevAll('noscript').first().children('img').get(0);
+            if (noscriptImg && $html(noscriptImg).attr('src') === src) {
+                $html(img).remove();
             }
         } else {
-            $(img).attr('src', $(img).attr('data-src'));
+            $html(img).attr('src', $html(img).attr('data-src'));
         }
     });
 
     $html('figure blockquote').each((i, el) => {
-        const nextIsCaption = $(el).next('figcaption').length;
+        const nextIsCaption = $html(el).next('figcaption').length;
         let captionText = '';
         if (nextIsCaption) {
-            captionText = `<br><br>${$(el).next('figcaption').html()}`;
-            $(el).next('figcaption').remove();
+            captionText = `<br><br>${$html(el).next('figcaption').html()}`;
+            $html(el).next('figcaption').remove();
         }
-        $(el).html(`<p>${$(el).html()}${captionText}</p>`);
+        $html(el).html(`<p>${$html(el).html()}${captionText}</p>`);
     });
 
     $html('.sqs-video-wrapper').each((i, el) => {
-        const theHtml = $(el).attr('data-html');
-        const parent = $(el).parent('.embed-block-wrapper').parent('.intrinsic');
+        const theHtml = decode($html(el).attr('data-html'));
+        const parent = $html(el).parent('.embed-block-wrapper').parent('.intrinsic');
 
-        $(parent).replaceWith(`<figure class="kg-card kg-embed-card">${theHtml}</figure>`);
+        $html(parent).replaceWith(`<figure class="kg-card kg-embed-card">${theHtml}</figure>`);
     });
 
     // TODO: this should be a parser plugin
     // Wrap nested lists in HTML card
     $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {
-        let $parent = $(nestedList).parentsUntil('ul, ol').parent();
+        let $parent = $html(nestedList).parentsUntil('ul, ol').parent();
         $parent.before('<!--kg-card-begin: html-->');
         $parent.after('<!--kg-card-end: html-->');
     });
@@ -119,8 +123,8 @@ const processContent = (html, options) => {
 
 // The feature images is not "connected" to the post, other than it's located
 // in the sibling `<item>` node.
-const processFeatureImage = ($sqPost) => {
-    const $nextItem = $($sqPost).next().children('wp\\:attachment_url');
+const processFeatureImage = ($xml, sqPost) => {
+    const $nextItem = $xml(sqPost).next().children('wp\\:attachment_url');
 
     if ($nextItem.length >= 1) {
         let itemText = $nextItem.text();
@@ -135,25 +139,25 @@ const processFeatureImage = ($sqPost) => {
     return;
 };
 
-const processTags = ($sqCategories, fetchTags) => {
+const processTags = ($xml, $sqCategories, fetchTags) => {
     const categories = [];
     const tags = [];
 
     $sqCategories.each((i, taxonomy) => {
-        if (fetchTags && $(taxonomy).attr('domain') === 'post_tag') {
+        if (fetchTags && $xml(taxonomy).attr('domain') === 'post_tag') {
             tags.push({
-                url: `/tag/${$(taxonomy).attr('nicename')}`,
+                url: `/tag/${$xml(taxonomy).attr('nicename')}`,
                 data: {
-                    slug: $(taxonomy).attr('nicename'),
-                    name: $(taxonomy).text()
+                    slug: $xml(taxonomy).attr('nicename'),
+                    name: $xml(taxonomy).text()
                 }
             });
-        } else if ($(taxonomy).attr('domain') === 'category') {
+        } else if ($xml(taxonomy).attr('domain') === 'category') {
             categories.push({
-                url: `/tag/${$(taxonomy).attr('nicename')}`,
+                url: `/tag/${$xml(taxonomy).attr('nicename')}`,
                 data: {
-                    slug: $(taxonomy).attr('nicename'),
-                    name: $(taxonomy).text()
+                    slug: $xml(taxonomy).attr('nicename'),
+                    name: $xml(taxonomy).text()
                 }
             });
         }
@@ -162,18 +166,18 @@ const processTags = ($sqCategories, fetchTags) => {
     return categories.concat(tags);
 };
 
-const processPost = ($sqPost, users, options) => {
+const processPost = ($xml, sqPost, users, options) => {
     const {addTag, tags: fetchTags, url} = options;
-    const postType = $($sqPost).children('wp\\:post_type').text();
+    const postType = $xml(sqPost).children('wp\\:post_type').text();
 
     // only grab posts and pages
     if (postType !== 'attachment') {
-        const featureImage = processFeatureImage($sqPost);
-        // const authorSlug = slugify($($sqPost).children('dc\\:creator').text());
-        const creator = $($sqPost).children('dc\\:creator').text();
+        const featureImage = processFeatureImage($xml, sqPost);
+        // const authorSlug = slugify($xml(sqPost).children('dc\\:creator').text());
+        const creator = $xml(sqPost).children('dc\\:creator').text();
         const creatorSlug = slugify(creator);
 
-        let postSlug = $($sqPost).children('link').text();
+        let postSlug = $xml(sqPost).children('link').text();
         postSlug = postSlug.replace(/(\.html)/i, '');
         postSlug = postSlug.split('/').pop();
 
@@ -183,16 +187,16 @@ const processPost = ($sqPost, users, options) => {
         }
 
         // WP XML only provides a published date, we let's use that all dates Ghost expects
-        const postDate = new Date($($sqPost).children('pubDate').text());
+        const postDate = new Date($xml(sqPost).children('pubdate').text());
 
-        const postTitle = ($($sqPost).children('title').text().length > 0) ? $($sqPost).children('title').text() : false;
+        const postTitle = ($xml(sqPost).children('title').text().length > 0) ? $xml(sqPost).children('title').text() : false;
 
         const post = {
-            url: `${url}${$($sqPost).children('link').text()}`,
+            url: `${url}${$xml(sqPost).children('link').text()}`,
             data: {
                 slug: postSlug,
                 title: decode(postTitle),
-                status: $($sqPost).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
+                status: $xml(sqPost).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
                 published_at: postDate,
                 created_at: postDate,
                 updated_at: postDate,
@@ -201,10 +205,10 @@ const processPost = ($sqPost, users, options) => {
                 tags: []
             }
         };
-        post.data.html = processContent($($sqPost).children('content\\:encoded').text(), options);
+        post.data.html = processContent($xml(sqPost).children('content\\:encoded').text(), options);
 
-        if ($($sqPost).children('category').length >= 1) {
-            post.data.tags = processTags($($sqPost).children('category'), fetchTags);
+        if ($xml(sqPost).children('category').length >= 1) {
+            post.data.tags = processTags($xml, $xml(sqPost).children('category'), fetchTags);
         }
 
         if (addTag) {
@@ -271,7 +275,7 @@ const processPosts = ($xml, users, options) => {
     const postsOutput = [];
 
     $xml('item').each((i, sqPost) => {
-        postsOutput.push(processPost(sqPost, users, options));
+        postsOutput.push(processPost($xml, sqPost, users, options));
     });
 
     // don't return empty post objects
@@ -282,7 +286,7 @@ const processUsers = ($xml) => {
     const usersOutput = [];
 
     $xml('wp\\:author').each((i, sqUser) => {
-        usersOutput.push(processUser(sqUser));
+        usersOutput.push(processUser($xml, sqUser));
     });
 
     return usersOutput;
@@ -299,11 +303,13 @@ const all = async (input, {options}) => {
         return new errors.NoContentError({message: 'Input file is empty'});
     }
 
-    const $xml = $.load(input, {
-        decodeEntities: false,
-        xmlMode: true,
-        scriptingEnabled: false,
-        lowerCaseTags: true // needed to find `pubDate` tags
+    const $xml = cheerio.load(input, {
+        xml: {
+            decodeEntities: false,
+            xmlMode: true,
+            scriptingEnabled: false,
+            lowerCaseTags: true // needed to find `pubDate` tags
+        }
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
     // });
 

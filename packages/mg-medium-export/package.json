@@ -27,10 +27,10 @@
   },
   "dependencies": {
     "@tryghost/debug": "0.1.35",
-    "@tryghost/kg-default-cards": "10.2.0",
+    "@tryghost/kg-default-cards": "10.2.3",
     "@tryghost/mg-fs-utils": "0.16.2",
-    "@tryghost/string": "0.2.17",
-    "cheerio": "1.0.0-rc.12",
+    "@tryghost/string": "0.2.21",
+    "cheerio": "1.1.2",
     "simple-dom": "1.4.0"
   }
 }

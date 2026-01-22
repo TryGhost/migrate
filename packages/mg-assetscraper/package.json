@@ -28,16 +28,16 @@
   "dependencies": {
     "@tryghost/listr-smart-renderer": "0.5.21",
     "@tryghost/logging": "2.5.0",
-    "@tryghost/string": "0.2.17",
-    "cheerio": "1.0.0-rc.12",
+    "@tryghost/string": "0.2.21",
+    "cheerio": "1.1.2",
     "fast-replaceall": "2.0.2",
-    "file-type": "21.1.1",
-    "fs-extra": "11.3.2",
+    "file-type": "21.3.0",
+    "fs-extra": "11.3.3",
     "got": "11.8.6",
     "listr": "0.14.3",
     "markdown-it": "14.1.0",
     "mime-types": "3.0.2",
     "pretty-bytes": "7.1.0",
-    "srcset": "5.0.2"
+    "srcset": "5.0.3"
   }
 }

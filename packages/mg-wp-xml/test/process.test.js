@@ -1,6 +1,6 @@
 import path from 'node:path';
 import {promises as fs} from 'node:fs';
-import $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import process, {processWPMeta} from '../lib/process.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
@@ -455,10 +455,12 @@ describe('Process', function () {
 
     test('Can read post_meta', async function () {
         const input = await readSync('has-meta.xml');
-        const $xml = $.load(input, {
-            decodeEntities: false,
-            xmlMode: true,
-            lowerCaseTags: true
+        const $xml = cheerio.load(input, {
+            xml: {
+                decodeEntities: false,
+                xmlMode: true,
+                lowerCaseTags: true
+            }
         });
 
         let posts = [];
@@ -468,7 +470,7 @@ describe('Process', function () {
         });
 
         const post = posts[0];
-        const metaValues = await processWPMeta(post);
+        const metaValues = await processWPMeta($xml, post);
 
         expect(metaValues).toEqual({
             lorem1234: '433',
@@ -538,7 +540,7 @@ Lorem Ipsum`;
         const processed = await process.preProcessContent({html});
 
         expect(processed).toEqual('Hello world\n' +
-        '<iframe loading="lazy" title="" width="160" height="9" src="https://www.youtube.com/embed/ABCD1234xYz?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>\n' +
+        '<iframe loading="lazy" title width="160" height="9" src="https://www.youtube.com/embed/ABCD1234xYz?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>\n' +
         'Lorem Ipsum');
     });
 
@@ -550,7 +552,7 @@ Lorem Ipsum`;
         const processed = await process.preProcessContent({html});
 
         expect(processed).toEqual('Hello world\n' +
-        '<iframe loading="lazy" title="" width="160" height="9" src="https://www.youtube.com/embed/ABCD1234xYz?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>\n' +
+        '<iframe loading="lazy" title width="160" height="9" src="https://www.youtube.com/embed/ABCD1234xYz?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>\n' +
         'Lorem Ipsum');
     });
 
