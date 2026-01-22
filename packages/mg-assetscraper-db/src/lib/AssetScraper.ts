@@ -616,7 +616,7 @@ export default class AssetScraper {
             fileMime = converted.mime;
         }
 
-        if (!extension && !fileMime) {
+        if (!extension || !fileMime) {
             return null;
         }
 
