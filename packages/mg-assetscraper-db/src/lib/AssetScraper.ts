@@ -419,7 +419,7 @@ export default class AssetScraper {
 
         // Check the cache to see if we have a local src. If we do, use that to replace the found src
         if (localPath) {
-            content = content.replace(dataUri, localPath);
+            content = await this.replaceSrc(dataUri, localPath, content);
             return {
                 path: localPath,
                 content
