@@ -47,17 +47,17 @@ const DEFAULT_BLOCKED_DOMAINS: (string | RegExp)[] = [
 ];
 
 export default class AssetScraper {
-    fileCache: FileCache;
-    findOnlyMode: boolean;
-    baseUrl: string | false;
-    defaultOptions: Required<Pick<AssetScraperOptions, 'optimize' | 'allowImages' | 'allowMedia' | 'allowFiles'>>;
-    warnings: string[];
-    logger: Logger | undefined;
-    allowedDomains: string[];
-    allowAllDomains: boolean;
-    blockedDomains: (string | RegExp)[];
-    assetCache: AssetCache;
-    processBase64Images: boolean;
+    #fileCache: FileCache;
+    #findOnlyMode: boolean;
+    #baseUrl: string | false;
+    #defaultOptions: Required<Pick<AssetScraperOptions, 'optimize' | 'allowImages' | 'allowMedia' | 'allowFiles'>>;
+    #warnings: string[];
+    #logger: Logger | undefined;
+    #allowedDomains: string[];
+    #allowAllDomains: boolean;
+    #blockedDomains: (string | RegExp)[];
+    #assetCache: AssetCache;
+    #processBase64Images: boolean;
 
     #settingsKeys: string[];
     #keys: Array<keyof GhostContentObject>;
@@ -66,9 +66,9 @@ export default class AssetScraper {
     #failedDownloads: FailedDownload[];
 
     constructor(fileCache: FileCache, options: AssetScraperOptions = {}, ctx: AssetScraperContext = {}) {
-        this.fileCache = fileCache;
+        this.#fileCache = fileCache;
 
-        this.defaultOptions = {
+        this.#defaultOptions = {
             optimize: options.optimize ?? true,
             allowImages: options.allowImages ?? true,
             allowMedia: options.allowMedia ?? true,
@@ -76,21 +76,21 @@ export default class AssetScraper {
         };
 
         // Set the  base URL, but also trim thr trailing slash
-        this.baseUrl = options.baseUrl ? options.baseUrl.replace(/\/$/, '') : false;
-        this.findOnlyMode = options?.findOnlyMode ?? false;
-        this.allowedDomains = options?.domains ?? [];
-        this.allowAllDomains = options?.allowAllDomains ?? false;
+        this.#baseUrl = options.baseUrl ? options.baseUrl.replace(/\/$/, '') : false;
+        this.#findOnlyMode = options?.findOnlyMode ?? false;
+        this.#allowedDomains = options?.domains ?? [];
+        this.#allowAllDomains = options?.allowAllDomains ?? false;
 
-        if (this.allowedDomains.length === 0 && !this.allowAllDomains) {
+        if (this.#allowedDomains.length === 0 && !this.#allowAllDomains) {
             throw new errors.ValidationError({
                 message: 'AssetScraper requires either `domains` or `allowAllDomains: true`'
             });
         }
 
-        this.blockedDomains = [...DEFAULT_BLOCKED_DOMAINS, ...(options?.blockedDomains ?? [])];
-        this.processBase64Images = options?.processBase64Images ?? false;
-        this.warnings = (ctx.warnings) ? ctx.warnings : [];
-        this.logger = ctx.logger;
+        this.#blockedDomains = [...DEFAULT_BLOCKED_DOMAINS, ...(options?.blockedDomains ?? [])];
+        this.#processBase64Images = options?.processBase64Images ?? false;
+        this.#warnings = (ctx.warnings) ? ctx.warnings : [];
+        this.#logger = ctx.logger;
         this.#ctx = ctx;
         this.#settingsKeys = [
             'logo',
@@ -114,13 +114,13 @@ export default class AssetScraper {
         ];
         this.#foundItems = [];
         this.#failedDownloads = [];
-        this.assetCache = new AssetCache({
-            fileCache: this.fileCache
+        this.#assetCache = new AssetCache({
+            fileCache: this.#fileCache
         });
     }
 
     async init() {
-        await this.assetCache.init();
+        await this.#assetCache.init();
     }
 
     async getRemoteMedia(requestURL: string): Promise<RemoteMediaResponse> {
@@ -264,7 +264,7 @@ export default class AssetScraper {
         //     storagePath: '/content/images/path/to/photo.jpg',
         //     outputPath: 'the-temp-dir/1234/abcd//content/images/path/to/photo.jpg'
         // }
-        const assetFile = this.fileCache.resolveFileName(finalBasePath, folder);
+        const assetFile = this.#fileCache.resolveFileName(finalBasePath, folder);
 
         return assetFile;
     }
@@ -284,9 +284,9 @@ export default class AssetScraper {
 
         const assetFile = await this.resolveFileName(src, folder, media.extension);
 
-        let imageOptions = Object.assign(assetFile, {optimize: this.defaultOptions.optimize});
+        let imageOptions = Object.assign(assetFile, {optimize: this.#defaultOptions.optimize});
 
-        let newLocal = await this.fileCache.writeContentFile(media.fileBuffer, imageOptions);
+        let newLocal = await this.#fileCache.writeContentFile(media.fileBuffer, imageOptions);
 
         return newLocal;
     }
@@ -306,10 +306,10 @@ export default class AssetScraper {
         const imageOptions = {
             filename: media.fileName,
             outputPath: `/content/${folder}/${media.fileName}`,
-            optimize: this.defaultOptions.optimize
+            optimize: this.#defaultOptions.optimize
         };
 
-        const newLocal = await this.fileCache.writeContentFile(media.fileBuffer, imageOptions);
+        const newLocal = await this.#fileCache.writeContentFile(media.fileBuffer, imageOptions);
 
         return newLocal;
     }
@@ -335,7 +335,7 @@ export default class AssetScraper {
 
     async downloadExtractSave(src: string, content: string): Promise<DownloadResult> {
         // Create a cache item, or find a existing item
-        const cacheEntry = await this.assetCache.add(src) as AssetCacheEntry;
+        const cacheEntry = await this.#assetCache.add(src) as AssetCacheEntry;
         const {id: cacheId, localPath, skip} = cacheEntry;
 
         // Check the cache to see if we have a local src. If we do, use that to replace the found src
@@ -362,7 +362,7 @@ export default class AssetScraper {
 
             if (!response) {
                 // logging.warn(`Failed to download remote media: ${src}`);
-                await this.assetCache.update(cacheId, 'skip', 'no response');
+                await this.#assetCache.update(cacheId, 'skip', 'no response');
                 this.#failedDownloads.push({url: src, error: 'No response from server'});
                 return {
                     path: src,
@@ -371,14 +371,14 @@ export default class AssetScraper {
             }
 
             // Update the cache with the status code (for fault-finding later on)
-            await this.assetCache.update(cacheId, 'status', response?.statusCode);
+            await this.#assetCache.update(cacheId, 'status', response?.statusCode);
 
             const fileData = await this.extractFileDataFromResponse(src, response);
 
             // Store the file locally
             const filePath = await this.storeMediaLocally(src, fileData);
             if (!filePath) {
-                await this.assetCache.update(cacheId, 'skip', 'no storage found');
+                await this.#assetCache.update(cacheId, 'skip', 'no storage found');
                 this.#failedDownloads.push({url: src, error: 'Failed to store media locally'});
                 // logging.warn(`Failed to store media locally: ${src}`);
                 return {
@@ -388,7 +388,7 @@ export default class AssetScraper {
             }
 
             // Store the local path in the cache
-            await this.assetCache.update(cacheId, 'localPath', filePath);
+            await this.#assetCache.update(cacheId, 'localPath', filePath);
 
             return {
                 path: filePath,
@@ -397,7 +397,7 @@ export default class AssetScraper {
         } catch (error: any) {
             // Log the error and continue with other assets
             const errorMessage = error?.message || 'Unknown error';
-            await this.assetCache.update(cacheId, 'skip', errorMessage);
+            await this.#assetCache.update(cacheId, 'skip', errorMessage);
             this.#failedDownloads.push({url: src, error: errorMessage});
 
             // Return original src so the content remains valid
@@ -414,7 +414,7 @@ export default class AssetScraper {
         const cacheKey = `base64-${hash}`;
 
         // Create a cache item, or find an existing item
-        const cacheEntry = await this.assetCache.add(cacheKey) as AssetCacheEntry;
+        const cacheEntry = await this.#assetCache.add(cacheKey) as AssetCacheEntry;
         const {id: cacheId, localPath} = cacheEntry;
 
         // Check the cache to see if we have a local src. If we do, use that to replace the found src
@@ -430,7 +430,7 @@ export default class AssetScraper {
         const fileData = await this.extractFileDataFromBase64(dataUri);
 
         if (!fileData) {
-            await this.assetCache.update(cacheId, 'skip', 'invalid base64 data');
+            await this.#assetCache.update(cacheId, 'skip', 'invalid base64 data');
             return {
                 path: dataUri,
                 content
@@ -440,7 +440,7 @@ export default class AssetScraper {
         // Store the file locally without calling resolveFileName for base64
         const filePath = await this.storeBase64MediaLocally(fileData);
         if (!filePath) {
-            await this.assetCache.update(cacheId, 'skip', 'no storage found');
+            await this.#assetCache.update(cacheId, 'skip', 'no storage found');
             return {
                 path: dataUri,
                 content
@@ -448,7 +448,7 @@ export default class AssetScraper {
         }
 
         // Store the local path in the cache
-        await this.assetCache.update(cacheId, 'localPath', filePath);
+        await this.#assetCache.update(cacheId, 'localPath', filePath);
 
         // Replace the data URI with the local path
         content = await this.replaceSrc(dataUri, filePath, content);
@@ -460,7 +460,7 @@ export default class AssetScraper {
     }
 
     async findMatchesInString(content: string): Promise<string[]> {
-        if (this.allowAllDomains) {
+        if (this.#allowAllDomains) {
             return this.findAllUrlsExceptBlocked(content);
         }
         return this.findUrlsFromAllowedDomains(content);
@@ -469,7 +469,7 @@ export default class AssetScraper {
     private findUrlsFromAllowedDomains(content: string): string[] {
         const theMatches: string[] = [];
 
-        for (const domain of this.allowedDomains) {
+        for (const domain of this.#allowedDomains) {
             // NOTE: the src could end with a quote, apostrophe or double-backslash, comma, space, or ) - hence the termination symbols
             const srcTerminationSymbols = `("|\\)|'|(?=(?:,https?))| |<|\\\\|&quot;|$)`;
             const regex = new RegExp(`(${domain}.*?)(${srcTerminationSymbols})`, 'igm');
@@ -502,8 +502,8 @@ export default class AssetScraper {
             return item.replace(/,$/, '');
         });
 
-        const noAllowedDomains = this.allowedDomains.length === 0;
-        const noCustomBlockedDomains = this.blockedDomains.length === DEFAULT_BLOCKED_DOMAINS.length;
+        const noAllowedDomains = this.#allowedDomains.length === 0;
+        const noCustomBlockedDomains = this.#blockedDomains.length === DEFAULT_BLOCKED_DOMAINS.length;
         const requireFileExtension = noAllowedDomains && noCustomBlockedDomains;
 
         return matchesArray.filter((url) => {
@@ -520,11 +520,11 @@ export default class AssetScraper {
     }
 
     private isBlockedDomain(url: string): boolean {
-        if (this.blockedDomains.length === 0) {
+        if (this.#blockedDomains.length === 0) {
             return false;
         }
 
-        for (const blocked of this.blockedDomains) {
+        for (const blocked of this.#blockedDomains) {
             if (blocked instanceof RegExp) {
                 if (blocked.test(url)) {
                     return true;
@@ -633,8 +633,8 @@ export default class AssetScraper {
 
     async normalizeUrl(src: string): Promise<string> {
         // Replace the Ghost URL placeholder with the actual URL
-        if (src.includes('__GHOST_URL__') && this.baseUrl && typeof this.baseUrl === 'string') {
-            src = src.replace('__GHOST_URL__', this.baseUrl);
+        if (src.includes('__GHOST_URL__') && this.#baseUrl && typeof this.#baseUrl === 'string') {
+            src = src.replace('__GHOST_URL__', this.#baseUrl);
         }
 
         // If UTL is like `//example.com`, add `https:` to the start
@@ -644,7 +644,7 @@ export default class AssetScraper {
 
         // If URL is relative, add the base URL
         if (src.startsWith('/')) {
-            src = `${this.baseUrl}${src}`;
+            src = `${this.#baseUrl}${src}`;
         }
 
         return src;
@@ -652,12 +652,12 @@ export default class AssetScraper {
 
     async inlineContent(content: string): Promise<string> {
         // Process base64 images first if enabled
-        if (this.processBase64Images) {
+        if (this.#processBase64Images) {
             const base64Matches = await this.findBase64ImagesInString(content);
 
             for (const dataUri of base64Matches) {
                 // If in findOnlyMode, just push data URIs to an array and continue
-                if (this.findOnlyMode) {
+                if (this.#findOnlyMode) {
                     this.#foundItems.push(dataUri);
                     continue;
                 }
@@ -672,7 +672,7 @@ export default class AssetScraper {
 
         for (const src of matches) {
             // If in findOnlyMode, just puch srcs to an array and continue
-            if (this.findOnlyMode) {
+            if (this.#findOnlyMode) {
                 this.#foundItems.push(src);
                 continue;
             }
