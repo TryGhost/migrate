@@ -758,7 +758,8 @@ export default class AssetScraper {
                     continue;
                 }
 
-                const newSrc = await this.downloadExtractSave(value, value);
+                const absoluteSrc = await this.normalizeUrl(value);
+                const newSrc = await this.downloadExtractSave(absoluteSrc, absoluteSrc);
                 (newsletter as Record<string, string>)[item] = this.localizeSrc(newSrc.path);
             }
         }
