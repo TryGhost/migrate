@@ -1,86 +1,97 @@
 /* c8 ignore start */
 import {parse, join, basename, extname} from 'node:path';
-import {writeFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import errors from '@tryghost/errors';
 import {slugify} from '@tryghost/string';
-import SmartRenderer, {makeTaskRunner} from '@tryghost/listr-smart-renderer';
+import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {fileTypeFromBuffer} from 'file-type';
 import transliterate from 'transliteration';
-import sharp from 'sharp';
-import convert from 'heic-convert';
 import AssetCache from './AssetCache.js';
+import {needsConverting, convertImageBuffer, getFolderForMimeType, sanitizePathSegment} from './utils.js';
 
-// Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/shared/config/overrides.json
-const knownImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/webp', 'image/avif', 'image/heif', 'image/heic'];
-const knownMediaTypes = ['video/mp4', 'video/webm', 'video/ogg', 'audio/mpeg', 'audio/vnd.wav', 'audio/wave', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/mp4', 'audio/x-m4a'];
-const knownFileTypes = ['application/pdf', 'application/json', 'application/ld+json', 'application/vnd.oasis.opendocument.presentation', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.text', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/rtf', 'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/xml', 'application/atom+xml'
+import type {ListrTask} from 'listr2';
+import type {
+    FileCache,
+    AssetScraperOptions,
+    AssetScraperContext,
+    RemoteMediaResponse,
+    MediaData,
+    Logger,
+    GhostContentObject,
+    SettingsItem,
+    CustomThemeSettingsItem,
+    NewsletterItem,
+    DownloadResult,
+    FailedDownload,
+    AssetCacheEntry
+} from './types.js';
+
+const DEFAULT_BLOCKED_DOMAINS: (string | RegExp)[] = [
+    'https://images.unsplash.com', // Unsplash
+    'https://www.gravatar.com', // Gravatar
+    new RegExp('^https?://([a-z0-9-]+\\.)?cdninstagram\\.com'), // Instagram CDN
+    new RegExp('^https?://(www\\.)?instagram\\.com'), // Instagram website
+    new RegExp('^https?://([a-z0-9-]+\\.)?([a-z]+\\.)?fbcdn\\.net'), // Facebook CDN
+    new RegExp('^https?://(www\\.)?facebook\\.com'), // Facebook website
+    new RegExp('^https?://([a-z0-9-]+\\.)?ytimg\\.com'), // YouTube images
+    new RegExp('^https?://(www\\.)?(youtube\\.com|youtu\\.be)'), // YouTube website
+    new RegExp('^https?://([a-z0-9-]+\\.)?twitter\\.com'), // Twitter website
+    new RegExp('^https?://([a-z0-9-]+\\.)?x\\.com'), // Worse Twitter
+    new RegExp('^https?://([a-z0-9-]+\\.)?twimg\\.com'), // Twitter images
+    new RegExp('^https?://(www\\.)?amazon\\.[a-z]{2,}'), // Amazon website, across all locales
+    new RegExp('^https?://([a-z]+\\.)?media-amazon\\.com'), // Amazon images
+    new RegExp('^https?://(www\\.)?ebay\\.[a-z]{2,}'), // EBay website, across all locales
+    new RegExp('^https?://i\\.ebayimg\\.com'), // EBay images
+    new RegExp('^https?://(www\\.)?etsy\\.[a-z]{2,}'), // Etsy website, across all locales
+    new RegExp('^https?://i\\.etsystatic\\.com') // Etsy images
 ];
-const knownTypes = [...knownImageTypes, ...knownMediaTypes, ...knownFileTypes];
-
-const needsConverting = ['image/avif', 'image/heif', 'image/heic'];
 
 export default class AssetScraper {
-    /**
-     * The idea is:
-     *
-     * - Loop over posts, meta, tags, settings, one by one. Any object that _could_ have an image src in it, loop over that as a single task.
-     *  - When an asset is found, do the file type check and download right then, don't just add to the cache and move on
-     *  - Save the result (response status, new URL is applicable, etc) to the cache
-     * - When an asset is found, check the cache first as the asset might be downloaded already
-     *
-     * This will be more difficult to show a number of tasks, but the number of posts will have to do.
-     * Don't deviate from this, because complexity will grow massively
-     *
-     * Take inspiration from the external media inliner, as some of this may make sense there too
-     */
-
-    fileCache: any;
-    findOnlyMode: Boolean;
-    baseUrl: string | Boolean;
-    defaultOptions: any;
-    warnings: any;
-    logger: any;
-    allowedDomains: string[];
-    assetCache: AssetCache;
-    processBase64Images: boolean;
+    #fileCache: FileCache;
+    #findOnlyMode: boolean;
+    #baseUrl: string | false;
+    #defaultOptions: Required<Pick<AssetScraperOptions, 'optimize' | 'allowImages' | 'allowMedia' | 'allowFiles'>>;
+    #warnings: string[];
+    #logger: Logger | undefined;
+    #allowedDomains: string[];
+    #allowAllDomains: boolean;
+    #blockedDomains: (string | RegExp)[];
+    #assetCache: AssetCache;
+    #processBase64Images: boolean;
 
     #settingsKeys: string[];
-    #keys: string[];
-    // #postObjectKeys: string[];
-    // #userObjectKeys: string[];
-    // #tagObjectKeys: string[];
-    #ctx: any;
-
+    #keys: Array<keyof GhostContentObject>;
+    #ctx: AssetScraperContext;
     #foundItems: string[];
-    #failedDownloads: Array<{url: string; error: string}>;
+    #failedDownloads: FailedDownload[];
 
-    constructor(fileCache: any, options: any, ctx: any = {}) {
-        this.fileCache = fileCache;
+    constructor(fileCache: FileCache, options: AssetScraperOptions = {}, ctx: AssetScraperContext = {}) {
+        this.#fileCache = fileCache;
 
-        this.defaultOptions = Object.assign({
-            optimize: true,
-            // sizeLimit: false,
-            allowImages: true,
-            allowMedia: true,
-            allowFiles: true
-        }, options);
+        this.#defaultOptions = {
+            optimize: options.optimize ?? true,
+            allowImages: options.allowImages ?? true,
+            allowMedia: options.allowMedia ?? true,
+            allowFiles: options.allowFiles ?? true
+        };
 
         // Set the  base URL, but also trim thr trailing slash
-        this.baseUrl = (options?.baseUrl) ? options.baseUrl.replace(/\/$/, '') : false;
+        this.#baseUrl = options.baseUrl ? options.baseUrl.replace(/\/$/, '') : false;
+        this.#findOnlyMode = options?.findOnlyMode ?? false;
+        this.#allowedDomains = options?.domains ?? [];
+        this.#allowAllDomains = options?.allowAllDomains ?? false;
 
-        this.findOnlyMode = options?.findOnlyMode ?? false;
+        if (this.#allowedDomains.length === 0 && !this.#allowAllDomains) {
+            throw new errors.ValidationError({
+                message: 'AssetScraper requires either `domains` or `allowAllDomains: true`'
+            });
+        }
 
-        this.allowedDomains = options?.domains ?? [];
-
-        this.processBase64Images = options?.processBase64Images ?? false;
-
-        this.warnings = (ctx.warnings) ? ctx.warnings : [];
-
-        this.logger = ctx.logger;
-
+        this.#blockedDomains = [...DEFAULT_BLOCKED_DOMAINS, ...(options?.blockedDomains ?? [])];
+        this.#processBase64Images = options?.processBase64Images ?? false;
+        this.#warnings = (ctx.warnings) ? ctx.warnings : [];
+        this.#logger = ctx.logger;
         this.#ctx = ctx;
-
         this.#settingsKeys = [
             'logo',
             'cover_image',
@@ -89,7 +100,6 @@ export default class AssetScraper {
             'twitter_image',
             'portal_button_icon'
         ];
-
         this.#keys = [
             'src',
             'feature_image',
@@ -102,29 +112,18 @@ export default class AssetScraper {
             'customThumbnailSrc',
             'productImageSrc'
         ];
-
         this.#foundItems = [];
         this.#failedDownloads = [];
-
-        // TODO: Custom theme settings
-        // Any objects where `"type": "image"`, look for assets in `value`
-
-        this.assetCache = new AssetCache({
-            // folderPath: options.assetCachePath
-            fileCache: this.fileCache
+        this.#assetCache = new AssetCache({
+            fileCache: this.#fileCache
         });
     }
 
     async init() {
-        await this.assetCache.init();
+        await this.#assetCache.init();
     }
 
-    /**
-     *
-     * @param {string} requestURL - url of remote media
-     * @returns {Promise<Object>}
-     */
-    async getRemoteMedia(requestURL: string) {
+    async getRemoteMedia(requestURL: string): Promise<RemoteMediaResponse> {
         // Enforce http - http > https redirects are commonplace
         const updatedRequestURL = requestURL.replace(/^\/\//g, 'http://');
 
@@ -143,7 +142,7 @@ export default class AssetScraper {
             return {
                 body: Buffer.from(arrayBuffer),
                 headers: {
-                    'content-type': response.headers.get('content-type')
+                    'content-type': response.headers.get('content-type') ?? undefined
                 },
                 statusCode: response.status
             };
@@ -155,7 +154,7 @@ export default class AssetScraper {
                 return {
                     body: Buffer.from(arrayBuffer),
                     headers: {
-                        'content-type': response.headers.get('content-type')
+                        'content-type': response.headers.get('content-type') ?? undefined
                     },
                     statusCode: response.status
                 };
@@ -165,23 +164,19 @@ export default class AssetScraper {
         }
     }
 
-    /**
-     *
-     * @param {Object} response - response from request
-     * @returns {Object}
-     */
-    async extractFileDataFromResponse(requestURL: any, response: any) {
-        let extension;
-        let fileMime;
+    async extractFileDataFromResponse(requestURL: string, response: RemoteMediaResponse): Promise<MediaData | null> {
+        let extension: string | undefined;
+        let fileMime: string | undefined;
         let body = response.body;
 
         // Attempt to get the file extension from the file itself
         // If that fails, or if `.ext` is undefined, get the extension from the file path in the catch
         try {
-            const fileInfo: any = await fileTypeFromBuffer(body);
-            // console.log({fileInfo});
-            extension = fileInfo.ext;
-            fileMime = fileInfo.mime;
+            const fileInfo = await fileTypeFromBuffer(body);
+            if (fileInfo) {
+                extension = fileInfo.ext;
+                fileMime = fileInfo.mime;
+            }
         } catch {
             const headers = response.headers;
             fileMime = headers['content-type'];
@@ -190,23 +185,14 @@ export default class AssetScraper {
         }
 
         // If mime is in array, it needs converting to a supported image format.
-        // To do that, convert the inout buffer to a webp buffer.
-        if (needsConverting.includes(fileMime)) {
-            if (fileMime === 'image/heic' || fileMime === 'image/heif') {
-                body = await convert({
-                    buffer: body,
-                    format: 'JPEG'
-                });
-            } else {
-                body = await sharp(body).webp({lossless: true}).toBuffer();
-            }
-
-            const newFileInfo: any = await fileTypeFromBuffer(body);
-            extension = newFileInfo.ext;
-            fileMime = newFileInfo.mime;
+        if (fileMime && needsConverting.includes(fileMime)) {
+            const converted = await convertImageBuffer(body, fileMime);
+            body = converted.buffer;
+            extension = converted.extension;
+            fileMime = converted.mime;
         }
 
-        if (!extension && !fileMime) {
+        if (!extension || !fileMime) {
             // console.log(`No file extension or mime found in response for file: ${requestURL}`);
             return null;
         }
@@ -234,7 +220,7 @@ export default class AssetScraper {
         const parsedSrc = parse(src);
 
         // Get the dir (all of the URL up until the file name) with no scheme, so `example.com/path/to`
-        const dirNoScheme = parsedSrc.dir.replace(assetUrl.protocol, '').replace(/^\/?\/?/, '').replace(/\./gm, '-').replace(/,/gm, '-').replace(/:/gm, '-');
+        const dirNoScheme = sanitizePathSegment(parsedSrc.dir.replace(assetUrl.protocol, '').replace(/^\/?\/?/, ''));
 
         // Get the file name with no extension or search
         const fileNameNoExtOrSearch = parsedSrc.name;
@@ -250,10 +236,7 @@ export default class AssetScraper {
         assetUrl.pathname = assetUrl.pathname.replace(fileNameNoExtOrSearch, `${transliteratedBasename}`);
 
         // Decode the file name, as it can sometimes be an encoded URL if used with a CDN or image manipulation service
-        let decodedFileName = decodeURIComponent(fileNameNoExtOrSearch);
-        decodedFileName = decodedFileName.replace(/\./g, '-');
-        decodedFileName = decodedFileName.replace(/,/g, '-');
-        decodedFileName = decodedFileName.replace(/:/g, '-');
+        const decodedFileName = sanitizePathSegment(decodeURIComponent(fileNameNoExtOrSearch));
 
         // Start an array of final file name parts, starting with the raw name itself
         const fileNameParts = [decodedFileName];
@@ -281,32 +264,18 @@ export default class AssetScraper {
         //     storagePath: '/content/images/path/to/photo.jpg',
         //     outputPath: 'the-temp-dir/1234/abcd//content/images/path/to/photo.jpg'
         // }
-        const assetFile = this.fileCache.resolveFileName(finalBasePath, folder);
+        const assetFile = this.#fileCache.resolveFileName(finalBasePath, folder);
 
         return assetFile;
     }
 
-    /**
-     *
-     * @param {String} src - The image src, used for the file name
-     * @param {Object} media - media to store locally
-     * @returns {Promise<string>} - path to stored media
-     */
-    async storeMediaLocally(src: string, media: any) {
-        let folder = null;
-
+    async storeMediaLocally(src: string, media: MediaData | null): Promise<string | null> {
         if (!media || !media.fileMime) {
             // console.log(`No file mime found for file: ${src}`);
             return null;
         }
 
-        if (knownImageTypes.includes(media.fileMime)) {
-            folder = 'images';
-        } else if (knownMediaTypes.includes(media.fileMime)) {
-            folder = 'media';
-        } else if (knownFileTypes.includes(media.fileMime)) {
-            folder = 'files';
-        }
+        const folder = getFolderForMimeType(media.fileMime);
 
         if (!folder) {
             // console.log(`No storage folder found for file mime: ${media.fileMime}`);
@@ -315,27 +284,19 @@ export default class AssetScraper {
 
         const assetFile = await this.resolveFileName(src, folder, media.extension);
 
-        let imageOptions = Object.assign(assetFile, {optimize: this.defaultOptions.optimize});
+        let imageOptions = Object.assign(assetFile, {optimize: this.#defaultOptions.optimize});
 
-        let newLocal = await this.fileCache.writeContentFile(media.fileBuffer, imageOptions);
+        let newLocal = await this.#fileCache.writeContentFile(media.fileBuffer, imageOptions);
 
         return newLocal;
     }
 
-    async storeBase64MediaLocally(media: any) {
-        let folder = null;
-
+    async storeBase64MediaLocally(media: MediaData | null): Promise<string | null> {
         if (!media || !media.fileMime) {
             return null;
         }
 
-        if (knownImageTypes.includes(media.fileMime)) {
-            folder = 'images';
-        } else if (knownMediaTypes.includes(media.fileMime)) {
-            folder = 'media';
-        } else if (knownFileTypes.includes(media.fileMime)) {
-            folder = 'files';
-        }
+        const folder = getFolderForMimeType(media.fileMime);
 
         if (!folder) {
             return null;
@@ -345,15 +306,15 @@ export default class AssetScraper {
         const imageOptions = {
             filename: media.fileName,
             outputPath: `/content/${folder}/${media.fileName}`,
-            optimize: this.defaultOptions.optimize
+            optimize: this.#defaultOptions.optimize
         };
 
-        let newLocal = await this.fileCache.writeContentFile(media.fileBuffer, imageOptions);
+        const newLocal = await this.#fileCache.writeContentFile(media.fileBuffer, imageOptions);
 
         return newLocal;
     }
 
-    async replaceSrc(src: string, inlinedSrc: string, content: string) {
+    async replaceSrc(src: string, inlinedSrc: string, content: string): Promise<string> {
         if (inlinedSrc.startsWith('/content/')) {
             const theRealSrc = this.localizeSrc(inlinedSrc);
             content = content.replace(src, theRealSrc);
@@ -372,9 +333,9 @@ export default class AssetScraper {
         return src;
     }
 
-    async downloadExtractSave(src: string, content: string) {
+    async downloadExtractSave(src: string, content: string): Promise<DownloadResult> {
         // Create a cache item, or find a existing item
-        const cacheEntry: any = await this.assetCache.add(src);
+        const cacheEntry = await this.#assetCache.add(src) as AssetCacheEntry;
         const {id: cacheId, localPath, skip} = cacheEntry;
 
         // Check the cache to see if we have a local src. If we do, use that to replace the found src
@@ -401,7 +362,7 @@ export default class AssetScraper {
 
             if (!response) {
                 // logging.warn(`Failed to download remote media: ${src}`);
-                await this.assetCache.update(cacheId, 'skip', 'no response');
+                await this.#assetCache.update(cacheId, 'skip', 'no response');
                 this.#failedDownloads.push({url: src, error: 'No response from server'});
                 return {
                     path: src,
@@ -410,14 +371,14 @@ export default class AssetScraper {
             }
 
             // Update the cache with the status code (for fault-finding later on)
-            await this.assetCache.update(cacheId, 'status', response?.statusCode);
+            await this.#assetCache.update(cacheId, 'status', response?.statusCode);
 
             const fileData = await this.extractFileDataFromResponse(src, response);
 
             // Store the file locally
             const filePath = await this.storeMediaLocally(src, fileData);
             if (!filePath) {
-                await this.assetCache.update(cacheId, 'skip', 'no storage found');
+                await this.#assetCache.update(cacheId, 'skip', 'no storage found');
                 this.#failedDownloads.push({url: src, error: 'Failed to store media locally'});
                 // logging.warn(`Failed to store media locally: ${src}`);
                 return {
@@ -427,7 +388,7 @@ export default class AssetScraper {
             }
 
             // Store the local path in the cache
-            await this.assetCache.update(cacheId, 'localPath', filePath);
+            await this.#assetCache.update(cacheId, 'localPath', filePath);
 
             return {
                 path: filePath,
@@ -436,7 +397,7 @@ export default class AssetScraper {
         } catch (error: any) {
             // Log the error and continue with other assets
             const errorMessage = error?.message || 'Unknown error';
-            await this.assetCache.update(cacheId, 'skip', errorMessage);
+            await this.#assetCache.update(cacheId, 'skip', errorMessage);
             this.#failedDownloads.push({url: src, error: errorMessage});
 
             // Return original src so the content remains valid
@@ -447,17 +408,18 @@ export default class AssetScraper {
         }
     }
 
-    async downloadExtractSaveBase64(dataUri: string, content: string) {
+    async downloadExtractSaveBase64(dataUri: string, content: string): Promise<DownloadResult> {
         // Create a hash of the data URI to use as cache key
         const hash = createHash('md5').update(dataUri).digest('hex');
         const cacheKey = `base64-${hash}`;
 
         // Create a cache item, or find an existing item
-        const {id: cacheId, localPath} = await this.assetCache.add(cacheKey);
+        const cacheEntry = await this.#assetCache.add(cacheKey) as AssetCacheEntry;
+        const {id: cacheId, localPath} = cacheEntry;
 
         // Check the cache to see if we have a local src. If we do, use that to replace the found src
         if (localPath) {
-            content = content.replace(dataUri, localPath);
+            content = await this.replaceSrc(dataUri, localPath, content);
             return {
                 path: localPath,
                 content
@@ -468,7 +430,7 @@ export default class AssetScraper {
         const fileData = await this.extractFileDataFromBase64(dataUri);
 
         if (!fileData) {
-            await this.assetCache.update(cacheId, 'skip', 'invalid base64 data');
+            await this.#assetCache.update(cacheId, 'skip', 'invalid base64 data');
             return {
                 path: dataUri,
                 content
@@ -478,7 +440,7 @@ export default class AssetScraper {
         // Store the file locally without calling resolveFileName for base64
         const filePath = await this.storeBase64MediaLocally(fileData);
         if (!filePath) {
-            await this.assetCache.update(cacheId, 'skip', 'no storage found');
+            await this.#assetCache.update(cacheId, 'skip', 'no storage found');
             return {
                 path: dataUri,
                 content
@@ -486,7 +448,7 @@ export default class AssetScraper {
         }
 
         // Store the local path in the cache
-        await this.assetCache.update(cacheId, 'localPath', filePath);
+        await this.#assetCache.update(cacheId, 'localPath', filePath);
 
         // Replace the data URI with the local path
         content = await this.replaceSrc(dataUri, filePath, content);
@@ -497,10 +459,17 @@ export default class AssetScraper {
         };
     }
 
-    async findMatchesInString(content: any) {
+    async findMatchesInString(content: string): Promise<string[]> {
+        if (this.#allowAllDomains) {
+            return this.findAllUrlsExceptBlocked(content);
+        }
+        return this.findUrlsFromAllowedDomains(content);
+    }
+
+    private findUrlsFromAllowedDomains(content: string): string[] {
         const theMatches: string[] = [];
 
-        for (const domain of this.allowedDomains) {
+        for (const domain of this.#allowedDomains) {
             // NOTE: the src could end with a quote, apostrophe or double-backslash, comma, space, or ) - hence the termination symbols
             const srcTerminationSymbols = `("|\\)|'|(?=(?:,https?))| |<|\\\\|&quot;|$)`;
             const regex = new RegExp(`(${domain}.*?)(${srcTerminationSymbols})`, 'igm');
@@ -520,7 +489,67 @@ export default class AssetScraper {
         return theMatches;
     }
 
-    async findBase64ImagesInString(content: any) {
+    private findAllUrlsExceptBlocked(content: string): string[] {
+        // Match any http/https URL with same termination symbols as allowedDomains matching
+        const srcTerminationSymbols = `("|\\)|'|(?=(?:,https?))| |<|\\\\|&quot;|$)`;
+        const urlRegex = new RegExp(`(https?://[^\\s"'<>)\\\\,]+?)(${srcTerminationSymbols})`, 'igm');
+        const matches = content.matchAll(urlRegex);
+
+        let matchesArray = Array.from(matches, (m: any) => m[1]);
+
+        // Trim trailing commas from each match
+        matchesArray = matchesArray.map((item) => {
+            return item.replace(/,$/, '');
+        });
+
+        const noAllowedDomains = this.#allowedDomains.length === 0;
+        const noCustomBlockedDomains = this.#blockedDomains.length === DEFAULT_BLOCKED_DOMAINS.length;
+        const requireFileExtension = noAllowedDomains && noCustomBlockedDomains;
+
+        return matchesArray.filter((url) => {
+            if (this.isBlockedDomain(url)) {
+                return false;
+            }
+
+            if (requireFileExtension && !this.hasFileExtension(url)) {
+                return false;
+            }
+
+            return true;
+        });
+    }
+
+    private isBlockedDomain(url: string): boolean {
+        if (this.#blockedDomains.length === 0) {
+            return false;
+        }
+
+        for (const blocked of this.#blockedDomains) {
+            if (blocked instanceof RegExp) {
+                if (blocked.test(url)) {
+                    return true;
+                }
+            } else {
+                // Prefix match for plain URLs
+                if (url.startsWith(blocked)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private hasFileExtension(url: string): boolean {
+        try {
+            const pathname = new URL(url).pathname;
+            // Check if pathname ends with a file extension (e.g., .jpg, .png, .mp4)
+            return /\.[a-z0-9]+$/i.test(pathname);
+        } catch {
+            return false;
+        }
+    }
+
+    async findBase64ImagesInString(content: string): Promise<string[]> {
         const theMatches: string[] = [];
 
         // Match data URI scheme for images: data:image/[mime-type];base64,[base64-data]
@@ -536,12 +565,7 @@ export default class AssetScraper {
         return theMatches;
     }
 
-    /**
-     * Extract file data from a base64 data URI
-     * @param {string} dataUri - The base64 data URI (e.g., data:image/png;base64,...)
-     * @returns {Object} File data similar to extractFileDataFromResponse
-     */
-    async extractFileDataFromBase64(dataUri: string) {
+    async extractFileDataFromBase64(dataUri: string): Promise<MediaData | null> {
         // Parse the data URI to extract mime type and base64 data
         const matches = dataUri.match(/^data:image\/([^;]+);base64,(.+)$/);
 
@@ -553,7 +577,7 @@ export default class AssetScraper {
         const base64Data = matches[2];
 
         // Decode base64 to buffer
-        let body = Buffer.from(base64Data, 'base64');
+        let body: Buffer = Buffer.from(base64Data, 'base64');
 
         // Generate a hash of the buffer for a consistent filename (for deduplication)
         const hash = createHash('md5').update(body).digest('hex');
@@ -563,12 +587,14 @@ export default class AssetScraper {
         let fileMime = mimeType;
 
         try {
-            const fileInfo: any = await fileTypeFromBuffer(body);
-            extension = fileInfo.ext;
-            fileMime = fileInfo.mime;
+            const fileInfo = await fileTypeFromBuffer(body);
+            if (fileInfo) {
+                extension = fileInfo.ext;
+                fileMime = fileInfo.mime;
+            }
         } catch {
             // Fallback to the mime from the data URI
-            const mimeToExtMap: any = {
+            const mimeToExtMap: Record<string, string> = {
                 'image/jpeg': 'jpg',
                 'image/jpg': 'jpg',
                 'image/png': 'png',
@@ -584,21 +610,13 @@ export default class AssetScraper {
 
         // If mime is in array, it needs converting to a supported image format
         if (needsConverting.includes(fileMime)) {
-            if (fileMime === 'image/heic' || fileMime === 'image/heif') {
-                body = await convert({
-                    buffer: body,
-                    format: 'JPEG'
-                });
-            } else {
-                body = await sharp(body).webp({lossless: true}).toBuffer();
-            }
-
-            const newFileInfo: any = await fileTypeFromBuffer(body);
-            extension = newFileInfo.ext;
-            fileMime = newFileInfo.mime;
+            const converted = await convertImageBuffer(body, fileMime);
+            body = converted.buffer;
+            extension = converted.extension;
+            fileMime = converted.mime;
         }
 
-        if (!extension && !fileMime) {
+        if (!extension || !fileMime) {
             return null;
         }
 
@@ -613,10 +631,10 @@ export default class AssetScraper {
         };
     }
 
-    async normalizeUrl(src: string) {
+    async normalizeUrl(src: string): Promise<string> {
         // Replace the Ghost URL placeholder with the actual URL
-        if (src.includes('__GHOST_URL__') && this.baseUrl && typeof this.baseUrl === 'string') {
-            src = src.replace('__GHOST_URL__', this.baseUrl);
+        if (src.includes('__GHOST_URL__') && this.#baseUrl && typeof this.#baseUrl === 'string') {
+            src = src.replace('__GHOST_URL__', this.#baseUrl);
         }
 
         // If UTL is like `//example.com`, add `https:` to the start
@@ -626,20 +644,20 @@ export default class AssetScraper {
 
         // If URL is relative, add the base URL
         if (src.startsWith('/')) {
-            src = `${this.baseUrl}${src}`;
+            src = `${this.#baseUrl}${src}`;
         }
 
         return src;
     }
 
-    async inlineContent(content: any) {
+    async inlineContent(content: string): Promise<string> {
         // Process base64 images first if enabled
-        if (this.processBase64Images) {
+        if (this.#processBase64Images) {
             const base64Matches = await this.findBase64ImagesInString(content);
 
-            for await (const dataUri of base64Matches) {
+            for (const dataUri of base64Matches) {
                 // If in findOnlyMode, just push data URIs to an array and continue
-                if (this.findOnlyMode) {
+                if (this.#findOnlyMode) {
                     this.#foundItems.push(dataUri);
                     continue;
                 }
@@ -652,9 +670,9 @@ export default class AssetScraper {
         // Then process domain-based images
         const matches = await this.findMatchesInString(content);
 
-        for await (const src of matches) {
+        for (const src of matches) {
             // If in findOnlyMode, just puch srcs to an array and continue
-            if (this.findOnlyMode) {
+            if (this.#findOnlyMode) {
                 this.#foundItems.push(src);
                 continue;
             }
@@ -674,7 +692,7 @@ export default class AssetScraper {
         return content;
     }
 
-    async inlinePostTagUserObject(post: any) {
+    async inlinePostTagUserObject(post: GhostContentObject): Promise<void> {
         if (post.lexical) {
             post.lexical = await this.inlineContent(post.lexical);
         }
@@ -691,19 +709,20 @@ export default class AssetScraper {
             post.codeinjection_foot = await this.inlineContent(post.codeinjection_foot);
         }
 
-        for await (const item of this.#keys) {
-            if (!post[item]) {
+        for (const item of this.#keys) {
+            const value = post[item];
+            if (!value || typeof value !== 'string') {
                 continue;
             }
 
-            const newSrc = await this.downloadExtractSave(post[item], post[item]);
+            const absoluteSrc = await this.normalizeUrl(value);
+            const newSrc = await this.downloadExtractSave(absoluteSrc, absoluteSrc);
             post[item] = this.localizeSrc(newSrc.path);
         }
     }
 
-    // TODO: Come up with a better name for these methods
-    async doSettingsObject(settings: any) {
-        for await (const [index, {key, value}] of settings.entries()) {
+    async doSettingsObject(settings: SettingsItem[]): Promise<void> {
+        for (const [index, {key, value}] of settings.entries()) {
             if (settings[index].key === 'codeinjection_head') {
                 settings[index].value = await this.inlineContent(settings[index].value);
             }
@@ -716,22 +735,35 @@ export default class AssetScraper {
                 continue;
             }
 
-            const newSrc = await this.downloadExtractSave(value, value);
+            const absoluteSrc = await this.normalizeUrl(value);
+            const newSrc = await this.downloadExtractSave(absoluteSrc, absoluteSrc);
             settings[index].value = this.localizeSrc(newSrc.path);
         }
     }
 
-    async doCustomThemeSettingsObject(settings: any) {
-        for await (const [index, {type, key, value}] of settings.entries()) {
-            if (settings[index].type === 'image') {
-                const absoluteSrc = await this.normalizeUrl(settings[index].value);
-                settings[index].value = await this.inlineContent(absoluteSrc);
+    async doCustomThemeSettingsObject(settings: CustomThemeSettingsItem[]): Promise<void> {
+        for (const [index, {type, value}] of settings.entries()) {
+            if (type !== 'image' || !value) {
+                continue;
             }
-
             const absoluteSrc = await this.normalizeUrl(value);
-
             const newSrc = await this.downloadExtractSave(absoluteSrc, absoluteSrc);
             settings[index].value = this.localizeSrc(newSrc.path);
+        }
+    }
+
+    async doNewslettersObject(newsletters: NewsletterItem[]): Promise<void> {
+        for (const newsletter of newsletters) {
+            for (const item of this.#keys) {
+                const value = newsletter[item as keyof NewsletterItem] as string | undefined;
+                if (!value) {
+                    continue;
+                }
+
+                const absoluteSrc = await this.normalizeUrl(value);
+                const newSrc = await this.downloadExtractSave(absoluteSrc, absoluteSrc);
+                (newsletter as Record<string, string>)[item] = this.localizeSrc(newSrc.path);
+            }
         }
     }
 
@@ -743,35 +775,20 @@ export default class AssetScraper {
         return this.#failedDownloads;
     }
 
-    getTasks() {
-        const tasks: any = [];
+    getTasks(): ListrTask[] {
+        const tasks: ListrTask[] = [];
 
-        const addTasks = (items: any, type: string) => {
-            items.forEach((item: any) => {
-                tasks.push({
-                    title: `Assets for ${type} ${item?.slug ?? item?.name ?? item.id ?? item.post_id}`,
-                    task: async () => {
-                        try {
-                            item = await this.inlinePostTagUserObject(item);
-                        } catch (err: any) {
-                            throw new errors.InternalServerError({message: 'Failed to inline object', err});
-                        }
-                    }
-                });
-            });
-        };
+        const addSubTasks = (items: GhostContentObject[], type: string) => {
+            const subTasks: ListrTask[] = [];
 
-        const addSubTasks = (items: any, type: string) => {
-            let subTasks: any = [];
-
-            items.forEach((item: any) => {
+            items.forEach((item: GhostContentObject) => {
                 subTasks.push({
                     title: `Assets for ${type} ${item?.slug ?? item?.name ?? item.id ?? item.post_id}`,
                     task: async () => {
                         try {
-                            item = await this.inlinePostTagUserObject(item);
-                        } catch (err: any) {
-                            throw new errors.InternalServerError({message: 'Failed to inline object', err});
+                            await this.inlinePostTagUserObject(item);
+                        } catch (err) {
+                            throw new errors.InternalServerError({message: 'Failed to inline object', err: err instanceof Error ? err : undefined});
                         }
                     }
                 });
@@ -841,56 +858,18 @@ export default class AssetScraper {
         tasks.push({
             title: `Snippets`,
             task: async () => {
-                // await this.doCustomThemeSettingsObject(customThemeSettings);
-                // inlinePostTagUserObject
-                addTasks(theSnippets, 'snippets');
+                return addSubTasks(theSnippets, 'snippets');
             }
         });
 
-        // tasks.push({
-        //     title: 'Fetching assets in posts',
-        //     task: async (ctx: any, task: any) => { // eslint-disable-line no-shadow
-        //         let subTasks: any = [];
-
-        //         let postsToLoopOver: any = null;
-
-        //         if (this.#ctx.posts && this.#ctx.posts.length) {
-        //             postsToLoopOver = this.#ctx.posts;
-        //         } else if (this.#ctx.result.data.posts) {
-        //             postsToLoopOver = this.#ctx.result.data.posts;
-        //         } else {
-        //             // this.logger.error('No data to loop over');
-        //             throw new Error('No data to loop over');
-        //         }
-
-        //         postsToLoopOver.forEach((post: any) => {
-        //             subTasks.push({
-        //                 title: `Assets for post ${post?.slug ?? post.id}`,
-        //                 task: async () => {
-        //                     post = await this.doPostObject(post);
-        //                 }
-        //             });
-        //         });
-
-        //         // TODO: Also loop over these
-        //         // users
-        //         // tags
-
-        //         // And the settings too, in its own special way
-
-        //         // And custom_theme_settings
-
-        //         return makeTaskRunner(subTasks, {
-        //             concurrent: 5
-        //         });
-
-        //         // return task.newListr(subTasks, {
-        //         //     // renderer: (ctx.options.verbose) ? 'verbose' : SmartRenderer,
-        //         //     // renderer: SmartRenderer,
-        //         //     concurrent: 5
-        //         // });
-        //     }
-        // });
+        // Newsletters
+        const theNewsletters = this.#ctx?.newsletters ?? this.#ctx?.result?.data?.newsletters ?? [];
+        tasks.push({
+            title: `Newsletters`,
+            task: async () => {
+                await this.doNewslettersObject(theNewsletters);
+            }
+        });
 
         return tasks;
     }
