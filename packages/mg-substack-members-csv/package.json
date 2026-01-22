@@ -30,6 +30,6 @@
     "bluebird": "3.7.2",
     "csv-parser": "3.2.0",
     "ghost-ignition": "4.6.3",
-    "lodash": "4.17.21"
+    "lodash": "4.17.23"
   }
 }
