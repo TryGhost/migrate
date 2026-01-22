@@ -495,8 +495,21 @@ export default class AssetScraper {
             return item.replace(/,$/, '');
         });
 
-        // Filter out blocked domains
-        return matchesArray.filter(url => !this.isBlockedDomain(url));
+        const noAllowedDomains = this.allowedDomains.length === 0;
+        const noCustomBlockedDomains = this.blockedDomains.length === DEFAULT_BLOCKED_DOMAINS.length;
+        const requireFileExtension = noAllowedDomains && noCustomBlockedDomains;
+
+        return matchesArray.filter((url) => {
+            if (this.isBlockedDomain(url)) {
+                return false;
+            }
+
+            if (requireFileExtension && !this.hasFileExtension(url)) {
+                return false;
+            }
+
+            return true;
+        });
     }
 
     private isBlockedDomain(url: string): boolean {
@@ -517,6 +530,16 @@ export default class AssetScraper {
             }
         }
         return false;
+    }
+
+    private hasFileExtension(url: string): boolean {
+        try {
+            const pathname = new URL(url).pathname;
+            // Check if pathname ends with a file extension (e.g., .jpg, .png, .mp4)
+            return /\.[a-z0-9]+$/i.test(pathname);
+        } catch {
+            return false;
+        }
     }
 
     async findBase64ImagesInString(content: string): Promise<string[]> {

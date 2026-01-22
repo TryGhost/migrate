@@ -65,6 +65,8 @@ const scraper = new AssetScraper(fileCache, {
 }, ctx);
 ```
 
+**Note:** When using `allowAllDomains` without any custom `domains` or `blockedDomains`, only URLs with file extensions (e.g., `.jpg`, `.png`, `.mp4`) are scraped. This prevents scraping non-asset URLs like API endpoints or web pages. Adding custom domain configuration disables this filter.
+
 ## Options
 
 | Option                | Type                   | Default     | Description                                                               |
