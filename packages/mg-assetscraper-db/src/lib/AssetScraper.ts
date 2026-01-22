@@ -135,7 +135,7 @@ export default class AssetScraper {
             return {
                 body: Buffer.from(arrayBuffer),
                 headers: {
-                    'content-type': response.headers.get('content-type')
+                    'content-type': response.headers.get('content-type') ?? undefined
                 },
                 statusCode: response.status
             };
@@ -147,7 +147,7 @@ export default class AssetScraper {
                 return {
                     body: Buffer.from(arrayBuffer),
                     headers: {
-                        'content-type': response.headers.get('content-type')
+                        'content-type': response.headers.get('content-type') ?? undefined
                     },
                     statusCode: response.status
                 };
