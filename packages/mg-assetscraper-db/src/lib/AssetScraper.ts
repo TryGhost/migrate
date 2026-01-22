@@ -29,21 +29,21 @@ import type {
 const DEFAULT_BLOCKED_DOMAINS: (string | RegExp)[] = [
     'https://images.unsplash.com', // Unsplash
     'https://www.gravatar.com', // Gravatar
-    new RegExp('^https?://([a-z0-9-]+.)?cdninstagram.com'), // Instagram CDN
-    new RegExp('^https?://(www.)?instagram.com'), // Instagram website
-    new RegExp('^https?://([a-z0-9-]+.)?([a-z]+.)?fbcdn.net'), // Facebook CDN
-    new RegExp('^https?://(www.)?facebook.com'), // Facebook website
+    new RegExp('^https?://([a-z0-9-]+\\.)?cdninstagram\\.com'), // Instagram CDN
+    new RegExp('^https?://(www\\.)?instagram\\.com'), // Instagram website
+    new RegExp('^https?://([a-z0-9-]+\\.)?([a-z]+\\.)?fbcdn\\.net'), // Facebook CDN
+    new RegExp('^https?://(www\\.)?facebook\\.com'), // Facebook website
     new RegExp('^https?://([a-z0-9-]+\\.)?ytimg\\.com'), // YouTube images
-    new RegExp('^https?://(www.)?(youtube.com|youtu.be)'), // YouTube website
-    new RegExp('^https?://([a-z0-9-]+.)?twitter.com'), // Twitter website
-    new RegExp('^https?://([a-z0-9-]+.)?x.com'), // Worse Twitter
-    new RegExp('^https?://([a-z0-9-]+.)?twimg.com'), // Twitter images
-    new RegExp('^https?://(www.)?amazon.[a-z]{2,}'), // Amazon website, across all locales
-    new RegExp('^https?://([a-z]+.)?media-amazon.com'), // Amazon images
-    new RegExp('^https?://(www.)?ebay.[a-z]{2,}'), // EBay website, across all locales
-    new RegExp('https?://i.ebayimg.com'), // EBay images
-    new RegExp('^https?://(www.)?etsy.[a-z]{2,}'), // Etsy website, across all locales
-    new RegExp('https?://i.etsystatic.com') // Etsy images
+    new RegExp('^https?://(www\\.)?(youtube\\.com|youtu\\.be)'), // YouTube website
+    new RegExp('^https?://([a-z0-9-]+\\.)?twitter\\.com'), // Twitter website
+    new RegExp('^https?://([a-z0-9-]+\\.)?x\\.com'), // Worse Twitter
+    new RegExp('^https?://([a-z0-9-]+\\.)?twimg\\.com'), // Twitter images
+    new RegExp('^https?://(www\\.)?amazon\\.[a-z]{2,}'), // Amazon website, across all locales
+    new RegExp('^https?://([a-z]+\\.)?media-amazon\\.com'), // Amazon images
+    new RegExp('^https?://(www\\.)?ebay\\.[a-z]{2,}'), // EBay website, across all locales
+    new RegExp('^https?://i\\.ebayimg\\.com'), // EBay images
+    new RegExp('^https?://(www\\.)?etsy\\.[a-z]{2,}'), // Etsy website, across all locales
+    new RegExp('^https?://i\\.etsystatic\\.com') // Etsy images
 ];
 
 export default class AssetScraper {
