@@ -46,6 +46,17 @@ Some other useful options are:
 - `--to`: the Stripe API secret key of the new account (optional)
 - `--delay`: Period (in hours, starting now) during which payment collection is paused. This period should be large enough to cover the entire migration. Estimated time to migrate 10,000 members is 1 hour, we recommend adding an extra hour of buffer time to be safe (optional)
 - `--subscription`: Only migrate a specific subscription id (optional). The value should be the subscription ID, i.e. `sub_1234abcd5678efgh1234abcd`
+- `--subscriptions-csv`: Path to a CSV file containing subscription IDs to migrate (optional). The CSV must have a `subscription_id` column header. Cannot be used with `--subscription`
+
+Here's an example of the CSV that should be passed to `subscriptions-csv`.
+
+```csv
+subscription_id,customer_email
+sub_1234abcd5678efgh,user1@example.com
+sub_2345bcde6789fghi,user2@example.com
+sub_3456cdef7890ghij,user3@example.com
+sub_4567defg8901hijk,user4@example.com
+```
 
 See full list of options [here](https://github.com/TryGhost/migrate/blob/main/packages/mg-stripe/src/lib/Options.ts).
 
