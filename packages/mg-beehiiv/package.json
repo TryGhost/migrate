@@ -46,7 +46,7 @@
     "@tryghost/kg-default-cards": "10.2.3",
     "@tryghost/mg-fs-utils": "0.12.14",
     "@tryghost/string": "0.2.21",
-    "cheerio": "1.1.2",
+    "cheerio": "1.2.0",
     "sanitize-html": "2.17.0",
     "simple-dom": "1.4.0"
   }
