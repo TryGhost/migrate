@@ -35,6 +35,6 @@
     "fs-extra": "11.3.3",
     "lodash": "4.17.21",
     "sharp": "0.34.5",
-    "transliteration": "2.6.0"
+    "transliteration": "2.6.1"
   }
 }

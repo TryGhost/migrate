@@ -11325,10 +11325,10 @@ transliteration@2.3.5:
   dependencies:
     yargs "^17.5.1"
 
-transliteration@2.6.0:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/transliteration/-/transliteration-2.6.0.tgz#e9231976b963e913b9d2d51854c665dfec494c50"
-  integrity sha512-T6frfMj7N5xNK0l+duIzIWKxkc9ewG72uv7NeOs4dIoysqTnYpwxeVEE5qYdKKmy7hby55ah0wNUoMaLsB2Zjw==
+transliteration@2.6.1:
+  version "2.6.1"
+  resolved "https://registry.yarnpkg.com/transliteration/-/transliteration-2.6.1.tgz#dadd5b6812d08815f5dc4a53122f8f8355fbb0f1"
+  integrity sha512-hJ9BhrQAOnNTbpOr1MxsNjZISkn7ppvF5TKUeFmTE1mG4ZPD/XVxF0L0LUoIUCWmQyxH0gJpVtfYLAWf298U9w==
 
 trim-trailing-lines@^1.0.0:
   version "1.1.4"
