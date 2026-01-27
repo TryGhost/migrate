@@ -22,7 +22,7 @@
   "devDependencies": {
     "eslint": "8.57.0",
     "jest": "30.0.5",
-    "jest-extended": "6.0.0"
+    "jest-extended": "7.0.0"
   },
   "dependencies": {
     "@tryghost/admin-api": "1.14.4"
