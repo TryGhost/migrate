@@ -37,7 +37,7 @@
     "eslint": "8.57.0",
     "jest": "30.0.5",
     "sinon": "^21.0.0",
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   },
   "dependencies": {
     "@tryghost/debug": "0.1.35",
