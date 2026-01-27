@@ -54,7 +54,7 @@
     "sequelize": "6.37.7",
     "sharp": "0.34.5",
     "sqlite3": "5.1.7",
-    "transliteration": "2.6.0",
+    "transliteration": "2.6.1",
     "uuid": "13.0.0"
   }
 }
