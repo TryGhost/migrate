@@ -3324,12 +3324,12 @@
     "@stdlib/utils-copy" "^0.2.0"
     uuid "^9.0.0"
 
-"@tryghost/html-to-mobiledoc@3.2.13":
-  version "3.2.13"
-  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-3.2.13.tgz#619d576ad1d69e5f6126175e80d3c77336389a18"
-  integrity sha512-Yr+xP5EYm/5ThXbLFLpjG+Ofsk0fOVTm4toGFjHwGlVx0iz25Ad9Ejled0q1GuzKkBUnfSJ+Xo2KKQ5Rfohn0w==
+"@tryghost/html-to-mobiledoc@3.2.14":
+  version "3.2.14"
+  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-3.2.14.tgz#2e2b4eda3491599f4e5615140fb8cd436c7197e5"
+  integrity sha512-Ym/eS7jQfcssckJohXDWRX9DLNkmZo6tfuORFsDyL585EFlbBqPO1YHmu8ayHSNf+LroUEfPJVug4AsTo/BvLw==
   dependencies:
-    "@tryghost/kg-parser-plugins" "4.2.12"
+    "@tryghost/kg-parser-plugins" "4.2.13"
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "^24.1.1"
 
@@ -3375,6 +3375,11 @@
   version "4.2.12"
   resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-4.2.12.tgz#2011bc7e019d60709a712c0ce0b978502f1100df"
   integrity sha512-dccovay1qh5DnHAaEl7wOx+g6veoOlC3Mc5bXEfvyp/mGzp5M/aTm/6mZ/G3dTZWlnHw5EOQCuHq9tGdbNprAA==
+
+"@tryghost/kg-clean-basic-html@4.2.13":
+  version "4.2.13"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-4.2.13.tgz#ec2979c2048f62d88f7143f65c2a5659c3f203ef"
+  integrity sha512-MxMAdyOrDWbqdg/8fkS7rxySTPCtnEs/PIDmXYCeiitL99LAb15gQKPqHa8kmQmM6EA7+THs8mlKw3/gtoehhg==
 
 "@tryghost/kg-default-cards@10.2.5":
   version "10.2.5"
@@ -3464,12 +3469,12 @@
     markdown-it-sup "^2.0.0"
     semver "^7.7.0"
 
-"@tryghost/kg-parser-plugins@4.2.12":
-  version "4.2.12"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-4.2.12.tgz#279602f3ee356729577e96f39337b3fbcccd0f66"
-  integrity sha512-arA8ux1lXJiczTw1wMnfV3F82S7btTGWDE2+VKTM/zcQiiYh6AmLhAzMG/PIPxAmUKPae5xYkBTT17xJHK1aJA==
+"@tryghost/kg-parser-plugins@4.2.13":
+  version "4.2.13"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-4.2.13.tgz#b8452e5bf1d05ce6b70995f87a4017541b9d6450"
+  integrity sha512-NkwLq75AYidvLl/N15ViEtKy0nHF8dMXpnz1l7aJ+yh/qsJ3vy2iBHQZEdrlCfZgs2DLU8UZTLQc0XDdi8T+Fg==
   dependencies:
-    "@tryghost/kg-clean-basic-html" "4.2.12"
+    "@tryghost/kg-clean-basic-html" "4.2.13"
 
 "@tryghost/kg-utils@1.0.31":
   version "1.0.31"
