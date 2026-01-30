@@ -571,6 +571,57 @@ describe('Process WordPress HTML', function () {
         expect(processed).toEqual('<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><a href="https://twitter.com/example/status/12345678"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure><!--kg-card-end: embed-->');
     });
 
+    test('Can convert WP post embed', async function () {
+        const mockFileCache = {
+            hasFile: (filename) => {
+                // Filename is derived from bookmarkHref: https://www.example.org/2025/04/03/lorem-ipsum/
+                return filename === 'https___www_example_org_2025_04_03_lorem_ipsum_.json';
+            },
+            readTmpJSONFile: () => ({
+                responseData: {
+                    title: 'Lorem Ipsum',
+                    description: 'A sample description',
+                    image: 'https://www.example.org/images/featured.jpg',
+                    icon: 'https://www.example.org/favicon.ico',
+                    publisher: 'Example Publisher'
+                }
+            })
+        };
+
+        const html = `<figure class="wp-block-embed is-type-wp-embed is-provider-the-example wp-block-embed-the-example"><div class="wp-block-embed__wrapper"><blockquote class="wp-embedded-content" data-secret="qwertyTVih"><a href="https://www.example.org/2025/04/03/lorem-ipsum/">Lorem Ipsum</a></blockquote><iframe loading="lazy" class="wp-embedded-content" sandbox="allow-scripts" security="restricted" style="position: absolute; visibility: hidden;" title="&#8220;Lorem Ipsum&#8221; &#8212; The Urbanist" src="https://www.example.org/2025/04/03/lorem-ipsum/embed/#?secret=abcd#?secret=qwertyTVih" data-secret="qwertyTVih" width="600" height="338" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe></div></figure>`;
+
+        const processed = await processor.processContent({html, fileCache: mockFileCache, options: {
+            scrape: ['all']
+        }});
+
+        expect(processed).toEqual('<!--kg-card-begin: html--><figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://www.example.org/2025/04/03/lorem-ipsum/"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Lorem Ipsum</div><div class="kg-bookmark-description">A sample description</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://www.example.org/favicon.ico" alt><span class="kg-bookmark-author">Example Publisher</span></div></div><div class="kg-bookmark-thumbnail"><img src="https://www.example.org/images/featured.jpg" alt></div></a></figure><!--kg-card-end: html-->');
+    });
+
+    test('Can convert WP post embed to link when scrape fails', async function () {
+        const mockFileCache = {
+            hasFile: () => {
+                // eslint-disable-next-line ghost/ghost-custom/no-native-error
+                throw new Error('Scrape failed');
+            }
+        };
+
+        const html = `<figure class="wp-block-embed is-type-wp-embed is-provider-the-example wp-block-embed-the-example"><div class="wp-block-embed__wrapper"><blockquote class="wp-embedded-content" data-secret="qwertyTVih"><a href="https://www.example.org/2025/04/03/lorem-ipsum/">Lorem Ipsum</a></blockquote><iframe loading="lazy" class="wp-embedded-content" sandbox="allow-scripts" security="restricted" style="position: absolute; visibility: hidden;" title="&#8220;Lorem Ipsum&#8221; &#8212; The Urbanist" src="https://www.example.org/2025/04/03/lorem-ipsum/embed/#?secret=abcd#?secret=qwertyTVih" data-secret="qwertyTVih" width="600" height="338" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe></div></figure>`;
+
+        const processed = await processor.processContent({html, fileCache: mockFileCache, options: {
+            scrape: ['all']
+        }});
+
+        expect(processed).toEqual('<p><a href="https://www.example.org/2025/04/03/lorem-ipsum/">Lorem Ipsum</a></p>');
+    });
+
+    test('Can convert WP post embed to link when scrape option is not enabled', async function () {
+        const html = `<figure class="wp-block-embed is-type-wp-embed is-provider-the-example wp-block-embed-the-example"><div class="wp-block-embed__wrapper"><blockquote class="wp-embedded-content" data-secret="qwertyTVih"><a href="https://www.example.org/2025/04/03/lorem-ipsum/">Lorem Ipsum</a></blockquote><iframe loading="lazy" class="wp-embedded-content" sandbox="allow-scripts" security="restricted" style="position: absolute; visibility: hidden;" title="&#8220;Lorem Ipsum&#8221; &#8212; The Urbanist" src="https://www.example.org/2025/04/03/lorem-ipsum/embed/#?secret=abcd#?secret=qwertyTVih" data-secret="qwertyTVih" width="600" height="338" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe></div></figure>`;
+
+        const processed = await processor.processContent({html});
+
+        expect(processed).toEqual('<p><a href="https://www.example.org/2025/04/03/lorem-ipsum/">Lorem Ipsum</a></p>');
+    });
+
     test('Can convert a list-based gallery', async function () {
         const html = `<ul class="wp-block-gallery alignwide columns-3 is-cropped">
             <li class="blocks-gallery-item">

@@ -12,6 +12,7 @@ import {_base as debugFactory} from '@tryghost/debug';
 import SimpleDom from 'simple-dom';
 import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
+import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
@@ -639,6 +640,89 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     }).get();
 
     await Promise.all(libsynPodcasts);
+
+    let wpEmbeds = $html('.wp-block-embed.is-type-wp-embed').map(async (i, el) => {
+        const bookmarkHref = $html(el).find('blockquote a').attr('href');
+        const bookmarkTitle = $html(el).find('blockquote a').text();
+
+        if (!bookmarkHref || !bookmarkTitle) {
+            return;
+        }
+
+        const replaceWithLink = () => {
+            $html(el).replaceWith(`<p><a href="${bookmarkHref}">${bookmarkTitle}</a></p>`);
+        };
+
+        if (!allowRemoteScraping) {
+            replaceWithLink();
+            return;
+        }
+
+        try {
+            const iframeHref = $html(el).find('iframe').attr('src');
+
+            let scrapeConfig = {
+                title: {
+                    selector: 'meta[property="og:title"]',
+                    attr: 'content'
+                },
+                description: {
+                    selector: '.wp-embed-excerpt p',
+                    how: 'html'
+                },
+                image: {
+                    selector: '.wp-embed-featured-image img',
+                    attr: 'src'
+                },
+                icon: {
+                    selector: '.wp-embed-site-title img',
+                    attr: 'src'
+                },
+                publisher: {
+                    selector: '.wp-embed-site-title span',
+                    how: 'text'
+                }
+            };
+
+            let filename = bookmarkHref.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            let {responseData} = await webScraper.scrapeUrl(iframeHref, scrapeConfig, filename);
+
+            let cardOpts = {
+                env: {dom: new SimpleDom.Document()},
+                payload: {
+                    url: bookmarkHref,
+                    metadata: {
+                        url: bookmarkHref,
+                        title: bookmarkTitle
+                    }
+                }
+            };
+
+            if (responseData.image) {
+                cardOpts.payload.metadata.thumbnail = responseData.image;
+            }
+
+            if (responseData.icon) {
+                cardOpts.payload.metadata.icon = responseData.icon;
+            }
+
+            if (responseData.publisher) {
+                cardOpts.payload.metadata.publisher = responseData.publisher;
+            }
+
+            if (responseData.description) {
+                cardOpts.payload.metadata.description = stripHtml(responseData.description);
+            }
+
+            const bookmarkHtml = serializer.serialize(bookmarkCard.render(cardOpts));
+
+            $html(el).replaceWith(`<!--kg-card-begin: html-->${bookmarkHtml}<!--kg-card-end: html-->`);
+        } catch (err) {
+            replaceWithLink();
+        }
+    }).get();
+
+    await Promise.all(wpEmbeds);
 
     $html('.wp-block-syntaxhighlighter-code').each((i, el) => {
         const hasCodeElem = $html(el).find('code').length;
