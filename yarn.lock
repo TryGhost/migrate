@@ -8932,10 +8932,10 @@ log-update@6.1.0:
     strip-ansi "^7.1.0"
     wrap-ansi "^9.0.0"
 
-log-update@7.0.2:
-  version "7.0.2"
-  resolved "https://registry.yarnpkg.com/log-update/-/log-update-7.0.2.tgz#eddb498d154f29523a897d4f901a2c3d4b57f8f0"
-  integrity sha512-cSSF1K5w9juI2+JeSRAdaTUZJf6cJB0aWwWO1nQQkcWw44+bIfXmhZMwK2eEsv6tXvU3UfKX/kzcX6SP+1tLAw==
+log-update@7.1.0:
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/log-update/-/log-update-7.1.0.tgz#c1b3823f1ba5d2b254ef320d6da61a11400d939d"
+  integrity sha512-y9pi/ZOQQVvTgfRDEHV1Cj4zQUkJZPipEUNOxhn1R6KgmdMs7LKvXWCd9eMVPGJgvYzFLCenecWr0Ps8ChVv2A==
   dependencies:
     ansi-escapes "^7.1.0"
     cli-cursor "^5.0.0"
