@@ -216,6 +216,16 @@ const processPost = async ($xml, $post, users, options) => {
                 const user = users?.find(u => u.data.slug === slug);
                 if (user) {
                     additionalAuthors.push(user);
+                } else {
+                    // Create placeholder user for co-authors not in wp:author list
+                    additionalAuthors.push({
+                        url: slug,
+                        data: {
+                            slug: slug,
+                            name: slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+                            email: `${slug}@placeholder.com`
+                        }
+                    });
                 }
             }
         }
