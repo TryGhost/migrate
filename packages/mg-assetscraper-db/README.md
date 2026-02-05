@@ -78,9 +78,6 @@ const scraper = new AssetScraper(fileCache, {
 | `findOnlyMode`        | `boolean`              | `false`     | Only discover assets, don't download (access via `scraper.foundItems`)    |
 | `baseUrl`             | `string`               | `undefined` | Base URL for resolving relative URLs (only needed for Ghost JSON exports) |
 | `processBase64Images` | `boolean`              | `false`     | Extract embedded base64 images and save as files                          |
-| `allowImages`         | `boolean`              | `true`      | Process image files                                                       |
-| `allowMedia`          | `boolean`              | `true`      | Process audio/video files                                                 |
-| `allowFiles`          | `boolean`              | `true`      | Process documents (PDF, etc.)                                             |
 
 ## Context Object
 

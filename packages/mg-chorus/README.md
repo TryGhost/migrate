@@ -47,6 +47,9 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Configure scraping tasks
     - string - default: `all` 
     - Choices: `all`, `web`, `none`
+        - `all`: Scrape web metadata
+        - `web`: Only scrape metadata from web pages
+        - `none`: Skip all scraping tasks
 - **`--addPrimaryTag`**
     - string - default: `null`
     - Provide a tag name which should be added to every post as primary tag

@@ -405,10 +405,7 @@ const processShortcodes = async ({html, options}) => {
 const processContent = async ({html, excerptSelector, featureImageSrc = false, fileCache = false, options = {}}) => { // eslint-disable-line no-shadow
     let webScraper = new MgWebScraper(fileCache);
 
-    let allowRemoteScraping = false;
-    if (options?.scrape?.includes('all') || options.scrape?.includes('media')) {
-        allowRemoteScraping = true;
-    }
+    let allowRemoteScraping = !options?.scrape?.includes('none');
 
     html = await processShortcodes({html, options});
 
