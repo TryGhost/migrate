@@ -212,9 +212,7 @@ const getTaskRunner = (options) => {
 
                 ctx.allowScrape = {
                     all: ctx.options.scrape.includes('all'),
-                    images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),
-                    media: ctx.options.scrape.includes('media') || ctx.options.scrape.includes('all'),
-                    files: ctx.options.scrape.includes('files') || ctx.options.scrape.includes('all'),
+                    assets: ctx.options.scrape.includes('all') || ctx.options.scrape.includes('assets') || ctx.options.scrape.includes('img') || ctx.options.scrape.includes('media') || ctx.options.scrape.includes('files'),
                     web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
                 };
 
@@ -230,10 +228,7 @@ const getTaskRunner = (options) => {
                 });
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor, skipScrape);
                 ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
-                    allowAllDomains: true,
-                    allowImages: ctx.allowScrape.images,
-                    allowMedia: ctx.allowScrape.media,
-                    allowFiles: ctx.allowScrape.files
+                    allowAllDomains: true
                 }, ctx);
                 await ctx.assetScraper.init();
                 ctx.linkFixer = new MgLinkFixer();
@@ -305,9 +300,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Fetch images via AssetScraper',
-            skip: (ctx) => {
-                return [ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false);
-            },
+            skip: ctx => !ctx.allowScrape.assets,
             task: async (ctx) => {
                 // 6. Format the data as a valid Ghost JSON file
                 let tasks = ctx.assetScraper.getTasks();

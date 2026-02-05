@@ -66,9 +66,9 @@ const options = [
     {
         type: 'array',
         flags: '--scrape',
-        choices: ['all', 'img', 'web', 'media', 'files', 'none'],
+        choices: ['all', 'web', 'assets', 'none', 'img', 'media', 'files'],
         defaultValue: ['all'],
-        desc: 'Configure scraping tasks'
+        desc: 'Configure scraping tasks (all = web + assets, web = metadata only, assets = download assets only)'
     },
     {
         type: 'number',
