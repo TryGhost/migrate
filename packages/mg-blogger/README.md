@@ -48,10 +48,11 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`-s` `--scrape`** 
     - Configure scraping tasks
     - string - default: `all` 
-    - Choices: `all`, `img`, `web`, `media`, `files`, `none`
-- **`--sizeLimit`**
-    - number - default: `false`
-    - Media files larger than this size (defined in MB [i.e. `5`]) will be flagged as oversize
+    - Choices: `all`, `web`, `assets`, `none`
+        - `all`: Scrape web metadata and download assets
+        - `web`: Only scrape metadata from web pages
+        - `assets`: Only download assets (images, media, files)
+        - `none`: Skip all scraping tasks
 - **`--addTag`**
     - string - default: `null`
     - Provide a tag slug which should be added to every post in this migration
