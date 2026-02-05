@@ -45,9 +45,9 @@ const options = [
     {
         type: 'array',
         flags: '-s --scrape',
-        choices: ['all', 'web', 'assets', 'none', 'img', 'media', 'files'],
+        choices: ['all', 'web', 'assets', 'none'],
         defaultValue: 'all',
-        desc: 'Configure scraping tasks (all = web + assets, web = metadata only, assets = download assets only)'
+        desc: 'Configure scraping tasks (all = web + assets, web = metadata only, assets = download assets only). Legacy aliases for assets: img, media, files'
     },
     {
         type: 'boolean',
