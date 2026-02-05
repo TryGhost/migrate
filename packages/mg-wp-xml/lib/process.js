@@ -8,13 +8,17 @@ import {isSerialized, unserialize} from 'php-serialize';
 
 const processUser = ($xml, $user) => {
     const authorSlug = slugify($xml($user).children('wp\\:author_login').text());
+    const bio = $xml($user).children('wp\\:author_description').text() || '';
+    const avatar = $xml($user).children('wp\\:author_avatar').text() || '';
 
     return {
         url: authorSlug,
         data: {
             slug: authorSlug,
             name: $xml($user).children('wp\\:author_display_name').text(),
-            email: $xml($user).children('wp\\:author_email').text()
+            email: $xml($user).children('wp\\:author_email').text(),
+            bio: bio || undefined,
+            profile_image: avatar || undefined
         }
     };
 };
@@ -200,8 +204,35 @@ const processPost = async ($xml, $post, users, options) => {
     let parsedPostUrl = new URL(postUrl, url);
     postUrl = parsedPostUrl.href;
 
-    // If you need <wp:postmeta> data, access it here
-    // const postMeta = await processWPMeta($xml, $post);
+    // Check for additional authors in postmeta (_ghost_authors contains comma-separated author slugs)
+    let additionalAuthors = [];
+    $xml($post).children('wp\\:postmeta').each((i, meta) => {
+        const key = $xml(meta).children('wp\\:meta_key').text();
+        const value = $xml(meta).children('wp\\:meta_value').text();
+        if (key === '_ghost_authors' && value) {
+            // Parse comma-separated author slugs
+            const authorSlugs = value.split(',').map(s => s.trim()).filter(Boolean);
+            for (const slug of authorSlugs) {
+                const user = users?.find(u => u.data.slug === slug);
+                if (user) {
+                    additionalAuthors.push(user);
+                }
+            }
+        }
+    });
+
+    // Build authors array - primary author first, then additional authors
+    const primaryAuthor = users ? users.find(user => user.data.slug === authorSlug) : null;
+    const authors = [];
+    if (primaryAuthor) {
+        authors.push(primaryAuthor);
+    }
+    // Add additional authors (excluding primary to avoid duplicates)
+    for (const author of additionalAuthors) {
+        if (!primaryAuthor || author.data.slug !== primaryAuthor.data.slug) {
+            authors.push(author);
+        }
+    }
 
     const post = {
         url: postUrl,
@@ -218,7 +249,9 @@ const processPost = async ($xml, $post, users, options) => {
             feature_image_alt: featureImage?.alt ?? null,
             feature_image_caption: (featureImageCaption !== false) ? (featureImage?.description ?? featureImage?.title ?? null) : null,
             type: postType,
-            author: users ? users.find(user => user.data.slug === authorSlug) : null,
+            // Use authors array if multiple, otherwise single author for backwards compatibility
+            authors: authors.length > 0 ? authors : undefined,
+            author: authors.length === 0 ? (users ? users.find(user => user.data.slug === authorSlug) : null) : undefined,
             tags: []
         }
     };
