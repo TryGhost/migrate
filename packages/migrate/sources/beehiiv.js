@@ -202,7 +202,7 @@ const getFullTaskList = (options) => {
             },
             task: async (ctx) => {
                 // 6. Format the data as a valid Ghost JSON file
-                let tasks = ctx.assetScraper.getTasks(ctx);
+                let tasks = ctx.assetScraper.getTasks();
                 return makeTaskRunner(tasks, {
                     verbose: options.verbose,
                     exitOnError: false,

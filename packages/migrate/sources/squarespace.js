@@ -2,7 +2,7 @@ import {readFileSync} from 'node:fs';
 import {toGhostJSON} from '@tryghost/mg-json';
 import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
 import MgWebScraper from '@tryghost/mg-webscraper';
-import MgAssetScraper from '@tryghost/mg-assetscraper';
+import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import xmlIngest from '@tryghost/mg-squarespace-xml';
@@ -76,7 +76,7 @@ const getTaskRunner = (options) => {
     let runnerTasks = [
         {
             title: 'Initializing',
-            task: (ctx, task) => {
+            task: async (ctx, task) => {
                 ctx.options = options;
 
                 ctx.allowScrape = {
@@ -95,11 +95,12 @@ const getTaskRunner = (options) => {
 
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, null, skipScrape);
                 ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
-                    sizeLimit: ctx.options.sizeLimit,
+                    allowAllDomains: true,
                     allowImages: ctx.allowScrape.images,
                     allowMedia: ctx.allowScrape.media,
                     allowFiles: ctx.allowScrape.files
                 }, ctx);
+                await ctx.assetScraper.init();
 
                 ctx.linkFixer = new MgLinkFixer();
 
@@ -159,7 +160,7 @@ const getTaskRunner = (options) => {
             },
             task: async (ctx) => {
                 // 5. Format the data as a valid Ghost JSON file
-                let tasks = ctx.assetScraper.fetch(ctx);
+                let tasks = ctx.assetScraper.getTasks();
                 return makeTaskRunner(tasks, {
                     verbose: options.verbose,
                     exitOnError: false,

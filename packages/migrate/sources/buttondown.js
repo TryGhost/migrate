@@ -84,7 +84,7 @@ const getFullTaskList = (options) => {
                 return [ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false);
             },
             task: async (ctx) => {
-                let tasks = ctx.assetScraper.getTasks(ctx);
+                let tasks = ctx.assetScraper.getTasks();
                 return makeTaskRunner(tasks, {
                     verbose: options.verbose,
                     exitOnError: false,

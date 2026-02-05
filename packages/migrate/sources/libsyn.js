@@ -1,7 +1,7 @@
 import libsyn from '@tryghost/mg-libsyn';
 import {toGhostJSON} from '@tryghost/mg-json';
 import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
-import MgAssetScraper from '@tryghost/mg-assetscraper';
+import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
@@ -10,7 +10,7 @@ import prettyMilliseconds from 'pretty-ms';
 const initialize = (options) => {
     return {
         title: 'Initializing Workspace',
-        task: (ctx, task) => {
+        task: async (ctx, task) => {
             ctx.options = options;
             ctx.allowScrape = {
                 all: ctx.options.scrape.includes('all'),
@@ -26,11 +26,12 @@ const initialize = (options) => {
                 tmpPath: ctx.options.tmpPath
             });
             ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
-                sizeLimit: ctx.options.sizeLimit,
+                allowAllDomains: true,
                 allowImages: ctx.allowScrape.images,
                 allowMedia: ctx.allowScrape.media,
                 allowFiles: ctx.allowScrape.files
             }, ctx);
+            await ctx.assetScraper.init();
 
             ctx.linkFixer = new MgLinkFixer();
 
@@ -108,7 +109,7 @@ const getFullTaskList = (options) => {
             },
             task: async (ctx) => {
                 // 5. Format the data as a valid Ghost JSON file
-                let tasks = ctx.assetScraper.fetch(ctx);
+                let tasks = ctx.assetScraper.getTasks();
                 return makeTaskRunner(tasks, {
                     verbose: options.verbose,
                     exitOnError: false,
