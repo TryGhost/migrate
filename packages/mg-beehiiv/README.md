@@ -48,7 +48,11 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`-s` `--scrape`** 
     - Configure scraping tasks
     - string - default: `all` 
-    - Choices: `all`, `img`, `web`, `media`, `files`, `none`
+    - Choices: `all`, `web`, `assets`, `none`
+        - `all`: Scrape web metadata and download assets
+        - `web`: Only scrape metadata from web pages
+        - `assets`: Only download assets (images, media, files)
+        - `none`: Skip all scraping tasks
 - **`--subscribeLink`** 
     - Provide a path that existing `/subscribe` anchors will link to e.g. `/join-us` or `#/portal/signup` (`#` characters need to be escaped with a `\`)
     - string - default: `#/portal/signup`

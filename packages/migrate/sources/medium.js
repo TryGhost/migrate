@@ -3,7 +3,7 @@ import mediumIngest from '@tryghost/mg-medium-export';
 import {toGhostJSON} from '@tryghost/mg-json';
 import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
 import MgWebScraper from '@tryghost/mg-webscraper';
-import MgAssetScraper from '@tryghost/mg-assetscraper';
+import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
@@ -142,14 +142,12 @@ const getTaskRunner = (options) => {
     let runnerTasks = [
         {
             title: 'Initializing Workspace',
-            task: (ctx, task) => {
+            task: async (ctx, task) => {
                 ctx.options = options;
 
                 ctx.allowScrape = {
                     all: ctx.options.scrape.includes('all'),
-                    images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),
-                    media: ctx.options.scrape.includes('media') || ctx.options.scrape.includes('all'),
-                    files: ctx.options.scrape.includes('files') || ctx.options.scrape.includes('all'),
+                    assets: ctx.options.scrape.includes('all') || ctx.options.scrape.includes('assets') || ctx.options.scrape.includes('img') || ctx.options.scrape.includes('media') || ctx.options.scrape.includes('files'),
                     web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
                 };
 
@@ -161,11 +159,9 @@ const getTaskRunner = (options) => {
 
                 ctx.mediumScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
                 ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
-                    sizeLimit: ctx.options.sizeLimit,
-                    allowImages: ctx.allowScrape.images,
-                    allowMedia: ctx.allowScrape.media,
-                    allowFiles: ctx.allowScrape.files
+                    allowAllDomains: true
                 }, ctx);
+                await ctx.assetScraper.init();
                 ctx.linkFixer = new MgLinkFixer();
 
                 task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
@@ -219,14 +215,10 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Fetch images via AssetScraper',
-            skip: (ctx) => {
-                if ([ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false)) {
-                    return true;
-                }
-            },
+            skip: ctx => !ctx.allowScrape.assets,
             task: async (ctx) => {
                 // 5. Format the data as a valid Ghost JSON file
-                let tasks = ctx.assetScraper.fetch(ctx);
+                let tasks = ctx.assetScraper.getTasks();
                 return makeTaskRunner(tasks, {
                     verbose: options.verbose,
                     exitOnError: false,

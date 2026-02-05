@@ -33,7 +33,6 @@
   },
   "dependencies": {
     "@tryghost/listr-smart-renderer": "0.5.22",
-    "@tryghost/mg-assetscraper": "0.4.32",
     "@tryghost/mg-assetscraper-db": "0.2.6",
     "@tryghost/mg-beehiiv": "0.3.13",
     "@tryghost/mg-beehiiv-members": "0.1.22",
