@@ -344,12 +344,17 @@ function generateWXR(tables: Tables, siteUrl: string): string {
     
     // Get data from tables
     const nodeData = tables['node_field_data']?.rows || [];
-    const userData = tables['users_field_data']?.rows.filter(u => Number(u.uid) > 0) || [];
     const tagData = tables['taxonomy_term_field_data']?.rows || [];
     const postTagData = tables['node__field_tags']?.rows || [];
     
-    // Build user picture lookup (uid → file URI)
-    const userPictures = tables['user__user_picture']?.rows || [];
+    // Extract authors from profile nodes (not Drupal users)
+    // Profile nodes are the authoritative source for author data
+    // Note: SQL parser preserves quotes, so we check for both 'profile' and profile
+    const profileNodes = nodeData.filter(n => {
+        const typeStr = String(n.type || '').replace(/^'|'$/g, '');
+        return typeStr === 'profile';
+    });
+    const profileBios = tables['node__field_profile_bio']?.rows || [];
     const allFiles = tables['file_managed']?.rows || [];
     
     // file ID → file URI (with base URL for author images)
@@ -365,36 +370,74 @@ function generateWXR(tables: Tables, siteUrl: string): string {
         fileToAbsoluteUri.set(fid, uri);
     }
     
-    const authorImageLookup: Map<number, string> = new Map();
-    for (const row of userPictures) {
-        const uid = Number(row.entity_id);
-        const fileId = Number(row.user_picture_target_id);
-        const uri = fileToAbsoluteUri.get(fileId);
-        if (uri) {
-            authorImageLookup.set(uid, uri);
+    // Build profile node → bio lookup
+    const profileBioLookup: Map<number, string> = new Map();
+    for (const bio of profileBios) {
+        const profileNodeId = Number(bio.entity_id);
+        if (bio.field_profile_bio_value) {
+            const bioText = stripHtml(String(bio.field_profile_bio_value));
+            profileBioLookup.set(profileNodeId, bioText);
         }
     }
     
-    // Build author bio lookup (uid → bio text, HTML stripped)
-    // Profile bios are in node__field_profile_bio, linked via node__field_user
-    const profileUserLink = tables['node__field_user']?.rows || [];
-    const profileBios = tables['node__field_profile_bio']?.rows || [];
+    // Build profile node → image lookup (from node__field_primary_media)
+    const profilePrimaryMedia = tables['node__field_primary_media']?.rows || [];
+    const mediaImages = tables['media__field_media_image']?.rows || [];
     
-    const authorBioLookup: Map<number, string> = new Map();
-    for (const link of profileUserLink) {
-        const profileNodeId = Number(link.entity_id);
-        const userId = Number(link.field_user_target_id);
+    // media ID → file ID
+    const mediaToFileId: Map<number, number> = new Map();
+    for (const row of mediaImages) {
+        const mediaId = Number(row.entity_id);
+        const fileId = Number(row.field_media_image_target_id);
+        mediaToFileId.set(mediaId, fileId);
+    }
+    
+    const profileImageLookup: Map<number, string> = new Map();
+    for (const row of profilePrimaryMedia) {
+        if (String(row.bundle || '').replace(/^'|'$/g, '') === 'profile') {
+            const profileNodeId = Number(row.entity_id);
+            const mediaId = Number(row.field_primary_media_target_id);
+            const fileId = mediaToFileId.get(mediaId);
+            if (fileId) {
+                const uri = fileToAbsoluteUri.get(fileId);
+                if (uri) {
+                    profileImageLookup.set(profileNodeId, uri);
+                }
+            }
+        }
+    }
+    
+    // Build author data from profile nodes
+    interface AuthorData {
+        id: number;
+        name: string;
+        slug: string;
+        email: string;
+        bio: string;
+        avatar: string;
+    }
+    
+    const authorData: AuthorData[] = [];
+    for (const profile of profileNodes) {
+        const nid = Number(profile.nid);
+        const name = String(profile.title || 'Unknown Author');
+        const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        const bio = profileBioLookup.get(nid) || '';
+        const avatar = profileImageLookup.get(nid) || '';
         
-        const bioEntry = profileBios.find(b => Number(b.entity_id) === profileNodeId);
-        if (bioEntry && bioEntry.field_profile_bio_value) {
-            // Strip HTML from bio since Ghost doesn't support it
-            const bioText = stripHtml(String(bioEntry.field_profile_bio_value));
-            authorBioLookup.set(userId, bioText);
-        }
+        authorData.push({
+            id: nid,
+            name,
+            slug,
+            email: `${slug}@placeholder.com`,
+            bio,
+            avatar
+        });
     }
     
-    console.log(`👤 Found ${authorBioLookup.size} author bios`);
-    console.log(`🖼️  Found ${authorImageLookup.size} author images`);
+    console.log(`👤 Found ${authorData.length} authors (from profile nodes)`);
+    console.log(`   📝 ${profileBioLookup.size} with bios`);
+    console.log(`   🖼️  ${profileImageLookup.size} with images`);
     
     // Get body content - try standard field first, then paragraphs
     let bodyLookup: Map<number, string> = new Map();
@@ -745,33 +788,25 @@ function generateWXR(tables: Tables, siteUrl: string): string {
     console.log(`🖼️  Found ${featuredImageLookup.size} featured images`);
     
     // Build post → authors lookup from node__field_author
-    // This field references profile nodes, which we need to resolve to user IDs
+    // This field references profile nodes directly (not user IDs)
     const postAuthors = tables['node__field_author']?.rows || [];
     
-    // Build profile node → user ID lookup (reusing profileUserLink from earlier)
-    const profileToUser: Map<number, number> = new Map();
-    for (const link of profileUserLink) {
-        const profileNodeId = Number(link.entity_id);
-        const userId = Number(link.field_user_target_id);
-        profileToUser.set(profileNodeId, userId);
-    }
-    
-    // Build post → author user IDs lookup (sorted by delta for primary author first)
+    // Build post → profile node IDs lookup (sorted by delta for primary author first)
     const postAuthorLookup: Map<number, number[]> = new Map();
     let multiAuthorPosts = 0;
     for (const row of postAuthors) {
         const nid = Number(row.entity_id);
         const profileNodeId = Number(row.field_author_target_id);
         const delta = Number(row.delta || 0);
-        const userId = profileToUser.get(profileNodeId);
         
-        if (userId) {
+        // Only include if this profile exists in our author data
+        if (authorData.find(a => a.id === profileNodeId)) {
             if (!postAuthorLookup.has(nid)) {
                 postAuthorLookup.set(nid, []);
             }
             const authors = postAuthorLookup.get(nid)!;
             // Insert at correct position based on delta
-            authors[delta] = userId;
+            authors[delta] = profileNodeId;
         }
     }
     
@@ -803,22 +838,18 @@ function generateWXR(tables: Tables, siteUrl: string): string {
     <wp:base_blog_url>${baseUrl}</wp:base_blog_url>
 `;
 
-    // Authors (with bios)
-    for (const user of userData) {
-        const uid = Number(user.uid);
-        const bio = authorBioLookup.get(uid) || '';
-        const avatar = authorImageLookup.get(uid) || '';
-        
+    // Authors (from profile nodes, with bios and avatars)
+    for (const author of authorData) {
         wxr += `
     <wp:author>
-        <wp:author_id>${uid}</wp:author_id>
-        <wp:author_login>${cdata(user.name)}</wp:author_login>
-        <wp:author_email>${cdata(user.mail || `user${uid}@placeholder.com`)}</wp:author_email>
-        <wp:author_display_name>${cdata(user.name)}</wp:author_display_name>
+        <wp:author_id>${author.id}</wp:author_id>
+        <wp:author_login>${cdata(author.name)}</wp:author_login>
+        <wp:author_email>${cdata(author.email)}</wp:author_email>
+        <wp:author_display_name>${cdata(author.name)}</wp:author_display_name>
         <wp:author_first_name>${cdata('')}</wp:author_first_name>
         <wp:author_last_name>${cdata('')}</wp:author_last_name>
-        <wp:author_description>${cdata(bio)}</wp:author_description>
-        <wp:author_avatar>${cdata(avatar)}</wp:author_avatar>
+        <wp:author_description>${cdata(author.bio)}</wp:author_description>
+        <wp:author_avatar>${cdata(author.avatar)}</wp:author_avatar>
     </wp:author>`;
     }
 
@@ -885,9 +916,12 @@ function generateWXR(tables: Tables, siteUrl: string): string {
         const status = Number(post.status) === 1 ? 'publish' : 'draft';
         const created = new Date(Number(post.created) * 1000);
         const dateStr = created.toISOString().replace('T', ' ').replace('Z', '').split('.')[0];
-        // Use author from node__field_author if available, fallback to node owner
-        const authorFromField = postAuthorLookup.get(nid)?.[0];
-        const authorId = authorFromField || Number(post.uid) || 1;
+        
+        // Get author from node__field_author (profile node IDs)
+        const postProfileIds = postAuthorLookup.get(nid)?.filter(Boolean) || [];
+        const primaryAuthor = postProfileIds.length > 0 
+            ? authorData.find(a => a.id === postProfileIds[0])
+            : authorData[0]; // Fallback to first author if no author assigned
         
         const content = bodyLookup.get(nid) || '';
         
@@ -925,13 +959,12 @@ function generateWXR(tables: Tables, siteUrl: string): string {
         }
         
         // Add all authors as postmeta for Ghost multi-author support
-        const postAuthorIds = postAuthorLookup.get(nid)?.filter(Boolean) || [];
-        if (postAuthorIds.length > 0) {
-            // Convert user IDs to slugs
-            const authorSlugs = postAuthorIds
-                .map(uid => {
-                    const user = userData.find(u => Number(u.uid) === uid);
-                    return user ? slugify(String(user.name || '')) : null;
+        if (postProfileIds.length > 0) {
+            // Convert profile node IDs to author slugs
+            const authorSlugs = postProfileIds
+                .map(profileId => {
+                    const author = authorData.find(a => a.id === profileId);
+                    return author ? author.slug : null;
                 })
                 .filter(Boolean);
             
@@ -945,7 +978,7 @@ function generateWXR(tables: Tables, siteUrl: string): string {
         }
 
         // Get the primary author name for dc:creator
-        const primaryAuthorName = userData.find(u => Number(u.uid) === authorId)?.name || 'admin';
+        const primaryAuthorName = primaryAuthor?.name || 'Unknown Author';
 
         wxr += `
     <item>
