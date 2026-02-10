@@ -21,7 +21,7 @@
       <wp:author_email>bob@example.com</wp:author_email>
       <wp:author_display_name><![CDATA[Bob Jones]]></wp:author_display_name>
       <wp:author_first_name><![CDATA[Bob]]></wp:author_first_name>
-      <wp:author_last_name><![CDATA[Bob]]></wp:author_last_name>
+      <wp:author_last_name><![CDATA[Jones]]></wp:author_last_name>
     </wp:author>
     <wp:author>
       <wp:author_id>3</wp:author_id>

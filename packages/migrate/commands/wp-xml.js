@@ -2,6 +2,7 @@ import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import wpXml from '../sources/wp-xml.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
+import {ghostAuthOptions} from '@tryghost/mg-ghost-authors';
 
 // Internal ID in case we need one.
 const id = 'wp-xml';
@@ -157,18 +158,7 @@ const options = [
         defaultValue: null,
         desc: 'Provide a unique name for the cache directory (defaults to a UUID)'
     },
-    {
-        type: 'string',
-        flags: '--ghostApiUrl',
-        defaultValue: null,
-        desc: 'Ghost site URL to fetch existing users (e.g. https://example.ghost.io)'
-    },
-    {
-        type: 'string',
-        flags: '--ghostAdminKey',
-        defaultValue: null,
-        desc: 'Ghost Admin API key to authenticate with Ghost (format: id:secret)'
-    }
+    ...ghostAuthOptions
 ];
 
 // Build an object of defaults to be exported - Not used here, but needs to be provided
