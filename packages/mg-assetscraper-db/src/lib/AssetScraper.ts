@@ -50,7 +50,7 @@ export default class AssetScraper {
     #fileCache: FileCache;
     #findOnlyMode: boolean;
     #baseUrl: string | false;
-    #defaultOptions: Required<Pick<AssetScraperOptions, 'optimize' | 'allowImages' | 'allowMedia' | 'allowFiles'>>;
+    #defaultOptions: Required<Pick<AssetScraperOptions, 'optimize'>>;
     #warnings: string[];
     #logger: Logger | undefined;
     #allowedDomains: string[];
@@ -69,10 +69,7 @@ export default class AssetScraper {
         this.#fileCache = fileCache;
 
         this.#defaultOptions = {
-            optimize: options.optimize ?? true,
-            allowImages: options.allowImages ?? true,
-            allowMedia: options.allowMedia ?? true,
-            allowFiles: options.allowFiles ?? true
+            optimize: options.optimize ?? true
         };
 
         // Set the  base URL, but also trim thr trailing slash

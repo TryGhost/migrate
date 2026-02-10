@@ -15,9 +15,7 @@ const initialize = (options) => {
             ctx.options = options;
             ctx.allowScrape = {
                 all: ctx.options.scrape.includes('all'),
-                images: ctx.options.scrape.includes('img') || ctx.options.scrape.includes('all'),
-                media: ctx.options.scrape.includes('media') || ctx.options.scrape.includes('all'),
-                files: ctx.options.scrape.includes('files') || ctx.options.scrape.includes('all'),
+                assets: ctx.options.scrape.includes('all') || ctx.options.scrape.includes('assets') || ctx.options.scrape.includes('img') || ctx.options.scrape.includes('media') || ctx.options.scrape.includes('files'),
                 web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
             };
 
@@ -80,11 +78,9 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Fetch images via AssetScraper',
-            skip: (ctx) => {
-                return [ctx.allowScrape.images, ctx.allowScrape.media, ctx.allowScrape.files].every(element => element === false);
-            },
+            skip: ctx => !ctx.allowScrape.assets,
             task: async (ctx) => {
-                let tasks = ctx.assetScraper.getTasks(ctx);
+                let tasks = ctx.assetScraper.getTasks();
                 return makeTaskRunner(tasks, {
                     verbose: options.verbose,
                     exitOnError: false,

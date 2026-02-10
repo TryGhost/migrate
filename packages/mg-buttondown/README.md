@@ -39,7 +39,11 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`-s` `--scrape`** 
     - Configure scraping tasks
     - string - default: `all` 
-    - Choices: `all`, `img`, `web`, `media`, `files`, `none`
+    - Choices: `all`, `web`, `assets`, `none`
+        - `all`: Scrape web metadata and download assets
+        - `web`: Only scrape metadata from web pages
+        - `assets`: Only download assets (images, media, files)
+        - `none`: Skip all scraping tasks
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
     - bool - default: `true`     

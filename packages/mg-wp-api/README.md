@@ -45,10 +45,11 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`-s` `--scrape`** 
     - Configure scraping tasks
     - string - default: `all` 
-    - Choices: `all`, `img`, `web`, `media`, `files`, `none`
-- **`--sizeLimit`**
-    - number - default: `false`
-    - Media files larger than this size (defined in MB [i.e. `5`]) will be flagged as oversize
+    - Choices: `all`, `web`, `assets`, `none`
+        - `all`: Scrape web metadata and download assets
+        - `web`: Only scrape metadata from web pages
+        - `assets`: Only download assets (images, media, files)
+        - `none`: Skip all scraping tasks
 - **`-I` `--info`**
     - bool - default: `false`
     - Show initalisation info only
@@ -133,10 +134,10 @@ migrate wp-api --url https://example.com --auth person:pa55w0rd --addTag 'From o
 This will fetch the newest 50 posts, in 5 batches of 10, collect real author data including email addresses), and add the tag 'From old site'.
 
 ```sh
-migrate wp-api --url https://example.com --scrape img web
+migrate wp-api --url https://example.com --scrape web
 ```
 
-This will fetch all posts, and only scrape image & web meta data
+This will fetch all posts, and only scrape web metadata (no asset downloading)
 
 ### Only get a specific set of posts:
 

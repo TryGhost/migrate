@@ -32,9 +32,6 @@ export interface FileCache {
 
 export interface AssetScraperOptions {
     optimize?: boolean;
-    allowImages?: boolean;
-    allowMedia?: boolean;
-    allowFiles?: boolean;
     baseUrl?: string;
     findOnlyMode?: boolean;
     domains?: string[];

@@ -45,15 +45,9 @@ const options = [
     {
         type: 'array',
         flags: '-s --scrape',
-        choices: ['all', 'img', 'web', 'media', 'files', 'none'],
+        choices: ['all', 'web', 'assets', 'none', 'img', 'media', 'files'],
         defaultValue: 'all',
-        desc: 'Configure scraping tasks'
-    },
-    {
-        type: 'number',
-        flags: '--sizeLimit',
-        defaultValue: false,
-        desc: 'Assets larger than this size (defined in MB) will be ignored'
+        desc: 'Configure scraping tasks (all = web + assets, web = metadata only, assets = download assets only). Legacy aliases for assets: img, media, files'
     },
     {
         type: 'boolean',
