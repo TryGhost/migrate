@@ -31,6 +31,21 @@ interface GhostUserTaskOptions {
     ghostAdminKey?: string;
 }
 
+interface MigrationContext {
+    fileCache: {
+        hasFile: (filename: string, subdir: string) => boolean;
+    };
+    ghostUsers: Array<{email: string; name?: string; slug?: string}>;
+    result: {
+        users?: Array<{data: {email?: string; name?: string; slug?: string}}>;
+    };
+    errors: Array<{message: string; error: unknown}>;
+}
+
+interface ListrTask {
+    output: string;
+}
+
 /**
  * Creates the task runner tasks for fetching and merging Ghost users
  * This can be spread into any migration source's task array after the initial data processing
@@ -43,7 +58,7 @@ export const createGhostUserTasks = (options: GhostUserTaskOptions) => {
         {
             title: 'Fetch existing Ghost users',
             skip: () => !options.ghostApiUrl || !options.ghostAdminKey,
-            task: async (ctx: any, task: any) => {
+            task: async (ctx: MigrationContext, task: ListrTask) => {
                 try {
                     const wasCached = ctx.fileCache.hasFile('ghost-existing-users.json', 'tmp');
                     ctx.ghostUsers = await fetchGhostUsers({
