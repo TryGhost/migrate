@@ -521,6 +521,92 @@ describe('Process', function () {
             _et_dynamic_cached_attributes: []
         });
     });
+
+    test('Can extract multiple authors from Co-Authors Plus format', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                posts: true
+            }
+        };
+        const input = await readSync('co-authors-plus.xml');
+        const processed = await process.all(input, ctx);
+
+        // Post with 2 authors
+        const multiAuthorPost = processed.posts[0];
+        expect(multiAuthorPost.data.title).toEqual('Multi-Author Post');
+        expect(multiAuthorPost.data.authors).toBeArrayOfSize(2);
+        expect(multiAuthorPost.data.author).toBeUndefined();
+        expect(multiAuthorPost.data.authors[0].data.slug).toEqual('alice-smith');
+        expect(multiAuthorPost.data.authors[0].data.name).toEqual('Alice Smith');
+        expect(multiAuthorPost.data.authors[0].data.email).toEqual('alice@example.com');
+        expect(multiAuthorPost.data.authors[1].data.slug).toEqual('bob-jones');
+        expect(multiAuthorPost.data.authors[1].data.name).toEqual('Bob Jones');
+        expect(multiAuthorPost.data.authors[1].data.email).toEqual('bob@example.com');
+    });
+
+    test('Can extract three authors from Co-Authors Plus format', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                posts: true
+            }
+        };
+        const input = await readSync('co-authors-plus.xml');
+        const processed = await process.all(input, ctx);
+
+        // Post with 3 authors
+        const threeAuthorPost = processed.posts[1];
+        expect(threeAuthorPost.data.title).toEqual('Three Author Post');
+        expect(threeAuthorPost.data.authors).toBeArrayOfSize(3);
+        expect(threeAuthorPost.data.author).toBeUndefined();
+        expect(threeAuthorPost.data.authors[0].data.slug).toEqual('alice-smith');
+        expect(threeAuthorPost.data.authors[1].data.slug).toEqual('bob-jones');
+        expect(threeAuthorPost.data.authors[2].data.slug).toEqual('carol-white');
+    });
+
+    test('Uses single author field for single Co-Authors Plus entry', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                posts: true
+            }
+        };
+        const input = await readSync('co-authors-plus.xml');
+        const processed = await process.all(input, ctx);
+
+        // Post with 1 author via Co-Authors Plus should use author field, not authors array
+        const singleCoAuthorPost = processed.posts[2];
+        expect(singleCoAuthorPost.data.title).toEqual('Single Co-Author Post');
+        expect(singleCoAuthorPost.data.authors).toBeUndefined();
+        expect(singleCoAuthorPost.data.author).toBeObject();
+        expect(singleCoAuthorPost.data.author.data.slug).toEqual('bob-jones');
+        expect(singleCoAuthorPost.data.author.data.name).toEqual('Bob Jones');
+        expect(singleCoAuthorPost.data.author.data.email).toEqual('bob@example.com');
+    });
+
+    test('Deduplicates Co-Authors Plus author entries', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                posts: true
+            }
+        };
+        const input = await readSync('co-authors-plus.xml');
+        const processed = await process.all(input, ctx);
+
+        // Post with duplicate author entries should be deduplicated
+        const duplicateAuthorPost = processed.posts[3];
+        expect(duplicateAuthorPost.data.title).toEqual('Duplicate Author Entries Post');
+        expect(duplicateAuthorPost.data.authors).toBeArrayOfSize(2);
+        expect(duplicateAuthorPost.data.author).toBeUndefined();
+        expect(duplicateAuthorPost.data.authors[0].data.slug).toEqual('alice-smith');
+        expect(duplicateAuthorPost.data.authors[1].data.slug).toEqual('bob-jones');
+    });
 });
 
 describe('HTML Processing', function () {

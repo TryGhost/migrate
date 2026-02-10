@@ -134,6 +134,47 @@ const processTerms = (wpTerms, fetchTags) => {
     return categories.concat(tags);
 };
 
+// Extract co-authors from wp:term data (used by Co-Authors Plus and PublishPress Authors plugins)
+// These plugins store authors as a custom taxonomy with taxonomy === 'author'
+const processCoAuthors = (wpTerms, users) => {
+    const coAuthors = [];
+    const seenSlugs = new Set();
+
+    if (!wpTerms || !Array.isArray(wpTerms)) {
+        return coAuthors;
+    }
+
+    wpTerms.forEach((taxonomy) => {
+        if (!Array.isArray(taxonomy)) {
+            return;
+        }
+
+        taxonomy.forEach((term) => {
+            // Co-Authors Plus and PublishPress Authors use 'author' taxonomy
+            if (term.taxonomy === 'author' && term.slug && !seenSlugs.has(term.slug)) {
+                seenSlugs.add(term.slug);
+
+                // Try to find matching user from the users list (for full user data)
+                const matchedUser = users?.find(u => u.data.slug === term.slug);
+                if (matchedUser) {
+                    coAuthors.push(matchedUser);
+                } else {
+                    // Create author entry from the term data
+                    coAuthors.push({
+                        url: term.link,
+                        data: {
+                            slug: term.slug,
+                            name: _.unescape(term.name)
+                        }
+                    });
+                }
+            }
+        });
+    });
+
+    return coAuthors;
+};
+
 // Sometimes, the custom excerpt can be part of the post content. If the flag with an selector for the
 // custom excerpt class is passed, we use this one to populate the custom excerpt and remove it from the post content
 const processExcerpt = (html, excerptSelector = false) => {
@@ -1049,10 +1090,6 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
             created_at: wpPost.date_gmt,
             published_at: wpPost.date_gmt,
             updated_at: wpPost.modified_gmt,
-            author: users ? users.find((user) => {
-                // Try to use the user data returned from the API
-                return user.data.id === wpPost.author;
-            }) : null,
             tags: []
         }
     };
@@ -1068,16 +1105,35 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
         }
     }
 
-    // We no author was defined…
-    if (!post.data.author) {
-        // … but a global author is defined, use that
-        if (wpPost._embedded && wpPost._embedded.author) {
-            // use the data passed along the post if we couldn't match the user from the API
-            const wpAuthor = wpPost._embedded.author[0];
-            post.data.author = processAuthor(wpAuthor);
-        // … else, use the first user in the `users` object
-        } else {
-            post.data.author = processAuthor(users[0].data);
+    // Check for co-authors from Co-Authors Plus or PublishPress Authors plugins
+    // These store authors as terms in wp:term with taxonomy === 'author'
+    const coAuthors = wpPost._embedded && wpPost._embedded['wp:term']
+        ? processCoAuthors(wpPost._embedded['wp:term'], users)
+        : [];
+
+    // Handle author assignment based on co-authors
+    if (coAuthors.length > 1) {
+        // Multiple co-authors: use authors array
+        post.data.authors = coAuthors;
+    } else if (coAuthors.length === 1) {
+        // Single co-author: use author field for backwards compatibility
+        post.data.author = coAuthors[0];
+    } else {
+        // No co-authors found, fall back to standard WordPress author
+        post.data.author = users ? users.find((user) => {
+            return user.data.id === wpPost.author;
+        }) : null;
+
+        // If no author was found from users list…
+        if (!post.data.author) {
+            // … but an embedded author is defined, use that
+            if (wpPost._embedded && wpPost._embedded.author) {
+                const wpAuthor = wpPost._embedded.author[0];
+                post.data.author = processAuthor(wpAuthor);
+            // … else, use the first user in the `users` object
+            } else if (users && users.length > 0) {
+                post.data.author = processAuthor(users[0].data);
+            }
         }
     }
 
@@ -1215,6 +1271,7 @@ export default {
     processAuthor,
     processTerm,
     processTerms,
+    processCoAuthors,
     processExcerpt,
     processShortcodes,
     processContent,

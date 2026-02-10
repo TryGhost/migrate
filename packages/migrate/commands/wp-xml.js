@@ -61,6 +61,12 @@ const options = [
         desc: 'Import posts'
     },
     {
+        type: 'boolean',
+        flags: '--tags',
+        defaultValue: true,
+        desc: 'Import WordPress tags (set to false to only import categories)'
+    },
+    {
         type: 'string',
         flags: '--addTag',
         defaultValue: null,
@@ -150,6 +156,18 @@ const options = [
         flags: '--cacheName',
         defaultValue: null,
         desc: 'Provide a unique name for the cache directory (defaults to a UUID)'
+    },
+    {
+        type: 'string',
+        flags: '--ghostApiUrl',
+        defaultValue: null,
+        desc: 'Ghost site URL to fetch existing users (e.g. https://example.ghost.io)'
+    },
+    {
+        type: 'string',
+        flags: '--ghostAdminKey',
+        defaultValue: null,
+        desc: 'Ghost Admin API key to authenticate with Ghost (format: id:secret)'
     }
 ];
 

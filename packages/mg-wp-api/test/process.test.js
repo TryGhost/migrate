@@ -10,6 +10,8 @@ import singlePostWithDuplicateImagesfixture from './fixtures/single-post-with-du
 import singlePostWithHtmlInTitlefixture from './fixtures/single-post-with-html-in-title.json';
 import singlePostNoAuthorFixture from './fixtures/single-post-no-author.json';
 import datedPosts from './fixtures/dated-posts.json';
+import coAuthorsPostFixture from './fixtures/co-authors-post.json';
+import singleCoAuthorPostFixture from './fixtures/single-coauthor-post.json';
 
 describe('Process WordPress REST API JSON', function () {
     test('Can convert a single post', async function () {
@@ -1002,5 +1004,123 @@ describe('wpCDNToLocal', function () {
     test('Updated long & subdirectory CDN URL', function () {
         const updated = processor.wpCDNToLocal('https://i0.wp.com/this-is-a-long-one.com/subdir/wp-content/uploads/2021/02photo.jpg?resize=200%2C300&amp;ssl=1');
         expect(updated).toEqual('https://this-is-a-long-one.com/subdir/wp-content/uploads/2021/02photo.jpg');
+    });
+});
+
+describe('Co-Authors Plus multi-author support', function () {
+    test('processCoAuthors extracts authors from wp:term with author taxonomy', function () {
+        const wpTerms = [
+            [{id: 1, name: 'Category', slug: 'category', taxonomy: 'category'}],
+            [
+                {id: 100, name: 'Alice Smith', slug: 'alice-smith', taxonomy: 'author', link: 'https://example.com/author/alice-smith'},
+                {id: 101, name: 'Bob Jones', slug: 'bob-jones', taxonomy: 'author', link: 'https://example.com/author/bob-jones'}
+            ]
+        ];
+
+        const coAuthors = processor.processCoAuthors(wpTerms, []);
+
+        expect(coAuthors).toBeArrayOfSize(2);
+        expect(coAuthors[0].data.slug).toEqual('alice-smith');
+        expect(coAuthors[0].data.name).toEqual('Alice Smith');
+        expect(coAuthors[1].data.slug).toEqual('bob-jones');
+        expect(coAuthors[1].data.name).toEqual('Bob Jones');
+    });
+
+    test('processCoAuthors returns empty array when no author taxonomy terms', function () {
+        const wpTerms = [
+            [{id: 1, name: 'Category', slug: 'category', taxonomy: 'category'}],
+            [{id: 2, name: 'Tag', slug: 'tag', taxonomy: 'post_tag'}]
+        ];
+
+        const coAuthors = processor.processCoAuthors(wpTerms, []);
+
+        expect(coAuthors).toBeArrayOfSize(0);
+    });
+
+    test('processCoAuthors deduplicates authors by slug', function () {
+        const wpTerms = [
+            [
+                {id: 100, name: 'Alice Smith', slug: 'alice-smith', taxonomy: 'author', link: 'https://example.com/author/alice-smith'},
+                {id: 100, name: 'Alice Smith', slug: 'alice-smith', taxonomy: 'author', link: 'https://example.com/author/alice-smith'},
+                {id: 101, name: 'Bob Jones', slug: 'bob-jones', taxonomy: 'author', link: 'https://example.com/author/bob-jones'}
+            ]
+        ];
+
+        const coAuthors = processor.processCoAuthors(wpTerms, []);
+
+        expect(coAuthors).toBeArrayOfSize(2);
+    });
+
+    test('processCoAuthors uses user data when available', function () {
+        const wpTerms = [
+            [
+                {id: 100, name: 'Alice Smith', slug: 'alice-smith', taxonomy: 'author', link: 'https://example.com/author/alice-smith'}
+            ]
+        ];
+
+        const users = [
+            {
+                url: 'https://example.com/author/alice-smith',
+                data: {
+                    id: 1,
+                    slug: 'alice-smith',
+                    name: 'Alice Smith',
+                    email: 'alice@example.com',
+                    bio: 'Full bio from users list'
+                }
+            }
+        ];
+
+        const coAuthors = processor.processCoAuthors(wpTerms, users);
+
+        expect(coAuthors).toBeArrayOfSize(1);
+        expect(coAuthors[0].data.email).toEqual('alice@example.com');
+        expect(coAuthors[0].data.bio).toEqual('Full bio from users list');
+    });
+
+    test('processPost uses authors array for multiple co-authors', async function () {
+        const users = [];
+        const options = {tags: true};
+
+        const post = await processor.processPost(coAuthorsPostFixture, users, options);
+
+        expect(post.data.authors).toBeArrayOfSize(2);
+        expect(post.data.author).toBeUndefined();
+        expect(post.data.authors[0].data.slug).toEqual('alice-smith');
+        expect(post.data.authors[0].data.name).toEqual('Alice Smith');
+        expect(post.data.authors[1].data.slug).toEqual('bob-jones');
+        expect(post.data.authors[1].data.name).toEqual('Bob Jones');
+    });
+
+    test('processPost uses author field for single co-author', async function () {
+        const users = [];
+        const options = {tags: true};
+
+        const post = await processor.processPost(singleCoAuthorPostFixture, users, options);
+
+        expect(post.data.authors).toBeUndefined();
+        expect(post.data.author).toBeObject();
+        expect(post.data.author.data.slug).toEqual('bob-jones');
+        expect(post.data.author.data.name).toEqual('Bob Jones');
+    });
+
+    test('processPost falls back to standard author when no co-authors', async function () {
+        const users = [
+            {
+                url: 'https://mysite.com/team/guest-writer',
+                data: {
+                    id: 29,
+                    slug: 'guest-writer',
+                    name: 'Guest Writer'
+                }
+            }
+        ];
+        const options = {tags: true, featureImage: 'featuredmedia'};
+
+        const post = await processor.processPost(singlePostFixture, users, options);
+
+        expect(post.data.authors).toBeUndefined();
+        expect(post.data.author).toBeObject();
+        expect(post.data.author.data.slug).toEqual('guest-writer');
     });
 });

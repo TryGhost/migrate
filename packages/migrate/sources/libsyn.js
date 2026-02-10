@@ -5,6 +5,7 @@ import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
+import {createGhostUserTasks} from '@tryghost/mg-ghost-authors';
 import prettyMilliseconds from 'pretty-ms';
 
 const initialize = (options) => {
@@ -73,6 +74,7 @@ const getFullTaskList = (options) => {
                 }
             }
         },
+        ...createGhostUserTasks(options),
         {
             title: 'Build Link Map',
             task: async (ctx) => {

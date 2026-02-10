@@ -2,6 +2,7 @@ import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import libsyn from '../sources/libsyn.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
+import {ghostAuthOptions} from '@tryghost/mg-ghost-authors';
 
 // Internal ID in case we need one.
 const id = 'libsyn';
@@ -77,7 +78,8 @@ const options = [
         flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
-    }
+    },
+    ...ghostAuthOptions
 ];
 
 // Build an object of defaults to be exported - Not used here, but needs to be provided
