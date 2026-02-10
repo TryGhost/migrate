@@ -1,5 +1,7 @@
 import {fetchGhostUsers} from './lib/fetch-users.js';
 import {mergeUsersWithGhost} from './lib/merge-users.js';
+import type {GhostUser, FetchUsersOptions} from './lib/fetch-users.js';
+import type {MigratedUser} from './lib/merge-users.js';
 
 export {fetchGhostUsers};
 export type {GhostUser, FetchUsersOptions} from './lib/fetch-users.js';
@@ -32,12 +34,12 @@ interface GhostUserTaskOptions {
 }
 
 interface MigrationContext {
-    fileCache: {
+    fileCache: FetchUsersOptions['fileCache'] & {
         hasFile: (filename: string, subdir: string) => boolean;
     };
-    ghostUsers: Array<{email: string; name?: string; slug?: string}>;
+    ghostUsers: GhostUser[];
     result: {
-        users?: Array<{data: {email?: string; name?: string; slug?: string}}>;
+        users?: MigratedUser[];
     };
     errors: Array<{message: string; error: unknown}>;
 }
