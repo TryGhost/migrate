@@ -22,7 +22,7 @@ export class StripeAPI {
             telemetry: false
         });
         this.mode = apiKey.includes('_test_') ? 'test' : 'live';
-        this.#maxRequestsPerSecond = this.mode === 'test' ? 20 : 1;
+        this.#maxRequestsPerSecond = this.mode === 'test' ? 20 : 5;
         this.#queue = new Queue({
             maxRunningTasks: this.#maxRequestsPerSecond
         });

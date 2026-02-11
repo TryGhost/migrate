@@ -15,7 +15,7 @@ export class StripeConnector {
 
         Logger.shared.startSpinner('Validating API-key');
         const {accountName, mode} = await fromAccount.validate();
-        Logger.shared.succeed(`From ${chalk.green(accountName)} (${mode} mode)`);
+        Logger.shared.succeed(`From ${chalk.green(accountName)} / ${chalk.grey(fromAccount.id)} (${mode} mode)`);
 
         const toAccount = await this.askForAccount('To which Stripe account?', options.newApiKey, fromAccount);
 
@@ -24,7 +24,7 @@ export class StripeConnector {
         } else {
             Logger.shared.startSpinner('Validating API-key');
             const {accountName: accountNameTo, mode: modeTo} = await toAccount.validate();
-            Logger.shared.succeed(`To ${chalk.green(accountNameTo)} (${modeTo} mode)\n`);
+            Logger.shared.succeed(`To ${chalk.green(accountNameTo)} / ${chalk.grey(toAccount.id)} (${modeTo} mode)\n`);
         }
 
         return {fromAccount, toAccount};
