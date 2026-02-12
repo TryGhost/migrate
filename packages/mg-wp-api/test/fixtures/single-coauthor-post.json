@@ -1,0 +1,82 @@
+{
+  "id": 99998,
+  "date": "2024-11-08T10:36:54",
+  "date_gmt": "2024-11-08T15:36:54",
+  "guid": {
+    "rendered": "http://mysite.com/?p=99998"
+  },
+  "modified": "2024-11-08T10:37:03",
+  "modified_gmt": "2024-11-08T15:37:03",
+  "slug": "single-coauthor-post",
+  "status": "publish",
+  "type": "post",
+  "link": "https://mysite.com/2024/11/08/single-coauthor-post",
+  "title": {
+    "rendered": "Single Co-Author Post"
+  },
+  "content": {
+    "rendered": "<p>This is a post with a single author using Co-Authors Plus taxonomy.</p>",
+    "protected": false
+  },
+  "excerpt": {
+    "rendered": "<p>A post with one co-author.</p>\n",
+    "protected": false
+  },
+  "author": 2,
+  "featured_media": 0,
+  "comment_status": "closed",
+  "ping_status": "open",
+  "sticky": false,
+  "template": "",
+  "format": "standard",
+  "meta": {},
+  "categories": [1],
+  "tags": [],
+  "_links": {
+    "self": [{"href": "https://mysite.com/wp-json/wp/v2/posts/99998"}],
+    "collection": [{"href": "https://mysite.com/wp-json/wp/v2/posts"}],
+    "author": [{"embeddable": true, "href": "https://mysite.com/wp-json/wp/v2/users/2"}],
+    "wp:term": [
+      {"taxonomy": "category", "embeddable": true, "href": "https://mysite.com/wp-json/wp/v2/categories?post=99998"},
+      {"taxonomy": "author", "embeddable": true, "href": "https://mysite.com/wp-json/wp/v2/author?post=99998"}
+    ]
+  },
+  "_embedded": {
+    "author": [
+      {
+        "id": 2,
+        "name": "Bob Jones",
+        "url": "",
+        "description": "",
+        "link": "https://mysite.com/author/bob-jones",
+        "slug": "bob-jones",
+        "avatar_urls": {
+          "24": "https://secure.gravatar.com/avatar/def456?s=24&d=mm&r=g",
+          "48": "https://secure.gravatar.com/avatar/def456?s=48&d=mm&r=g",
+          "96": "https://secure.gravatar.com/avatar/def456?s=96&d=mm&r=g"
+        }
+      }
+    ],
+    "wp:term": [
+      [
+        {
+          "id": 1,
+          "link": "https://mysite.com/category/uncategorized",
+          "name": "Uncategorized",
+          "slug": "uncategorized",
+          "taxonomy": "category"
+        }
+      ],
+      [
+        {
+          "id": 101,
+          "link": "https://mysite.com/author/bob-jones",
+          "name": "Bob Jones",
+          "slug": "bob-jones",
+          "taxonomy": "author",
+          "description": "Bob's bio"
+        }
+      ]
+    ]
+  }
+}

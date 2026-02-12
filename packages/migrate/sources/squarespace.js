@@ -7,6 +7,7 @@ import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import xmlIngest from '@tryghost/mg-squarespace-xml';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
+import {createGhostUserTasks} from '@tryghost/mg-ghost-authors';
 import prettyMilliseconds from 'pretty-ms';
 
 const scrapeConfig = {
@@ -115,6 +116,7 @@ const getTaskRunner = (options) => {
                 }
             }
         },
+        ...createGhostUserTasks(options),
         {
             title: 'Fetch missing data via WebScraper',
             skip: ctx => !ctx.allowScrape.web,

@@ -7,6 +7,7 @@ import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
+import {createGhostUserTasks} from '@tryghost/mg-ghost-authors';
 import prettyMilliseconds from 'pretty-ms';
 
 const scrapeConfig = {
@@ -170,7 +171,6 @@ const getTaskRunner = (options) => {
         {
             title: 'Read Medium export zip',
             task: async (ctx) => {
-                // 1. Read the zip file
                 try {
                     ctx.result = mediumIngest(options.pathToZip, options);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'medium-export-data.json');
@@ -180,6 +180,7 @@ const getTaskRunner = (options) => {
                 }
             }
         },
+        ...createGhostUserTasks(options),
         {
             title: 'Fetch missing data via WebScraper',
             skip: ctx => !ctx.allowScrape.web,

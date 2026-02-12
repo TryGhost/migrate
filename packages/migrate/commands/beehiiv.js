@@ -2,6 +2,7 @@ import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import beehiiv from '../sources/beehiiv.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
+import {ghostAuthOptions} from '@tryghost/mg-ghost-authors';
 
 // Internal ID in case we need one.
 const id = 'beehiiv';
@@ -108,7 +109,8 @@ const options = [
         flags: '--zip',
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
-    }
+    },
+    ...ghostAuthOptions
 ];
 
 // Build an object of defaults to be exported - Not used here, but needs to be provided

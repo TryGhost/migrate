@@ -43,6 +43,7 @@
     "@tryghost/mg-curated-members-csv": "0.4.33",
     "@tryghost/mg-fs-utils": "0.16.3",
     "@tryghost/mg-ghost-api": "0.4.25",
+    "@tryghost/mg-ghost-authors": "0.0.1",
     "@tryghost/mg-html-lexical": "0.0.30",
     "@tryghost/mg-html-mobiledoc": "0.9.39",
     "@tryghost/mg-jekyll-export": "0.3.40",

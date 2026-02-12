@@ -8,13 +8,17 @@ import {isSerialized, unserialize} from 'php-serialize';
 
 const processUser = ($xml, $user) => {
     const authorSlug = slugify($xml($user).children('wp\\:author_login').text());
+    const bio = $xml($user).children('wp\\:author_description').text() || '';
+    const avatar = $xml($user).children('wp\\:author_avatar').text() || '';
 
     return {
         url: authorSlug,
         data: {
             slug: authorSlug,
             name: $xml($user).children('wp\\:author_display_name').text(),
-            email: $xml($user).children('wp\\:author_email').text()
+            email: $xml($user).children('wp\\:author_email').text(),
+            bio: bio || undefined,
+            profile_image: avatar || undefined
         }
     };
 };
@@ -71,9 +75,12 @@ const processFeatureImage = ($xml, $post, attachments) => {
     return attachmentData;
 };
 
-const processTags = ($xml, $wpTerms) => {
+const processTags = ($xml, $wpTerms, options = {}) => {
     const categories = [];
     const tags = [];
+
+    // If options.tags is false, skip post_tag (only import categories)
+    const includeTags = options.tags !== false;
 
     let allowedTerms = [
         'post_tag',
@@ -85,8 +92,10 @@ const processTags = ($xml, $wpTerms) => {
     ];
 
     $wpTerms.each((i, taxonomy) => {
+        const domain = $xml(taxonomy).attr('domain');
+
         // `category` takes priority and is use as the primary tag, so gets added to the list first
-        if ($xml(taxonomy).attr('domain') === 'category') {
+        if (domain === 'category') {
             categories.push({
                 url: `/tag/${$xml(taxonomy).attr('nicename')}`,
                 data: {
@@ -94,7 +103,8 @@ const processTags = ($xml, $wpTerms) => {
                     name: $xml(taxonomy).text().replace('&amp;', '&').substring(0, 190)
                 }
             });
-        } else if (allowedTerms.includes($xml(taxonomy).attr('domain'))) {
+        } else if (includeTags && allowedTerms.includes(domain)) {
+            // Only include tags if options.tags is not false
             tags.push({
                 url: `/tag/${$xml(taxonomy).attr('nicename')}`,
                 data: {
@@ -190,7 +200,7 @@ const processPost = async ($xml, $post, users, options) => {
     const postTypeVal = $xml($post).children('wp\\:post_type').text();
     const postType = (postTypeVal === 'page') ? 'page' : 'post';
     const featureImage = processFeatureImage($xml, $post, options.attachments);
-    const authorSlug = slugify($xml($post).children('dc\\:creator').text());
+    const dcCreatorSlug = slugify($xml($post).children('dc\\:creator').text());
 
     // WP XML only provides a published date, we let's use that all dates Ghost expects
     const postDate = new Date($xml($post).children('pubdate').text());
@@ -200,8 +210,38 @@ const processPost = async ($xml, $post, users, options) => {
     let parsedPostUrl = new URL(postUrl, url);
     postUrl = parsedPostUrl.href;
 
-    // If you need <wp:postmeta> data, access it here
-    // const postMeta = await processWPMeta($xml, $post);
+    // Extract authors from Co-Authors Plus format: <category domain="author" nicename="slug">Name</category>
+    // This is the most common multi-author plugin for WordPress
+    const coAuthors = [];
+    const seenSlugs = new Set();
+    $xml($post).children('category[domain="author"]').each((i, authorCat) => {
+        const authorSlug = $xml(authorCat).attr('nicename');
+        const authorName = $xml(authorCat).text();
+
+        // Skip duplicates (Co-Authors Plus sometimes includes multiple entries for same author)
+        if (authorSlug && !seenSlugs.has(authorSlug)) {
+            seenSlugs.add(authorSlug);
+
+            // Try to find matching user from the XML's wp:author list
+            const matchedUser = users?.find(u => u.data.slug === authorSlug);
+            if (matchedUser) {
+                coAuthors.push(matchedUser);
+            } else {
+                // Create author entry from the category data
+                coAuthors.push({
+                    url: authorSlug,
+                    data: {
+                        slug: authorSlug,
+                        name: authorName
+                    }
+                });
+            }
+        }
+    });
+
+    // Build final authors array - only use for multiple authors (Co-Authors Plus)
+    // For single-author posts, we use the `author` field for backwards compatibility
+    const authors = coAuthors.length > 1 ? coAuthors : [];
 
     const post = {
         url: postUrl,
@@ -218,7 +258,10 @@ const processPost = async ($xml, $post, users, options) => {
             feature_image_alt: featureImage?.alt ?? null,
             feature_image_caption: (featureImageCaption !== false) ? (featureImage?.description ?? featureImage?.title ?? null) : null,
             type: postType,
-            author: users ? users.find(user => user.data.slug === authorSlug) : null,
+            // Use authors array only for multiple authors (Co-Authors Plus with 2+ authors)
+            // Use single author field for backwards compatibility with single-author posts
+            authors: authors.length > 0 ? authors : undefined,
+            author: authors.length === 0 ? (coAuthors.length === 1 ? coAuthors[0] : (users ? users.find(user => user.data.slug === dcCreatorSlug) : null)) : undefined,
             tags: []
         }
     };
@@ -253,7 +296,7 @@ const processPost = async ($xml, $post, users, options) => {
     });
 
     if ($xml($post).children('category').length >= 1) {
-        post.data.tags = processTags($xml, $xml($post).children('category'));
+        post.data.tags = processTags($xml, $xml($post).children('category'), options);
     }
 
     if (addTag) {
@@ -284,12 +327,13 @@ const processPost = async ($xml, $post, users, options) => {
         }
     });
 
-    if (!post.data.author) {
+    // Only set fallback author if we don't have an author and we don't have multiple authors
+    if (!post.data.author && !post.data.authors) {
         if ($xml($post).children('dc\\:creator').length >= 1) {
             post.data.author = {
-                url: authorSlug,
+                url: dcCreatorSlug,
                 data: {
-                    slug: authorSlug
+                    slug: dcCreatorSlug
                 }
             };
         } else {

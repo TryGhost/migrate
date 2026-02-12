@@ -5,6 +5,7 @@ import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
+import {createGhostUserTasks} from '@tryghost/mg-ghost-authors';
 import bloggerIngest from '@tryghost/mg-blogger';
 import prettyMilliseconds from 'pretty-ms';
 
@@ -109,6 +110,7 @@ const getTaskRunner = (options) => {
                 }
             }
         },
+        ...createGhostUserTasks(options),
         {
             title: 'Fetch missing data via WebScraper',
             skip: ctx => !ctx.allowScrape.web,

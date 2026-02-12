@@ -6,6 +6,7 @@ import {ui} from '@tryghost/pretty-cli';
 import xml2json from 'xml2json';
 import wpAPISource from '../sources/wp-api.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
+import {ghostAuthOptions} from '@tryghost/mg-ghost-authors';
 
 // Internal ID in case we need one.
 const id = 'wp-api';
@@ -197,7 +198,8 @@ const options = [
         flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
-    }
+    },
+    ...ghostAuthOptions
 ];
 
 // Build an object of defaults to be exported - Not used here, but needs to be provided

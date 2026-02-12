@@ -2,6 +2,7 @@ import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import wpXml from '../sources/wp-xml.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
+import {ghostAuthOptions} from '@tryghost/mg-ghost-authors';
 
 // Internal ID in case we need one.
 const id = 'wp-xml';
@@ -59,6 +60,12 @@ const options = [
         flags: '--posts',
         defaultValue: true,
         desc: 'Import posts'
+    },
+    {
+        type: 'boolean',
+        flags: '--tags',
+        defaultValue: true,
+        desc: 'Import WordPress tags (set to false to only import categories)'
     },
     {
         type: 'string',
@@ -150,7 +157,8 @@ const options = [
         flags: '--cacheName',
         defaultValue: null,
         desc: 'Provide a unique name for the cache directory (defaults to a UUID)'
-    }
+    },
+    ...ghostAuthOptions
 ];
 
 // Build an object of defaults to be exported - Not used here, but needs to be provided

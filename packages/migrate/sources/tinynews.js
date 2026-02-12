@@ -7,6 +7,7 @@ import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
+import {createGhostUserTasks} from '@tryghost/mg-ghost-authors';
 import prettyMilliseconds from 'pretty-ms';
 
 const scrapeConfig = {
@@ -69,7 +70,6 @@ const getFullTaskList = (options) => {
         {
             title: 'Read Tiny News content',
             task: async (ctx) => {
-                // 1. Read the zip file
                 try {
                     ctx.result = await tinynewsIngest({
                         options
@@ -81,6 +81,7 @@ const getFullTaskList = (options) => {
                 }
             }
         },
+        ...createGhostUserTasks(options),
         {
             title: 'Fetch missing data via WebScraper',
             skip: ctx => !ctx.allowScrape.web,
