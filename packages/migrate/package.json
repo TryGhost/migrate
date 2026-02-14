@@ -63,7 +63,7 @@
     "@tryghost/mg-webscraper": "0.9.28",
     "@tryghost/mg-wp-api": "0.11.18",
     "@tryghost/mg-wp-xml": "0.5.19",
-    "@tryghost/pretty-cli": "1.2.47",
+    "@tryghost/pretty-cli": "1.2.48",
     "@tryghost/string": "0.2.21",
     "fs-extra": "11.3.3",
     "listr": "0.14.3",
