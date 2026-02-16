@@ -2,6 +2,7 @@
 import sharp from 'sharp';
 import convert from 'heic-convert';
 import {fileTypeFromBuffer} from 'file-type';
+import transliterate from 'transliteration';
 
 // Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/shared/config/overrides.json
 export const knownImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/webp', 'image/avif', 'image/heif', 'image/heic'];
@@ -64,5 +65,38 @@ export function getFolderForMimeType(fileMime: string): 'images' | 'media' | 'fi
  * @returns The sanitized string
  */
 export function sanitizePathSegment(str: string): string {
-    return str.replace(/\./g, '-').replace(/,/g, '-').replace(/:/g, '-');
+    return str.replace(/\./g, '-').replace(/,/g, '-').replace(/:/g, '-').replace(/[^a-zA-Z0-9_-]/g, '-');
+}
+
+/**
+ * Decode, transliterate and sanitize a single path segment
+ * @param segment - A path segment or encoded path segment
+ * @returns The normalized segment
+ */
+export function normalizePathSegment(segment: string): string {
+    let decodedSegment = segment;
+    try {
+        decodedSegment = decodeURIComponent(segment);
+    } catch {
+        decodedSegment = segment;
+    }
+
+    decodedSegment = decodedSegment.trim();
+    if (!decodedSegment) {
+        return '';
+    }
+
+    const hasNonAscii = Array.from(decodedSegment).some(char => char.charCodeAt(0) > 127);
+    const transliteratedSegment = transliterate.slugify(decodedSegment, {
+        separator: hasNonAscii ? '_' : '-'
+    });
+    const segmentSource = hasNonAscii ? transliteratedSegment : decodedSegment;
+    let normalizedSegment = sanitizePathSegment(segmentSource).replace(/-+/g, '-').replace(/^-|-$/g, '');
+
+    // Keep protocol-like markers (e.g. "https:") distinct in nested encoded paths.
+    if (decodedSegment.endsWith(':') && !normalizedSegment.endsWith('-')) {
+        normalizedSegment = `${normalizedSegment}-`;
+    }
+
+    return normalizedSegment;
 }

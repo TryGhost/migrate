@@ -1,13 +1,12 @@
 /* c8 ignore start */
-import {parse, join, basename, extname} from 'node:path';
+import {parse, join, extname} from 'node:path';
 import {createHash} from 'node:crypto';
 import errors from '@tryghost/errors';
 import {slugify} from '@tryghost/string';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {fileTypeFromBuffer} from 'file-type';
-import transliterate from 'transliteration';
 import AssetCache from './AssetCache.js';
-import {needsConverting, convertImageBuffer, getFolderForMimeType, sanitizePathSegment} from './utils.js';
+import {needsConverting, convertImageBuffer, getFolderForMimeType, normalizePathSegment} from './utils.js';
 
 import type {ListrTask} from 'listr2';
 import type {
@@ -214,46 +213,88 @@ export default class AssetScraper {
 
     async resolveFileName(src: string, folder: string, newExtension?: string) {
         const assetUrl = new URL(src);
-        const parsedSrc = parse(src);
 
-        // Get the dir (all of the URL up until the file name) with no scheme, so `example.com/path/to`
-        const dirNoScheme = sanitizePathSegment(parsedSrc.dir.replace(assetUrl.protocol, '').replace(/^\/?\/?/, ''));
+        // Decode percent-encoded values, but keep the original value when malformed.
+        const decodeSegment = (segment: string): string => {
+            try {
+                return decodeURIComponent(segment);
+            } catch {
+                return segment;
+            }
+        };
 
-        // Get the file name with no extension or search
-        const fileNameNoExtOrSearch = parsedSrc.name;
+        // Turn a pathname into normalized segments and expand nested encoded paths
+        // (e.g. ".../https%3A%2F%2Fcdn.example.com%2Ffile.jpg" becomes multiple segments).
+        const expandPathSegments = (pathname: string): string[] => {
+            return pathname
+                .split('/')
+                .flatMap(segment => decodeSegment(segment).split('/'))
+                .map(segment => segment.trim())
+                .filter(Boolean);
+        };
 
-        // And get the extension
-        const fileExtension = extname(assetUrl.pathname);
+        // Split URL into directory segments + terminal file segment.
+        const pathnameSegments = expandPathSegments(assetUrl.pathname);
+        const rawFileSegment = pathnameSegments.pop() ?? 'file';
+        const detectedExtension = extname(rawFileSegment) || extname(assetUrl.pathname);
+        const fileExtension = newExtension ?? detectedExtension;
+        const fileNameNoExt = detectedExtension ? rawFileSegment.slice(0, -detectedExtension.length) : rawFileSegment;
 
-        // Decode the path, transliterate it, slugify it, then replace the encoded basename with that
-        const decodedPathname = decodeURI(fileNameNoExtOrSearch);
-        const transliteratedBasename = transliterate.slugify(basename(decodedPathname, fileExtension), {
-            separator: '-'
-        });
-        assetUrl.pathname = assetUrl.pathname.replace(fileNameNoExtOrSearch, `${transliteratedBasename}`);
+        // Build normalized directory path from hostname + pathname segments.
+        const dirSegments = [assetUrl.host, ...pathnameSegments]
+            .map(normalizePathSegment)
+            .filter(Boolean);
 
-        // Decode the file name, as it can sometimes be an encoded URL if used with a CDN or image manipulation service
-        const decodedFileName = sanitizePathSegment(decodeURIComponent(fileNameNoExtOrSearch));
+        // Start filename with the normalized basename from the URL pathname.
+        let normalizedFileNameBase = normalizePathSegment(fileNameNoExt);
+        const fileNameParts: string[] = [];
 
-        // Start an array of final file name parts, starting with the raw name itself
-        const fileNameParts = [decodedFileName];
-
-        // Add slugified search params if available
+        // Keep query params in the filename, and support path-like queries by treating
+        // most query pieces as nested directories (preserving prior behavior).
         if (assetUrl.search) {
-            fileNameParts.push(slugify(assetUrl.search));
+            const decodedSearch = decodeSegment(assetUrl.search.replace(/^\?/, ''));
+            const searchLooksLikePath = decodedSearch.includes('/') && !decodedSearch.includes('=');
+
+            if (searchLooksLikePath) {
+                const querySegments = decodedSearch
+                    .split('/')
+                    .map(segment => segment.trim())
+                    .filter(Boolean);
+
+                const extensionNoDot = fileExtension.replace(/^\./, '').toLowerCase();
+                if (extensionNoDot && querySegments[querySegments.length - 1]?.toLowerCase() === extensionNoDot) {
+                    querySegments.pop();
+                }
+
+                if (querySegments.length > 0) {
+                    const queryPathSegments = querySegments.slice(0, -1);
+                    const queryFileSegment = querySegments[querySegments.length - 1];
+
+                    // Preserve previous behavior where path-like query components become nested directories.
+                    if (normalizedFileNameBase) {
+                        dirSegments.push(normalizedFileNameBase);
+                    }
+                    dirSegments.push(...queryPathSegments.map(normalizePathSegment).filter(Boolean));
+
+                    // The final query segment becomes the new filename base.
+                    normalizedFileNameBase = normalizePathSegment(queryFileSegment);
+                    fileNameParts.push(slugify(querySegments.join('/')));
+                }
+            } else {
+                fileNameParts.push(slugify(decodedSearch));
+            }
         }
 
-        // Add a slugified hash if available
+        // Keep hash fragments as part of the file identity too.
         if (assetUrl.hash) {
-            fileNameParts.push(slugify(assetUrl.hash));
+            fileNameParts.push(slugify(decodeSegment(assetUrl.hash.replace(/^#/, ''))));
         }
 
-        // Combine parts into a new string
-        const theNewFileName = `${fileNameParts.filter(Boolean).join('-')}${newExtension ?? fileExtension}`;
+        // Compose final filename + extension, then resolve collisions in FileCache.
+        const fileName = [normalizedFileNameBase, ...fileNameParts].filter(Boolean).join('-');
+        const theNewFileName = `${fileName}${fileExtension}`;
 
-        // Combine with the dir ath we made at start of this function
-        let finalBasePath = join(...[dirNoScheme, theNewFileName].filter(Boolean));
-        finalBasePath = finalBasePath.replace(/\?/g, '/');
+        const finalBasePath = join(...[...dirSegments, theNewFileName].filter(Boolean));
 
         // And now pass this to the file cache, which returns:
         // {
