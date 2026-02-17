@@ -220,8 +220,8 @@ describe('toGhostJSON', function () {
     });
 
     test('Keeps deduplicated slugs within Ghost 191-char limit', async function () {
-        // Two posts with same long slug: validate truncates to 185, then dedupe appends -<ObjectID>
-        // and must truncate base so total <= 191 (base max 166 when suffix is 25 chars)
+        // Two posts with the same long slug: dedupe truncates the base to 166 chars,
+        // then appends -<ObjectID> (25 chars), keeping the total <= 191
         const longSlug = 'a'.repeat(200);
         const input = {
             posts: [
