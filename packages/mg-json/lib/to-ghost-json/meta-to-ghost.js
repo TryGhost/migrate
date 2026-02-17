@@ -23,6 +23,10 @@ const removeMeta = (resource) => {
 
 let slugs = {};
 
+// Ghost's post/tag slug max length (MySQL utf8mb4 index limit)
+const GHOST_SLUG_MAX = 191;
+const DEDUP_SUFFIX_LENGTH = 25; // '-' + 24-char ObjectID
+
 const deduplicateSlugs = (obj, type) => {
     if (!slugs[type]) {
         slugs[type] = [];
@@ -31,7 +35,11 @@ const deduplicateSlugs = (obj, type) => {
     if (_.includes(slugs[type], obj.slug)) {
         // @TODO: log some sort of warning for things like this?
         const objectID = new ObjectID();
-        obj.slug = `${obj.slug}-${objectID}`;
+        const maxBaseLength = GHOST_SLUG_MAX - DEDUP_SUFFIX_LENGTH;
+        const baseSlug = obj.slug.length > maxBaseLength
+            ? obj.slug.substring(0, maxBaseLength).trim()
+            : obj.slug;
+        obj.slug = `${baseSlug}-${objectID}`;
     }
 
     slugs[type].push(obj.slug);

@@ -218,4 +218,48 @@ describe('toGhostJSON', function () {
 
         expect(output.data.users[0].email).toEqual('joe@example.com');
     });
+
+    test('Keeps deduplicated slugs within Ghost 191-char limit', async function () {
+        // Two posts with the same long slug: dedupe truncates the base to 166 chars,
+        // then appends -<ObjectID> (25 chars), keeping the total <= 191
+        const longSlug = 'a'.repeat(200);
+        const input = {
+            posts: [
+                {
+                    url: 'https://example.com/p/first',
+                    data: {
+                        slug: longSlug,
+                        title: 'First',
+                        status: 'published',
+                        published_at: '2018-08-11T11:23:34.123Z',
+                        html: '<p>One</p>',
+                        author: {url: 'https://example.com/me', data: {name: 'Me', slug: 'me', roles: ['Author']}}
+                    }
+                },
+                {
+                    url: 'https://example.com/p/second',
+                    data: {
+                        slug: longSlug,
+                        title: 'Second',
+                        status: 'published',
+                        published_at: '2018-08-11T11:23:34.123Z',
+                        html: '<p>Two</p>',
+                        author: {url: 'https://example.com/me', data: {name: 'Me', slug: 'me', roles: ['Author']}}
+                    }
+                }
+            ]
+        };
+        const output = await toGhostJSON(input);
+
+        expect(output).toBeGhostJSON();
+        expect(output.data.posts).toBeArrayOfSize(2);
+
+        const slug0 = output.data.posts[0].slug;
+        const slug1 = output.data.posts[1].slug;
+
+        expect(slug0.length).toBeLessThanOrEqual(191);
+        expect(slug1.length).toBeLessThanOrEqual(191);
+        expect(slug1).not.toEqual(slug0);
+        expect(slug1).toMatch(/^[a-z0-9-]+-[0-9a-f]{24}$/i);
+    });
 });

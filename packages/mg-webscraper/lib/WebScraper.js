@@ -168,6 +168,7 @@ export default class WebScraper {
         tasks = res.posts.map((post) => {
             let {url, data} = post;
             let filename = slugify(url);
+            filename = filename.substring(0, 250);
 
             return {
                 title: url,
