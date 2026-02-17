@@ -561,6 +561,10 @@ const processContent = (post, siteUrl, options) => {
             }
 
             if (buttonHref === '/subscribe/') {
+                if (options.noSubscribeButtons) {
+                    $html(button).remove();
+                    return;
+                }
                 buttonHref = options.subscribeLink || '#/portal/signup';
             }
 
@@ -621,8 +625,23 @@ const processContent = (post, siteUrl, options) => {
         }
     });
 
-    // Replace any subscribe link on the same domain with a specific link
-    if (options.subscribeLink) {
+    // Remove or replace subscribe links on the same domain
+    if (options.noSubscribeButtons) {
+        $html('a').each((i, anchor) => {
+            let href = $html(anchor).attr('href');
+            let linkRegex = new RegExp(`^(${siteUrl})?(/subscribe)(.*)`, 'gi');
+
+            if (!href) {
+                return;
+            }
+
+            let matches = href.replace(linkRegex, '$2');
+
+            if (matches === '/subscribe') {
+                $html(anchor).remove();
+            }
+        });
+    } else if (options.subscribeLink) {
         $html('a').each((i, anchor) => {
             let href = $html(anchor).attr('href');
             let linkRegex = new RegExp(`^(${siteUrl})?(/subscribe)(.*)`, 'gi');
@@ -639,8 +658,12 @@ const processContent = (post, siteUrl, options) => {
         });
     }
 
-    // Replace any signup forms with a Portal signup button
-    if (options.subscribeLink) {
+    // Remove or replace signup forms with a Portal signup button
+    if (options.noSubscribeButtons) {
+        $html('.subscription-widget-wrap, .subscription-widget-wrap-editor').each((i, div) => {
+            $html(div).remove();
+        });
+    } else if (options.subscribeLink) {
         $html('.subscription-widget-wrap, .subscription-widget-wrap-editor').each((i, div) => {
             const hasForm = $html(div).find('form');
 

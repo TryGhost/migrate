@@ -618,6 +618,42 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         expect(processed.data.html).toEqual(`<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div><p><a href="#/portal/signup">Subscribe</a></p>`);
     });
 
+    test('Removes subscribe buttons and links when noSubscribeButtons is true', async function () {
+        const post = {
+            data: {
+                html: `<p class="button-wrapper" data-attrs='{"url":"https://example.com/subscribe?","text":"Sign up now","class":null}'><a class="button primary" href="https://example.com/subscribe?"><span>Sign up now</span></a></p><p><a href="https://example.com/subscribe">Subscribe</a></p><p>Keep this paragraph.</p>`
+            }
+        };
+        const url = 'https://example.com';
+        const options = {
+            noSubscribeButtons: true
+        };
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).not.toContain('subscribe');
+        expect(processed.data.html).not.toContain('Sign up now');
+        expect(processed.data.html).toContain('Keep this paragraph.');
+    });
+
+    test('Removes subscription widget when noSubscribeButtons is true', async function () {
+        const post = {
+            data: {
+                html: `<p>Before</p><div class="subscription-widget-wrap" data-attrs="{&quot;url&quot;:&quot;https://example.com/subscribe?&quot;,&quot;text&quot;:&quot;Subscribe&quot;}"><div class="subscription-widget show-subscribe"><form class="subscription-widget-subscribe"><input type="submit" class="button primary" value="Subscribe"></form></div></div><p>After</p>`
+            }
+        };
+        const url = 'https://example.com';
+        const options = {
+            noSubscribeButtons: true
+        };
+
+        const processed = await processContent(post, url, options);
+
+        expect(processed.data.html).toContain('<p>Before</p>');
+        expect(processed.data.html).toContain('<p>After</p>');
+        expect(processed.data.html).not.toContain('subscription-widget-wrap');
+    });
+
     test('Can transform comment buttons with custom defined URL', async function () {
         const post = {
             data: {
