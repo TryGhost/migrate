@@ -136,6 +136,12 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--noSubscribeButtons',
+        defaultValue: false,
+        desc: 'Remove subscribe buttons and links from content (no replacement link)'
+    },
+    {
+        type: 'boolean',
         flags: '--comments',
         defaultValue: true,
         desc: 'Keep comment buttons'

@@ -93,6 +93,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--subscribeLink`** 
     - Provide a path that existing `/subscribe` anchors will link to e.g. `/join-us` or `#/portal/signup` (`#` characters need to be escaped with a `\`)
     - string - default: `#/portal/signup`
+- **`--noSubscribeButtons`** 
+    - Remove subscribe buttons and links from content (no replacement link)
+    - bool - default: `false`
 - **`--comments`** 
     - Keep comment buttons
     - bool - default: `true`
