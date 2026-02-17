@@ -449,6 +449,14 @@ describe('Asset Scraper', () => {
             assert.equal(result.filename, 'example-com/path/to/ni_hao.jpg');
         });
 
+        it('Handles special characters in the pathname', async () => {
+            const assetScraper = await createScraper({});
+
+            const result = await assetScraper.resolveFileName('https://examplecdn.com/image/fetch/$s_!1mim!,w_2500,h_1308,c_fill,f_webp,q_auto:good,fl_progressive:steep,g_center/https%3A%2F%2Fexample-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fee231da2-1234-5678-abcd-1c7a03b112ab_6000x4000.jpeg', 'images');
+
+            assert.equal(result.filename, 'examplecdn-com/image/fetch/s_-1mim-w_2500-h_1308-c_fill-f_webp-q_auto-good-fl_progressive-steep-g_center/https-/example-post-media-s3-amazonaws-com/public/images/ee231da2-1234-5678-abcd-1c7a03b112ab_6000x4000.jpg');
+        });
+
         it.todo('test replaceSrc else');
     });
 
