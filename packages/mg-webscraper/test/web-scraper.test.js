@@ -79,3 +79,42 @@ describe('ScrapeURL', function () {
         expect(response).toEqual(mockResponse);
     });
 });
+
+describe('hydrate', function () {
+    test('Caps filename at 250 chars for long post URLs', async function () {
+        const baseUrl = 'https://example.com/p/';
+        const longPath = 'a'.repeat(300);
+        const longUrl = baseUrl + longPath;
+
+        const mockFileCache = {
+            hasFile: jest.fn(() => false),
+            writeTmpFile: jest.fn(() => true),
+            readTmpJSONFile: jest.fn(() => ({responseData: {}}))
+        };
+
+        const webScraper = new WebScraper(mockFileCache, mockConfig);
+        webScraper.scrape = jest.fn(async () => ({responseData: {}}));
+
+        const ctx = {
+            result: {
+                posts: [{
+                    url: longUrl,
+                    data: {}
+                }]
+            },
+            options: {},
+            errors: []
+        };
+
+        const tasks = webScraper.hydrate(ctx);
+        expect(tasks).toHaveLength(1);
+
+        await tasks[0].task(ctx);
+
+        expect(mockFileCache.hasFile).toHaveBeenCalled();
+        const filenameArg = mockFileCache.hasFile.mock.calls[0][0];
+        expect(filenameArg.endsWith('.json')).toBe(true);
+        const filename = filenameArg.slice(0, -5);
+        expect(filename.length).toBeLessThanOrEqual(250);
+    });
+});
