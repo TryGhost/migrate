@@ -191,6 +191,7 @@ const processHTMLContent = async (args) => {
         html: args.html,
         excerptSelector: args.excerptSelector,
         postUrl: args.postUrl,
+        featureImageSrc: args.featureImageSrc ?? false,
         options: args.options
     });
 };
@@ -292,6 +293,7 @@ const processPost = async ($xml, $post, users, options) => {
         html: post.data.html,
         excerptSelector: (!excerpt && excerptSelector) ? excerptSelector : false,
         postUrl: post.url,
+        featureImageSrc: featureImage?.url ?? null,
         options: options
     });
 

@@ -468,17 +468,17 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         }
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
-    // If the first element in the content is an image, and is the same as the feature image, remove it
+    // If the first content element is (or contains) an image that matches the feature image, remove it
     if (featureImageSrc) {
         let firstElement = $html('*').first();
 
-        if (firstElement.tagName === 'img' || $html(firstElement).find('img').length) {
-            let theElementItself = (firstElement.tagName === 'img') ? firstElement : $html(firstElement).find('img');
+        if ($html(firstElement).is('img') || $html(firstElement).find('img').length) {
+            let theElementItself = $html(firstElement).is('img') ? firstElement : $html(firstElement).find('img').first();
 
             if ($html(theElementItself).attr('src')) {
-                // Ensure the feature image and first image both are HTTPS with no size attributes
-                let imgSrcNoSize = $html(theElementItself).attr('src').replace('http://', 'https://').replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
-                let featureImageSrcNoSize = featureImageSrc.replace('http://', 'https://').replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
+                // Match largerSrc: strip WordPress size suffix (e.g. -100x100 or -10000x5000) and normalise protocol
+                let imgSrcNoSize = $html(theElementItself).attr('src').replace('http://', 'https://').replace(/(?:-\d{2,}x\d{2,})(\.\w+)$/gi, '$1');
+                let featureImageSrcNoSize = featureImageSrc.replace('http://', 'https://').replace(/(?:-\d{2,}x\d{2,})(\.\w+)$/gi, '$1');
 
                 if (featureImageSrcNoSize === imgSrcNoSize) {
                     $html(firstElement).remove();

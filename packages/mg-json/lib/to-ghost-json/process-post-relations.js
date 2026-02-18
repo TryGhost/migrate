@@ -15,7 +15,10 @@ export default (json) => {
         let relations = [];
         let pluralForm = schema.RESOURCE_SINGULAR_TO_PLURAL[relation];
 
-        if (_.has(postData, pluralForm)) {
+        // Only use plural key when it's actually an array (e.g. authors: [a, b]).
+        // When single-author Co-Authors Plus posts set authors: undefined and author: <person>,
+        // we must not take this branch or we'd process no one and orphan the post.
+        if (_.has(postData, pluralForm) && Array.isArray(postData[pluralForm])) {
             relations = postData[pluralForm];
             delete postData[pluralForm];
         } else if (_.has(postData, relation)) {
@@ -30,13 +33,15 @@ export default (json) => {
         if (!_.has(json, location)) {
             return;
         }
+        const matchData = match.data || match;
         return json[location].find((item) => { // eslint-disable-line array-callback-return
+            const itemData = item.data || item;
             // @TODO: need to scrape, or post-process scrape for user and tag slugs
-            if (item.data.id && item.data.id === match.data.id) {
+            if (itemData.id && matchData.id && itemData.id === matchData.id) {
                 return item;
-            } else if (item.data.slug && item.data.slug === match.data.slug) {
+            } else if (itemData.slug && matchData.slug && itemData.slug === matchData.slug) {
                 return item;
-            } else if (item.data.name && item.data.name === match.data.name) {
+            } else if (itemData.name && matchData.name && itemData.name === matchData.name) {
                 return item;
             } else if (!_.isNil(item.url || match.url) && item.url === match.url) {
                 return item;
@@ -44,26 +49,54 @@ export default (json) => {
         });
     };
 
+    // Normalise author to { url, data } shape so matching and IDs work
+    const normaliseAuthor = (author) => {
+        if (!author) {
+            return author;
+        }
+        if (_.has(author, 'data') && _.isObject(author.data)) {
+            return author;
+        }
+        return {
+            url: author.url || author.slug || '',
+            data: _.has(author, 'data') ? author.data : author
+        };
+    };
+
     const processPostAuthors = (postData) => {
         let postAuthors = findPostRelations(postData, 'author');
 
         _.each(postAuthors, (author) => {
+            author = normaliseAuthor(author);
+            if (!author || !(author.data || author)) {
+                return;
+            }
+            const authorData = author.data || author;
             let user = findMatchingItem(author, 'users');
 
             if (!user) {
                 user = author;
-                user.data.id = new ObjectID();
+                if (!user.data) {
+                    user = {url: authorData.slug || authorData.name || '', data: authorData};
+                }
+                user.data.id = user.data.id || new ObjectID();
                 json.users.push(user);
             }
 
-            if (user && !user.data.id) {
-                user.data.id = new ObjectID();
+            const userData = user.data || user;
+            if (!userData.id) {
+                userData.id = new ObjectID();
             }
 
             json.posts_authors.push({
                 post_id: postData.id,
-                author_id: user.data.id
+                author_id: userData.id
             });
+        });
+
+        // Ensure no author-like keys remain on the post (Ghost expects users + posts_authors only)
+        schema.AUTHOR_ALIASES.forEach((key) => {
+            delete postData[key];
         });
     };
 
@@ -126,14 +159,18 @@ export default (json) => {
 
     const processPostRelations = (post) => {
         try {
-            // Ensure we have a post ID
-            if (!post.data.id) {
-                post.data.id = new ObjectID();
+            // Support both wrapped ({ url, data: { ... } }) and flat post shapes
+            const postData = post.data !== undefined ? post.data : post;
+            if (!postData.id) {
+                postData.id = new ObjectID();
             }
 
-            processPostAuthors(post.data);
-            processPostTags(post.data);
-            post.data = processPostMeta(post.data);
+            processPostAuthors(postData);
+            processPostTags(postData);
+            const metaProcessed = processPostMeta(postData);
+            if (post.data !== undefined) {
+                post.data = metaProcessed;
+            }
         } catch (error) {
             error.reference = post.url;
             throw error;

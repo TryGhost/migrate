@@ -159,6 +159,87 @@ describe('toGhostJSON', function () {
         expect(output).toBeGhostJSON();
     });
 
+    test('Posts in output have no author field (only users + posts_authors)', async function () {
+        const output = await toGhostJSON(singlePostOnlyFixture);
+
+        expect(output.data.posts).toBeArrayOfSize(1);
+        expect(output.data.posts[0]).not.toHaveProperty('author');
+        expect(output.data.posts[0]).not.toHaveProperty('authors');
+    });
+
+    test('Single Co-Author (authors: undefined, author: person) is processed and post is not orphaned', async function () {
+        // Simulates wp-xml output for a post with one contributor from category domain="author"
+        const input = {
+            posts: [{
+                url: 'https://example.com/post',
+                data: {
+                    title: 'Post by contributor',
+                    slug: 'post-by-contributor',
+                    status: 'published',
+                    published_at: '2024-01-01T00:00:00.000Z',
+                    authors: undefined,
+                    author: {
+                        url: 'contributor-1',
+                        data: {slug: 'contributor-1', name: 'Contributor One'}
+                    }
+                }
+            }],
+            users: []
+        };
+        const output = await toGhostJSON(input);
+
+        expect(output).toBeGhostJSON();
+        expect(output.data.posts).toBeArrayOfSize(1);
+        expect(output.data.posts[0]).not.toHaveProperty('author');
+        expect(output.data.posts[0]).not.toHaveProperty('authors');
+        expect(output.data.users).toBeArrayOfSize(1);
+        expect(output.data.users[0].slug).toEqual('contributor-1');
+        expect(output.data.users[0].name).toEqual('Contributor One');
+        expect(output.data.posts_authors).toBeArrayOfSize(1);
+        expect(output.data.posts_authors[0].post_id).toEqual(output.data.posts[0].id);
+        expect(output.data.posts_authors[0].author_id).toEqual(output.data.users[0].id);
+    });
+
+    test('Multiple co-authors are in users and posts_authors and linked correctly', async function () {
+        // Use distinct slugs so they don't collide with single co-author test (module-level slug dedup state)
+        const input = {
+            posts: [{
+                url: 'https://example.com/post',
+                data: {
+                    title: 'Post by two contributors',
+                    slug: 'post-by-two',
+                    status: 'published',
+                    published_at: '2024-01-01T00:00:00.000Z',
+                    authors: [
+                        {url: 'multi-contributor-1', data: {slug: 'multi-contributor-1', name: 'Contributor One'}},
+                        {url: 'multi-contributor-2', data: {slug: 'multi-contributor-2', name: 'Contributor Two'}}
+                    ]
+                }
+            }],
+            users: []
+        };
+        const output = await toGhostJSON(input);
+
+        expect(output.data.posts).toBeArrayOfSize(1);
+        expect(output.data.posts[0]).not.toHaveProperty('author');
+        expect(output.data.posts[0]).not.toHaveProperty('authors');
+        expect(output.data.users).toBeArrayOfSize(2);
+        const slug = u => u.slug || (u.data && u.data.slug);
+        const user1 = output.data.users.find(u => slug(u) === 'multi-contributor-1');
+        const user2 = output.data.users.find(u => slug(u) === 'multi-contributor-2');
+        expect(user1).toBeDefined();
+        expect(user2).toBeDefined();
+        const name = u => u.name || (u.data && u.data.name);
+        expect(name(user1)).toEqual('Contributor One');
+        expect(name(user2)).toEqual('Contributor Two');
+        expect(output.data.posts_authors).toBeArrayOfSize(2);
+        const postAuthors = output.data.posts_authors.filter(pa => pa.post_id.equals(output.data.posts[0].id));
+        expect(postAuthors).toBeArrayOfSize(2);
+        const userId = u => u.id || (u.data && u.data.id);
+        const authorIds = postAuthors.map(pa => pa.author_id.toString()).sort();
+        expect(authorIds).toEqual([userId(user1), userId(user2)].map(id => id.toString()).sort());
+    });
+
     test('Calculates relations across multiple posts', async function () {
         const output = await toGhostJSON(multiPostOnlyFixture);
 

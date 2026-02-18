@@ -653,4 +653,28 @@ Lorem Ipsum`;
         'Watch https://www.youtube.com/watch?v=ABCD1234xYz this\n' +
         'Lorem Ipsum');
     });
+
+    test('Removes first image in post when it matches the featured image', async function () {
+        const html = '<p><img src="https://example.com/feature.jpg" /></p><p>Body text.</p>';
+
+        const processed = await process.processHTMLContent({
+            html,
+            featureImageSrc: 'https://example.com/feature.jpg',
+            options: {}
+        });
+        expect(processed).toContain('Body text.');
+        expect(processed).not.toContain('https://example.com/feature.jpg');
+    });
+
+    test('Removes bare first <img> when it matches the featured image', async function () {
+        const html = '<img src="https://example.com/feature.jpg" /><p>Body text.</p>';
+
+        const processed = await process.processHTMLContent({
+            html,
+            featureImageSrc: 'https://example.com/feature.jpg',
+            options: {}
+        });
+        expect(processed).toContain('Body text.');
+        expect(processed).not.toContain('https://example.com/feature.jpg');
+    });
 });
