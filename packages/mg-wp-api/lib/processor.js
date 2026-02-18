@@ -472,12 +472,13 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     if (featureImageSrc) {
         let firstElement = $html('*').first();
 
-        if (firstElement.tagName === 'img' || $html(firstElement).find('img').length) {
-            let theElementItself = (firstElement.tagName === 'img') ? firstElement : $html(firstElement).find('img').first();
+        if ($html(firstElement).is('img') || $html(firstElement).find('img').length) {
+            let theElementItself = $html(firstElement).is('img') ? firstElement : $html(firstElement).find('img').first();
 
             if ($html(theElementItself).attr('src')) {
-                let imgSrcNoSize = $html(theElementItself).attr('src').replace('http://', 'https://').replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
-                let featureImageSrcNoSize = featureImageSrc.replace('http://', 'https://').replace(/(?:-\d{2,4}x\d{2,4})(.\w+)$/gi, '$1');
+                // Match largerSrc: strip WordPress size suffix (e.g. -100x100 or -10000x5000) and normalise protocol
+                let imgSrcNoSize = $html(theElementItself).attr('src').replace('http://', 'https://').replace(/(?:-\d{2,}x\d{2,})(\.\w+)$/gi, '$1');
+                let featureImageSrcNoSize = featureImageSrc.replace('http://', 'https://').replace(/(?:-\d{2,}x\d{2,})(\.\w+)$/gi, '$1');
 
                 if (featureImageSrcNoSize === imgSrcNoSize) {
                     $html(firstElement).remove();

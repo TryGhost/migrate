@@ -188,8 +188,10 @@ describe('toGhostJSON', function () {
         };
         const output = await toGhostJSON(input);
 
+        expect(output).toBeGhostJSON();
         expect(output.data.posts).toBeArrayOfSize(1);
         expect(output.data.posts[0]).not.toHaveProperty('author');
+        expect(output.data.posts[0]).not.toHaveProperty('authors');
         expect(output.data.users).toBeArrayOfSize(1);
         expect(output.data.users[0].slug).toEqual('contributor-1');
         expect(output.data.users[0].name).toEqual('Contributor One');

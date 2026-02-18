@@ -663,6 +663,18 @@ Lorem Ipsum`;
             options: {}
         });
         expect(processed).toContain('Body text.');
-        expect(processed.trim()).not.toMatch(/^<p>\s*<img[^>]*src="https:\/\/example\.com\/feature\.jpg"/);
+        expect(processed).not.toContain('https://example.com/feature.jpg');
+    });
+
+    test('Removes bare first <img> when it matches the featured image', async function () {
+        const html = '<img src="https://example.com/feature.jpg" /><p>Body text.</p>';
+
+        const processed = await process.processHTMLContent({
+            html,
+            featureImageSrc: 'https://example.com/feature.jpg',
+            options: {}
+        });
+        expect(processed).toContain('Body text.');
+        expect(processed).not.toContain('https://example.com/feature.jpg');
     });
 });
