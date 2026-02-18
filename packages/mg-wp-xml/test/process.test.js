@@ -653,4 +653,28 @@ Lorem Ipsum`;
         'Watch https://www.youtube.com/watch?v=ABCD1234xYz this\n' +
         'Lorem Ipsum');
     });
+
+    test('Removes first image in post when it matches the featured image (only when option is set)', async function () {
+        const html = '<p><img src="https://example.com/feature.jpg" /></p><p>Body text.</p>';
+
+        const processedWithOption = await process.processHTMLContent({
+            html,
+            featureImageSrc: 'https://example.com/feature.jpg',
+            options: {removeDuplicateFeatureImage: true}
+        });
+        expect(processedWithOption).toContain('Body text.');
+        expect(processedWithOption.trim()).not.toMatch(/^<p>\s*<img[^>]*src="https:\/\/example\.com\/feature\.jpg"/);
+    });
+
+    test('Does not remove first image when removeDuplicateFeatureImage option is not set', async function () {
+        const html = '<p><img src="https://example.com/feature.jpg" /></p><p>Body text.</p>';
+        const processed = await process.processHTMLContent({
+            html,
+            featureImageSrc: 'https://example.com/feature.jpg',
+            options: {}
+        });
+
+        expect(processed).toContain('https://example.com/feature.jpg');
+        expect(processed).toContain('Body text.');
+    });
 });

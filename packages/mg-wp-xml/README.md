@@ -87,6 +87,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--featureImageCaption`**
     - bool - default: `true`
     - Include featured image captions
+- **`--removeDuplicateFeatureImage`**
+    - bool - default: `false`
+    - When the first content element is the same image as the featured image, remove it from the body (keeps the featured image)
 - **`--rawHtml`** 
     - Don't process HTML and wrap in a HTML card
     - bool - default: `false`

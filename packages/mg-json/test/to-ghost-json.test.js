@@ -159,6 +159,45 @@ describe('toGhostJSON', function () {
         expect(output).toBeGhostJSON();
     });
 
+    test('Posts in output have no author field (only users + posts_authors)', async function () {
+        const output = await toGhostJSON(singlePostOnlyFixture);
+
+        expect(output.data.posts).toBeArrayOfSize(1);
+        expect(output.data.posts[0]).not.toHaveProperty('author');
+        expect(output.data.posts[0]).not.toHaveProperty('authors');
+    });
+
+    test('Single Co-Author (authors: undefined, author: person) is processed and post is not orphaned', async function () {
+        // Simulates wp-xml output for a post with one contributor from category domain="author"
+        const input = {
+            posts: [{
+                url: 'https://example.com/post',
+                data: {
+                    title: 'Post by contributor',
+                    slug: 'post-by-contributor',
+                    status: 'published',
+                    published_at: '2024-01-01T00:00:00.000Z',
+                    authors: undefined,
+                    author: {
+                        url: 'faraheltohamy',
+                        data: {slug: 'faraheltohamy', name: 'Fatimah'}
+                    }
+                }
+            }],
+            users: []
+        };
+        const output = await toGhostJSON(input);
+
+        expect(output.data.posts).toBeArrayOfSize(1);
+        expect(output.data.posts[0]).not.toHaveProperty('author');
+        expect(output.data.users).toBeArrayOfSize(1);
+        expect(output.data.users[0].slug).toEqual('faraheltohamy');
+        expect(output.data.users[0].name).toEqual('Fatimah');
+        expect(output.data.posts_authors).toBeArrayOfSize(1);
+        expect(output.data.posts_authors[0].post_id).toEqual(output.data.posts[0].id);
+        expect(output.data.posts_authors[0].author_id).toEqual(output.data.users[0].id);
+    });
+
     test('Calculates relations across multiple posts', async function () {
         const output = await toGhostJSON(multiPostOnlyFixture);
 

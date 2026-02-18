@@ -176,6 +176,12 @@ const options = [
         desc: 'Include featured image captions'
     },
     {
+        type: 'boolean',
+        flags: '--removeDuplicateFeatureImage',
+        defaultValue: false,
+        desc: 'When the first content element is the same image as the featured image, remove it from the body (keeps the featured image)'
+    },
+    {
         type: 'string',
         flags: '--removeSelectors',
         defaultValue: null,
