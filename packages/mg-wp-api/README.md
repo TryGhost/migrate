@@ -95,9 +95,6 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--featureImageCaption`**
     - bool - default: `true`
     - Include featured image captions
-- **`--removeDuplicateFeatureImage`**
-    - bool - default: `false`
-    - When the first content element is the same image as the featured image, remove it from the body (keeps the featured image)
 - **`--datedPermalinks`** 
     - Set the dated permalink structure. `/*/` matches any prefix, such as `/articles/2018/05/` or `/blog-posts/2018/05/`
     - string - default: `none` 

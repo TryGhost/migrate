@@ -468,8 +468,8 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         }
     }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
-    // When opted in: if the first content element is (or contains) an image that matches the feature image, remove it
-    if (featureImageSrc && options.removeDuplicateFeatureImage) {
+    // If the first content element is (or contains) an image that matches the feature image, remove it
+    if (featureImageSrc) {
         let firstElement = $html('*').first();
 
         if (firstElement.tagName === 'img' || $html(firstElement).find('img').length) {

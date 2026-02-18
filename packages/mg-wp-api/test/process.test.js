@@ -192,7 +192,7 @@ describe('Process WordPress REST API JSON', function () {
 
     test('Can remove first image in post if same as feature image', async function () {
         const users = [];
-        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: 'mycpt', removeDuplicateFeatureImage: true};
+        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: 'mycpt'};
         const post = await processor.processPost(singlePostWithDuplicateImagesfixture, users, options);
 
         const data = post.data;
