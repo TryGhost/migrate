@@ -166,6 +166,98 @@ describe('HTML handling', function () {
         });
     });
 
+    test('Convert empty div to Lexical produces valid structure', function () {
+        let post: postOptions = {
+            title: 'Title',
+            slug: 'slug',
+            html: '<div></div>'
+        };
+
+        convertPost(post, false);
+
+        const lexical = JSON.parse(post.lexical!);
+
+        // Should have at least one child (empty paragraph) to be valid
+        assert.equal(lexical.root.children.length, 1);
+        assert.deepEqual(lexical.root.children[0], {
+            children: [],
+            direction: null,
+            format: '',
+            indent: 0,
+            type: 'paragraph',
+            version: 1
+        });
+    });
+
+    test('Convert div with br to Lexical produces valid structure', function () {
+        let post: postOptions = {
+            title: 'Title',
+            slug: 'slug',
+            html: '<div><br></div>'
+        };
+
+        convertPost(post, false);
+
+        const lexical = JSON.parse(post.lexical!);
+
+        // Should have at least one child (empty paragraph) to be valid
+        assert.equal(lexical.root.children.length, 1);
+        assert.deepEqual(lexical.root.children[0], {
+            children: [],
+            direction: null,
+            format: '',
+            indent: 0,
+            type: 'paragraph',
+            version: 1
+        });
+    });
+
+    test('Convert HTML comment only to Lexical produces valid structure', function () {
+        let post: postOptions = {
+            title: 'Title',
+            slug: 'slug',
+            html: '<!-- comment -->'
+        };
+
+        convertPost(post, false);
+
+        const lexical = JSON.parse(post.lexical!);
+
+        // Should have at least one child (empty paragraph) to be valid
+        assert.equal(lexical.root.children.length, 1);
+        assert.deepEqual(lexical.root.children[0], {
+            children: [],
+            direction: null,
+            format: '',
+            indent: 0,
+            type: 'paragraph',
+            version: 1
+        });
+    });
+
+    test('Convert newlines only to Lexical produces valid structure', function () {
+        let post: postOptions = {
+            title: 'Title',
+            slug: 'slug',
+            html: '\n\n\n'
+        };
+
+        convertPost(post, false);
+
+        const lexical = JSON.parse(post.lexical!);
+
+        // Should have at least one child (empty paragraph) to be valid
+        assert.equal(lexical.root.children.length, 1);
+        assert.deepEqual(lexical.root.children[0], {
+            children: [],
+            direction: null,
+            format: '',
+            indent: 0,
+            type: 'paragraph',
+            version: 1
+        });
+    });
+
     test('Convert full content to Lexical', function () {
         let post: postOptions = {
             title: 'Title',

@@ -9,6 +9,17 @@ export type postOptions = {
     html?: string;
 }
 
+// Ghost requires at least one child in the root. This empty paragraph is used
+// when the HTML conversion produces no children (e.g., empty divs, br tags, etc.)
+const emptyParagraph = {
+    children: [],
+    direction: null,
+    format: '',
+    indent: 0,
+    type: 'paragraph',
+    version: 1
+};
+
 const convertPost = (post: postOptions, htmlCard = false) => {
     if (typeof post.html === 'undefined' || post.html === 'undefined') {
         throw new errors.InternalServerError({message: 'Post has no html field to convert'});
@@ -25,7 +36,12 @@ const convertPost = (post: postOptions, htmlCard = false) => {
             html: post.html
         });
     } else {
-        post.lexical = JSON.stringify(htmlToLexical(post.html));
+        const lexical = htmlToLexical(post.html);
+        // Ensure the root has at least one child (Ghost rejects empty root children)
+        if (lexical.root.children.length === 0) {
+            lexical.root.children.push(emptyParagraph);
+        }
+        post.lexical = JSON.stringify(lexical);
     }
 
     delete post.html;
