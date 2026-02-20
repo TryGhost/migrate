@@ -1,35 +1,41 @@
-import * as cheerio from 'cheerio';
+import {XMLParser} from 'fast-xml-parser';
 import {readFile} from './read-file.js';
+
+const parserOptions = {
+    ignoreAttributes: false,
+    attributeNamePrefix: '@_',
+    textNodeName: '#text',
+    parseTagValue: false,
+    parseAttributeValue: false,
+    trimValues: false
+};
 
 const contentStats = async (xmlPath) => {
     const input = await readFile(xmlPath);
 
-    const $xml = cheerio.load(input, {
-        xml: {
-            decodeEntities: false,
-            xmlMode: true,
-            scriptingEnabled: false,
-            lowerCaseTags: true
-        }
-    }, false);
+    const parser = new XMLParser(parserOptions);
+    const xml = parser.parse(input);
 
-    let postsOutput = [];
-    let pagesOutput = [];
+    const items = xml?.rss?.channel?.item || [];
+    // Ensure items is always an array (single item becomes object)
+    const itemsArray = Array.isArray(items) ? items : [items];
 
-    $xml('item').each((i, post) => {
-        const postType = $xml(post).children('wp\\:post_type').text();
-        const postLink = $xml(post).children('link').text();
+    let postsCount = 0;
+    let pagesCount = 0;
+
+    for (const item of itemsArray) {
+        const postType = item['wp:post_type'];
 
         if (postType === 'post') {
-            postsOutput.push(postLink);
+            postsCount += 1;
         } else if (postType === 'page') {
-            pagesOutput.push(postLink);
+            pagesCount += 1;
         }
-    });
+    }
 
     return {
-        posts: postsOutput.length,
-        pages: pagesOutput.length
+        posts: postsCount,
+        pages: pagesCount
     };
 };
 

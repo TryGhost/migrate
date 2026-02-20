@@ -1,7 +1,16 @@
 import path from 'node:path';
 import {promises as fs} from 'node:fs';
-import * as cheerio from 'cheerio';
+import {XMLParser} from 'fast-xml-parser';
 import process, {processWPMeta} from '../lib/process.js';
+
+const parserOptions = {
+    ignoreAttributes: false,
+    attributeNamePrefix: '@_',
+    textNodeName: '#text',
+    parseTagValue: false,
+    parseAttributeValue: false,
+    trimValues: false
+};
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
@@ -455,22 +464,14 @@ describe('Process', function () {
 
     test('Can read post_meta', async function () {
         const input = await readSync('has-meta.xml');
-        const $xml = cheerio.load(input, {
-            xml: {
-                decodeEntities: false,
-                xmlMode: true,
-                lowerCaseTags: true
-            }
-        });
+        const parser = new XMLParser(parserOptions);
+        const xml = parser.parse(input);
 
-        let posts = [];
+        const items = xml?.rss?.channel?.item || [];
+        const itemsArray = Array.isArray(items) ? items : [items];
 
-        $xml('item').each((i, post) => {
-            posts.push(post);
-        });
-
-        const post = posts[0];
-        const metaValues = await processWPMeta($xml, post);
+        const post = itemsArray[0];
+        const metaValues = await processWPMeta(post);
 
         expect(metaValues).toEqual({
             lorem1234: '433',

@@ -6,8 +6,10 @@
  */
 import {readFileSync, writeFileSync} from 'node:fs';
 import {dirname, join} from 'node:path';
-import * as cheerio from 'cheerio';
+import {domUtils} from '@tryghost/mg-utils';
 import {slugify} from '@tryghost/string';
+
+const {parseFragment} = domUtils;
 
 if (!process.argv[2]) {
     console.error('Please provide a path to the file'); // eslint-disable-line no-console
@@ -19,22 +21,28 @@ const destPath = join(desitnationDir, 'users.json');
 
 const html = readFileSync(process.argv[2], 'utf8');
 
-const $html = cheerio.load(html);
+const parsed = parseFragment(html);
 
 let users = [];
 
-$html('tr[id^="user-"]').each((i, el) => {
-    const postCount = parseInt($html(el).find('[data-colname="Posts"]').text().trim());
+for (const el of parsed.$('tr[id^="user-"]')) {
+    const postsCell = el.querySelector('[data-colname="Posts"]');
+    const postCount = parseInt(postsCell ? postsCell.textContent.trim() : '0');
 
     if (postCount === 0) {
-        return;
+        continue;
     }
 
-    let id = parseInt($html(el).attr('id').replace('user-', ''));
-    let email = $html(el).find('[data-colname="Email"]').text().trim();
-    let name = $html(el).find('[data-colname="Name"]').text().trim();
-    let username = $html(el).find('[data-colname="Username"]').find('strong').text().trim();
-    let image = $html(el).find('[data-colname="Username"]').find('img').attr('src').trim().replace('s=64', 's=500');
+    let id = parseInt(el.getAttribute('id').replace('user-', ''));
+    const emailCell = el.querySelector('[data-colname="Email"]');
+    let email = emailCell ? emailCell.textContent.trim() : '';
+    const nameCell = el.querySelector('[data-colname="Name"]');
+    let name = nameCell ? nameCell.textContent.trim() : '';
+    const usernameCell = el.querySelector('[data-colname="Username"]');
+    const usernameStrong = usernameCell ? usernameCell.querySelector('strong') : null;
+    let username = usernameStrong ? usernameStrong.textContent.trim() : '';
+    const usernameImg = usernameCell ? usernameCell.querySelector('img') : null;
+    let image = usernameImg ? usernameImg.getAttribute('src').trim().replace('s=64', 's=500') : '';
 
     if (name.includes('—Unknown')) {
         name = username;
@@ -51,7 +59,7 @@ $html('tr[id^="user-"]').each((i, el) => {
             96: image
         }
     });
-});
+}
 
 writeFileSync(destPath, JSON.stringify(users, null, 4));
 console.log(`✅ File saved to: ${destPath}`); // eslint-disable-line no-console
