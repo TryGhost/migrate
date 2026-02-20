@@ -4,7 +4,10 @@ import {slugify} from '@tryghost/string';
 import errors from '@tryghost/errors';
 import MarkdownIt from 'markdown-it';
 import MgWpAPI from '@tryghost/mg-wp-api';
+import {domUtils} from '@tryghost/mg-utils';
 import {isSerialized, unserialize} from 'php-serialize';
+
+const {parseFragment} = domUtils;
 
 const processUser = ($xml, $user) => {
     const authorSlug = slugify($xml($user).children('wp\\:author_login').text());
@@ -156,24 +159,17 @@ const preProcessContent = async ({html, options}) => { // eslint-disable-line no
     // Join the separated lines
     html = splitIt.join('\n');
 
-    const $html = cheerio.load(html, {
-        xml: {
-            xmlMode: false,
-            decodeEntities: false
-        }
-    }, false);
-
-    // 👀 If any XML-specific processing needs to be done, this is the place to do it.
+    const parsed = parseFragment(html);
 
     // Remove empty link elements, typically HTML anchors
-    $html('a').each((i, el) => {
-        if ($html(el).html().length === 0) {
-            $html(el).remove();
+    for (const el of parsed.$('a')) {
+        if (el.innerHTML.length === 0) {
+            el.remove();
         }
-    });
+    }
 
     // convert HTML back to a string
-    html = $html.html();
+    html = parsed.html();
 
     // Convert shortcodes here to that they don't accidently get wrapped in <p> tags by MarkdownIt
     html = await MgWpAPI.process.processShortcodes({html, options});
