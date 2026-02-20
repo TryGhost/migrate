@@ -2,7 +2,6 @@ import url from 'node:url';
 import {readFileSync} from 'node:fs';
 import {basename} from 'node:path';
 import _ from 'lodash';
-import * as cheerio from 'cheerio';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import Shortcodes from '@tryghost/mg-shortcodes';
 import {slugify} from '@tryghost/string';
@@ -13,6 +12,20 @@ import SimpleDom from 'simple-dom';
 import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
+import {domUtils} from '@tryghost/mg-utils';
+
+const {
+    parseFragment,
+    serializeNode,
+    replaceWith,
+    insertBefore,
+    insertAfter,
+    wrap,
+    lastParent,
+    setStyle,
+    isComment,
+    getCommentData
+} = domUtils;
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
@@ -191,15 +204,9 @@ const processExcerpt = (html, excerptSelector = false) => {
     // Set the text to convert to either be the supplied string or found text in the supplied HTML chunk
     if (excerptSelector) {
         // TODO: this should be possible by using a pseudo selector as a passed `excerptSelector`, e. g. `h2.excerpt:first-of-type`,
-        const $excerpt = cheerio.load(html, {
-            xml: {
-                xmlMode: false,
-                decodeEntities: false,
-                scriptingEnabled: false
-            }
-        }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
-
-        excerptText = $excerpt(excerptSelector).first().html();
+        const parsed = parseFragment(html);
+        const excerptEls = parsed.$(excerptSelector);
+        excerptText = excerptEls.length > 0 ? excerptEls[0].innerHTML : '';
     } else {
         excerptText = html;
     }
@@ -261,19 +268,21 @@ const processShortcodes = async ({html, options}) => {
             return '';
         }
 
-        const $caption = cheerio.load(content, {}, false);
+        const parsed = parseFragment(content);
+        const imgEls = parsed.$('img');
+        const img = imgEls[0];
 
-        let theImageSrc = $caption('img').attr('src') ?? '';
-        let theImageWidth = $caption('img').attr('width') ?? '';
-        let theImageHeight = $caption('img').attr('height') ?? '';
-        let theImageAlt = $caption('img').attr('alt') ?? '';
-        let theImageTitle = $caption('img').attr('title') ?? '';
+        let theImageSrc = img ? (img.getAttribute('src') || '') : '';
+        let theImageWidth = img ? (img.getAttribute('width') || '') : '';
+        let theImageHeight = img ? (img.getAttribute('height') || '') : '';
+        let theImageAlt = img ? (img.getAttribute('alt') || '') : '';
+        let theImageTitle = img ? (img.getAttribute('title') || '') : '';
 
         // Convert $ to entity
         theImageAlt = theImageAlt.replace(/\$/gm, '&#36;');
         theImageTitle = theImageTitle.replace(/\$/gm, '&#36;');
 
-        let theCaption = $caption.text().trim();
+        let theCaption = parsed.text().trim();
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
@@ -460,111 +469,117 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         return `<!--kg-card-begin: html-->${html}<!--kg-card-end: html-->`;
     }
 
-    const $html = cheerio.load(html, {
-        xml: {
-            xmlMode: false,
-            decodeEntities: false,
-            scriptingEnabled: false
-        }
-    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+    const parsed = parseFragment(html);
 
     // If the first content element is (or contains) an image that matches the feature image, remove it
     if (featureImageSrc) {
-        let firstElement = $html('*').first();
+        let firstElement = parsed.body.firstElementChild;
 
-        if ($html(firstElement).is('img') || $html(firstElement).find('img').length) {
-            let theElementItself = $html(firstElement).is('img') ? firstElement : $html(firstElement).find('img').first();
+        if (firstElement) {
+            let isImg = firstElement.tagName.toLowerCase() === 'img';
+            let hasImg = firstElement.querySelector('img');
 
-            if ($html(theElementItself).attr('src')) {
-                // Match largerSrc: strip WordPress size suffix (e.g. -100x100 or -10000x5000) and normalise protocol
-                let imgSrcNoSize = $html(theElementItself).attr('src').replace('http://', 'https://').replace(/(?:-\d{2,}x\d{2,})(\.\w+)$/gi, '$1');
-                let featureImageSrcNoSize = featureImageSrc.replace('http://', 'https://').replace(/(?:-\d{2,}x\d{2,})(\.\w+)$/gi, '$1');
+            if (isImg || hasImg) {
+                let theElementItself = isImg ? firstElement : firstElement.querySelector('img');
+                let imgSrc = theElementItself ? theElementItself.getAttribute('src') : null;
 
-                if (featureImageSrcNoSize === imgSrcNoSize) {
-                    $html(firstElement).remove();
+                if (imgSrc) {
+                    // Match largerSrc: strip WordPress size suffix (e.g. -100x100 or -10000x5000) and normalise protocol
+                    let imgSrcNoSize = imgSrc.replace('http://', 'https://').replace(/(?:-\d{2,}x\d{2,})(\.\w+)$/gi, '$1');
+                    let featureImageSrcNoSize = featureImageSrc.replace('http://', 'https://').replace(/(?:-\d{2,}x\d{2,})(\.\w+)$/gi, '$1');
+
+                    if (featureImageSrcNoSize === imgSrcNoSize) {
+                        firstElement.remove();
+                    }
                 }
             }
         }
     }
 
     if (options.removeSelectors) {
-        $html(options.removeSelectors).each((i, el) => {
-            $html(el).remove();
-        });
+        for (const el of parsed.$(options.removeSelectors)) {
+            el.remove();
+        }
     }
 
     // Handle twitter embeds
-    $html('p > script[src="https://platform.twitter.com/widgets.js"]').remove();
+    for (const el of parsed.$('p > script[src="https://platform.twitter.com/widgets.js"]')) {
+        el.remove();
+    }
 
-    $html('#toc_container').each((i, toc) => {
-        $html(toc).remove();
-    });
+    for (const toc of parsed.$('#toc_container')) {
+        toc.remove();
+    }
 
     // <style> blocks don't belong in content - codeinjection_head is the place for these
-    $html('style').each((i, el) => {
-        $html(el).remove();
-    });
+    for (const el of parsed.$('style')) {
+        el.remove();
+    }
 
     if (excerptSelector) {
-        $html(excerptSelector).first().each((i, excerpt) => {
-            $html(excerpt).remove();
-        });
+        const excerptEls = parsed.$(excerptSelector);
+        if (excerptEls.length > 0) {
+            excerptEls[0].remove();
+        }
     }
 
     // Basic text cleanup
     // @TODO: Expand on this
-    $html('[style="font-weight: 400;"], [style="font-weight:400;"], [style="font-weight: 400"], [style="font-weight:400"]').each((i, el) => {
-        $html(el).removeAttr('style');
-    });
+    for (const el of parsed.$('[style="font-weight: 400;"], [style="font-weight:400;"], [style="font-weight: 400"], [style="font-weight:400"]')) {
+        el.removeAttribute('style');
+    }
 
     // Normalize image elements
-    $html('.wp-block-jetpack-tiled-gallery').each((i, gal) => {
-        $html(gal).replaceWith($html(gal).html());
-    });
+    for (const gal of parsed.$('.wp-block-jetpack-tiled-gallery')) {
+        replaceWith(gal, gal.innerHTML);
+    }
 
-    $html('.tiled-gallery__gallery').each((i, gal) => {
-        $html(gal).replaceWith($html(gal).html());
-    });
+    for (const gal of parsed.$('.tiled-gallery__gallery')) {
+        replaceWith(gal, gal.innerHTML);
+    }
 
-    $html('.tiled-gallery__row').each((i, gal) => {
-        $html(gal).replaceWith($html(gal).html());
-    });
+    for (const gal of parsed.$('.tiled-gallery__row')) {
+        replaceWith(gal, gal.innerHTML);
+    }
 
-    $html('.tiled-gallery__col').each((i, gal) => {
-        $html(gal).replaceWith($html(gal).html());
-    });
+    for (const gal of parsed.$('.tiled-gallery__col')) {
+        replaceWith(gal, gal.innerHTML);
+    }
 
-    $html('.tiled-gallery__item').each((i, gal) => {
-        $html(gal).removeAttr('class');
-    });
+    for (const gal of parsed.$('.tiled-gallery__item')) {
+        gal.removeAttribute('class');
+    }
 
     // Remove duplicates images in <noscript> tags that have the same src
-    $html('noscript').each((i, el) => {
-        if (el?.prev?.name === 'img') {
-            const prevImgSrc = el.prev.attribs['data-src'] ?? el.prev.attribs.src;
-            const noScriptImgSrc = $html(el).find('img').attr('src');
+    for (const el of parsed.$('noscript')) {
+        const prevEl = el.previousElementSibling;
+        if (prevEl && prevEl.tagName.toLowerCase() === 'img') {
+            const prevImgSrc = prevEl.getAttribute('data-src') || prevEl.getAttribute('src');
+            const noScriptImg = el.querySelector('img');
+            const noScriptImgSrc = noScriptImg ? noScriptImg.getAttribute('src') : null;
 
             const updatedPrevImgSrc = largerSrc(wpCDNToLocal(prevImgSrc));
             const updatedNoScriptImgSrc = largerSrc(wpCDNToLocal(noScriptImgSrc));
 
             if (updatedPrevImgSrc === updatedNoScriptImgSrc) {
-                $html(el).remove();
+                el.remove();
             }
         }
-    });
+    }
 
-    $html('div.wp-caption').each((i, el) => {
-        const hasImage = $html(el).find('img').length > 0;
+    for (const el of parsed.$('div.wp-caption')) {
+        const img = el.querySelector('img');
 
-        if (!hasImage) {
-            return;
+        if (!img) {
+            continue;
         }
 
-        const imgSrc = $html(el).find('img').attr('src');
-        const imgAlt = $html(el).find('img').attr('alt');
+        const imgSrc = img.getAttribute('src');
+        const imgAlt = img.getAttribute('alt');
 
-        const hasCaption = $html(el).find('.wp-caption-text').length > 0;
-        const imgCaption = hasCaption ? $html(el).find('.wp-caption-text').text() : '';
+        const captionEl = el.querySelector('.wp-caption-text');
+        const hasCaption = !!captionEl;
+        const imgCaption = hasCaption ? captionEl.textContent : '';
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
@@ -579,51 +594,53 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             cardOpts.payload.caption = imgCaption;
         }
 
-        $html(el).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
-    });
+        replaceWith(el, serializer.serialize(imageCard.render(cardOpts)));
+    }
 
-    $html('img').each((i, img) => {
-        $html(img).removeAttr('decoding');
-        $html(img).removeAttr('data-id');
-        $html(img).removeAttr('data-link');
-        $html(img).removeAttr('data-url');
-        $html(img).removeAttr('data-amp-layout');
+    for (const img of parsed.$('img')) {
+        img.removeAttribute('decoding');
+        img.removeAttribute('data-id');
+        img.removeAttribute('data-link');
+        img.removeAttribute('data-url');
+        img.removeAttribute('data-amp-layout');
 
-        if ($html(img).attr('data-width')) {
-            $html(img).attr('width', $html(img).attr('data-width'));
-            $html(img).removeAttr('data-width');
+        const dataWidth = img.getAttribute('data-width');
+        if (dataWidth) {
+            img.setAttribute('width', dataWidth);
+            img.removeAttribute('data-width');
         }
 
-        if ($html(img).attr('data-height')) {
-            $html(img).attr('height', $html(img).attr('data-height'));
-            $html(img).removeAttr('data-height');
+        const dataHeight = img.getAttribute('data-height');
+        if (dataHeight) {
+            img.setAttribute('height', dataHeight);
+            img.removeAttribute('data-height');
         }
 
-        const nonCDNSrc = wpCDNToLocal($html(img).attr('src'));
-        $html(img).attr('src', nonCDNSrc);
-    });
+        const nonCDNSrc = wpCDNToLocal(img.getAttribute('src'));
+        img.setAttribute('src', nonCDNSrc);
+    }
 
     // (Some) WordPress renders gifs a different way. They use an `img` tag with a `src` for a still image,
     // and a `data-gif` attribute to reference the actual gif. We need `src` to be the actual gif.
-    $html('img[data-gif]').each((i, gif) => {
-        let gifSrc = $html(gif).attr('data-gif');
-        $html(gif).removeAttr('data-gif');
-        $html(gif).attr('src', gifSrc);
-    });
+    for (const gif of parsed.$('img[data-gif]')) {
+        let gifSrc = gif.getAttribute('data-gif');
+        gif.removeAttribute('data-gif');
+        gif.setAttribute('src', gifSrc);
+    }
 
     // Likewise some images are lazy-loaded using JavaScript & `data-src` attributes
-    $html('img[data-src]').each((i, img) => {
-        let dataSrc = $html(img).attr('data-src');
-        $html(img).removeAttr('data-src');
-        $html(img).attr('src', dataSrc);
-    });
+    for (const img of parsed.$('img[data-src]')) {
+        let dataSrc = img.getAttribute('data-src');
+        img.removeAttribute('data-src');
+        img.setAttribute('src', dataSrc);
+    }
 
-    let libsynPodcasts = $html('iframe[src*="libsyn.com/embed/"]').map(async (i, el) => {
+    let libsynPodcasts = parsed.$('iframe[src*="libsyn.com/embed/"]').map(async (el) => {
         if (!allowRemoteScraping) {
             return;
         }
 
-        let iframeSrc = $html(el).attr('src');
+        let iframeSrc = el.getAttribute('src');
         let libsynIdRegex = new RegExp('/id/([0-9]{1,})/');
         let matches = iframeSrc.match(libsynIdRegex);
         let showId = matches[1];
@@ -674,21 +691,22 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             </div>
         `;
 
-        $html(el).replaceWith(audioHTML);
-    }).get();
+        replaceWith(el, audioHTML);
+    });
 
     await Promise.all(libsynPodcasts);
 
-    let wpEmbeds = $html('.wp-block-embed.is-type-wp-embed').map(async (i, el) => {
-        const bookmarkHref = $html(el).find('blockquote a').attr('href');
-        const bookmarkTitle = $html(el).find('blockquote a').text();
+    let wpEmbeds = parsed.$('.wp-block-embed.is-type-wp-embed').map(async (el) => {
+        const blockquoteLink = el.querySelector('blockquote a');
+        const bookmarkHref = blockquoteLink ? blockquoteLink.getAttribute('href') : null;
+        const bookmarkTitle = blockquoteLink ? blockquoteLink.textContent : '';
 
         if (!bookmarkHref || !bookmarkTitle) {
             return;
         }
 
         const replaceWithLink = () => {
-            $html(el).replaceWith(`<p><a href="${bookmarkHref}">${bookmarkTitle}</a></p>`);
+            replaceWith(el, `<p><a href="${bookmarkHref}">${bookmarkTitle}</a></p>`);
         };
 
         if (!allowRemoteScraping) {
@@ -697,7 +715,8 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         }
 
         try {
-            const iframeHref = $html(el).find('iframe').attr('src');
+            const iframe = el.querySelector('iframe');
+            const iframeHref = iframe ? iframe.getAttribute('src') : null;
 
             let scrapeConfig = {
                 title: {
@@ -754,163 +773,193 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
             const bookmarkHtml = serializer.serialize(bookmarkCard.render(cardOpts));
 
-            $html(el).replaceWith(`<!--kg-card-begin: html-->${bookmarkHtml}<!--kg-card-end: html-->`);
+            replaceWith(el, `<!--kg-card-begin: html-->${bookmarkHtml}<!--kg-card-end: html-->`);
         } catch (err) {
             replaceWithLink();
         }
-    }).get();
+    });
 
     await Promise.all(wpEmbeds);
 
-    $html('.wp-block-syntaxhighlighter-code').each((i, el) => {
-        const hasCodeElem = $html(el).find('code').length;
+    for (const el of parsed.$('.wp-block-syntaxhighlighter-code')) {
+        const hasCodeElem = el.querySelector('code');
 
         if (!hasCodeElem) {
-            $html(el).html(`<code>${$html(el).html()}</code>`);
+            el.innerHTML = `<code>${el.innerHTML}</code>`;
         }
-    });
+    }
 
-    $html('figure.wp-block-embed.is-provider-twitter').each((i, el) => {
-        $html(el).replaceWith(`<blockquote class="twitter-tweet"><a href="${$html(el).text()}"></a></blockquote>`);
-    });
+    for (const el of parsed.$('figure.wp-block-embed.is-provider-twitter')) {
+        replaceWith(el, `<blockquote class="twitter-tweet"><a href="${el.textContent}"></a></blockquote>`);
+    }
 
-    $html('blockquote.twitter-tweet').each((i, el) => {
-        let $figure = $html('<figure class="kg-card kg-embed-card"></figure>');
-        let $script = $html('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
+    for (const el of parsed.$('blockquote.twitter-tweet')) {
+        let wrapperEl = wrap(el, '<figure class="kg-card kg-embed-card"></figure>');
+        if (wrapperEl) {
+            const script = parsed.document.createElement('script');
+            script.setAttribute('async', '');
+            script.setAttribute('src', 'https://platform.twitter.com/widgets.js');
+            script.setAttribute('charset', 'utf-8');
+            wrapperEl.appendChild(script);
+            insertBefore(wrapperEl, '<!--kg-card-begin: embed-->');
+            insertAfter(wrapperEl, '<!--kg-card-end: embed-->');
+        }
+    }
 
-        $html(el).wrap($figure);
-        $figure.append($script);
-        $figure.before('<!--kg-card-begin: embed-->');
-        $figure.after('<!--kg-card-end: embed-->');
-    });
-
-    $html('blockquote.twitter-video').each((i, el) => {
-        let $figure = $html('<figure class="kg-card kg-embed-card"></figure>');
-        let $script = $html('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
-
-        $html(el).wrap($figure);
-        $figure.append($script);
-        $figure.before('<!--kg-card-begin: embed-->');
-        $figure.after('<!--kg-card-end: embed-->');
-    });
+    for (const el of parsed.$('blockquote.twitter-video')) {
+        let wrapperEl = wrap(el, '<figure class="kg-card kg-embed-card"></figure>');
+        if (wrapperEl) {
+            const script = parsed.document.createElement('script');
+            script.setAttribute('async', '');
+            script.setAttribute('src', 'https://platform.twitter.com/widgets.js');
+            script.setAttribute('charset', 'utf-8');
+            wrapperEl.appendChild(script);
+            insertBefore(wrapperEl, '<!--kg-card-begin: embed-->');
+            insertAfter(wrapperEl, '<!--kg-card-end: embed-->');
+        }
+    }
 
     // Handle instagram embeds
-    $html('script[src="//platform.instagram.com/en_US/embeds.js"]').remove();
-    $html('#fb-root').each((i, el) => {
-        if ($html(el).prev().get(0) && $html(el).prev().get(0).name === 'script') {
-            $html(el).prev().remove();
+    for (const el of parsed.$('script[src="//platform.instagram.com/en_US/embeds.js"]')) {
+        el.remove();
+    }
+    for (const el of parsed.$('#fb-root')) {
+        const prevEl = el.previousElementSibling;
+        if (prevEl && prevEl.tagName.toLowerCase() === 'script') {
+            prevEl.remove();
         }
-        if ($html(el).next().get(0) && $html(el).next().get(0).name === 'script') {
-            $html(el).next().remove();
+        const nextEl = el.nextElementSibling;
+        if (nextEl && nextEl.tagName.toLowerCase() === 'script') {
+            nextEl.remove();
         }
 
-        $html(el).remove();
-    });
+        el.remove();
+    }
 
-    $html('blockquote.instagram-media').each((i, el) => {
-        let src = $html(el).find('a').attr('href');
+    for (const el of parsed.$('blockquote.instagram-media')) {
+        const linkEl = el.querySelector('a');
+        let src = linkEl ? linkEl.getAttribute('href') : null;
 
         if (!src) {
-            src = $html(el).attr('data-instgrm-permalink');
+            src = el.getAttribute('data-instgrm-permalink');
         }
 
         if (!src) {
-            return;
+            continue;
         }
 
-        let parsed = url.parse(src);
+        let parsedUrl = url.parse(src);
 
-        if (parsed.search) {
+        if (parsedUrl.search) {
             // remove possible query params
-            parsed.search = null;
+            parsedUrl.search = null;
         }
-        src = url.format(parsed, {search: false});
-
-        let $iframe = $html('<iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;"></iframe>');
-        let $script = $html('<script async="" src="//www.instagram.com/embed.js"></script>');
-        let $figure = $html('<figure class="instagram"></figure>');
+        src = url.format(parsedUrl, {search: false});
 
         // Trim the trailing slash from src if it exists
         if (src.endsWith('/')) {
             src = src.slice(0, -1);
         }
 
-        $iframe.attr('src', `${src}/embed/captioned/`);
-        $figure.append($iframe);
-        $figure.append($script);
+        const figure = parsed.document.createElement('figure');
+        figure.setAttribute('class', 'instagram');
 
-        $html(el).replaceWith($figure);
-    });
+        const iframe = parsed.document.createElement('iframe');
+        iframe.setAttribute('class', 'instagram-media instagram-media-rendered');
+        iframe.setAttribute('id', 'instagram-embed-0');
+        iframe.setAttribute('allowtransparency', 'true');
+        iframe.setAttribute('allowfullscreen', 'true');
+        iframe.setAttribute('frameborder', '0');
+        iframe.setAttribute('height', '968');
+        iframe.setAttribute('data-instgrm-payload-id', 'instagram-media-payload-0');
+        iframe.setAttribute('scrolling', 'no');
+        iframe.setAttribute('style', 'background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;');
+        iframe.setAttribute('src', `${src}/embed/captioned/`);
+
+        const script = parsed.document.createElement('script');
+        script.setAttribute('async', '');
+        script.setAttribute('src', '//www.instagram.com/embed.js');
+
+        figure.appendChild(iframe);
+        figure.appendChild(script);
+
+        replaceWith(el, serializeNode(figure));
+    }
 
     // Convert <blockquote>s with 2 or more <p> tags into a single <p> tag
-    $html('blockquote').each((i, el) => {
-        const textElements = $html(el).find('p, cite');
+    for (const el of parsed.$('blockquote')) {
+        const textElements = el.querySelectorAll('p, cite');
 
         if (textElements.length >= 2) {
-            const combinedText = textElements.map((index, element) => $html(element).html()).get().join('<br><br>');
-            const newParagraph = $html('<p>').html(combinedText);
-            $html(el).replaceWith(`<blockquote>${newParagraph}</blockquote>`);
+            const combinedText = Array.from(textElements).map((element) => {
+                return element.innerHTML.trim();
+            }).join('<br><br>');
+            replaceWith(el, `<blockquote><p>${combinedText}</p></blockquote>`);
         }
-    });
+    }
 
     // TODO: this should be a parser plugin
     // Wrap nested lists in HTML card
-    $html('ol, ul').each((i, list) => {
-        let $parent = ($html(list).parents('ul, ol').last().length) ? $html(list).parents('ul, ol').last() : $html(list);
+    for (const list of parsed.$('ol, ul')) {
+        let parentList = lastParent(list, 'ul, ol');
+        let $parent = parentList || list;
 
-        let hasStyle = ($html($parent).attr('style') || $html($parent).find('[style]').length) ? true : false;
-        let hasType = ($html($parent).attr('type') || $html($parent).find('[type]').length) ? true : false;
-        let hasValue = ($html($parent).attr('value') || $html($parent).find('[value]').length) ? true : false;
-        let hasStart = ($html($parent).attr('start') || $html($parent).find('[start]').length) ? true : false;
-        let hasOLList = ($html($parent).find('ol').length) ? true : false;
-        let hasULList = ($html($parent).find('ul').length) ? true : false;
+        let hasStyle = $parent.getAttribute('style') || $parent.querySelector('[style]');
+        let hasType = $parent.getAttribute('type') || $parent.querySelector('[type]');
+        let hasValue = $parent.getAttribute('value') || $parent.querySelector('[value]');
+        let hasStart = $parent.getAttribute('start') || $parent.querySelector('[start]');
+        let hasOLList = $parent.querySelector('ol');
+        let hasULList = $parent.querySelector('ul');
 
         if (hasStyle || hasType || hasValue || hasStart || hasOLList || hasULList) {
-            // If parent is not wrapped ina  HTML card, wrap it in one
-            if ($parent.get(0)?.prev?.data !== 'kg-card-begin: html') {
-                $html($parent).before('<!--kg-card-begin: html-->');
-                $html($parent).after('<!--kg-card-end: html-->');
+            // If parent is not wrapped in a HTML card, wrap it in one
+            const prevSibling = $parent.previousSibling;
+            if (!isComment(prevSibling) || getCommentData(prevSibling) !== 'kg-card-begin: html') {
+                insertBefore($parent, '<!--kg-card-begin: html-->');
+                insertAfter($parent, '<!--kg-card-end: html-->');
             }
         }
-    });
+    }
 
     // Handle button elements
-    $html('.wp-block-buttons').each((i, el) => {
+    for (const el of parsed.$('.wp-block-buttons')) {
         let buttons = [];
-        let isCentered = $html(el).hasClass('is-content-justification-center');
+        let isCentered = el.classList.contains('is-content-justification-center');
         let positionClass = (isCentered) ? 'kg-align-center' : 'kg-align-left';
 
-        $html(el).find('.wp-block-button__link').each((ii, button) => {
-            let buttonHref = $html(button).attr('href');
-            let buttonText = $html(button).text();
+        for (const button of el.querySelectorAll('.wp-block-button__link')) {
+            let buttonHref = button.getAttribute('href');
+            let buttonText = button.textContent;
 
             buttons.push(`<div class="kg-card kg-button-card ${positionClass}"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
-        });
+        }
 
-        $html(el).replaceWith(buttons.join(''));
-    });
+        replaceWith(el, buttons.join(''));
+    }
 
     // Replace spacers with horizontal rules
-    $html('.wp-block-spacer').each((i, el) => {
-        $html(el).replaceWith('<hr>');
-    });
+    for (const el of parsed.$('.wp-block-spacer')) {
+        replaceWith(el, '<hr>');
+    }
 
     // Handle YouTube embeds
-    $html('.wp-block-embed.is-provider-youtube').each((i, el) => {
-        const videoUrl = $html(el).find('iframe').attr('src') ?? $html(el).text();
+    for (const el of parsed.$('.wp-block-embed.is-provider-youtube')) {
+        const iframe = el.querySelector('iframe');
+        const videoUrl = iframe ? iframe.getAttribute('src') : el.textContent;
         const videoID = getYouTubeID(videoUrl);
-        const videoCaption = $html(el).find('figcaption')?.text()?.trim() ?? false;
+        const figcaptionEl = el.querySelector('figcaption');
+        const videoCaption = figcaptionEl ? figcaptionEl.textContent.trim() : false;
 
         if (videoUrl && videoID && videoID.length) {
-            $html(el).replaceWith(`<figure class="kg-card kg-embed-card"><iframe width="160" height="90"
+            replaceWith(el, `<figure class="kg-card kg-embed-card"><iframe width="160" height="90"
             src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowfullscreen=""></iframe>${videoCaption ? `<figcaption>${videoCaption}</figcaption>` : ''}</figure>`);
         }
-    });
+    }
 
     // Handle list-based galleries
-    $html('.wp-block-gallery').each((i, el) => {
+    for (const el of parsed.$('.wp-block-gallery')) {
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
             payload: {
@@ -918,141 +967,132 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             }
         };
 
-        $html(el).find('figure').each((iii, elll) => { // eslint-disable-line no-shadow
-            let img = $html(elll).find('img');
+        for (const figureEl of el.querySelectorAll('figure')) {
+            let img = figureEl.querySelector('img');
 
-            if (img && img.attr('src')) {
+            if (img && img.getAttribute('src')) {
                 cardOpts.payload.images.push({
                     row: 0,
-                    fileName: basename(img.attr('src')),
-                    src: img.attr('data-full') ?? img.attr('src'),
-                    width: img.attr('width'),
-                    height: img.attr('height')
+                    fileName: basename(img.getAttribute('src')),
+                    src: img.getAttribute('data-full') || img.getAttribute('src'),
+                    width: img.getAttribute('width'),
+                    height: img.getAttribute('height')
                 });
             }
-        });
+        }
 
         const galleryHtml = serializer.serialize(galleryCard.render(cardOpts));
 
-        $html(el).replaceWith(galleryHtml);
-    });
+        replaceWith(el, galleryHtml);
+    }
 
     // Unwrap WP gallery blocks
     // Case: WP gallery blocks have figures in figures which trips up the HTML to mobiledoc conversion
-    $html('.wp-block-gallery').each((i, el) => {
-        $html(el).replaceWith($html(el).html());
-    });
+    for (const el of parsed.$('.wp-block-gallery')) {
+        replaceWith(el, el.innerHTML);
+    }
 
     // Wrap inline styled tags in HTML card
-    $html('div[style], p[style], a[style], span[style]').each((i, styled) => {
-        let imgChildren = $html(styled).children('img:not([data-gif])');
+    for (const styled of parsed.$('div[style], p[style], a[style], span[style]')) {
+        // Get direct img children (not nested) that don't have data-gif
+        let imgChildren = Array.from(styled.children).filter((child) => {
+            return child.tagName && child.tagName.toLowerCase() === 'img' && !child.hasAttribute('data-gif');
+        });
 
-        if ($html(imgChildren).length === 0) {
-            $html(styled).before('<!--kg-card-begin: html-->');
-            $html(styled).after('<!--kg-card-end: html-->');
+        if (imgChildren.length === 0) {
+            insertBefore(styled, '<!--kg-card-begin: html-->');
+            insertAfter(styled, '<!--kg-card-end: html-->');
         }
-    });
+    }
 
     // Remove links around images that link to the same file
-    $html('a > img').each((l, img) => {
+    for (const img of parsed.$('a > img')) {
         // <img> src
-        let $image = $html(img);
-        let imageSrc = $html(img).attr('src');
+        let imageSrc = img.getAttribute('src');
         let largeSrc = largerSrc(imageSrc);
 
         // <a> href
-        let $link = $html($image).parent('a');
-        let linkHref = $html($link).attr('href');
-        let largeHref = largerSrc(linkHref);
+        let link = img.parentElement;
+        if (link && link.tagName.toLowerCase() === 'a') {
+            let linkHref = link.getAttribute('href');
+            let largeHref = largerSrc(linkHref);
 
-        if (largeSrc === largeHref) {
-            $html($link).replaceWith($html($link).html());
+            if (largeSrc === largeHref) {
+                replaceWith(link, link.innerHTML);
+            }
         }
-    });
+    }
 
     // Some header elements contain span children to use custom inline styling. Wrap 'em in HTML cards.
-    $html('h1 > span[style], h2 > span[style], h3 > span[style], h4 > span[style], h5 > span[style], h6 > span[style]').each((i, styledSpan) => {
-        let $heading = $html(styledSpan).parent('h1, h2, h3, h4, h5, h6');
-        $heading.before('<!--kg-card-begin: html-->');
-        $heading.after('<!--kg-card-end: html-->');
-    });
+    for (const styledSpan of parsed.$('h1 > span[style], h2 > span[style], h3 > span[style], h4 > span[style], h5 > span[style], h6 > span[style]')) {
+        let heading = styledSpan.parentElement;
+        if (heading && heading.matches('h1, h2, h3, h4, h5, h6')) {
+            insertBefore(heading, '<!--kg-card-begin: html-->');
+            insertAfter(heading, '<!--kg-card-end: html-->');
+        }
+    }
 
     // Convert videos to HTML cards and report as errors
-    $html('video').each((i, el) => {
-        const isInFigure = el?.parent?.name === 'figure' || false;
+    for (const el of parsed.$('video')) {
+        const parent = el.parentElement;
+        const isInFigure = parent && parent.tagName.toLowerCase() === 'figure';
 
-        $html(el).css('width', '100%');
-
-        if (isInFigure) {
-            $html(el.parent).before('<!--kg-card-begin: html-->');
-            $html(el.parent).after('<!--kg-card-end: html-->');
-        } else {
-            $html(el).before('<!--kg-card-begin: html-->');
-            $html(el).after('<!--kg-card-end: html-->');
-        }
-    });
-
-    $html('audio').each((i, el) => {
-        const isInFigure = el?.parent?.name === 'figure' || false;
-
-        $html(el).css('width', '100%');
+        setStyle(el, 'width', '100%');
 
         if (isInFigure) {
-            $html(el.parent).before('<!--kg-card-begin: html-->');
-            $html(el.parent).after('<!--kg-card-end: html-->');
+            insertBefore(parent, '<!--kg-card-begin: html-->');
+            insertAfter(parent, '<!--kg-card-end: html-->');
         } else {
-            $html(el).before('<!--kg-card-begin: html-->');
-            $html(el).after('<!--kg-card-end: html-->');
+            insertBefore(el, '<!--kg-card-begin: html-->');
+            insertAfter(el, '<!--kg-card-end: html-->');
         }
-    });
+    }
 
-    $html('img').each((i, img) => {
-        let $image = $html(img);
-        $html($image).removeAttr('srcset');
-        $html($image).removeAttr('sizes');
-        let imageSrc = $html($image).attr('src');
+    for (const el of parsed.$('audio')) {
+        const parent = el.parentElement;
+        const isInFigure = parent && parent.tagName.toLowerCase() === 'figure';
+
+        setStyle(el, 'width', '100%');
+
+        if (isInFigure) {
+            insertBefore(parent, '<!--kg-card-begin: html-->');
+            insertAfter(parent, '<!--kg-card-end: html-->');
+        } else {
+            insertBefore(el, '<!--kg-card-begin: html-->');
+            insertAfter(el, '<!--kg-card-end: html-->');
+        }
+    }
+
+    for (const img of parsed.$('img')) {
+        img.removeAttribute('srcset');
+        img.removeAttribute('sizes');
+        let imageSrc = img.getAttribute('src');
         let newSrc = largerSrc(imageSrc);
-        $html($image).attr('src', newSrc);
-    });
+        img.setAttribute('src', newSrc);
+    }
 
     // Detect full size images
     // TODO: add more classes that are used within WordPress to determine full-width images
-    $html('img.full.size-full').each((i, img) => {
+    for (const img of parsed.$('img.full.size-full')) {
         // Ignore images, that are already wrapped in a figure tag or are linked
-        if ($html(img).parent('figure').length <= 0 && $html(img).parent('a').length <= 0) {
-            let $figure = $html('<figure class="kg-card kg-image-card kg-width-wide"></figure>');
+        const parent = img.parentElement;
+        const parentTag = parent ? parent.tagName.toLowerCase() : '';
+        if (parentTag !== 'figure' && parentTag !== 'a') {
+            img.classList.add('kg-image');
 
-            $html(img).addClass('kg-image');
-
-            if ($html(img).attr('srcset')) {
-                $html(img).removeAttr('width');
-                $html(img).removeAttr('height');
-                $html(img).removeAttr('srcset');
-                $html(img).removeAttr('sizes');
+            if (img.getAttribute('srcset')) {
+                img.removeAttribute('width');
+                img.removeAttribute('height');
+                img.removeAttribute('srcset');
+                img.removeAttribute('sizes');
             }
 
-            $html(img).wrap($figure);
+            wrap(img, '<figure class="kg-card kg-image-card kg-width-wide"></figure>');
         }
-    });
-
-    $html('img').each((i, img) => {
-        const oldBase = /https?:\/\/deceleration.news\/wp-content\//;
-        const newBase = 'https://d3l0i86vhnepo5.cloudfront.net/wp-content/';
-        const currentSrc = $html(img).attr('src');
-
-        if (!currentSrc) {
-            return;
-        }
-
-        const updatedSrc = currentSrc.replace(oldBase, newBase);
-        $html(img).attr('src', updatedSrc);
-    });
+    }
 
     // convert HTML back to a string
-    html = $html.html();
-
-    // Remove empty attributes
-    html = html.replace(/=""/g, '');
+    html = parsed.html();
 
     return html;
 };
@@ -1075,7 +1115,7 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
     let {tags: fetchTags, addTag, excerptSelector, excerpt, featureImageCaption} = options;
 
     let slug = wpPost.slug;
-    let titleText = cheerio.load(wpPost.title.rendered).text();
+    let titleText = parseFragment(wpPost.title.rendered).text();
 
     // @note: we don't copy excerpts because WP generated excerpts aren't better than Ghost ones but are often too long.
     const post = {
@@ -1112,7 +1152,11 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
         : [];
 
     // Handle author assignment based on co-authors
-    if (coAuthors.length > 1) {
+    if (wpPost?.parsely?.meta?.author && wpPost.parsely.meta.author.length > 0) {
+        wpPost.parsely.meta.author.forEach((author) => {
+            post.data.author = processAuthor({name: author.name});
+        });
+    } else if (coAuthors.length > 1) {
         // Multiple co-authors: use authors array
         post.data.authors = coAuthors;
     } else if (coAuthors.length === 1) {
