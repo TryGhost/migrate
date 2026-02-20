@@ -1035,19 +1035,6 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         }
     });
 
-    $html('img').each((i, img) => {
-        const oldBase = /https?:\/\/deceleration.news\/wp-content\//;
-        const newBase = 'https://d3l0i86vhnepo5.cloudfront.net/wp-content/';
-        const currentSrc = $html(img).attr('src');
-
-        if (!currentSrc) {
-            return;
-        }
-
-        const updatedSrc = currentSrc.replace(oldBase, newBase);
-        $html(img).attr('src', updatedSrc);
-    });
-
     // convert HTML back to a string
     html = $html.html();
 
