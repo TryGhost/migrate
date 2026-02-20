@@ -182,7 +182,7 @@ describe('resolveFileName character handling', function () {
 
         let fileName = await fileCache.resolveFileName('/image/fetch/w_600%2Ch_400,c_fill,f_auto,q_auto:good,fl_progressive:steep,g_center/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fad8015f6-a9.0c-46f8-89f2-b6d7db866c6e_3866x2298.jpeg');
 
-        expect(fileName.filename).toEqual('/image/fetch/w_600-h_400-c_fill-f_auto-q_auto:good-fl_progressive:steep-g_center/https_3a_2f_2fsubstack-post-media-s3-amazonaws-com_2fpublic_2fimages_2fad8015f6-a9-0c-46f8-89f2-b6d7db866c6e_3866x2298.jpg');
+        expect(fileName.filename).toEqual('/image/fetch/w_600-h_400-c_fill-f_auto-q_auto:good-fl_progressive:steep-g_center/https_3A_2F_2Fsubstack-post-media-s3-amazonaws-com_2Fpublic_2Fimages_2Fad8015f6-a9-0c-46f8-89f2-b6d7db866c6e_3866x2298.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -288,9 +288,9 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/快乐的小树.jpeg');
 
-        expect(fileName.filename).toEqual('/my-images/kuai_le_de_xiao_shu.jpg');
-        expect(fileName.storagePath).toInclude('/content/images/my-images/kuai_le_de_xiao_shu.jpg');
-        expect(fileName.outputPath).toEqual('/content/images/my-images/kuai_le_de_xiao_shu.jpg');
+        expect(fileName.filename).toEqual('/my-images/Kuai_Le_De_Xiao_Shu.jpg');
+        expect(fileName.storagePath).toInclude('/content/images/my-images/Kuai_Le_De_Xiao_Shu.jpg');
+        expect(fileName.outputPath).toEqual('/content/images/my-images/Kuai_Le_De_Xiao_Shu.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -299,9 +299,9 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/幸せな小さな木.jpeg');
 
-        expect(fileName.filename).toEqual('/my-images/xing_senaxiao_sanamu.jpg');
-        expect(fileName.storagePath).toInclude('/content/images/my-images/xing_senaxiao_sanamu.jpg');
-        expect(fileName.outputPath).toEqual('/content/images/my-images/xing_senaxiao_sanamu.jpg');
+        expect(fileName.filename).toEqual('/my-images/Xing_senaXiao_sanaMu.jpg');
+        expect(fileName.storagePath).toInclude('/content/images/my-images/Xing_senaXiao_sanaMu.jpg');
+        expect(fileName.outputPath).toEqual('/content/images/my-images/Xing_senaXiao_sanaMu.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -310,9 +310,9 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/أشجار صغيرة سعيدة.jpeg');
 
-        expect(fileName.filename).toEqual('/my-images/shjr-sgyr_-saayd.jpg');
-        expect(fileName.storagePath).toInclude('/content/images/my-images/shjr-sgyr_-saayd.jpg');
-        expect(fileName.outputPath).toEqual('/content/images/my-images/shjr-sgyr_-saayd.jpg');
+        expect(fileName.filename).toEqual('/my-images/shjr-SGyr_-saayd.jpg');
+        expect(fileName.storagePath).toInclude('/content/images/my-images/shjr-SGyr_-saayd.jpg');
+        expect(fileName.outputPath).toEqual('/content/images/my-images/shjr-SGyr_-saayd.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });
