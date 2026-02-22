@@ -3921,10 +3921,10 @@
     log-update "6.1.0"
     strip-ansi "7.1.0"
 
-"@tryghost/logging@2.5.1":
-  version "2.5.1"
-  resolved "https://registry.yarnpkg.com/@tryghost/logging/-/logging-2.5.1.tgz#76b88e0a35a0ad43fb392446fc2731f39ebf9bb0"
-  integrity sha512-JmHslDTfhoBoBmyWFPZa5IxArXabFgfXGTmO2vyjmPTTVNv+4ljpntgkp7RCNu81spm4cNdgku3Ck0nSzhSYpQ==
+"@tryghost/logging@2.5.5":
+  version "2.5.5"
+  resolved "https://registry.yarnpkg.com/@tryghost/logging/-/logging-2.5.5.tgz#81a5f457c492b33f7119164aff06859853e08ef5"
+  integrity sha512-OILuHgDuoO5Eq1aPrwAmxSPWPRF8AZI+EfyGusZVY70kdBH3XcxNySGZAZIvc0rAtXLOgQPSdQpxPfKbbBxPAg==
   dependencies:
     "@tryghost/bunyan-rotating-filestream" "^0.0.7"
     "@tryghost/elasticsearch" "^3.0.25"
@@ -3932,7 +3932,7 @@
     "@tryghost/pretty-stream" "^0.2.1"
     "@tryghost/root-utils" "^0.3.34"
     bunyan "^1.8.15"
-    bunyan-loggly "^1.4.2"
+    bunyan-loggly "^2.0.0"
     fs-extra "^11.0.0"
     gelf-stream "^1.1.1"
     json-stringify-safe "^5.0.1"
@@ -5192,13 +5192,21 @@ builtin-modules@^3.3.0:
   resolved "https://registry.yarnpkg.com/builtin-modules/-/builtin-modules-3.3.0.tgz#cae62812b89801e9656336e46223e030386be7b6"
   integrity sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==
 
-bunyan-loggly@1.4.2, bunyan-loggly@^1.4.2:
+bunyan-loggly@1.4.2:
   version "1.4.2"
   resolved "https://registry.yarnpkg.com/bunyan-loggly/-/bunyan-loggly-1.4.2.tgz#dda0fb18f487fa150a79728e906d83e871d235e9"
   integrity sha512-/fwAO+NPogiPziEk4bQKZhwYo+POrbdAlatpW5r+BQSTHqYyxGFHMtLMp4uSjIdPetXDxvG5qffAePB3hc/6NA==
   dependencies:
     json-stringify-safe "^5.0.1"
     node-loggly-bulk "^2.2.4"
+
+bunyan-loggly@^2.0.0:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/bunyan-loggly/-/bunyan-loggly-2.0.1.tgz#d65ea3ad0647ed8a2095d0a802a4306fe4a3e174"
+  integrity sha512-9F+BYVqqtrYHmWfDE2JLoQmQmZod7AQQuRtAS41qaXa5wjiOviFNnMlY56gZmv5SZ2czbeuWeX+xSAEFcktsXw==
+  dependencies:
+    json-stringify-safe "^5.0.1"
+    node-loggly-bulk "^3.0.1"
 
 bunyan@1.8.15, bunyan@^1.8.15:
   version "1.8.15"
@@ -9586,6 +9594,15 @@ node-loggly-bulk@^2.2.4:
     moment "^2.18.1"
     request ">=2.76.0 <3.0.0"
 
+node-loggly-bulk@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/node-loggly-bulk/-/node-loggly-bulk-3.0.1.tgz#5aba3b032b366b9bb892b22095103637c8919512"
+  integrity sha512-KrqNHqseUnGNGz4q1ZsnfD10W/KQkwFLpZjTHp98TPUXEqZ8zytEAugfFeiPMz/YMzgY4hqGI+6hsMIPhzaE4A==
+  dependencies:
+    json-stringify-safe "5.0.x"
+    moment "^2.18.1"
+    request ">=2.88.2 <3.0.0"
+
 node-releases@^2.0.27:
   version "2.0.27"
   resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-2.0.27.tgz#eedca519205cf20f650f61d56b070db111231e4e"
@@ -10340,7 +10357,7 @@ repeat-string@^1.5.4:
   resolved "https://registry.yarnpkg.com/repeat-string/-/repeat-string-1.6.1.tgz#8dcae470e1c88abc2d600fff4a776286da75e637"
   integrity sha512-PV0dzCYDNfRi1jCDbJzpW7jNNDRuCOG/jI5ctQcGKt/clZD+YcPS3yIlWuTJMmESC8aevCFmWJy5wjAFgNqN6w==
 
-"request@>=2.76.0 <3.0.0":
+"request@>=2.76.0 <3.0.0", "request@>=2.88.2 <3.0.0":
   version "2.88.2"
   resolved "https://registry.yarnpkg.com/request/-/request-2.88.2.tgz#d73c918731cb5a87da047e207234146f664d12b3"
   integrity sha512-MsvtOrfG9ZcrOwAW+Qi+F6HbD0CWXEh9ou77uOb7FM2WPhwT7smM833PzanhJLsgXjN89Ir6V2PczXNnMpwKhw==
