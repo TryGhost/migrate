@@ -1,6 +1,8 @@
 import {join} from 'node:path';
 import _ from 'lodash';
-import * as cheerio from 'cheerio';
+import {domUtils} from '@tryghost/mg-utils';
+
+const {parseFragment} = domUtils;
 
 // @TODO: expand this list
 const htmlFields = ['html'];
@@ -128,30 +130,24 @@ export default class LinkFixer {
     }
 
     async processHTML(html) {
-        let $ = cheerio.load(html, {
-            xml: {
-                decodeEntities: false,
-                scriptingEnabled: false
-            }
-        }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+        const parsed = parseFragment(html);
 
-        let links = $('a').map(async (i, el) => {
-            let href = $(el).attr('href');
+        for (const el of parsed.$('a')) {
+            let href = el.getAttribute('href');
 
             if (!href) {
-                return;
+                continue;
             }
 
             // Clean the URL, matching the links stored in the linkMap
             let updatedURL = this.cleanURL(href);
 
             if (this.linkMap[updatedURL]) {
-                $(el).attr('href', this.linkMap[updatedURL]);
+                el.setAttribute('href', this.linkMap[updatedURL]);
             }
-        }).get();
+        }
 
-        await Promise.all(links);
-        return $.html();
+        return parsed.html();
     }
 
     async processLexical(lexical) {
