@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-curated-members-csv",
-  "version": "0.4.34",
+  "version": "0.4.35",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-curated-members-csv",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -25,6 +25,6 @@
     "jest-extended": "7.0.0"
   },
   "dependencies": {
-    "@tryghost/mg-fs-utils": "0.16.4"
+    "@tryghost/mg-fs-utils": "0.16.5"
   }
 }
