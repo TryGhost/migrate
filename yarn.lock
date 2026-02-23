@@ -4744,7 +4744,7 @@ ansi-styles@^5.2.0:
   resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-5.2.0.tgz#07449690ad45777d1924ac2abb2fc8895dba836b"
   integrity sha512-Cxwpt2SfTzTtXcfOlzGEee8O+c+MmUgGrNiBcXnuWxuFJHe6a5Hz7qwhwe5OgaSYI0IJvkLqWX1ASG+cJOkEiA==
 
-ansi-styles@^6.0.0, ansi-styles@^6.1.0, ansi-styles@^6.2.1:
+ansi-styles@^6.0.0, ansi-styles@^6.1.0, ansi-styles@^6.2.1, ansi-styles@^6.2.3:
   version "6.2.3"
   resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-6.2.3.tgz#c044d5dcc521a076413472597a1acb1f103c4041"
   integrity sha512-4Dj6M28JB+oAH8kFkTLUo+a2jwOFkuqb3yucU0CANcRRUbxS0cP0nZYCGjcc3BNXwRIsUVmDGgzawme7zvJHvg==
@@ -5602,7 +5602,7 @@ cli-truncate@4.0.0:
     slice-ansi "^5.0.0"
     string-width "^7.0.0"
 
-cli-truncate@5.1.1:
+cli-truncate@5.1.1, cli-truncate@^5.0.0:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/cli-truncate/-/cli-truncate-5.1.1.tgz#455476face9904d94b7d11e98d9adbca15292ea5"
   integrity sha512-SroPvNHxUnk+vIW/dOSfNqdy1sPEFkrTk6TUtqLCnBlo3N7TNYYkzzN7uSD6+jVjrdO4+p8nH7JzH6cIvUem6A==
@@ -8732,6 +8732,18 @@ listr-verbose-renderer@^0.5.0:
     date-fns "^1.27.2"
     figures "^2.0.0"
 
+listr2@10.1.1:
+  version "10.1.1"
+  resolved "https://registry.yarnpkg.com/listr2/-/listr2-10.1.1.tgz#2bc033dca825935e202e59b75959149b02c977a2"
+  integrity sha512-4oogpJzRRGtq41B0GKZIldzYCnQTgX2DPM/XvcfNu7g2E7sxaast009150RKFZBnrHAnfMOUaedIqdIOLCCRxQ==
+  dependencies:
+    cli-truncate "^5.0.0"
+    colorette "^2.0.20"
+    eventemitter3 "^5.0.1"
+    log-update "^7.1.0"
+    rfdc "^1.4.1"
+    wrap-ansi "^10.0.0"
+
 listr2@6.6.1:
   version "6.6.1"
   resolved "https://registry.yarnpkg.com/listr2/-/listr2-6.6.1.tgz#08b2329e7e8ba6298481464937099f4a2cd7f95d"
@@ -8967,7 +8979,7 @@ log-update@6.1.0:
     strip-ansi "^7.1.0"
     wrap-ansi "^9.0.0"
 
-log-update@7.1.0:
+log-update@7.1.0, log-update@^7.1.0:
   version "7.1.0"
   resolved "https://registry.yarnpkg.com/log-update/-/log-update-7.1.0.tgz#c1b3823f1ba5d2b254ef320d6da61a11400d939d"
   integrity sha512-y9pi/ZOQQVvTgfRDEHV1Cj4zQUkJZPipEUNOxhn1R6KgmdMs7LKvXWCd9eMVPGJgvYzFLCenecWr0Ps8ChVv2A==
@@ -10487,7 +10499,7 @@ reusify@^1.0.4:
   resolved "https://registry.yarnpkg.com/reusify/-/reusify-1.1.0.tgz#0fe13b9522e1473f51b558ee796e08f11f9b489f"
   integrity sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw==
 
-rfdc@^1.3.0:
+rfdc@^1.3.0, rfdc@^1.4.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/rfdc/-/rfdc-1.4.1.tgz#778f76c4fb731d93414e8f925fbecf64cce7f6ca"
   integrity sha512-q1b3N5QkRUWUl7iyylaaj3kOpIT0N2i9MqIEQXP73GVsN9cw3fdx8X63cEmWhJGi2PPCF23Ijp7ktmd39rawIA==
@@ -11132,7 +11144,7 @@ string-width@^7.0.0, string-width@^7.2.0:
     get-east-asian-width "^1.0.0"
     strip-ansi "^7.1.0"
 
-string-width@^8.0.0, string-width@^8.1.0:
+string-width@^8.0.0, string-width@^8.1.0, string-width@^8.2.0:
   version "8.2.0"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-8.2.0.tgz#bdb6a9bd6d7800db635adae96cdb0443fec56c42"
   integrity sha512-6hJPQ8N0V0P3SNmP6h2J99RLuzrWz2gvT7VnK5tKvrNqJoyS9W4/Fb8mo31UiPvy00z7DQXkP2hnKBVav76thw==
@@ -12137,6 +12149,15 @@ wpapi@1.2.2:
     ansi-styles "^4.0.0"
     string-width "^4.1.0"
     strip-ansi "^6.0.0"
+
+wrap-ansi@^10.0.0:
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-10.0.0.tgz#b83ddcc14dbc5596f1b07e153bf6f863c1acbb57"
+  integrity sha512-SGcvg80f0wUy2/fXES19feHMz8E0JoXv2uNgHOu4Dgi2OrCy1lqwFYEJz1BLbDI0exjPMe/ZdzZ/YpGECBG/aQ==
+  dependencies:
+    ansi-styles "^6.2.3"
+    string-width "^8.2.0"
+    strip-ansi "^7.1.2"
 
 wrap-ansi@^3.0.1:
   version "3.0.1"
