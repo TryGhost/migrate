@@ -26,6 +26,9 @@
     "posttest": "yarn lint",
     "test": "rm -rf build && yarn build --force && NODE_OPTIONS=--experimental-vm-modules c8 --src src --all --reporter text --reporter cobertura jest build/test"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@types/jest": "30.0.0",
     "@typescript-eslint/eslint-plugin": "8.56.0",
