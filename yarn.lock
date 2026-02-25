@@ -3736,15 +3736,7 @@
   dependencies:
     long-timeout "^0.1.1"
 
-"@tryghost/debug@0.1.36":
-  version "0.1.36"
-  resolved "https://registry.yarnpkg.com/@tryghost/debug/-/debug-0.1.36.tgz#54561ffad4d24632406824aa8b78148a59a826e2"
-  integrity sha512-6B3zrO7Y3SWlxTB9M+dwhj63whE2R4ktmDYI7r1L1Ao9S//Y0XYOPVVlqUDxHfig7T29JliZfbhZw9VdSEUYjg==
-  dependencies:
-    "@tryghost/root-utils" "^0.3.34"
-    debug "^4.3.1"
-
-"@tryghost/debug@^0.1.36":
+"@tryghost/debug@0.1.40", "@tryghost/debug@^0.1.36":
   version "0.1.40"
   resolved "https://registry.yarnpkg.com/@tryghost/debug/-/debug-0.1.40.tgz#c2251d1775ec240e1c11f9fcce90900d93aec5ba"
   integrity sha512-r8ecoTeoickPsn/59tkrouCNHhUEy79MNhJdPNkhx/Q3Oevw+SQBjnVYa5mHaxTaXryM4nNguKM5fbxPGPBo3Q==
