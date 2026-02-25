@@ -4,7 +4,7 @@ This file provides guidance to AI Agents when working with code in this reposito
 
 ## Overview
 
-This is a Ghost blog migration toolkit - a monorepo with 45+ packages for migrating content from various platforms to Ghost. Requires **Node >= 22.13.1**.
+This is a Ghost blog migration toolkit - a monorepo with 45+ packages for migrating content from various platforms to Ghost. Requires **Node >= 22.21.1**.
 
 ## Package Manager & Dependencies
 
