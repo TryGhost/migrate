@@ -1,7 +1,9 @@
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
 
 describe('Options to Sywac', function () {
-    test('Convert options to defaults', function () {
+    it('Convert options to defaults', function () {
         let options = [
             {
                 type: 'string',
@@ -27,10 +29,13 @@ describe('Options to Sywac', function () {
 
         let defaults = convertOptionsToDefaults(options);
 
-        expect(defaults).toContainAllKeys(['url', 'Z', 'zip', 'scrape']);
-        expect(defaults.url).toEqual(null);
-        expect(defaults.Z).toEqual(true);
-        expect(defaults.zip).toEqual(true);
-        expect(defaults.scrape).toEqual(['all']);
+        assert.ok('url' in defaults);
+        assert.ok('Z' in defaults);
+        assert.ok('zip' in defaults);
+        assert.ok('scrape' in defaults);
+        assert.equal(defaults.url, null);
+        assert.equal(defaults.Z, true);
+        assert.equal(defaults.zip, true);
+        assert.deepEqual(defaults.scrape, ['all']);
     });
 });

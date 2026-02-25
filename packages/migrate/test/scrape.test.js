@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {jest} from '@jest/globals';
+import {describe, it, mock} from 'node:test';
 import nock from 'nock';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
@@ -8,13 +8,13 @@ import {scrapeConfig, postProcessor, skipScrape} from '../sources/substack.js';
 
 // Create a mock FileCache with only the methods needed for this test
 const mockFileCache = {
-    hasFile: jest.fn(() => false),
-    readTmpJSONFile: jest.fn(async () => ({})),
-    writeTmpFile: jest.fn(async () => '/mock/tmp/file')
+    hasFile: mock.fn(() => false),
+    readTmpJSONFile: mock.fn(async () => ({})),
+    writeTmpFile: mock.fn(async () => '/mock/tmp/file')
 };
 
 describe('Web Scrap Config & Post Processor', function () {
-    test('Scrapes a text post', async function () {
+    it('Scrapes a text post', async function () {
         const helloWorldHTML = await readFile(new URL('./fixtures/substack-hello-world.html', import.meta.url));
 
         nock('https://example.substack.com')
@@ -81,7 +81,7 @@ describe('Web Scrap Config & Post Processor', function () {
         assert.equal(scrapedData.tags[2].data.slug, 'news');
     });
 
-    test('Scrapes a text post with a single author', async function () {
+    it('Scrapes a text post with a single author', async function () {
         const singleAuthordHTML = await readFile(new URL('./fixtures/substack-single-author.html', import.meta.url));
 
         nock('https://example.substack.com')
@@ -123,7 +123,7 @@ describe('Web Scrap Config & Post Processor', function () {
         assert.equal(scrapedData.authors[0].data.email, 'example-org@example.com');
     });
 
-    test('Scrapes a podcast', async function () {
+    it('Scrapes a podcast', async function () {
         const podcastHTML = await readFile(new URL('./fixtures/substack-podcast.html', import.meta.url));
 
         nock('https://example.substack.com')

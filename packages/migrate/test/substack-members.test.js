@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {parseCompGift} from '../commands/substack-members.js';
 
 describe('Substack Members Parse Comp & Gift', function () {
-    test('18:none', async function () {
+    it('18:none', async function () {
         const result = parseCompGift('18:none');
 
         assert.deepEqual(result, {
@@ -11,7 +12,7 @@ describe('Substack Members Parse Comp & Gift', function () {
         });
     });
 
-    test('18:free', async function () {
+    it('18:free', async function () {
         const result = parseCompGift('18:free');
 
         assert.deepEqual(result, {
@@ -20,7 +21,7 @@ describe('Substack Members Parse Comp & Gift', function () {
         });
     });
 
-    test('20180510:none', async function () {
+    it('20180510:none', async function () {
         const result = parseCompGift('20180510:none');
 
         assert.deepEqual(result, {
@@ -29,7 +30,7 @@ describe('Substack Members Parse Comp & Gift', function () {
         });
     });
 
-    test('20180510:free', async function () {
+    it('20180510:free', async function () {
         const result = parseCompGift('20180510:free');
 
         assert.deepEqual(result, {
