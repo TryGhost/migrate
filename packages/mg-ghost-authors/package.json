@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-ghost-authors",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Fetch existing Ghost users and merge with migrated authors",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-ghost-authors",
   "author": "Ghost Foundation",
@@ -25,6 +25,9 @@
     "lint": "eslint src/ --ext .ts --cache",
     "posttest": "yarn lint",
     "test": "rm -rf build && yarn build --force && NODE_OPTIONS=--experimental-vm-modules c8 --src src --all --reporter text --reporter cobertura jest build/test"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "devDependencies": {
     "@types/jest": "30.0.0",

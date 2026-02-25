@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-html-lexical",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-html-lexical",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@tryghost/listr-smart-renderer": "0.5.22",
+    "@tryghost/listr-smart-renderer": "0.5.23",
     "@types/jest": "30.0.0",
     "@types/sinon": "21.0.0",
     "@typescript-eslint/eslint-plugin": "8.56.0",
