@@ -27,7 +27,7 @@
     "listr": "0.14.3"
   },
   "dependencies": {
-    "cheerio": "1.2.0",
+    "@tryghost/mg-utils": "0.0.1",
     "lodash": "4.17.23"
   }
 }

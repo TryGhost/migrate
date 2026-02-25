@@ -25,9 +25,10 @@
   },
   "dependencies": {
     "@tryghost/errors": "1.3.8",
+    "@tryghost/mg-utils": "0.0.1",
     "@tryghost/mg-wp-api": "0.11.20",
-    "cheerio": "1.2.0",
     "fast-glob": "3.3.3",
+    "fast-xml-parser": "5.3.7",
     "markdown-it": "14.1.1",
     "php-serialize": "5.1.3"
   }
