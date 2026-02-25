@@ -1,4 +1,5 @@
-import assert from 'assert/strict';
+import assert from 'node:assert/strict';
+import {describe, it, before, beforeEach, afterEach} from 'node:test';
 import Stripe from 'stripe';
 import {Options} from '../../lib/Options.js';
 import {StripeAPI} from '../../lib/StripeAPI.js';
@@ -27,7 +28,7 @@ describe('Recreating subscriptions', () => {
     let realPriceImporter: ReturnType<typeof createPriceImporter>;
     let realCouponImporter: ReturnType<typeof createCouponImporter>;
 
-    beforeAll(async () => {
+    before(async () => {
         await stripe.validate();
         if (stripe.mode !== 'test') {
             throw new Error('Tests must run on a Stripe Account in test mode');

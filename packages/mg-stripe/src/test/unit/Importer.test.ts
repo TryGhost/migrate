@@ -1,4 +1,5 @@
-import assert from 'assert';
+import assert from 'node:assert/strict';
+import {describe, it, before} from 'node:test';
 import Importer from '../../lib/importers/Importer.js';
 import {ReportTags, Reporter, ReportingCategory} from '../../lib/importers/Reporter.js';
 import {ImportWarning} from '../../lib/importers/ImportWarning.js';
@@ -76,7 +77,7 @@ const baseProviderWithExisting = {
 };
 
 describe('Importer', () => {
-    beforeAll(() => {
+    before(() => {
         Logger.init({verboseLevel: 2, debug: true});
     });
 

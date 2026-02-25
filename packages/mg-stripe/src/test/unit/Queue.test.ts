@@ -1,6 +1,7 @@
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import sinon from 'sinon';
 import {Queue} from '../../lib/Queue.js';
-import assert from 'assert';
 
 describe('Queue', () => {
     it('Runs tasks as soon as they are added', async () => {

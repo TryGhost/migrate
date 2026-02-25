@@ -1,4 +1,5 @@
-import {strict as assert} from 'assert';
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {ErrorGroup} from '../../lib/importers/ErrorGroup.js';
 import {ImportWarning} from '../../lib/importers/ImportWarning.js';
 import {ImportError} from '../../lib/importers/ImportError.js';

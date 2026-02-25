@@ -1,3 +1,4 @@
+import {describe, it} from 'node:test';
 import sinon from 'sinon';
 import {ReuseLastCall} from '../../lib/ReuseLastCall.js';
 

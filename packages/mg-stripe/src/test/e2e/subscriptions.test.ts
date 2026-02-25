@@ -1,3 +1,5 @@
+import assert from 'node:assert/strict';
+import {describe, it, before, beforeEach, afterEach} from 'node:test';
 import Stripe from 'stripe';
 import {StripeAPI} from '../../lib/StripeAPI.js';
 import {createCouponImporter} from '../../lib/importers/createCouponImporter.js';
@@ -6,7 +8,6 @@ import {createProductImporter} from '../../lib/importers/createProductImporter.j
 import {createSubscriptionImporter} from '../../lib/importers/createSubscriptionImporter.js';
 import {advanceClock, buildCoupon, buildDiscount, buildInvoice, buildPrice, buildProduct, buildSubscription, cleanup, createDeclinedCustomer, createPaymentMethod, createSource, createValidCustomer, getStripeTestAPIKey} from './../utils/stripe.js';
 import {Options} from '../../lib/Options.js';
-import assert from 'assert/strict';
 import sinon from 'sinon';
 import {Logger} from '../../lib/Logger.js';
 import {isWarning} from '../../lib/helpers.js';
@@ -23,7 +24,7 @@ describe('Recreating subscriptions', () => {
     let declinedCustomer: Stripe.Customer;
     let currentInvoices: Stripe.Invoice[];
 
-    beforeAll(async () => {
+    before(async () => {
         await stripe.validate();
         if (stripe.mode !== 'test') {
             throw new Error('Tests must run on a Stripe Account in test mode');
@@ -1000,11 +1001,11 @@ describe('Recreating subscriptions', () => {
     });
 
     describe('Payment methods', () => {
-        test.skip('Default payment method on customer', async () => {
+        it.skip('Default payment method on customer', async () => {
             // Already tested in other tests
         });
 
-        test('Default source on customer', async () => {
+        it('Default source on customer', async () => {
             const {customer, clock} = await createValidCustomer(stripe.debugClient, {testClock: true, method: 'source'});
             const oldProduct = buildProduct({});
 
@@ -1097,7 +1098,7 @@ describe('Recreating subscriptions', () => {
             assert.equal(newInvoicesAfterConfirm.data[0].amount_paid + newInvoicesAfterConfirm.data[0].amount_remaining, 100);
         });
 
-        test('Default payment method on subscription', async () => {
+        it('Default payment method on subscription', async () => {
             // Customer with default payment method
             const {customer, clock} = await createValidCustomer(stripe.debugClient, {testClock: true, method: 'payment_method'});
 
@@ -1208,7 +1209,7 @@ describe('Recreating subscriptions', () => {
             assert.equal(newInvoicesAfterConfirm.data[0].amount_paid + newInvoicesAfterConfirm.data[0].amount_remaining, 100);
         });
 
-        test('Default source on subscription', async () => {
+        it('Default source on subscription', async () => {
             // Customer with default source
             const {customer, clock} = await createValidCustomer(stripe.debugClient, {testClock: true, method: 'source'});
 
@@ -1300,7 +1301,7 @@ describe('Recreating subscriptions', () => {
             await subscriptionImporter.confirm(oldSubscription);
         });
 
-        test('Default card source on subscription', async () => {
+        it('Default card source on subscription', async () => {
             // Stripe API supports to have a default_source of type Stripe.Card (instead of Stripe.Source). This is tested here.
 
             // Customer with default source

@@ -1,4 +1,5 @@
-import {strict as assert} from 'assert';
+import assert from 'node:assert/strict';
+import {describe, it, beforeEach, afterEach} from 'node:test';
 import {ReportTags, Reporter, ReportingCategory} from '../../lib/importers/Reporter.js';
 import sinon from 'sinon';
 import {Logger} from '../../lib/Logger.js';
