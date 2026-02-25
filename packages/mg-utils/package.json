@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@types/jsdom": "21.1.7",
-    "@types/node": "22.15.21",
+    "@types/node": "22.19.11",
     "@typescript-eslint/eslint-plugin": "8.32.1",
     "@typescript-eslint/parser": "8.32.1",
     "c8": "10.1.3",
