@@ -1,3 +1,5 @@
+import assert from 'node:assert/strict';
+import {describe, it, before, after} from 'node:test';
 import {readZipEntries} from '../lib/read-zip.js';
 import {execSync} from 'node:child_process';
 import {unlink} from 'node:fs';
@@ -9,7 +11,7 @@ const inputZipPath = join(__dirname, '/fixtures/posts.zip');
 const doubleInputZipPath = join(__dirname, '/fixtures/posts-double.zip');
 
 describe('Read Zip', function () {
-    beforeAll(function () {
+    before(function () {
         execSync(`zip -r ${inputZipPath} *`, {
             cwd: inputPath
         });
@@ -19,7 +21,7 @@ describe('Read Zip', function () {
         });
     });
 
-    afterAll(function () {
+    after(function () {
         unlink(inputZipPath, (err) => {
             if (err) {
                 throw err;
@@ -36,26 +38,32 @@ describe('Read Zip', function () {
     it('Can read files in zip without extracting it', async function () {
         let zipEntries = await readZipEntries(inputZipPath);
 
-        expect(zipEntries).toBeArrayOfSize(5);
-        expect(zipEntries).toIncludeAllMembers([
+        assert.ok(Array.isArray(zipEntries));
+        assert.equal(zipEntries.length, 5);
+        for (const member of [
             'posts/123402.podcast.html',
             'posts/123404.draft-text.html',
             'posts/123403.thread.html',
             'posts/123401.plain-text.html',
             'posts.csv'
-        ]);
+        ]) {
+            assert.ok(zipEntries.includes(member));
+        }
     });
 
     it('Can read nested zips', async function () {
         let zipEntries = await readZipEntries(doubleInputZipPath);
 
-        expect(zipEntries).toBeArrayOfSize(5);
-        expect(zipEntries).toIncludeAllMembers([
+        assert.ok(Array.isArray(zipEntries));
+        assert.equal(zipEntries.length, 5);
+        for (const member of [
             'posts/123402.podcast.html',
             'posts/123404.draft-text.html',
             'posts/123403.thread.html',
             'posts/123401.plain-text.html',
             'posts.csv'
-        ]);
+        ]) {
+            assert.ok(zipEntries.includes(member));
+        }
     });
 });

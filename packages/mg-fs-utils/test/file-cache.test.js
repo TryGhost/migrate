@@ -1,5 +1,6 @@
+import assert from 'node:assert/strict';
+import {describe, it, beforeEach, afterEach, mock} from 'node:test';
 import {tmpdir} from 'node:os';
-import {jest} from '@jest/globals';
 import imageTransform from '@tryghost/image-transform';
 import FileCache from '../lib/FileCache.js';
 
@@ -11,7 +12,7 @@ const mockOriginalPath = `/tmp/blah/test_o.jpg`;
 describe('FileCache', function () {
     it('Can set cache name from path in constructor', function () {
         let fileCache = new FileCache('/this/is/a/long/file/path/for/1234-current_migration_file.zip');
-        expect(fileCache.cacheName).toEqual('1234-current-migration-file');
+        assert.equal(fileCache.cacheName, '1234-current-migration-file');
     });
 });
 
@@ -19,14 +20,13 @@ describe('writeContentFile', function () {
     let transformStub;
 
     beforeEach(function () {
-        // Env is set before each test if the file is present, so reset that here
         delete process.env.CACHE_PATH;
 
-        transformStub = jest.spyOn(imageTransform, 'resizeFromBuffer').mockReturnValue('optimizedimagebuffer');
+        transformStub = mock.method(imageTransform, 'resizeFromBuffer', () => 'optimizedimagebuffer');
     });
 
     afterEach(function () {
-        transformStub.mockReset();
+        mock.restoreAll();
     });
 
     it('Can use a custom specified cache directory', async function () {
@@ -34,8 +34,8 @@ describe('writeContentFile', function () {
             tmpPath: '/Users/MyName/Desktop/Files'
         });
 
-        expect(fileCache.tmpDirPath).toEqual('/Users/MyName/Desktop/Files');
-        expect(fileCache.cacheBaseDir).toEqual('/Users/MyName/Desktop/Files/mg');
+        assert.equal(fileCache.tmpDirPath, '/Users/MyName/Desktop/Files');
+        assert.equal(fileCache.cacheBaseDir, '/Users/MyName/Desktop/Files/mg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -45,8 +45,8 @@ describe('writeContentFile', function () {
 
         let fileCache = new FileCache('test');
 
-        expect(fileCache.tmpDirPath).toEqual('/random/location');
-        expect(fileCache.cacheBaseDir).toEqual('/random/location/mg');
+        assert.equal(fileCache.tmpDirPath, '/random/location');
+        assert.equal(fileCache.cacheBaseDir, '/random/location/mg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -58,8 +58,8 @@ describe('writeContentFile', function () {
             tmpPath: '/Users/MyName/Desktop/Files'
         });
 
-        expect(fileCache.tmpDirPath).toEqual('/Users/MyName/Desktop/Files');
-        expect(fileCache.cacheBaseDir).toEqual('/Users/MyName/Desktop/Files/mg');
+        assert.equal(fileCache.tmpDirPath, '/Users/MyName/Desktop/Files');
+        assert.equal(fileCache.cacheBaseDir, '/Users/MyName/Desktop/Files/mg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -69,15 +69,15 @@ describe('writeContentFile', function () {
 
         const osTempDir = tmpdir();
 
-        expect(fileCache.tmpDirPath).toEqual(osTempDir);
-        expect(fileCache.cacheBaseDir).toEqual(`${osTempDir}/mg`);
+        assert.equal(fileCache.tmpDirPath, osTempDir);
+        assert.equal(fileCache.cacheBaseDir, `${osTempDir}/mg`);
 
         await fileCache.emptyCurrentCacheDir();
     });
 
     it('Writes one file if optimize is false', async function () {
         let fileCache = new FileCache('test');
-        let spy = jest.spyOn(fileCache, 'saveFile').mockImplementation(() => true);
+        let spy = mock.method(fileCache, 'saveFile', () => true);
 
         let resultPath = await fileCache.writeContentFile('imagebuffer', {
             filename: mockFile,
@@ -86,18 +86,18 @@ describe('writeContentFile', function () {
             optimize: false
         });
 
-        expect(fileCache.saveFile).toHaveBeenCalledTimes(1);
-        expect(transformStub).toHaveBeenCalledTimes(0);
+        assert.equal(spy.mock.callCount(), 1);
+        assert.equal(transformStub.mock.callCount(), 0);
 
-        expect(resultPath).toEqual(mockOutputPath);
+        assert.equal(resultPath, mockOutputPath);
 
-        spy.mockRestore();
+        spy.mock.restore();
         await fileCache.emptyCurrentCacheDir();
     });
 
     it('Writes two files if optimize is true', async function () {
         let fileCache = new FileCache('test');
-        let spy = jest.spyOn(fileCache, 'saveFile').mockImplementation(() => true);
+        let spy = mock.method(fileCache, 'saveFile', () => true);
 
         let resultPath = await fileCache.writeContentFile('imagebuffer', {
             filename: mockFile,
@@ -106,21 +106,21 @@ describe('writeContentFile', function () {
             optimize: true
         });
 
-        expect(fileCache.saveFile).toHaveBeenCalledTimes(2);
-        expect(transformStub).toHaveBeenCalledTimes(1);
+        assert.equal(spy.mock.callCount(), 2);
+        assert.equal(transformStub.mock.callCount(), 1);
 
-        expect(fileCache.saveFile.mock.calls[1]).toEqual([mockStoragePath, 'optimizedimagebuffer']);
-        expect(fileCache.saveFile.mock.calls[0]).toEqual([mockOriginalPath, 'imagebuffer']);
+        assert.deepStrictEqual(spy.mock.calls[1].arguments, [mockStoragePath, 'optimizedimagebuffer']);
+        assert.deepStrictEqual(spy.mock.calls[0].arguments, [mockOriginalPath, 'imagebuffer']);
 
-        expect(resultPath).toEqual(mockOutputPath);
+        assert.equal(resultPath, mockOutputPath);
 
-        spy.mockRestore();
+        spy.mock.restore();
         await fileCache.emptyCurrentCacheDir();
     });
 
     it('Writes one file if the extension is not supported for optimization', async function () {
         let fileCache = new FileCache('test');
-        let spy = jest.spyOn(fileCache, 'saveFile').mockImplementation(() => true);
+        let spy = mock.method(fileCache, 'saveFile', () => true);
 
         let resultPath = await fileCache.writeContentFile('imagebuffer', {
             filename: 'blah.bmp',
@@ -129,12 +129,12 @@ describe('writeContentFile', function () {
             optimize: true
         });
 
-        expect(fileCache.saveFile).toHaveBeenCalledTimes(1);
-        expect(transformStub).toHaveBeenCalledTimes(0);
+        assert.equal(spy.mock.callCount(), 1);
+        assert.equal(transformStub.mock.callCount(), 0);
 
-        expect(resultPath).toEqual('/content/images/blah.bmp');
+        assert.equal(resultPath, '/content/images/blah.bmp');
 
-        spy.mockRestore();
+        spy.mock.restore();
         await fileCache.emptyCurrentCacheDir();
     });
 
@@ -142,13 +142,13 @@ describe('writeContentFile', function () {
         let fileCache = new FileCache('test');
 
         const check1 = fileCache.convertMbToBytes(1.5);
-        expect(check1).toEqual(1572864);
+        assert.equal(check1, 1572864);
 
         const check2 = fileCache.convertMbToBytes('1.5');
-        expect(check2).toEqual(1572864);
+        assert.equal(check2, 1572864);
 
         const check3 = fileCache.convertMbToBytes(20);
-        expect(check3).toEqual(20971520);
+        assert.equal(check3, 20971520);
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -159,9 +159,9 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
 
-        expect(fileName.filename).toEqual('/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
-        expect(fileName.storagePath).toInclude('/content/images/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
-        expect(fileName.outputPath).toEqual('/content/images/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+        assert.equal(fileName.filename, '/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+        assert.ok(fileName.storagePath.includes('/content/images/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg'));
+        assert.equal(fileName.outputPath, '/content/images/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -170,9 +170,9 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
 
-        expect(fileName.filename).toEqual('/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
-        expect(fileName.storagePath).toInclude('/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
-        expect(fileName.outputPath).toEqual('/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+        assert.equal(fileName.filename, '/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+        assert.ok(fileName.storagePath.includes('/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg'));
+        assert.equal(fileName.outputPath, '/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -182,7 +182,7 @@ describe('resolveFileName character handling', function () {
 
         let fileName = await fileCache.resolveFileName('/image/fetch/w_600%2Ch_400,c_fill,f_auto,q_auto:good,fl_progressive:steep,g_center/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fad8015f6-a9.0c-46f8-89f2-b6d7db866c6e_3866x2298.jpeg');
 
-        expect(fileName.filename).toEqual('/image/fetch/w_600-h_400-c_fill-f_auto-q_auto:good-fl_progressive:steep-g_center/https_3a_2f_2fsubstack-post-media-s3-amazonaws-com_2fpublic_2fimages_2fad8015f6-a9-0c-46f8-89f2-b6d7db866c6e_3866x2298.jpg');
+        assert.equal(fileName.filename, '/image/fetch/w_600-h_400-c_fill-f_auto-q_auto:good-fl_progressive:steep-g_center/https_3a_2f_2fsubstack-post-media-s3-amazonaws-com_2fpublic_2fimages_2fad8015f6-a9-0c-46f8-89f2-b6d7db866c6e_3866x2298.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -192,7 +192,7 @@ describe('resolveFileName character handling', function () {
 
         let fileName = await fileCache.resolveFileName('/file.jpg/blah.jpeg');
 
-        expect(fileName.filename).toEqual('/file-jpg/blah.jpg');
+        assert.equal(fileName.filename, '/file-jpg/blah.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -201,9 +201,9 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/blah.jpeg');
 
-        expect(fileName.filename).toEqual('/my-images/blah.jpg');
-        expect(fileName.storagePath).toInclude('/content/images/my-images/blah.jpg');
-        expect(fileName.outputPath).toEqual('/content/images/my-images/blah.jpg');
+        assert.equal(fileName.filename, '/my-images/blah.jpg');
+        assert.ok(fileName.storagePath.includes('/content/images/my-images/blah.jpg'));
+        assert.equal(fileName.outputPath, '/content/images/my-images/blah.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -212,14 +212,14 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
 
         let fileNameOneDash = await fileCache.resolveFileName('/my-images/-.jpeg');
-        expect(fileNameOneDash.filename).toEqual('/my-images/-.jpg');
-        expect(fileNameOneDash.storagePath).toInclude('/content/images/my-images/-.jpg');
-        expect(fileNameOneDash.outputPath).toEqual('/content/images/my-images/-.jpg');
+        assert.equal(fileNameOneDash.filename, '/my-images/-.jpg');
+        assert.ok(fileNameOneDash.storagePath.includes('/content/images/my-images/-.jpg'));
+        assert.equal(fileNameOneDash.outputPath, '/content/images/my-images/-.jpg');
 
         let fileNameThreeDashes = await fileCache.resolveFileName('/my-images/---.jpeg');
-        expect(fileNameThreeDashes.filename).toEqual('/my-images/---.jpg');
-        expect(fileNameThreeDashes.storagePath).toInclude('/content/images/my-images/---.jpg');
-        expect(fileNameThreeDashes.outputPath).toEqual('/content/images/my-images/---.jpg');
+        assert.equal(fileNameThreeDashes.filename, '/my-images/---.jpg');
+        assert.ok(fileNameThreeDashes.storagePath.includes('/content/images/my-images/---.jpg'));
+        assert.equal(fileNameThreeDashes.outputPath, '/content/images/my-images/---.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -228,9 +228,9 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
 
         let fileNameOneDash = await fileCache.resolveFileName('/photo.jpg/my-images/hello.png');
-        expect(fileNameOneDash.filename).toEqual('/photo-jpg/my-images/hello.png');
-        expect(fileNameOneDash.storagePath).toInclude('/content/images/photo-jpg/my-images/hello.png');
-        expect(fileNameOneDash.outputPath).toEqual('/content/images/photo-jpg/my-images/hello.png');
+        assert.equal(fileNameOneDash.filename, '/photo-jpg/my-images/hello.png');
+        assert.ok(fileNameOneDash.storagePath.includes('/content/images/photo-jpg/my-images/hello.png'));
+        assert.equal(fileNameOneDash.outputPath, '/content/images/photo-jpg/my-images/hello.png');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -239,14 +239,14 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
 
         let fileNameEncodedSpaces = await fileCache.resolveFileName('/assets/Lorem%20Ipsum/Dolor%20Sit%20Amet/document.pdf');
-        expect(fileNameEncodedSpaces.filename).toEqual('/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
-        expect(fileNameEncodedSpaces.storagePath).toInclude('/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
-        expect(fileNameEncodedSpaces.outputPath).toEqual('/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
+        assert.equal(fileNameEncodedSpaces.filename, '/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
+        assert.ok(fileNameEncodedSpaces.storagePath.includes('/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf'));
+        assert.equal(fileNameEncodedSpaces.outputPath, '/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
 
         let fileNameRawSpaces = await fileCache.resolveFileName('/assets/Lorem Ipsum/Dolor Sit Amet/document.pdf');
-        expect(fileNameRawSpaces.filename).toEqual('/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
-        expect(fileNameRawSpaces.storagePath).toInclude('/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
-        expect(fileNameRawSpaces.outputPath).toEqual('/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
+        assert.equal(fileNameRawSpaces.filename, '/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
+        assert.ok(fileNameRawSpaces.storagePath.includes('/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf'));
+        assert.equal(fileNameRawSpaces.outputPath, '/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -255,9 +255,9 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/счастливые-маленькие-деревья.jpeg');
 
-        expect(fileName.filename).toEqual('/my-images/schastlivye-malenkie-derevya.jpg');
-        expect(fileName.storagePath).toInclude('/content/images/my-images/schastlivye-malenkie-derevya.jpg');
-        expect(fileName.outputPath).toEqual('/content/images/my-images/schastlivye-malenkie-derevya.jpg');
+        assert.equal(fileName.filename, '/my-images/schastlivye-malenkie-derevya.jpg');
+        assert.ok(fileName.storagePath.includes('/content/images/my-images/schastlivye-malenkie-derevya.jpg'));
+        assert.equal(fileName.outputPath, '/content/images/my-images/schastlivye-malenkie-derevya.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -266,9 +266,9 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/щастливи-малки-дървета.jpeg');
 
-        expect(fileName.filename).toEqual('/my-images/shchastlivi-malki-drveta.jpg');
-        expect(fileName.storagePath).toInclude('/content/images/my-images/shchastlivi-malki-drveta.jpg');
-        expect(fileName.outputPath).toEqual('/content/images/my-images/shchastlivi-malki-drveta.jpg');
+        assert.equal(fileName.filename, '/my-images/shchastlivi-malki-drveta.jpg');
+        assert.ok(fileName.storagePath.includes('/content/images/my-images/shchastlivi-malki-drveta.jpg'));
+        assert.equal(fileName.outputPath, '/content/images/my-images/shchastlivi-malki-drveta.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -277,9 +277,9 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/с-ећна=мала-дрвећа.jpeg');
 
-        expect(fileName.filename).toEqual('/my-images/s-etshna_mala-drvetsha.jpg');
-        expect(fileName.storagePath).toInclude('/content/images/my-images/s-etshna_mala-drvetsha.jpg');
-        expect(fileName.outputPath).toEqual('/content/images/my-images/s-etshna_mala-drvetsha.jpg');
+        assert.equal(fileName.filename, '/my-images/s-etshna_mala-drvetsha.jpg');
+        assert.ok(fileName.storagePath.includes('/content/images/my-images/s-etshna_mala-drvetsha.jpg'));
+        assert.equal(fileName.outputPath, '/content/images/my-images/s-etshna_mala-drvetsha.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -288,9 +288,9 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/快乐的小树.jpeg');
 
-        expect(fileName.filename).toEqual('/my-images/kuai_le_de_xiao_shu.jpg');
-        expect(fileName.storagePath).toInclude('/content/images/my-images/kuai_le_de_xiao_shu.jpg');
-        expect(fileName.outputPath).toEqual('/content/images/my-images/kuai_le_de_xiao_shu.jpg');
+        assert.equal(fileName.filename, '/my-images/kuai_le_de_xiao_shu.jpg');
+        assert.ok(fileName.storagePath.includes('/content/images/my-images/kuai_le_de_xiao_shu.jpg'));
+        assert.equal(fileName.outputPath, '/content/images/my-images/kuai_le_de_xiao_shu.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -299,9 +299,9 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/幸せな小さな木.jpeg');
 
-        expect(fileName.filename).toEqual('/my-images/xing_senaxiao_sanamu.jpg');
-        expect(fileName.storagePath).toInclude('/content/images/my-images/xing_senaxiao_sanamu.jpg');
-        expect(fileName.outputPath).toEqual('/content/images/my-images/xing_senaxiao_sanamu.jpg');
+        assert.equal(fileName.filename, '/my-images/xing_senaxiao_sanamu.jpg');
+        assert.ok(fileName.storagePath.includes('/content/images/my-images/xing_senaxiao_sanamu.jpg'));
+        assert.equal(fileName.outputPath, '/content/images/my-images/xing_senaxiao_sanamu.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -310,9 +310,9 @@ describe('resolveFileName character handling', function () {
         let fileCache = new FileCache('test');
         let fileName = await fileCache.resolveFileName('/my-images/أشجار صغيرة سعيدة.jpeg');
 
-        expect(fileName.filename).toEqual('/my-images/shjr-sgyr_-saayd.jpg');
-        expect(fileName.storagePath).toInclude('/content/images/my-images/shjr-sgyr_-saayd.jpg');
-        expect(fileName.outputPath).toEqual('/content/images/my-images/shjr-sgyr_-saayd.jpg');
+        assert.equal(fileName.filename, '/my-images/shjr-sgyr_-saayd.jpg');
+        assert.ok(fileName.storagePath.includes('/content/images/my-images/shjr-sgyr_-saayd.jpg'));
+        assert.equal(fileName.outputPath, '/content/images/my-images/shjr-sgyr_-saayd.jpg');
 
         await fileCache.emptyCurrentCacheDir();
     });

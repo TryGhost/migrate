@@ -1,11 +1,12 @@
-import {jest} from '@jest/globals';
+import assert from 'node:assert/strict';
+import {describe, it, before, after, mock} from 'node:test';
 import zip from '../lib/zip.js';
 
 describe('Zip', function () {
     let fakeEntries = [];
 
-    beforeAll(function () {
-        jest.spyOn(zip._private, 'openZipForRead').mockImplementation(() => {
+    before(function () {
+        mock.method(zip._private, 'openZipForRead', () => {
             return {
                 getEntries: function getEntries() {
                     return fakeEntries;
@@ -14,12 +15,12 @@ describe('Zip', function () {
         });
     });
 
-    afterAll(function () {
-        jest.restoreAllMocks();
+    after(function () {
+        mock.restoreAll();
     });
 
-    test('Reads a simple file list', function () {
-        let entryCallbackSpy = jest.fn();
+    it('Reads a simple file list', function () {
+        let entryCallbackSpy = mock.fn();
 
         fakeEntries = [
             {isDirectory: false, entryName: 'file1.html'},
@@ -29,14 +30,14 @@ describe('Zip', function () {
 
         zip.read('testFilePath', entryCallbackSpy);
 
-        expect(entryCallbackSpy).toHaveBeenCalledTimes(3);
-        expect(entryCallbackSpy.mock.calls[0][0]).toEqual('file1.html');
-        expect(entryCallbackSpy.mock.calls[1][0]).toEqual('file2.html');
-        expect(entryCallbackSpy.mock.calls[2][0]).toEqual('file3.html');
+        assert.equal(entryCallbackSpy.mock.callCount(), 3);
+        assert.equal(entryCallbackSpy.mock.calls[0].arguments[0], 'file1.html');
+        assert.equal(entryCallbackSpy.mock.calls[1].arguments[0], 'file2.html');
+        assert.equal(entryCallbackSpy.mock.calls[2].arguments[0], 'file3.html');
     });
 
-    test('Flattens a single top level directory', function () {
-        let entryCallbackSpy = jest.fn();
+    it('Flattens a single top level directory', function () {
+        let entryCallbackSpy = mock.fn();
 
         fakeEntries = [
             {isDirectory: true, entryName: 'test-folder/'},
@@ -46,14 +47,14 @@ describe('Zip', function () {
 
         zip.read('testFilePath', entryCallbackSpy);
 
-        expect(entryCallbackSpy).toHaveBeenCalledTimes(2);
+        assert.equal(entryCallbackSpy.mock.callCount(), 2);
 
-        expect(entryCallbackSpy.mock.calls[0][0]).toEqual('file1.html');
-        expect(entryCallbackSpy.mock.calls[1][0]).toEqual('random.js');
+        assert.equal(entryCallbackSpy.mock.calls[0].arguments[0], 'file1.html');
+        assert.equal(entryCallbackSpy.mock.calls[1].arguments[0], 'random.js');
     });
 
-    test('Skips a single top level directory if there are other files', function () {
-        let entryCallbackSpy = jest.fn();
+    it('Skips a single top level directory if there are other files', function () {
+        let entryCallbackSpy = mock.fn();
 
         fakeEntries = [
             {isDirectory: true, entryName: 'test-folder/'},
@@ -63,15 +64,15 @@ describe('Zip', function () {
 
         zip.read('testFilePath', entryCallbackSpy);
 
-        expect(entryCallbackSpy).toHaveBeenCalledTimes(3);
+        assert.equal(entryCallbackSpy.mock.callCount(), 3);
 
-        expect(entryCallbackSpy.mock.calls[0][0]).toEqual('test-folder/');
-        expect(entryCallbackSpy.mock.calls[1][0]).toEqual('test-folder/file1.html');
-        expect(entryCallbackSpy.mock.calls[2][0]).toEqual('random.js');
+        assert.equal(entryCallbackSpy.mock.calls[0].arguments[0], 'test-folder/');
+        assert.equal(entryCallbackSpy.mock.calls[1].arguments[0], 'test-folder/file1.html');
+        assert.equal(entryCallbackSpy.mock.calls[2].arguments[0], 'random.js');
     });
 
-    test('Keeps multiple directories', function () {
-        let entryCallbackSpy = jest.fn();
+    it('Keeps multiple directories', function () {
+        let entryCallbackSpy = mock.fn();
 
         fakeEntries = [
             {isDirectory: true, entryName: 'posts/'},
@@ -83,12 +84,12 @@ describe('Zip', function () {
 
         zip.read('testFilePath', entryCallbackSpy);
 
-        expect(entryCallbackSpy).toHaveBeenCalledTimes(5);
+        assert.equal(entryCallbackSpy.mock.callCount(), 5);
 
-        expect(entryCallbackSpy.mock.calls[0][0]).toEqual('posts/');
-        expect(entryCallbackSpy.mock.calls[1][0]).toEqual('posts/file1.html');
-        expect(entryCallbackSpy.mock.calls[2][0]).toEqual('posts/file2.html');
-        expect(entryCallbackSpy.mock.calls[3][0]).toEqual('profile/');
-        expect(entryCallbackSpy.mock.calls[4][0]).toEqual('profile/profile.html');
+        assert.equal(entryCallbackSpy.mock.calls[0].arguments[0], 'posts/');
+        assert.equal(entryCallbackSpy.mock.calls[1].arguments[0], 'posts/file1.html');
+        assert.equal(entryCallbackSpy.mock.calls[2].arguments[0], 'posts/file2.html');
+        assert.equal(entryCallbackSpy.mock.calls[3].arguments[0], 'profile/');
+        assert.equal(entryCallbackSpy.mock.calls[4].arguments[0], 'profile/profile.html');
     });
 });
