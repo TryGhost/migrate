@@ -1,45 +1,53 @@
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import Shortcodes from '../lib/Shortcodes.js';
 
 describe('Interface', function () {
-    test('Can init with blank state', function () {
+    it('Can init with blank state', function () {
         const shortcodes = new Shortcodes();
 
-        expect(shortcodes).toContainAllKeys(['html', 'shortcodes']);
-        expect(shortcodes.html).toEqual('');
-        expect(shortcodes.shortcodes).toBeArrayOfSize(0);
+        for (const key of ['html', 'shortcodes']) {
+            assert.ok(key in shortcodes);
+        }
+        assert.equal(shortcodes.html, '');
+        assert.equal(shortcodes.shortcodes.length, 0);
     });
 
-    test('Can add shortcodes to parse', function () {
+    it('Can add shortcodes to parse', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('hr_line', () => {
             return '<hr>';
         });
 
-        expect(shortcodes.shortcodes).toBeArrayOfSize(1);
-        expect(shortcodes.shortcodes[0]).toContainAllKeys(['name', 'callback']);
-        expect(shortcodes.shortcodes[0].name).toEqual('hr_line');
-        expect(shortcodes.shortcodes[0].callback).toBeFunction();
+        assert.equal(shortcodes.shortcodes.length, 1);
+        for (const key of ['name', 'callback']) {
+            assert.ok(key in shortcodes.shortcodes[0]);
+        }
+        assert.equal(shortcodes.shortcodes[0].name, 'hr_line');
+        assert.equal(typeof shortcodes.shortcodes[0].callback, 'function');
     });
 
-    test('Can add shortcodes to unwrap', function () {
+    it('Can add shortcodes to unwrap', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.unwrap('block');
 
-        expect(shortcodes.shortcodes).toBeArrayOfSize(1);
-        expect(shortcodes.shortcodes[0]).toContainAllKeys(['name', 'callback']);
-        expect(shortcodes.shortcodes[0].name).toEqual('block');
-        expect(shortcodes.shortcodes[0].callback).toBeFunction();
+        assert.equal(shortcodes.shortcodes.length, 1);
+        for (const key of ['name', 'callback']) {
+            assert.ok(key in shortcodes.shortcodes[0]);
+        }
+        assert.equal(shortcodes.shortcodes[0].name, 'block');
+        assert.equal(typeof shortcodes.shortcodes[0].callback, 'function');
     });
 });
 
 describe('Shortcode attributes', function () {
-    test('Handles double-quoted string', function () {
+    it('Handles double-quoted string', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.url).toEqual('https://example.com');
+            assert.equal(attrs.url, 'https://example.com');
         });
 
         const html = `[test url="https://example.com"]Hello[/test]`;
@@ -47,11 +55,11 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles single-quoted string', function () {
+    it('Handles single-quoted string', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.url).toEqual('https://example.com');
+            assert.equal(attrs.url, 'https://example.com');
         });
 
         const html = `[test url='https://example.com']Hello[/test]`;
@@ -59,11 +67,11 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles unquoted string', function () {
+    it('Handles unquoted string', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.url).toEqual('https://example.com');
+            assert.equal(attrs.url, 'https://example.com');
         });
 
         const html = `[test url=https://example.com]Hello[/test]`;
@@ -71,11 +79,11 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles quoted int', function () {
+    it('Handles quoted int', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.number).toEqual(12);
+            assert.equal(attrs.number, 12);
         });
 
         const html = `[test number="12"]Hello[/test]`;
@@ -83,11 +91,11 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles unquoted int', function () {
+    it('Handles unquoted int', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.number).toEqual(12);
+            assert.equal(attrs.number, 12);
         });
 
         const html = `[test number=12]Hello[/test]`;
@@ -95,11 +103,11 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles quoted negative int', function () {
+    it('Handles quoted negative int', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.number).toEqual(-12);
+            assert.equal(attrs.number, -12);
         });
 
         const html = `[test number="-12"]Hello[/test]`;
@@ -107,11 +115,11 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles unquoted negative int', function () {
+    it('Handles unquoted negative int', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.number).toEqual(-12);
+            assert.equal(attrs.number, -12);
         });
 
         const html = `[test number=-12]Hello[/test]`;
@@ -119,11 +127,11 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles quoted float', function () {
+    it('Handles quoted float', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.number).toEqual(1.2);
+            assert.equal(attrs.number, 1.2);
         });
 
         const html = `[test number="1.2"]Hello[/test]`;
@@ -131,11 +139,11 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles unquoted float', function () {
+    it('Handles unquoted float', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.number).toEqual(1.2);
+            assert.equal(attrs.number, 1.2);
         });
 
         const html = `[test number=1.2]Hello[/test]`;
@@ -143,11 +151,11 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles quoted negative float', function () {
+    it('Handles quoted negative float', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.number).toEqual(-1.2);
+            assert.equal(attrs.number, -1.2);
         });
 
         const html = `[test number="-1.2"]Hello[/test]`;
@@ -155,11 +163,11 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles unquoted negative float', function () {
+    it('Handles unquoted negative float', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.number).toEqual(-1.2);
+            assert.equal(attrs.number, -1.2);
         });
 
         const html = `[test number=-1.2]Hello[/test]`;
@@ -167,11 +175,11 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles quoted numbers with more than 1 decimal', function () {
+    it('Handles quoted numbers with more than 1 decimal', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.number).toEqual('1.2.3');
+            assert.equal(attrs.number, '1.2.3');
         });
 
         const html = `[test number="1.2.3"]Hello[/test]`;
@@ -179,11 +187,11 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles unquoted numbers with more than 1 decimal', function () {
+    it('Handles unquoted numbers with more than 1 decimal', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.number).toEqual('1.2.3');
+            assert.equal(attrs.number, '1.2.3');
         });
 
         const html = `[test number=1.2.3]Hello[/test]`;
@@ -191,11 +199,11 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles quoted negative numbers with more than 1 decimal', function () {
+    it('Handles quoted negative numbers with more than 1 decimal', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.number).toEqual('-1.2.3');
+            assert.equal(attrs.number, '-1.2.3');
         });
 
         const html = `[test number="-1.2.3"]Hello[/test]`;
@@ -203,11 +211,11 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles unquoted negative numbers with more than 1 decimal', function () {
+    it('Handles unquoted negative numbers with more than 1 decimal', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.number).toEqual('-1.2.3');
+            assert.equal(attrs.number, '-1.2.3');
         });
 
         const html = `[test number=-1.2.3]Hello[/test]`;
@@ -215,11 +223,11 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles valueless keys', function () {
+    it('Handles valueless keys', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.noval).toEqual(true);
+            assert.equal(attrs.noval, true);
         });
 
         const html = `[test noval]Hello[/test]`;
@@ -227,13 +235,13 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handles multiple attributes', function () {
+    it('Handles multiple attributes', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('test', ({attrs}) => {
-            expect(attrs.url).toEqual('https://example.com');
-            expect(attrs.number).toEqual(12);
-            expect(attrs.noval).toEqual(true);
+            assert.equal(attrs.url, 'https://example.com');
+            assert.equal(attrs.number, 12);
+            assert.equal(attrs.noval, true);
         });
 
         const html = `[test url="https://example.com" number="12" noval]Hello[/test]`;
@@ -241,15 +249,15 @@ describe('Shortcode attributes', function () {
         shortcodes.parse(html);
     });
 
-    test('Handle encoded attribute key & value quotes', function () {
+    it('Handle encoded attribute key & value quotes', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('et_pb_button', ({attrs}) => {
-            expect(attrs.button_url).toEqual('https://example.com/test-link');
-            expect(attrs.button_text).toEqual('Case');
-            expect(attrs.Study).toEqual(true);
-            expect(attrs.Work).toEqual(false);
-            expect(attrs.rest).toEqual(true);
+            assert.equal(attrs.button_url, 'https://example.com/test-link');
+            assert.equal(attrs.button_text, 'Case');
+            assert.equal(attrs.Study, true);
+            assert.equal(attrs.Work, false);
+            assert.equal(attrs.rest, true);
 
             return `<a href="${attrs.button_url}">${attrs.button_text}</a>`;
         });
@@ -258,15 +266,15 @@ describe('Shortcode attributes', function () {
 
         let parsed = shortcodes.parse(html);
 
-        expect(parsed).toEqual('<a href="https://example.com/test-link">Case</a>');
+        assert.equal(parsed, '<a href="https://example.com/test-link">Case</a>');
     });
 
-    test('Handle key & value quote entities', function () {
+    it('Handle key & value quote entities', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('et_pb_button', ({attrs}) => {
-            expect(attrs.button_url).toEqual('https://example.com/test-link');
-            expect(attrs.button_text).toEqual('Case');
+            assert.equal(attrs.button_url, 'https://example.com/test-link');
+            assert.equal(attrs.button_text, 'Case');
 
             return `<a href="${attrs.button_url}">${attrs.button_text}</a>`;
         });
@@ -275,15 +283,15 @@ describe('Shortcode attributes', function () {
 
         let parsed = shortcodes.parse(html);
 
-        expect(parsed).toEqual('<a href="https://example.com/test-link">Case</a>');
+        assert.equal(parsed, '<a href="https://example.com/test-link">Case</a>');
     });
 
-    test('Handle key & value quote entities alt', function () {
+    it('Handle key & value quote entities alt', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('et_pb_button', ({attrs}) => {
-            expect(attrs.button_url).toEqual('https://example.com/test-link');
-            expect(attrs.button_text).toEqual('Case');
+            assert.equal(attrs.button_url, 'https://example.com/test-link');
+            assert.equal(attrs.button_text, 'Case');
 
             return `<a href="${attrs.button_url}">${attrs.button_text}</a>`;
         });
@@ -292,16 +300,16 @@ describe('Shortcode attributes', function () {
 
         let parsed = shortcodes.parse(html);
 
-        expect(parsed).toEqual('<a href="https://example.com/test-link">Case</a>');
+        assert.equal(parsed, '<a href="https://example.com/test-link">Case</a>');
     });
 
-    test('Handle empty key values', function () {
+    it('Handle empty key values', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('et_pb_button', ({attrs}) => {
-            expect(attrs.button_url).toEqual('');
-            expect(attrs.button_text).toEqual('Case');
-            expect(attrs.button_alt).toEqual('');
+            assert.equal(attrs.button_url, '');
+            assert.equal(attrs.button_text, 'Case');
+            assert.equal(attrs.button_alt, '');
 
             return `<a href="${attrs.button_url}" alt="${attrs.button_alt}">${attrs.button_text}</a>`;
         });
@@ -310,18 +318,18 @@ describe('Shortcode attributes', function () {
 
         let parsed = shortcodes.parse(html);
 
-        expect(parsed).toEqual('<a href="" alt="">Case</a>');
+        assert.equal(parsed, '<a href="" alt="">Case</a>');
     });
 });
 
 describe('Shortcode processing', function () {
-    test('Returns given HTML', function () {
+    it('Returns given HTML', function () {
         const shortcodes = new Shortcodes();
         const html = '<p>Hello world</p>';
-        expect(shortcodes.parse(html)).toEqual('<p>Hello world</p>');
+        assert.equal(shortcodes.parse(html), '<p>Hello world</p>');
     });
 
-    test('Converts a no-slash self-closing shortcode', function () {
+    it('Converts a no-slash self-closing shortcode', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('hr_line', () => {
@@ -329,10 +337,10 @@ describe('Shortcode processing', function () {
         });
 
         const html = `<p>Hello world</p>[hr_line]`;
-        expect(shortcodes.parse(html)).toEqual('<p>Hello world</p><hr>');
+        assert.equal(shortcodes.parse(html), '<p>Hello world</p><hr>');
     });
 
-    test('Converts a no-slash self-closing shortcode with attributes', function () {
+    it('Converts a no-slash self-closing shortcode with attributes', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('hr_line', ({attrs}) => {
@@ -340,10 +348,10 @@ describe('Shortcode processing', function () {
         });
 
         const html = `<p>Hello world</p>[hr_line color="red" size=2]`;
-        expect(shortcodes.parse(html)).toEqual('<p>Hello world</p><hr style="border-color: red; border-width: 2px;">');
+        assert.equal(shortcodes.parse(html), '<p>Hello world</p><hr style="border-color: red; border-width: 2px;">');
     });
 
-    test('Converts slashed self-closing shortcode', function () {
+    it('Converts slashed self-closing shortcode', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('hr_line', () => {
@@ -351,10 +359,10 @@ describe('Shortcode processing', function () {
         });
 
         const html = `<p>Hello world</p>[hr_line /]`;
-        expect(shortcodes.parse(html)).toEqual('<p>Hello world</p><hr>');
+        assert.equal(shortcodes.parse(html), '<p>Hello world</p><hr>');
     });
 
-    test('Converts slashed self-closing shortcode with attributes', function () {
+    it('Converts slashed self-closing shortcode with attributes', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('hr_line', ({attrs}) => {
@@ -362,10 +370,10 @@ describe('Shortcode processing', function () {
         });
 
         const html = `<p>Hello world</p>[hr_line color="red" size=2 /]`;
-        expect(shortcodes.parse(html)).toEqual('<p>Hello world</p><hr style="border-color: red; border-width: 2px;">');
+        assert.equal(shortcodes.parse(html), '<p>Hello world</p><hr style="border-color: red; border-width: 2px;">');
     });
 
-    test('Can change content value', function () {
+    it('Can change content value', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('uppercase', ({content}) => {
@@ -373,10 +381,10 @@ describe('Shortcode processing', function () {
         });
 
         const html = `<p>Hello [uppercase]world[/uppercase]</p>`;
-        expect(shortcodes.parse(html)).toEqual('<p>Hello WORLD</p>');
+        assert.equal(shortcodes.parse(html), '<p>Hello WORLD</p>');
     });
 
-    test('Can handle multiples of the same shortcode', function () {
+    it('Can handle multiples of the same shortcode', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('uppercase', ({content}) => {
@@ -384,10 +392,10 @@ describe('Shortcode processing', function () {
         });
 
         const html = `<p>Hello [uppercase]pretty[/uppercase] [uppercase]world[/uppercase]</p>`;
-        expect(shortcodes.parse(html)).toEqual('<p>Hello PRETTY WORLD</p>');
+        assert.equal(shortcodes.parse(html), '<p>Hello PRETTY WORLD</p>');
     });
 
-    test('Can handle multiple different shortcodes', function () {
+    it('Can handle multiple different shortcodes', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('uppercase', ({content}) => {
@@ -399,25 +407,25 @@ describe('Shortcode processing', function () {
         });
 
         const html = `<p>Hello [uppercase]pretty[/uppercase] [uppercase]world[/uppercase]</p>[hr_line]<p>Lorem</p>[hr_line]`;
-        expect(shortcodes.parse(html)).toEqual('<p>Hello PRETTY WORLD</p><hr><p>Lorem</p><hr>');
+        assert.equal(shortcodes.parse(html), '<p>Hello PRETTY WORLD</p><hr><p>Lorem</p><hr>');
     });
 
-    test('Can use shortcode attributes', function () {
+    it('Can use shortcode attributes', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('link', ({attrs, content}) => {
-            expect(attrs.url).toEqual('https://another.example.com');
-            expect(attrs.open_in).toEqual('_blank');
-            expect(content).toEqual('<i>My content</i>');
+            assert.equal(attrs.url, 'https://another.example.com');
+            assert.equal(attrs.open_in, '_blank');
+            assert.equal(content, '<i>My content</i>');
 
             return `<a href="${attrs.url}" target="${attrs.open_in}">${content}</a>`;
         });
 
         const html = `<p>Hello world</p>[link url="https://another.example.com" open_in="_blank"]<i>My content</i>[/link]`;
-        expect(shortcodes.parse(html)).toEqual('<p>Hello world</p><a href="https://another.example.com" target="_blank"><i>My content</i></a>');
+        assert.equal(shortcodes.parse(html), '<p>Hello world</p><a href="https://another.example.com" target="_blank"><i>My content</i></a>');
     });
 
-    test('Can handle nested shortcodes', function () {
+    it('Can handle nested shortcodes', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('span', ({content}) => {
@@ -444,10 +452,10 @@ describe('Shortcode processing', function () {
 
         let parsed = shortcodes.parse(html);
 
-        expect(parsed).toEqual('<span><b><u><div>Hello</div><hr></u></b><b>Small</b></span>');
+        assert.equal(parsed, '<span><b><u><div>Hello</div><hr></u></b><b>Small</b></span>');
     });
 
-    test('Can handle nested use of the same shortcode', function () {
+    it('Can handle nested use of the same shortcode', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('span', ({attrs, content}) => {
@@ -458,10 +466,10 @@ describe('Shortcode processing', function () {
 
         let parsed = shortcodes.parse(html);
 
-        expect(parsed).toEqual('<span style="color: blue;">Hello <span style="color: red;">World</span></span>');
+        assert.equal(parsed, '<span style="color: blue;">Hello <span style="color: red;">World</span></span>');
     });
 
-    test('Can unwrap shortcodes', function () {
+    it('Can unwrap shortcodes', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.unwrap('block');
@@ -470,10 +478,10 @@ describe('Shortcode processing', function () {
 
         let parsed = shortcodes.parse(html);
 
-        expect(parsed).toEqual('Hello world ');
+        assert.equal(parsed, 'Hello world ');
     });
 
-    test('Can unwrap nested shortcodes', function () {
+    it('Can unwrap nested shortcodes', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.unwrap('block');
@@ -484,10 +492,10 @@ describe('Shortcode processing', function () {
 
         let parsed = shortcodes.parse(html);
 
-        expect(parsed).toEqual('Hello world  Lorem Ipsum   ');
+        assert.equal(parsed, 'Hello world  Lorem Ipsum   ');
     });
 
-    test('Can handle complex combinations', function () {
+    it('Can handle complex combinations', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('block', ({content}) => {
@@ -506,10 +514,10 @@ describe('Shortcode processing', function () {
 
         let parsed = shortcodes.parse(html);
 
-        expect(parsed).toEqual('HELLO<HR> <hr> WORLD <hr>');
+        assert.equal(parsed, 'HELLO<HR> <hr> WORLD <hr>');
     });
 
-    test('Can leave unhandled shortcodes alone', function () {
+    it('Can leave unhandled shortcodes alone', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('uppercase', ({content}) => {
@@ -524,10 +532,10 @@ describe('Shortcode processing', function () {
 
         let parsed = shortcodes.parse(html);
 
-        expect(parsed).toEqual('[block]HELLO<HR> <hr> WORLD[/block] <hr> [Leave this alone] [unhandled]contents[/unhandled] This is just a bit of text');
+        assert.equal(parsed, '[block]HELLO<HR> <hr> WORLD[/block] <hr> [Leave this alone] [unhandled]contents[/unhandled] This is just a bit of text');
     });
 
-    test('Can remove shortcode and content', function () {
+    it('Can remove shortcode and content', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.add('hr_line', () => {
@@ -542,10 +550,10 @@ describe('Shortcode processing', function () {
 
         let parsed = shortcodes.parse(html);
 
-        expect(parsed).toEqual('Hello  world  ');
+        assert.equal(parsed, 'Hello  world  ');
     });
 
-    test('Can handle shortcodes with splits', function () {
+    it('Can handle shortcodes with splits', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.addWitSplit('premium_content', 'premelse', 0, ({attrs, content}) => {
@@ -567,14 +575,14 @@ describe('Shortcode processing', function () {
 
         let parsed = shortcodes.parse(html).trim();
 
-        expect(parsed).toInclude('<div data-color="red">');
-        expect(parsed).toInclude('<p>Full post</p>');
-        expect(parsed).not.toInclude('<p>Free excerpt</p>');
-        expect(parsed).not.toInclude('premium_content');
-        expect(parsed).not.toInclude('plan_setup');
+        assert.ok(parsed.includes('<div data-color="red">'));
+        assert.ok(parsed.includes('<p>Full post</p>'));
+        assert.ok(!parsed.includes('<p>Free excerpt</p>'));
+        assert.ok(!parsed.includes('premium_content'));
+        assert.ok(!parsed.includes('plan_setup'));
     });
 
-    test('Can handle shortcodes with splits and return other part', function () {
+    it('Can handle shortcodes with splits and return other part', function () {
         const shortcodes = new Shortcodes();
 
         shortcodes.addWitSplit('premium_content', 'premelse', 1, ({attrs, content}) => {
@@ -596,10 +604,10 @@ describe('Shortcode processing', function () {
 
         let parsed = shortcodes.parse(html).trim();
 
-        expect(parsed).toInclude('<div data-color="blue">');
-        expect(parsed).toInclude('<p>Free excerpt</p>');
-        expect(parsed).not.toInclude('<p>Full post</p>');
-        expect(parsed).not.toInclude('premium_content');
-        expect(parsed).not.toInclude('plan_setup');
+        assert.ok(parsed.includes('<div data-color="blue">'));
+        assert.ok(parsed.includes('<p>Free excerpt</p>'));
+        assert.ok(!parsed.includes('<p>Full post</p>'));
+        assert.ok(!parsed.includes('premium_content'));
+        assert.ok(!parsed.includes('plan_setup'));
     });
 });
