@@ -1,3 +1,6 @@
+import {createRequire} from 'node:module';
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import processor from '../lib/processor.js';
 import {
     EntryBodyList,
@@ -12,11 +15,13 @@ import {
     EntryBodyHorizontalRule,
     EntryBodyRelatedList
 } from '../lib/json-to-html.js';
-import fixtureSimple from './fixtures/Entry:1234.json';
-import fixture from './fixtures/Entry:0969db64-b8d7-11ed-afa1-0242ac120001.json';
+
+const require = createRequire(import.meta.url);
+const fixtureSimple = require('./fixtures/Entry:1234.json');
+const fixture = require('./fixtures/Entry:0969db64-b8d7-11ed-afa1-0242ac120001.json');
 
 describe('Process', function () {
-    test('Can convert a single post', function () {
+    it('Can convert a single post', function () {
         let options = {
             url: 'https://example.com',
             addPrimaryTag: 'Newsletter'
@@ -24,67 +29,67 @@ describe('Process', function () {
 
         const post = processor.processPost({source: fixture}, options);
 
-        expect(post).toHaveProperty('url');
-        expect(post).toHaveProperty('data');
+        assert.ok('url' in post);
+        assert.ok('data' in post);
 
-        expect(post.url).toEqual('https://example.com/2019/9/26/12345678/my-article');
+        assert.equal(post.url, 'https://example.com/2019/9/26/12345678/my-article');
 
         const data = post.data;
 
-        expect(data.slug).toEqual('my-article');
-        expect(data.title).toEqual('Example post title');
-        expect(data.custom_excerpt).toEqual('My subtitle');
-        expect(data.status).toEqual('published');
-        expect(data.created_at).toEqual('2019-09-27T00:40:19.000Z');
-        expect(data.updated_at).toEqual('2019-09-27T00:48:48.000Z');
-        expect(data.published_at).toEqual('2019-09-27T00:40:19.000Z');
+        assert.equal(data.slug, 'my-article');
+        assert.equal(data.title, 'Example post title');
+        assert.equal(data.custom_excerpt, 'My subtitle');
+        assert.equal(data.status, 'published');
+        assert.equal(data.created_at, '2019-09-27T00:40:19.000Z');
+        assert.equal(data.updated_at, '2019-09-27T00:48:48.000Z');
+        assert.equal(data.published_at, '2019-09-27T00:40:19.000Z');
         // HTML is in another test
 
         const tags = data.tags;
 
-        expect(tags).toBeArrayOfSize(5);
+        assert.equal(tags.length, 5);
 
-        expect(tags[0].url).toEqual('/tag/newsletter');
-        expect(tags[0].data.slug).toEqual('newsletter');
-        expect(tags[0].data.name).toEqual('Newsletter');
+        assert.equal(tags[0].url, '/tag/newsletter');
+        assert.equal(tags[0].data.slug, 'newsletter');
+        assert.equal(tags[0].data.name, 'Newsletter');
 
-        expect(tags[1].url).toEqual('migrator-added-tag-lorem');
-        expect(tags[1].data.slug).toEqual('lorem');
-        expect(tags[1].data.name).toEqual('Lorem');
+        assert.equal(tags[1].url, 'migrator-added-tag-lorem');
+        assert.equal(tags[1].data.slug, 'lorem');
+        assert.equal(tags[1].data.name, 'Lorem');
 
-        expect(tags[2].url).toEqual('migrator-added-tag-ipsum-dolor');
-        expect(tags[2].data.slug).toEqual('ipsum-dolor');
-        expect(tags[2].data.name).toEqual('Ipsum Dolor');
+        assert.equal(tags[2].url, 'migrator-added-tag-ipsum-dolor');
+        assert.equal(tags[2].data.slug, 'ipsum-dolor');
+        assert.equal(tags[2].data.name, 'Ipsum Dolor');
 
-        expect(tags[3].url).toEqual('migrator-added-tag-simet');
-        expect(tags[3].data.slug).toEqual('simet');
-        expect(tags[3].data.name).toEqual('Simet');
+        assert.equal(tags[3].url, 'migrator-added-tag-simet');
+        assert.equal(tags[3].data.slug, 'simet');
+        assert.equal(tags[3].data.name, 'Simet');
 
-        expect(tags[4].url).toEqual('migrator-added-tag-hash-chorus');
-        expect(tags[4].data.slug).toEqual('hash-chorus');
-        expect(tags[4].data.name).toEqual('#chorus');
+        assert.equal(tags[4].url, 'migrator-added-tag-hash-chorus');
+        assert.equal(tags[4].data.slug, 'hash-chorus');
+        assert.equal(tags[4].data.name, '#chorus');
 
         const authors = data.authors;
 
-        expect(authors).toBeArrayOfSize(3);
+        assert.equal(authors.length, 3);
 
-        expect(authors[0].url).toEqual('/author/main-author-name');
-        expect(authors[0].data.email).toEqual('main-author-name@example.com');
-        expect(authors[0].data.slug).toEqual('main-author-name');
-        expect(authors[0].data.name).toEqual('Main Author Name');
+        assert.equal(authors[0].url, '/author/main-author-name');
+        assert.equal(authors[0].data.email, 'main-author-name@example.com');
+        assert.equal(authors[0].data.slug, 'main-author-name');
+        assert.equal(authors[0].data.name, 'Main Author Name');
 
-        expect(authors[1].url).toEqual('/author/author-name');
-        expect(authors[1].data.email).toEqual('author-name@example.com');
-        expect(authors[1].data.slug).toEqual('author-name');
-        expect(authors[1].data.name).toEqual('Author Name');
+        assert.equal(authors[1].url, '/author/author-name');
+        assert.equal(authors[1].data.email, 'author-name@example.com');
+        assert.equal(authors[1].data.slug, 'author-name');
+        assert.equal(authors[1].data.name, 'Author Name');
 
-        expect(authors[2].url).toEqual('/author/contributors-name');
-        expect(authors[2].data.email).toEqual('contributors-name@example.com');
-        expect(authors[2].data.slug).toEqual('contributors-name');
-        expect(authors[2].data.name).toEqual('Contributors Name');
+        assert.equal(authors[2].url, '/author/contributors-name');
+        assert.equal(authors[2].data.email, 'contributors-name@example.com');
+        assert.equal(authors[2].data.slug, 'contributors-name');
+        assert.equal(authors[2].data.name, 'Contributors Name');
     });
 
-    test('Can convert JSON to HTML', function () {
+    it('Can convert JSON to HTML', function () {
         let options = {
             url: 'https://example.com',
             addPrimaryTag: 'Newsletter'
@@ -92,85 +97,85 @@ describe('Process', function () {
 
         const post = processor.processPost({source: fixtureSimple}, options);
 
-        expect(post).toHaveProperty('url');
-        expect(post).toHaveProperty('data');
-        expect(post.data.html).toEqual('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. In semper ligula tellus, eget euismod purus posuere sed.</p>');
+        assert.ok('url' in post);
+        assert.ok('data' in post);
+        assert.equal(post.data.html, '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. In semper ligula tellus, eget euismod purus posuere sed.</p>');
     });
 });
 
 describe('JSON to HTML', function () {
-    test('Can convert EntryBodyParagraph', function () {
+    it('Can convert EntryBodyParagraph', function () {
         let block = fixture.body.components[0];
         let converted = EntryBodyParagraph(block);
 
-        expect(converted).toEqual('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. In semper ligula tellus, eget euismod purus posuere sed.</p>');
+        assert.equal(converted, '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. In semper ligula tellus, eget euismod purus posuere sed.</p>');
     });
 
-    test('Can convert EntryBodyList (unordered)', function () {
+    it('Can convert EntryBodyList (unordered)', function () {
         let block = fixture.body.components[1];
         let converted = EntryBodyList(block);
 
-        expect(converted).toEqual('<ul><li>Nullam gravida commodo dignissim. Morbi non nulla porta, sagittis elit non</li><li>Morbi rhoncus vel sapien sed condimentum. In hac habitasse platea dictumst</li>/<ul>');
+        assert.equal(converted, '<ul><li>Nullam gravida commodo dignissim. Morbi non nulla porta, sagittis elit non</li><li>Morbi rhoncus vel sapien sed condimentum. In hac habitasse platea dictumst</li>/<ul>');
     });
 
-    test('Can convert EntryBodyList (ordered)', function () {
+    it('Can convert EntryBodyList (ordered)', function () {
         let block = fixture.body.components[2];
         let converted = EntryBodyList(block);
-        expect(converted).toEqual('<ol><li>Nullam gravida commodo dignissim. Morbi non nulla porta, sagittis elit non</li><li>Morbi rhoncus vel sapien sed condimentum. In hac habitasse platea dictumst</li></ol>');
+        assert.equal(converted, '<ol><li>Nullam gravida commodo dignissim. Morbi non nulla porta, sagittis elit non</li><li>Morbi rhoncus vel sapien sed condimentum. In hac habitasse platea dictumst</li></ol>');
     });
 
-    test('Can convert EntryBodyRelatedList', function () {
+    it('Can convert EntryBodyRelatedList', function () {
         let block = fixture.body.components[3];
         let converted = EntryBodyRelatedList(block);
-        expect(converted).toEqual('<hr><h4>Related</h4><p><a href="https://example.com/2019/9/25/23456789/marius">Mauris nunc lacus, cursus ut semper id</a><br><a href="https://example.com/2019/9/25/33456789/Fermentum">Fermentum nec diam. Mauris at dapibus orci</a><br><a href="https://example.com/2019/9/26/43456789/vehicula">In vehicula vitae elit vel imperdiet</a></p><hr>');
+        assert.equal(converted, '<hr><h4>Related</h4><p><a href="https://example.com/2019/9/25/23456789/marius">Mauris nunc lacus, cursus ut semper id</a><br><a href="https://example.com/2019/9/25/33456789/Fermentum">Fermentum nec diam. Mauris at dapibus orci</a><br><a href="https://example.com/2019/9/26/43456789/vehicula">In vehicula vitae elit vel imperdiet</a></p><hr>');
     });
 
-    test('Can convert EntryBodyHTML', function () {
+    it('Can convert EntryBodyHTML', function () {
         let block = fixture.body.components[4];
         let converted = EntryBodyHTML(block);
-        expect(converted).toEqual('<!--kg-card-begin: html--><iframe frameborder="0" height="200" scrolling="no" src="https://example.com?v=1234" width="100%"></iframe><!--kg-card-end: html-->');
+        assert.equal(converted, '<!--kg-card-begin: html--><iframe frameborder="0" height="200" scrolling="no" src="https://example.com?v=1234" width="100%"></iframe><!--kg-card-end: html-->');
     });
 
-    test('Can convert EntryBodyHeading', function () {
+    it('Can convert EntryBodyHeading', function () {
         let block = fixture.body.components[5];
         let converted = EntryBodyHeading(block);
-        expect(converted).toEqual('<h2>A sub header!</h2>');
+        assert.equal(converted, '<h2>A sub header!</h2>');
     });
 
-    test('Can convert EntryBodyEmbed', function () {
+    it('Can convert EntryBodyEmbed', function () {
         let block = fixture.body.components[6];
         let converted = EntryBodyEmbed(block);
-        expect(converted).toEqual(`<!--kg-card-begin: html--><blockquote class="twitter-tweet"><p lang="en" dir="ltr">Want to work on open source full time, from anywhere in the world? We&#39;re hiring for new roles in product, front-end and back-end engineering! 👇<a href="https://t.co/T5U76vH0nJ">https://t.co/T5U76vH0nJ</a></p>&mdash; Ghost (@Ghost) <a href="https://twitter.com/Ghost/status/1570816009090789377?ref_src=twsrc%5Etfw">September 16, 2022</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+        assert.equal(converted, `<!--kg-card-begin: html--><blockquote class="twitter-tweet"><p lang="en" dir="ltr">Want to work on open source full time, from anywhere in the world? We&#39;re hiring for new roles in product, front-end and back-end engineering! \u{1F447}<a href="https://t.co/T5U76vH0nJ">https://t.co/T5U76vH0nJ</a></p>&mdash; Ghost (@Ghost) <a href="https://twitter.com/Ghost/status/1570816009090789377?ref_src=twsrc%5Etfw">September 16, 2022</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 <!--kg-card-end: html-->`);
     });
 
-    test('Can convert EntryBodyPullquote', function () {
+    it('Can convert EntryBodyPullquote', function () {
         let block = fixture.body.components[7];
         let converted = EntryBodyPullquote(block);
-        expect(converted).toEqual('<blockquote class="kg-blockquote-alt">“Try Ghost!”</blockquote>');
+        assert.equal(converted, '<blockquote class="kg-blockquote-alt">\u201CTry Ghost!\u201D</blockquote>');
     });
 
-    test('Can convert EntryBodyHorizontalRule', function () {
+    it('Can convert EntryBodyHorizontalRule', function () {
         let block = fixture.body.components[8];
         let converted = EntryBodyHorizontalRule(block);
-        expect(converted).toEqual('<hr>');
+        assert.equal(converted, '<hr>');
     });
 
-    test('Can convert EntryBodyBlockquote', function () {
+    it('Can convert EntryBodyBlockquote', function () {
         let block = fixture.body.components[9];
         let converted = EntryBodyBlockquote(block);
-        expect(converted).toEqual('<blockuote><p>Lorem ipsum</p><p>Dolor simet</p></blockuote>');
+        assert.equal(converted, '<blockuote><p>Lorem ipsum</p><p>Dolor simet</p></blockuote>');
     });
 
-    test('Can convert EntryBodyPoll', function () {
+    it('Can convert EntryBodyPoll', function () {
         let block = fixture.body.components[10];
         let converted = EntryBodyPoll(block);
-        expect(converted).toEqual('<h3>Who will win?</h3><!--kg-card-begin: html--><table><tbody><tr><td>Lorem</td><td>10</td></tr><tr><td>Ipsum</td><td>5</td></tr></tbody></table><!--kg-card-end: html-->');
+        assert.equal(converted, '<h3>Who will win?</h3><!--kg-card-begin: html--><table><tbody><tr><td>Lorem</td><td>10</td></tr><tr><td>Ipsum</td><td>5</td></tr></tbody></table><!--kg-card-end: html-->');
     });
 
-    test('Can convert EntryBodyTable', function () {
+    it('Can convert EntryBodyTable', function () {
         let block = fixture.body.components[11];
         let converted = EntryBodyTable(block);
-        expect(converted).toEqual('<h3>The beatles</h3><!--kg-card-begin: html--><table><thead><th>Name</th><th>Year of birth</th></thead><tbody><tr><td>John</td><td>Paul</td><td>George</td><td>Ringo</td></tr><tr><td>1940</td><td>1942</td><td>1943</td><td>1940</td></tr></tbody></table><!--kg-card-end: html-->');
+        assert.equal(converted, '<h3>The beatles</h3><!--kg-card-begin: html--><table><thead><th>Name</th><th>Year of birth</th></thead><tbody><tr><td>John</td><td>Paul</td><td>George</td><td>Ringo</td></tr><tr><td>1940</td><td>1942</td><td>1943</td><td>1940</td></tr></tbody></table><!--kg-card-end: html-->');
     });
 });
