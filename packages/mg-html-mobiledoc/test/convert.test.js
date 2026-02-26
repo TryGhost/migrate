@@ -1,3 +1,5 @@
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {convert} from '../lib/convert.js';
 import {convertPost} from '../lib/convert-post.js';
 
@@ -8,7 +10,7 @@ let fakeLogger = {
 };
 
 describe('Convert', function () {
-    test('Can convert to a HTML card', function () {
+    it('Can convert to a HTML card', function () {
         let post = {
             html: '<h2>Good stuff here</h2>'
         };
@@ -18,23 +20,25 @@ describe('Convert', function () {
 
         const mobiledoc = JSON.parse(post.mobiledoc);
 
-        expect(mobiledoc.html).not.toBeDefined();
+        assert.equal(mobiledoc.html, undefined);
 
-        expect(mobiledoc).toContainAllKeys(['version', 'markups', 'atoms', 'cards', 'sections']);
-        expect(mobiledoc.version).toEqual('0.3.1');
-        expect(mobiledoc.markups).toBeArrayOfSize(0);
-        expect(mobiledoc.atoms).toBeArrayOfSize(0);
-        expect(mobiledoc.sections).toEqual([[10, 0]]);
+        for (const key of ['version', 'markups', 'atoms', 'cards', 'sections']) {
+            assert.ok(key in mobiledoc);
+        }
+        assert.equal(mobiledoc.version, '0.3.1');
+        assert.equal(mobiledoc.markups.length, 0);
+        assert.equal(mobiledoc.atoms.length, 0);
+        assert.deepEqual(mobiledoc.sections, [[10, 0]]);
 
         // We're checking an unassosiative array here:
         // [ 'html', { cardName: 'html', html: '<h2>Good stuff here</h2>' } ]
         const card = mobiledoc.cards[0];
-        expect(card[0]).toEqual('html');
-        expect(card[1].cardName).toEqual('html');
-        expect(card[1].html).toEqual('<h2>Good stuff here</h2>');
+        assert.equal(card[0], 'html');
+        assert.equal(card[1].cardName, 'html');
+        assert.equal(card[1].html, '<h2>Good stuff here</h2>');
     });
 
-    test('Covert to Mobiledoc section', function () {
+    it('Covert to Mobiledoc section', function () {
         let post = {
             html: '<h2>Good stuff here</h2>'
         };
@@ -44,17 +48,19 @@ describe('Convert', function () {
 
         const mobiledoc = JSON.parse(post.mobiledoc);
 
-        expect(mobiledoc.html).not.toBeDefined();
+        assert.equal(mobiledoc.html, undefined);
 
-        expect(mobiledoc).toContainAllKeys(['version', 'markups', 'atoms', 'cards', 'sections']);
-        expect(mobiledoc.version).toEqual('0.3.1');
-        expect(mobiledoc.markups).toBeArrayOfSize(0);
-        expect(mobiledoc.atoms).toBeArrayOfSize(0);
-        expect(mobiledoc.cards).toBeArrayOfSize(0);
-        expect(mobiledoc.sections).toEqual([[1, 'h2', [[0, [], 0, 'Good stuff here']]]]);
+        for (const key of ['version', 'markups', 'atoms', 'cards', 'sections']) {
+            assert.ok(key in mobiledoc);
+        }
+        assert.equal(mobiledoc.version, '0.3.1');
+        assert.equal(mobiledoc.markups.length, 0);
+        assert.equal(mobiledoc.atoms.length, 0);
+        assert.equal(mobiledoc.cards.length, 0);
+        assert.deepEqual(mobiledoc.sections, [[1, 'h2', [[0, [], 0, 'Good stuff here']]]]);
     });
 
-    test('Can catch an error', function () {
+    it('Can catch an error', function () {
         // `wrong_key` should be `html`, and will throw an error
         let post = {
             wrong_key: '<h2>Good stuff here</h2>'
@@ -64,13 +70,14 @@ describe('Convert', function () {
         try {
             convertPost(post, htmlCard);
         } catch (error) {
-            expect(error).toBeObject();
-            expect(error.name).toEqual('InternalServerError');
-            expect(error.message).toEqual('Post has no html field to convert');
+            assert.equal(typeof error, 'object');
+            assert.ok(error !== null);
+            assert.equal(error.name, 'InternalServerError');
+            assert.equal(error.message, 'Post has no html field to convert');
         }
     });
 
-    test('Covert full content to Mobiledoc', function () {
+    it('Covert full content to Mobiledoc', function () {
         let post = {
             html: '\
                 <h2>Good stuff here</h2>\
@@ -87,17 +94,19 @@ describe('Convert', function () {
 
         const mobiledoc = JSON.parse(post.mobiledoc);
 
-        expect(mobiledoc.html).not.toBeDefined();
+        assert.equal(mobiledoc.html, undefined);
 
-        expect(mobiledoc).toContainAllKeys(['version', 'markups', 'atoms', 'cards', 'sections']);
-        expect(mobiledoc.version).toEqual('0.3.1');
-        expect(mobiledoc.atoms).toEqual([['soft-return', '', {}]]);
-        expect(mobiledoc.cards).toEqual([['image',{src: 'https://example.com/image.jpg', alt: 'Hello'}],['hr',{}]]);
-        expect(mobiledoc.markups).toEqual([['i'],['a',['href','https://example.com']]]);
-        expect(mobiledoc.sections).toEqual([[1,'h2',[[0,[],0,'Good stuff here']]],[10,0],[1,'p',[[0,[],0,'Hello '],[0,[0],1,'world']]],[10,1],[1,'p',[[0,[],0,'Link to '],[0,[1],1,'Example']]],[1,'p',[[0,[],0,'Hello '],[1,[],0,0],[0,[],0,'world']]]]);
+        for (const key of ['version', 'markups', 'atoms', 'cards', 'sections']) {
+            assert.ok(key in mobiledoc);
+        }
+        assert.equal(mobiledoc.version, '0.3.1');
+        assert.deepEqual(mobiledoc.atoms, [['soft-return', '', {}]]);
+        assert.deepEqual(mobiledoc.cards, [['image',{src: 'https://example.com/image.jpg', alt: 'Hello'}],['hr',{}]]);
+        assert.deepEqual(mobiledoc.markups, [['i'],['a',['href','https://example.com']]]);
+        assert.deepEqual(mobiledoc.sections, [[1,'h2',[[0,[],0,'Good stuff here']]],[10,0],[1,'p',[[0,[],0,'Hello '],[0,[0],1,'world']]],[10,1],[1,'p',[[0,[],0,'Link to '],[0,[1],1,'Example']]],[1,'p',[[0,[],0,'Hello '],[1,[],0,0],[0,[],0,'world']]]]);
     });
 
-    test('Correctly transforms relative Portal links that start with #', function () {
+    it('Correctly transforms relative Portal links that start with #', function () {
         let post = {
             html: '\
                 <div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>\
@@ -116,17 +125,19 @@ describe('Convert', function () {
 
         const mobiledoc = JSON.parse(post.mobiledoc);
 
-        expect(mobiledoc.html).not.toBeDefined();
+        assert.equal(mobiledoc.html, undefined);
 
-        expect(mobiledoc).toContainAllKeys(['version', 'markups', 'atoms', 'cards', 'sections']);
-        expect(mobiledoc.version).toEqual('0.3.1');
-        expect(mobiledoc.atoms).toEqual([]);
-        expect(mobiledoc.cards).toEqual([['button',{alignment: 'center', buttonUrl: '#/portal/signup', buttonText: 'Subscribe'}],['button',{alignment: 'center', buttonUrl: '#/portal/signup',buttonText: 'Subscribe'}],['button',{alignment: 'center', buttonUrl: '/#/portal/signup', buttonText: 'Subscribe'}],['button',{alignment: 'center', buttonUrl: 'https://example.com/#/portal/signup/free', buttonText: 'Subscribe'}]]);
-        expect(mobiledoc.markups).toEqual([['a',['href','#/portal/signup']],['a',['href','/#/portal/signup']],['a',['href','https://example.com/#/portal/signup/free']]]);
-        expect(mobiledoc.sections).toEqual([[10,0],[1,'p',[[0,[],0,'Please '],[0,[0],1,'Subscribe']]],[10,1],[1,'p',[[0,[],0,'Please '],[0,[0],1,'Subscribe']]],[10,2],[1,'p',[[0,[],0,'Please '],[0,[1],1,'Subscribe']]],[10,3],[1,'p',[[0,[],0,'Please '],[0,[2],1,'Subscribe']]]]);
+        for (const key of ['version', 'markups', 'atoms', 'cards', 'sections']) {
+            assert.ok(key in mobiledoc);
+        }
+        assert.equal(mobiledoc.version, '0.3.1');
+        assert.deepEqual(mobiledoc.atoms, []);
+        assert.deepEqual(mobiledoc.cards, [['button',{alignment: 'center', buttonUrl: '#/portal/signup', buttonText: 'Subscribe'}],['button',{alignment: 'center', buttonUrl: '#/portal/signup',buttonText: 'Subscribe'}],['button',{alignment: 'center', buttonUrl: '/#/portal/signup', buttonText: 'Subscribe'}],['button',{alignment: 'center', buttonUrl: 'https://example.com/#/portal/signup/free', buttonText: 'Subscribe'}]]);
+        assert.deepEqual(mobiledoc.markups, [['a',['href','#/portal/signup']],['a',['href','/#/portal/signup']],['a',['href','https://example.com/#/portal/signup/free']]]);
+        assert.deepEqual(mobiledoc.sections, [[10,0],[1,'p',[[0,[],0,'Please '],[0,[0],1,'Subscribe']]],[10,1],[1,'p',[[0,[],0,'Please '],[0,[0],1,'Subscribe']]],[10,2],[1,'p',[[0,[],0,'Please '],[0,[1],1,'Subscribe']]],[10,3],[1,'p',[[0,[],0,'Please '],[0,[2],1,'Subscribe']]]]);
     });
 
-    test('Correctly converts a linked image', function () {
+    it('Correctly converts a linked image', function () {
         let post = {
             html: '<a href="https://example.com"><img src="https://example.com/images/photo.jpg" /></a>'
         };
@@ -136,15 +147,17 @@ describe('Convert', function () {
 
         const mobiledoc = JSON.parse(post.mobiledoc);
 
-        expect(mobiledoc).toContainAllKeys(['version', 'markups', 'atoms', 'cards', 'sections']);
-        expect(mobiledoc.version).toEqual('0.3.1');
-        expect(mobiledoc.atoms).toEqual([]);
-        expect(mobiledoc.cards).toEqual([['image',{src: 'https://example.com/images/photo.jpg', href: 'https://example.com/'}]]);
-        expect(mobiledoc.markups).toEqual([]);
-        expect(mobiledoc.sections).toEqual([[10,0]]);
+        for (const key of ['version', 'markups', 'atoms', 'cards', 'sections']) {
+            assert.ok(key in mobiledoc);
+        }
+        assert.equal(mobiledoc.version, '0.3.1');
+        assert.deepEqual(mobiledoc.atoms, []);
+        assert.deepEqual(mobiledoc.cards, [['image',{src: 'https://example.com/images/photo.jpg', href: 'https://example.com/'}]]);
+        assert.deepEqual(mobiledoc.markups, []);
+        assert.deepEqual(mobiledoc.sections, [[10,0]]);
     });
 
-    test('Correctly converts a linked image with alt & title text', function () {
+    it('Correctly converts a linked image with alt & title text', function () {
         let post = {
             html: '<a href="https://example.com"><img src="https://example.com/images/photo.jpg" alt="My alt text" title="My title" /></a>'
         };
@@ -154,15 +167,17 @@ describe('Convert', function () {
 
         const mobiledoc = JSON.parse(post.mobiledoc);
 
-        expect(mobiledoc).toContainAllKeys(['version', 'markups', 'atoms', 'cards', 'sections']);
-        expect(mobiledoc.version).toEqual('0.3.1');
-        expect(mobiledoc.atoms).toEqual([]);
-        expect(mobiledoc.cards).toEqual([['image',{src: 'https://example.com/images/photo.jpg', alt: 'My alt text', href: 'https://example.com/', title: 'My title'}]]);
-        expect(mobiledoc.markups).toEqual([]);
-        expect(mobiledoc.sections).toEqual([[10,0]]);
+        for (const key of ['version', 'markups', 'atoms', 'cards', 'sections']) {
+            assert.ok(key in mobiledoc);
+        }
+        assert.equal(mobiledoc.version, '0.3.1');
+        assert.deepEqual(mobiledoc.atoms, []);
+        assert.deepEqual(mobiledoc.cards, [['image',{src: 'https://example.com/images/photo.jpg', alt: 'My alt text', href: 'https://example.com/', title: 'My title'}]]);
+        assert.deepEqual(mobiledoc.markups, []);
+        assert.deepEqual(mobiledoc.sections, [[10,0]]);
     });
 
-    test('Correctly converts a WordPress flavoured image', function () {
+    it('Correctly converts a WordPress flavoured image', function () {
         let post = {
             html: '<figure class="wp-block-image alignwide size-large"><img loading="lazy" width="1024" height="683" src="https://example.com/wp-content/uploads/2021/12/photo-1024x683.jpg" alt="" class="wp-image-9438"><figcaption>My awesome page</figcaption></figure>'
         };
@@ -172,15 +187,17 @@ describe('Convert', function () {
 
         const mobiledoc = JSON.parse(post.mobiledoc);
 
-        expect(mobiledoc).toContainAllKeys(['version', 'markups', 'atoms', 'cards', 'sections']);
-        expect(mobiledoc.version).toEqual('0.3.1');
-        expect(mobiledoc.atoms).toEqual([]);
-        expect(mobiledoc.cards).toEqual([['image',{src: 'https://example.com/wp-content/uploads/2021/12/photo-1024x683.jpg', width: 1024, height: 683, caption: 'My awesome page'}]]);
-        expect(mobiledoc.markups).toEqual([]);
-        expect(mobiledoc.sections).toEqual([[10,0]]);
+        for (const key of ['version', 'markups', 'atoms', 'cards', 'sections']) {
+            assert.ok(key in mobiledoc);
+        }
+        assert.equal(mobiledoc.version, '0.3.1');
+        assert.deepEqual(mobiledoc.atoms, []);
+        assert.deepEqual(mobiledoc.cards, [['image',{src: 'https://example.com/wp-content/uploads/2021/12/photo-1024x683.jpg', width: 1024, height: 683, caption: 'My awesome page'}]]);
+        assert.deepEqual(mobiledoc.markups, []);
+        assert.deepEqual(mobiledoc.sections, [[10,0]]);
     });
 
-    test('Correctly converts a WordPress flavoured linked image', function () {
+    it('Correctly converts a WordPress flavoured linked image', function () {
         let post = {
             html: '<figure class="wp-block-image alignwide size-large"><a href="https://example.com/2021/12/13/compare/"><img loading="lazy" width="1024" height="683" src="https://example.com/wp-content/uploads/2021/12/photo-1024x683.jpg" alt="" class="wp-image-9438"></a><figcaption>My awesome page</figcaption></figure>'
         };
@@ -190,17 +207,19 @@ describe('Convert', function () {
 
         const mobiledoc = JSON.parse(post.mobiledoc);
 
-        expect(mobiledoc).toContainAllKeys(['version', 'markups', 'atoms', 'cards', 'sections']);
-        expect(mobiledoc.version).toEqual('0.3.1');
-        expect(mobiledoc.atoms).toEqual([]);
-        expect(mobiledoc.cards).toEqual([['image',{src: 'https://example.com/wp-content/uploads/2021/12/photo-1024x683.jpg', width: 1024, height: 683, href: 'https://example.com/2021/12/13/compare/', caption: 'My awesome page'}]]);
-        expect(mobiledoc.markups).toEqual([]);
-        expect(mobiledoc.sections).toEqual([[10,0]]);
+        for (const key of ['version', 'markups', 'atoms', 'cards', 'sections']) {
+            assert.ok(key in mobiledoc);
+        }
+        assert.equal(mobiledoc.version, '0.3.1');
+        assert.deepEqual(mobiledoc.atoms, []);
+        assert.deepEqual(mobiledoc.cards, [['image',{src: 'https://example.com/wp-content/uploads/2021/12/photo-1024x683.jpg', width: 1024, height: 683, href: 'https://example.com/2021/12/13/compare/', caption: 'My awesome page'}]]);
+        assert.deepEqual(mobiledoc.markups, []);
+        assert.deepEqual(mobiledoc.sections, [[10,0]]);
     });
 });
 
 describe('Convert tasks', function () {
-    test('Can make tasks', function () {
+    it('Can make tasks', function () {
         let ctx = {
             result: {
                 data: {
@@ -218,6 +237,6 @@ describe('Convert tasks', function () {
 
         let tasks = convert(ctx);
 
-        expect(tasks).toBeArrayOfSize(2);
+        assert.equal(tasks.length, 2);
     });
 });
