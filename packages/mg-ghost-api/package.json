@@ -23,6 +23,6 @@
     "eslint": "8.57.1"
   },
   "dependencies": {
-    "@tryghost/admin-api": "1.14.4"
+    "@tryghost/admin-api": "1.14.6"
   }
 }

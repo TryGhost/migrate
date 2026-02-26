@@ -23,7 +23,7 @@
     "eslint": "8.57.1"
   },
   "dependencies": {
-    "@tryghost/string": "0.2.21",
+    "@tryghost/string": "0.3.1",
     "bson-objectid": "2.0.4",
     "html-entities": "2.6.0",
     "lodash": "4.17.23",
