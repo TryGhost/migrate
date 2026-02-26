@@ -44,7 +44,7 @@
     "@tryghost/errors": "2.2.1",
     "@tryghost/listr-smart-renderer": "0.5.15",
     "@tryghost/mg-fs-utils": "0.16.5",
-    "@tryghost/string": "0.2.21",
+    "@tryghost/string": "0.3.1",
     "file-type": "21.3.0",
     "fs-extra": "11.3.3",
     "heic-convert": "2.1.0",

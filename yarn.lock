@@ -3198,14 +3198,14 @@
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-1.1.2.tgz#ccb91445360179a04e7fe6aff78c00ffc1eeaf82"
   integrity sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==
 
-"@tryghost/admin-api@1.14.4":
-  version "1.14.4"
-  resolved "https://registry.yarnpkg.com/@tryghost/admin-api/-/admin-api-1.14.4.tgz#41d770cd8f8d4c1daf02dc4e70ad96cd52e089ff"
-  integrity sha512-rs7SlEo9InJQoxmUzY0siZQ0uRxTzKBhLj7Rys5hxYnmvtet4quHU4ZK2M4qpMKT9SBs7IYGXlboA7MsYoZTxA==
+"@tryghost/admin-api@1.14.6":
+  version "1.14.6"
+  resolved "https://registry.yarnpkg.com/@tryghost/admin-api/-/admin-api-1.14.6.tgz#7748904acd5fd63ccef8edf1eefd444ca9f67f8c"
+  integrity sha512-GZ14THA09fCUIxveB1iC50v9GyCqCy3xbvAM51Q4XVhTmycz1BZaWfH2n+X+JXnfN3nIzQQwgSjp/RxMglQ9Mg==
   dependencies:
-    axios "^1.0.0"
-    form-data "^4.0.0"
-    jsonwebtoken "^9.0.2"
+    axios "1.13.5"
+    form-data "4.0.5"
+    jsonwebtoken "9.0.3"
 
 "@tryghost/bunyan-rotating-filestream@0.0.7", "@tryghost/bunyan-rotating-filestream@^0.0.7":
   version "0.0.7"
@@ -3247,14 +3247,6 @@
     lodash "^4.17.21"
     uuid "^9.0.0"
 
-"@tryghost/errors@1.3.8":
-  version "1.3.8"
-  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-1.3.8.tgz#d4212b52e876360b4fa8e303ae13ef86f3e95846"
-  integrity sha512-2+4ExAAWM0rFWC7FlzxQMzIvIEQKt/vQLxLyqJqCmAcJa4i2uqUPJHqd/X5BBRuSTuftgca7EAo7adESbHEkZw==
-  dependencies:
-    "@stdlib/utils-copy" "^0.2.0"
-    uuid "^9.0.0"
-
 "@tryghost/errors@2.2.1", "@tryghost/errors@^2.2.1":
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-2.2.1.tgz#e6b98aa35d077c240d4cf00eb0a788f3775258c0"
@@ -3271,12 +3263,12 @@
     "@stdlib/utils-copy" "^0.2.0"
     uuid "^9.0.0"
 
-"@tryghost/html-to-mobiledoc@3.2.16":
-  version "3.2.16"
-  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-3.2.16.tgz#7a76ebc0fac68e5e2f4b95f547697d4645571b6e"
-  integrity sha512-mLuMqqqUvb2kbtH+Zq/qnlkc3Z2MQZqy8eruuBt1s88bEvornDryCg5nvwegEeODbhovuyrVch7dP2amE1o7kQ==
+"@tryghost/html-to-mobiledoc@3.2.17":
+  version "3.2.17"
+  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-3.2.17.tgz#c87ab43b2345f3e10c31ac28da0501fcbd114a24"
+  integrity sha512-IgmEhUurFyqMgLB6jINDfoZn/p5Nh70CCGPpVkmhkm2CWNqQ1UsXZ204o4267lmHJQNViFsmTmojAH3UMNTNfg==
   dependencies:
-    "@tryghost/kg-parser-plugins" "4.2.15"
+    "@tryghost/kg-parser-plugins" "4.2.16"
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "^24.1.1"
 
@@ -3308,20 +3300,15 @@
   optionalDependencies:
     sharp "^0.32.0"
 
-"@tryghost/image-transform@1.4.10":
-  version "1.4.10"
-  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.4.10.tgz#ef0d93a14634219bcb5e85c26ac44de7222cbb51"
-  integrity sha512-CFwFBDy8rFkt2IT9TLXxCwC5Gp1P3rwHNmk2KfRwGhbuKIa8MzAN8JNqpjVl6D44ZC5AvH43dBFyF6tdr6uLww==
+"@tryghost/image-transform@1.4.12":
+  version "1.4.12"
+  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.4.12.tgz#5b25aaeb306b54193646d03ee4156030ef0bbaa6"
+  integrity sha512-m4lKc6nr2aVhpskx3njpNk8oATdocVwi9tbV4SgwYRonS+79vtflUWO75n26PCpcQn5SnqeZucHDcGw2QzOb8A==
   dependencies:
-    "@tryghost/errors" "1.3.8"
-    fs-extra "^11.3.2"
+    "@tryghost/errors" "2.2.1"
+    fs-extra "11.3.3"
   optionalDependencies:
     sharp "^0.34.2"
-
-"@tryghost/kg-clean-basic-html@4.2.15":
-  version "4.2.15"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-4.2.15.tgz#177a12db5a6fb46a3e04c902936f4b0cfae02ab6"
-  integrity sha512-WVbQAv9oTQMdTSTC0/Gf9bjb1bYA5lqXKjGdqvVthExTcgQerSic3Eh+W9l9CeZP3fMFgLbf6gS25oqpHZv2JQ==
 
 "@tryghost/kg-clean-basic-html@4.2.16":
   version "4.2.16"
@@ -3416,12 +3403,12 @@
     markdown-it-sup "^2.0.0"
     semver "^7.7.0"
 
-"@tryghost/kg-parser-plugins@4.2.15":
-  version "4.2.15"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-4.2.15.tgz#9f81733e795ccf80dab4b121508164394170eed7"
-  integrity sha512-u3GeD1+vBg7tINQwZpdpH/rcpBuPPUy2RMewj3JJ+0eAj/kV+3CadD7TNoAo9cKHR3uZ1QhVfEt99PW2HoYwrg==
+"@tryghost/kg-parser-plugins@4.2.16":
+  version "4.2.16"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-4.2.16.tgz#953e206c1d7e7fe3e8981199752756f6199373f9"
+  integrity sha512-uxY+zcX9Uici3tS1Ref15+LLuQyr0lDRj3ci1gqylaBucqUuIqu/Q1EudwRK1RrVsMja2dpGllexdxQOAeaVeA==
   dependencies:
-    "@tryghost/kg-clean-basic-html" "4.2.15"
+    "@tryghost/kg-clean-basic-html" "4.2.16"
 
 "@tryghost/kg-utils@1.0.31":
   version "1.0.31"
@@ -3570,6 +3557,13 @@
   integrity sha512-XorOw8qEcMMLP3JqXe+ocM/ej66kgg84Uw9FaqR1AgoCJbTpbp7xrOEG8c+MIoj5zzd8AEQ5jD0pqiGCGPdwzQ==
   dependencies:
     unidecode "^0.1.8"
+
+"@tryghost/string@0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.3.1.tgz#83ba5fb48c8285915b39dbe2425c9bf76d9c16c7"
+  integrity sha512-p1wyN6p5Ds6IQkoYwIJkabhQ10WIY+t8yf3/Uf/BNADTg66R0jYF8wmXgFYpBwm55rXwM/92cROwvopIbFKtYg==
+  dependencies:
+    unidecode "1.1.0"
 
 "@tryghost/tpl@^1.2.1":
   version "1.2.1"
@@ -4264,7 +4258,7 @@ aws4@^1.8.0:
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.13.2.tgz#0aa167216965ac9474ccfa83892cfb6b3e1e52ef"
   integrity sha512-lHe62zvbTB5eEABUVi/AwVh0ZKY9rMMDhmm+eeyuuUQbQ3+J+fONVQOZyj+DdrvD4BY33uYniyRJ4UJIaSKAfw==
 
-axios@^1.0.0, axios@^1.3.4:
+axios@1.13.5, axios@^1.3.4:
   version "1.13.5"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.13.5.tgz#5e464688fa127e11a660a2c49441c009f6567a43"
   integrity sha512-cz4ur7Vb0xS4/KUN0tPWe44eqxrIu31me+fbang3ijiNscE129POzipJJA6zniq2C/Z6sJCjMimjS8Lc/GAs8Q==
@@ -6214,6 +6208,17 @@ form-data-encoder@^4.0.2:
   resolved "https://registry.yarnpkg.com/form-data-encoder/-/form-data-encoder-4.1.0.tgz#497cedc94810bd5d53b99b5d4f6c152d5cbc9db2"
   integrity sha512-G6NsmEW15s0Uw9XnCg+33H3ViYRyiM0hMrMhhqQOR8NFc5GhYrI+6I3u7OTw7b91J2g8rtvMBZJDbcGb2YUniw==
 
+form-data@4.0.5, form-data@^4.0.0, form-data@^4.0.5:
+  version "4.0.5"
+  resolved "https://registry.yarnpkg.com/form-data/-/form-data-4.0.5.tgz#b49e48858045ff4cbf6b03e1805cebcad3679053"
+  integrity sha512-8RipRLol37bNs2bhoV67fiTEvdTrbMUYcFTiy3+wuuOnUog2QBHCZWXDRijWQfAkhBj2Uf5UnVaiWwA5vdd82w==
+  dependencies:
+    asynckit "^0.4.0"
+    combined-stream "^1.0.8"
+    es-set-tostringtag "^2.1.0"
+    hasown "^2.0.2"
+    mime-types "^2.1.12"
+
 form-data@^2.3.3:
   version "2.5.5"
   resolved "https://registry.yarnpkg.com/form-data/-/form-data-2.5.5.tgz#a5f6364ad7e4e67e95b4a07e2d8c6f711c74f624"
@@ -6225,17 +6230,6 @@ form-data@^2.3.3:
     hasown "^2.0.2"
     mime-types "^2.1.35"
     safe-buffer "^5.2.1"
-
-form-data@^4.0.0, form-data@^4.0.5:
-  version "4.0.5"
-  resolved "https://registry.yarnpkg.com/form-data/-/form-data-4.0.5.tgz#b49e48858045ff4cbf6b03e1805cebcad3679053"
-  integrity sha512-8RipRLol37bNs2bhoV67fiTEvdTrbMUYcFTiy3+wuuOnUog2QBHCZWXDRijWQfAkhBj2Uf5UnVaiWwA5vdd82w==
-  dependencies:
-    asynckit "^0.4.0"
-    combined-stream "^1.0.8"
-    es-set-tostringtag "^2.1.0"
-    hasown "^2.0.2"
-    mime-types "^2.1.12"
 
 form-data@~2.3.2:
   version "2.3.3"
@@ -6279,7 +6273,7 @@ fs-extra@11.1.1:
     jsonfile "^6.0.1"
     universalify "^2.0.0"
 
-fs-extra@11.3.3, fs-extra@^11.0.0, fs-extra@^11.3.2:
+fs-extra@11.3.3, fs-extra@^11.0.0:
   version "11.3.3"
   resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-11.3.3.tgz#a27da23b72524e81ac6c3815cc0179b8c74c59ee"
   integrity sha512-VWSRii4t0AFm6ixFFmLLx1t7wS1gh+ckoa84aOeapGum0h+EZd1EhEumSB+ZdDLnEPuucsVB9oB7cxJHap6Afg==
@@ -7448,7 +7442,7 @@ jsonfile@^6.0.1:
   optionalDependencies:
     graceful-fs "^4.1.6"
 
-jsonwebtoken@^9.0.2:
+jsonwebtoken@9.0.3:
   version "9.0.3"
   resolved "https://registry.yarnpkg.com/jsonwebtoken/-/jsonwebtoken-9.0.3.tgz#6cd57ab01e9b0ac07cb847d53d3c9b6ee31f7ae2"
   integrity sha512-MT/xP0CrubFRNLNKvxJ2BYfy53Zkm++5bX9dtuPbqAeQpTVe0MQTFhao8+Cp//EmJp244xt6Drw/GVEGCUj40g==
@@ -10481,6 +10475,11 @@ unherit@^1.0.4:
   dependencies:
     inherits "^2.0.0"
     xtend "^4.0.0"
+
+unidecode@1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/unidecode/-/unidecode-1.1.0.tgz#0b5f5ddd9b7b1ce3dbc7a24c72150edd63a83a8c"
+  integrity sha512-GIp57N6DVVJi8dpeIU6/leJGdv7W65ZSXFLFiNmxvexXkc0nXdqUvhA/qL9KqBKsILxMwg5MnmYNOIDJLb5JVA==
 
 unidecode@^0.1.8:
   version "0.1.8"
