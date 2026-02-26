@@ -39,6 +39,6 @@
   },
   "dependencies": {
     "@tryghost/admin-api": "1.14.4",
-    "@tryghost/errors": "1.3.13"
+    "@tryghost/errors": "2.2.1"
   }
 }
