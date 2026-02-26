@@ -1,3 +1,5 @@
+import assert from 'node:assert/strict';
+import {describe, it, before, after} from 'node:test';
 import {URL} from 'node:url';
 import {unlink} from 'node:fs';
 import {join} from 'node:path';
@@ -10,13 +12,13 @@ const inputPath = join(__dirname, '/fixtures/export/');
 const inputZipPath = join(__dirname, '/fixtures/export.zip');
 
 describe('contentStats', function () {
-    beforeAll(function () {
+    before(function () {
         execSync(`zip -r ${inputZipPath} *`, {
             cwd: inputPath
         });
     });
 
-    afterAll(function () {
+    after(function () {
         unlink(inputZipPath, (err) => {
             if (err) {
                 throw err;
@@ -27,9 +29,10 @@ describe('contentStats', function () {
     it('Count posts & users', async function () {
         const stats = await contentStats(inputZipPath);
 
-        expect(stats).toContainAllKeys(['posts', 'users']);
-        expect(stats.posts).toEqual(7);
-        expect(stats.users).toEqual(1);
+        for (const key of ['posts', 'users']) {
+            assert.ok(key in stats);
+        }
+        assert.equal(stats.posts, 7);
+        assert.equal(stats.users, 1);
     });
 });
-
