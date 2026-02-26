@@ -3566,6 +3566,13 @@
   dependencies:
     unidecode "^0.1.8"
 
+"@tryghost/string@0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.3.1.tgz#83ba5fb48c8285915b39dbe2425c9bf76d9c16c7"
+  integrity sha512-p1wyN6p5Ds6IQkoYwIJkabhQ10WIY+t8yf3/Uf/BNADTg66R0jYF8wmXgFYpBwm55rXwM/92cROwvopIbFKtYg==
+  dependencies:
+    unidecode "1.1.0"
+
 "@tryghost/tpl@^0.1.36":
   version "0.1.40"
   resolved "https://registry.yarnpkg.com/@tryghost/tpl/-/tpl-0.1.40.tgz#4dba69276ed9dd1baa44548cc3c3117442d42077"
@@ -10494,6 +10501,11 @@ unherit@^1.0.4:
   dependencies:
     inherits "^2.0.0"
     xtend "^4.0.0"
+
+unidecode@1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/unidecode/-/unidecode-1.1.0.tgz#0b5f5ddd9b7b1ce3dbc7a24c72150edd63a83a8c"
+  integrity sha512-GIp57N6DVVJi8dpeIU6/leJGdv7W65ZSXFLFiNmxvexXkc0nXdqUvhA/qL9KqBKsILxMwg5MnmYNOIDJLb5JVA==
 
 unidecode@^0.1.8:
   version "0.1.8"
