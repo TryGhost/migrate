@@ -130,8 +130,7 @@ TypeScript packages live in `src/` and compile to `build/`.
 ## Testing Patterns
 
 ### Framework
-- **Existing packages** use Jest 30 with `NODE_OPTIONS=--experimental-vm-modules` for ESM support
-- **New packages** should use Node's built-in test runner with `node:assert/strict`
+- **All packages** use Node's built-in test runner (`node:test`) with `node:assert/strict`
 - **c8** for coverage (100% required for TypeScript packages)
 
 ### Test File Location
@@ -143,18 +142,19 @@ Always use `*.test.js` or `*.test.ts` (not `.spec`).
 
 ### Example Test (JavaScript):
 ```javascript
-import {describe, it, expect} from '@jest/globals';
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {myFunction} from '../lib/utils.js';
 
 describe('myFunction', function () {
     it('returns expected result', function () {
         const result = myFunction('input');
-        expect(result).toEqual('expected');
+        assert.equal(result, 'expected');
     });
 });
 ```
 
-### Example Test (TypeScript - new packages with Node test runner):
+### Example Test (TypeScript):
 ```typescript
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
