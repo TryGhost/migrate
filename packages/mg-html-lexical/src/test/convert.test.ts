@@ -1,9 +1,10 @@
-import assert from 'assert/strict';
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {convert} from '../index.js';
 
 describe('Convert', function () {
-    test('Can convert a list of posts', async function () {
+    it('Can convert a list of posts', async function () {
         const ctx: any = {
             options: {
                 fallBackHTMLCard: false
@@ -55,7 +56,7 @@ describe('Convert', function () {
         assert.deepEqual(ctx.result.posts[2].lexical.startsWith('{"root":{"children"'), true);
     });
 
-    test('Log warning if post failed to convert to HTML card', async function () {
+    it('Log warning if post failed to convert to HTML card', async function () {
         const ctx: any = {
             options: {
                 fallBackHTMLCard: true
@@ -93,7 +94,7 @@ describe('Convert', function () {
         assert.deepEqual(Object.keys(ctx.result.posts[2]), ['title', 'slug', 'lexical']);
     });
 
-    test('Log warning if post failed to convert to Lexical', async function () {
+    it('Log warning if post failed to convert to Lexical', async function () {
         const ctx: any = {
             options: {
                 fallBackHTMLCard: false
@@ -131,7 +132,7 @@ describe('Convert', function () {
         assert.deepEqual(Object.keys(ctx.result.posts[2]), ['title', 'slug', 'lexical']);
     });
 
-    test('Finds posts in ctx.results.data.posts', async function () {
+    it('Finds posts in ctx.results.data.posts', async function () {
         const ctx: any = {
             options: {
                 fallBackHTMLCard: false
@@ -160,7 +161,7 @@ describe('Convert', function () {
         assert.equal(ctx.result.data.posts.length, 1);
     });
 
-    test('Finds posts in ctx.db[0].data.posts', async function () {
+    it('Finds posts in ctx.db[0].data.posts', async function () {
         const ctx: any = {
             options: {
                 fallBackHTMLCard: false
@@ -193,7 +194,7 @@ describe('Convert', function () {
         assert.equal(ctx.result.db[0].data.posts.length, 1);
     });
 
-    test('Handles empty content', async function () {
+    it('Handles empty content', async function () {
         const ctx: any = {
             options: {
                 fallBackHTMLCard: false

@@ -1,4 +1,5 @@
-import assert from 'assert/strict';
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {convertPost} from '../index.js';
 import type {postOptions} from '../lib/convert-post.js';
 
@@ -8,7 +9,7 @@ interface postOptionsTest extends postOptions {
 }
 
 describe('Convert Tasks', function () {
-    test('Can convert to a HTML card', function () {
+    it('Can convert to a HTML card', function () {
         let post: postOptions = {
             title: 'title',
             slug: 'slug',
@@ -47,7 +48,7 @@ describe('Convert Tasks', function () {
         });
     });
 
-    test('Convert to Lexical section', function () {
+    it('Convert to Lexical section', function () {
         let post: postOptions = {
             title: 'title',
             slug: 'slug',
@@ -88,7 +89,7 @@ describe('Convert Tasks', function () {
         });
     });
 
-    test('Can catch an error', function () {
+    it('Can catch an error', function () {
         // `convertPost` will not be expecting the `wrong_key` property, so it will throw an error
         let post: postOptionsTest = {
             title: 'Title',
@@ -106,7 +107,7 @@ describe('Convert Tasks', function () {
 });
 
 describe('HTML handling', function () {
-    test('Convert empty HTML to Lexical', function () {
+    it('Convert empty HTML to Lexical', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
@@ -136,7 +137,7 @@ describe('HTML handling', function () {
         });
     });
 
-    test('Convert HTML with only spaces to Lexical', function () {
+    it('Convert HTML with only spaces to Lexical', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
@@ -166,7 +167,7 @@ describe('HTML handling', function () {
         });
     });
 
-    test('Convert empty div to Lexical produces valid structure', function () {
+    it('Convert empty div to Lexical produces valid structure', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
@@ -189,7 +190,7 @@ describe('HTML handling', function () {
         });
     });
 
-    test('Convert div with br to Lexical produces valid structure', function () {
+    it('Convert div with br to Lexical produces valid structure', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
@@ -212,7 +213,7 @@ describe('HTML handling', function () {
         });
     });
 
-    test('Convert HTML comment only to Lexical produces valid structure', function () {
+    it('Convert HTML comment only to Lexical produces valid structure', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
@@ -235,7 +236,7 @@ describe('HTML handling', function () {
         });
     });
 
-    test('Convert newlines only to Lexical produces valid structure', function () {
+    it('Convert newlines only to Lexical produces valid structure', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
@@ -258,7 +259,7 @@ describe('HTML handling', function () {
         });
     });
 
-    test('Convert full content to Lexical', function () {
+    it('Convert full content to Lexical', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
@@ -420,7 +421,7 @@ describe('HTML handling', function () {
         });
     });
 
-    test('Correctly transforms relative Portal links that start with #', function () {
+    it('Correctly transforms relative Portal links that start with #', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
@@ -450,7 +451,7 @@ describe('HTML handling', function () {
         assert.deepEqual(lexical.root.children[7].children[1].url, 'https://example.com/#/portal/signup/free');
     });
 
-    test('Correctly converts a linked image', function () {
+    it('Correctly converts a linked image', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
@@ -469,7 +470,7 @@ describe('HTML handling', function () {
         assert.equal(lexical.root.children[0].children[0].children[1].text, 'Hello');
     });
 
-    test('Correctly converts a linked image with img alt', function () {
+    it('Correctly converts a linked image with img alt', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
@@ -489,7 +490,7 @@ describe('HTML handling', function () {
         assert.equal(lexical.root.children[0].children[0].children[1].text, 'Hello');
     });
 
-    test('Correctly converts a WordPress flavoured image', function () {
+    it('Correctly converts a WordPress flavoured image', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
@@ -507,7 +508,7 @@ describe('HTML handling', function () {
         assert.equal(lexical.root.children[0].height, 683);
     });
 
-    test('Correctly converts a WordPress flavoured linked image', function () {
+    it('Correctly converts a WordPress flavoured linked image', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
@@ -526,7 +527,7 @@ describe('HTML handling', function () {
         assert.equal(lexical.root.children[0].href, 'https://example.com/2021/12/13/compare/');
     });
 
-    test('Converts a nested list', function () {
+    it('Converts a nested list', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
@@ -559,7 +560,7 @@ describe('HTML handling', function () {
         assert.equal(lexical.root.children[0].children[2].children[0].children[1].children[0].text, 'Two');
     });
 
-    test('Converts paywall card', function () {
+    it('Converts paywall card', function () {
         let post: postOptions = {
             title: 'Title',
             slug: 'slug',
