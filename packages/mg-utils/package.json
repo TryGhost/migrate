@@ -19,7 +19,7 @@
     "posttest": "yarn lint"
   },
   "devDependencies": {
-    "@types/jsdom": "21.1.7",
+    "@types/jsdom": "28.0.0",
     "@types/node": "24.10.13",
     "@typescript-eslint/eslint-plugin": "8.56.1",
     "@typescript-eslint/parser": "8.56.1",
@@ -29,6 +29,6 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "jsdom": "26.0.0"
+    "jsdom": "28.1.0"
   }
 }
