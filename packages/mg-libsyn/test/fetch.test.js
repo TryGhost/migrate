@@ -1,3 +1,5 @@
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import path from 'node:path';
 import {promises as fs} from 'node:fs';
 import {rssToJson} from '../lib/fetch.js';
@@ -10,13 +12,13 @@ const readSync = async (name) => {
 };
 
 describe('rssToJson', function () {
-    test('Correctly converts XML to JSON', async function () {
+    it('Correctly converts XML to JSON', async function () {
         const xmlFixture = await readSync('feed.xml');
         const jsonFile = await readSync('feed.json');
         const jsonFixture = JSON.parse(jsonFile);
 
         const converted = rssToJson(xmlFixture);
 
-        expect(converted).toEqual(jsonFixture);
+        assert.deepEqual(converted, jsonFixture);
     });
 });

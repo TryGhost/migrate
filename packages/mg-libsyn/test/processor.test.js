@@ -1,40 +1,45 @@
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
+import {createRequire} from 'node:module';
 import processor from '../lib/processor.js';
-import fixture from './fixtures/feed.json';
+
+const require = createRequire(import.meta.url);
+const fixture = require('./fixtures/feed.json');
 
 describe('durationToSeconds', function () {
-    test('Minutes with no seconds', function () {
+    it('Minutes with no seconds', function () {
         const result = processor.durationToSeconds('1');
-        expect(result).toEqual(60);
+        assert.equal(result, 60);
     });
 
-    test('Minutes with seconds', function () {
+    it('Minutes with seconds', function () {
         const result = processor.durationToSeconds('1:00');
-        expect(result).toEqual(60);
+        assert.equal(result, 60);
     });
 
-    test('Minutes with seconds & leading zero', function () {
+    it('Minutes with seconds & leading zero', function () {
         const result = processor.durationToSeconds('01:00');
-        expect(result).toEqual(60);
+        assert.equal(result, 60);
     });
 
-    test('2 character minutes with seconds', function () {
+    it('2 character minutes with seconds', function () {
         const result = processor.durationToSeconds('10:00');
-        expect(result).toEqual(600);
+        assert.equal(result, 600);
     });
 
-    test('1 character minutes with seconds', function () {
+    it('1 character minutes with seconds', function () {
         const result = processor.durationToSeconds('1:23');
-        expect(result).toEqual(83);
+        assert.equal(result, 83);
     });
 
-    test('2 character minutes with odd seconds', function () {
+    it('2 character minutes with odd seconds', function () {
         const result = processor.durationToSeconds('12:34');
-        expect(result).toEqual(754);
+        assert.equal(result, 754);
     });
 });
 
 describe('Process posts', function () {
-    test('Can process posts', function () {
+    it('Can process posts', function () {
         const data = {
             posts: fixture.rss.channel.item,
             author: {
@@ -51,10 +56,10 @@ describe('Process posts', function () {
             }
         });
 
-        expect(result.posts).toBeArrayOfSize(2);
+        assert.equal(result.posts.length, 2);
     });
 
-    test('Post has required fields', function () {
+    it('Post has required fields', function () {
         const data = {
             posts: fixture.rss.channel.item,
             author: {
@@ -74,31 +79,44 @@ describe('Process posts', function () {
 
         const post = result.posts[0];
 
-        expect(post).toContainAllKeys(['url', 'data']);
-        expect(post.data).toContainAllKeys(['slug', 'title', 'created_at', 'published_at', 'updated_at', 'type', 'status', 'tags', 'author', 'html']);
+        for (const key of ['url', 'data']) {
+            assert.ok(key in post);
+        }
+        for (const key of ['slug', 'title', 'created_at', 'published_at', 'updated_at', 'type', 'status', 'tags', 'author', 'html']) {
+            assert.ok(key in post.data);
+        }
 
-        expect(post.data.slug).toEqual('lorem-ipsum');
-        expect(post.data.title).toEqual('Lorem Ipsum');
-        expect(post.data.created_at).toEqual('2020-08-10T07:00:00.000Z');
-        expect(post.data.published_at).toEqual('2020-08-10T07:00:00.000Z');
-        expect(post.data.updated_at).toEqual('2020-08-10T07:00:00.000Z');
-        expect(post.data.type).toEqual('post');
-        expect(post.data.status).toEqual('published');
+        assert.equal(post.data.slug, 'lorem-ipsum');
+        assert.equal(post.data.title, 'Lorem Ipsum');
+        assert.equal(post.data.created_at, '2020-08-10T07:00:00.000Z');
+        assert.equal(post.data.published_at, '2020-08-10T07:00:00.000Z');
+        assert.equal(post.data.updated_at, '2020-08-10T07:00:00.000Z');
+        assert.equal(post.data.type, 'post');
+        assert.equal(post.data.status, 'published');
         // Test post.data.html below
 
-        expect(post.data.author).toBeObject();
-        expect(post.data.author).toContainAllKeys(['url', 'data']);
-        expect(post.data.author.data).toContainAllKeys(['name', 'slug', 'email']);
-        expect(post.data.author.data.name).toEqual('Test Author');
-        expect(post.data.author.data.slug).toEqual('test-author');
-        expect(post.data.author.data.email).toEqual('test@author.com');
+        assert.equal(typeof post.data.author, 'object');
+        assert.ok(post.data.author !== null);
+        for (const key of ['url', 'data']) {
+            assert.ok(key in post.data.author);
+        }
+        for (const key of ['name', 'slug', 'email']) {
+            assert.ok(key in post.data.author.data);
+        }
+        assert.equal(post.data.author.data.name, 'Test Author');
+        assert.equal(post.data.author.data.slug, 'test-author');
+        assert.equal(post.data.author.data.email, 'test@author.com');
 
-        expect(post.data.tags).toBeArray();
-        expect(post.data.tags[0]).toContainAllKeys(['url', 'data']);
-        expect(post.data.tags[0].data).toContainAllKeys(['name', 'slug']);
+        assert.ok(Array.isArray(post.data.tags));
+        for (const key of ['url', 'data']) {
+            assert.ok(key in post.data.tags[0]);
+        }
+        for (const key of ['name', 'slug']) {
+            assert.ok(key in post.data.tags[0].data);
+        }
     });
 
-    test('Can add a tag', function () {
+    it('Can add a tag', function () {
         const data = {
             posts: fixture.rss.channel.item,
             author: {
@@ -121,14 +139,18 @@ describe('Process posts', function () {
 
         const post = result.posts[0];
 
-        expect(post.data.tags).toBeArrayOfSize(2);
-        expect(post.data.tags[0]).toContainAllKeys(['url', 'data']);
-        expect(post.data.tags[0].data).toContainAllKeys(['name', 'slug']);
-        expect(post.data.tags[0].data.name).toEqual('My Podcast');
-        expect(post.data.tags[0].data.slug).toEqual('my-podcast');
+        assert.equal(post.data.tags.length, 2);
+        for (const key of ['url', 'data']) {
+            assert.ok(key in post.data.tags[0]);
+        }
+        for (const key of ['name', 'slug']) {
+            assert.ok(key in post.data.tags[0].data);
+        }
+        assert.equal(post.data.tags[0].data.name, 'My Podcast');
+        assert.equal(post.data.tags[0].data.slug, 'my-podcast');
     });
 
-    test('Can use feed categories', function () {
+    it('Can use feed categories', function () {
         const data = {
             posts: fixture.rss.channel.item,
             tags: ['Lorem', 'Ipsum', 'dolor'],
@@ -153,30 +175,30 @@ describe('Process posts', function () {
         const post = result.posts[0];
         const tags = post.data.tags;
 
-        expect(tags).toBeArrayOfSize(5);
+        assert.equal(tags.length, 5);
 
-        expect(tags[0].url).toEqual('migrator-added-tag-my-podcast');
-        expect(tags[0].data.name).toEqual('My Podcast');
-        expect(tags[0].data.slug).toEqual('my-podcast');
+        assert.equal(tags[0].url, 'migrator-added-tag-my-podcast');
+        assert.equal(tags[0].data.name, 'My Podcast');
+        assert.equal(tags[0].data.slug, 'my-podcast');
 
-        expect(tags[1].url).toEqual('migrator-added-tag-lorem');
-        expect(tags[1].data.name).toEqual('Lorem');
-        expect(tags[1].data.slug).toEqual('lorem');
+        assert.equal(tags[1].url, 'migrator-added-tag-lorem');
+        assert.equal(tags[1].data.name, 'Lorem');
+        assert.equal(tags[1].data.slug, 'lorem');
 
-        expect(tags[2].url).toEqual('migrator-added-tag-ipsum');
-        expect(tags[2].data.name).toEqual('Ipsum');
-        expect(tags[2].data.slug).toEqual('ipsum');
+        assert.equal(tags[2].url, 'migrator-added-tag-ipsum');
+        assert.equal(tags[2].data.name, 'Ipsum');
+        assert.equal(tags[2].data.slug, 'ipsum');
 
-        expect(tags[3].url).toEqual('migrator-added-tag-dolor');
-        expect(tags[3].data.name).toEqual('dolor');
-        expect(tags[3].data.slug).toEqual('dolor');
+        assert.equal(tags[3].url, 'migrator-added-tag-dolor');
+        assert.equal(tags[3].data.name, 'dolor');
+        assert.equal(tags[3].data.slug, 'dolor');
 
-        expect(tags[4].url).toEqual('migrator-added-tag');
-        expect(tags[4].data.name).toEqual('#libsyn');
-        expect(tags[4].data.slug).toEqual('hash-libsyn');
+        assert.equal(tags[4].url, 'migrator-added-tag');
+        assert.equal(tags[4].data.name, '#libsyn');
+        assert.equal(tags[4].data.slug, 'hash-libsyn');
     });
 
-    test('Can use item categories', function () {
+    it('Can use item categories', function () {
         const data = {
             posts: fixture.rss.channel.item,
             author: {
@@ -200,28 +222,28 @@ describe('Process posts', function () {
         const post = result.posts[0];
         const tags = post.data.tags;
 
-        expect(tags).toBeArrayOfSize(4);
+        assert.equal(tags.length, 4);
 
-        expect(tags[0].url).toEqual('migrator-added-tag-my-podcast');
-        expect(tags[0].data.name).toEqual('My Podcast');
-        expect(tags[0].data.slug).toEqual('my-podcast');
+        assert.equal(tags[0].url, 'migrator-added-tag-my-podcast');
+        assert.equal(tags[0].data.name, 'My Podcast');
+        assert.equal(tags[0].data.slug, 'my-podcast');
 
-        expect(tags[1].url).toEqual('migrator-added-tag-exmaple');
-        expect(tags[1].data.name).toEqual('exmaple');
-        expect(tags[1].data.slug).toEqual('exmaple');
+        assert.equal(tags[1].url, 'migrator-added-tag-exmaple');
+        assert.equal(tags[1].data.name, 'exmaple');
+        assert.equal(tags[1].data.slug, 'exmaple');
 
-        expect(tags[2].url).toEqual('migrator-added-tag-keywords');
-        expect(tags[2].data.name).toEqual('keywords');
-        expect(tags[2].data.slug).toEqual('keywords');
+        assert.equal(tags[2].url, 'migrator-added-tag-keywords');
+        assert.equal(tags[2].data.name, 'keywords');
+        assert.equal(tags[2].data.slug, 'keywords');
 
-        expect(tags[3].url).toEqual('migrator-added-tag');
-        expect(tags[3].data.name).toEqual('#libsyn');
-        expect(tags[3].data.slug).toEqual('hash-libsyn');
+        assert.equal(tags[3].url, 'migrator-added-tag');
+        assert.equal(tags[3].data.name, '#libsyn');
+        assert.equal(tags[3].data.slug, 'hash-libsyn');
     });
 });
 
 describe('Process content', function () {
-    test('Remove empty p tags', function () {
+    it('Remove empty p tags', function () {
         const data = {
             posts: fixture.rss.channel.item,
             author: {
@@ -241,10 +263,10 @@ describe('Process content', function () {
 
         const post = result.posts[0];
 
-        expect(post.data.html).toEqual('<!--kg-card-begin: html--><iframe id="embed_12345678" title="Lorem Ipsum" style="border: none" src="//html5-player.libsyn.com/embed/episode/id/12345678/custom-color/000000/" height="90" width="100%" scrolling="no" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe><!--kg-card-end: html--><p>Description</p>');
+        assert.equal(post.data.html, '<!--kg-card-begin: html--><iframe id="embed_12345678" title="Lorem Ipsum" style="border: none" src="//html5-player.libsyn.com/embed/episode/id/12345678/custom-color/000000/" height="90" width="100%" scrolling="no" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe><!--kg-card-end: html--><p>Description</p>');
     });
 
-    test('Use Libsyn embeds', function () {
+    it('Use Libsyn embeds', function () {
         const data = {
             posts: fixture.rss.channel.item,
             author: {
@@ -264,12 +286,12 @@ describe('Process content', function () {
 
         const post = result.posts[0];
 
-        expect(post.data.html).toInclude('<!--kg-card-begin: html--><iframe id="embed_12345678" title="Lorem Ipsum" style="border: none" src="//html5-player.libsyn.com/embed/episode/id/12345678/custom-color/000000/" height="90" width="100%" scrolling="no" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe><!--kg-card-end: html--><p>Description</p>');
+        assert.ok(post.data.html.includes('<!--kg-card-begin: html--><iframe id="embed_12345678" title="Lorem Ipsum" style="border: none" src="//html5-player.libsyn.com/embed/episode/id/12345678/custom-color/000000/" height="90" width="100%" scrolling="no" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe><!--kg-card-end: html--><p>Description</p>'));
 
-        expect(post.data.html).not.toInclude('<div class="kg-card kg-audio-card">');
+        assert.ok(!post.data.html.includes('<div class="kg-card kg-audio-card">'));
     });
 
-    test('Use Audio cards', function () {
+    it('Use Audio cards', function () {
         const data = {
             posts: fixture.rss.channel.item,
             author: {
@@ -289,12 +311,12 @@ describe('Process content', function () {
 
         const post = result.posts[0];
 
-        expect(post.data.html).toInclude('<div class="kg-card kg-audio-card">');
-        expect(post.data.html).toInclude('<img src="https://ssl-static.libsyn.com/p/assets/1/9/0/c/abcd123434a5734c/cover.jpg"');
-        expect(post.data.html).toInclude('<div class="kg-audio-player-container"');
-        expect(post.data.html).toInclude('<audio src="https://traffic.libsyn.com/secure/exampleshow/lorem-ipsum.mp3"');
-        expect(post.data.html).toInclude('<span class="kg-audio-duration">24:51</span>');
+        assert.ok(post.data.html.includes('<div class="kg-card kg-audio-card">'));
+        assert.ok(post.data.html.includes('<img src="https://ssl-static.libsyn.com/p/assets/1/9/0/c/abcd123434a5734c/cover.jpg"'));
+        assert.ok(post.data.html.includes('<div class="kg-audio-player-container"'));
+        assert.ok(post.data.html.includes('<audio src="https://traffic.libsyn.com/secure/exampleshow/lorem-ipsum.mp3"'));
+        assert.ok(post.data.html.includes('<span class="kg-audio-duration">24:51</span>'));
 
-        expect(post.data.html).not.toInclude('<!--kg-card-begin: html--><iframe id="embed_12345678" title="Lorem Ipsum" style="border: none" src="//html5-player.libsyn.com/embed/episode/id/12345678/custom-color/000000/" height="90" width="100%" scrolling="no" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe><!--kg-card-end: html--><p>Description</p>');
+        assert.ok(!post.data.html.includes('<!--kg-card-begin: html--><iframe id="embed_12345678" title="Lorem Ipsum" style="border: none" src="//html5-player.libsyn.com/embed/episode/id/12345678/custom-color/000000/" height="90" width="100%" scrolling="no" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe><!--kg-card-end: html--><p>Description</p>'));
     });
 });
