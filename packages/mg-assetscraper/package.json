@@ -20,7 +20,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.57.0",
+    "eslint": "8.57.1",
     "listr": "0.14.3"
   },
   "dependencies": {

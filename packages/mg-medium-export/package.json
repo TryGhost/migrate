@@ -21,7 +21,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.57.0"
+    "eslint": "8.57.1"
   },
   "dependencies": {
     "@tryghost/debug": "1.2.1",
