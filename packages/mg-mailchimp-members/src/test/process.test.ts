@@ -2,6 +2,7 @@ import {URL} from 'node:url';
 import {unlink} from 'node:fs';
 import {execSync} from 'node:child_process';
 import assert from 'node:assert/strict';
+import {describe, it, before, after} from 'node:test';
 import {join} from 'node:path';
 import processCsv from '../index.js';
 import {processData} from '../lib/process.js';
@@ -175,13 +176,13 @@ describe('Mailchimp Members CSV', () => {
 });
 
 describe('Mailchimp Members ZIP', () => {
-    beforeAll(function () {
+    before(function () {
         execSync(`zip -r ${inputZipPath} *`, {
             cwd: inputPath
         });
     });
 
-    afterAll(function () {
+    after(function () {
         unlink(inputZipPath, (err) => {
             if (err) {
                 throw err;

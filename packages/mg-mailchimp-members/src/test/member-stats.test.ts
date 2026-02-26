@@ -2,6 +2,7 @@ import {URL} from 'node:url';
 import {unlink} from 'node:fs';
 import {execSync} from 'node:child_process';
 import assert from 'node:assert/strict';
+import {describe, it, before, after} from 'node:test';
 import {join} from 'node:path';
 import {memberStats} from '../index.js';
 
@@ -11,13 +12,13 @@ const inputPath = fixturesPath;
 const inputZipPath = join(fixturesPath, 'stats.zip');
 
 describe('Mailchimp member stats', () => {
-    beforeAll(function () {
+    before(function () {
         execSync(`zip -r ${inputZipPath} *`, {
             cwd: inputPath
         });
     });
 
-    afterAll(function () {
+    after(function () {
         unlink(inputZipPath, (err) => {
             if (err) {
                 throw err;
