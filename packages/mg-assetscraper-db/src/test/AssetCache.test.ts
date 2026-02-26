@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {describe, it, beforeEach} from 'node:test';
 import AssetCache from '../lib/AssetCache.js';
 import {validate as uuidValidate} from 'uuid';
 import fsUtils from '@tryghost/mg-fs-utils';
@@ -21,13 +22,13 @@ describe('AssetCache from scratch', () => {
     //     await assetCache._reset();
     // });
 
-    test('Starts with an empty cache', async () => {
+    it('Starts with an empty cache', async () => {
         const result = await assetCache.getAll();
 
         assert.equal(result.length, 0);
     });
 
-    test('Can add & read a single item', async () => {
+    it('Can add & read a single item', async () => {
         const newItem = await assetCache.add('/wp-content/2024/11/01/lorem.jpg');
 
         // Check we return a newly created object
@@ -41,7 +42,7 @@ describe('AssetCache from scratch', () => {
         assert.equal(result[0].src, '/wp-content/2024/11/01/lorem.jpg');
     });
 
-    test('Does not add the same item twice', async () => {
+    it('Does not add the same item twice', async () => {
         // Add the item first, and get its ID
         const firstInsert = await assetCache.add('/wp-content/2024/11/01/lorem.jpg');
         const firstInsertID = firstInsert.uuid;
@@ -74,7 +75,7 @@ describe('AssetCache from scratch', () => {
     //     assert.equal(results[1].src, '/wp-content/2024/11/01/dolor.jpg');
     // });
 
-    test('Can find a single item by src', async () => {
+    it('Can find a single item by src', async () => {
         await assetCache.add('/wp-content/2024/11/01/lorem.jpg');
         await assetCache.add('/wp-content/2024/11/01/ipsum.jpg');
 
@@ -93,7 +94,7 @@ describe('AssetCache from scratch', () => {
     //     assert.deepEqual(results, []);
     // });
 
-    test('Can update a single item', async () => {
+    it('Can update a single item', async () => {
         // Insert an item and then update it
         const item = await assetCache.add('/wp-content/2024/11/01/lorem.jpg');
         await assetCache.update(item.id, 'localPath', '/content/images/wp-content/2024/11/01/lorem.jpg');
@@ -145,13 +146,13 @@ describe('AssetCache from scratch', () => {
 //         });
 //     });
 
-//     test('Starts with 100 items', async () => {
+//     it('Starts with 100 items', async () => {
 //         const result = await assetCache.getAll();
 
 //         assert.equal(result.length, 20);
 //     });
 
-//     test('Can find items by where clauses', async () => {
+//     it('Can find items by where clauses', async () => {
 //         // Get the 2 items that end in `0.jpg`
 //         const results = await assetCache.find((item: any) => item.src.includes('0.jpg'));
 //         assert.equal(results.length, 2);

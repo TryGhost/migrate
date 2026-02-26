@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {describe, it, before, beforeEach, afterEach} from 'node:test';
 import {readFile} from 'node:fs/promises';
 import fs, {chownSync, rmSync} from 'node:fs';
 import {join} from 'node:path';
@@ -30,7 +31,7 @@ describe('Asset Scraper', () => {
     let mp4VideoBuffer: Buffer;
     let mp3AudioBuffer: Buffer;
 
-    beforeAll(async () => {
+    before(async () => {
         jpgImageBuffer = await readFile(join(fixturesPath, '/image.jpg'));
         avifImageBuffer = await readFile(join(fixturesPath, '/image.avif'));
         heicImageBuffer = await readFile(join(fixturesPath, '/image.heic'));
