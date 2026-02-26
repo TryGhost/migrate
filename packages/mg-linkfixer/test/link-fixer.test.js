@@ -1,13 +1,17 @@
+import assert from 'node:assert/strict';
+import {describe, it, before} from 'node:test';
+import {createRequire} from 'node:module';
 import {toGhostJSON} from '@tryghost/mg-json';
 import linkFixer from '../lib/LinkFixer.js';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 
-import standardFixtures from './fixtures/ctx.json';
-import standardLexicalFixtures from './fixtures/ctx-lexical.json';
-import yyyymmFixtures from './fixtures/ctx-yyyy-mm.json';
-import slugYyyymmFixtures from './fixtures/ctx-slug-yyyy-mm.json';
-import yyyymmddFixtures from './fixtures/ctx-yyyy-mm-dd.json';
-import slugYyyymmddFixtures from './fixtures/ctx-slug-yyyy-mm-dd.json';
+const require = createRequire(import.meta.url);
+const standardFixtures = require('./fixtures/ctx.json');
+const standardLexicalFixtures = require('./fixtures/ctx-lexical.json');
+const yyyymmFixtures = require('./fixtures/ctx-yyyy-mm.json');
+const slugYyyymmFixtures = require('./fixtures/ctx-slug-yyyy-mm.json');
+const yyyymmddFixtures = require('./fixtures/ctx-yyyy-mm-dd.json');
+const slugYyyymmddFixtures = require('./fixtures/ctx-slug-yyyy-mm-dd.json');
 
 const getPosts = async (options = {}) => {
     let ctx = null;
@@ -48,7 +52,7 @@ let dailyPosts;
 let datelessLexicalPosts;
 let datelessPosts;
 
-beforeAll(async () => {
+before(async () => {
     slugMonthlyPosts = await getPosts({datedPermalinks: '/*/yyyy/mm/'});
     monthlyPosts = await getPosts({datedPermalinks: '/yyyy/mm/'});
     slugDailyPosts = await getPosts({datedPermalinks: '/*/yyyy/mm/dd/'});
@@ -58,108 +62,108 @@ beforeAll(async () => {
 });
 
 describe('LinkFixer', function () {
-    test('Fixes links to posts in HTML', async function () {
-        expect(datelessPosts).toBeArrayOfSize(7);
+    it('Fixes links to posts in HTML', async function () {
+        assert.equal(datelessPosts.length, 7);
 
-        expect(datelessPosts[3].html).not.toContain('<a href="https://example.com/2020/06/27/lorem-ipsum/">Consectetur</a>');
-        expect(datelessPosts[3].html).toContain('<a href="/lorem-ipsum/">Consectetur</a>');
+        assert.ok(!datelessPosts[3].html.includes('<a href="https://example.com/2020/06/27/lorem-ipsum/">Consectetur</a>'));
+        assert.ok(datelessPosts[3].html.includes('<a href="/lorem-ipsum/">Consectetur</a>'));
     });
 
-    test('Fixes links to posts in Lexical', async function () {
-        expect(datelessLexicalPosts).toBeArrayOfSize(7);
+    it('Fixes links to posts in Lexical', async function () {
+        assert.equal(datelessLexicalPosts.length, 7);
 
-        expect(datelessLexicalPosts[0].lexical).not.toContain(`"url":"https://example.com/lorem-ipsum/"`);
-        expect(datelessLexicalPosts[0].lexical).toContain(`"url":"/lorem-ipsum/"`);
+        assert.ok(!datelessLexicalPosts[0].lexical.includes(`"url":"https://example.com/lorem-ipsum/"`));
+        assert.ok(datelessLexicalPosts[0].lexical.includes(`"url":"/lorem-ipsum/"`));
 
-        expect(datelessLexicalPosts[0].lexical).not.toContain(`"url":"https://example.com/dolor-simet/"`);
-        expect(datelessLexicalPosts[0].lexical).toContain(`"url":"/dolor-simet/"`);
+        assert.ok(!datelessLexicalPosts[0].lexical.includes(`"url":"https://example.com/dolor-simet/"`));
+        assert.ok(datelessLexicalPosts[0].lexical.includes(`"url":"/dolor-simet/"`));
 
-        expect(datelessLexicalPosts[0].lexical).not.toContain(`"url":"https://example.com/est-vitae/"`);
-        expect(datelessLexicalPosts[0].lexical).toContain(`"url":"/est-vitae/"`);
+        assert.ok(!datelessLexicalPosts[0].lexical.includes(`"url":"https://example.com/est-vitae/"`));
+        assert.ok(datelessLexicalPosts[0].lexical.includes(`"url":"/est-vitae/"`));
 
-        expect(datelessLexicalPosts[0].lexical).not.toContain(`"url":"https://example.com/sample-page/child-sample-page/"`);
-        expect(datelessLexicalPosts[0].lexical).toContain(`"url":"/child-sample-page/"`);
+        assert.ok(!datelessLexicalPosts[0].lexical.includes(`"url":"https://example.com/sample-page/child-sample-page/"`));
+        assert.ok(datelessLexicalPosts[0].lexical.includes(`"url":"/child-sample-page/"`));
 
-        expect(datelessLexicalPosts[0].lexical).not.toContain(`"url":"https://example.com/sample-page/"`);
-        expect(datelessLexicalPosts[0].lexical).toContain(`"url":"/sample-page/"`);
+        assert.ok(!datelessLexicalPosts[0].lexical.includes(`"url":"https://example.com/sample-page/"`));
+        assert.ok(datelessLexicalPosts[0].lexical.includes(`"url":"/sample-page/"`));
 
-        expect(datelessLexicalPosts[0].lexical).not.toContain(`"url":"https://example.com/query-params/"`);
-        expect(datelessLexicalPosts[0].lexical).toContain(`"url":"/query-params/"`);
+        assert.ok(!datelessLexicalPosts[0].lexical.includes(`"url":"https://example.com/query-params/"`));
+        assert.ok(datelessLexicalPosts[0].lexical.includes(`"url":"/query-params/"`));
 
-        expect(datelessLexicalPosts[0].lexical).not.toContain(`"url":"https://example.com/p/substack-url/"`);
-        expect(datelessLexicalPosts[0].lexical).toContain(`"url":"/substack-url/"`);
+        assert.ok(!datelessLexicalPosts[0].lexical.includes(`"url":"https://example.com/p/substack-url/"`));
+        assert.ok(datelessLexicalPosts[0].lexical.includes(`"url":"/substack-url/"`));
     });
 
     it('Treats http and https links to the same domain equally', async function () {
-        expect(datelessPosts[4].html).not.toContain('<a href="http://example.com/sample-page/">your dashboard</a>');
-        expect(datelessPosts[4].html).toContain('<a href="/sample-page/">your dashboard</a>');
+        assert.ok(!datelessPosts[4].html.includes('<a href="http://example.com/sample-page/">your dashboard</a>'));
+        assert.ok(datelessPosts[4].html.includes('<a href="/sample-page/">your dashboard</a>'));
     });
 
     it('Fixes yyyy-mm-dd dated links to posts', async function () {
-        expect(dailyPosts).toBeArrayOfSize(5);
+        assert.equal(dailyPosts.length, 5);
 
-        expect(dailyPosts[3].html).not.toContain('<a href="https://example.com/2020/06/27/lorem-ipsum/">Consectetur</a>');
-        expect(dailyPosts[3].html).toContain('<a href="/2020/06/27/lorem-ipsum/">Consectetur</a>');
+        assert.ok(!dailyPosts[3].html.includes('<a href="https://example.com/2020/06/27/lorem-ipsum/">Consectetur</a>'));
+        assert.ok(dailyPosts[3].html.includes('<a href="/2020/06/27/lorem-ipsum/">Consectetur</a>'));
     });
 
     it('Fixes slug-yyyy-mm-dd dated links to posts', async function () {
-        expect(slugDailyPosts).toBeArrayOfSize(5);
+        assert.equal(slugDailyPosts.length, 5);
 
-        expect(slugDailyPosts[3].html).not.toContain('<a href="https://example.com/articles/2020/06/27/lorem-ipsum/">Consectetur</a>');
-        expect(slugDailyPosts[3].html).toContain('<a href="/2020/06/27/lorem-ipsum/">Consectetur</a>');
+        assert.ok(!slugDailyPosts[3].html.includes('<a href="https://example.com/articles/2020/06/27/lorem-ipsum/">Consectetur</a>'));
+        assert.ok(slugDailyPosts[3].html.includes('<a href="/2020/06/27/lorem-ipsum/">Consectetur</a>'));
     });
 
     it('Fixes yyyy-mm dated links to posts', async function () {
-        expect(monthlyPosts).toBeArrayOfSize(5);
+        assert.equal(monthlyPosts.length, 5);
 
-        expect(monthlyPosts[3].html).not.toContain('<a href="https://example.com/2020/06/lorem-ipsum/">Consectetur</a>');
-        expect(monthlyPosts[3].html).toContain('<a href="/2020/06/lorem-ipsum/">Consectetur</a>');
+        assert.ok(!monthlyPosts[3].html.includes('<a href="https://example.com/2020/06/lorem-ipsum/">Consectetur</a>'));
+        assert.ok(monthlyPosts[3].html.includes('<a href="/2020/06/lorem-ipsum/">Consectetur</a>'));
     });
 
     it('Fixes slug-yyyy-mm dated links to posts', async function () {
-        expect(slugMonthlyPosts).toBeArrayOfSize(5);
+        assert.equal(slugMonthlyPosts.length, 5);
 
-        expect(slugMonthlyPosts[3].html).not.toContain('<a href="https://example.com/articles/2020/06/lorem-ipsum/">Consectetur</a>');
-        expect(slugMonthlyPosts[3].html).toContain('<a href="/2020/06/lorem-ipsum/">Consectetur</a>');
+        assert.ok(!slugMonthlyPosts[3].html.includes('<a href="https://example.com/articles/2020/06/lorem-ipsum/">Consectetur</a>'));
+        assert.ok(slugMonthlyPosts[3].html.includes('<a href="/2020/06/lorem-ipsum/">Consectetur</a>'));
     });
 
     it('Fixes links to pages', async function () {
-        expect(datelessPosts[0].html).not.toContain('<a href="https://example.com/sample-page/">aspernatur</a>');
-        expect(datelessPosts[0].html).toContain('<a href="/sample-page/">aspernatur</a>');
+        assert.ok(!datelessPosts[0].html.includes('<a href="https://example.com/sample-page/">aspernatur</a>'));
+        assert.ok(datelessPosts[0].html.includes('<a href="/sample-page/">aspernatur</a>'));
 
-        expect(datelessPosts[2].html).not.toContain('<a href="https://example.com/sample-page/child-sample-page/">quis</a>');
-        expect(datelessPosts[2].html).toContain('<a href="/child-sample-page/">quis</a>');
+        assert.ok(!datelessPosts[2].html.includes('<a href="https://example.com/sample-page/child-sample-page/">quis</a>'));
+        assert.ok(datelessPosts[2].html.includes('<a href="/child-sample-page/">quis</a>'));
     });
 
     it('Does not replace external links', async function () {
-        expect(datelessPosts[0].html).toContain('<a href="https://exampleurl.com/eos-quia-quos-voluptas-aliquam-et-et-omnis.html">Sunt tempore nisi similique</a>');
-        expect(datelessPosts[0].html).not.toContain('<a href="/eos-quia-quos-voluptas-aliquam-et-et-omnis.html">Sunt tempore nisi similique</a>');
+        assert.ok(datelessPosts[0].html.includes('<a href="https://exampleurl.com/eos-quia-quos-voluptas-aliquam-et-et-omnis.html">Sunt tempore nisi similique</a>'));
+        assert.ok(!datelessPosts[0].html.includes('<a href="/eos-quia-quos-voluptas-aliquam-et-et-omnis.html">Sunt tempore nisi similique</a>'));
     });
 
     it('Does replace tag links that were migrated', async function () {
-        expect(datelessPosts[1].html).not.toContain('<a href="https://example.com/category/cakes/fruit/">dolor</a>');
-        expect(datelessPosts[1].html).toContain('<a href="/tag/fruit/">dolor</a>');
+        assert.ok(!datelessPosts[1].html.includes('<a href="https://example.com/category/cakes/fruit/">dolor</a>'));
+        assert.ok(datelessPosts[1].html.includes('<a href="/tag/fruit/">dolor</a>'));
     });
 
     it('Does not replace tag links that were not migrated', async function () {
-        expect(datelessPosts[0].html).toContain('<a href="https://example.com/tag/delivery/">soluta</a>');
-        expect(datelessPosts[0].html).not.toContain('<a href="/tag/delivery/">soluta</a>');
+        assert.ok(datelessPosts[0].html.includes('<a href="https://example.com/tag/delivery/">soluta</a>'));
+        assert.ok(!datelessPosts[0].html.includes('<a href="/tag/delivery/">soluta</a>'));
     });
 
     it('Fixes links internal that contain query parameters', async function () {
-        expect(datelessPosts[5].html).toContain('<a href="/sample-page/">Sample page with query params</a>');
-        expect(datelessPosts[5].html).not.toContain('<a href="https://example.com/sample-page/?hello=world">Sample page with query params</a>');
+        assert.ok(datelessPosts[5].html.includes('<a href="/sample-page/">Sample page with query params</a>'));
+        assert.ok(!datelessPosts[5].html.includes('<a href="https://example.com/sample-page/?hello=world">Sample page with query params</a>'));
 
-        expect(datelessPosts[5].html).toContain('<a href="/child-sample-page/">Child sample page with query params</a>');
-        expect(datelessPosts[5].html).not.toContain('<a href="https://example.com/sample-page/child-sample-page/?lorem=ipsum">Child sample page with query params</a>');
+        assert.ok(datelessPosts[5].html.includes('<a href="/child-sample-page/">Child sample page with query params</a>'));
+        assert.ok(!datelessPosts[5].html.includes('<a href="https://example.com/sample-page/child-sample-page/?lorem=ipsum">Child sample page with query params</a>'));
 
-        expect(datelessPosts[5].html).toContain('<a href="https://exampleurl.com/sample-page/?let=amos">External sample page with query params</a>');
-        expect(datelessPosts[5].html).not.toContain('<a href="/sample-page/">External sample page with query params</a>');
+        assert.ok(datelessPosts[5].html.includes('<a href="https://exampleurl.com/sample-page/?let=amos">External sample page with query params</a>'));
+        assert.ok(!datelessPosts[5].html.includes('<a href="/sample-page/">External sample page with query params</a>'));
 
-        expect(datelessPosts[5].html).toContain('<a href="https://exampleurl.com/sample-page/child-sample-page/?dolor=simet">External child sample page with query params</a>');
-        expect(datelessPosts[5].html).not.toContain('<a href="/child-sample-page/">External child sample page with query params</a>');
+        assert.ok(datelessPosts[5].html.includes('<a href="https://exampleurl.com/sample-page/child-sample-page/?dolor=simet">External child sample page with query params</a>'));
+        assert.ok(!datelessPosts[5].html.includes('<a href="/child-sample-page/">External child sample page with query params</a>'));
 
-        expect(datelessPosts[5].html).toContain('<a href="/substack-url/">Substack-like URL</a>');
-        expect(datelessPosts[5].html).not.toContain('<a href="https://example.com/p/substack-url/?s=w">Substack-like URL</a>');
+        assert.ok(datelessPosts[5].html.includes('<a href="/substack-url/">Substack-like URL</a>'));
+        assert.ok(!datelessPosts[5].html.includes('<a href="https://example.com/p/substack-url/?s=w">Substack-like URL</a>'));
     });
 });
