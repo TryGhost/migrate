@@ -1,3 +1,5 @@
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {URL} from 'node:url';
 import {join} from 'node:path';
 import {readFileSync} from 'node:fs';
@@ -11,17 +13,17 @@ const readSync = (name) => {
 };
 
 describe('Process', function () {
-    test('Can get site URL from XML file', async function () {
+    it('Can get site URL from XML file', async function () {
         let ctx = {
             options: {}
         };
         const input = await readSync('sample.xml');
         await process.all(input, ctx);
 
-        expect(ctx.options.url).toEqual('http://example.com');
+        assert.equal(ctx.options.url, 'http://example.com');
     });
 
-    test('Can convert a single published post', async function () {
+    it('Can convert a single published post', async function () {
         let ctx = {
             options: {
                 drafts: true,
@@ -34,21 +36,21 @@ describe('Process', function () {
 
         const post = processed.posts[1];
 
-        expect(post).toBeObject();
-        expect(post.url).toEqual('http://example.com/blog/basic-post.html');
+        assert.ok(typeof post === 'object' && post !== null);
+        assert.equal(post.url, 'http://example.com/blog/basic-post.html');
 
         const data = post.data;
 
-        expect(data).toBeObject();
-        expect(data.slug).toEqual('basic-post');
-        expect(data.title).toEqual('Basic Post');
-        expect(data.status).toEqual('published');
-        expect(data.published_at).toEqual(new Date('2013-06-07T03:00:44.000Z'));
-        expect(data.created_at).toEqual(new Date('2013-06-07T03:00:44.000Z'));
-        expect(data.updated_at).toEqual(new Date('2013-06-07T03:00:44.000Z'));
-        expect(data.feature_image).toEqual('https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1268&q=80');
-        expect(data.type).toEqual('post');
-        expect(data.html).toEqual('<div class="image-block-outer-wrapper layout-caption-below design-layout-inline" data-test="image-block-inline-outer-wrapper">\n' +
+        assert.ok(typeof data === 'object' && data !== null);
+        assert.equal(data.slug, 'basic-post');
+        assert.equal(data.title, 'Basic Post');
+        assert.equal(data.status, 'published');
+        assert.deepEqual(data.published_at, new Date('2013-06-07T03:00:44.000Z'));
+        assert.deepEqual(data.created_at, new Date('2013-06-07T03:00:44.000Z'));
+        assert.deepEqual(data.updated_at, new Date('2013-06-07T03:00:44.000Z'));
+        assert.equal(data.feature_image, 'https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1268&q=80');
+        assert.equal(data.type, 'post');
+        assert.equal(data.html, '<div class="image-block-outer-wrapper layout-caption-below design-layout-inline" data-test="image-block-inline-outer-wrapper">\n' +
         '        <figure class="sqs-block-image-figure intrinsic" style="max-width:409.0px;">\n' +
         '          <a class="sqs-block-image-link" href="https://anothersite.co.uk" target="_blank">\n' +
         '            <div style="padding-bottom:37.4083137512207%;" lass="image-block-wrapper" data-animation-role="image" data-animation-override>\n' +
@@ -94,20 +96,20 @@ describe('Process', function () {
 
         const tags = data.tags;
 
-        expect(tags).toBeArrayOfSize(2);
-        expect(tags[0].url).toEqual('/tag/company-news');
-        expect(tags[0].data.slug).toEqual('company-news');
-        expect(tags[0].data.name).toEqual('Company News');
-        expect(tags[1].url).toEqual('migrator-added-tag-sqs');
-        expect(tags[1].data.name).toEqual('#sqs');
+        assert.equal(tags.length, 2);
+        assert.equal(tags[0].url, '/tag/company-news');
+        assert.equal(tags[0].data.slug, 'company-news');
+        assert.equal(tags[0].data.name, 'Company News');
+        assert.equal(tags[1].url, 'migrator-added-tag-sqs');
+        assert.equal(tags[1].data.name, '#sqs');
 
         const author = data.author;
 
-        expect(author).toBeObject();
-        expect(author.url).toEqual('hermione-example-com');
-        expect(author.data.slug).toEqual('hermione-example-com');
-        expect(author.data.name).toEqual('Hermione Granger');
-        expect(author.data.email).toEqual('hermione@example.com');
+        assert.ok(typeof author === 'object' && author !== null);
+        assert.equal(author.url, 'hermione-example-com');
+        assert.equal(author.data.slug, 'hermione-example-com');
+        assert.equal(author.data.name, 'Hermione Granger');
+        assert.equal(author.data.email, 'hermione@example.com');
     });
 
     it('Can convert a single draft post', async function () {
@@ -123,38 +125,38 @@ describe('Process', function () {
 
         const post = processed.posts[0];
 
-        expect(post).toBeObject();
-        expect(post.url).toEqual('http://example.com/draft-post');
+        assert.ok(typeof post === 'object' && post !== null);
+        assert.equal(post.url, 'http://example.com/draft-post');
 
         const data = post.data;
 
-        expect(data).toBeObject();
-        expect(data.slug).toEqual('draft-post');
-        expect(data.title).toEqual('Draft & Post & More—More');
-        expect(data.status).toEqual('draft');
-        expect(data.published_at).toEqual(new Date('2013-11-02T23:02:32.000Z'));
-        expect(data.created_at).toEqual(new Date('2013-11-02T23:02:32.000Z'));
-        expect(data.updated_at).toEqual(new Date('2013-11-02T23:02:32.000Z'));
-        expect(data.feature_image).not.toBeDefined();
-        expect(data.type).toEqual('post');
-        expect(data.html).toEqual('<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. </p>');
+        assert.ok(typeof data === 'object' && data !== null);
+        assert.equal(data.slug, 'draft-post');
+        assert.equal(data.title, 'Draft & Post & More—More');
+        assert.equal(data.status, 'draft');
+        assert.deepEqual(data.published_at, new Date('2013-11-02T23:02:32.000Z'));
+        assert.deepEqual(data.created_at, new Date('2013-11-02T23:02:32.000Z'));
+        assert.deepEqual(data.updated_at, new Date('2013-11-02T23:02:32.000Z'));
+        assert.equal(data.feature_image, undefined);
+        assert.equal(data.type, 'post');
+        assert.equal(data.html, '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. </p>');
 
         const tags = data.tags;
 
-        expect(tags).toBeArrayOfSize(2);
-        expect(tags[0].url).toEqual('/tag/company-news');
-        expect(tags[0].data.slug).toEqual('company-news');
-        expect(tags[0].data.name).toEqual('Company News');
-        expect(tags[1].url).toEqual('migrator-added-tag-sqs');
-        expect(tags[1].data.name).toEqual('#sqs');
+        assert.equal(tags.length, 2);
+        assert.equal(tags[0].url, '/tag/company-news');
+        assert.equal(tags[0].data.slug, 'company-news');
+        assert.equal(tags[0].data.name, 'Company News');
+        assert.equal(tags[1].url, 'migrator-added-tag-sqs');
+        assert.equal(tags[1].data.name, '#sqs');
 
         const author = data.author;
 
-        expect(author).toBeObject();
-        expect(author.url).toEqual('harrysquatter');
-        expect(author.data.slug).toEqual('harrysquatter');
-        expect(author.data.name).toEqual('Harry Squatter');
-        expect(author.data.email).toEqual('harrysquatter@example.com');
+        assert.ok(typeof author === 'object' && author !== null);
+        assert.equal(author.url, 'harrysquatter');
+        assert.equal(author.data.slug, 'harrysquatter');
+        assert.equal(author.data.name, 'Harry Squatter');
+        assert.equal(author.data.email, 'harrysquatter@example.com');
     });
 
     it('Can convert a published page', async function () {
@@ -170,34 +172,34 @@ describe('Process', function () {
 
         const page = processed.posts[2];
 
-        expect(page).toBeObject();
-        expect(page.url).toEqual('http://example.com/services');
+        assert.ok(typeof page === 'object' && page !== null);
+        assert.equal(page.url, 'http://example.com/services');
 
         const data = page.data;
 
-        expect(data).toBeObject();
-        expect(data.slug).toEqual('services');
-        expect(data.title).toEqual('Services');
-        expect(data.status).toEqual('published');
-        expect(data.published_at).toEqual(new Date('2017-05-27T11:33:38.000Z'));
-        expect(data.feature_image).not.toBeDefined();
-        expect(data.type).toEqual('page');
-        expect(data.html).toEqual('<h2>Our Services</h2><p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>');
+        assert.ok(typeof data === 'object' && data !== null);
+        assert.equal(data.slug, 'services');
+        assert.equal(data.title, 'Services');
+        assert.equal(data.status, 'published');
+        assert.deepEqual(data.published_at, new Date('2017-05-27T11:33:38.000Z'));
+        assert.equal(data.feature_image, undefined);
+        assert.equal(data.type, 'page');
+        assert.equal(data.html, '<h2>Our Services</h2><p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>');
 
         const tags = data.tags;
 
-        expect(tags).toBeArrayOfSize(1);
-        expect(tags[0].url).toEqual('migrator-added-tag-sqs');
-        expect(tags[0].data.name).toEqual('#sqs');
+        assert.equal(tags.length, 1);
+        assert.equal(tags[0].url, 'migrator-added-tag-sqs');
+        assert.equal(tags[0].data.name, '#sqs');
 
         const author = data.author;
 
-        expect(author).toBeObject();
-        expect(author.url).toEqual('migrator-added-author');
-        expect(author.data.slug).toEqual('migrator-added-author');
+        assert.ok(typeof author === 'object' && author !== null);
+        assert.equal(author.url, 'migrator-added-author');
+        assert.equal(author.data.slug, 'migrator-added-author');
     });
 
-    test('Can only convert posts', async function () {
+    it('Can only convert posts', async function () {
         let ctx = {
             options: {
                 drafts: true,
@@ -208,13 +210,13 @@ describe('Process', function () {
         const input = await readSync('sample.xml');
         const processed = await process.all(input, ctx);
 
-        expect(processed.posts).toBeArrayOfSize(3);
-        expect(processed.posts[0].data.type).toEqual('post');
-        expect(processed.posts[1].data.type).toEqual('post');
-        expect(processed.posts[2].data.type).toEqual('post');
+        assert.equal(processed.posts.length, 3);
+        assert.equal(processed.posts[0].data.type, 'post');
+        assert.equal(processed.posts[1].data.type, 'post');
+        assert.equal(processed.posts[2].data.type, 'post');
     });
 
-    test('Can only convert pages', async function () {
+    it('Can only convert pages', async function () {
         let ctx = {
             options: {
                 drafts: true,
@@ -225,11 +227,11 @@ describe('Process', function () {
         const input = await readSync('sample.xml');
         const processed = await process.all(input, ctx);
 
-        expect(processed.posts).toBeArrayOfSize(2);
-        expect(processed.posts[0].data.type).toEqual('page');
+        assert.equal(processed.posts.length, 2);
+        assert.equal(processed.posts[0].data.type, 'page');
     });
 
-    test('Can convert audio block to audio card', async function () {
+    it('Can convert audio block to audio card', async function () {
         let audioBlock = `<div class="sqs-audio-embed"
             data-url="http://example.com/auio-file.mp3"
             data-mime-type=""
@@ -243,12 +245,12 @@ describe('Process', function () {
 
         let processed = process.processContent(audioBlock);
 
-        expect(processed).toContain('<div class="kg-card kg-audio-card">');
-        expect(processed).toContain('<audio src="http://example.com/auio-file.mp3"');
-        expect(processed).not.toContain('<div class="sqs-audio-embed"');
+        assert.ok(processed.includes('<div class="kg-card kg-audio-card">'));
+        assert.ok(processed.includes('<audio src="http://example.com/auio-file.mp3"'));
+        assert.ok(!processed.includes('<div class="sqs-audio-embed"'));
     });
 
-    test('Can convert blockquotes', async function () {
+    it('Can convert blockquotes', async function () {
         let blockquote = `<p>Hello</p>
 <figure class="block-animation-none">
   <blockquote data-animation-role="quote">
@@ -260,7 +262,7 @@ describe('Process', function () {
 
         let processed = process.processContent(blockquote);
 
-        expect(processed).toEqual('<p>Hello</p>\n' +
+        assert.equal(processed, '<p>Hello</p>\n' +
         '<figure class="block-animation-none">\n' +
         '  <blockquote data-animation-role="quote"><p>\n' +
         '    <span>“</span>Lorem ipsum<br><br>dolor simet.<span>”</span>\n' +
@@ -270,17 +272,17 @@ describe('Process', function () {
         '<p>World</p>');
     });
 
-    test('Can remove elements', async function () {
+    it('Can remove elements', async function () {
         let blockquote = `<p>Hello</p><div class="custom-subscribe-form"></div><p>World</p>`;
 
         let processed = process.processContent(blockquote, {
             removeSelectors: '.custom-subscribe-form'
         });
 
-        expect(processed).toEqual('<p>Hello</p><p>World</p>');
+        assert.equal(processed, '<p>Hello</p><p>World</p>');
     });
 
-    test('Can handle YouTube embeds', async function () {
+    it('Can handle YouTube embeds', async function () {
         let video = `<div class="sqs-html-content" data-sqsp-text-block-content><p>Hello world</p></div>
             <div class="intrinsic" style="max-width:100%">
                 <div class="embed-block-wrapper" style="padding-bottom:56.5%;">
@@ -293,11 +295,11 @@ describe('Process', function () {
             removeSelectors: '.custom-subscribe-form'
         });
 
-        expect(processed).toEqual('<div class="sqs-html-content" data-sqsp-text-block-content><p>Hello world</p></div>\n' +
+        assert.equal(processed, '<div class="sqs-html-content" data-sqsp-text-block-content><p>Hello world</p></div>\n' +
         '            <figure class="kg-card kg-embed-card"><iframe width="200" height="113" src="https://www.youtube.com/embed/lqCmETMKzA8?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen title="The Video Title"></iframe></figure>');
     });
 
-    test('Can handle posts with no title', async function () {
+    it('Can handle posts with no title', async function () {
         let ctx = {
             options: {
                 drafts: true,
@@ -311,18 +313,18 @@ describe('Process', function () {
         const post = processed.posts[1];
         const data = post.data;
 
-        expect(data.title).toEqual('Our Services Sed ut perspiciatis unde omnis iste');
+        assert.equal(data.title, 'Our Services Sed ut perspiciatis unde omnis iste');
 
         const tags = data.tags;
 
-        expect(tags).toBeArrayOfSize(2);
-        expect(tags[0].url).toEqual('migrator-added-tag-sqs');
-        expect(tags[0].data.name).toEqual('#sqs');
-        expect(tags[1].url).toEqual('migrator-added-tag-no-title');
-        expect(tags[1].data.name).toEqual('#no-title');
+        assert.equal(tags.length, 2);
+        assert.equal(tags[0].url, 'migrator-added-tag-sqs');
+        assert.equal(tags[0].data.name, '#sqs');
+        assert.equal(tags[1].url, 'migrator-added-tag-no-title');
+        assert.equal(tags[1].data.name, '#no-title');
     });
 
-    test('Will clean up post slugs', async function () {
+    it('Will clean up post slugs', async function () {
         let ctx = {
             options: {
                 drafts: true,
@@ -336,6 +338,6 @@ describe('Process', function () {
         const post = processed.posts[2];
         const data = post.data;
 
-        expect(data.slug).toEqual('my-dated-post');
+        assert.equal(data.slug, 'my-dated-post');
     });
 });
