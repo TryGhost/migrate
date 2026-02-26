@@ -1,14 +1,15 @@
 import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import AuthorContext from '../lib/AuthorContext.js';
 
 describe('AuthorContext', () => {
-    test('Is instance of', () => {
+    it('Is instance of', () => {
         const author: any = new AuthorContext();
 
         assert.equal(author instanceof AuthorContext, true);
     });
 
-    test('Has schema', () => {
+    it('Has schema', () => {
         const author: any = new AuthorContext();
 
         // Check the number of items
@@ -20,7 +21,7 @@ describe('AuthorContext', () => {
         assert.equal(author.schema.name.maxLength, 191);
     });
 
-    test('Can accept initialData', () => {
+    it('Can accept initialData', () => {
         const author: any = new AuthorContext({
             initialData: {
                 name: 'Test',
@@ -34,7 +35,7 @@ describe('AuthorContext', () => {
         assert.equal(author.data.email, 'test@email.com');
     });
 
-    test('Will use constructor param as initialValue if one object supplied', () => {
+    it('Will use constructor param as initialValue if one object supplied', () => {
         const author: any = new AuthorContext({
             name: 'Test',
             slug: 'test',
@@ -46,7 +47,7 @@ describe('AuthorContext', () => {
         assert.equal(author.data.email, 'test@email.com');
     });
 
-    test('Can add author information', () => {
+    it('Can add author information', () => {
         const author: any = new AuthorContext({
             name: 'Test',
             slug: 'test',
@@ -58,7 +59,7 @@ describe('AuthorContext', () => {
         assert.equal(author.data.website, 'https://test.com');
     });
 
-    test('Can edit author information', () => {
+    it('Can edit author information', () => {
         const author: any = new AuthorContext({
             name: 'Test',
             slug: 'test',
@@ -72,7 +73,7 @@ describe('AuthorContext', () => {
         assert.equal(author.data.email, 'test2@email.com');
     });
 
-    test('Can remove author information', () => {
+    it('Can remove author information', () => {
         const author: any = new AuthorContext({
             name: 'Test',
             slug: 'test',
@@ -87,7 +88,7 @@ describe('AuthorContext', () => {
         assert.equal(author.data.website, null);
     });
 
-    test('Will throw on an invalid email address', () => {
+    it('Will throw on an invalid email address', () => {
         const thisIs80Chars = 'this-string-is-80-chars-long-lorem-ipsum-dolor-sit-amet-consectetur-adipiscing-el';
 
         const author = new AuthorContext({

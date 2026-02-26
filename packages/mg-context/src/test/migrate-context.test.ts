@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {MigrateContext, PostContext} from '../index.js';
 
 const reusedInstance: any = new MigrateContext();
@@ -35,13 +36,13 @@ reusedPost2.addAuthor({name: 'Test Author', slug: 'test-author', email: 'test@ex
 reusedPost2.addAuthor({name: 'Second Author', slug: 'second-author', email: 'second@example.com'});
 
 describe('MigrateContext', () => {
-    test('Is instance of', () => {
+    it('Is instance of', () => {
         const instance: any = new MigrateContext();
 
         assert.equal(instance instanceof MigrateContext, true);
     });
 
-    test('Can add posts', () => {
+    it('Can add posts', () => {
         const instance: any = new MigrateContext();
 
         const post1 = instance.addPost();
@@ -63,7 +64,7 @@ describe('MigrateContext', () => {
         assert.equal(instance.allPosts[1].data.title, 'Another Post');
     });
 
-    test('Can add existing PostContext to list of posts', () => {
+    it('Can add existing PostContext to list of posts', () => {
         const instance: any = new MigrateContext();
 
         const post1 = new PostContext();
@@ -87,7 +88,7 @@ describe('MigrateContext', () => {
         assert.equal(instance.allPosts[1].data.title, 'Another Post');
     });
 
-    test('Can loop over posts async', async () => {
+    it('Can loop over posts async', async () => {
         const instance: any = new MigrateContext();
 
         const post1 = instance.addPost();
@@ -113,7 +114,7 @@ describe('MigrateContext', () => {
         assert.equal(instance.allPosts[1].data.status, 'published');
     });
 
-    test('Can loop over posts sync', () => {
+    it('Can loop over posts sync', () => {
         const instance: any = new MigrateContext();
 
         const post1 = instance.addPost();
@@ -140,7 +141,7 @@ describe('MigrateContext', () => {
     });
 
     describe('findPosts', () => {
-        test('Can find posts by slug', () => {
+        it('Can find posts by slug', () => {
             const foundPosts = reusedInstance.findPosts({
                 slug: 'another-post'
             });
@@ -149,7 +150,7 @@ describe('MigrateContext', () => {
             assert.equal(foundPosts[0].data.title, 'Another Post');
         });
 
-        test('Can find posts by title', () => {
+        it('Can find posts by title', () => {
             const foundPosts = reusedInstance.findPosts({
                 title: 'Another Post'
             });
@@ -158,7 +159,7 @@ describe('MigrateContext', () => {
             assert.equal(foundPosts[0].data.title, 'Another Post');
         });
 
-        test('Can find posts by source', () => {
+        it('Can find posts by source', () => {
             const foundPosts = reusedInstance.findPosts({
                 sourceAttr: {
                     key: 'url',
@@ -170,7 +171,7 @@ describe('MigrateContext', () => {
             assert.equal(foundPosts[0].data.title, 'Test Post');
         });
 
-        test('Can find posts by tag slug', () => {
+        it('Can find posts by tag slug', () => {
             const foundPosts = reusedInstance.findPosts({
                 tagSlug: 'second-tag'
             });
@@ -179,7 +180,7 @@ describe('MigrateContext', () => {
             assert.equal(foundPosts[0].data.title, 'Another Post');
         });
 
-        test('Can find posts by tag name', () => {
+        it('Can find posts by tag name', () => {
             const foundPosts = reusedInstance.findPosts({
                 tagName: 'Second Tag'
             });
@@ -188,7 +189,7 @@ describe('MigrateContext', () => {
             assert.equal(foundPosts[0].data.title, 'Another Post');
         });
 
-        test('Can find posts by author slug', () => {
+        it('Can find posts by author slug', () => {
             const foundPosts = reusedInstance.findPosts({
                 authorSlug: 'second-author'
             });
@@ -197,7 +198,7 @@ describe('MigrateContext', () => {
             assert.equal(foundPosts[0].data.title, 'Another Post');
         });
 
-        test('Can find posts by author name', () => {
+        it('Can find posts by author name', () => {
             const foundPosts = reusedInstance.findPosts({
                 authorName: 'Second Author'
             });
@@ -206,7 +207,7 @@ describe('MigrateContext', () => {
             assert.equal(foundPosts[0].data.title, 'Another Post');
         });
 
-        test('Can find posts by author email', () => {
+        it('Can find posts by author email', () => {
             const foundPosts = reusedInstance.findPosts({
                 authorEmail: 'second@example.com'
             });
@@ -215,7 +216,7 @@ describe('MigrateContext', () => {
             assert.equal(foundPosts[0].data.title, 'Another Post');
         });
 
-        test('Returns null if no filter provided', () => {
+        it('Returns null if no filter provided', () => {
             const foundPosts = reusedInstance.findPosts({});
 
             assert.equal(foundPosts, null);
@@ -223,7 +224,7 @@ describe('MigrateContext', () => {
     });
 
     describe('findTags', () => {
-        test('Can find tags by slug', () => {
+        it('Can find tags by slug', () => {
             const foundTags = reusedInstance.findTags({
                 slug: 'second-tag'
             });
@@ -232,7 +233,7 @@ describe('MigrateContext', () => {
             assert.equal(foundTags[0].data.name, 'Second Tag');
         });
 
-        test('Can find tags by name', () => {
+        it('Can find tags by name', () => {
             const foundTags = reusedInstance.findTags({
                 name: 'Second Tag'
             });
@@ -241,7 +242,7 @@ describe('MigrateContext', () => {
             assert.equal(foundTags[0].data.name, 'Second Tag');
         });
 
-        test('Returns null if no filter provided', () => {
+        it('Returns null if no filter provided', () => {
             const foundTags = reusedInstance.findTags({});
 
             assert.equal(foundTags, null);
@@ -249,7 +250,7 @@ describe('MigrateContext', () => {
     });
 
     describe('findAuthors', () => {
-        test('Can find authors by slug', () => {
+        it('Can find authors by slug', () => {
             const foundAuthors = reusedInstance.findAuthors({
                 slug: 'second-author'
             });
@@ -258,7 +259,7 @@ describe('MigrateContext', () => {
             assert.equal(foundAuthors[0].data.name, 'Second Author');
         });
 
-        test('Can find authors by name', () => {
+        it('Can find authors by name', () => {
             const foundAuthors = reusedInstance.findAuthors({
                 name: 'Second Author'
             });
@@ -267,7 +268,7 @@ describe('MigrateContext', () => {
             assert.equal(foundAuthors[0].data.name, 'Second Author');
         });
 
-        test('Can find authors by email', () => {
+        it('Can find authors by email', () => {
             const foundAuthors = reusedInstance.findAuthors({
                 email: 'second@example.com'
             });
@@ -276,14 +277,14 @@ describe('MigrateContext', () => {
             assert.equal(foundAuthors[0].data.name, 'Second Author');
         });
 
-        test('Returns null if no filter provided', () => {
+        it('Returns null if no filter provided', () => {
             const foundTags = reusedInstance.findAuthors({});
 
             assert.equal(foundTags, null);
         });
     });
 
-    test('Can return Ghost JSON', async () => {
+    it('Can return Ghost JSON', async () => {
         const ghostJSON = await reusedInstance.ghostJson;
 
         assert.deepEqual(Object.keys(ghostJSON), ['meta', 'data']);

@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {MigrateContext} from '../index.js';
 
 describe('MigrateContext as tasks', () => {
-    test('Runs tasks', async () => {
+    it('Runs tasks', async () => {
         let tasks = [];
 
         tasks.push({

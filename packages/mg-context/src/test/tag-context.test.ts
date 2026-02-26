@@ -1,14 +1,15 @@
 import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import TagContext from '../lib/TagContext.js';
 
 describe('TagContext', () => {
-    test('Is instance of', () => {
+    it('Is instance of', () => {
         const tag: any = new TagContext();
 
         assert.equal(tag instanceof TagContext, true);
     });
 
-    test('Has schema', () => {
+    it('Has schema', () => {
         const tag: any = new TagContext();
 
         // Check the number of items
@@ -20,7 +21,7 @@ describe('TagContext', () => {
         assert.equal(tag.schema.name.maxLength, 255);
     });
 
-    test('Can accept initialData', () => {
+    it('Can accept initialData', () => {
         const tag: any = new TagContext({
             initialData: {
                 name: 'Test',
@@ -32,7 +33,7 @@ describe('TagContext', () => {
         assert.equal(tag.data.slug, 'test');
     });
 
-    test('Can set set properties with set() method', () => {
+    it('Can set set properties with set() method', () => {
         const tag: any = new TagContext();
         tag.set('name', 'Test');
         tag.set('slug', 'test');
@@ -41,7 +42,7 @@ describe('TagContext', () => {
         assert.equal(tag.data.slug, 'test');
     });
 
-    test('Will use constructor param as initialValue if one object supplied', () => {
+    it('Will use constructor param as initialValue if one object supplied', () => {
         const tag: any = new TagContext({
             name: 'Test',
             slug: 'test'
@@ -51,7 +52,7 @@ describe('TagContext', () => {
         assert.equal(tag.data.slug, 'test');
     });
 
-    test('Can add tag information', () => {
+    it('Can add tag information', () => {
         const tag: any = new TagContext({
             name: 'Test',
             slug: 'test'
@@ -62,7 +63,7 @@ describe('TagContext', () => {
         assert.equal(tag.data.description, 'My description');
     });
 
-    test('Can edit tag information', () => {
+    it('Can edit tag information', () => {
         const tag: any = new TagContext({
             name: 'Test',
             slug: 'test'
@@ -73,7 +74,7 @@ describe('TagContext', () => {
         assert.equal(tag.data.slug, 'testing');
     });
 
-    test('Can remove tag information', () => {
+    it('Can remove tag information', () => {
         const tag: any = new TagContext({
             name: 'Test',
             slug: 'test',

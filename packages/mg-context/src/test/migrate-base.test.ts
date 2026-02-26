@@ -3,6 +3,7 @@
 // import MigrateBase from '../lib/MigrateBase.js';
 import {MigrateBase} from '../index.js';
 import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 
 class TestContext extends MigrateBase {
     #schema;
@@ -45,49 +46,49 @@ class TestContext extends MigrateBase {
 }
 
 describe('MigrateBase', () => {
-    test('Is instance of MigrateBase', () => {
+    it('Is instance of MigrateBase', () => {
         const instance: any = new MigrateBase();
         assert.equal(instance instanceof MigrateBase, true);
     });
 
-    test('Can extend of MigrateBase', () => {
+    it('Can extend of MigrateBase', () => {
         const instance: any = new TestContext();
         assert.equal(instance instanceof TestContext, true);
     });
 
-    test('TestContext has all keys from schema', () => {
+    it('TestContext has all keys from schema', () => {
         const instance: any = new TestContext();
         assert.deepEqual(Object.keys(instance.data), ['name', 'slug', 'html', 'mobiledoc', 'lexical', 'created_at', 'role', 'list', 'featured']);
     });
 
-    test('Can set individual key', () => {
+    it('Can set individual key', () => {
         const instance: any = new TestContext();
         instance.set('name', 'Test');
         assert.equal(instance.data.name, 'Test');
     });
 
-    test('Can set multiple keys to a single value by array', () => {
+    it('Can set multiple keys to a single value by array', () => {
         const instance: any = new TestContext();
         instance.set(['name', 'slug'], 'test');
         assert.equal(instance.data.name, 'test');
         assert.equal(instance.data.slug, 'test');
     });
 
-    test('Can chain setting keys', () => {
+    it('Can chain setting keys', () => {
         const instance: any = new TestContext();
         instance.set('name', 'Test').set('slug', 'test');
         assert.equal(instance.data.name, 'Test');
         assert.equal(instance.data.slug, 'test');
     });
 
-    test('Can get individual value', () => {
+    it('Can get individual value', () => {
         const instance: any = new TestContext();
         instance.set('name', 'Test');
         const theName = instance.get('name');
         assert.equal(theName, 'Test');
     });
 
-    test('Will return final object', () => {
+    it('Will return final object', () => {
         const instance: any = new TestContext();
         instance.set('name', 'Test');
         instance.set('slug', 'test');
@@ -109,7 +110,7 @@ describe('MigrateBase', () => {
         });
     });
 
-    test('Will throw when setting a key that does not exist', async () => {
+    it('Will throw when setting a key that does not exist', async () => {
         const instance: any = new TestContext();
 
         assert.throws(() => instance.set('lorem', 'Ipsum'), {
@@ -119,7 +120,7 @@ describe('MigrateBase', () => {
         });
     });
 
-    test('Will throw in invalid string length', async () => {
+    it('Will throw in invalid string length', async () => {
         const instance: any = new TestContext();
 
         assert.throws(() => instance.set('name', 'This Name Is Too Long To Be Valid'), {
@@ -129,7 +130,7 @@ describe('MigrateBase', () => {
         });
     });
 
-    test('Will throw in invalid type', async () => {
+    it('Will throw in invalid type', async () => {
         const instance: any = new TestContext();
 
         assert.throws(() => instance.set('created_at', 'Not a date'), {
@@ -139,7 +140,7 @@ describe('MigrateBase', () => {
         });
     });
 
-    test('Will throw in invalid choice', async () => {
+    it('Will throw in invalid choice', async () => {
         const instance: any = new TestContext();
 
         assert.throws(() => instance.set('role', 'DoesNotExist'), {
@@ -149,14 +150,14 @@ describe('MigrateBase', () => {
         });
     });
 
-    test('Can push valid value to array', async () => {
+    it('Can push valid value to array', async () => {
         const instance: any = new TestContext();
         instance.set('list', ['hello', 'world']);
 
         assert.deepEqual(instance.data.list, ['hello', 'world']);
     });
 
-    test('Will throw when setting string to array', async () => {
+    it('Will throw when setting string to array', async () => {
         const instance: any = new TestContext();
 
         assert.throws(() => instance.set('list', 'dont do this'), {
@@ -166,7 +167,7 @@ describe('MigrateBase', () => {
         });
     });
 
-    test('Will throw when setting string to boolean', async () => {
+    it('Will throw when setting string to boolean', async () => {
         const instance: any = new TestContext();
 
         assert.throws(() => instance.set('featured', 'yes'), {
@@ -176,7 +177,7 @@ describe('MigrateBase', () => {
         });
     });
 
-    test('Will throw if required values are missing', async () => {
+    it('Will throw if required values are missing', async () => {
         const instance: any = new TestContext();
 
         instance.set('name', 'Test');
@@ -191,7 +192,7 @@ describe('MigrateBase', () => {
         });
     });
 
-    test('Will throw when getting non-existent value', async () => {
+    it('Will throw when getting non-existent value', async () => {
         const instance: any = new TestContext();
 
         assert.throws(() => instance.get('lorem'), {
@@ -201,14 +202,14 @@ describe('MigrateBase', () => {
         });
     });
 
-    test('Will return undefined when validating non-existent property', async () => {
+    it('Will return undefined when validating non-existent property', async () => {
         const instance: any = new TestContext();
         const valid = instance.validate('lorem', 'ipsum');
 
         assert.equal(valid, undefined);
     });
 
-    test('Will return undefined when validating property with no value', async () => {
+    it('Will return undefined when validating property with no value', async () => {
         const instance: any = new TestContext();
         const valid = instance.validate('slug', undefined);
 

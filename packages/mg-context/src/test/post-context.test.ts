@@ -1,14 +1,15 @@
 import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {PostContext, TagContext, AuthorContext} from '../index.js';
 
 describe('PostContext', function () {
-    test('Is instance of PostContext', () => {
+    it('Is instance of PostContext', () => {
         const instance: any = new PostContext();
 
         assert.equal(instance instanceof PostContext, true);
     });
 
-    test('Can set & get meta', () => {
+    it('Can set & get meta', () => {
         const instance: any = new PostContext();
         instance.setMeta({
             url: 'https://example.com'
@@ -19,7 +20,7 @@ describe('PostContext', function () {
         });
     });
 
-    test('Can get meta key', () => {
+    it('Can get meta key', () => {
         const instance: any = new PostContext();
         instance.setMeta({
             url: 'https://example.com'
@@ -28,7 +29,7 @@ describe('PostContext', function () {
         assert.equal(instance.getMetaValue('url'), 'https://example.com');
     });
 
-    test('Can set & get source', () => {
+    it('Can set & get source', () => {
         const instance: any = new PostContext({
             source: {
                 episode: 1234,
@@ -42,7 +43,7 @@ describe('PostContext', function () {
         });
     });
 
-    test('Can get source key', () => {
+    it('Can get source key', () => {
         const instance: any = new PostContext({
             source: {
                 episode: 1234,
@@ -54,7 +55,7 @@ describe('PostContext', function () {
         assert.equal(instance.getSourceValue('id'), 'abcd');
     });
 
-    test('Can set and get content format', () => {
+    it('Can set and get content format', () => {
         const instance: any = new PostContext();
         instance.contentFormat = 'lexical';
 
@@ -62,7 +63,7 @@ describe('PostContext', function () {
     });
 
     describe('Post Handling', function () {
-        test('Can add a post directly to post context', async () => {
+        it('Can add a post directly to post context', async () => {
             const instance: any = new PostContext();
             instance.set('title', 'My Post');
             instance.set('slug', 'my-post');
@@ -71,7 +72,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.slug, 'my-post');
         });
 
-        test('Do not convert is format is not specified', function () {
+        it('Do not convert is format is not specified', function () {
             const instance: any = new PostContext();
             instance.set('title', 'My Post');
             instance.set('slug', 'my-post');
@@ -87,7 +88,7 @@ describe('PostContext', function () {
             assert.deepEqual(final.data.lexical, null);
         });
 
-        test('Can set export format to Mobiledoc with constructor arg', function () {
+        it('Can set export format to Mobiledoc with constructor arg', function () {
             const instance: any = new PostContext({contentFormat: 'mobiledoc'});
             instance.set('title', 'My Post');
             instance.set('slug', 'my-post');
@@ -103,7 +104,7 @@ describe('PostContext', function () {
             assert.deepEqual(final.data.lexical, null);
         });
 
-        test('Can set export format to Lexical with constructor arg', function () {
+        it('Can set export format to Lexical with constructor arg', function () {
             const instance: any = new PostContext({contentFormat: 'lexical'});
             instance.set('title', 'My Post');
             instance.set('slug', 'my-post');
@@ -119,7 +120,7 @@ describe('PostContext', function () {
             assert.deepEqual(final.data.mobiledoc, null);
         });
 
-        test('Can set content format with setter', function () {
+        it('Can set content format with setter', function () {
             const instance: any = new PostContext();
             instance.contentFormat = 'lexical';
             instance.set('title', 'My Post');
@@ -136,7 +137,7 @@ describe('PostContext', function () {
             assert.deepEqual(final.data.mobiledoc, null);
         });
 
-        test('Can get final object', function () {
+        it('Can get final object', function () {
             const instance: any = new PostContext();
             instance.set('title', 'My Post');
             instance.set('slug', 'my-post');
@@ -186,7 +187,7 @@ describe('PostContext', function () {
     });
 
     describe('Tag Handling', function () {
-        test('Can add a tag directly to post context', async () => {
+        it('Can add a tag directly to post context', async () => {
             const instance: any = new PostContext();
             instance.addTag({
                 name: 'My Tag',
@@ -199,7 +200,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.tags[0].data.slug, 'my-tag');
         });
 
-        test('Can push a tag to post context', async () => {
+        it('Can push a tag to post context', async () => {
             const instance: any = new PostContext();
             const tag = new TagContext({
                 name: 'My Tag',
@@ -214,7 +215,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.tags[0].data.slug, 'my-tag');
         });
 
-        test('Can silently ignore adding tag as an object if it exists already', async () => {
+        it('Can silently ignore adding tag as an object if it exists already', async () => {
             const instance: any = new PostContext();
             instance.addTag({
                 name: 'My Tag',
@@ -232,7 +233,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.tags.length, 1);
         });
 
-        test('Can silently ignore adding tag as TagContext if it exists already', async () => {
+        it('Can silently ignore adding tag as TagContext if it exists already', async () => {
             const instance: any = new PostContext();
             const tag = new TagContext({
                 name: 'My Tag',
@@ -249,7 +250,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.tags.length, 1);
         });
 
-        test('Can reorder tags', function () {
+        it('Can reorder tags', function () {
             const instance: any = new PostContext();
             instance.addTag({
                 name: 'Second Tag',
@@ -282,7 +283,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.tags[2].data.name, 'Third Tag');
         });
 
-        test('Can remove tag by slug', function () {
+        it('Can remove tag by slug', function () {
             const instance: any = new PostContext();
             instance.addTag({
                 name: 'First Tag',
@@ -307,7 +308,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.tags[1].data.name, 'Third Tag');
         });
 
-        test('Can set primary tag where tag already exists', function () {
+        it('Can set primary tag where tag already exists', function () {
             const instance: any = new PostContext();
             instance.addTag({
                 name: 'First Tag',
@@ -328,7 +329,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.tags.length, 2);
         });
 
-        test('Can set primary tag where tag did not already exist', function () {
+        it('Can set primary tag where tag did not already exist', function () {
             const instance: any = new PostContext();
             instance.addTag({
                 name: 'First Tag',
@@ -348,7 +349,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.tags[2].data.name, 'Second Tag');
         });
 
-        test('Can detect if post has tag slug', function () {
+        it('Can detect if post has tag slug', function () {
             const instance: any = new PostContext();
             instance.addTag({
                 name: 'First Tag',
@@ -367,7 +368,7 @@ describe('PostContext', function () {
             assert.equal(instance.hasTagSlug('not-a-tag'), false);
         });
 
-        test('Can detect if post has tag name', function () {
+        it('Can detect if post has tag name', function () {
             const instance: any = new PostContext();
             instance.addTag({
                 name: 'First Tag',
@@ -388,7 +389,7 @@ describe('PostContext', function () {
     });
 
     describe('Author Handling', function () {
-        test('Can add a author directly to post context', async () => {
+        it('Can add a author directly to post context', async () => {
             const instance: any = new PostContext();
             instance.addAuthor({
                 name: 'My Name',
@@ -404,7 +405,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.authors.length, 1);
         });
 
-        test('Can push a author to post context', async () => {
+        it('Can push a author to post context', async () => {
             const instance: any = new PostContext();
             const author = new AuthorContext({
                 name: 'My Name',
@@ -421,7 +422,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.authors.length, 1);
         });
 
-        test('Can silently ignore adding author as as object if it exists already', async () => {
+        it('Can silently ignore adding author as as object if it exists already', async () => {
             const instance: any = new PostContext();
             instance.addAuthor({
                 name: 'My Author',
@@ -439,7 +440,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.authors.length, 1);
         });
 
-        test('Can silently ignore adding author as AuthorContext if it exists already', async () => {
+        it('Can silently ignore adding author as AuthorContext if it exists already', async () => {
             const instance: any = new PostContext();
             const author = new AuthorContext({
                 name: 'My Author',
@@ -456,7 +457,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.authors.length, 1);
         });
 
-        test('Can reorder authors', function () {
+        it('Can reorder authors', function () {
             const instance: any = new PostContext();
             instance.addAuthor({
                 name: 'Second Author',
@@ -489,7 +490,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.authors[2].data.name, 'Third Author');
         });
 
-        test('Can remove author by slug', function () {
+        it('Can remove author by slug', function () {
             const instance: any = new PostContext();
             instance.addAuthor({
                 name: 'First Author',
@@ -515,7 +516,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.authors.length, 2);
         });
 
-        test('Can set primary author where author already exists', function () {
+        it('Can set primary author where author already exists', function () {
             const instance: any = new PostContext();
             instance.addAuthor({
                 name: 'First Author',
@@ -535,7 +536,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.authors.length, 2);
         });
 
-        test('Can set primary author where author did not already exist', function () {
+        it('Can set primary author where author did not already exist', function () {
             const instance: any = new PostContext();
             instance.addAuthor({
                 name: 'First Author',
@@ -555,7 +556,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.authors[2].data.name, 'Second Author');
         });
 
-        test('Can detect if post has author slug', function () {
+        it('Can detect if post has author slug', function () {
             const instance: any = new PostContext();
             instance.addAuthor({
                 name: 'First Author',
@@ -574,7 +575,7 @@ describe('PostContext', function () {
             assert.equal(instance.hasAuthorSlug('not-an-author'), false);
         });
 
-        test('Can detect if post has author name', function () {
+        it('Can detect if post has author name', function () {
             const instance: any = new PostContext();
             instance.addAuthor({
                 name: 'First Author',
@@ -593,7 +594,7 @@ describe('PostContext', function () {
             assert.equal(instance.hasAuthorName('Not an author'), false);
         });
 
-        test('Can detect if post has author email', function () {
+        it('Can detect if post has author email', function () {
             const instance: any = new PostContext();
             instance.addAuthor({
                 name: 'First Author',
