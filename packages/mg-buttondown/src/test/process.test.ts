@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {URL} from 'node:url';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';

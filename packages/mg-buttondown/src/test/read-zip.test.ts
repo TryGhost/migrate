@@ -1,6 +1,7 @@
 import {URL} from 'node:url';
 import {unlink} from 'node:fs';
 import assert from 'node:assert/strict';
+import {describe, it, before, after} from 'node:test';
 import {join} from 'node:path';
 import {execSync} from 'node:child_process';
 import mapper, {contentStats, readZip} from '../index.js';
@@ -10,13 +11,13 @@ const fixturesPath = join(__dirname, '../../src/test/fixtures');
 const inputZipPath = join(__dirname, '/export.zip');
 
 describe('Buttondown Zip Reader', () => {
-    beforeAll(function () {
+    before(function () {
         execSync(`zip -r ${inputZipPath} *`, {
             cwd: fixturesPath
         });
     });
 
-    afterAll(function () {
+    after(function () {
         unlink(inputZipPath, (err) => {
             if (err) {
                 throw err;

@@ -1,6 +1,7 @@
 import {URL} from 'node:url';
 import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {join} from 'node:path';
 import {mapContent} from '../lib/mapper.js';
 
