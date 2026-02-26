@@ -1,4 +1,5 @@
-import {describe, it, expect} from '@jest/globals';
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {mergeUsersWithGhost} from '../lib/merge-users.js';
 import type {MigratedUser} from '../lib/merge-users.js';
 import type {GhostUser} from '../lib/fetch-users.js';
@@ -17,7 +18,7 @@ describe('mergeUsersWithGhost', function () {
         ];
 
         const result = mergeUsersWithGhost(sourceUsers, []);
-        expect(result).toEqual(sourceUsers);
+        assert.deepEqual(result, sourceUsers);
     });
 
     it('returns source users unchanged when no email matches', function () {
@@ -42,7 +43,7 @@ describe('mergeUsersWithGhost', function () {
         ];
 
         const result = mergeUsersWithGhost(sourceUsers, ghostUsers);
-        expect(result).toEqual(sourceUsers);
+        assert.deepEqual(result, sourceUsers);
     });
 
     it('merges user when email matches (case-insensitive)', function () {
@@ -70,12 +71,12 @@ describe('mergeUsersWithGhost', function () {
 
         const result = mergeUsersWithGhost(sourceUsers, ghostUsers);
 
-        expect(result.length).toBe(1);
-        expect(result[0].data.id).toBe('ghost-123');
-        expect(result[0].data.slug).toBe('john-d'); // Uses Ghost slug
-        expect(result[0].data.name).toBe('John D.'); // Uses Ghost name
-        expect(result[0].data.email).toBe('john@example.com'); // Uses Ghost email
-        expect(result[0].data.bio).toBe('Source bio'); // Prefers source bio by default
+        assert.equal(result.length, 1);
+        assert.equal(result[0].data.id, 'ghost-123');
+        assert.equal(result[0].data.slug, 'john-d'); // Uses Ghost slug
+        assert.equal(result[0].data.name, 'John D.'); // Uses Ghost name
+        assert.equal(result[0].data.email, 'john@example.com'); // Uses Ghost email
+        assert.equal(result[0].data.bio, 'Source bio'); // Prefers source bio by default
     });
 
     it('uses Ghost bio when source has none', function () {
@@ -102,7 +103,7 @@ describe('mergeUsersWithGhost', function () {
 
         const result = mergeUsersWithGhost(sourceUsers, ghostUsers);
 
-        expect(result[0].data.bio).toBe('Ghost bio with HTML');
+        assert.equal(result[0].data.bio, 'Ghost bio with HTML');
     });
 
     it('prefers Ghost bio when option is set', function () {
@@ -130,7 +131,7 @@ describe('mergeUsersWithGhost', function () {
 
         const result = mergeUsersWithGhost(sourceUsers, ghostUsers, {preferGhostBio: true});
 
-        expect(result[0].data.bio).toBe('Ghost bio');
+        assert.equal(result[0].data.bio, 'Ghost bio');
     });
 
     it('extracts roles from Ghost user objects', function () {
@@ -157,7 +158,7 @@ describe('mergeUsersWithGhost', function () {
 
         const result = mergeUsersWithGhost(sourceUsers, ghostUsers);
 
-        expect(result[0].data.roles).toEqual(['Editor', 'Author']);
+        assert.deepEqual(result[0].data.roles, ['Editor', 'Author']);
     });
 
     it('handles roles as string array', function () {
@@ -184,7 +185,7 @@ describe('mergeUsersWithGhost', function () {
 
         const result = mergeUsersWithGhost(sourceUsers, ghostUsers);
 
-        expect(result[0].data.roles).toEqual(['Editor', 'Author']);
+        assert.deepEqual(result[0].data.roles, ['Editor', 'Author']);
     });
 
     it('defaults to Contributor role when no roles present', function () {
@@ -210,7 +211,7 @@ describe('mergeUsersWithGhost', function () {
 
         const result = mergeUsersWithGhost(sourceUsers, ghostUsers);
 
-        expect(result[0].data.roles).toEqual(['Contributor']);
+        assert.deepEqual(result[0].data.roles, ['Contributor']);
     });
 
     it('prefers source profile_image and website, falls back to Ghost', function () {
@@ -240,8 +241,8 @@ describe('mergeUsersWithGhost', function () {
 
         const result = mergeUsersWithGhost(sourceUsers, ghostUsers);
 
-        expect(result[0].data.profile_image).toBe('https://source.com/john.jpg'); // Source preferred
-        expect(result[0].data.website).toBe('https://johndoe.com'); // Falls back to Ghost
+        assert.equal(result[0].data.profile_image, 'https://source.com/john.jpg'); // Source preferred
+        assert.equal(result[0].data.website, 'https://johndoe.com'); // Falls back to Ghost
     });
 
     it('handles multiple users with partial matches', function () {
@@ -272,16 +273,16 @@ describe('mergeUsersWithGhost', function () {
 
         const result = mergeUsersWithGhost(sourceUsers, ghostUsers);
 
-        expect(result.length).toBe(3);
+        assert.equal(result.length, 3);
         // John is matched
-        expect(result[0].data.id).toBe('ghost-1');
-        expect(result[0].data.slug).toBe('john-existing');
+        assert.equal(result[0].data.id, 'ghost-1');
+        assert.equal(result[0].data.slug, 'john-existing');
         // Jane is unchanged
-        expect(result[1].data.id).toBeUndefined();
-        expect(result[1].data.slug).toBe('jane');
+        assert.equal(result[1].data.id, undefined);
+        assert.equal(result[1].data.slug, 'jane');
         // Bob is unchanged
-        expect(result[2].data.id).toBeUndefined();
-        expect(result[2].data.slug).toBe('bob');
+        assert.equal(result[2].data.id, undefined);
+        assert.equal(result[2].data.slug, 'bob');
     });
 
     it('skips matching when source user has no email', function () {
@@ -308,7 +309,7 @@ describe('mergeUsersWithGhost', function () {
         const result = mergeUsersWithGhost(sourceUsers, ghostUsers);
 
         // Should not match since source has no email
-        expect(result[0].data.id).toBeUndefined();
-        expect(result[0].data.slug).toBe('john-doe');
+        assert.equal(result[0].data.id, undefined);
+        assert.equal(result[0].data.slug, 'john-doe');
     });
 });

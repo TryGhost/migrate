@@ -1,27 +1,28 @@
-import {describe, it, expect} from '@jest/globals';
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import * as ghostAuthors from '../index.js';
 
 describe('mg-ghost-authors exports', function () {
     it('exports fetchGhostUsers function', function () {
-        expect(typeof ghostAuthors.fetchGhostUsers).toBe('function');
+        assert.equal(typeof ghostAuthors.fetchGhostUsers, 'function');
     });
 
     it('exports mergeUsersWithGhost function', function () {
-        expect(typeof ghostAuthors.mergeUsersWithGhost).toBe('function');
+        assert.equal(typeof ghostAuthors.mergeUsersWithGhost, 'function');
     });
 
     it('exports ghostAuthOptions array', function () {
-        expect(Array.isArray(ghostAuthors.ghostAuthOptions)).toBe(true);
-        expect(ghostAuthors.ghostAuthOptions.length).toBe(2);
-        
+        assert.equal(Array.isArray(ghostAuthors.ghostAuthOptions), true);
+        assert.equal(ghostAuthors.ghostAuthOptions.length, 2);
+
         const apiUrlOption = ghostAuthors.ghostAuthOptions.find(o => o.flags === '--ghostApiUrl');
-        expect(apiUrlOption).toBeDefined();
-        expect(apiUrlOption?.type).toBe('string');
-        expect(apiUrlOption?.defaultValue).toBe(null);
+        assert.ok(apiUrlOption !== undefined);
+        assert.equal(apiUrlOption?.type, 'string');
+        assert.equal(apiUrlOption?.defaultValue, null);
 
         const adminKeyOption = ghostAuthors.ghostAuthOptions.find(o => o.flags === '--ghostAdminKey');
-        expect(adminKeyOption).toBeDefined();
-        expect(adminKeyOption?.type).toBe('string');
-        expect(adminKeyOption?.defaultValue).toBe(null);
+        assert.ok(adminKeyOption !== undefined);
+        assert.equal(adminKeyOption?.type, 'string');
+        assert.equal(adminKeyOption?.defaultValue, null);
     });
 });

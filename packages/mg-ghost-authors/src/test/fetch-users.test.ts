@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {describe, it, expect} from '@jest/globals';
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {fetchGhostUsers} from '../lib/fetch-users.js';
 import type {FetchUsersOptions} from '../lib/fetch-users.js';
 
@@ -11,7 +12,7 @@ describe('fetchGhostUsers', function () {
         };
 
         const result = await fetchGhostUsers(options);
-        expect(result).toEqual([]);
+        assert.deepEqual(result, []);
     });
 
     it('returns empty array when adminKey is not provided', async function () {
@@ -21,7 +22,7 @@ describe('fetchGhostUsers', function () {
         };
 
         const result = await fetchGhostUsers(options);
-        expect(result).toEqual([]);
+        assert.deepEqual(result, []);
     });
 
     it('throws error for invalid admin key format', async function () {
@@ -30,7 +31,7 @@ describe('fetchGhostUsers', function () {
             adminKey: 'invalid-key-without-colon'
         };
 
-        await expect(fetchGhostUsers(options)).rejects.toThrow('Invalid Admin API key format');
+        await assert.rejects(fetchGhostUsers(options), {message: /Invalid Admin API key format/});
     });
 
     it('throws error for admin key with empty parts', async function () {
@@ -39,7 +40,7 @@ describe('fetchGhostUsers', function () {
             adminKey: ':secret'
         };
 
-        await expect(fetchGhostUsers(options)).rejects.toThrow('Invalid Admin API key format');
+        await assert.rejects(fetchGhostUsers(options), {message: /Invalid Admin API key format/});
     });
 
     it('throws error for admin key with empty id', async function () {
@@ -48,7 +49,7 @@ describe('fetchGhostUsers', function () {
             adminKey: 'id:'
         };
 
-        await expect(fetchGhostUsers(options)).rejects.toThrow('Invalid Admin API key format');
+        await assert.rejects(fetchGhostUsers(options), {message: /Invalid Admin API key format/});
     });
 
     it('returns cached users when available', async function () {
@@ -70,7 +71,7 @@ describe('fetchGhostUsers', function () {
 
         const result = await fetchGhostUsers(options);
 
-        expect(result).toEqual(cachedUsers);
+        assert.deepEqual(result, cachedUsers);
     });
 
     it('returns empty array when API call fails', async function () {
@@ -84,6 +85,6 @@ describe('fetchGhostUsers', function () {
         const result = await fetchGhostUsers(options);
 
         // Should return empty array on failure, not throw
-        expect(result).toEqual([]);
+        assert.deepEqual(result, []);
     });
 });
