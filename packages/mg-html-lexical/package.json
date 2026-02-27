@@ -40,6 +40,6 @@
   },
   "dependencies": {
     "@tryghost/errors": "2.2.1",
-    "@tryghost/kg-html-to-lexical": "1.2.34"
+    "@tryghost/kg-html-to-lexical": "1.2.35"
   }
 }
