@@ -25,7 +25,7 @@
   "dependencies": {
     "@tryghost/debug": "1.2.1",
     "@tryghost/errors": "2.2.1",
-    "@tryghost/kg-default-cards": "10.2.6",
+    "@tryghost/kg-default-cards": "10.2.7",
     "@tryghost/mg-fs-utils": "0.16.5",
     "@tryghost/mg-shortcodes": "0.2.23",
     "@tryghost/mg-utils": "0.0.1",
