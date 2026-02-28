@@ -24,7 +24,7 @@
     "@typescript-eslint/eslint-plugin": "8.56.1",
     "@typescript-eslint/parser": "8.56.1",
     "c8": "11.0.0",
-    "eslint": "8.57.1",
+    "eslint": "10.0.2",
     "eslint-plugin-ghost": "3.4.4",
     "typescript": "5.9.3"
   },

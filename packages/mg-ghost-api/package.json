@@ -20,7 +20,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.57.1"
+    "eslint": "10.0.2"
   },
   "dependencies": {
     "@tryghost/admin-api": "1.14.6"
