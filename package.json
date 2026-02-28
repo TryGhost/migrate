@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@tryghost/errors": "2.2.1",
-    "eslint": "8.57.1",
+    "eslint": "10.0.2",
     "eslint-plugin-ghost": "3.4.4",
     "tsx": "4.21.0"
   }
