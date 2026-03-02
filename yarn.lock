@@ -4036,7 +4036,7 @@ ansi-escapes@^5.0.0:
   dependencies:
     type-fest "^1.0.2"
 
-ansi-escapes@^7.0.0, ansi-escapes@^7.1.0, ansi-escapes@^7.3.0:
+ansi-escapes@^7.0.0, ansi-escapes@^7.3.0:
   version "7.3.0"
   resolved "https://registry.yarnpkg.com/ansi-escapes/-/ansi-escapes-7.3.0.tgz#5395bb74b2150a4a1d6e3c2565f4aeca78d28627"
   integrity sha512-BvU8nYgGQBxcmMuEeUEmNTvrMVjJNSH7RgW24vXexN4Ven6qCvy4TntnvlnwnMLTVlcRQQdbRY8NKnaIoeWDNg==
@@ -7877,16 +7877,16 @@ log-update@6.1.0:
     strip-ansi "^7.1.0"
     wrap-ansi "^9.0.0"
 
-log-update@7.1.0:
-  version "7.1.0"
-  resolved "https://registry.yarnpkg.com/log-update/-/log-update-7.1.0.tgz#c1b3823f1ba5d2b254ef320d6da61a11400d939d"
-  integrity sha512-y9pi/ZOQQVvTgfRDEHV1Cj4zQUkJZPipEUNOxhn1R6KgmdMs7LKvXWCd9eMVPGJgvYzFLCenecWr0Ps8ChVv2A==
+log-update@7.2.0, log-update@^7.1.0:
+  version "7.2.0"
+  resolved "https://registry.yarnpkg.com/log-update/-/log-update-7.2.0.tgz#cd6c87c1270c80b53fa1d6d8ac5b2c624a286258"
+  integrity sha512-iLs7dGSyjZiUgvrUvuD3FndAxVJk+TywBkkkwUSm9HdYoskJalWg5qVsEiXeufPvRVPbCUmNQewg798rx+sPXg==
   dependencies:
-    ansi-escapes "^7.1.0"
+    ansi-escapes "^7.3.0"
     cli-cursor "^5.0.0"
-    slice-ansi "^7.1.2"
-    strip-ansi "^7.1.2"
-    wrap-ansi "^9.0.2"
+    slice-ansi "^8.0.0"
+    strip-ansi "^7.2.0"
+    wrap-ansi "^10.0.0"
 
 log-update@^2.3.0:
   version "2.3.0"
@@ -7907,17 +7907,6 @@ log-update@^5.0.1:
     slice-ansi "^5.0.0"
     strip-ansi "^7.0.1"
     wrap-ansi "^8.0.1"
-
-log-update@^7.1.0:
-  version "7.2.0"
-  resolved "https://registry.yarnpkg.com/log-update/-/log-update-7.2.0.tgz#cd6c87c1270c80b53fa1d6d8ac5b2c624a286258"
-  integrity sha512-iLs7dGSyjZiUgvrUvuD3FndAxVJk+TywBkkkwUSm9HdYoskJalWg5qVsEiXeufPvRVPbCUmNQewg798rx+sPXg==
-  dependencies:
-    ansi-escapes "^7.3.0"
-    cli-cursor "^5.0.0"
-    slice-ansi "^8.0.0"
-    strip-ansi "^7.2.0"
-    wrap-ansi "^10.0.0"
 
 long-timeout@^0.1.1:
   version "0.1.1"
@@ -9774,7 +9763,7 @@ slice-ansi@^5.0.0:
     ansi-styles "^6.0.0"
     is-fullwidth-code-point "^4.0.0"
 
-slice-ansi@^7.1.0, slice-ansi@^7.1.2:
+slice-ansi@^7.1.0:
   version "7.1.2"
   resolved "https://registry.yarnpkg.com/slice-ansi/-/slice-ansi-7.1.2.tgz#adf7be70aa6d72162d907cd0e6d5c11f507b5403"
   integrity sha512-iOBWFgUX7caIZiuutICxVgX1SdxwAVFFKwt1EvMYYec/NWO5meOJ6K5uQxhrYBdQJne4KxiqZc+KptFOWFSI9w==
@@ -10963,7 +10952,7 @@ wrap-ansi@^8.0.1, wrap-ansi@^8.1.0:
     string-width "^5.0.1"
     strip-ansi "^7.0.1"
 
-wrap-ansi@^9.0.0, wrap-ansi@^9.0.2:
+wrap-ansi@^9.0.0:
   version "9.0.2"
   resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-9.0.2.tgz#956832dea9494306e6d209eb871643bb873d7c98"
   integrity sha512-42AtmgqjV+X1VpdOfyTGOYRi0/zsoLqtXQckTmqTeybT+BDIbM/Guxo7x3pE2vtpr1ok6xRqM9OpBe+Jyoqyww==
