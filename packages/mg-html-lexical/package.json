@@ -39,7 +39,7 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@tryghost/errors": "2.2.1",
+    "@tryghost/errors": "3.0.0",
     "@tryghost/kg-html-to-lexical": "1.2.36"
   }
 }
