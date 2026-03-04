@@ -63,7 +63,7 @@ describe('Substack E2E Migration', function () {
 
         // Create the input ZIP
         zipPath = join(fixtureDir, '..', 'substack-e2e.zip');
-        execSync(`zip -r ${zipPath} posts.csv posts/`, {
+        execSync(`zip -r "${zipPath}" posts.csv posts/`, {
             cwd: fixtureDir
         });
 
