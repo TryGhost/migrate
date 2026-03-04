@@ -229,8 +229,12 @@ const getTaskRunner = (options) => {
                 });
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor, skipScrape);
                 ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
-                    allowAllDomains: true,
-                    domains: ['https://cdn.substack.com', 'https://substackcdn.com', 'https://substack-post-media.s3.amazonaws.com', 'https://api.substack.com']
+                    domains: [
+                        'https://cdn.substack.com',
+                        'https://substackcdn.com',
+                        'https://substack-post-media.s3.amazonaws.com',
+                        'https://api.substack.com'
+                    ]
                 }, ctx);
                 await ctx.assetScraper.init();
                 ctx.linkFixer = new MgLinkFixer();
