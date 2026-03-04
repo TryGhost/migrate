@@ -3,7 +3,7 @@ import {parse, join, extname} from 'node:path';
 import {createHash} from 'node:crypto';
 import errors from '@tryghost/errors';
 import {slugify} from '@tryghost/string';
-import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
+// Subtasks are created via task.newListr() instead of makeTaskRunner
 import {fileTypeFromBuffer} from 'file-type';
 import AssetCache from './AssetCache.js';
 import {needsConverting, convertImageBuffer, getFolderForMimeType, normalizePathSegment} from './utils.js';
@@ -816,33 +816,25 @@ export default class AssetScraper {
     getTasks(): ListrTask[] {
         const tasks: ListrTask[] = [];
 
-        const addSubTasks = (items: GhostContentObject[], type: string) => {
-            const subTasks: ListrTask[] = [];
-
-            items.forEach((item: GhostContentObject) => {
-                subTasks.push({
-                    title: `Assets for ${type} ${item?.slug ?? item?.name ?? item.id ?? item.post_id}`,
-                    task: async () => {
-                        try {
-                            await this.inlinePostTagUserObject(item);
-                        } catch (err) {
-                            throw new errors.InternalServerError({message: 'Failed to inline object', err: err instanceof Error ? err : undefined});
-                        }
+        const addSubTasks = (items: GhostContentObject[], type: string): ListrTask[] => {
+            return items.map((item: GhostContentObject) => ({
+                title: `Assets for ${type} ${item?.slug ?? item?.name ?? item.id ?? item.post_id}`,
+                task: async () => {
+                    try {
+                        await this.inlinePostTagUserObject(item);
+                    } catch (err) {
+                        throw new errors.InternalServerError({message: 'Failed to inline object', err: err instanceof Error ? err : undefined});
                     }
-                });
-            });
-
-            return makeTaskRunner(subTasks, {
-                concurrent: 5
-            });
+                }
+            }));
         };
 
         // Posts
         const thePosts = this.#ctx?.posts ?? this.#ctx?.result?.data?.posts ?? [];
         tasks.push({
             title: `Posts`,
-            task: async () => {
-                return addSubTasks(thePosts, 'posts');
+            task: (ctx: any, task: any) => {
+                return task.newListr(addSubTasks(thePosts, 'posts'), {concurrent: 5});
             }
         });
 
@@ -850,8 +842,8 @@ export default class AssetScraper {
         const thePostMeta = this.#ctx?.posts_meta ?? this.#ctx?.result?.data?.posts_meta ?? [];
         tasks.push({
             title: `Posts Meta`,
-            task: async () => {
-                return addSubTasks(thePostMeta, 'posts meta');
+            task: (ctx: any, task: any) => {
+                return task.newListr(addSubTasks(thePostMeta, 'posts meta'), {concurrent: 5});
             }
         });
 
@@ -859,8 +851,8 @@ export default class AssetScraper {
         const theTags = this.#ctx?.tags ?? this.#ctx?.result?.data?.tags ?? [];
         tasks.push({
             title: `Tags`,
-            task: async () => {
-                return addSubTasks(theTags, 'tags');
+            task: (ctx: any, task: any) => {
+                return task.newListr(addSubTasks(theTags, 'tags'), {concurrent: 5});
             }
         });
 
@@ -868,8 +860,8 @@ export default class AssetScraper {
         const theUsers = this.#ctx?.users ?? this.#ctx?.result?.data?.users ?? [];
         tasks.push({
             title: `Users`,
-            task: async () => {
-                return addSubTasks(theUsers, 'users');
+            task: (ctx: any, task: any) => {
+                return task.newListr(addSubTasks(theUsers, 'users'), {concurrent: 5});
             }
         });
 
@@ -895,8 +887,8 @@ export default class AssetScraper {
         const theSnippets = this.#ctx?.snippets ?? this.#ctx?.result?.data?.snippets ?? [];
         tasks.push({
             title: `Snippets`,
-            task: async () => {
-                return addSubTasks(theSnippets, 'snippets');
+            task: (ctx: any, task: any) => {
+                return task.newListr(addSubTasks(theSnippets, 'snippets'), {concurrent: 5});
             }
         });
 
