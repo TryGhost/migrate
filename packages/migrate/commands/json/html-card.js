@@ -14,6 +14,10 @@ const setup = (sywac) => {
         defaultValue: Boolean(process?.env?.DEBUG),
         desc: 'Show verbose output'
     });
+    sywac.boolean('--veryVerbose', {
+        defaultValue: false,
+        desc: 'Show very verbose output (implies --verbose)'
+    });
 };
 
 const desc = 'Convert all html fields to mobiledoc using html cards (non-lossy)';
@@ -24,6 +28,10 @@ const paramsDesc = ['Path to a Ghost JSON file to convert'];
 const run = async (argv) => {
     let timer = Date.now();
     let context = {errors: []};
+
+    if (argv.veryVerbose) {
+        argv.verbose = true;
+    }
 
     if (argv.verbose) {
         ui.log.info(`Running html conversion on ${argv.pathToJSON}`);
@@ -38,8 +46,12 @@ const run = async (argv) => {
         // Run the migration
         await utility.run(context);
 
-        if (argv.verbose) {
-            ui.log.info('Done', inspect(context.result, false, 3));
+        if (argv.verbose && context.result) {
+            ui.log.info('Done');
+        }
+
+        if (argv.veryVerbose && context.result) {
+            ui.log.info(inspect(context.result, false, 3));
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);

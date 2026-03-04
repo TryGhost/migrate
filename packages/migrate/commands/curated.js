@@ -32,6 +32,12 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--veryVerbose',
+        defaultValue: false,
+        desc: 'Show very verbose output (implies --verbose)'
+    },
+    {
+        type: 'boolean',
         flags: '--zip',
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
@@ -82,6 +88,10 @@ const run = async (argv) => {
         warnings: []
     };
 
+    if (argv.veryVerbose) {
+        argv.verbose = true;
+    }
+
     // Remove trailing slash from URL
     if (argv.url.endsWith('/')) {
         argv.url = argv.url.slice(0, -1);
@@ -98,8 +108,12 @@ const run = async (argv) => {
         // Run the migration
         await migrate.run(context);
 
-        if (argv.verbose) {
-            ui.log.info('Done', inspect(context.result.data, false, 2));
+        if (argv.verbose && context.result) {
+            ui.log.info('Done');
+        }
+
+        if (argv.veryVerbose && context.result) {
+            ui.log.info(inspect(context.result.data, false, 2));
         }
     } catch (error) {
         ui.log.info('Done with errors', context.errors);

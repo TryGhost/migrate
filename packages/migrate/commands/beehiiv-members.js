@@ -67,6 +67,12 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--veryVerbose',
+        defaultValue: false,
+        desc: 'Show very verbose output (implies --verbose)'
+    },
+    {
+        type: 'boolean',
         flags: '--zip',
         defaultValue: false,
         desc: 'Create a zip file (set to false to skip)'
@@ -86,6 +92,10 @@ const run = async (argv) => {
         warnings: []
     };
 
+    if (argv.veryVerbose) {
+        argv.verbose = true;
+    }
+
     try {
         // Fetch the tasks, configured correctly according to the options passed in
         let migrate = beehiivMembers.getTaskRunner(argv);
@@ -94,7 +104,11 @@ const run = async (argv) => {
         await migrate.run(context);
 
         if (argv.verbose && context.result) {
-            ui.log.info('Done', inspect(context.result.data, false, 2));
+            ui.log.info('Done');
+        }
+
+        if (argv.veryVerbose && context.result) {
+            ui.log.info(inspect(context.result.data, false, 2));
         }
     } catch (error) {
         ui.log.error(error);
