@@ -10373,17 +10373,17 @@ tinyglobby@^0.2.15:
     fdir "^6.5.0"
     picomatch "^4.0.3"
 
-tldts-core@^7.0.23:
-  version "7.0.23"
-  resolved "https://registry.yarnpkg.com/tldts-core/-/tldts-core-7.0.23.tgz#47bf18282a44641304a399d247703413b5d3e309"
-  integrity sha512-0g9vrtDQLrNIiCj22HSe9d4mLVG3g5ph5DZ8zCKBr4OtrspmNB6ss7hVyzArAeE88ceZocIEGkyW1Ime7fxPtQ==
+tldts-core@^7.0.24:
+  version "7.0.24"
+  resolved "https://registry.yarnpkg.com/tldts-core/-/tldts-core-7.0.24.tgz#ffc93642720e4dd708fc7b68dfd7d630fec43403"
+  integrity sha512-pj7yygNMoMRqG7ML2SDQ0xNIOfN3IBDUcPVM2Sg6hP96oFNN2nqnzHreT3z9xLq85IWJyNTvD38O002DdOrPMw==
 
-tldts@7.0.23, tldts@^7.0.5:
-  version "7.0.23"
-  resolved "https://registry.yarnpkg.com/tldts/-/tldts-7.0.23.tgz#444f0f0720fa777839a23ea665e04f61ee57217a"
-  integrity sha512-ASdhgQIBSay0R/eXggAkQ53G4nTJqTXqC2kbaBbdDwM7SkjyZyO0OaaN1/FH7U/yCeqOHDwFO5j8+Os/IS1dXw==
+tldts@7.0.24, tldts@^7.0.5:
+  version "7.0.24"
+  resolved "https://registry.yarnpkg.com/tldts/-/tldts-7.0.24.tgz#11785c58333ef50afdf1ed42f571efc8808ebb1f"
+  integrity sha512-1r6vQTTt1rUiJkI5vX7KG8PR342Ru/5Oh13kEQP2SMbRSZpOey9SrBe27IDxkoWulx8ShWu4K6C0BkctP8Z1bQ==
   dependencies:
-    tldts-core "^7.0.23"
+    tldts-core "^7.0.24"
 
 to-regex-range@^5.0.1:
   version "5.0.1"
