@@ -31,7 +31,7 @@
     "cli-truncate": "5.2.0",
     "elegant-spinner": "3.0.0",
     "indent-string": "5.0.0",
-    "listr2": "10.1.2",
+    "listr2": "10.2.1",
     "log-symbols": "7.0.1",
     "log-update": "7.2.0",
     "strip-ansi": "7.2.0"
