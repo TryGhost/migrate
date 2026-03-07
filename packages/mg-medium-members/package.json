@@ -34,7 +34,7 @@
     "@typescript-eslint/parser": "8.56.1",
     "c8": "11.0.0",
     "eslint": "8.57.1",
-    "sinon": "21.0.1",
+    "sinon": "21.0.2",
     "typescript": "5.9.3"
   },
   "dependencies": {
