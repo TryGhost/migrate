@@ -20,7 +20,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.57.1"
+    "eslint": "10.0.2"
   },
   "dependencies": {
     "@tryghost/mg-fs-utils": "0.12.13"
