@@ -291,4 +291,62 @@ describe('MigrateContext', () => {
         assert.deepEqual(Object.keys(ghostJSON.data), ['posts', 'users', 'tags', 'posts_authors', 'posts_tags', 'posts_meta']);
         assert.deepEqual(ghostJSON.data.posts.length, 2);
     });
+
+    describe('Ghost JSON content formats', () => {
+        it('Can export with HTML only', async () => {
+            const instance: any = new MigrateContext();
+
+            const post = instance.addPost();
+            post.set('title', 'HTML Only Post');
+            post.set('slug', 'html-only-post');
+            post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            post.set('html', '<p>Hello world</p>');
+            post.addAuthor({name: 'Test Author', slug: 'test-author', email: 'test@example.com'});
+
+            const ghostJSON = await instance.ghostJson;
+
+            assert.equal(ghostJSON.data.posts.length, 1);
+            assert.equal(ghostJSON.data.posts[0].html, '<p>Hello world</p>');
+            assert.equal(ghostJSON.data.posts[0].mobiledoc, null);
+            assert.equal(ghostJSON.data.posts[0].lexical, null);
+        });
+
+        it('Can export with Lexical only', async () => {
+            const instance: any = new MigrateContext();
+
+            const post = instance.addPost({contentFormat: 'lexical'});
+            post.set('title', 'Lexical Only Post');
+            post.set('slug', 'lexical-only-post');
+            post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            post.set('html', '<p>Hello world</p>');
+            post.addAuthor({name: 'Test Author', slug: 'test-author', email: 'test@example.com'});
+
+            const ghostJSON = await instance.ghostJson;
+
+            assert.equal(ghostJSON.data.posts.length, 1);
+            assert.equal(ghostJSON.data.posts[0].html, '<p>Hello world</p>');
+            assert.ok(ghostJSON.data.posts[0].lexical);
+            assert.equal(typeof ghostJSON.data.posts[0].lexical, 'object');
+            assert.equal(ghostJSON.data.posts[0].mobiledoc, null);
+        });
+
+        it('Can export with Mobiledoc only', async () => {
+            const instance: any = new MigrateContext();
+
+            const post = instance.addPost({contentFormat: 'mobiledoc'});
+            post.set('title', 'Mobiledoc Only Post');
+            post.set('slug', 'mobiledoc-only-post');
+            post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            post.set('html', '<p>Hello world</p>');
+            post.addAuthor({name: 'Test Author', slug: 'test-author', email: 'test@example.com'});
+
+            const ghostJSON = await instance.ghostJson;
+
+            assert.equal(ghostJSON.data.posts.length, 1);
+            assert.equal(ghostJSON.data.posts[0].html, '<p>Hello world</p>');
+            assert.ok(ghostJSON.data.posts[0].mobiledoc);
+            assert.equal(typeof ghostJSON.data.posts[0].mobiledoc, 'object');
+            assert.equal(ghostJSON.data.posts[0].lexical, null);
+        });
+    });
 });

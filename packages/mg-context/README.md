@@ -49,6 +49,12 @@ const post = context.addPost();
 post.contentFormat = 'lexical';
 ```
 
+When you call `post.set('html', '<p>...</p>')`, the content is automatically converted based on the `contentFormat`:
+
+- **`html`** (default): Only `html` is populated in the export. `mobiledoc` and `lexical` will be `null`.
+- **`lexical`**: Both `html` and `lexical` are populated. The HTML is automatically converted to Lexical format. `mobiledoc` will be `null`.
+- **`mobiledoc`**: Both `html` and `mobiledoc` are populated. The HTML is automatically converted to Mobiledoc format. `lexical` will be `null`.
+
 ### Add a tag
 
 ```js
