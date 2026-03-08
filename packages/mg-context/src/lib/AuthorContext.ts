@@ -61,7 +61,7 @@ export default class AuthorContext extends MigrateBase {
             }, // TODO: The bit before @ is limited to 64 chars, so this needs validating separately to length alone
             profile_image: {type: 'string', maxLength: 2000},
             cover_image: {type: 'string', maxLength: 2000},
-            bio: {type: 'text', maxLength: 200},
+            bio: {type: 'text', maxLength: 250},
             website: {type: 'string', maxLength: 2000},
             location: {type: 'text', maxLength: 150},
             facebook: {type: 'string', maxLength: 2000},
