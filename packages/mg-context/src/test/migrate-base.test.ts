@@ -1,37 +1,31 @@
 // In here, we're testing that MigrateBase can be extended and used as intended
 
+import {z} from 'zod/v4';
 // import MigrateBase from '../lib/MigrateBase.js';
 import {MigrateBase} from '../index.js';
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 
+const testSchema = z.object({
+    name: z.string().max(20),
+    slug: z.string().max(10),
+    html: z.string().max(1000000000).nullable(),
+    mobiledoc: z.string().max(1000000000).nullable(),
+    lexical: z.string().max(1000000000).nullable(),
+    created_at: z.date().nullable(),
+    role: z.enum(['Contributor', 'Author', 'Editor', 'Administrator']),
+    list: z.array(z.any()).default([]),
+    featured: z.boolean().default(false)
+});
+
 class TestContext extends MigrateBase {
-    #schema;
     data: any = {};
 
     constructor({initialData = {}} = {}) {
         super();
 
-        // Define what fields are allowed, their types, validations, and defaults
-        this.#schema = {
-            name: {required: true, type: 'string', maxLength: 20},
-            slug: {required: true, type: 'string', maxLength: 10},
-            html: {type: 'string', maxLength: 1000000000},
-            mobiledoc: {type: 'string', maxLength: 1000000000},
-            lexical: {type: 'string', maxLength: 1000000000},
-            created_at: {type: 'dateTime'},
-            role: {required: true, type: 'string', choices: ['Contributor', 'Author', 'Editor', 'Administrator']},
-            list: {type: 'array', default: []},
-            featured: {type: 'boolean', default: false}
-        };
-
-        this.schema = this.#schema;
-
-        // Push entires from the schema into the working object
-        Object.entries(this.#schema).forEach((item: any) => {
-            const [key, value] = item;
-            this.data[key] = value.default ?? null;
-        });
+        this.schema = testSchema;
+        this.initializeData();
 
         // Set initial data if provided
         Object.entries(initialData).forEach((item: any) => {
@@ -39,10 +33,6 @@ class TestContext extends MigrateBase {
             this.data[key] = value;
         });
     }
-
-    // get schema(): any {
-    //     return this.#schema;
-    // }
 }
 
 describe('MigrateBase', () => {
@@ -136,7 +126,7 @@ describe('MigrateBase', () => {
         assert.throws(() => instance.set('created_at', 'Not a date'), {
             name: 'InternalServerError',
             statusCode: 500,
-            message: '(TestContext) Invalid date value for created_at'
+            message: '(TestContext) Invalid date value for "created_at"'
         });
     });
 
@@ -146,7 +136,7 @@ describe('MigrateBase', () => {
         assert.throws(() => instance.set('role', 'DoesNotExist'), {
             name: 'InternalServerError',
             statusCode: 500,
-            message: '(TestContext) Invalid choice for role'
+            message: '(TestContext) Invalid choice for "role"'
         });
     });
 
@@ -163,7 +153,7 @@ describe('MigrateBase', () => {
         assert.throws(() => instance.set('list', 'dont do this'), {
             name: 'InternalServerError',
             statusCode: 500,
-            message: '(TestContext) Invalid array value for list'
+            message: '(TestContext) Invalid array value for "list"'
         });
     });
 
@@ -173,7 +163,7 @@ describe('MigrateBase', () => {
         assert.throws(() => instance.set('featured', 'yes'), {
             name: 'InternalServerError',
             statusCode: 500,
-            message: '(TestContext) Invalid boolean value for featured'
+            message: '(TestContext) Invalid boolean value for "featured"'
         });
     });
 
@@ -188,8 +178,17 @@ describe('MigrateBase', () => {
         assert.throws(() => instance.getFinal, {
             name: 'InternalServerError',
             statusCode: 500,
-            message: '(TestContext) Missing required field: role'
+            message: '(TestContext) Missing required field: "role"'
         });
+    });
+
+    it('Can remove a field with a default value', () => {
+        const instance: any = new TestContext();
+        instance.set('featured', true);
+        assert.equal(instance.data.featured, true);
+
+        instance.remove('featured');
+        assert.equal(instance.data.featured, false);
     });
 
     it('Will throw when getting non-existent value', async () => {

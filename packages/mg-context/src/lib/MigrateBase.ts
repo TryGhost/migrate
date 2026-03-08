@@ -1,4 +1,5 @@
 import errors from '@tryghost/errors';
+import {getFieldInfo} from './zod-schema-utils.js';
 
 export default class MigrateBase {
     #context;
@@ -9,54 +10,66 @@ export default class MigrateBase {
         this.#context = this.constructor.name;
     }
 
+    protected initializeData() {
+        for (const key of Object.keys(this.schema.shape)) {
+            const info = getFieldInfo(this.schema.shape[key]);
+            this.data[key] = info.hasDefault ? info.defaultValue : null;
+        }
+    }
+
     validate(key: any, value: any) {
-        if (!this.schema[key] || value === null) {
+        if (!(key in this.schema.shape) || value === null) {
             return;
         }
 
-        const type = this.schema[key].type;
-        const maxLength = this.schema[key].maxLength ?? null;
-        const choices = this.schema[key].choices ?? null;
+        const info = getFieldInfo(this.schema.shape[key]);
 
-        // Use validation method from schema if available
-        if (this?.schema[key]?.validate) {
-            value = this.schema[key].validate(value);
-        }
-
-        if (maxLength && value?.length > maxLength) {
+        if (info.maxLength && value?.length > info.maxLength) {
             throw new errors.InternalServerError({
-                message: `(${this.#context}) Value for "${key}" is too long. Currently ${value.length} characters, Max ${maxLength}.`,
+                message: `(${this.#context}) Value for "${key}" is too long. Currently ${value.length} characters, Max ${info.maxLength}.`,
                 context: value
             });
-        } else if (type === 'dateTime') {
+        } else if (info.type === 'dateTime') {
             if (!(value instanceof Date)) {
                 throw new errors.InternalServerError({
-                    message: `(${this.#context}) Invalid date value for ${key}`,
+                    message: `(${this.#context}) Invalid date value for "${key}"`,
                     context: value
                 });
             }
-        } else if (type === 'string' && choices && choices.length) {
-            if (!choices.includes(value)) {
+        } else if (info.type === 'string' && info.choices && info.choices.length) {
+            if (!info.choices.includes(value)) {
                 throw new errors.InternalServerError({
-                    message: `(${this.#context}) Invalid choice for ${key}`,
+                    message: `(${this.#context}) Invalid choice for "${key}"`,
                     context: value
                 });
             }
-        } else if (type === 'boolean' && typeof value !== 'boolean') {
+        } else if (info.type === 'boolean' && typeof value !== 'boolean') {
             throw new errors.InternalServerError({
-                message: `(${this.#context}) Invalid boolean value for ${key}`,
+                message: `(${this.#context}) Invalid boolean value for "${key}"`,
                 context: value
             });
-        } else if (type === 'array' && !Array.isArray(value)) {
+        } else if (info.type === 'array' && !Array.isArray(value)) {
             throw new errors.InternalServerError({
-                message: `(${this.#context}) Invalid array value for ${key}`,
+                message: `(${this.#context}) Invalid array value for "${key}"`,
                 context: value
             });
+        }
+
+        // Run Zod refinements (e.g. .refine() on schema fields)
+        const result = this.schema.shape[key].safeParse(value);
+        if (!result.success) {
+            const customIssue = result.error.issues.find((i: any) => i.code === 'custom');
+            if (customIssue) {
+                throw new errors.InternalServerError({
+                    message: `(${this.#context}) ${customIssue.message} for "${key}"`,
+                    context: value
+                });
+            }
         }
     }
 
     #setProp(prop: any, value: any) {
-        if (this.schema[prop]) {
+        if (prop in this.schema.shape) {
             // NOTE: This is buggy
             // if (Array.isArray(value)) {
             //     value.forEach((vItem) => {
@@ -77,7 +90,7 @@ export default class MigrateBase {
     }
 
     get(prop: string) {
-        if (prop in this.schema) {
+        if (prop in this.schema.shape) {
             let value = this.data[prop];
             return value;
         } else {
@@ -100,7 +113,8 @@ export default class MigrateBase {
     }
 
     remove(prop: any) {
-        this.set(prop, this.schema[prop].default ?? null);
+        const info = getFieldInfo(this.schema.shape[prop]);
+        this.set(prop, info.hasDefault ? info.defaultValue : null);
 
         return this;
     }
@@ -114,11 +128,14 @@ export default class MigrateBase {
 
     checkRequired(working: any) {
         // Check required fields
-        const required = Object.keys(this.schema).filter(key => this.schema[key].required);
+        const required = Object.keys(this.schema.shape).filter((key) => {
+            const info = getFieldInfo(this.schema.shape[key]);
+            return info.required;
+        });
 
         required.forEach((key) => {
             if (working[key] === null || working[key] === undefined) {
-                throw new errors.InternalServerError({message: `(${this.#context}) Missing required field: ${key}`});
+                throw new errors.InternalServerError({message: `(${this.#context}) Missing required field: "${key}"`});
             }
         });
 

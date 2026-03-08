@@ -130,6 +130,70 @@ describe('PostContext', function () {
         });
     });
 
+    describe('Validation Errors', function () {
+        it('Will throw on string value that is too long', () => {
+            const instance: any = new PostContext();
+            const longTitle = 'a'.repeat(256);
+
+            assert.throws(() => instance.set('title', longTitle), {
+                name: 'InternalServerError',
+                statusCode: 500,
+                message: '(PostContext) Value for "title" is too long. Currently 256 characters, Max 255.'
+            });
+        });
+
+        it('Will throw on invalid date value', () => {
+            const instance: any = new PostContext();
+
+            assert.throws(() => instance.set('created_at', 'not-a-date'), {
+                name: 'InternalServerError',
+                statusCode: 500,
+                message: '(PostContext) Invalid date value for "created_at"'
+            });
+        });
+
+        it('Will throw on invalid choice value', () => {
+            const instance: any = new PostContext();
+
+            assert.throws(() => instance.set('status', 'archived'), {
+                name: 'InternalServerError',
+                statusCode: 500,
+                message: '(PostContext) Invalid choice for "status"'
+            });
+        });
+
+        it('Will throw on invalid boolean value', () => {
+            const instance: any = new PostContext();
+
+            assert.throws(() => instance.set('featured', 'yes'), {
+                name: 'InternalServerError',
+                statusCode: 500,
+                message: '(PostContext) Invalid boolean value for "featured"'
+            });
+        });
+
+        it('Includes the failing value as context in validation errors', () => {
+            const instance: any = new PostContext();
+
+            try {
+                instance.set('created_at', 'not-a-date');
+                assert.fail('Expected an error');
+            } catch (err: any) {
+                assert.equal(err.context, 'not-a-date');
+            }
+        });
+
+        it('Will throw on unknown property', () => {
+            const instance: any = new PostContext();
+
+            assert.throws(() => instance.set('nonexistent', 'value'), {
+                name: 'InternalServerError',
+                statusCode: 500,
+                message: '(PostContext) Property "nonexistent" is not allowed in PostContext'
+            });
+        });
+    });
+
     describe('Tag Handling', function () {
         it('Can add a tag directly to post context', async () => {
             const instance: any = new PostContext();

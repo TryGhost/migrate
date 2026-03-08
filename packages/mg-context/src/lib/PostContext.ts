@@ -1,43 +1,46 @@
+import {z} from 'zod/v4';
 import mobiledocConverter from '@tryghost/html-to-mobiledoc';
 import lexicalConverter from '@tryghost/kg-html-to-lexical';
 import MigrateBase from './MigrateBase.js';
 import TagContext, {TagObject, TagDataObject} from './TagContext.js';
 import AuthorContext, {AuthorObject, AuthorDataObject} from './AuthorContext.js';
 
-export type PostObject = {
-    title: string;
-    slug: string;
-    html?: string;
-    mobiledoc?: string;
-    lexical?: string;
-    comment_id?: string;
-    plaintext?: string;
-    feature_image?: string;
-    feature_image_alt?: string;
-    feature_image_caption?: string;
-    featured: string;
-    type: 'post' | 'page';
-    status: 'published' | 'draft' | 'scheduled' | 'sent';
-    visibility: 'public' | 'members' | 'paid';
-    created_at: string;
-    updated_at?: string;
-    published_at?: string;
-    custom_excerpt?: string;
-    codeinjection_head?: string;
-    codeinjection_foot?: string;
-    custom_template?: string;
-    canonical_url?: string;
-    og_image?: string;
-    og_title?: string;
-    og_description?: string;
-    twitter_image?: string;
-    twitter_title?: string;
-    twitter_description?: string;
-    meta_title?: string;
-    meta_description?: string;
-    tags?: TagObject[];
-    authors?: AuthorObject[];
-};
+export const postZodSchema = z.object({
+    title: z.string().max(255),
+    slug: z.string().max(191),
+    html: z.string().max(1000000000).nullable(),
+    mobiledoc: z.string().max(1000000000).nullable(),
+    lexical: z.string().max(1000000000).nullable(),
+    comment_id: z.string().max(50).nullable(),
+    plaintext: z.string().max(1000000000).nullable(),
+    feature_image: z.string().max(2000).nullable(),
+    feature_image_alt: z.string().max(125).nullable(),
+    feature_image_caption: z.string().max(65535).nullable(),
+    featured: z.boolean().default(false),
+    type: z.enum(['post', 'page']).default('post'),
+    status: z.enum(['published', 'draft', 'scheduled', 'sent']).default('draft'),
+    visibility: z.enum(['public', 'members', 'paid']).default('public'),
+    created_at: z.date(),
+    updated_at: z.date().nullable(),
+    published_at: z.date().nullable(),
+    custom_excerpt: z.string().max(300).nullable(),
+    codeinjection_head: z.string().max(65535).nullable(),
+    codeinjection_foot: z.string().max(65535).nullable(),
+    custom_template: z.string().max(100).nullable(),
+    canonical_url: z.string().max(2000).nullable(),
+    og_image: z.string().max(2000).nullable(),
+    og_title: z.string().max(300).nullable(),
+    og_description: z.string().max(500).nullable(),
+    twitter_image: z.string().max(2000).nullable(),
+    twitter_title: z.string().max(300).nullable(),
+    twitter_description: z.string().max(500).nullable(),
+    meta_title: z.string().max(300).nullable(),
+    meta_description: z.string().max(500).nullable(),
+    tags: z.array(z.any()).max(500).default([]),
+    authors: z.array(z.any()).max(500).default([])
+});
+
+export type PostObject = z.infer<typeof postZodSchema>;
 
 export type PostDataObject = {
     data: PostObject;
@@ -51,7 +54,6 @@ export type PostConstructorOptions = {
 
 export default class PostContext extends MigrateBase {
     #source: any;
-    #schema;
     #meta: any;
     #contentFormat: 'mobiledoc' | 'lexical' | 'html';
     data: any = {};
@@ -66,49 +68,8 @@ export default class PostContext extends MigrateBase {
 
         this.#contentFormat = contentFormat;
 
-        // Define what fields are allowed, their types, validations, and defaults
-        this.#schema = {
-            title: {required: true, type: 'string', maxLength: 255},
-            slug: {required: true, type: 'string', maxLength: 191},
-            html: {type: 'string', maxLength: 1000000000},
-            mobiledoc: {type: 'string', maxLength: 1000000000},
-            lexical: {type: 'string', maxLength: 1000000000},
-            comment_id: {type: 'string', maxLength: 50},
-            plaintext: {type: 'string', maxLength: 1000000000},
-            feature_image: {type: 'string', maxLength: 2000},
-            feature_image_alt: {type: 'string', maxLength: 125},
-            feature_image_caption: {type: 'string', maxLength: 65535},
-            featured: {required: true, type: 'boolean', default: false},
-            type: {required: true, type: 'string', maxLength: 50, choices: ['post', 'page'], default: 'post'},
-            status: {required: true, type: 'string', maxLength: 50, choices: ['published', 'draft', 'scheduled', 'sent'], default: 'draft'},
-            visibility: {required: true, type: 'string', maxLength: 50, choices: ['public', 'members', 'paid'], default: 'public'},
-            created_at: {required: true, type: 'dateTime'},
-            updated_at: {type: 'dateTime'},
-            published_at: {type: 'dateTime'},
-            custom_excerpt: {type: 'string', maxLength: 300},
-            codeinjection_head: {type: 'string', maxLength: 65535},
-            codeinjection_foot: {type: 'string', maxLength: 65535},
-            custom_template: {type: 'string', maxLength: 100},
-            canonical_url: {type: 'string', maxLength: 2000},
-            og_image: {type: 'string', maxLength: 2000},
-            og_title: {type: 'string', maxLength: 300},
-            og_description: {type: 'string', maxLength: 500},
-            twitter_image: {type: 'string', maxLength: 2000},
-            twitter_title: {type: 'string', maxLength: 300},
-            twitter_description: {type: 'string', maxLength: 500},
-            meta_title: {type: 'string', maxLength: 300},
-            meta_description: {type: 'string', maxLength: 500},
-            tags: {type: 'array', maxLength: 500, default: []},
-            authors: {type: 'array', maxLength: 500, default: []}
-        };
-
-        this.schema = this.#schema;
-
-        // Push entires from the schema into the working object
-        Object.entries(this.#schema).forEach((item: any) => {
-            const [key, value] = item;
-            this.data[key] = value.default ?? null;
-        });
+        this.schema = postZodSchema;
+        this.initializeData();
     }
 
     get meta() {

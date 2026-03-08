@@ -1,22 +1,25 @@
+import {z} from 'zod/v4';
 import MigrateBase from './MigrateBase.js';
 
-export type TagObject = {
-    name: string;
-    slug: string;
-    description?: string;
-    feature_image?: string;
-    og_image?: string;
-    og_title?: string;
-    og_description?: string;
-    twitter_image?: string;
-    twitter_title?: string;
-    twitter_description?: string;
-    meta_title?: string;
-    meta_description?: string;
-    codeinjection_head?: string;
-    codeinjection_foot?: string;
-    canonical_url?: string;
-};
+export const tagZodSchema = z.object({
+    name: z.string().max(255),
+    slug: z.string().max(191),
+    description: z.string().max(500).nullable(),
+    feature_image: z.string().max(2000).nullable(),
+    og_image: z.string().max(2000).nullable(),
+    og_title: z.string().max(300).nullable(),
+    og_description: z.string().max(500).nullable(),
+    twitter_image: z.string().max(2000).nullable(),
+    twitter_title: z.string().max(300).nullable(),
+    twitter_description: z.string().max(500).nullable(),
+    meta_title: z.string().max(300).nullable(),
+    meta_description: z.string().max(500).nullable(),
+    codeinjection_head: z.string().max(65535).nullable(),
+    codeinjection_foot: z.string().max(65535).nullable(),
+    canonical_url: z.string().max(2000).nullable()
+});
+
+export type TagObject = z.infer<typeof tagZodSchema>;
 
 export type TagDataObject = {
     data: TagObject;
@@ -24,7 +27,6 @@ export type TagDataObject = {
 
 export default class TagContext extends MigrateBase {
     #context;
-    #schema;
     data: any = {};
 
     constructor(args?: any) {
@@ -41,32 +43,8 @@ export default class TagContext extends MigrateBase {
             initialData = args?.initialData ?? {};
         }
 
-        // Define what fields are allowed, their types, validations, and defaults
-        this.#schema = {
-            name: {required: true, type: 'string', maxLength: 255},
-            slug: {required: true, type: 'string', maxLength: 191},
-            description: {type: 'string', maxLength: 500, default: null},
-            feature_image: {type: 'string', maxLength: 2000},
-            og_image: {type: 'string', maxLength: 2000},
-            og_title: {type: 'string', maxLength: 300},
-            og_description: {type: 'string', maxLength: 500},
-            twitter_image: {type: 'string', maxLength: 2000},
-            twitter_title: {type: 'string', maxLength: 300},
-            twitter_description: {type: 'string', maxLength: 500},
-            meta_title: {type: 'string', maxLength: 300},
-            meta_description: {type: 'string', maxLength: 500},
-            codeinjection_head: {type: 'text', maxLength: 65535},
-            codeinjection_foot: {type: 'text', maxLength: 65535},
-            canonical_url: {type: 'string', maxLength: 2000}
-        };
-
-        this.schema = this.#schema;
-
-        // Push entires from the schema into the working object
-        Object.entries(this.#schema).forEach((item: any) => {
-            const [key, value] = item;
-            this.data[key] = value.default ?? null;
-        });
+        this.schema = tagZodSchema;
+        this.initializeData();
 
         // Set initial data if provided
         Object.entries(initialData).forEach((item: any) => {

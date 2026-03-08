@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import TagContext from '../lib/TagContext.js';
+import {getFieldInfo} from '../lib/zod-schema-utils.js';
 
 describe('TagContext', () => {
     it('Is instance of', () => {
@@ -13,12 +14,13 @@ describe('TagContext', () => {
         const tag: any = new TagContext();
 
         // Check the number of items
-        assert.equal(Object.keys(tag.schema).length, 15);
+        assert.equal(Object.keys(tag.schema.shape).length, 15);
 
         // And to sanity check, look at the first item
-        assert.equal(tag.schema.name.required, true);
-        assert.equal(tag.schema.name.type, 'string');
-        assert.equal(tag.schema.name.maxLength, 255);
+        const nameInfo = getFieldInfo(tag.schema.shape.name);
+        assert.equal(nameInfo.required, true);
+        assert.equal(nameInfo.type, 'string');
+        assert.equal(nameInfo.maxLength, 255);
     });
 
     it('Can accept initialData', () => {
@@ -72,6 +74,39 @@ describe('TagContext', () => {
         tag.set('slug', 'testing');
 
         assert.equal(tag.data.slug, 'testing');
+    });
+
+    it('Will throw on string value that is too long', () => {
+        const tag: any = new TagContext();
+        const longName = 'a'.repeat(256);
+
+        assert.throws(() => tag.set('name', longName), {
+            name: 'InternalServerError',
+            statusCode: 500,
+            message: '(TagContext) Value for "name" is too long. Currently 256 characters, Max 255.'
+        });
+    });
+
+    it('Includes the failing value as context in validation errors', () => {
+        const tag: any = new TagContext();
+        const longName = 'a'.repeat(256);
+
+        try {
+            tag.set('name', longName);
+            assert.fail('Expected an error');
+        } catch (err: any) {
+            assert.equal(err.context, longName);
+        }
+    });
+
+    it('Will throw on unknown property', () => {
+        const tag: any = new TagContext();
+
+        assert.throws(() => tag.set('nonexistent', 'value'), {
+            name: 'InternalServerError',
+            statusCode: 500,
+            message: '(TagContext) Property "nonexistent" is not allowed in TagContext'
+        });
     });
 
     it('Can remove tag information', () => {

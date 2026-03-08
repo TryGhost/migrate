@@ -1,30 +1,30 @@
-import errors from '@tryghost/errors';
+import {z} from 'zod/v4';
 import ghValidate from '@tryghost/validator';
 import MigrateBase from './MigrateBase.js';
 
-export type AuthorObject = {
-    name: string;
-    slug: string;
-    email?: string;
-    profile_image?: string;
-    cover_image?: string;
-    bio?: string;
-    website?: string;
-    location?: string;
-    facebook?: string;
-    twitter?: string;
-    meta_title?: string;
-    meta_description?: string;
-    role?: 'Contributor' | 'Author' | 'Editor' | 'Administrator';
-    default?: string;
-};
+export const authorZodSchema = z.object({
+    name: z.string().max(191),
+    slug: z.string().max(191),
+    email: z.string().max(191).refine(val => ghValidate.isEmail(val), {message: 'Invalid email address'}),
+    profile_image: z.string().max(2000).nullable(),
+    cover_image: z.string().max(2000).nullable(),
+    bio: z.string().max(250).nullable(),
+    website: z.string().max(2000).nullable(),
+    location: z.string().max(150).nullable(),
+    facebook: z.string().max(2000).nullable(),
+    twitter: z.string().max(2000).nullable(),
+    meta_title: z.string().max(300).nullable(),
+    meta_description: z.string().max(500).nullable(),
+    role: z.enum(['Contributor', 'Author', 'Editor', 'Administrator']).default('Contributor')
+});
+
+export type AuthorObject = z.infer<typeof authorZodSchema>;
 
 export type AuthorDataObject = {
     data: AuthorObject;
 };
 
 export default class AuthorContext extends MigrateBase {
-    #schema;
     data: any = {};
 
     constructor(args?: any) {
@@ -39,44 +39,8 @@ export default class AuthorContext extends MigrateBase {
             initialData = args?.initialData ?? {};
         }
 
-        // Define what fields are allowed, their types, validations, and defaults
-        this.#schema = {
-            name: {required: true, type: 'string', maxLength: 191},
-            slug: {required: true, type: 'string', maxLength: 191},
-            email: {
-                required: true,
-                type: 'string',
-                maxLength: 191,
-                validate: (val: any) => {
-                    if (!ghValidate.isEmail(val)) {
-                        throw new errors.InternalServerError({
-                            message: `(Author) Invalid email address`,
-                            context: val
-                        });
-                    }
-
-                    return val;
-                }
-            },
-            profile_image: {type: 'string', maxLength: 2000},
-            cover_image: {type: 'string', maxLength: 2000},
-            bio: {type: 'text', maxLength: 250},
-            website: {type: 'string', maxLength: 2000},
-            location: {type: 'text', maxLength: 150},
-            facebook: {type: 'string', maxLength: 2000},
-            twitter: {type: 'string', maxLength: 2000},
-            meta_title: {type: 'string', maxLength: 300},
-            meta_description: {type: 'string', maxLength: 500},
-            role: {required: true, type: 'string', choices: ['Contributor', 'Author', 'Editor', 'Administrator'], default: 'Contributor'}
-        };
-
-        this.schema = this.#schema;
-
-        // Push entires from the schema into the working object
-        Object.entries(this.#schema).forEach((item: any) => {
-            const [key, value] = item;
-            this.data[key] = value.default ?? null;
-        });
+        this.schema = authorZodSchema;
+        this.initializeData();
 
         // Set initial data if provided
         Object.entries(initialData).forEach(([key, value]) => {

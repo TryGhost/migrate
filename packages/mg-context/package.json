@@ -43,6 +43,7 @@
     "@tryghost/kg-html-to-lexical": "1.2.36",
     "@tryghost/listr-smart-renderer": "0.5.23",
     "@tryghost/mg-json": "0.11.13",
-    "@tryghost/validator": "2.0.0"
+    "@tryghost/validator": "2.0.0",
+    "zod": "4.3.6"
   }
 }
