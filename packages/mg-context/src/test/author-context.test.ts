@@ -103,4 +103,45 @@ describe('AuthorContext', () => {
             message: '(Author) Invalid email address'
         });
     });
+
+    it('Will throw on email with empty local part', () => {
+        const author = new AuthorContext({
+            name: 'Test',
+            slug: 'test'
+        });
+
+        assert.throws(() => author.set('email', '@example.com'), {
+            name: 'InternalServerError',
+            statusCode: 500,
+            message: '(Author) Invalid email address'
+        });
+    });
+
+    it('Will throw on email with no @ sign', () => {
+        const author = new AuthorContext({
+            name: 'Test',
+            slug: 'test'
+        });
+
+        assert.throws(() => author.set('email', 'notanemail'), {
+            name: 'InternalServerError',
+            statusCode: 500,
+            message: '(Author) Invalid email address'
+        });
+    });
+
+    it('Will throw on email with local part exceeding 64 characters', () => {
+        const local65 = 'a'.repeat(65);
+
+        const author = new AuthorContext({
+            name: 'Test',
+            slug: 'test'
+        });
+
+        assert.throws(() => author.set('email', `${local65}@example.com`), {
+            name: 'InternalServerError',
+            statusCode: 500,
+            message: '(Author) Invalid email address'
+        });
+    });
 });

@@ -56,9 +56,8 @@ export default class AuthorContext extends MigrateBase {
                     }
 
                     return val;
-                    // return `${val}-special`;
                 }
-            }, // TODO: The bit before @ is limited to 64 chars, so this needs validating separately to length alone
+            },
             profile_image: {type: 'string', maxLength: 2000},
             cover_image: {type: 'string', maxLength: 2000},
             bio: {type: 'text', maxLength: 250},
