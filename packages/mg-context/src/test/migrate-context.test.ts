@@ -324,7 +324,7 @@ describe('MigrateContext', () => {
             const ghostJSON = await instance.ghostJson;
 
             assert.equal(ghostJSON.data.posts.length, 1);
-            assert.equal(ghostJSON.data.posts[0].html, '<p>Hello world</p>');
+            assert.equal(ghostJSON.data.posts[0].html, null);
             assert.ok(ghostJSON.data.posts[0].lexical);
             assert.equal(typeof ghostJSON.data.posts[0].lexical, 'object');
             assert.equal(ghostJSON.data.posts[0].mobiledoc, null);
@@ -343,7 +343,7 @@ describe('MigrateContext', () => {
             const ghostJSON = await instance.ghostJson;
 
             assert.equal(ghostJSON.data.posts.length, 1);
-            assert.equal(ghostJSON.data.posts[0].html, '<p>Hello world</p>');
+            assert.equal(ghostJSON.data.posts[0].html, null);
             assert.ok(ghostJSON.data.posts[0].mobiledoc);
             assert.equal(typeof ghostJSON.data.posts[0].mobiledoc, 'object');
             assert.equal(ghostJSON.data.posts[0].lexical, null);

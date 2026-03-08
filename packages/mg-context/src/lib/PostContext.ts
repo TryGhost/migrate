@@ -129,6 +129,23 @@ export default class PostContext extends MigrateBase {
         return this;
     }
 
+    get getFinal(): any {
+        const result = super.getFinal;
+
+        if (this.#contentFormat === 'lexical') {
+            result.data.html = null;
+            result.data.mobiledoc = null;
+        } else if (this.#contentFormat === 'mobiledoc') {
+            result.data.html = null;
+            result.data.lexical = null;
+        } else {
+            result.data.mobiledoc = null;
+            result.data.lexical = null;
+        }
+
+        return result;
+    }
+
     setMeta(value: any) {
         this.#meta = value;
     }
