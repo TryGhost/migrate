@@ -312,9 +312,9 @@ describe('MigrateContext', () => {
         });
 
         it('Can export with Lexical only', async () => {
-            const instance: any = new MigrateContext();
+            const instance: any = new MigrateContext({contentFormat: 'lexical'});
 
-            const post = instance.addPost({contentFormat: 'lexical'});
+            const post = instance.addPost();
             post.set('title', 'Lexical Only Post');
             post.set('slug', 'lexical-only-post');
             post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
@@ -331,9 +331,9 @@ describe('MigrateContext', () => {
         });
 
         it('Can export with Mobiledoc only', async () => {
-            const instance: any = new MigrateContext();
+            const instance: any = new MigrateContext({contentFormat: 'mobiledoc'});
 
-            const post = instance.addPost({contentFormat: 'mobiledoc'});
+            const post = instance.addPost();
             post.set('title', 'Mobiledoc Only Post');
             post.set('slug', 'mobiledoc-only-post');
             post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));

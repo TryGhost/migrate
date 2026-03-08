@@ -111,14 +111,6 @@ export default class PostContext extends MigrateBase {
         });
     }
 
-    get contentFormat() {
-        return this.#contentFormat;
-    }
-
-    set contentFormat(format: 'mobiledoc' | 'lexical' | 'html') {
-        this.#contentFormat = format;
-    }
-
     get meta() {
         return this.#meta;
     }

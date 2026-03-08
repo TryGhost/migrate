@@ -26,13 +26,19 @@ export type FindAuthorsOptions = {
     email?: string;
 };
 
+export type MigrateContextOptions = {
+    contentFormat?: 'mobiledoc' | 'lexical' | 'html';
+};
+
 export default class MigrateContext extends MigrateBase {
     #posts: any;
+    #contentFormat: 'mobiledoc' | 'lexical' | 'html';
 
-    constructor() {
+    constructor({contentFormat = 'html'}: MigrateContextOptions = {}) {
         super();
 
         this.#posts = [];
+        this.#contentFormat = contentFormat;
     }
 
     async forEachPost(callback: Function) {
@@ -52,11 +58,11 @@ export default class MigrateContext extends MigrateBase {
             this.#posts.push(post);
             return post;
         } else if (post && typeof post === 'object') {
-            let emptyPost = new PostContext(post);
+            let emptyPost = new PostContext({...post, contentFormat: this.#contentFormat});
             this.#posts.push(emptyPost);
             return emptyPost;
         } else {
-            let emptyPost = new PostContext();
+            let emptyPost = new PostContext({contentFormat: this.#contentFormat});
             this.#posts.push(emptyPost);
             return emptyPost;
         }

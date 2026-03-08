@@ -55,13 +55,6 @@ describe('PostContext', function () {
         assert.equal(instance.getSourceValue('id'), 'abcd');
     });
 
-    it('Can set and get content format', () => {
-        const instance: any = new PostContext();
-        instance.contentFormat = 'lexical';
-
-        assert.equal(instance.contentFormat, 'lexical');
-    });
-
     describe('Post Handling', function () {
         it('Can add a post directly to post context', async () => {
             const instance: any = new PostContext();
@@ -86,55 +79,6 @@ describe('PostContext', function () {
             assert.deepEqual(final.data.html, '<p>Hello world</p>');
             assert.deepEqual(final.data.mobiledoc, null);
             assert.deepEqual(final.data.lexical, null);
-        });
-
-        it('Can set export format to Mobiledoc with constructor arg', function () {
-            const instance: any = new PostContext({contentFormat: 'mobiledoc'});
-            instance.set('title', 'My Post');
-            instance.set('slug', 'my-post');
-            instance.set('html', '<p>Hello world</p>');
-            instance.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
-            instance.set('updated_at', new Date('2023-11-24T12:00:00.000Z'));
-            instance.set('published_at', new Date('2023-11-24T12:00:00.000Z'));
-
-            const final = instance.getFinal;
-
-            assert.deepEqual(final.data.html, '<p>Hello world</p>');
-            assert.deepEqual(typeof final.data.mobiledoc, 'object');
-            assert.deepEqual(final.data.lexical, null);
-        });
-
-        it('Can set export format to Lexical with constructor arg', function () {
-            const instance: any = new PostContext({contentFormat: 'lexical'});
-            instance.set('title', 'My Post');
-            instance.set('slug', 'my-post');
-            instance.set('html', '<p>Hello world</p>');
-            instance.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
-            instance.set('updated_at', new Date('2023-11-24T12:00:00.000Z'));
-            instance.set('published_at', new Date('2023-11-24T12:00:00.000Z'));
-
-            const final = instance.getFinal;
-
-            assert.deepEqual(final.data.html, '<p>Hello world</p>');
-            assert.deepEqual(typeof final.data.lexical, 'object');
-            assert.deepEqual(final.data.mobiledoc, null);
-        });
-
-        it('Can set content format with setter', function () {
-            const instance: any = new PostContext();
-            instance.contentFormat = 'lexical';
-            instance.set('title', 'My Post');
-            instance.set('slug', 'my-post');
-            instance.set('html', '<p>Hello world</p>');
-            instance.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
-            instance.set('updated_at', new Date('2023-11-24T12:00:00.000Z'));
-            instance.set('published_at', new Date('2023-11-24T12:00:00.000Z'));
-
-            const final = instance.getFinal;
-
-            assert.deepEqual(final.data.html, '<p>Hello world</p>');
-            assert.deepEqual(typeof final.data.lexical, 'object');
-            assert.deepEqual(final.data.mobiledoc, null);
         });
 
         it('Can get final object', function () {

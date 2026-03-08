@@ -27,6 +27,12 @@ import {MigrateContext} from '@tryghost/mg-context';
 const context = new MigrateContext();
 ```
 
+You can optionally set the content format to `lexical` or `mobiledoc` on the context. By default, only `html` is exported. All posts added to the context will use this format.
+
+```js
+const context = new MigrateContext({contentFormat: 'lexical'});
+```
+
 ### Create a post
 
 ```js
@@ -38,15 +44,6 @@ post.set('published_at', new Date('2023-12-08T13:34:22.000Z'));
 post.set('created_at', new Date('2023-12-08T13:23:03.000Z'));
 post.set('updated_at', new Date('2023-12-08T13:36:42.000Z'));
 post.set('html', '<p>My post content</p>');
-```
-
-You can optionally set the content format to `lexical` or `mobiledoc`. By default, only `html` is exported. This can be done in the constructor or by setting the property directly.
-
-```js
-const post = context.addPost({contentFormat: 'lexical'});
-
-const post = context.addPost();
-post.contentFormat = 'lexical';
 ```
 
 When you call `post.set('html', '<p>...</p>')`, the content is automatically converted based on the `contentFormat`:
