@@ -420,12 +420,17 @@ describe('MigrateContext', () => {
         post2.addAuthor({name: 'Test Author', slug: 'test-author', email: 'test@example.com'});
         await post2.save(instance.db);
 
-        const ghostJSON = await instance.ghostJson;
+        const filePath = join(tmpdir(), `mg-context-test-${Date.now()}.json`);
+        const writtenFiles = await instance.writeGhostJson(filePath);
+
+        assert.equal(writtenFiles.length, 1);
+        const ghostJSON = JSON.parse(await readFile(writtenFiles[0], 'utf-8'));
 
         assert.deepEqual(Object.keys(ghostJSON), ['meta', 'data']);
         assert.deepEqual(Object.keys(ghostJSON.data), ['posts', 'users', 'tags', 'posts_authors', 'posts_tags', 'posts_meta']);
         assert.deepEqual(ghostJSON.data.posts.length, 2);
 
+        await unlink(writtenFiles[0]);
         await instance.close();
     });
 
@@ -441,14 +446,80 @@ describe('MigrateContext', () => {
         await post.save(instance.db);
 
         const filePath = join(tmpdir(), `mg-context-test-${Date.now()}.json`);
-        const result = await instance.writeGhostJson(filePath);
+        const writtenFiles = await instance.writeGhostJson(filePath);
 
-        const fileContent = JSON.parse(await readFile(filePath, 'utf-8'));
+        assert.equal(writtenFiles.length, 1);
+        const fileContent = JSON.parse(await readFile(writtenFiles[0], 'utf-8'));
         assert.deepEqual(Object.keys(fileContent), ['meta', 'data']);
         assert.deepEqual(fileContent.data.posts.length, 1);
-        assert.deepEqual(Object.keys(result), ['meta', 'data']);
 
-        await unlink(filePath);
+        await unlink(writtenFiles[0]);
+        await instance.close();
+    });
+
+    it('Can write batched Ghost JSON files', async () => {
+        const instance: any = new MigrateContext();
+        await instance.init();
+
+        // Create 3 posts with different tags/authors
+        for (let i = 1; i <= 3; i++) {
+            const post = await instance.addPost();
+            post.set('title', `Batch Post ${i}`);
+            post.set('slug', `batch-post-${i}`);
+            post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            post.addTag({name: 'Shared Tag', slug: 'shared-tag'});
+            post.addTag({name: `Tag ${i}`, slug: `tag-${i}`});
+            post.addAuthor({name: 'Shared Author', slug: 'shared-author', email: 'shared@example.com'});
+            await post.save(instance.db);
+        }
+
+        const filePath = join(tmpdir(), `mg-context-batch-${Date.now()}.json`);
+        const writtenFiles = await instance.writeGhostJson(filePath, {batchSize: 2});
+
+        assert.equal(writtenFiles.length, 2);
+        assert.ok(writtenFiles[0].endsWith('-1.json'));
+        assert.ok(writtenFiles[1].endsWith('-2.json'));
+
+        const batch1 = JSON.parse(await readFile(writtenFiles[0], 'utf-8'));
+        const batch2 = JSON.parse(await readFile(writtenFiles[1], 'utf-8'));
+
+        // Batch 1 has 2 posts, batch 2 has 1 post
+        assert.equal(batch1.data.posts.length, 2);
+        assert.equal(batch2.data.posts.length, 1);
+
+        // Each batch includes the tags for its posts
+        assert.ok(batch1.data.tags.length >= 2);
+        assert.ok(batch2.data.tags.length >= 1);
+
+        // Shared tag appears in both batches
+        const batch1TagSlugs = batch1.data.tags.map((t: any) => t.slug);
+        const batch2TagSlugs = batch2.data.tags.map((t: any) => t.slug);
+        assert.ok(batch1TagSlugs.includes('shared-tag'));
+        assert.ok(batch2TagSlugs.includes('shared-tag'));
+
+        // Shared author appears in both batches
+        assert.ok(batch1.data.users.length >= 1);
+        assert.ok(batch2.data.users.length >= 1);
+
+        for (const f of writtenFiles) {
+            await unlink(f);
+        }
+        await instance.close();
+    });
+
+    it('Can write Ghost JSON with empty context', async () => {
+        const instance: any = new MigrateContext();
+        await instance.init();
+
+        const filePath = join(tmpdir(), `mg-context-empty-${Date.now()}.json`);
+        const writtenFiles = await instance.writeGhostJson(filePath);
+
+        assert.equal(writtenFiles.length, 1);
+        const content = JSON.parse(await readFile(writtenFiles[0], 'utf-8'));
+        assert.deepEqual(Object.keys(content), ['meta', 'data']);
+        assert.equal(content.data.posts.length, 0);
+
+        await unlink(writtenFiles[0]);
         await instance.close();
     });
 
@@ -465,13 +536,16 @@ describe('MigrateContext', () => {
             post.addAuthor({name: 'Test Author', slug: 'test-author', email: 'test@example.com'});
             await post.save(instance.db);
 
-            const ghostJSON = await instance.ghostJson;
+            const filePath = join(tmpdir(), `mg-context-html-${Date.now()}.json`);
+            const writtenFiles = await instance.writeGhostJson(filePath);
+            const ghostJSON = JSON.parse(await readFile(writtenFiles[0], 'utf-8'));
 
             assert.equal(ghostJSON.data.posts.length, 1);
             assert.equal(ghostJSON.data.posts[0].html, '<p>Hello world</p>');
             assert.equal(ghostJSON.data.posts[0].mobiledoc, null);
             assert.equal(ghostJSON.data.posts[0].lexical, null);
 
+            await unlink(writtenFiles[0]);
             await instance.close();
         });
 
@@ -487,7 +561,9 @@ describe('MigrateContext', () => {
             post.addAuthor({name: 'Test Author', slug: 'test-author', email: 'test@example.com'});
             await post.save(instance.db);
 
-            const ghostJSON = await instance.ghostJson;
+            const filePath = join(tmpdir(), `mg-context-lexical-${Date.now()}.json`);
+            const writtenFiles = await instance.writeGhostJson(filePath);
+            const ghostJSON = JSON.parse(await readFile(writtenFiles[0], 'utf-8'));
 
             assert.equal(ghostJSON.data.posts.length, 1);
             assert.equal(ghostJSON.data.posts[0].html, null);
@@ -495,6 +571,7 @@ describe('MigrateContext', () => {
             assert.equal(typeof ghostJSON.data.posts[0].lexical, 'object');
             assert.equal(ghostJSON.data.posts[0].mobiledoc, null);
 
+            await unlink(writtenFiles[0]);
             await instance.close();
         });
 
@@ -510,7 +587,9 @@ describe('MigrateContext', () => {
             post.addAuthor({name: 'Test Author', slug: 'test-author', email: 'test@example.com'});
             await post.save(instance.db);
 
-            const ghostJSON = await instance.ghostJson;
+            const filePath = join(tmpdir(), `mg-context-mobiledoc-${Date.now()}.json`);
+            const writtenFiles = await instance.writeGhostJson(filePath);
+            const ghostJSON = JSON.parse(await readFile(writtenFiles[0], 'utf-8'));
 
             assert.equal(ghostJSON.data.posts.length, 1);
             assert.equal(ghostJSON.data.posts[0].html, null);
@@ -518,6 +597,7 @@ describe('MigrateContext', () => {
             assert.equal(typeof ghostJSON.data.posts[0].mobiledoc, 'object');
             assert.equal(ghostJSON.data.posts[0].lexical, null);
 
+            await unlink(writtenFiles[0]);
             await instance.close();
         });
     });

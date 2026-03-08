@@ -1,3 +1,5 @@
+import {writeFile} from 'node:fs/promises';
+import {extname, basename, dirname, join} from 'node:path';
 import errors from '@tryghost/errors';
 import {toGhostJSON} from '@tryghost/mg-json';
 import MigrateBase from './MigrateBase.js';
@@ -252,22 +254,43 @@ export default class MigrateContext extends MigrateBase {
         }
     }
 
-    get ghostJson() {
-        return this.#getGhostJson();
-    }
+    async writeGhostJson(filePath: string, {batchSize = 5000}: {batchSize?: number} = {}): Promise<string[]> {
+        const count = await this.db.Post.count();
+        const totalBatches = Math.max(1, Math.ceil(count / batchSize));
+        const writtenFiles: string[] = [];
 
-    async #getGhostJson() {
-        const allPosts = await this.getAllPosts();
-        const result = {
-            posts: allPosts.map((post: PostContext) => post.getFinal)
-        };
-        return toGhostJSON(result);
-    }
+        for (let batch = 0; batch < totalBatches; batch++) {
+            const offset = batch * batchSize;
+            const rows = await this.db.Post.findAll({
+                limit: batchSize,
+                offset,
+                order: [['id', 'ASC']]
+            });
 
-    async writeGhostJson(filePath: string): Promise<any> {
-        const json = await this.ghostJson;
-        const {writeFile} = await import('node:fs/promises');
-        await writeFile(filePath, JSON.stringify(json, null, 2));
-        return json;
+            const posts: PostContext[] = [];
+            for (const row of rows) {
+                posts.push(await PostContext.fromRow(row, this.db));
+            }
+
+            const result = {
+                posts: posts.map((post: PostContext) => post.getFinal)
+            };
+            const json = await toGhostJSON(result);
+
+            let outputPath: string;
+            if (totalBatches === 1) {
+                outputPath = filePath;
+            } else {
+                const ext = extname(filePath);
+                const base = basename(filePath, ext);
+                const dir = dirname(filePath);
+                outputPath = join(dir, `${base}-${batch + 1}${ext}`);
+            }
+
+            await writeFile(outputPath, JSON.stringify(json, null, 2));
+            writtenFiles.push(outputPath);
+        }
+
+        return writtenFiles;
     }
 }

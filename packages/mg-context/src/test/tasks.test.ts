@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {readFile, unlink} from 'node:fs/promises';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {MigrateContext} from '../index.js';
 
@@ -79,7 +82,8 @@ describe('MigrateContext as tasks', () => {
         tasks.push({
             title: 'Get JSON',
             task: async (ctx: any) => {
-                ctx.json = await ctx.MGContext.ghostJson;
+                ctx.jsonFilePath = join(tmpdir(), `mg-context-tasks-${Date.now()}.json`);
+                ctx.writtenFiles = await ctx.MGContext.writeGhostJson(ctx.jsonFilePath);
             }
         });
 
@@ -101,7 +105,7 @@ describe('MigrateContext as tasks', () => {
 
         await taskRunner.run(context);
 
-        const json = context.json;
+        const json = JSON.parse(await readFile(context.writtenFiles[0], 'utf-8'));
         const data = json.data;
 
         assert.deepEqual(Object.keys(json), ['meta', 'data']);
@@ -119,5 +123,7 @@ describe('MigrateContext as tasks', () => {
         assert.equal(data.posts_tags[0].tag_id, firstTagID);
         assert.equal(data.posts_tags[1].tag_id, firstTagID);
         assert.equal(data.posts_tags[2].tag_id, secondTagID);
+
+        await unlink(context.writtenFiles[0]);
     });
 });

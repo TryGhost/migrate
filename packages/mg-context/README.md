@@ -117,8 +117,17 @@ for (const row of arrayOfPostData) {
 ### Get a Ghost JSON file
 
 ```js
-const json = await context.writeGhostJson('/path/to/output.json');
-// Writes a `.json` file that can be imported into Ghost
+const writtenFiles = await context.writeGhostJson('/path/to/output.json');
+// Writes one or more `.json` files that can be imported into Ghost
+// Returns an array of written file paths
+```
+
+For large sites, posts are batched into separate files (default: 5,000 posts per file). Each file is a complete Ghost JSON import with all tags and authors for the posts in that file. You can configure the batch size:
+
+```js
+const writtenFiles = await context.writeGhostJson('/path/to/output.json', {batchSize: 2000});
+// With 10,000 posts, this creates: output-1.json, output-2.json, output-3.json, output-4.json, output-5.json
+// If all posts fit in a single batch, the file is written as-is without a suffix
 ```
 
 ### Clean up
@@ -149,7 +158,7 @@ All methods that interact with the database are async.
 - `await context.findAuthors({slug, name, email})`
 - `await context.forEachPost(callback, batchSize?)`
 - `await context.getAllPosts()`
-- `await context.writeGhostJson(filePath)`
+- `await context.writeGhostJson(filePath, {batchSize?})`
 - `context.db` — access the database models (for `post.save(context.db)`)
 
 ### `PostContext`
