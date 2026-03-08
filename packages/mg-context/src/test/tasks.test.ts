@@ -8,6 +8,13 @@ describe('MigrateContext as tasks', () => {
         let tasks = [];
 
         tasks.push({
+            title: 'Init context',
+            task: async (ctx: any) => {
+                await ctx.MGContext.init();
+            }
+        });
+
+        tasks.push({
             title: 'Make posts',
             task: async (ctx: any) => { // eslint-disable-line no-unused-vars
                 let subTasks = [];
@@ -18,7 +25,7 @@ describe('MigrateContext as tasks', () => {
                         task: async (ctx: any) => { // eslint-disable-line no-shadow
                             await new Promise(r => setTimeout(r, 50)); // eslint-disable-line no-promise-executor-return
 
-                            const post = ctx.MGContext.addPost();
+                            const post = await ctx.MGContext.addPost();
                             post.set('title', `My Post ${i + 1}`);
                             post.set('slug', `my-post-${i + 1}`);
                             post.set('status', 'draft');
@@ -26,6 +33,7 @@ describe('MigrateContext as tasks', () => {
                             post.set('updated_at', new Date(`2023-11-28T12:0${i + 1}:03.000Z`));
                             post.set('published_at', new Date(`2023-11-28T12:0${i + 1}:02.000Z`));
                             post.set('html', `<p>My Post content ${i + 1}</p>`);
+                            await post.save(ctx.MGContext.db);
                         }
                     });
                 }
@@ -37,7 +45,7 @@ describe('MigrateContext as tasks', () => {
         tasks.push({
             title: 'Add tag & author to all',
             task: async (ctx: any) => {
-                await ctx.MGContext.forEachPost((post: any) => {
+                await ctx.MGContext.forEachPost(async (post: any) => {
                     post.addTag({
                         name: 'My Tag',
                         slug: 'my-tag'
@@ -48,6 +56,8 @@ describe('MigrateContext as tasks', () => {
                         slug: 'jane',
                         email: 'jane@example.com'
                     });
+
+                    await post.save(ctx.MGContext.db);
                 });
             }
         });
@@ -55,12 +65,14 @@ describe('MigrateContext as tasks', () => {
         tasks.push({
             title: 'Add tag to second',
             task: async (ctx: any) => {
-                const selectPost = ctx.MGContext.findPosts({title: 'My Post 2'});
+                const selectPost = await ctx.MGContext.findPosts({title: 'My Post 2'});
 
                 selectPost[0].addTag({
                     name: 'Second Tag',
                     slug: 'second-tag'
                 });
+
+                await selectPost[0].save(ctx.MGContext.db);
             }
         });
 
@@ -68,6 +80,13 @@ describe('MigrateContext as tasks', () => {
             title: 'Get JSON',
             task: async (ctx: any) => {
                 ctx.json = await ctx.MGContext.ghostJson;
+            }
+        });
+
+        tasks.push({
+            title: 'Close context',
+            task: async (ctx: any) => {
+                await ctx.MGContext.close();
             }
         });
 

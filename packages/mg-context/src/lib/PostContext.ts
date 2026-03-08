@@ -4,6 +4,7 @@ import lexicalConverter from '@tryghost/kg-html-to-lexical';
 import MigrateBase from './MigrateBase.js';
 import TagContext, {TagObject, TagDataObject} from './TagContext.js';
 import AuthorContext, {AuthorObject, AuthorDataObject} from './AuthorContext.js';
+import type {DatabaseModels} from './database.js';
 
 export const postZodSchema = z.object({
     title: z.string().max(255),
@@ -235,5 +236,117 @@ export default class PostContext extends MigrateBase {
 
             return authors;
         });
+    }
+
+    async save(db: DatabaseModels) {
+        // Serialize post data excluding tags and authors
+        const postData: any = {};
+        for (const key of Object.keys(this.data)) {
+            if (key !== 'tags' && key !== 'authors') {
+                postData[key] = this.data[key];
+            }
+        }
+
+        const serializedData = JSON.stringify(postData);
+        const serializedSource = JSON.stringify(this.#source);
+        const serializedMeta = JSON.stringify(this.#meta);
+
+        if (this.dbId) {
+            await db.Post.update({
+                data: serializedData,
+                source: serializedSource,
+                meta: serializedMeta,
+                content_format: this.#contentFormat
+            }, {where: {id: this.dbId}});
+        } else {
+            const row = await db.Post.create({
+                data: serializedData,
+                source: serializedSource,
+                meta: serializedMeta,
+                content_format: this.#contentFormat
+            });
+            this.dbId = row.get('id') as number;
+        }
+
+        // Handle tags - delete existing join rows and recreate
+        await db.PostTag.destroy({where: {post_id: this.dbId}});
+        for (let i = 0; i < this.data.tags.length; i++) {
+            const tag = this.data.tags[i];
+            if (tag instanceof TagContext) {
+                await tag.save(db);
+                await db.PostTag.create({
+                    post_id: this.dbId,
+                    tag_id: tag.dbId,
+                    sort_order: i
+                });
+            }
+        }
+
+        // Handle authors - delete existing join rows and recreate
+        await db.PostAuthor.destroy({where: {post_id: this.dbId}});
+        for (let i = 0; i < this.data.authors.length; i++) {
+            const author = this.data.authors[i];
+            if (author instanceof AuthorContext) {
+                await author.save(db);
+                await db.PostAuthor.create({
+                    post_id: this.dbId,
+                    author_id: author.dbId,
+                    sort_order: i
+                });
+            }
+        }
+    }
+
+    static async fromRow(row: any, db: DatabaseModels): Promise<PostContext> {
+        const rawData = JSON.parse(row.get('data'));
+        const source = JSON.parse(row.get('source'));
+        const meta = JSON.parse(row.get('meta'));
+        const contentFormat = row.get('content_format');
+
+        // Convert date strings back to Date objects
+        const dateFields = ['created_at', 'updated_at', 'published_at'];
+        for (const field of dateFields) {
+            if (rawData[field] && typeof rawData[field] === 'string') {
+                rawData[field] = new Date(rawData[field]);
+            }
+        }
+
+        const post = new PostContext({source, meta, contentFormat});
+        post.dbId = row.get('id') as number;
+
+        // Set scalar data directly (bypass set() to avoid re-conversion)
+        for (const [key, value] of Object.entries(rawData)) {
+            if (key !== 'tags' && key !== 'authors') {
+                post.data[key] = value;
+            }
+        }
+
+        // Load tags via join table
+        const postTags = await db.PostTag.findAll({
+            where: {post_id: post.dbId},
+            order: [['sort_order', 'ASC']]
+        });
+
+        for (const pt of postTags) {
+            const tagRow = await db.Tag.findByPk(pt.get('tag_id') as number);
+            if (tagRow) {
+                post.data.tags.push(TagContext.fromRow(tagRow));
+            }
+        }
+
+        // Load authors via join table
+        const postAuthors = await db.PostAuthor.findAll({
+            where: {post_id: post.dbId},
+            order: [['sort_order', 'ASC']]
+        });
+
+        for (const pa of postAuthors) {
+            const authorRow = await db.Author.findByPk(pa.get('author_id') as number);
+            if (authorRow) {
+                post.data.authors.push(AuthorContext.fromRow(authorRow));
+            }
+        }
+
+        return post;
     }
 }

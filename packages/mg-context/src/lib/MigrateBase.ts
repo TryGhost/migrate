@@ -5,6 +5,7 @@ export default class MigrateBase {
     #context;
     schema: any;
     data: any;
+    dbId: number | null = null;
 
     constructor() {
         this.#context = this.constructor.name;
@@ -121,8 +122,9 @@ export default class MigrateBase {
 
     get getFinal(): any {
         this.checkRequired(this.data);
-        let clone = Object.assign({}, this);
+        let clone: any = Object.assign({}, this);
         delete clone.schema;
+        delete clone.dbId;
         return clone;
     }
 

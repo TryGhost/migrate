@@ -44,6 +44,8 @@
     "@tryghost/listr-smart-renderer": "0.5.23",
     "@tryghost/mg-json": "0.11.13",
     "@tryghost/validator": "2.0.0",
+    "sequelize": "6.37.7",
+    "sqlite3": "5.1.7",
     "zod": "4.3.6"
   }
 }

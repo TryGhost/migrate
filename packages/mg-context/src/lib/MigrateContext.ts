@@ -1,8 +1,10 @@
+import errors from '@tryghost/errors';
 import {toGhostJSON} from '@tryghost/mg-json';
 import MigrateBase from './MigrateBase.js';
 import PostContext, {PostConstructorOptions} from './PostContext.js';
 import TagContext from './TagContext.js';
 import AuthorContext from './AuthorContext.js';
+import {createDatabase, type DatabaseModels} from './database.js';
 
 export type FindPostsOptions = {
     slug?: string;
@@ -28,169 +30,244 @@ export type FindAuthorsOptions = {
 
 export type MigrateContextOptions = {
     contentFormat?: 'mobiledoc' | 'lexical' | 'html';
+    dbPath?: string;
+    ephemeral?: boolean;
 };
 
 export default class MigrateContext extends MigrateBase {
-    #posts: any;
     #contentFormat: 'mobiledoc' | 'lexical' | 'html';
+    #dbPath: string;
+    #ephemeral: boolean;
+    #db: DatabaseModels | null = null;
 
-    constructor({contentFormat = 'html'}: MigrateContextOptions = {}) {
+    constructor({contentFormat = 'html', dbPath, ephemeral}: MigrateContextOptions = {}) {
         super();
 
-        this.#posts = [];
         this.#contentFormat = contentFormat;
-    }
 
-    async forEachPost(callback: Function) {
-        for (const post of this.#posts) {
-            await callback(post);
+        if (dbPath) {
+            this.#dbPath = dbPath;
+            this.#ephemeral = ephemeral ?? false;
+        } else {
+            this.#dbPath = ':memory:';
+            this.#ephemeral = ephemeral ?? true;
         }
     }
 
-    forEachPostSync(callback: Function) {
-        for (const post of this.#posts) {
-            callback(post);
+    get db(): DatabaseModels {
+        if (!this.#db) {
+            throw new errors.InternalServerError({message: 'Database not initialized. Call init() first.'});
+        }
+        return this.#db;
+    }
+
+    async init() {
+        const storage = this.#ephemeral ? ':memory:' : this.#dbPath;
+        this.#db = await createDatabase(storage);
+    }
+
+    async close() {
+        if (this.#db) {
+            await this.#db.sequelize.close();
+            this.#db = null;
         }
     }
 
-    addPost(post?: PostContext | PostConstructorOptions) {
+    async forEachPost(callback: Function, batchSize = 100) {
+        const count = await this.db.Post.count();
+        for (let offset = 0; offset < count; offset += batchSize) {
+            const rows = await this.db.Post.findAll({
+                limit: batchSize,
+                offset,
+                order: [['id', 'ASC']]
+            });
+
+            for (const row of rows) {
+                const post = await PostContext.fromRow(row, this.db);
+                await callback(post);
+            }
+        }
+    }
+
+    async addPost(post?: PostContext | PostConstructorOptions): Promise<PostContext> {
+        let newPost: PostContext;
+
         if (post && post instanceof PostContext) {
-            this.#posts.push(post);
-            return post;
+            newPost = post;
         } else if (post && typeof post === 'object') {
-            let emptyPost = new PostContext({...post, contentFormat: this.#contentFormat});
-            this.#posts.push(emptyPost);
-            return emptyPost;
+            newPost = new PostContext({...post, contentFormat: this.#contentFormat});
         } else {
-            let emptyPost = new PostContext({contentFormat: this.#contentFormat});
-            this.#posts.push(emptyPost);
-            return emptyPost;
+            newPost = new PostContext({contentFormat: this.#contentFormat});
         }
+
+        await newPost.save(this.db);
+        return newPost;
     }
 
-    findPosts({slug, title, sourceAttr, tagSlug, tagName, authorSlug, authorName, authorEmail}: FindPostsOptions = {}) : PostContext[] | null {
+    async getAllPosts(): Promise<PostContext[]> {
+        const rows = await this.db.Post.findAll({order: [['id', 'ASC']]});
+        const posts: PostContext[] = [];
+        for (const row of rows) {
+            posts.push(await PostContext.fromRow(row, this.db));
+        }
+        return posts;
+    }
+
+    async findPosts({slug, title, sourceAttr, tagSlug, tagName, authorSlug, authorName, authorEmail}: FindPostsOptions = {}): Promise<PostContext[] | null> {
         if (slug) {
-            return this.#posts.filter((post: PostContext) => {
-                return post.get('slug') === slug;
-            });
+            const rows = await this.db.Post.findAll({order: [['id', 'ASC']]});
+            const results: PostContext[] = [];
+            for (const row of rows) {
+                const data = JSON.parse(row.get('data') as string);
+                if (data.slug === slug) {
+                    results.push(await PostContext.fromRow(row, this.db));
+                }
+            }
+            return results;
         } else if (title) {
-            return this.#posts.filter((post: PostContext) => {
-                return post.get('title') === title;
-            });
+            const rows = await this.db.Post.findAll({order: [['id', 'ASC']]});
+            const results: PostContext[] = [];
+            for (const row of rows) {
+                const data = JSON.parse(row.get('data') as string);
+                if (data.title === title) {
+                    results.push(await PostContext.fromRow(row, this.db));
+                }
+            }
+            return results;
         } else if (sourceAttr && sourceAttr.key && sourceAttr.value) {
-            return this.#posts.filter((post: PostContext) => {
-                return post.getSourceValue(sourceAttr.key) === sourceAttr.value;
-            });
+            const rows = await this.db.Post.findAll({order: [['id', 'ASC']]});
+            const results: PostContext[] = [];
+            for (const row of rows) {
+                const source = JSON.parse(row.get('source') as string);
+                if (source[sourceAttr.key] === sourceAttr.value) {
+                    results.push(await PostContext.fromRow(row, this.db));
+                }
+            }
+            return results;
         } else if (tagSlug) {
-            let foundPosts: PostContext[] = [];
-            this.forEachPostSync((post: PostContext) => {
-                if (post.hasTagSlug(tagSlug)) {
-                    foundPosts.push(post);
+            const tag = await this.db.Tag.findOne({where: {slug: tagSlug}});
+            if (!tag) {
+                return [];
+            }
+            const postTags = await this.db.PostTag.findAll({where: {tag_id: tag.get('id') as number}});
+            const results: PostContext[] = [];
+            for (const pt of postTags) {
+                const postRow = await this.db.Post.findByPk(pt.get('post_id') as number);
+                if (postRow) {
+                    results.push(await PostContext.fromRow(postRow, this.db));
                 }
-            });
-            return foundPosts;
+            }
+            return results;
         } else if (tagName) {
-            let foundPosts: PostContext[] = [];
-            this.forEachPostSync((post: PostContext) => {
-                if (post.hasTagName(tagName)) {
-                    foundPosts.push(post);
+            const tags = await this.db.Tag.findAll({where: {name: tagName}});
+            const postIds = new Set<number>();
+            for (const t of tags) {
+                const postTags = await this.db.PostTag.findAll({where: {tag_id: t.get('id') as number}});
+                for (const pt of postTags) {
+                    postIds.add(pt.get('post_id') as number);
                 }
-            });
-            return foundPosts;
+            }
+            const results: PostContext[] = [];
+            for (const postId of postIds) {
+                const postRow = await this.db.Post.findByPk(postId);
+                if (postRow) {
+                    results.push(await PostContext.fromRow(postRow, this.db));
+                }
+            }
+            return results;
         } else if (authorSlug) {
-            let foundPosts: PostContext[] = [];
-            this.forEachPostSync((post: PostContext) => {
-                if (post.hasAuthorSlug(authorSlug)) {
-                    foundPosts.push(post);
+            const author = await this.db.Author.findOne({where: {slug: authorSlug}});
+            if (!author) {
+                return [];
+            }
+            const postAuthors = await this.db.PostAuthor.findAll({where: {author_id: author.get('id') as number}});
+            const results: PostContext[] = [];
+            for (const pa of postAuthors) {
+                const postRow = await this.db.Post.findByPk(pa.get('post_id') as number);
+                if (postRow) {
+                    results.push(await PostContext.fromRow(postRow, this.db));
                 }
-            });
-            return foundPosts;
+            }
+            return results;
         } else if (authorName) {
-            let foundPosts: PostContext[] = [];
-            this.forEachPostSync((post: PostContext) => {
-                if (post.hasAuthorName(authorName)) {
-                    foundPosts.push(post);
+            const authors = await this.db.Author.findAll({where: {name: authorName}});
+            const postIds = new Set<number>();
+            for (const a of authors) {
+                const postAuthors = await this.db.PostAuthor.findAll({where: {author_id: a.get('id') as number}});
+                for (const pa of postAuthors) {
+                    postIds.add(pa.get('post_id') as number);
                 }
-            });
-            return foundPosts;
+            }
+            const results: PostContext[] = [];
+            for (const postId of postIds) {
+                const postRow = await this.db.Post.findByPk(postId);
+                if (postRow) {
+                    results.push(await PostContext.fromRow(postRow, this.db));
+                }
+            }
+            return results;
         } else if (authorEmail) {
-            let foundPosts: PostContext[] = [];
-            this.forEachPostSync((post: PostContext) => {
-                if (post.hasAuthorEmail(authorEmail)) {
-                    foundPosts.push(post);
+            const author = await this.db.Author.findOne({where: {email: authorEmail}});
+            if (!author) {
+                return [];
+            }
+            const postAuthors = await this.db.PostAuthor.findAll({where: {author_id: author.get('id') as number}});
+            const results: PostContext[] = [];
+            for (const pa of postAuthors) {
+                const postRow = await this.db.Post.findByPk(pa.get('post_id') as number);
+                if (postRow) {
+                    results.push(await PostContext.fromRow(postRow, this.db));
                 }
-            });
-            return foundPosts;
+            }
+            return results;
         } else {
             return null;
         }
     }
 
-    findTags({slug, name}: FindTagsOptions = {}) : TagContext[] | null {
-        // Get all tags from all posts
-        let allTags: TagContext[] = [];
-
-        this.#posts.forEach((post: PostContext) => {
-            const postTags = post.get('tags');
-            postTags.forEach((tag: TagContext) => {
-                allTags.push(tag);
-            });
-        });
-
+    async findTags({slug, name}: FindTagsOptions = {}): Promise<TagContext[] | null> {
         if (slug) {
-            return allTags.filter((tag: TagContext) => {
-                return tag.get('slug') === slug;
-            });
+            const rows = await this.db.Tag.findAll({where: {slug}});
+            return rows.map((row: any) => TagContext.fromRow(row));
         } else if (name) {
-            return allTags.filter((tag: TagContext) => {
-                return tag.get('name') === name;
-            });
+            const rows = await this.db.Tag.findAll({where: {name}});
+            return rows.map((row: any) => TagContext.fromRow(row));
         } else {
             return null;
         }
     }
 
-    findAuthors({slug, name, email}: FindAuthorsOptions = {}) : AuthorContext[] | null {
-        // Get all authors from all posts
-        let allAuthors: AuthorContext[] = [];
-
-        this.#posts.forEach((post: PostContext) => {
-            const postTags = post.get('authors');
-            postTags.forEach((author: AuthorContext) => {
-                allAuthors.push(author);
-            });
-        });
-
+    async findAuthors({slug, name, email}: FindAuthorsOptions = {}): Promise<AuthorContext[] | null> {
         if (slug) {
-            return allAuthors.filter((author: AuthorContext) => {
-                return author.get('slug') === slug;
-            });
+            const rows = await this.db.Author.findAll({where: {slug}});
+            return rows.map((row: any) => AuthorContext.fromRow(row));
         } else if (name) {
-            return allAuthors.filter((author: AuthorContext) => {
-                return author.get('name') === name;
-            });
+            const rows = await this.db.Author.findAll({where: {name}});
+            return rows.map((row: any) => AuthorContext.fromRow(row));
         } else if (email) {
-            return allAuthors.filter((author: AuthorContext) => {
-                return author.get('email') === email;
-            });
+            const rows = await this.db.Author.findAll({where: {email}});
+            return rows.map((row: any) => AuthorContext.fromRow(row));
         } else {
             return null;
         }
-    }
-
-    get allPosts() {
-        let data = this.#posts.map((post: PostContext) => {
-            return post.getFinal;
-        });
-
-        return data;
     }
 
     get ghostJson() {
-        const result = {
-            posts: this.allPosts
-        };
+        return this.#getGhostJson();
+    }
 
+    async #getGhostJson() {
+        const allPosts = await this.getAllPosts();
+        const result = {
+            posts: allPosts.map((post: PostContext) => post.getFinal)
+        };
         return toGhostJSON(result);
+    }
+
+    async writeGhostJson(filePath: string): Promise<any> {
+        const json = await this.ghostJson;
+        const {writeFile} = await import('node:fs/promises');
+        await writeFile(filePath, JSON.stringify(json, null, 2));
+        return json;
     }
 }
