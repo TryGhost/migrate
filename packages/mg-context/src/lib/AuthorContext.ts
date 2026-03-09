@@ -1,6 +1,7 @@
 import {z} from 'zod/v4';
 import ghValidate from '@tryghost/validator';
 import MigrateBase from './MigrateBase.js';
+import type {DatabaseModels} from './database.js';
 
 export const authorZodSchema = z.object({
     name: z.string().max(191),
@@ -46,5 +47,44 @@ export default class AuthorContext extends MigrateBase {
         Object.entries(initialData).forEach(([key, value]) => {
             this.data[key] = value;
         });
+    }
+
+    async save(db: DatabaseModels) {
+        const authorData = JSON.stringify(this.data);
+
+        if (this.dbId) {
+            await db.Author.update({
+                data: authorData,
+                slug: this.data.slug,
+                name: this.data.name,
+                email: this.data.email
+            }, {where: {id: this.dbId}});
+        } else {
+            const existing = this.data.slug ? await db.Author.findOne({where: {slug: this.data.slug}}) : null;
+
+            if (existing) {
+                await existing.update({
+                    data: authorData,
+                    name: this.data.name,
+                    email: this.data.email
+                });
+                this.dbId = existing.get('id') as number;
+            } else {
+                const row = await db.Author.create({
+                    data: authorData,
+                    slug: this.data.slug,
+                    name: this.data.name,
+                    email: this.data.email
+                });
+                this.dbId = row.get('id') as number;
+            }
+        }
+    }
+
+    static fromRow(row: any): AuthorContext {
+        const data = JSON.parse(row.get('data'));
+        const author = new AuthorContext(data);
+        author.dbId = row.get('id') as number;
+        return author;
     }
 }

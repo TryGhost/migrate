@@ -1,5 +1,6 @@
 import {z} from 'zod/v4';
 import MigrateBase from './MigrateBase.js';
+import type {DatabaseModels} from './database.js';
 
 export const tagZodSchema = z.object({
     name: z.string().max(255),
@@ -51,5 +52,41 @@ export default class TagContext extends MigrateBase {
             const [key, value] = item;
             this.data[key] = value;
         });
+    }
+
+    async save(db: DatabaseModels) {
+        const tagData = JSON.stringify(this.data);
+
+        if (this.dbId) {
+            await db.Tag.update({
+                data: tagData,
+                slug: this.data.slug,
+                name: this.data.name
+            }, {where: {id: this.dbId}});
+        } else {
+            const existing = this.data.slug ? await db.Tag.findOne({where: {slug: this.data.slug}}) : null;
+
+            if (existing) {
+                await existing.update({
+                    data: tagData,
+                    name: this.data.name
+                });
+                this.dbId = existing.get('id') as number;
+            } else {
+                const row = await db.Tag.create({
+                    data: tagData,
+                    slug: this.data.slug,
+                    name: this.data.name
+                });
+                this.dbId = row.get('id') as number;
+            }
+        }
+    }
+
+    static fromRow(row: any): TagContext {
+        const data = JSON.parse(row.get('data'));
+        const tag = new TagContext(data);
+        tag.dbId = row.get('id') as number;
+        return tag;
     }
 }
