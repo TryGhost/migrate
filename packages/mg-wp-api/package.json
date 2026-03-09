@@ -33,7 +33,7 @@
     "@tryghost/string": "0.3.1",
     "html-to-text": "9.0.5",
     "simple-dom": "1.4.0",
-    "tldts": "7.0.24",
+    "tldts": "7.0.25",
     "wpapi": "1.2.2"
   }
 }
