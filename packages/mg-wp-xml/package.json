@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-wp-xml",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-xml",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -21,8 +21,8 @@
   },
   "dependencies": {
     "@tryghost/errors": "3.0.1",
-    "@tryghost/mg-utils": "0.1.0",
-    "@tryghost/mg-wp-api": "0.12.0",
+    "@tryghost/mg-utils": "0.1.1",
+    "@tryghost/mg-wp-api": "0.12.1",
     "fast-glob": "3.3.3",
     "fast-xml-parser": "5.4.2",
     "markdown-it": "14.1.1",
