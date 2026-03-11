@@ -40,8 +40,8 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@tryghost/debug": "2.0.0",
-    "@tryghost/errors": "3.0.0",
+    "@tryghost/debug": "2.0.1",
+    "@tryghost/errors": "3.0.1",
     "@tryghost/listr-smart-renderer": "0.5.15",
     "@tryghost/mg-fs-utils": "0.16.5",
     "@tryghost/string": "0.3.1",

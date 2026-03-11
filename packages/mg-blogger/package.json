@@ -23,7 +23,7 @@
     "eslint": "8.57.1"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.0",
+    "@tryghost/errors": "3.0.1",
     "@tryghost/kg-default-cards": "10.2.8",
     "autop": "1.0.1",
     "cheerio": "1.2.0",
