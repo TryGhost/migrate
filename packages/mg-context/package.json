@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-context",
-  "version": "0.1.25",
+  "version": "0.1.26",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-context",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -41,8 +41,8 @@
     "@tryghost/errors": "3.0.1",
     "@tryghost/html-to-mobiledoc": "3.2.19",
     "@tryghost/kg-html-to-lexical": "1.2.36",
-    "@tryghost/listr-smart-renderer": "0.5.23",
-    "@tryghost/mg-json": "0.11.13",
+    "@tryghost/listr-smart-renderer": "0.5.24",
+    "@tryghost/mg-json": "0.12.0",
     "@tryghost/validator": "2.0.1",
     "zod": "4.3.6"
   }

@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-utils",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-utils",
   "author": "Ghost Foundation",
   "license": "MIT",
@@ -11,7 +11,9 @@
       "default": "./build/index.js"
     }
   },
-  "files": ["build"],
+  "files": [
+    "build"
+  ],
   "scripts": {
     "build": "tsc --build",
     "test": "yarn build && c8 --100 node --test 'build/test/**/*.test.js'",
