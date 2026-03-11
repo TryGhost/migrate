@@ -1,7 +1,7 @@
 import {promises as fs} from 'node:fs';
 import {join, basename} from 'node:path';
 import url from 'node:url';
-import * as cheerio from 'cheerio';
+import {domUtils} from '@tryghost/mg-utils';
 import errors from '@tryghost/errors';
 import SimpleDom from 'simple-dom';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
@@ -14,6 +14,8 @@ import {parseSrcset} from 'srcset';
 import {_base as debugFactory} from '@tryghost/debug';
 import {slugify} from '@tryghost/string';
 import _ from 'lodash';
+
+const {parseFragment, serializeChildren, replaceWith, insertBefore, insertAfter, attr, parents} = domUtils;
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 const debug = debugFactory('migrate:substack:process');
@@ -78,9 +80,9 @@ const getImageDimensions = (str) => {
     }
 };
 
-const largestSrc = ($imageElem) => {
-    const src = $imageElem.attr('src') ?? false;
-    const srcset = $imageElem.attr('srcset') ?? false;
+const largestSrc = (imageElem) => {
+    const src = attr(imageElem, 'src');
+    const srcset = attr(imageElem, 'srcset');
 
     if (!src || !src.length) {
         return '';
@@ -115,40 +117,40 @@ const processContent = (post, siteUrl, options) => {
         return post;
     }
 
-    // As there is HTML, pass it to Cheerio inside a `<div class="migrate-substack-wrapper"></div>` element so we have a global wrapper to target later on
-    const $html = cheerio.load(`<div class="migrate-substack-wrapper">${html}</div>`, {}, false);
+    // Parse the HTML inside a wrapper element so we have a global wrapper to target later on
+    const parsed = parseFragment(`<div class="migrate-substack-wrapper">${html}</div>`);
 
     // Change paywall card to comment
-    $html('.paywall-jump').each((i, el) => {
-        $html(el).replaceWith('<!--members-only-->');
+    parsed.$('.paywall-jump').forEach((el) => {
+        replaceWith(el, '<!--members-only-->');
     });
 
     // Empty text elements are commonplace and are not needed
-    $html('p').each((i, el) => {
-        let content = $html(el).html().trim();
+    parsed.$('p').forEach((el) => {
+        let content = serializeChildren(el).trim();
 
         if (content.length === 0) {
-            $html(el).remove();
+            el.remove();
         }
     });
 
     // Wrap these in a HTML card so they can be handled by publishers as needed
-    $html('div.latex-rendered').each((i, el) => {
-        $html(el).before('<!--kg-card-begin: html-->');
-        $html(el).after('<!--kg-card-end: html-->');
+    parsed.$('div.latex-rendered').forEach((el) => {
+        insertBefore(el, '<!--kg-card-begin: html-->');
+        insertAfter(el, '<!--kg-card-end: html-->');
     });
 
     // We don't currently handle these, so remove them to clean up the document
-    $html('div.native-video-embed').each((i, el) => {
-        $html(el).remove();
+    parsed.$('div.native-video-embed').forEach((el) => {
+        el.remove();
     });
 
-    $html('div.poll-embed').each((i, el) => {
-        $html(el).remove();
+    parsed.$('div.poll-embed').forEach((el) => {
+        el.remove();
     });
 
-    $html('.image3').each((i, el) => {
-        const attrs = $html(el).attr('data-attrs');
+    parsed.$('.image3').forEach((el) => {
+        const attrs = attr(el, 'data-attrs');
         const attrsObj = JSON.parse(attrs);
 
         let cardOpts = {
@@ -160,7 +162,7 @@ const processContent = (post, siteUrl, options) => {
             }
         };
 
-        $html(el).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
+        replaceWith(el, serializer.serialize(imageCard.render(cardOpts)));
     });
 
     // We use the `'og:image` as the feature image. If the first item in the content is an image and is the same as the `og:image`, remove it
@@ -169,47 +171,57 @@ const processContent = (post, siteUrl, options) => {
             post.data.feature_image = largeImageUrl(post.data.og_image);
         }
 
-        let firstElement = $html('.migrate-substack-wrapper *').first();
+        let firstElement = parsed.$('.migrate-substack-wrapper *')[0];
 
-        if (firstElement.tagName === 'img' || ($html(firstElement).get(0) && $html(firstElement).get(0).name === 'img') || $html(firstElement).find('img').length) {
-            let theElementItself = (firstElement.tagName === 'img' || $html(firstElement).get(0).name === 'img') ? firstElement : $html(firstElement).find('img');
-            let firstImgSrc = $html(theElementItself).attr('src');
+        if (firstElement) {
+            const isImg = firstElement.tagName === 'IMG';
+            const hasImg = !isImg && parsed.$('img', firstElement).length > 0;
 
-            if (firstImgSrc.length > 0) {
-                let unsizedFirstSrc = getUnsizedImageName(firstImgSrc);
+            if (isImg || hasImg) {
+                let theElementItself = isImg ? firstElement : parsed.$('img', firstElement)[0];
+                let firstImgSrc = attr(theElementItself, 'src');
 
-                let ogImgSrc = post.data.og_image;
-                let unsizedOgSrc = getUnsizedImageName(ogImgSrc);
+                if (firstImgSrc.length > 0) {
+                    let unsizedFirstSrc = getUnsizedImageName(firstImgSrc);
 
-                if (unsizedFirstSrc === unsizedOgSrc) {
-                    if ($html(firstElement).find('figcaption').length) {
-                        post.data.feature_image_caption = $html(firstElement).find('figcaption').html();
+                    let ogImgSrc = post.data.og_image;
+                    let unsizedOgSrc = getUnsizedImageName(ogImgSrc);
+
+                    if (unsizedFirstSrc === unsizedOgSrc) {
+                        if (parsed.$('figcaption', firstElement).length) {
+                            post.data.feature_image_caption = serializeChildren(parsed.$('figcaption', firstElement)[0]);
+                        }
+
+                        firstElement.remove();
                     }
-
-                    $html(firstElement).remove();
                 }
             }
         }
     }
 
     if (useFirstImage && !post.data.feature_image) {
-        let firstElement = $html('.migrate-substack-wrapper *').first();
+        let firstElement = parsed.$('.migrate-substack-wrapper *')[0];
 
-        if (firstElement.tagName === 'img' || ($html(firstElement).get(0) && $html(firstElement).get(0).name === 'img') || $html(firstElement).find('img').length) {
-            let theElementItself = (firstElement.tagName === 'img' || $html(firstElement).get(0).name === 'img') ? firstElement : $html(firstElement).find('img');
-            let firstImgSrc = $html(theElementItself).attr('src');
+        if (firstElement) {
+            const isImg = firstElement.tagName === 'IMG';
+            const hasImg = !isImg && parsed.$('img', firstElement).length > 0;
 
-            if (firstImgSrc.length > 0) {
-                let unsizedFirstSrc = largeImageUrl(firstImgSrc);
+            if (isImg || hasImg) {
+                let theElementItself = isImg ? firstElement : parsed.$('img', firstElement)[0];
+                let firstImgSrc = attr(theElementItself, 'src');
 
-                if (unsizedFirstSrc) {
-                    post.data.feature_image = unsizedFirstSrc;
+                if (firstImgSrc.length > 0) {
+                    let unsizedFirstSrc = largeImageUrl(firstImgSrc);
 
-                    if ($html(firstElement).find('figcaption').length) {
-                        post.data.feature_image_caption = $html(firstElement).find('figcaption').html();
+                    if (unsizedFirstSrc) {
+                        post.data.feature_image = unsizedFirstSrc;
+
+                        if (parsed.$('figcaption', firstElement).length) {
+                            post.data.feature_image_caption = serializeChildren(parsed.$('figcaption', firstElement)[0]);
+                        }
+
+                        firstElement.remove();
                     }
-
-                    $html(firstElement).remove();
                 }
             }
         }
@@ -240,25 +252,32 @@ const processContent = (post, siteUrl, options) => {
             const buildCard = audioCard.render(cardOpts);
             const cardHTML = buildCard.nodeValue;
 
-            $html('.migrate-substack-wrapper').prepend(cardHTML);
+            const wrapper = parsed.$('.migrate-substack-wrapper')[0];
+            wrapper.insertAdjacentHTML('afterbegin', cardHTML);
         }
     }
 
-    $html('div.tweet').each((i, el) => {
-        let src = $html(el).children('a').attr('href');
-        let parsed = url.parse(src);
+    parsed.$('div.tweet').forEach((el) => {
+        let childAnchors = parsed.$(':scope > a', el);
+        let src = attr(childAnchors[0], 'href');
+        let parsedUrl = url.parse(src);
 
-        if (parsed.search) {
+        if (parsedUrl.search) {
             // remove possible query params
-            parsed.search = null;
+            parsedUrl.search = null;
         }
-        src = url.format(parsed, {search: false});
+        src = url.format(parsedUrl, {search: false});
 
-        let tweetText = $html(el)?.find('.tweet-text')?.html()?.replace(/(?:\r\n|\r|\n)/g, '<br>') ?? false;
-        let tweetAuthorName = $html(el)?.find('.tweet-author-name')?.html()?.trim() ?? false;
-        let tweetAuthorHandle = $html(el)?.find('.tweet-author-handle')?.html()?.trim() ?? false;
-        let tweetDateTime = $html(el)?.find('.tweet-date')?.text()?.trim() ?? false;
-        let tweetURL = $html(el)?.find('.tweet-link-top')?.attr('href') ?? false;
+        const tweetTextEl = parsed.$('.tweet-text', el)[0];
+        let tweetText = tweetTextEl ? serializeChildren(tweetTextEl).replace(/(?:\r\n|\r|\n)/g, '<br>') : false;
+        const tweetAuthorNameEl = parsed.$('.tweet-author-name', el)[0];
+        let tweetAuthorName = tweetAuthorNameEl ? serializeChildren(tweetAuthorNameEl).trim() : false;
+        const tweetAuthorHandleEl = parsed.$('.tweet-author-handle', el)[0];
+        let tweetAuthorHandle = tweetAuthorHandleEl ? serializeChildren(tweetAuthorHandleEl).trim() : false;
+        const tweetDateTimeEl = parsed.$('.tweet-date', el)[0];
+        let tweetDateTime = tweetDateTimeEl ? (tweetDateTimeEl.textContent || '').trim() : false;
+        const tweetLinkEl = parsed.$('.tweet-link-top', el)[0];
+        let tweetURL = tweetLinkEl ? attr(tweetLinkEl, 'href') : false;
 
         let theHtml = [];
 
@@ -286,21 +305,12 @@ const processContent = (post, siteUrl, options) => {
 
         theHtml.push(`</a>`);
 
-        let $figure = $html('<figure class="kg-card kg-embed-card"></figure>');
-        let $blockquote = $html(`<blockquote class="twitter-tweet">${theHtml.join(' ')}</blockquote>`);
-        let $anchor = $html(`<a href="${src}"></a>`);
-        let $script = $html('<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
-
-        $blockquote.append($anchor);
-
-        $figure.append($blockquote);
-        $figure.append($script);
-
-        $html(el).replaceWith($figure);
+        const tweetHtml = `<figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet">${theHtml.join(' ')}<a href="${src}"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure>`;
+        replaceWith(el, tweetHtml);
     });
 
-    $html('.image-gallery-embed').each((i, el) => {
-        const attrs = $html(el).attr('data-attrs');
+    parsed.$('.image-gallery-embed').forEach((el) => {
+        const attrs = attr(el, 'data-attrs');
         const attrsObj = JSON.parse(attrs);
 
         let items = [];
@@ -331,21 +341,22 @@ const processContent = (post, siteUrl, options) => {
             }
         };
 
-        $html(el).replaceWith(serializer.serialize(galleryCard.render(cardOpts)));
+        replaceWith(el, serializer.serialize(galleryCard.render(cardOpts)));
     });
 
-    $html('[class*="ImageGallery-module__imageGallery"]').each((i, el) => {
-        const $row = $html(el).find('[class*="ImageGallery-module__imageRow"]');
-        const caption = $html(el).find('figcaption').html();
+    parsed.$('[class*="ImageGallery-module__imageGallery"]').forEach((el) => {
+        const rows = parsed.$('[class*="ImageGallery-module__imageRow"]', el);
+        const figcaptionEl = parsed.$('figcaption', el)[0];
+        const caption = figcaptionEl ? serializeChildren(figcaptionEl) : null;
 
         let items = [];
 
-        $row.each((ii, row) => {
-            const $pictures = $html(row).find('picture');
+        rows.forEach((row) => {
+            const pictures = parsed.$('picture', row);
 
-            $pictures.each((iii, picture) => {
-                const $img = $html(picture).find('img');
-                const src = largestSrc($img);
+            pictures.forEach((picture) => {
+                const img = parsed.$('img', picture)[0];
+                const src = largestSrc(img);
                 const dimensions = getImageDimensions(src);
 
                 items.push({
@@ -372,14 +383,18 @@ const processContent = (post, siteUrl, options) => {
             }
         };
 
-        $html(el).replaceWith(serializer.serialize(galleryCard.render(cardOpts)));
+        replaceWith(el, serializer.serialize(galleryCard.render(cardOpts)));
     });
 
-    $html('.captioned-image-container').each((i, div) => {
-        const imgAlt = $html(div).find('img[alt]').attr('alt') || '';
-        const linkHref = $html(div).find('a.image-link').attr('href') || false;
-        const imgCaption = $html(div).find('figcaption').html() || false;
-        const imageSrc = largestSrc($html(div).find('img'));
+    parsed.$('.captioned-image-container').forEach((div) => {
+        const imgAltEl = parsed.$('img[alt]', div)[0];
+        const imgAlt = imgAltEl ? attr(imgAltEl, 'alt') : '';
+        const linkEl = parsed.$('a.image-link', div)[0];
+        const linkHref = linkEl ? attr(linkEl, 'href') : false;
+        const figcaptionEl = parsed.$('figcaption', div)[0];
+        const imgCaption = figcaptionEl ? serializeChildren(figcaptionEl) : false;
+        const imgEl = parsed.$('img', div)[0];
+        const imageSrc = largestSrc(imgEl);
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
@@ -394,13 +409,15 @@ const processContent = (post, siteUrl, options) => {
             cardOpts.payload.href = linkHref;
         }
 
-        $html(div).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
+        replaceWith(div, serializer.serialize(imageCard.render(cardOpts)));
     });
 
-    $html('.image-link').each((i, anchor) => {
-        const imgAlt = $html(anchor).find('img[alt]').attr('alt') || '';
-        const linkHref = $html(anchor).attr('href');
-        const imageSrc = largestSrc($html(anchor).find('img'));
+    parsed.$('.image-link').forEach((anchor) => {
+        const imgAltEl = parsed.$('img[alt]', anchor)[0];
+        const imgAlt = imgAltEl ? attr(imgAltEl, 'alt') : '';
+        const linkHref = attr(anchor, 'href');
+        const imgEl = parsed.$('img', anchor)[0];
+        const imageSrc = largestSrc(imgEl);
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
@@ -416,13 +433,16 @@ const processContent = (post, siteUrl, options) => {
             cardOpts.payload.href = linkHref;
         }
 
-        $html(anchor).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
+        replaceWith(anchor, serializer.serialize(imageCard.render(cardOpts)));
     });
 
-    $html('.file-embed-wrapper').each((i, el) => {
-        const fileSrc = $html(el).find('.file-embed-button').attr('href');
-        const fileTitle = $html(el).find('.file-embed-details-h1').text();
-        const fileDetails = $html(el).find('.file-embed-details-h2').text();
+    parsed.$('.file-embed-wrapper').forEach((el) => {
+        const fileSrcEl = parsed.$('.file-embed-button', el)[0];
+        const fileSrc = attr(fileSrcEl, 'href');
+        const fileTitleEl = parsed.$('.file-embed-details-h1', el)[0];
+        const fileTitle = fileTitleEl ? fileTitleEl.textContent : '';
+        const fileDetailsEl = parsed.$('.file-embed-details-h2', el)[0];
+        const fileDetails = fileDetailsEl ? fileDetailsEl.textContent : '';
 
         const fileSizeMatch = fileDetails.match(/([\d.]+)([KMGT]B)/i);
         let fileSizeBytes = 0;
@@ -459,15 +479,15 @@ const processContent = (post, siteUrl, options) => {
             }
         };
 
-        $html(el).replaceWith(serializer.serialize(fileCard.render(cardOpts)));
+        replaceWith(el, serializer.serialize(fileCard.render(cardOpts)));
     });
 
-    $html('.comment').each((i, el) => {
-        $html(el).remove();
+    parsed.$('.comment').forEach((el) => {
+        el.remove();
     });
 
-    $html('.digest-post-embed').each((i, el) => {
-        const attrsRaw = $html(el).attr('data-attrs');
+    parsed.$('.digest-post-embed').forEach((el) => {
+        const attrsRaw = attr(el, 'data-attrs');
 
         let attrs;
 
@@ -505,56 +525,56 @@ const processContent = (post, siteUrl, options) => {
 
         const bookmarkHtml = serializer.serialize(bookmarkCard.render(cardOpts));
 
-        $html(el).replaceWith(bookmarkHtml);
+        replaceWith(el, bookmarkHtml);
     });
 
-    $html('a > style').each((i, style) => {
-        $html(style).remove();
+    parsed.$('a > style').forEach((style) => {
+        style.remove();
     });
 
-    $html('ul, ol').each((i, list) => {
-        if ($html(list).find('img, div, figure, blockquote, .button-wrapper').length) {
-            $html(list).before('<!--kg-card-begin: html-->');
-            $html(list).after('<!--kg-card-end: html-->');
+    parsed.$('ul, ol').forEach((list) => {
+        if (parsed.$('img, div, figure, blockquote, .button-wrapper', list).length) {
+            insertBefore(list, '<!--kg-card-begin: html-->');
+            insertAfter(list, '<!--kg-card-end: html-->');
         }
     });
 
     // Remove Substack share buttons
-    $html('p.button-wrapper').each((i, button) => {
-        let shareLinks = $html(button).children('a.button');
+    parsed.$('p.button-wrapper').forEach((button) => {
+        let shareLinks = parsed.$(':scope > a.button', button);
         if (shareLinks.length === 1 && siteUrl) {
-            let shareLink = $html(shareLinks).get(0);
-            let src = $html(shareLink).attr('href');
-            let parsed = url.parse(src);
+            let shareLink = shareLinks[0];
+            let src = attr(shareLink, 'href');
+            let parsedUrl = url.parse(src);
 
             // If it's a share button, there's no use for it and completely remove the button
-            if (parsed.search && parsed.search.indexOf('action=share') >= 0) {
-                $html(button).remove();
+            if (parsedUrl.search && parsedUrl.search.indexOf('action=share') >= 0) {
+                button.remove();
                 return;
             }
 
             // If it's a gift button, there's no use for it and completely remove the button
-            if (parsed.search && parsed.search.indexOf('gift=true') >= 0) {
-                $html(button).remove();
+            if (parsedUrl.search && parsedUrl.search.indexOf('gift=true') >= 0) {
+                button.remove();
                 return;
             }
         }
     });
 
     // Update button elements
-    $html('p.button-wrapper').each((i, button) => {
-        let buttons = $html(button).children('a.button');
+    parsed.$('p.button-wrapper').forEach((button) => {
+        let buttons = parsed.$(':scope > a.button', button);
         if (buttons.length === 1 && siteUrl) {
             let siteRegex = new RegExp(`^(?:${siteUrl}(?:\\/?)(?:p\\/)?)([a-zA-Z-_\\d]*)(?:\\/?)`, 'gi');
-            let buttonLink = $html(buttons).get(0);
-            let buttonHref = $html(buttonLink).attr('href');
-            let buttonText = $html(buttonLink).text();
-            let parsed = url.parse(buttonHref);
+            let buttonLink = buttons[0];
+            let buttonHref = attr(buttonLink, 'href');
+            let buttonText = buttonLink.textContent;
+            let parsedUrl = url.parse(buttonHref);
 
             // remove possible query params
-            parsed.search = null;
+            parsedUrl.search = null;
 
-            buttonHref = url.format(parsed, {search: false});
+            buttonHref = url.format(parsedUrl, {search: false});
 
             if (buttonHref.match(siteRegex)) {
                 buttonHref = buttonHref.replace(siteRegex, '/$1/');
@@ -562,7 +582,7 @@ const processContent = (post, siteUrl, options) => {
 
             if (buttonHref === '/subscribe/') {
                 if (options.noSubscribeButtons) {
-                    $html(button).remove();
+                    button.remove();
                     return;
                 }
                 buttonHref = options.subscribeLink || '#/portal/signup';
@@ -572,63 +592,67 @@ const processContent = (post, siteUrl, options) => {
                 buttonHref = options.commentLink || '#ghost-comments-root';
 
                 if (!options.comments) {
-                    $html(button).remove();
+                    button.remove();
                     return;
                 }
             }
 
-            $html(button).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+            replaceWith(button, `<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
         }
     });
 
     // TODO: this should be a parser plugin
     // Wrap nested lists in HTML card
-    $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {
-        let $parent = $html(nestedList).parentsUntil('ul, ol').parent();
-        $parent.before('<!--kg-card-begin: html-->');
-        $parent.after('<!--kg-card-end: html-->');
+    parsed.$('ul li ul, ol li ol, ol li ul, ul li ol').forEach((nestedList) => {
+        const parentList = parents(nestedList, 'ul, ol')[0];
+        if (parentList) {
+            insertBefore(parentList, '<!--kg-card-begin: html-->');
+            insertAfter(parentList, '<!--kg-card-end: html-->');
+        }
     });
 
     // Handle footnotes
-    let footnotesMarkup = $html(`<div class="footnotes"><hr><ol></ol></div>`);
+    let footnotesItems = [];
     let footnotesCount = 0;
-    $html('.footnote').each((i, el) => {
-        let footnoteBodyAnchor = $html(el).find('a').attr('href');
+    parsed.$('.footnote').forEach((el) => {
+        const footnoteAnchor = parsed.$('a', el)[0];
+        let footnoteBodyAnchor = attr(footnoteAnchor, 'href');
 
-        let footnoteID = null;
-        if ($html(el).attr('id')) {
-            footnoteID = $html(el).attr('id');
-        } else {
-            footnoteID = $html(el).find('a').attr('id');
-        }
+        let footnoteID = attr(el, 'id') || attr(footnoteAnchor, 'id');
 
         let footnoteNumber = footnoteID.replace('footnote-', '');
-        let footnoteContent = $html(el).find('.footnote-content');
+        let footnoteContent = parsed.$('.footnote-content', el)[0];
 
-        footnoteContent.find('p').last().append(` <a href="${footnoteBodyAnchor}" title="Jump back to footnote ${footnoteNumber} in the text.">↩</a>`);
-        footnotesMarkup.find('ol').append(`<li id="${footnoteID}">${footnoteContent.html()}</li>`);
-        $html(el).remove();
+        const pElements = parsed.$('p', footnoteContent);
+        const lastP = pElements[pElements.length - 1];
+        if (lastP) {
+            lastP.insertAdjacentHTML('beforeend', ` <a href="${footnoteBodyAnchor}" title="Jump back to footnote ${footnoteNumber} in the text.">↩</a>`);
+        }
+
+        footnotesItems.push(`<li id="${footnoteID}">${serializeChildren(footnoteContent)}</li>`);
+        el.remove();
 
         footnotesCount = footnotesCount + 1;
     });
 
     if (footnotesCount > 0) {
-        let footnotedHTML = $html.html($html(footnotesMarkup));
-        $html('.migrate-substack-wrapper').append(`<!--kg-card-begin: html-->${footnotedHTML}<!--kg-card-end: html-->`);
+        let footnotedHTML = `<div class="footnotes"><hr><ol>${footnotesItems.join('')}</ol></div>`;
+        const wrapper = parsed.$('.migrate-substack-wrapper')[0];
+        wrapper.insertAdjacentHTML('beforeend', `<!--kg-card-begin: html-->${footnotedHTML}<!--kg-card-end: html-->`);
     }
 
     // Wrap content that has footnote anchors in HTML tags to retain the footnote jump anchor
-    $html('p, ul, ol').each((i, el) => {
-        if ($html(el).find('a.footnote-anchor').length > 0) {
-            $html(el).before('<!--kg-card-begin: html-->');
-            $html(el).after('<!--kg-card-end: html-->');
+    parsed.$('p, ul, ol').forEach((el) => {
+        if (parsed.$('a.footnote-anchor', el).length > 0) {
+            insertBefore(el, '<!--kg-card-begin: html-->');
+            insertAfter(el, '<!--kg-card-end: html-->');
         }
     });
 
     // Remove or replace subscribe links on the same domain
     if (options.noSubscribeButtons) {
-        $html('a').each((i, anchor) => {
-            let href = $html(anchor).attr('href');
+        parsed.$('a').forEach((anchor) => {
+            let href = attr(anchor, 'href');
             let linkRegex = new RegExp(`^(${siteUrl})?(/subscribe)(.*)`, 'gi');
 
             if (!href) {
@@ -638,12 +662,12 @@ const processContent = (post, siteUrl, options) => {
             let matches = href.replace(linkRegex, '$2');
 
             if (matches === '/subscribe') {
-                $html(anchor).remove();
+                anchor.remove();
             }
         });
     } else if (options.subscribeLink) {
-        $html('a').each((i, anchor) => {
-            let href = $html(anchor).attr('href');
+        parsed.$('a').forEach((anchor) => {
+            let href = attr(anchor, 'href');
             let linkRegex = new RegExp(`^(${siteUrl})?(/subscribe)(.*)`, 'gi');
 
             if (!href) {
@@ -653,29 +677,30 @@ const processContent = (post, siteUrl, options) => {
             let matches = href.replace(linkRegex, '$2');
 
             if (matches === '/subscribe') {
-                $html(anchor).attr('href', options.subscribeLink);
+                attr(anchor, 'href', options.subscribeLink);
             }
         });
     }
 
     // Remove or replace signup forms with a Portal signup button
     if (options.noSubscribeButtons) {
-        $html('.subscription-widget-wrap, .subscription-widget-wrap-editor').each((i, div) => {
-            $html(div).remove();
+        parsed.$('.subscription-widget-wrap, .subscription-widget-wrap-editor').forEach((div) => {
+            div.remove();
         });
     } else if (options.subscribeLink) {
-        $html('.subscription-widget-wrap, .subscription-widget-wrap-editor').each((i, div) => {
-            const hasForm = $html(div).find('form');
+        parsed.$('.subscription-widget-wrap, .subscription-widget-wrap-editor').forEach((div) => {
+            const hasForm = parsed.$('form', div);
 
             if (hasForm.length) {
-                const buttonText = $html(div).find('form input[type="submit"]').attr('value');
-                $html(div).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+                const submitEl = parsed.$('form input[type="submit"]', div)[0];
+                const buttonText = submitEl ? attr(submitEl, 'value') : '';
+                replaceWith(div, `<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
             }
         });
     }
 
-    $html('.embedded-post-wrap').each((i, div) => {
-        const attrs = $html(div).attr('data-attrs') || false;
+    parsed.$('.embedded-post-wrap').forEach((div) => {
+        const attrs = attr(div, 'data-attrs') || false;
 
         if (!attrs) {
             return;
@@ -690,65 +715,53 @@ const processContent = (post, siteUrl, options) => {
         let bookmarkTitle = bookmarkJSON.title;
         let bookmarkContent = bookmarkJSON.truncated_body_text;
 
-        let $bookmark = $html('<figure class="kg-card kg-bookmark-card"></figure>');
-        let $link = $html(`<a class="kg-bookmark-container" href="${bookmarkLink}"></a>`);
-        let $content = $html(`<div class="kg-bookmark-content"><div class="kg-bookmark-title">${bookmarkTitle}</div><div class="kg-bookmark-description">${bookmarkContent}</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="${bookmarkPubIcon}"><span class="kg-bookmark-author">${bookmarkPubName}</span></div></div>`);
+        const embeddedHtml = `<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="${bookmarkLink}"><div class="kg-bookmark-content"><div class="kg-bookmark-title">${bookmarkTitle}</div><div class="kg-bookmark-description">${bookmarkContent}</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="${bookmarkPubIcon}"><span class="kg-bookmark-author">${bookmarkPubName}</span></div></div></a></figure>`;
 
-        $link.append($content);
-        $bookmark.append($link);
-
-        $html(div).replaceWith($bookmark);
-        $bookmark.before('<!--kg-card-begin: html-->');
-        $bookmark.after('<!--kg-card-end: html-->');
+        replaceWith(div, `<!--kg-card-begin: html-->${embeddedHtml}<!--kg-card-end: html-->`);
     });
 
-    $html('div.instagram').each((i, el) => {
-        let src = $html(el).find('a.instagram-image').attr('href');
+    parsed.$('div.instagram').forEach((el) => {
+        const instagramLink = parsed.$('a.instagram-image', el)[0];
+        let src = instagramLink ? attr(instagramLink, 'href') : '';
 
         if (!src) {
             return;
         }
 
-        let parsed = url.parse(src);
+        let parsedUrl = url.parse(src);
 
-        if (parsed.search) {
+        if (parsedUrl.search) {
             // remove possible query params
-            parsed.search = null;
+            parsedUrl.search = null;
         }
-        src = url.format(parsed, {search: false});
-
-        let $iframe = $html('<iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;"></iframe>');
-        let $script = $html('<script async="" src="//www.instagram.com/embed.js"></script>');
-        let $figure = $html('<figure class="instagram"></figure>');
+        src = url.format(parsedUrl, {search: false});
 
         // Trim the trailing slash from src if it exists
         if (src.endsWith('/')) {
             src = src.slice(0, -1);
         }
 
-        $iframe.attr('src', `${src}/embed/captioned/`);
-        $figure.append($iframe);
-        $figure.append($script);
-
-        $html(el).replaceWith($figure);
+        const instagramHtml = `<figure class="instagram"><iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;" src="${src}/embed/captioned/"></iframe><script async="" src="//www.instagram.com/embed.js"></script></figure>`;
+        replaceWith(el, instagramHtml);
     });
 
     // For each image and link, alter the path to remove cropping & sizing for image paths
-    $html('img[src], a[href]').each((i, el) => {
-        const src = $html(el).attr('src');
-        const href = $html(el).attr('href');
+    parsed.$('img[src], a[href]').forEach((el) => {
+        const src = attr(el, 'src');
+        const href = attr(el, 'href');
 
         if (src) {
-            $html(el).attr('src', largeImageUrl(src));
+            attr(el, 'src', largeImageUrl(src));
         }
 
         if (href) {
-            $html(el).attr('href', largeImageUrl(href));
+            attr(el, 'href', largeImageUrl(href));
         }
     });
 
     // convert HTML back to a string
-    html = $html('.migrate-substack-wrapper').html();
+    const wrapper = parsed.$('.migrate-substack-wrapper')[0];
+    html = serializeChildren(wrapper);
 
     // Remove empty attributes
     html = html.replace(/=""/g, '');
