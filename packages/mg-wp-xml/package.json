@@ -21,7 +21,7 @@
   },
   "devDependencies": {},
   "dependencies": {
-    "@tryghost/errors": "3.0.0",
+    "@tryghost/errors": "3.0.1",
     "@tryghost/mg-utils": "0.0.1",
     "@tryghost/mg-wp-api": "0.11.20",
     "fast-glob": "3.3.3",

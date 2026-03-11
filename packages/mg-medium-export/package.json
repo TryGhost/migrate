@@ -24,7 +24,7 @@
     "eslint": "8.57.1"
   },
   "dependencies": {
-    "@tryghost/debug": "2.0.0",
+    "@tryghost/debug": "2.0.1",
     "@tryghost/kg-default-cards": "10.2.8",
     "@tryghost/mg-fs-utils": "0.16.5",
     "@tryghost/string": "0.3.1",
