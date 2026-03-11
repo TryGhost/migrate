@@ -24,7 +24,7 @@
     "eslint": "8.57.1"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.1",
+    "@tryghost/errors": "3.0.2",
     "@tryghost/mg-fs-utils": "0.16.6",
     "@tryghost/string": "0.3.1",
     "cheerio": "1.2.0",
