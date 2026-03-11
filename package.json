@@ -31,7 +31,7 @@
     "update": "git pull origin main && yarn"
   },
   "devDependencies": {
-    "@tryghost/errors": "3.0.1",
+    "@tryghost/errors": "3.0.2",
     "eslint": "8.57.1",
     "eslint-plugin-ghost": "3.5.0",
     "tsx": "4.21.0"
