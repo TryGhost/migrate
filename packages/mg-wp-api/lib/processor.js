@@ -12,7 +12,7 @@ import SimpleDom from 'simple-dom';
 import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
-import {domUtils} from '@tryghost/mg-utils';
+import {domUtils, youtubeUtils} from '@tryghost/mg-utils';
 
 const {
     parseFragment,
@@ -27,6 +27,8 @@ const {
     getCommentData
 } = domUtils;
 
+const {getYouTubeID} = youtubeUtils;
+
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
 const debug = debugFactory('migrate:wp-api:processor');
@@ -34,11 +36,6 @@ const debug = debugFactory('migrate:wp-api:processor');
 const stripHtml = (html) => {
     // Remove HTML tags, new line characters, and trim white-space
     return html.replace(/<[^>]+>/g, '').replace(/\r?\n|\r/g, ' ').trim();
-};
-
-const getYouTubeID = (videoUrl) => {
-    const arr = videoUrl.split(/(vi\/|v%3D|v=|\/v\/|youtu\.be\/|\/embed\/)/);
-    return undefined !== arr[2] ? arr[2].split(/[^\w-]/i)[0] : arr[0];
 };
 
 const wpCDNToLocal = (imgUrl) => {

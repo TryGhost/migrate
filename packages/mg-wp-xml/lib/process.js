@@ -4,10 +4,11 @@ import {slugify} from '@tryghost/string';
 import errors from '@tryghost/errors';
 import MarkdownIt from 'markdown-it';
 import MgWpAPI from '@tryghost/mg-wp-api';
-import {domUtils} from '@tryghost/mg-utils';
+import {domUtils, youtubeUtils} from '@tryghost/mg-utils';
 import {isSerialized, unserialize} from 'php-serialize';
 
 const {parseFragment} = domUtils;
+const {getYouTubeID} = youtubeUtils;
 
 // XML Parser configuration
 const parserOptions = {
@@ -157,11 +158,6 @@ const processTags = (categories, options = {}) => {
     }
 
     return categoriesOutput.concat(tags);
-};
-
-const getYouTubeID = (videoUrl) => {
-    const arr = videoUrl.split(/(vi\/|v%3D|v=|\/v\/|youtu\.be\/|\/embed\/)/);
-    return undefined !== arr[2] ? arr[2].split(/[^\w-]/i)[0] : arr[0];
 };
 
 const stripHtml = (html) => {
