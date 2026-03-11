@@ -20,7 +20,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.1",
+    "@tryghost/errors": "3.0.2",
     "@tryghost/mg-utils": "0.1.1",
     "@tryghost/mg-wp-api": "0.12.1",
     "fast-glob": "3.3.3",
