@@ -9,7 +9,7 @@ const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?
             comment_id: postData.id,
             slug: postData.slug,
             published_at: new Date(postData.publish_date * 1000),
-            updated_at: new Date(postData.created * 1000),
+            updated_at: new Date(postData.publish_date * 1000),
             created_at: new Date(postData.created * 1000),
             title: postData.title,
             type: 'post',

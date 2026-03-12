@@ -14,8 +14,8 @@ type beehiivPostDataObject = {
     created: number;
     status: 'archived' | 'confirmed' | 'draft';
     publish_date: number;
-    displayed_date: null,
-    split_tested: false,
+    displayed_date: number | null;
+    split_tested: boolean;
     subject_line: string;
     preview_text: string;
     slug: string;
@@ -24,8 +24,8 @@ type beehiivPostDataObject = {
     audience: 'free' | 'premium' | 'both';
     platform: 'web' | 'email' | 'both';
     content_tags: string[];
-    meta_default_description: null,
-    meta_default_title: null,
+    meta_default_description: string | null;
+    meta_default_title: string | null;
     hidden_from_feed: boolean;
     enforce_gated_content: boolean;
     email_capture_popup: boolean;
