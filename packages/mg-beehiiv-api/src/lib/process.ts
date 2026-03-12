@@ -152,7 +152,7 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
     });
 
     // Convert YouTube iframes to embeds
-    parsed.$('iframe[src^="https://youtube"]').forEach((el) => {
+    parsed.$('iframe[src*="youtube.com/embed"], iframe[src*="youtu.be"]').forEach((el) => {
         const videoID = getYouTubeID(attr(el, 'src') as string);
 
         let cardOpts = {

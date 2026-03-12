@@ -171,10 +171,17 @@ describe('beehiiv API processor', () => {
         });
 
         it('converts YouTube iframes to embed cards', () => {
-            const html = '<div id="content-blocks"><iframe src="https://youtube.com/embed/dQw4w9WgXcQ"></iframe></div>';
+            const html = '<div id="content-blocks"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></div>';
             const result = processHTML({post: {url: 'test', data: {html}} as any});
             assert.ok(result.includes('kg-card kg-embed-card'));
             assert.ok(result.includes('dQw4w9WgXcQ'));
+        });
+
+        it('converts youtu.be iframes to embed cards', () => {
+            const html = '<div id="content-blocks"><iframe src="https://youtu.be/FdeioVndUhs"></iframe></div>';
+            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            assert.ok(result.includes('kg-card kg-embed-card'));
+            assert.ok(result.includes('FdeioVndUhs'));
         });
 
         it('converts image with caption to Ghost image card', () => {
