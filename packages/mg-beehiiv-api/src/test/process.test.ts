@@ -297,14 +297,13 @@ describe('beehiiv API processor', () => {
             assert.ok(result.includes('No images here'));
         });
 
-        it('handles empty feature source with non-asset URL', () => {
-            // When featureSrc is empty and image URL doesn't contain /uploads/asset/,
-            // both split results have undefined at index 1, so image is removed
+        it('keeps image when neither URL contains /uploads/asset/', () => {
+            // When neither URL contains /uploads/asset/, the guard prevents
+            // undefined === undefined from incorrectly removing the image
             const html = '<img src="https://example.com/image.jpg" />';
             const featureSrc = '';
             const result = removeDuplicateFeatureImage({html, featureSrc});
-            // Due to undefined === undefined comparison, image is removed
-            assert.ok(!result.includes('<img'));
+            assert.ok(result.includes('<img'));
         });
 
         it('keeps image when URLs have different asset paths', () => {

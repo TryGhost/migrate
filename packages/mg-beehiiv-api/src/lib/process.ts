@@ -532,7 +532,7 @@ const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string, featureS
             const firstImageSplit = firstImgSrc.split('/uploads/asset/');
             const featureImageSplit = featureSrc.split('/uploads/asset/');
 
-            if (firstImageSplit[1] === featureImageSplit[1]) {
+            if (firstImageSplit[1] !== undefined && featureImageSplit[1] !== undefined && firstImageSplit[1] === featureImageSplit[1]) {
                 theElementItself.remove();
             }
 
