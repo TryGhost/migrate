@@ -1,3 +1,5 @@
+import errors from '@tryghost/errors';
+
 const API_LIMIT = 10;
 
 const authedClient = async (apiKey: string, theUrl: URL) => {
@@ -16,7 +18,7 @@ const discover = async (key: string, pubId: string, limit: number) => {
     const response = await authedClient(key, url);
 
     if (!response.ok) {
-        throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+        throw new errors.InternalServerError({message: `Request failed: ${response.status} ${response.statusText}`});
     }
 
     const data = await response.json();
@@ -40,7 +42,7 @@ const cachedFetch = async ({fileCache, key, pubId, limit = API_LIMIT, page}: {fi
     const response = await authedClient(key, url);
 
     if (!response.ok) {
-        throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+        throw new errors.InternalServerError({message: `Request failed: ${response.status} ${response.statusText}`});
     }
 
     const data = await response.json();

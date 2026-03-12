@@ -156,7 +156,7 @@ const getTaskRunner = (options) => {
 
                     task.output = `Successfully written output to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
-                    ctx.errors.push('Failed to write and upload output file', error);
+                    ctx.errors.push({message: 'Failed to write and upload output file', error});
                     throw error;
                 }
             }
@@ -168,7 +168,7 @@ const getTaskRunner = (options) => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {
-                    ctx.errors.push('Failed to clear cache', error);
+                    ctx.errors.push({message: 'Failed to clear cache', error});
                     throw error;
                 }
             }

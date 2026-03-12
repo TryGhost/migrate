@@ -1,3 +1,4 @@
+import errors from '@tryghost/errors';
 import {authedClient} from './fetch.js';
 
 const listPublications = async (apiKey: string) => {
@@ -7,7 +8,7 @@ const listPublications = async (apiKey: string) => {
     const response = await authedClient(apiKey, url);
 
     if (!response.ok) {
-        throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+        throw new errors.InternalServerError({message: `Request failed: ${response.status} ${response.statusText}`});
     }
 
     const data = await response.json();

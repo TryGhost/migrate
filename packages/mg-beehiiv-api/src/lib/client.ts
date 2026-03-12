@@ -1,3 +1,5 @@
+import errors from '@tryghost/errors';
+
 const client = async (apiKey: string) => {
     const url = new URL(`https://api.beehiiv.com/v2/publications`);
 
@@ -9,7 +11,7 @@ const client = async (apiKey: string) => {
     });
 
     if (!response.ok) {
-        throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+        throw new errors.InternalServerError({message: `Request failed: ${response.status} ${response.statusText}`});
     }
 
     const data = await response.json();

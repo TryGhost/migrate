@@ -65,7 +65,7 @@ const getFullTaskList = (options) => {
                     let tasks = await mgBeehiiv.mapPostsTasks(options, ctx);
                     return makeTaskRunner(tasks, {...options});
                 } catch (error) {
-                    ctx.errors.push('Failed to process beehiiv content', error); // eslint-disable-line no-console
+                    ctx.errors.push({message: 'Failed to process beehiiv content', error});
                     throw error;
                 }
             }
@@ -77,7 +77,7 @@ const getFullTaskList = (options) => {
                 try {
                     ctx.linkFixer.buildMap(ctx);
                 } catch (error) {
-                    ctx.errors.push('Failed to build link map', error); // eslint-disable-line no-console
+                    ctx.errors.push({message: 'Failed to build link map', error});
                     throw error;
                 }
             }
@@ -89,7 +89,7 @@ const getFullTaskList = (options) => {
                 try {
                     ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
                 } catch (error) {
-                    ctx.errors.push('Failed to format data as Ghost JSON', error); // eslint-disable-line no-console
+                    ctx.errors.push({message: 'Failed to format data as Ghost JSON', error});
                     throw error;
                 }
             }
@@ -123,7 +123,7 @@ const getFullTaskList = (options) => {
                     let tasks = mgHtmlLexical.convert(ctx);
                     return makeTaskRunner(tasks, options);
                 } catch (error) {
-                    ctx.errors.push('Failed to convert HTML -> Lexical', error); // eslint-disable-line no-console
+                    ctx.errors.push({message: 'Failed to convert HTML -> Lexical', error});
                     throw error;
                 }
             }
@@ -135,7 +135,7 @@ const getFullTaskList = (options) => {
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
                 } catch (error) {
-                    ctx.errors.push('Failed to write Ghost import JSON File', error); // eslint-disable-line no-console
+                    ctx.errors.push({message: 'Failed to write Ghost import JSON File', error});
                     throw error;
                 }
             }
@@ -167,7 +167,7 @@ const getFullTaskList = (options) => {
 
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
-                    ctx.errors.push('Failed to write and upload ZIP file', error); // eslint-disable-line no-console
+                    ctx.errors.push({message: 'Failed to write and upload ZIP file', error});
                     throw error;
                 }
             }
@@ -179,7 +179,7 @@ const getFullTaskList = (options) => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {
-                    ctx.errors.push('Failed to clear temporary cached files', error); // eslint-disable-line no-console
+                    ctx.errors.push({message: 'Failed to clear temporary cached files', error});
                     throw error;
                 }
             }
