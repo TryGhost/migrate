@@ -93,28 +93,28 @@ const run = async (argv) => {
         warnings: []
     };
 
-    // If no publication ID is provided, list publications and exit
-    if (!argv.id) {
-        const getPubs = await mgBeehiivApiMembers.listPublications(argv.key);
+    try {
+        // If no publication ID is provided, list publications and exit
+        if (!argv.id) {
+            const getPubs = await mgBeehiivApiMembers.listPublications(argv.key);
 
-        if (!getPubs || !getPubs.length) {
-            ui.log.error('Error fetching publications:', getPubs?.errors || 'No publications found');
-            return;
+            if (!getPubs || !getPubs.length) {
+                ui.log.error('Error fetching publications:', getPubs?.errors || 'No publications found');
+                return;
+            }
+
+            console.table(getPubs.map(pub => ({ // eslint-disable-line no-console
+                name: pub.name,
+                id: pub.id,
+                created: new Date(pub.created * 1000),
+                subscribers: pub.stats?.active_subscriptions || '-'
+            })));
+
+            ui.log.warn('No publication ID provided. Please provide an ID using the --id flag to run the migration.');
+
+            process.exit(0);
         }
 
-        console.table(getPubs.map(pub => ({ // eslint-disable-line no-console
-            name: pub.name,
-            id: pub.id,
-            created: new Date(pub.created * 1000),
-            subscribers: pub.stats?.active_subscriptions || '-'
-        })));
-
-        ui.log.warn('No publication ID provided. Please provide an ID using the --id flag to run the migration.');
-
-        process.exit(0);
-    }
-
-    try {
         // Fetch the tasks, configured correctly according to the options passed in
         let migrate = beehiivApiMembers.getTaskRunner(argv);
 

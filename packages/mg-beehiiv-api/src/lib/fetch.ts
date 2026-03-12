@@ -11,7 +11,7 @@ const authedClient = async (apiKey: string, theUrl: URL) => {
     });
 };
 
-const discover = async (key: string, pubId: string, limit: number) => {
+const discover = async (key: string, pubId: string) => {
     const url = new URL(`https://api.beehiiv.com/v2/publications/${pubId}/posts`);
     url.searchParams.append('limit', '1');
 
@@ -53,7 +53,7 @@ const cachedFetch = async ({fileCache, key, pubId, limit = API_LIMIT, page}: {fi
 };
 
 export const fetchTasks = async (options: any, ctx: any) => {
-    const numberOfPosts = await discover(options.key, options.id, API_LIMIT);
+    const numberOfPosts = await discover(options.key, options.id);
     const totalPages = Math.ceil(numberOfPosts / API_LIMIT);
 
     let tasks = [];

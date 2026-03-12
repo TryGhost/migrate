@@ -141,28 +141,28 @@ const run = async (argv) => {
         argv.url = argv.url.slice(0, -1);
     }
 
-    // If no publication ID is provided, list publications and exit
-    if (!argv.id) {
-        const getPubs = await mgBeehiiv.listPublications(argv.key);
+    try {
+        // If no publication ID is provided, list publications and exit
+        if (!argv.id) {
+            const getPubs = await mgBeehiiv.listPublications(argv.key);
 
-        if (!getPubs || !getPubs.length) {
-            ui.log.error('Error fetching publications:', getPubs.errors);
-            return;
+            if (!getPubs || !getPubs.length) {
+                ui.log.error('Error fetching publications:', getPubs.errors);
+                return;
+            }
+
+            console.table(getPubs.map(pub => ({ // eslint-disable-line no-console
+                name: pub.name,
+                id: pub.id,
+                created: new Date(pub.created * 1000),
+                subscribers: pub.stats?.active_subscriptions || '-'
+            })));
+
+            ui.log.warn('No publication ID provided. Please provide an ID using the --id flag to run the migration.');
+
+            process.exit(0);
         }
 
-        console.table(getPubs.map(pub => ({ // eslint-disable-line no-console
-            name: pub.name,
-            id: pub.id,
-            created: new Date(pub.created * 1000),
-            subscribers: pub.stats?.active_subscriptions || '-'
-        })));
-
-        ui.log.warn('No publication ID provided. Please provide an ID using the --id flag to run the migration.');
-
-        process.exit(0);
-    }
-
-    try {
         // Fetch the tasks, configured correctly according to the options passed in
         let migrate = beehiiv.getTaskRunner(argv);
 
