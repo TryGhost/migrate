@@ -155,6 +155,16 @@ describe('beehiiv API processor', () => {
             assert.ok(result.includes('kg-card kg-bookmark-card'));
         });
 
+        it('handles generic embeds with missing sub-elements without crashing', () => {
+            const html = `<div id="content-blocks">
+                <div class="generic-embed--root">
+                </div>
+            </div>`;
+            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            // Should not throw; bookmark card renders empty when URL is null
+            assert.equal(typeof result, 'string');
+        });
+
         it('unwraps audio iframes from tables', () => {
             const html = `<div id="content-blocks">
                 <table>

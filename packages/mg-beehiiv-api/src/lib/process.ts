@@ -118,10 +118,15 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
 
     // Handle link embeds
     parsed.$('.generic-embed--root').forEach((el) => {
-        const href = attr(parsed.$('a', el)[0] as Element, 'href');
-        const title = _.unescape((parsed.$('.generic-embed--title p', el)[0] as Element).textContent!);
-        const description = _.unescape((parsed.$('.generic-embed--description p', el)[0] as Element).textContent!);
-        const image = attr(parsed.$('.generic-embed--image img', el)[0] as Element, 'src');
+        const anchorEl = parsed.$('a', el)[0] as Element | undefined;
+        const titleEl = parsed.$('.generic-embed--title p', el)[0] as Element | undefined;
+        const descEl = parsed.$('.generic-embed--description p', el)[0] as Element | undefined;
+        const imageEl = parsed.$('.generic-embed--image img', el)[0] as Element | undefined;
+
+        const href = anchorEl ? attr(anchorEl, 'href') : null;
+        const title = titleEl ? _.unescape(titleEl.textContent!) : '';
+        const description = descEl ? _.unescape(descEl.textContent!) : '';
+        const image = imageEl ? attr(imageEl, 'src') : null;
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
