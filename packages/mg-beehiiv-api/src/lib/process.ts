@@ -35,7 +35,7 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
 
     // Let's do some regexp magic to remove some beehiiv variables
     // https://support.beehiiv.com/hc/en-us/articles/7606088263191
-    html = html.replace(/{{subscriber_id}}/g, '#');
+    html = html.replace(/{{subscriber_id}}/g, ' ');
     html = html.replace(/{{rp_refer_url}}/g, '#');
     html = html.replace(/{{rp_refer_url_no_params}}/g, '#');
 

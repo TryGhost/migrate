@@ -72,10 +72,10 @@ describe('beehiiv API processor', () => {
             assert.equal(result, '');
         });
 
-        it('replaces beehiiv subscriber_id variable with #', () => {
+        it('replaces beehiiv subscriber_id variable with a space', () => {
             const html = '<div id="content-blocks"><p>Hello {{subscriber_id}}</p></div>';
             const result = processHTML({post: {url: 'test', data: {html}} as any});
-            assert.equal(result, '<p>Hello #</p>');
+            assert.equal(result, '<p>Hello  </p>');
         });
 
         it('replaces beehiiv rp_refer_url variable with #', () => {
