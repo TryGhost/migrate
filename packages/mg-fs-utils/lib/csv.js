@@ -43,7 +43,10 @@ const parseString = (csvString, options = {skip_lines_with_error: true, columns:
  * @param {Array} data - the data to format
  * @param {Array} fields - the fields to pick and use as column header
  */
-const jsonToCSV = (data, fields = Object.keys(data[0])) => {
+const jsonToCSV = (data, fields = (data && data[0] && typeof data[0] === 'object') ? Object.keys(data[0]) : []) => {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+        return fields.length > 0 ? `${fields.join(',')}\r\n` : '';
+    }
     let csv = `${fields.join(',')}\r\n`;
     let entry;
     let field;

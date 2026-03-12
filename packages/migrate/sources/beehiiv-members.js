@@ -47,12 +47,15 @@ const getTaskRunner = (options) => {
                     const types = Object.keys(ctx.result);
                     const files = [];
 
-                    types.forEach(async (type) => {
-                        files.push({
-                            data: ctx.result[type],
-                            fileName: `gh-members-${type}.csv`,
-                            tmpFilename: `gh-members-${type}-${Date.now()}.csv`
-                        });
+                    types.forEach((type) => {
+                        const batchData = ctx.result[type];
+                        if (batchData && Array.isArray(batchData)) {
+                            files.push({
+                                data: batchData,
+                                fileName: `gh-members-${type}.csv`,
+                                tmpFilename: `gh-members-${type}-${Date.now()}.csv`
+                            });
+                        }
                     });
 
                     await Promise.all(files.map(async ({data, fileName, tmpFilename}) => {
