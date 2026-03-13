@@ -465,4 +465,57 @@ describe('Process Content', function () {
         assert.ok(post.data.html.includes('<blockquote><p>Standalone quote</p></blockquote>'));
         assert.ok(post.data.html.includes('<blockquote><p>"Main quote."<br><br>— <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></p></blockquote>'));
     });
+
+    it('Can fall back to filename for slug when canonical URL has no slug', function () {
+        const fixture = readSync('no-slug-post.html');
+        const fakeName = '2018-08-11_my-post-title-efefef121212.html';
+        const post = processPost({name: fakeName, html: fixture, options: {}});
+
+        assert.equal(post.data.slug, 'my-post-title');
+        assert.equal(post.data.status, 'published');
+    });
+
+    it('Can use globalUser when post has no author', function () {
+        const fixture = readSync('draft-post.html');
+        const fakeName = 'draft_blog-post-title-ababab121212.html';
+        const globalUser = {
+            url: 'https://medium.com/@globaluser',
+            data: {
+                name: 'Global User',
+                slug: 'globaluser',
+                roles: ['Contributor']
+            }
+        };
+        const post = processPost({name: fakeName, html: fixture, globalUser, options: {}});
+
+        assert.equal(post.data.author.data.name, 'Global User');
+    });
+
+    it('Can handle published post with no datetime', function () {
+        const fixture = readSync('no-date-post.html');
+        const fakeName = '2018-08-11_no-date-post-efefef121212.html';
+        const post = processPost({name: fakeName, html: fixture, options: {}});
+
+        assert.equal(post.data.status, 'published');
+        assert.ok(post.data.created_at instanceof Date);
+        assert.ok(post.data.published_at instanceof Date);
+        assert.ok(post.data.updated_at instanceof Date);
+    });
+
+    it('Can handle feature image with no alt or caption', function () {
+        const fixture = readSync('basic-post.html');
+        const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
+
+        // Inject a data-is-featured image with no alt and no figcaption
+        const modifiedFixture = fixture.replace(
+            '<div class="section-content">',
+            '<div class="section-content"><figure><img data-is-featured src="https://example.com/photo.jpg"></figure>'
+        );
+
+        const post = processPost({name: fakeName, html: modifiedFixture, options: {}});
+
+        assert.equal(post.data.feature_image, 'https://example.com/photo.jpg');
+        assert.equal(post.data.feature_image_alt, null);
+        assert.equal(post.data.feature_image_caption, null);
+    });
 });
