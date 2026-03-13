@@ -340,4 +340,230 @@ describe('Process', function () {
 
         assert.equal(data.slug, 'my-dated-post');
     });
+
+    it('Can add a custom tag', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                posts: true,
+                pages: false,
+                addTag: 'custom-tag'
+            }
+        };
+        const input = readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+
+        const post = processed.posts[0];
+        const customTag = post.data.tags.find(t => t.data.slug === 'custom-tag');
+
+        assert.ok(customTag);
+        assert.equal(customTag.url, 'migrator-added-tag');
+        assert.equal(customTag.data.name, 'custom-tag');
+    });
+
+    it('Returns error for empty input', async function () {
+        let ctx = {
+            options: {}
+        };
+        const result = await process.all('', ctx);
+
+        assert.ok(result instanceof Error);
+        assert.equal(result.message, 'Input file is empty');
+    });
+
+    it('Can set src from data-src on non-thumb images', function () {
+        const html = '<img data-src="https://example.com/photo.jpg">';
+
+        const processed = process.processContent(html);
+
+        assert.ok(processed.includes('src="https://example.com/photo.jpg"'));
+    });
+
+    it('Can filter out draft posts', async function () {
+        let ctx = {
+            options: {
+                drafts: false,
+                posts: true,
+                pages: true
+            }
+        };
+        const input = readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+
+        const hasDraft = processed.posts.some(p => p.data.status === 'draft');
+        assert.equal(hasDraft, false);
+    });
+
+    it('Can handle tags option to include post_tag categories', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                posts: true,
+                pages: false,
+                tags: true
+            }
+        };
+        const input = readSync('sample.xml');
+        const processed = await process.all(input, ctx);
+
+        const post = processed.posts[0];
+        const programmingTag = post.data.tags.find(t => t.data.slug === 'programming');
+
+        assert.ok(programmingTag);
+        assert.equal(programmingTag.url, '/tag/programming');
+        assert.equal(programmingTag.data.name, 'Programming');
+    });
+
+    it('Can return empty string for empty content', function () {
+        assert.equal(process.processContent(''), '');
+        assert.equal(process.processContent(null), '');
+        assert.equal(process.processContent(undefined), '');
+    });
+
+    it('Can match author by display name', function () {
+        const users = [
+            {login: 'jdoe', data: {name: 'Jane Doe', slug: 'jdoe', email: 'jane@example.com'}}
+        ];
+        const sqPost = {
+            'wp:post_type': 'post',
+            'dc:creator': 'Jane Doe',
+            link: '/test-post',
+            pubDate: 'Sat, 02 Nov 2013 23:02:32 +0000',
+            title: 'Test',
+            'wp:status': 'publish',
+            'content:encoded': '<p>Hello</p>'
+        };
+
+        const post = process.processPost(sqPost, 0, [sqPost], users, {url: 'http://example.com'});
+
+        assert.equal(post.data.author.data.name, 'Jane Doe');
+        assert.equal(post.data.author.login, 'jdoe');
+    });
+
+    it('Can match author by email', function () {
+        const users = [
+            {login: 'jdoe', data: {name: 'Jane Doe', slug: 'jdoe', email: 'jane@example.com'}}
+        ];
+        const sqPost = {
+            'wp:post_type': 'post',
+            'dc:creator': 'jane@example.com',
+            link: '/test-post',
+            pubDate: 'Sat, 02 Nov 2013 23:02:32 +0000',
+            title: 'Test',
+            'wp:status': 'publish',
+            'content:encoded': '<p>Hello</p>'
+        };
+
+        const post = process.processPost(sqPost, 0, [sqPost], users, {url: 'http://example.com'});
+
+        assert.equal(post.data.author.data.name, 'Jane Doe');
+    });
+
+    it('Can create author from creator when no users list', function () {
+        const sqPost = {
+            'wp:post_type': 'post',
+            'dc:creator': 'Some Author',
+            link: '/test-post',
+            pubDate: 'Sat, 02 Nov 2013 23:02:32 +0000',
+            title: 'Test',
+            'wp:status': 'publish',
+            'content:encoded': '<p>Hello</p>'
+        };
+
+        const post = process.processPost(sqPost, 0, [sqPost], null, {url: 'http://example.com'});
+
+        assert.equal(post.data.author.data.name, 'Some Author');
+        assert.equal(post.data.author.data.slug, 'some-author');
+        assert.equal(post.data.author.data.email, 'some-author@example.com');
+    });
+
+    it('Can remove newsletter form wrapper', function () {
+        const html = '<p>Hello</p><div class="newsletter-form-wrapper"><input></div><p>World</p>';
+
+        const processed = process.processContent(html);
+
+        assert.equal(processed, '<p>Hello</p><p>World</p>');
+    });
+
+    it('Can wrap nested lists in HTML card comments', function () {
+        const html = '<ul><li>Item 1<ul><li>Sub item</li></ul></li></ul>';
+
+        const processed = process.processContent(html);
+
+        assert.ok(processed.includes('<!--kg-card-begin: html-->'));
+        assert.ok(processed.includes('<!--kg-card-end: html-->'));
+    });
+
+    it('Can handle thumb-image with non-adjacent noscript', function () {
+        const html = '<div><noscript><img src="https://example.com/photo.jpg"></noscript><span>spacer</span><img class="thumb-image" data-src="https://example.com/photo.jpg"></div>';
+
+        const processed = process.processContent(html);
+
+        // The noscript is not the immediate previous sibling, but we still walk back to find it
+        assert.ok(processed.includes('<noscript>'));
+        // The thumb-image should be removed since it matches the noscript img
+        assert.ok(!processed.includes('thumb-image'));
+    });
+
+    it('Uses untitled slug for posts with null link', function () {
+        const sqPost = {
+            'wp:post_type': 'post',
+            'dc:creator': '',
+            link: '/null',
+            pubDate: 'Sat, 02 Nov 2013 23:02:32 +0000',
+            title: 'Test',
+            'wp:status': 'publish',
+            'content:encoded': '<p>Hello</p>'
+        };
+
+        const post = process.processPost(sqPost, 0, [sqPost], null, {url: 'http://example.com'});
+
+        assert.equal(post.data.slug, 'untitled');
+    });
+
+    it('Can handle user with missing fields', function () {
+        const user = process.processUser({});
+
+        assert.equal(user.login, '');
+        assert.equal(user.data.name, '');
+        assert.ok(user.data.email.includes('@example.com'));
+    });
+
+    it('Can handle post with missing optional fields', function () {
+        const sqPost = {};
+
+        const post = process.processPost(sqPost, 0, [sqPost], [], {url: 'http://example.com'});
+
+        assert.equal(post.data.slug, 'untitled');
+        assert.equal(post.data.type, '');
+        assert.equal(post.data.status, 'draft');
+        assert.equal(post.data.html, '');
+        assert.equal(post.data.author.url, 'migrator-added-author');
+    });
+
+    it('Can handle XML with no authors or items', async function () {
+        const xml = '<?xml version="1.0" encoding="UTF-8"?><rss><channel><link>http://example.com</link></channel></rss>';
+        let ctx = {
+            options: {
+                drafts: true,
+                posts: true,
+                pages: true
+            }
+        };
+
+        const processed = await process.all(xml, ctx);
+
+        assert.equal(ctx.options.url, 'http://example.com');
+        assert.deepEqual(processed.users, []);
+        assert.deepEqual(processed.posts, []);
+    });
+
+    it('Can handle video wrapper without expected parent structure', function () {
+        const html = '<div class="sqs-video-wrapper" data-html="&lt;iframe src=&quot;https://example.com&quot;&gt;&lt;/iframe&gt;"></div>';
+
+        const processed = process.processContent(html);
+
+        // Video wrapper without .embed-block-wrapper parent is left as-is
+        assert.ok(processed.includes('sqs-video-wrapper'));
+    });
 });

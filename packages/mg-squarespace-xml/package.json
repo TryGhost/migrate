@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "dev": "echo \"Implement me!\"",
-    "test": "node --test 'test/**/*.test.js'",
+    "test": "c8 --check-coverage --lines 100 --branches 100 --functions 100 --statements 100 node --test 'test/**/*.test.js'",
     "lint": "eslint . --ext .js --cache",
     "posttest": "yarn lint"
   },
@@ -20,6 +20,7 @@
     "access": "public"
   },
   "devDependencies": {
+    "c8": "11.0.0",
     "eslint": "8.57.1"
   },
   "dependencies": {
