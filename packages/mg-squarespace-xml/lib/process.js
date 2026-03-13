@@ -1,5 +1,5 @@
 import {extname} from 'path';
-import * as cheerio from 'cheerio';
+import {xmlUtils, domUtils} from '@tryghost/mg-utils';
 import {slugify} from '@tryghost/string';
 import SimpleDom from 'simple-dom';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
@@ -11,11 +11,11 @@ const htmlToTextTrimmed = (html, max) => {
     return noHtml && noHtml.length > max ? noHtml.slice(0,max).split(' ').slice(0, -1).join(' ') : noHtml;
 };
 
-const processUser = ($xml, sqUser) => {
-    const login = $xml(sqUser).children('wp\\:author_login').text();
+const processUser = (sqUser) => {
+    const login = sqUser['wp:author_login'] || '';
     const slug = slugify(login);
-    const email = $xml(sqUser).children('wp\\:author_email').text();
-    const name = $xml(sqUser).children('wp\\:author_display_name').text();
+    const email = sqUser['wp:author_email'] || '';
+    const name = sqUser['wp:author_display_name'] || '';
 
     return {
         url: slug,
@@ -33,22 +33,17 @@ const processContent = (html, options) => {
         return '';
     }
 
-    const $html = cheerio.load(html, {
-        xml: {
-            xmlMode: false,
-            decodeEntities: false
-        }
-    }, false);
+    const parsed = domUtils.parseFragment(html);
 
     if (options?.removeSelectors) {
-        $html(options.removeSelectors).each((i, el) => {
-            $html(el).remove();
+        parsed.$(options.removeSelectors).forEach((el) => {
+            el.remove();
         });
     }
 
-    $html('.sqs-audio-embed').each((i, el) => {
-        let audioSrc = $html(el).attr('data-url');
-        let audioTitle = $html(el).attr('data-title');
+    parsed.$('.sqs-audio-embed').forEach((el) => {
+        let audioSrc = el.getAttribute('data-url');
+        let audioTitle = el.getAttribute('data-title');
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
@@ -61,59 +56,69 @@ const processContent = (html, options) => {
         const buildCard = audioCard.render(cardOpts);
         const cardHTML = buildCard.nodeValue;
 
-        $html(el).replaceWith(cardHTML);
+        domUtils.replaceWith(el, cardHTML);
     });
 
-    $html('.newsletter-form-wrapper').each((i, form) => {
-        $html(form).remove();
+    parsed.$('.newsletter-form-wrapper').forEach((el) => {
+        el.remove();
     });
 
     // squarespace images without src
-    $html('img[data-src]').each((i, img) => {
-        const src = $html(img).attr('data-src');
-        if ($html(img).hasClass('thumb-image')) {
+    parsed.$('img[data-src]').forEach((img) => {
+        const src = img.getAttribute('data-src');
+        if (img.classList.contains('thumb-image')) {
             // images with the `thumb-image` class might be a duplicate
             // to prevent migrating two images, we have to remove the false node
-            // Use prevAll to handle whitespace text nodes between elements
-            const noscriptImg = $html(img).prevAll('noscript').first().children('img').get(0);
-            if (noscriptImg && $html(noscriptImg).attr('src') === src) {
-                $html(img).remove();
+            // Walk backwards to find the noscript sibling
+            let sibling = img.previousElementSibling;
+            while (sibling) {
+                if (sibling.tagName === 'NOSCRIPT') {
+                    const noscriptImg = sibling.querySelector('img');
+                    if (noscriptImg && noscriptImg.getAttribute('src') === src) {
+                        img.remove();
+                    }
+                    break;
+                }
+                sibling = sibling.previousElementSibling;
             }
         } else {
-            $html(img).attr('src', $html(img).attr('data-src'));
+            img.setAttribute('src', img.getAttribute('data-src'));
         }
     });
 
-    $html('figure blockquote').each((i, el) => {
-        const nextIsCaption = $html(el).next('figcaption').length;
+    parsed.$('figure blockquote').forEach((el) => {
+        const nextSibling = el.nextElementSibling;
         let captionText = '';
-        if (nextIsCaption) {
-            captionText = `<br><br>${$html(el).next('figcaption').html()}`;
-            $html(el).next('figcaption').remove();
+        if (nextSibling && nextSibling.tagName === 'FIGCAPTION') {
+            captionText = `<br><br>${domUtils.serializeChildren(nextSibling)}`;
+            nextSibling.remove();
         }
-        $html(el).html(`<p>${$html(el).html()}${captionText}</p>`);
+        el.innerHTML = `<p>${domUtils.serializeChildren(el)}${captionText}</p>`;
     });
 
-    $html('.sqs-video-wrapper').each((i, el) => {
-        const theHtml = decode($html(el).attr('data-html'));
-        const parent = $html(el).parent('.embed-block-wrapper').parent('.intrinsic');
+    parsed.$('.sqs-video-wrapper').forEach((el) => {
+        const theHtml = decode(el.getAttribute('data-html'));
+        const embedWrapper = el.closest('.embed-block-wrapper');
+        const parent = embedWrapper ? embedWrapper.parentElement : null;
 
-        $html(parent).replaceWith(`<figure class="kg-card kg-embed-card">${theHtml}</figure>`);
+        if (parent) {
+            domUtils.replaceWith(parent, `<figure class="kg-card kg-embed-card">${theHtml}</figure>`);
+        }
     });
 
     // TODO: this should be a parser plugin
     // Wrap nested lists in HTML card
-    $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {
-        let $parent = $html(nestedList).parentsUntil('ul, ol').parent();
-        $parent.before('<!--kg-card-begin: html-->');
-        $parent.after('<!--kg-card-end: html-->');
+    parsed.$('ul li ul, ol li ol, ol li ul, ul li ol').forEach((nestedList) => {
+        // Walk up to the nearest parent ul/ol (equivalent to parentsUntil('ul, ol').parent())
+        let topList = nestedList.parentElement?.closest('ul, ol');
+        if (topList) {
+            domUtils.insertBefore(topList, '<!--kg-card-begin: html-->');
+            domUtils.insertAfter(topList, '<!--kg-card-end: html-->');
+        }
     });
 
     // Convert HTML back to a string
-    html = $html.html();
-
-    // Remove empty attributes
-    html = html.replace(/=""/g, '');
+    html = parsed.html();
 
     // Trim whitespace
     html = html.trim();
@@ -123,41 +128,41 @@ const processContent = (html, options) => {
 
 // The feature images is not "connected" to the post, other than it's located
 // in the sibling `<item>` node.
-const processFeatureImage = ($xml, sqPost) => {
-    const $nextItem = $xml(sqPost).next().children('wp\\:attachment_url');
+const processFeatureImage = (items, index) => {
+    const nextItem = items[index + 1];
 
-    if ($nextItem.length >= 1) {
-        let itemText = $nextItem.text();
+    if (nextItem && nextItem['wp:attachment_url']) {
+        let itemText = nextItem['wp:attachment_url'];
         let itemExt = extname(itemText);
         let allowedExt = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico', '.webp'];
 
         if (allowedExt.includes(itemExt) || itemText.includes('images.unsplash.com')) {
-            return $nextItem.text();
+            return itemText;
         }
     }
 
     return;
 };
 
-const processTags = ($xml, $sqCategories, fetchTags) => {
+const processTags = (sqCategories, fetchTags) => {
     const categories = [];
     const tags = [];
 
-    $sqCategories.each((i, taxonomy) => {
-        if (fetchTags && $xml(taxonomy).attr('domain') === 'post_tag') {
+    sqCategories.forEach((taxonomy) => {
+        if (fetchTags && taxonomy['@_domain'] === 'post_tag') {
             tags.push({
-                url: `/tag/${$xml(taxonomy).attr('nicename')}`,
+                url: `/tag/${taxonomy['@_nicename']}`,
                 data: {
-                    slug: $xml(taxonomy).attr('nicename'),
-                    name: $xml(taxonomy).text()
+                    slug: taxonomy['@_nicename'],
+                    name: taxonomy['#text']
                 }
             });
-        } else if ($xml(taxonomy).attr('domain') === 'category') {
+        } else if (taxonomy['@_domain'] === 'category') {
             categories.push({
-                url: `/tag/${$xml(taxonomy).attr('nicename')}`,
+                url: `/tag/${taxonomy['@_nicename']}`,
                 data: {
-                    slug: $xml(taxonomy).attr('nicename'),
-                    name: $xml(taxonomy).text()
+                    slug: taxonomy['@_nicename'],
+                    name: taxonomy['#text']
                 }
             });
         }
@@ -166,18 +171,17 @@ const processTags = ($xml, $sqCategories, fetchTags) => {
     return categories.concat(tags);
 };
 
-const processPost = ($xml, sqPost, users, options) => {
+const processPost = (sqPost, index, items, users, options) => {
     const {addTag, tags: fetchTags, url} = options;
-    const postType = $xml(sqPost).children('wp\\:post_type').text();
+    const postType = sqPost['wp:post_type'] || '';
 
     // only grab posts and pages
     if (postType !== 'attachment') {
-        const featureImage = processFeatureImage($xml, sqPost);
-        // const authorSlug = slugify($xml(sqPost).children('dc\\:creator').text());
-        const creator = $xml(sqPost).children('dc\\:creator').text();
+        const featureImage = processFeatureImage(items, index);
+        const creator = sqPost['dc:creator'] || '';
         const creatorSlug = slugify(creator);
 
-        let postSlug = $xml(sqPost).children('link').text();
+        let postSlug = sqPost.link || '';
         postSlug = postSlug.replace(/(\.html)/i, '');
         postSlug = postSlug.split('/').pop();
 
@@ -187,16 +191,16 @@ const processPost = ($xml, sqPost, users, options) => {
         }
 
         // WP XML only provides a published date, we let's use that all dates Ghost expects
-        const postDate = new Date($xml(sqPost).children('pubdate').text());
+        const postDate = new Date(sqPost.pubDate || '');
 
-        const postTitle = ($xml(sqPost).children('title').text().length > 0) ? $xml(sqPost).children('title').text() : false;
+        const postTitle = (sqPost.title && sqPost.title.length > 0) ? sqPost.title : false;
 
         const post = {
-            url: `${url}${$xml(sqPost).children('link').text()}`,
+            url: `${url}${sqPost.link || ''}`,
             data: {
                 slug: postSlug,
                 title: decode(postTitle),
-                status: $xml(sqPost).children('wp\\:status').text() === 'publish' ? 'published' : 'draft',
+                status: (sqPost['wp:status'] || '') === 'publish' ? 'published' : 'draft',
                 published_at: postDate,
                 created_at: postDate,
                 updated_at: postDate,
@@ -205,10 +209,11 @@ const processPost = ($xml, sqPost, users, options) => {
                 tags: []
             }
         };
-        post.data.html = processContent($xml(sqPost).children('content\\:encoded').text(), options);
+        post.data.html = processContent(sqPost['content:encoded'] || '', options);
 
-        if ($xml(sqPost).children('category').length >= 1) {
-            post.data.tags = processTags($xml, $xml(sqPost).children('category'), fetchTags);
+        const sqCategories = [].concat(sqPost.category || []);
+        if (sqCategories.length >= 1) {
+            post.data.tags = processTags(sqCategories, fetchTags);
         }
 
         if (addTag) {
@@ -271,25 +276,19 @@ const processPost = ($xml, sqPost, users, options) => {
     }
 };
 
-const processPosts = ($xml, users, options) => {
+const processPosts = (items, users, options) => {
     const postsOutput = [];
 
-    $xml('item').each((i, sqPost) => {
-        postsOutput.push(processPost($xml, sqPost, users, options));
+    items.forEach((sqPost, index) => {
+        postsOutput.push(processPost(sqPost, index, items, users, options));
     });
 
     // don't return empty post objects
     return postsOutput.filter(post => post);
 };
 
-const processUsers = ($xml) => {
-    const usersOutput = [];
-
-    $xml('wp\\:author').each((i, sqUser) => {
-        usersOutput.push(processUser($xml, sqUser));
-    });
-
-    return usersOutput;
+const processUsers = (authors) => {
+    return authors.map(sqUser => processUser(sqUser));
 };
 
 const all = async (input, {options}) => {
@@ -303,24 +302,19 @@ const all = async (input, {options}) => {
         return new errors.NoContentError({message: 'Input file is empty'});
     }
 
-    const $xml = cheerio.load(input, {
-        xml: {
-            decodeEntities: false,
-            xmlMode: true,
-            scriptingEnabled: false,
-            lowerCaseTags: true // needed to find `pubDate` tags
-        }
-    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
-    // });
+    const parsed = await xmlUtils.parseXml(input);
+    const channel = parsed.rss.channel;
 
     // grab the URL of the site we're importing
-    options.url = $xml('channel > link').text();
+    options.url = channel.link;
 
     // process users first, as we're using this information
     // to populate the author data for posts
-    output.users = processUsers($xml);
+    const authors = [].concat(channel['wp:author'] || []);
+    output.users = processUsers(authors);
 
-    output.posts = processPosts($xml, output.users, options);
+    const items = [].concat(channel.item || []);
+    output.posts = processPosts(items, output.users, options);
 
     if (!drafts) {
         // remove draft posts
