@@ -237,12 +237,32 @@ Place test fixtures in `test/fixtures/` (JS) or `src/test/fixtures/` (TS).
 3. **Key dependencies to consider**:
    - `@tryghost/mg-context` - Base classes with schema validation
    - `@tryghost/mg-fs-utils` - File operations, CSV parsing, ZIP handling
+   - `@tryghost/mg-utils` - XML parsing and HTML/DOM manipulation (see below)
    - `@tryghost/mg-assetscraper` - Download media assets
-   - `@tryghost/mg-webscraper` - Web scraping with Cheerio
-   - `cheerio` - HTML parsing
+   - `@tryghost/mg-webscraper` - Web scraping
 
 ### For a JavaScript package:
 Follow existing patterns in `mg-fs-utils` or `mg-tinynews`.
+
+## HTML & XML Parsing
+
+**Use `@tryghost/mg-utils` for all HTML and XML parsing. Do not use `cheerio`.**
+
+See the [`mg-utils` README](packages/mg-utils/README.md) for full API documentation.
+
+```javascript
+import {xmlUtils, domUtils} from '@tryghost/mg-utils';
+
+// XML: parse to plain JS object
+const parsed = await xmlUtils.parseXml(xmlString);
+const channel = parsed.rss.channel;
+const items = [].concat(channel.item || []); // normalize single/array
+
+// HTML: parse, manipulate, serialize
+const frag = domUtils.parseFragment(html);
+frag.$('.unwanted').forEach(el => el.remove());
+const output = frag.html();
+```
 
 ## Error Handling
 
