@@ -83,6 +83,35 @@ describe('serializeNode', function () {
         assert.equal(serializeNode(textNode), 'Hello World');
     });
 
+    it('escapes ampersands in text nodes', function () {
+        const parsed = parseFragment('<p>Tom &amp; Jerry</p>');
+        const p = parsed.$('p')[0];
+
+        assert.equal(serializeNode(p), '<p>Tom &amp; Jerry</p>');
+    });
+
+    it('escapes angle brackets in text nodes', function () {
+        const parsed = parseFragment('');
+        const textNode = parsed.document.createTextNode('a < b > c');
+        parsed.body.appendChild(textNode);
+
+        assert.ok(parsed.html().includes('&lt;'));
+        assert.ok(parsed.html().includes('&gt;'));
+        assert.equal(parsed.html(), 'a &lt; b &gt; c');
+    });
+
+    it('preserves &nbsp; in text nodes', function () {
+        const parsed = parseFragment('<p>&nbsp;</p>');
+
+        assert.equal(parsed.html(), '<p>&nbsp;</p>');
+    });
+
+    it('preserves multiple &nbsp; entities', function () {
+        const parsed = parseFragment('<p>hello&nbsp;&nbsp;world</p>');
+
+        assert.equal(parsed.html(), '<p>hello&nbsp;&nbsp;world</p>');
+    });
+
     it('serializes comment nodes', function () {
         const parsed = parseFragment('<!--kg-card-begin: html-->');
         const commentNode = parsed.body.firstChild;

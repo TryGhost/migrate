@@ -62,7 +62,11 @@ export function serializeNode(node: Node | null): string {
     // Text node
     if (node.nodeType === 3) {
         /* c8 ignore next -- defensive fallback for null textContent */
-        return node.textContent || '';
+        return (node.textContent || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\u00a0/g, '&nbsp;');
     }
 
     // Comment node
