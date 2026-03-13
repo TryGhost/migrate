@@ -15,6 +15,9 @@ const parseCSV = (filePath, options = {skip_lines_with_error: true, columns: tru
     const data = [];
     return new Promise((resolve, reject) => {
         const fileStream = createReadStream(filePath);
+        fileStream.on('error', (error) => {
+            return reject(error);
+        });
         fileStream
             .pipe(parser)
             .on('data', async (row) => {

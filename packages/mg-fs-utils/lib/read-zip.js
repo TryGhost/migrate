@@ -15,10 +15,6 @@ const readZipEntries = async (zipPath = null) => {
     let files = [];
 
     for (const entry of Object.entries(zipEntries)) {
-        if ((entry[1].name.match(/^__MACOSX/) || entry[1].name.match(/\.DS_Store$/))) {
-            continue;
-        }
-
         if (entry && !entry[1].isDirectory) {
             files.push(entry[0]);
         }

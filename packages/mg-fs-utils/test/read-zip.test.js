@@ -51,6 +51,16 @@ describe('Read Zip', function () {
         }
     });
 
+    it('Throws when no zip path is provided', async function () {
+        await assert.rejects(
+            readZipEntries(),
+            (err) => {
+                assert.ok(err.message.includes('No zip path provided'));
+                return true;
+            }
+        );
+    });
+
     it('Can read nested zips', async function () {
         let zipEntries = await readZipEntries(doubleInputZipPath);
 

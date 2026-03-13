@@ -4,7 +4,7 @@ import {tmpdir} from 'node:os';
 import {createHash} from 'node:crypto';
 import * as dotenv from 'dotenv';
 import _ from 'lodash';
-import {writeFileSync, readdirSync, rmdir, lstatSync, existsSync} from 'node:fs';
+import {writeFileSync, readdirSync, rmSync, lstatSync, existsSync} from 'node:fs';
 import {writeFile} from 'node:fs/promises';
 import {outputJson, outputJsonSync, mkdirpSync, readJson, remove, outputFile} from 'fs-extra/esm';
 import imageTransform from '@tryghost/image-transform';
@@ -232,7 +232,7 @@ export default class FileCache {
         }
 
         // @TODO: use content type on request to infer this, rather than assuming jpeg?
-        if (type === 'image' && !_.includes(knownImageExtensions, ext)) {
+        if (type === 'images' && !_.includes(knownImageExtensions, ext)) {
             if (!ext) {
                 filename += '.jpeg';
             } else {
@@ -444,26 +444,13 @@ export default class FileCache {
             pathToCheck = join(this[`${type}Dir`], filename);
         }
 
-        try {
-            return existsSync(pathToCheck);
-        } catch (error) {
-            return false;
-        }
+        return existsSync(pathToCheck);
     }
 
     async emptyCurrentCacheDir() {
-        if (!this.cacheKey) {
-            return false;
-        }
-
         let siteCachePath = join(this.cacheBaseDir, this.cacheKey);
-
-        try {
-            await remove(siteCachePath);
-            return true;
-        } catch (error) {
-            throw new errors.NotFoundError({message: 'Unknown file type'});
-        }
+        await remove(siteCachePath);
+        return true;
     }
 
     /**
@@ -471,13 +458,6 @@ export default class FileCache {
      */
     async emptyCacheDir() {
         const directory = this.cacheBaseDir + '/';
-
-        existsSync(directory, (err) => {
-            if (err) {
-                throw err;
-            }
-            return true;
-        });
 
         let itemsToDelete = [];
         const dirContents = readdirSync(directory).map((fileName) => {
@@ -491,12 +471,7 @@ export default class FileCache {
         });
 
         itemsToDelete.forEach((item) => {
-            rmdir(item, {recursive: true}, (err) => {
-                if (err) {
-                    throw err;
-                }
-                return true;
-            });
+            rmSync(item, {recursive: true});
         });
 
         return {
