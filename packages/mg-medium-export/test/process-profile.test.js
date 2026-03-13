@@ -44,6 +44,20 @@ describe('Process Profile', function () {
         assert.equal(profile.url, 'https://medium.com/@testuser');
     });
 
+    it('Can handle profile with no name element', function () {
+        const html = `<!DOCTYPE html><html><body>
+            <section class="h-card">
+                <img class="u-photo" src="https://example.com/photo.jpg">
+                <a class="u-url" href="https://medium.com/@testuser">@testuser</a>
+            </section>
+        </body></html>`;
+
+        const profile = processProfile({html});
+
+        assert.equal(profile.data.name, '');
+        assert.equal(profile.url, 'https://medium.com/@testuser');
+    });
+
     it('Skips unknown profile fields', function () {
         const html = `<!DOCTYPE html><html><body>
             <section class="h-card">

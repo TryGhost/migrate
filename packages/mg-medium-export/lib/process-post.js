@@ -1,10 +1,10 @@
-import * as cheerio from 'cheerio';
+import {domUtils} from '@tryghost/mg-utils';
 import string from '@tryghost/string';
 import processContent from './process-content.js';
 
 const sectionTags = ['aside', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'img'];
 
-const processMeta = ({name, $post, options}) => {
+const processMeta = ({name, parsed, options}) => {
     const mediumAsCanonical = options?.mediumAsCanonical ?? false;
 
     let urlInfo;
@@ -12,16 +12,17 @@ const processMeta = ({name, $post, options}) => {
     const dateNow = new Date();
 
     const post = {
-        url: $post('.p-canonical').attr('href'),
+        url: parsed.$('.p-canonical')[0]?.getAttribute('href'),
         data: {
-            title: $post('.p-name').text(),
-            custom_excerpt: $post('.p-summary').text().trim()
+            title: parsed.$('.p-name')[0]?.textContent || '',
+            custom_excerpt: (parsed.$('.p-summary')[0]?.textContent || '').trim()
         }
     };
 
     if (/^(?:posts\/)?draft/.test(name)) {
         urlInfo = name.match(/_(.*?)-([0-9a-f]+)\.html/);
-        post.url = $post('footer p a').attr('href');
+        const footerLink = parsed.$('footer p a')[0];
+        post.url = footerLink?.getAttribute('href');
         post.data.status = 'draft';
         post.data.created_at = dateNow;
         post.data.updated_at = dateNow;
@@ -35,22 +36,16 @@ const processMeta = ({name, $post, options}) => {
         }
 
         post.data.status = 'published';
-        post.data.created_at = $post('.dt-published').attr('datetime') || dateNow;
-        post.data.published_at = $post('.dt-published').attr('datetime') || dateNow;
-        post.data.updated_at = $post('.dt-published').attr('datetime') || dateNow;
+        const publishedDatetime = parsed.$('.dt-published')[0]?.getAttribute('datetime');
+        post.data.created_at = publishedDatetime || dateNow;
+        post.data.published_at = publishedDatetime || dateNow;
+        post.data.updated_at = publishedDatetime || dateNow;
     }
 
     if (mediumAsCanonical) {
-        const canonicalUrl = $post('.p-canonical').attr('href');
+        const canonicalUrl = parsed.$('.p-canonical')[0]?.getAttribute('href');
         post.data.canonical_url = canonicalUrl;
     }
-
-    // $('img').map(async (i, el) => {
-    //     let $image = $(el);
-    //     let type = $image.attr('src') === undefined ? 'data-src' : 'src';
-    //     let newSrc = await this.downloadImage($image.attr(type));
-    //     $image.attr(type, newSrc);
-    // }).get();
 
     // Ensure the slug is clean and valid according to Ghost
     post.data.slug = string.slugify(urlInfo[1]);
@@ -60,12 +55,13 @@ const processMeta = ({name, $post, options}) => {
     return post;
 };
 
-const processAuthor = ({$author}) => {
+const processAuthor = ({pAuthor}) => {
+    const href = pAuthor.getAttribute('href');
     return {
-        url: $author.attr('href'),
+        url: href,
         data: {
-            name: $author.text(),
-            slug: $author.attr('href').replace(/.*?@(.*?)$/, (m, p) => p.toLowerCase()),
+            name: pAuthor.textContent,
+            slug: href.replace(/.*?@(.*?)$/, (m, p) => p.toLowerCase()),
             roles: [
                 'Contributor'
             ]
@@ -73,44 +69,37 @@ const processAuthor = ({$author}) => {
     };
 };
 
-const processTags = ({$tags}) => {
-    const tags = [];
-    $tags.each((i) => {
-        let $tag = $tags.eq(i);
-        tags.push({
-            url: $tag.attr('href'),
+const processTags = ({tagLinks}) => {
+    return tagLinks.map((tag) => {
+        const href = tag.getAttribute('href');
+        return {
+            url: href,
             data: {
-                name: $tag.text(),
-                slug: $tag.attr('href').replace(/.*\/(.*?)$/, (m, p) => p.toLowerCase())
+                name: tag.textContent,
+                slug: href.replace(/.*\/(.*?)$/, (m, p) => p.toLowerCase())
             }
-        });
+        };
     });
-    return tags;
 };
 
 const processFeatureImage = ({html, post, options}) => {
-    const $html = cheerio.load(html, {
-        xml: {
-            xmlMode: false,
-            decodeEntities: false
-        }
-    }, false);
+    const parsed = domUtils.parseFragment(html);
 
     // Look for data-is-featured
-    let featured = $html('[data-is-featured]')[0];
+    let featured = parsed.$('[data-is-featured]')[0] || null;
 
     // Look for an image that appears before content
-    let allSections = $html(sectionTags.join(','));
+    let allSections = parsed.$(sectionTags.join(','));
     let foundImg = false;
     let preImageTags = [];
 
-    allSections.each((i, el) => {
+    allSections.forEach((el) => {
         if (!foundImg) {
-            preImageTags.push(el.tagName);
+            preImageTags.push(el.tagName.toLowerCase());
         }
 
-        if (!foundImg && el.tagName === 'img') {
-            return foundImg = el;
+        if (!foundImg && el.tagName.toLowerCase() === 'img') {
+            foundImg = el;
         }
     });
 
@@ -129,31 +118,29 @@ const processFeatureImage = ({html, post, options}) => {
     }
 
     if (featured) {
-        post.data.feature_image = $html(featured).attr('src');
-        post.data.feature_image_alt = $html(featured).attr('alt') || null;
-        post.data.feature_image_caption = $html(featured).parents('figure').find('figcaption').html() || null;
+        post.data.feature_image = featured.getAttribute('src');
+        post.data.feature_image_alt = featured.getAttribute('alt') || null;
+        const figure = featured.closest('figure');
+        const figcaption = figure ? figure.querySelector('figcaption') : null;
+        post.data.feature_image_caption = figcaption ? domUtils.serializeChildren(figcaption).trim() : null;
 
-        $html(featured).parents('figure').remove();
+        if (figure) {
+            figure.remove();
+        }
     }
 
-    return $html.html().trim();
+    return parsed.html().trim();
 };
 
 export default ({name, html, globalUser, options}) => {
-    const $post = cheerio.load(html, {
-        xml: {
-            xmlMode: false,
-            decodeEntities: false,
-            scriptingEnabled: false
-        }
-    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+    const parsed = domUtils.parseFragment(html);
 
-    let post = processMeta({name, $post, options});
+    let post = processMeta({name, parsed, options});
 
     // Process author
-    if ($post('.p-author').length) {
-        post.data.author = processAuthor({$author: $post('.p-author')});
-        // @TODO check if this is the global user and use that?
+    const pAuthor = parsed.$('.p-author')[0];
+    if (pAuthor) {
+        post.data.author = processAuthor({pAuthor});
     } else if (globalUser) {
         post.data.author = globalUser;
     }
@@ -170,8 +157,9 @@ export default ({name, html, globalUser, options}) => {
     }
 
     // Process tags
-    if ($post('.p-tags a').length) {
-        post.data.tags = [...post.data.tags, ...processTags({$tags: $post('.p-tags a')})];
+    const tagLinks = parsed.$('.p-tags a');
+    if (tagLinks.length) {
+        post.data.tags = [...post.data.tags, ...processTags({tagLinks})];
     }
 
     if (options?.addPlatformTag) {
@@ -184,8 +172,9 @@ export default ({name, html, globalUser, options}) => {
     }
 
     // Process content
-    // post.data.html = processContent({content: $post('.e-content'), post});
-    post = processContent({content: $post('.e-content'), post});
+    const eContent = parsed.$('.e-content')[0];
+    const contentHtml = eContent ? domUtils.serializeChildren(eContent) : '';
+    post = processContent({html: contentHtml, post});
 
     // Grab the featured image
     // Do this last so that we can add tags to indicate feature image style

@@ -1,4 +1,4 @@
-import * as cheerio from 'cheerio';
+import {domUtils} from '@tryghost/mg-utils';
 import SimpleDom from 'simple-dom';
 import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
 import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
@@ -8,10 +8,10 @@ const doReplace = (str) => {
     const replaceParts = [
         [/[\s\n]/g, ''], // Remove spaces
         [/\.$/, ''], // Trim trailing full stop
-        [/‘/, '\''], // Convert single opening curly quote to straight quote
-        [/’/, '\''], // Convert single closing curly quote to straight quote
-        [/“/, '"'], // Convert double opening curly quote to straight quote
-        [/”/, '"'] // Convert double closing curly quote to straight quote
+        [/\u2018/, '\''], // Convert single opening curly quote to straight quote
+        [/\u2019/, '\''], // Convert single closing curly quote to straight quote
+        [/\u201c/, '"'], // Convert double opening curly quote to straight quote
+        [/\u201d/, '"'] // Convert double closing curly quote to straight quote
     ];
 
     replaceParts.forEach((re) => {
@@ -28,17 +28,14 @@ const equivalentTitles = (title1, title2) => {
     return title1 === title2;
 };
 
-export default ({content, post}) => {
-    // Load the content HTML to get a Cheerio instance we can use
-    // Uses default cheerio options (parse5) to decode entities and preserve empty attributes
-    const $ = cheerio.load(content.html(), {}, false);
-    let $content = $.root();
+export default ({html, post}) => {
+    const parsed = domUtils.parseFragment(html);
 
     // Detect if post is likely to be a comment. If so, set as draft and add tag
     // Based on being published, content having 1 paragraph, and having no images
-    let childrenCount = $content.children().length;
-    let pCount = $content.find('p').length;
-    let imgCount = $content.find('img').length;
+    let childrenCount = parsed.body.children.length;
+    let pCount = parsed.$('p').length;
+    let imgCount = parsed.$('img').length;
 
     if (post.data.status === 'published' && childrenCount <= 1 && pCount <= 1 && imgCount === 0) {
         post.data.status = 'draft';
@@ -53,38 +50,38 @@ export default ({content, post}) => {
 
     // Medium usually has an hr divider at the very beginning of the content
     // We don't need this so remove it if we find it
-    let $firstSection = $content.find('.section--first');
-    if ($firstSection.children().first().hasClass('section-divider')) {
-        $firstSection.children().first().remove();
+    let firstSection = parsed.$('.section--first')[0];
+    if (firstSection) {
+        let firstChild = firstSection.firstElementChild;
+        if (firstChild && firstChild.classList.contains('section-divider')) {
+            firstChild.remove();
+        }
     }
 
     // Sometimes Medium has a duplicate header at the beginning of the content
     // Don't need this either so remove it
-    let firstTitle = $content.find('h1, h2, h3, h4, blockquote').first();
-    if (equivalentTitles(firstTitle.text(), post.data.title)) {
-        $content.find(firstTitle).remove();
+    let firstTitle = parsed.$('h1, h2, h3, h4, blockquote')[0];
+    if (firstTitle && equivalentTitles(firstTitle.textContent, post.data.title)) {
+        firstTitle.remove();
     }
 
     // Remove the subtitle if it's the same as the excerpt
-    $content.find('.graf--subtitle').each((i, el) => {
-        if (equivalentTitles($(el).text(), post.data.custom_excerpt)) {
-            $(el).remove();
+    parsed.$('.graf--subtitle').forEach((el) => {
+        if (equivalentTitles(el.textContent, post.data.custom_excerpt)) {
+            el.remove();
         }
     });
 
     // Convert galleries
-    $content.find('.section-inner.sectionLayout--outsetRow').each((i, el) => {
+    parsed.$('.section-inner.sectionLayout--outsetRow').forEach((el) => {
         // Check we're only working with a group of <figure> elements
-        const children = $(el).children();
-        const childElementTags = children.map((ii, ell) => {
-            return ell.tagName.toLowerCase();
-        }).get();
-        const allFigures = childElementTags.every(e => e === 'figure');
+        const children = Array.from(el.children);
+        const allFigures = children.every(child => child.tagName.toLowerCase() === 'figure');
 
         // If it's all figures
         if (allFigures) {
-            let hasCaption = $(el).find('figcaption');
-            let caption = hasCaption.length > 0 ? hasCaption.html().trim() : null;
+            let figcaption = el.querySelector('figcaption');
+            let caption = figcaption ? domUtils.serializeChildren(figcaption).trim() : null;
 
             let cardOpts = {
                 env: {dom: new SimpleDom.Document()},
@@ -94,105 +91,108 @@ export default ({content, post}) => {
                 }
             };
 
-            $(el).find('figure').each((iii, elll) => { // eslint-disable-line no-shadow
-                let img = $(elll).find('img');
+            el.querySelectorAll('figure').forEach((figure) => { // eslint-disable-line no-shadow
+                let img = figure.querySelector('img');
                 cardOpts.payload.images.push({
                     row: 0,
-                    fileName: img.attr('data-image-id'),
-                    src: img.attr('src'),
-                    width: img.attr('data-width'),
-                    height: img.attr('data-height')
+                    fileName: img.getAttribute('data-image-id'),
+                    src: img.getAttribute('src'),
+                    width: img.getAttribute('data-width'),
+                    height: img.getAttribute('data-height')
                 });
             });
 
             const galleryHtml = serializer.serialize(galleryCard.render(cardOpts));
 
-            $(el).replaceWith(galleryHtml);
+            domUtils.replaceWith(el, galleryHtml);
         }
     });
 
     // Convert Medium bookmarks
-    $content.find('.graf--mixtapeEmbed').each((i, el) => {
+    parsed.$('.graf--mixtapeEmbed').forEach((el) => {
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
             payload: {}
         };
 
-        let href = $(el).find('.markup--anchor').attr('href');
+        let href = el.querySelector('.markup--anchor')?.getAttribute('href');
         cardOpts.payload.url = href;
 
         cardOpts.payload.metadata = {
             url: href,
-            title: $(el).find('.markup--strong').text(),
-            description: $(el).find('.markup--em').text()
+            title: el.querySelector('.markup--strong')?.textContent || '',
+            description: el.querySelector('.markup--em')?.textContent || ''
         };
 
-        const bngImage = $(el).find('.js-mixtapeImage').css('background-image');
+        const mixtapeImage = el.querySelector('.js-mixtapeImage');
+        const bngImage = mixtapeImage ? mixtapeImage.style.backgroundImage : null;
         if (bngImage) {
-            let src = bngImage.replace(/url\((.*?)\)/, (m, p) => p);
+            let src = bngImage.replace(/url\(["']?(.*?)["']?\)/, (m, p) => p);
             cardOpts.payload.metadata.thumbnail = src;
         }
 
         const bookmarkHtml = serializer.serialize(bookmarkCard.render(cardOpts));
 
-        $(el).replaceWith(`<!--kg-card-begin: html-->\n${bookmarkHtml}\n<!--kg-card-end: html-->`);
+        domUtils.replaceWith(el, `<!--kg-card-begin: html-->\n${bookmarkHtml}\n<!--kg-card-end: html-->`);
     });
 
     // Handle blockquotes made of 2 elements
-    $content.find('blockquote.graf--pullquote, blockquote.graf--blockquote').each((i, bq) => {
-        $(bq).removeAttr('name');
-        $(bq).removeAttr('id');
-        $(bq).removeAttr('class');
+    parsed.$('blockquote.graf--pullquote, blockquote.graf--blockquote').forEach((bq) => {
+        bq.removeAttribute('name');
+        bq.removeAttribute('id');
+        bq.removeAttribute('class');
 
-        $(bq).find('a').each((ii, a) => {
-            $(a).removeAttr('data-href');
-            $(a).removeAttr('class');
+        bq.querySelectorAll('a').forEach((a) => {
+            a.removeAttribute('data-href');
+            a.removeAttribute('class');
         });
 
         let textElements = [];
-        textElements.push($(bq).html().trim());
+        textElements.push(domUtils.serializeChildren(bq).trim());
 
-        if ($(bq).next('.graf-after--pullquote')) {
-            const nextElem = $(bq).next('.graf-after--pullquote');
-            const nextText = $(nextElem).html();
+        const nextElem = bq.nextElementSibling;
+        if (nextElem && nextElem.matches('.graf-after--pullquote')) {
+            const nextText = domUtils.serializeChildren(nextElem);
             if (nextText && nextText.length > 0) {
                 textElements.push(nextText.trim());
-                $(nextElem).remove();
+                nextElem.remove();
             }
         }
 
-        $(bq).replaceWith(`<blockquote><p>${textElements.join('<br><br>')}</p></blockquote>`);
+        domUtils.replaceWith(bq, `<blockquote><p>${textElements.join('<br><br>')}</p></blockquote>`);
     });
 
-    $content.find('pre.graf--pre').each((i, pre) => {
-        $(pre).removeAttr('name');
-        $(pre).removeAttr('id');
-        $(pre).removeAttr('class');
-        $(pre).removeAttr('data-code-block-mode');
-        $(pre).removeAttr('spellcheck');
-        $(pre).html($(pre).html().trim());
+    parsed.$('pre.graf--pre').forEach((pre) => {
+        pre.removeAttribute('name');
+        pre.removeAttribute('id');
+        pre.removeAttribute('class');
+        pre.removeAttribute('data-code-block-mode');
+        pre.removeAttribute('spellcheck');
+        pre.innerHTML = domUtils.serializeChildren(pre).trim();
 
-        const lang = $(pre).attr('data-code-block-lang');
-        $(pre).removeAttr('data-code-block-lang');
+        const lang = pre.getAttribute('data-code-block-lang');
+        pre.removeAttribute('data-code-block-lang');
 
-        $(pre).find('span.pre--content').each((ii, span) => {
-            span.name = 'code';
+        pre.querySelectorAll('span.pre--content').forEach((span) => {
+            const code = parsed.document.createElement('code');
+            code.innerHTML = span.innerHTML;
+            span.parentNode.replaceChild(code, span);
         });
 
-        $(pre).find('code').each((iii, code) => {
-            $(code).removeAttr('name');
-            $(code).removeAttr('id');
-            $(code).removeAttr('class');
+        pre.querySelectorAll('code').forEach((code) => {
+            code.removeAttribute('name');
+            code.removeAttribute('id');
+            code.removeAttribute('class');
 
             if (lang && lang.length > 0) {
-                $(code).addClass(`language-${lang}`);
+                code.classList.add(`language-${lang}`);
             }
 
-            $(code).html($(code).html().replace(/<br>/g, ' \n').trim());
+            code.innerHTML = domUtils.serializeChildren(code).replace(/<br>/g, ' \n').trim();
         });
     });
 
-    post.data.html = $content.html().trim();
+    post.data.html = parsed.html().trim();
 
     return post;
 };

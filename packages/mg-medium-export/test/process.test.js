@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
-import * as cheerio from 'cheerio';
+import {domUtils} from '@tryghost/mg-utils';
 import processPost from '../lib/process-post.js';
 import processContent from '../lib/process-content.js';
 
@@ -11,6 +11,12 @@ const __dirname = new URL('.', import.meta.url).pathname;
 const readSync = (name) => {
     let fixtureFileName = join(__dirname, './', 'fixtures', 'export', 'posts', name);
     return readFileSync(fixtureFileName, {encoding: 'utf8'});
+};
+
+const extractEContent = (html) => {
+    const parsed = domUtils.parseFragment(html);
+    const eContent = parsed.$('.e-content')[0];
+    return eContent ? domUtils.serializeChildren(eContent) : '';
 };
 
 const assertMediumMetaObject = (value) => {
@@ -212,259 +218,6 @@ describe('Process', function () {
         // "This is a subtitle of some sort" is already used as excerpt, so don't include it in the content
         assert.ok(!post.data.html.includes('<h4 name="456" id="456" class="graf graf--h4 graf-after--h3 graf--subtitle">This is a subtitle of some sort</h4>'));
     });
-});
-
-describe('Process Content', function () {
-    it('Can process code blocks', function () {
-        const source = `<div class="e-content"><pre name="4a0a" id="4a0a" class="graf graf--pre graf-after--p">
-    <code class="markup--code markup--pre-code">
-        &lt;div class="image-block"&gt;\n    &lt;a href="https://example.com"&gt;\n        &lt;img src="/images/photo.jpg" alt="My alt text"&gt;\n    &lt;/a&gt;\n&lt;/div&gt;
-    </code>
-</pre></div>`;
-
-        const $post = cheerio.load(source, {
-            xml: {
-                xmlMode: false,
-                decodeEntities: false
-            }
-        }, false);
-
-        const post = processContent({
-            content: $post('.e-content'),
-            post: {
-                data: {
-                    title: 'Blog Post Title'
-                }
-            }
-        });
-
-        assert.equal(post.data.html, `<pre><code>&lt;div class="image-block"&gt;\n    &lt;a href="https://example.com"&gt;\n        &lt;img src="/images/photo.jpg" alt="My alt text"&gt;\n    &lt;/a&gt;\n&lt;/div&gt;</code></pre>`);
-    });
-
-    it('Can process code blocks wish slashes', function () {
-        const source = readSync('code-post.html');
-
-        const $post = cheerio.load(source, {
-            xml: {
-                xmlMode: false,
-                decodeEntities: false
-            }
-        }, false);
-
-        const post = processContent({
-            content: $post('.e-content'),
-            post: {
-                data: {
-                    title: 'Blog Post Title'
-                }
-            }
-        });
-
-        assert.ok(!post.data.html.includes('<pre name="4a0a" id="4a0a" class="graf graf--pre graf-after--p">'));
-        assert.ok(post.data.html.includes('<pre><code>sudo apt-get update \n' +
-        'sudo apt-get install \\ \n' +
-        '    apt-transport-https \\ \n' +
-        '    ca-certificates \\ \n' +
-        '    curl \\ \n' +
-        '    gnupg-agent \\ \n' +
-        '    software-properties-common \\ \n' +
-        '    example \\ \n' +
-        '    python3-example-lorem</code></pre>'));
-    });
-
-    it('Can process code blocks', function () {
-        const source = readSync('code-post.html');
-
-        const $post = cheerio.load(source, {
-            xml: {
-                xmlMode: false,
-                decodeEntities: false
-            }
-        }, false);
-
-        const post = processContent({
-            content: $post('.e-content'),
-            post: {
-                data: {
-                    title: 'Blog Post Title'
-                }
-            }
-        });
-
-        assert.ok(!post.data.html.includes('<pre name="9a1f" id="9a1f" class="graf graf--pre graf-after--pre">'));
-        assert.ok(post.data.html.includes('<pre><code>echo "deb https://sub.example.com/ce/dolor lorem ipsum" |\\  \n' +
-        'sudo tee /etc/apt/sources.list.d/example.list \n' +
-        'sudo apt-get update \n' +
-        'sudo apt-get install example</code></pre>'));
-    });
-
-    it('Can process code blocks', function () {
-        const source = `<div class="e-content"><p>My content</p>
-        <pre data-code-block-mode="2" spellcheck="false" data-code-block-lang="bash" name="2296" id="2296" class="graf graf--pre graf-after--p graf--preV2">
-        <span class="pre--content">wget https://example.com/package.zip</span>
-        </pre></div>`;
-
-        const $post = cheerio.load(source, {
-            xml: {
-                xmlMode: false,
-                decodeEntities: false
-            }
-        }, false);
-
-        const post = processContent({
-            content: $post('.e-content'),
-            post: {
-                data: {
-                    title: 'Blog Post Title'
-                }
-            }
-        });
-
-        assert.ok(!post.data.html.includes('<pre data-code-block-mode="2" spellcheck="false" data-code-block-lang="bash" name="2296" id="2296" class="graf graf--pre graf-after--p graf--preV2">\n' +
-            '<span class="pre--content">wget https://example.com/package.zip</span>\n' +
-            '</pre>'));
-        assert.ok(post.data.html.includes('<pre><code class="language-bash">wget https://example.com/package.zip</code></pre>'));
-    });
-
-    it('Can process galleries', function () {
-        const source = `<div class="e-content"><div class="section-inner sectionLayout--outsetRow" data-paragraph-count="3">
-            <figure name="f106" id="f106" class="graf graf--figure graf--layoutOutsetRow is-partialWidth graf-after--li" style="width: 34.74%;">
-                <img class="graf-image" data-image-id="1*1234.jpeg" data-width="768" data-height="933" src="https://cdn-images-1.medium.com/max/600/1*1234.jpeg">
-            </figure>
-            <figure name="13ec" id="13ec" class="graf graf--figure graf--layoutOutsetRowContinue is-partialWidth graf-after--figure" style="width: 31.659%;">
-                <img class="graf-image" data-image-id="1*5678.jpeg" data-width="768" data-height="1024" src="https://cdn-images-1.medium.com/max/400/1*5678.jpeg">
-            </figure>
-            <figure name="4dc5" id="4dc5" class="graf graf--figure graf--layoutOutsetRowContinue is-partialWidth graf-after--figure" style="width: 33.601%;">
-                <img class="graf-image" data-image-id="1*-abcd.jpeg" data-width="768" data-height="965" src="https://cdn-images-1.medium.com/max/600/1*-abcd.jpeg">
-                <figcaption class="imageCaption" style="width: 297.61%; left: -197.61%;">Photos by the author</figcaption>
-            </figure>
-        </div></div>`;
-
-        const $post = cheerio.load(source, {
-            xml: {
-                xmlMode: false,
-                decodeEntities: false
-            }
-        }, false);
-
-        const post = processContent({
-            content: $post('.e-content'),
-            post: {
-                data: {
-                    title: 'Blog Post Title'
-                }
-            }
-        });
-
-        assert.ok(!post.data.html.includes('<div class="section-inner sectionLayout--outsetRow" data-paragraph-count="3">'));
-
-        assert.ok(post.data.html.includes('<figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*1234.jpeg" width="768" height="933" loading="lazy" alt=""></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/400/1*5678.jpeg" width="768" height="1024" loading="lazy" alt=""></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*-abcd.jpeg" width="768" height="965" loading="lazy" alt=""></div></div></div><figcaption>Photos by the author</figcaption></figure>'));
-    });
-
-    it('Can process embeds with images', function () {
-        const source = `<div class="e-content">
-         <div name="d38c" id="d38c" class="graf graf--mixtapeEmbed graf-after--p graf--trailing"><a
-                     href="https://example.medium.com/list/1234"
-                     data-href="https://example.medium.com/list/1234"
-                     class="markup--anchor markup--mixtapeEmbed-anchor"
-                     title="https://example.medium.com/list/1234"><strong
-                       class="markup--strong markup--mixtapeEmbed-strong">My best Articles</strong><br>
-                       class="markup--em markup--mixtapeEmbed-em"><em class="markup--em markup--mixtapeEmbed-em">A description</em>example.medium.com</a><a
-                     href="https://example.medium.com/list/1234"
-                     class="js-mixtapeImage mixtapeImage mixtapeImage--mediumCatalog  u-ignoreBlock"
-                     data-media-id="abcd1234"
-                     data-thumbnail-img-id="0*5678.jpeg"
-                     style="background-image: url(https://cdn-images-1.medium.com/fit/c/304/160/0*5678.jpeg);"></a>
-                 </div>
-        </div>`;
-
-        const $post = cheerio.load(source, {
-            xml: {
-                xmlMode: false,
-                decodeEntities: false
-            }
-        }, false);
-
-        const post = processContent({
-            content: $post('.e-content'),
-            post: {
-                data: {
-                    title: 'Blog Post Title'
-                }
-            }
-        });
-
-        assert.ok(!post.data.html.includes('<div name="d38c" id="d38c" class="graf graf--mixtapeEmbed graf-after--p graf--trailing">'));
-
-        assert.ok(post.data.html.includes('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.medium.com/list/1234"><div class="kg-bookmark-content"><div class="kg-bookmark-title">My best Articles</div><div class="kg-bookmark-description">A description</div><div class="kg-bookmark-metadata"></div></div><div class="kg-bookmark-thumbnail"><img src="https://cdn-images-1.medium.com/fit/c/304/160/0*5678.jpeg" alt=""></div></a></figure>'));
-    });
-
-    it('Can process embeds without images', function () {
-        const source = `<div class="e-content">
-            <div name="c123" id="c123" class="graf graf--mixtapeEmbed graf-after--p">
-                <a href="https://example.com/lorem/ipsum" data-href="https://example.com/lorem/ipsum" class="markup--anchor markup--mixtapeEmbed-anchor" title="https://example.com/lorem/ipsum">
-                    <strong class="markup--strong markup--mixtapeEmbed-strong">lorem/ipsum</strong>
-                    <br>
-                    <em class="markup--em markup--mixtapeEmbed-em">Dolor Simet.</em>
-                    example.com
-                </a>
-                <a href="https://example.com/lorem/ipsum" class="js-mixtapeImage mixtapeImage mixtapeImage--empty u-ignoreBlock" data-media-id="abcd1234"></a>
-            </div>
-        </div>`;
-
-        const $post = cheerio.load(source, {
-            xml: {
-                xmlMode: false,
-                decodeEntities: false
-            }
-        }, false);
-
-        const post = processContent({
-            content: $post('.e-content'),
-            post: {
-                data: {
-                    title: 'Blog Post Title'
-                }
-            }
-        });
-
-        assert.ok(!post.data.html.includes('<div name="c123" id="c123" class="graf graf--mixtapeEmbed graf-after--p">'));
-
-        assert.ok(post.data.html.includes('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.com/lorem/ipsum"><div class="kg-bookmark-content"><div class="kg-bookmark-title">lorem/ipsum</div><div class="kg-bookmark-description">Dolor Simet.</div><div class="kg-bookmark-metadata"></div></div></a></figure>'));
-    });
-
-    it('Can process blockquotes in 2 parts', function () {
-        const source = `<div class="e-content">
-            <p>Not quote text</p>
-            <blockquote name="68bf" id="68bf" class="graf graf--pullquote graf-after--p graf--trailing">Standalone quote</blockquote>
-            <p>Also not quote text</p>
-            <blockquote name="3755" id="3755" class="graf graf--pullquote graf--startsWithDoubleQuote graf-after--li">"Main quote."</blockquote>
-            <blockquote name="8d9f" id="8d9f" class="graf graf--pullquote graf-after--pullquote graf--trailing">— <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></blockquote>
-        </div>`;
-
-        const $post = cheerio.load(source, {
-            xml: {
-                xmlMode: false,
-                decodeEntities: false
-            }
-        }, false);
-
-        const post = processContent({
-            content: $post('.e-content'),
-            post: {
-                data: {
-                    title: 'Blog Post Title'
-                }
-            }
-        });
-
-        assert.ok(!post.data.html.includes('<blockquote name="68bf" id="68bf" class="graf graf--pullquote graf-after--p graf--trailing">Standalone quote</blockquote>'));
-        assert.ok(!post.data.html.includes('<blockquote name="3755" id="3755" class="graf graf--pullquote graf--startsWithDoubleQuote graf-after--li">"Main quote."</blockquote>'));
-        assert.ok(!post.data.html.includes('<blockquote name="8d9f" id="8d9f" class="graf graf--pullquote graf-after--pullquote graf--trailing">— <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></blockquote>'));
-
-        assert.ok(post.data.html.includes('<blockquote><p>Standalone quote</p></blockquote>'));
-        assert.ok(post.data.html.includes('<blockquote><p>"Main quote."<br><br>— <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></p></blockquote>'));
-    });
 
     it('Can fall back to filename for slug when canonical URL has no slug', function () {
         const fixture = readSync('no-slug-post.html');
@@ -502,6 +255,44 @@ describe('Process Content', function () {
         assert.ok(post.data.updated_at instanceof Date);
     });
 
+    it('Can handle post with no e-content or title', function () {
+        const html = `<!DOCTYPE html><html><body>
+            <article class="h-entry">
+                <section class="p-summary">Summary</section>
+                <footer>
+                    <p>By <a href="https://medium.com/@test" class="p-author h-card">Test</a> on <a><time class="dt-published" datetime="2020-01-01T00:00:00.000Z">Jan 1</time></a>.</p>
+                    <p><a href="https://medium.com/@test/post-abc123" class="p-canonical">Link</a></p>
+                </footer>
+            </article>
+        </body></html>`;
+
+        const post = processPost({name: '2020-01-01_post-abc123.html', html, options: {}});
+
+        assert.equal(post.data.html, '');
+        assert.equal(post.data.title, '');
+    });
+
+    it('Can handle feature image not inside a figure', function () {
+        const html = `<!DOCTYPE html><html><body>
+            <article class="h-entry">
+                <header><h1 class="p-name">Test</h1></header>
+                <section class="p-summary">Summary</section>
+                <section class="e-content">
+                    <img data-is-featured src="https://example.com/photo.jpg">
+                    <p>Content here.</p>
+                </section>
+                <footer>
+                    <p>By <a href="https://medium.com/@test" class="p-author h-card">Test</a> on <a><time class="dt-published" datetime="2020-01-01T00:00:00.000Z">Jan 1</time></a>.</p>
+                    <p><a href="https://medium.com/@test/post-abc123" class="p-canonical">Link</a></p>
+                </footer>
+            </article>
+        </body></html>`;
+
+        const post = processPost({name: '2020-01-01_post-abc123.html', html, options: {}});
+
+        assert.equal(post.data.feature_image, 'https://example.com/photo.jpg');
+    });
+
     it('Can handle feature image with no alt or caption', function () {
         const fixture = readSync('basic-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
@@ -517,5 +308,215 @@ describe('Process Content', function () {
         assert.equal(post.data.feature_image, 'https://example.com/photo.jpg');
         assert.equal(post.data.feature_image_alt, null);
         assert.equal(post.data.feature_image_caption, null);
+    });
+});
+
+describe('Process Content', function () {
+    it('Can process code blocks', function () {
+        const source = `<pre name="4a0a" id="4a0a" class="graf graf--pre graf-after--p">
+    <code class="markup--code markup--pre-code">
+        &lt;div class="image-block"&gt;\n    &lt;a href="https://example.com"&gt;\n        &lt;img src="/images/photo.jpg" alt="My alt text"&gt;\n    &lt;/a&gt;\n&lt;/div&gt;
+    </code>
+</pre>`;
+
+        const post = processContent({
+            html: source,
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        assert.equal(post.data.html, `<pre><code>&lt;div class="image-block"&gt;\n    &lt;a href="https://example.com"&gt;\n        &lt;img src="/images/photo.jpg" alt="My alt text"&gt;\n    &lt;/a&gt;\n&lt;/div&gt;</code></pre>`);
+    });
+
+    it('Can process code blocks with slashes', function () {
+        const source = readSync('code-post.html');
+        const contentHtml = extractEContent(source);
+
+        const post = processContent({
+            html: contentHtml,
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        assert.ok(!post.data.html.includes('<pre name="4a0a" id="4a0a" class="graf graf--pre graf-after--p">'));
+        assert.ok(post.data.html.includes('<pre><code>sudo apt-get update \n' +
+        'sudo apt-get install \\ \n' +
+        '    apt-transport-https \\ \n' +
+        '    ca-certificates \\ \n' +
+        '    curl \\ \n' +
+        '    gnupg-agent \\ \n' +
+        '    software-properties-common \\ \n' +
+        '    example \\ \n' +
+        '    python3-example-lorem</code></pre>'));
+    });
+
+    it('Can process consecutive code blocks', function () {
+        const source = readSync('code-post.html');
+        const contentHtml = extractEContent(source);
+
+        const post = processContent({
+            html: contentHtml,
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        assert.ok(!post.data.html.includes('<pre name="9a1f" id="9a1f" class="graf graf--pre graf-after--pre">'));
+        assert.ok(post.data.html.includes('<pre><code>echo "deb https://sub.example.com/ce/dolor lorem ipsum" |\\  \n' +
+        'sudo tee /etc/apt/sources.list.d/example.list \n' +
+        'sudo apt-get update \n' +
+        'sudo apt-get install example</code></pre>'));
+    });
+
+    it('Can process code blocks with language', function () {
+        const source = `<p>My content</p>
+        <pre data-code-block-mode="2" spellcheck="false" data-code-block-lang="bash" name="2296" id="2296" class="graf graf--pre graf-after--p graf--preV2">
+        <span class="pre--content">wget https://example.com/package.zip</span>
+        </pre>`;
+
+        const post = processContent({
+            html: source,
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        assert.ok(!post.data.html.includes('<pre data-code-block-mode="2" spellcheck="false" data-code-block-lang="bash" name="2296" id="2296" class="graf graf--pre graf-after--p graf--preV2">\n' +
+            '<span class="pre--content">wget https://example.com/package.zip</span>\n' +
+            '</pre>'));
+        assert.ok(post.data.html.includes('<pre><code class="language-bash">wget https://example.com/package.zip</code></pre>'));
+    });
+
+    it('Can process galleries', function () {
+        const source = `<div class="section-inner sectionLayout--outsetRow" data-paragraph-count="3">
+            <figure name="f106" id="f106" class="graf graf--figure graf--layoutOutsetRow is-partialWidth graf-after--li" style="width: 34.74%;">
+                <img class="graf-image" data-image-id="1*1234.jpeg" data-width="768" data-height="933" src="https://cdn-images-1.medium.com/max/600/1*1234.jpeg">
+            </figure>
+            <figure name="13ec" id="13ec" class="graf graf--figure graf--layoutOutsetRowContinue is-partialWidth graf-after--figure" style="width: 31.659%;">
+                <img class="graf-image" data-image-id="1*5678.jpeg" data-width="768" data-height="1024" src="https://cdn-images-1.medium.com/max/400/1*5678.jpeg">
+            </figure>
+            <figure name="4dc5" id="4dc5" class="graf graf--figure graf--layoutOutsetRowContinue is-partialWidth graf-after--figure" style="width: 33.601%;">
+                <img class="graf-image" data-image-id="1*-abcd.jpeg" data-width="768" data-height="965" src="https://cdn-images-1.medium.com/max/600/1*-abcd.jpeg">
+                <figcaption class="imageCaption" style="width: 297.61%; left: -197.61%;">Photos by the author</figcaption>
+            </figure>
+        </div>`;
+
+        const post = processContent({
+            html: source,
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        assert.ok(!post.data.html.includes('<div class="section-inner sectionLayout--outsetRow" data-paragraph-count="3">'));
+
+        assert.ok(post.data.html.includes('<figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*1234.jpeg" width="768" height="933" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/400/1*5678.jpeg" width="768" height="1024" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*-abcd.jpeg" width="768" height="965" loading="lazy" alt></div></div></div><figcaption>Photos by the author</figcaption></figure>'));
+    });
+
+    it('Can process embeds with images', function () {
+        const source = `<div name="d38c" id="d38c" class="graf graf--mixtapeEmbed graf-after--p graf--trailing"><a
+                     href="https://example.medium.com/list/1234"
+                     data-href="https://example.medium.com/list/1234"
+                     class="markup--anchor markup--mixtapeEmbed-anchor"
+                     title="https://example.medium.com/list/1234"><strong
+                       class="markup--strong markup--mixtapeEmbed-strong">My best Articles</strong><br>
+                       class="markup--em markup--mixtapeEmbed-em"><em class="markup--em markup--mixtapeEmbed-em">A description</em>example.medium.com</a><a
+                     href="https://example.medium.com/list/1234"
+                     class="js-mixtapeImage mixtapeImage mixtapeImage--mediumCatalog  u-ignoreBlock"
+                     data-media-id="abcd1234"
+                     data-thumbnail-img-id="0*5678.jpeg"
+                     style="background-image: url(https://cdn-images-1.medium.com/fit/c/304/160/0*5678.jpeg);"></a>
+                 </div>`;
+
+        const post = processContent({
+            html: source,
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        assert.ok(!post.data.html.includes('<div name="d38c" id="d38c" class="graf graf--mixtapeEmbed graf-after--p graf--trailing">'));
+
+        assert.ok(post.data.html.includes('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.medium.com/list/1234"><div class="kg-bookmark-content"><div class="kg-bookmark-title">My best Articles</div><div class="kg-bookmark-description">A description</div><div class="kg-bookmark-metadata"></div></div><div class="kg-bookmark-thumbnail"><img src="https://cdn-images-1.medium.com/fit/c/304/160/0*5678.jpeg" alt></div></a></figure>'));
+    });
+
+    it('Can process embeds without images', function () {
+        const source = `<div name="c123" id="c123" class="graf graf--mixtapeEmbed graf-after--p">
+                <a href="https://example.com/lorem/ipsum" data-href="https://example.com/lorem/ipsum" class="markup--anchor markup--mixtapeEmbed-anchor" title="https://example.com/lorem/ipsum">
+                    <strong class="markup--strong markup--mixtapeEmbed-strong">lorem/ipsum</strong>
+                    <br>
+                    <em class="markup--em markup--mixtapeEmbed-em">Dolor Simet.</em>
+                    example.com
+                </a>
+                <a href="https://example.com/lorem/ipsum" class="js-mixtapeImage mixtapeImage mixtapeImage--empty u-ignoreBlock" data-media-id="abcd1234"></a>
+            </div>`;
+
+        const post = processContent({
+            html: source,
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        assert.ok(!post.data.html.includes('<div name="c123" id="c123" class="graf graf--mixtapeEmbed graf-after--p">'));
+
+        assert.ok(post.data.html.includes('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.com/lorem/ipsum"><div class="kg-bookmark-content"><div class="kg-bookmark-title">lorem/ipsum</div><div class="kg-bookmark-description">Dolor Simet.</div><div class="kg-bookmark-metadata"></div></div></a></figure>'));
+    });
+
+    it('Can process embed with minimal markup', function () {
+        const source = `<div class="graf graf--mixtapeEmbed">
+            <a href="https://example.com" class="markup--anchor">example.com</a>
+        </div>`;
+
+        const post = processContent({
+            html: source,
+            post: {
+                data: {
+                    title: 'Test'
+                }
+            }
+        });
+
+        assert.ok(post.data.html.includes('kg-card-begin'));
+        assert.ok(!post.data.html.includes('graf--mixtapeEmbed'));
+    });
+
+    it('Can process blockquotes in 2 parts', function () {
+        const source = `<p>Not quote text</p>
+            <blockquote name="68bf" id="68bf" class="graf graf--pullquote graf-after--p graf--trailing">Standalone quote</blockquote>
+            <p>Also not quote text</p>
+            <blockquote name="3755" id="3755" class="graf graf--pullquote graf--startsWithDoubleQuote graf-after--li">"Main quote."</blockquote>
+            <blockquote name="8d9f" id="8d9f" class="graf graf--pullquote graf-after--pullquote graf--trailing">\u2014 <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></blockquote>`;
+
+        const post = processContent({
+            html: source,
+            post: {
+                data: {
+                    title: 'Blog Post Title'
+                }
+            }
+        });
+
+        assert.ok(!post.data.html.includes('<blockquote name="68bf" id="68bf" class="graf graf--pullquote graf-after--p graf--trailing">Standalone quote</blockquote>'));
+        assert.ok(!post.data.html.includes('<blockquote name="3755" id="3755" class="graf graf--pullquote graf--startsWithDoubleQuote graf-after--li">"Main quote."</blockquote>'));
+
+        assert.ok(post.data.html.includes('<blockquote><p>Standalone quote</p></blockquote>'));
+        assert.ok(post.data.html.includes('<blockquote><p>"Main quote."<br><br>\u2014 <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></p></blockquote>'));
     });
 });

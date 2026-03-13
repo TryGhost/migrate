@@ -283,3 +283,4 @@ throw new errors.InternalServerError({
 - No console.log in production (use `// eslint-disable-next-line no-console` if needed)
 - Use async/await, not promise chains
 - TypeScript: use private fields (`#fieldName`) for encapsulation
+- Prefer literal characters over unicode escapes in code and tests. Use `"` not `\u201c`, `'` not `\u2018`, `—` not `\u2014`, etc.

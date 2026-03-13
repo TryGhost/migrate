@@ -1,4 +1,4 @@
-import * as cheerio from 'cheerio';
+import {domUtils} from '@tryghost/mg-utils';
 
 // Keys we've seen so far
 // Profile
@@ -22,20 +22,20 @@ const mediumToGhost = {
 };
 
 export default ({html}) => {
-    let $ = cheerio.load(html);
+    const parsed = domUtils.parseFragment(html);
     let profile = {
-        url: $('.u-url').attr('href'),
+        url: parsed.$('.u-url')[0]?.getAttribute('href'),
         data: {
-            name: $('.p-name').text(),
-            profile_image: $('.u-photo').attr('src'),
+            name: parsed.$('.p-name')[0]?.textContent || '',
+            profile_image: parsed.$('.u-photo')[0]?.getAttribute('src'),
             roles: [
                 'Contributor'
             ]
         }
     };
 
-    $('ul li').each((i, el) => {
-        let [item, value] = $(el).text().split(': ');
+    parsed.$('ul li').forEach((el) => {
+        let [item, value] = el.textContent.split(': ');
         let key = mediumToGhost[item.toLowerCase()] || null;
 
         if (key) {
