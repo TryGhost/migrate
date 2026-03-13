@@ -53,12 +53,32 @@ const html = parsed.html();
 const text = parsed.text();
 ```
 
+### XML Utilities
+
+Parse XML strings or files into JavaScript objects using `fast-xml-parser`:
+
+```js
+import {xmlUtils} from '@tryghost/mg-utils';
+
+const {parseXml} = xmlUtils;
+
+// Parse an XML string
+const data = await parseXml('<root><item>hello</item></root>');
+
+// Parse from a file path
+const data = await parseXml('/path/to/file.xml');
+
+// Override parser options
+const data = await parseXml(xmlString, {attributeNamePrefix: ''});
+```
+
 ### Key Features
 
 - **HTML5-compliant serialization**: Void elements (`<hr>`, `<img>`, `<br>`) are self-closing, non-void elements (`<script>`, `<iframe>`) always have closing tags
 - **DOM manipulation**: `replaceWith`, `insertBefore`, `insertAfter`, `wrap`
 - **Element utilities**: `attr`, `is`, `parents`, `lastParent`, `setStyle`
 - **Comment handling**: `isComment`, `getCommentData`
+- **XML parsing**: `parseXml` — auto-detects string vs file path, consistent parser defaults matching mg-wp-xml
 
 
 ## Develop
