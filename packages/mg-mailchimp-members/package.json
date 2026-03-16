@@ -38,8 +38,8 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@tryghost/debug": "2.0.2",
-    "@tryghost/errors": "3.0.2",
+    "@tryghost/debug": "2.0.3",
+    "@tryghost/errors": "3.0.3",
     "@tryghost/mg-fs-utils": "0.16.6"
   }
 }
