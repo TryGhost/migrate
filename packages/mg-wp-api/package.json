@@ -23,8 +23,8 @@
     "eslint": "8.57.1"
   },
   "dependencies": {
-    "@tryghost/debug": "2.0.2",
-    "@tryghost/errors": "3.0.2",
+    "@tryghost/debug": "2.0.3",
+    "@tryghost/errors": "3.0.3",
     "@tryghost/kg-default-cards": "10.2.9",
     "@tryghost/mg-fs-utils": "0.16.6",
     "@tryghost/mg-shortcodes": "0.2.24",

@@ -23,7 +23,7 @@
     "eslint": "8.57.1"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.2",
+    "@tryghost/errors": "3.0.3",
     "@tryghost/mg-fs-utils": "0.16.6",
     "bluebird": "3.7.2",
     "csv-parser": "3.2.0",

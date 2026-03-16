@@ -39,8 +39,8 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@tryghost/debug": "2.0.2",
-    "@tryghost/errors": "3.0.2",
+    "@tryghost/debug": "2.0.3",
+    "@tryghost/errors": "3.0.3",
     "@tryghost/kg-default-cards": "10.2.9",
     "@tryghost/mg-fs-utils": "0.12.14",
     "@tryghost/string": "0.3.1",
