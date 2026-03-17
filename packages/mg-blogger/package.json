@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@tryghost/errors": "3.0.3",
-    "@tryghost/kg-default-cards": "10.2.9",
+    "@tryghost/kg-default-cards": "10.2.10",
     "autop": "1.0.1",
     "cheerio": "1.2.0",
     "node-fetch": "3.3.2",
