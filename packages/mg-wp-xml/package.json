@@ -24,7 +24,7 @@
     "@tryghost/mg-utils": "0.1.1",
     "@tryghost/mg-wp-api": "0.12.1",
     "fast-glob": "3.3.3",
-    "fast-xml-parser": "5.5.5",
+    "fast-xml-parser": "5.5.6",
     "markdown-it": "14.1.1",
     "php-serialize": "5.1.3"
   }
