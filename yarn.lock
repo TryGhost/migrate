@@ -605,7 +605,7 @@
     chardet "^2.1.1"
     iconv-lite "^0.7.2"
 
-"@inquirer/figures@^2.0.3", "@inquirer/figures@^2.0.4":
+"@inquirer/figures@^2.0.4":
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/@inquirer/figures/-/figures-2.0.4.tgz#154986941a00db8b8171d1ed0d1df566972ed173"
   integrity sha512-eLBsjlS7rPS3WEhmOmh1znQ5IsQrxWzxWDxO51e4urv+iVrSnIHbq4zqJIOiyNdYLa+BVjwOtdetcQx1lWPpiQ==
@@ -668,17 +668,7 @@
     "@inquirer/figures" "^2.0.4"
     "@inquirer/type" "^4.0.4"
 
-"@inquirer/select@5.1.0":
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/@inquirer/select/-/select-5.1.0.tgz#02be4e8a2c53cd72a7bf4685be6eac5497bd4c5c"
-  integrity sha512-OyYbKnchS1u+zRe14LpYrN8S0wH1vD0p2yKISvSsJdH2TpI87fh4eZdWnpdbrGauCRWDph3NwxRmM4Pcm/hx1Q==
-  dependencies:
-    "@inquirer/ansi" "^2.0.3"
-    "@inquirer/core" "^11.1.5"
-    "@inquirer/figures" "^2.0.3"
-    "@inquirer/type" "^4.0.3"
-
-"@inquirer/select@^5.1.2":
+"@inquirer/select@5.1.2", "@inquirer/select@^5.1.2":
   version "5.1.2"
   resolved "https://registry.yarnpkg.com/@inquirer/select/-/select-5.1.2.tgz#d40f6af6fe86dbdbd97587a76ba3101274fb5208"
   integrity sha512-kTK8YIkHV+f02y7bWCh7E0u2/11lul5WepVTclr3UMBtBr05PgcZNWfMa7FY57ihpQFQH/spLMHTcr0rXy50tA==
