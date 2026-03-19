@@ -34,4 +34,12 @@ describe('getYouTubeID', function () {
     it('returns the input string when no ID is found', function () {
         assert.equal(getYouTubeID('not-a-youtube-url'), 'not-a-youtube-url');
     });
+
+    it('returns empty string for null input', function () {
+        assert.equal(getYouTubeID(null), '');
+    });
+
+    it('returns empty string for undefined input', function () {
+        assert.equal(getYouTubeID(undefined), '');
+    });
 });

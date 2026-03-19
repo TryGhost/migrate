@@ -119,7 +119,7 @@ const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest, postsBefo
                     // Treat all types as posts, except users
                     let resultType = (type !== 'users') ? 'posts' : type;
 
-                    ctx.result[resultType] = ctx.result[resultType].concat(response);
+                    ctx.result[resultType].push(...response);
                 } catch (err) {
                     // eslint-disable-next-line no-console
                     console.error(`Failed to fetch ${type}, page ${page} of ${totalPages}`, err);

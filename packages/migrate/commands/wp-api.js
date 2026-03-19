@@ -164,6 +164,12 @@ const options = [
         desc: 'The slug(s) of custom post type(s), e.g. `resources,newsletters`'
     },
     {
+        type: 'array',
+        flags: '--customTaxonomies',
+        defaultValue: null,
+        desc: 'The slug(s) of custom taxonomy/taxonomies to import as Ghost tags, e.g. `country,city`'
+    },
+    {
         type: 'boolean',
         flags: '--excerpt',
         defaultValue: true,

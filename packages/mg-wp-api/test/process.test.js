@@ -194,6 +194,68 @@ describe('Process WordPress REST API JSON', function () {
         assert.equal(data.tags[5].data.name, '#wp');
     });
 
+    it('Can include custom taxonomy terms as tags', async function () {
+        const fixture = structuredClone(singlePostFixture);
+        fixture._embedded['wp:term'].push([
+            {id: 350, link: 'https://mysite.com/country/czech-republic', name: 'Czech Republic', slug: 'czech-republic', taxonomy: 'country'},
+            {id: 12, link: 'https://mysite.com/country/romania', name: 'Romania', slug: 'romania', taxonomy: 'country'}
+        ]);
+        fixture._embedded['wp:term'].push([
+            {id: 500, link: 'https://mysite.com/city/prague', name: 'Prague', slug: 'prague', taxonomy: 'city'}
+        ]);
+
+        const users = [];
+        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', customTaxonomies: ['country']};
+        const post = await processor.processPost(fixture, users, options);
+
+        const tagSlugs = post.data.tags.map(t => t.data.slug);
+        assert.ok(tagSlugs.includes('czech-republic'), 'should include country term czech-republic');
+        assert.ok(tagSlugs.includes('romania'), 'should include country term romania');
+        assert.ok(!tagSlugs.includes('prague'), 'should not include city term when not in customTaxonomies');
+    });
+
+    it('Does not include custom taxonomy terms when customTaxonomies is not set', async function () {
+        const fixture = structuredClone(singlePostFixture);
+        fixture._embedded['wp:term'].push([
+            {id: 350, link: 'https://mysite.com/country/czech-republic', name: 'Czech Republic', slug: 'czech-republic', taxonomy: 'country'}
+        ]);
+
+        const users = [];
+        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com'};
+        const post = await processor.processPost(fixture, users, options);
+
+        const tagSlugs = post.data.tags.map(t => t.data.slug);
+        assert.ok(!tagSlugs.includes('czech-republic'), 'should not include country term when customTaxonomies is not set');
+    });
+
+    it('processTerms handles custom taxonomies directly', function () {
+        const wpTerms = [
+            [{id: 1, link: 'https://mysite.com/category/news', name: 'News', slug: 'news', taxonomy: 'category'}],
+            [{id: 2, link: 'https://mysite.com/tag/tech', name: 'Tech', slug: 'tech', taxonomy: 'post_tag'}],
+            [{id: 350, link: 'https://mysite.com/country/romania', name: 'Romania', slug: 'romania', taxonomy: 'country'}]
+        ];
+
+        const result = processor.processTerms(wpTerms, true, ['country']);
+        assert.equal(result.length, 3);
+        assert.equal(result[0].data.slug, 'news');
+        assert.equal(result[1].data.slug, 'tech');
+        assert.equal(result[2].data.slug, 'romania');
+    });
+
+    it('processTerms handles multiple custom taxonomies', function () {
+        const wpTerms = [
+            [{id: 1, link: 'https://mysite.com/category/news', name: 'News', slug: 'news', taxonomy: 'category'}],
+            [{id: 350, link: 'https://mysite.com/country/romania', name: 'Romania', slug: 'romania', taxonomy: 'country'}],
+            [{id: 500, link: 'https://mysite.com/city/bucharest', name: 'Bucharest', slug: 'bucharest', taxonomy: 'city'}]
+        ];
+
+        const result = processor.processTerms(wpTerms, false, ['country', 'city']);
+        assert.equal(result.length, 3);
+        assert.equal(result[0].data.slug, 'news');
+        assert.equal(result[1].data.slug, 'romania');
+        assert.equal(result[2].data.slug, 'bucharest');
+    });
+
     it('Can remove first image in post if same as feature image', async function () {
         const users = [];
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: 'mycpt'};

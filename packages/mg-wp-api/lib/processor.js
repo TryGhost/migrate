@@ -125,9 +125,12 @@ const processTerm = (wpTerm) => {
     };
 };
 
-const processTerms = (wpTerms, fetchTags) => {
+const processTerms = (wpTerms, fetchTags, customTaxonomies) => {
     let categories = [];
     let tags = [];
+    let customTerms = [];
+
+    const allowedCustomTaxonomies = customTaxonomies || [];
 
     wpTerms.forEach((taxonomy) => {
         taxonomy.forEach((term) => {
@@ -138,10 +141,14 @@ const processTerms = (wpTerms, fetchTags) => {
             if (fetchTags && term.taxonomy === 'post_tag') {
                 tags.push(processTerm(term));
             }
+
+            if (allowedCustomTaxonomies.includes(term.taxonomy)) {
+                customTerms.push(processTerm(term));
+            }
         });
     });
 
-    return categories.concat(tags);
+    return categories.concat(tags).concat(customTerms);
 };
 
 // Extract co-authors from wp:term data (used by Co-Authors Plus and PublishPress Authors plugins)
@@ -693,6 +700,17 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     await Promise.all(libsynPodcasts);
 
+    for (const el of parsed.$('script.podigee-podcast-player')) {
+        let configUrl = el.getAttribute('data-configuration');
+        if (!configUrl) {
+            continue;
+        }
+
+        let embedHTML = `<!--kg-card-begin: html--><iframe src="${configUrl}" style="width:100%;height:200px;" frameborder="0" scrolling="no"></iframe><!--kg-card-end: html-->`;
+
+        replaceWith(el, embedHTML);
+    }
+
     let wpEmbeds = parsed.$('.wp-block-embed.is-type-wp-embed').map(async (el) => {
         const blockquoteLink = el.querySelector('blockquote a');
         const bookmarkHref = blockquoteLink ? blockquoteLink.getAttribute('href') : null;
@@ -1109,7 +1127,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
  * }
  */
 const processPost = async (wpPost, users, options = {}, errors, fileCache) => { // eslint-disable-line no-shadow
-    let {tags: fetchTags, addTag, excerptSelector, excerpt, featureImageCaption} = options;
+    let {tags: fetchTags, addTag, excerptSelector, excerpt, featureImageCaption, customTaxonomies} = options;
 
     let slug = wpPost.slug;
     let titleText = parseFragment(wpPost.title.rendered).text();
@@ -1180,7 +1198,7 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
 
     if (wpPost._embedded && wpPost._embedded['wp:term']) {
         const wpTerms = wpPost._embedded['wp:term'];
-        post.data.tags = processTerms(wpTerms, fetchTags);
+        post.data.tags = processTerms(wpTerms, fetchTags, customTaxonomies);
 
         post.data.tags.push({
             url: 'migrator-added-tag',
@@ -1263,7 +1281,16 @@ const processPosts = async (posts, users, options, errors, fileCache) => { // es
         posts = foundPosts;
     }
 
-    return Promise.all(posts.map(post => processPost(post, users, options, errors, fileCache)));
+    const BATCH_SIZE = 100;
+    const results = [];
+
+    for (let i = 0; i < posts.length; i += BATCH_SIZE) {
+        const batch = posts.slice(i, i + BATCH_SIZE);
+        const batchResults = await Promise.all(batch.map(post => processPost(post, users, options, errors, fileCache)));
+        results.push(...batchResults);
+    }
+
+    return results;
 };
 
 const processAuthors = (authors) => {
