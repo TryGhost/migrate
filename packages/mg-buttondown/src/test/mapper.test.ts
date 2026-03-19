@@ -71,6 +71,28 @@ describe('Buttondown Mapper', () => {
         assert.equal(result.message, 'Input file is empty');
     });
 
+    it('Returns error if json data is null', async function () {
+        const result = await mapContent({
+            options: {},
+            posts: input.posts,
+            json: null as any
+        });
+
+        assert.ok(result instanceof Error);
+        assert.equal(result.message, 'No emails data found in zip (expected emails.json or emails.csv)');
+    });
+
+    it('Returns error if json data is empty array', async function () {
+        const result = await mapContent({
+            options: {},
+            posts: input.posts,
+            json: []
+        });
+
+        assert.ok(result instanceof Error);
+        assert.equal(result.message, 'No emails data found in zip (expected emails.json or emails.csv)');
+    });
+
     it('Uses blank HTML if file provided for post', async function () {
         let inputClone = JSON.parse(JSON.stringify(input));
 
