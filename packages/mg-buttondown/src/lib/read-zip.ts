@@ -16,19 +16,24 @@ const readZip = (zipPath: string) => {
         posts: []
     };
 
+    let csvString: string | null = null;
+
     fsUtils.zip.read(zipPath, (entryName: string, zipEntry: any) => {
-        // Catch all MD files inside `emails/`
         if (/^emails\/.*\.md$/.test(entryName) || /\/emails\/.*\.md$/.test(entryName)) {
             content.posts.push({
                 name: entryName.replace('emails/', ''),
                 html: zipEntry.getData().toString('utf8')
             });
-
-        // Get the emails.json
         } else if (entryName === 'emails.json' || entryName.endsWith('/emails.json')) {
             content.json = JSON.parse(zipEntry.getData().toString('utf8'));
+        } else if (entryName === 'emails.csv' || entryName.endsWith('/emails.csv')) {
+            csvString = zipEntry.getData().toString('utf8');
         }
     });
+
+    if (!content.json && csvString) {
+        content.json = fsUtils.csv.parseString(csvString);
+    }
 
     content.posts.sort((a: any, b: any) => a.name.localeCompare(b.name));
 

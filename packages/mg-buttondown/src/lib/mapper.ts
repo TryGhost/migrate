@@ -51,7 +51,10 @@ const mapContent = async (args: {options: any, posts?: object[], json: buttondow
         return new errors.NoContentError({message: 'Input file is empty'});
     }
 
-    // Inline the HTML we have with the CSV data
+    if (!args.json || !Array.isArray(args.json) || args.json.length === 0) {
+        return new errors.NoContentError({message: 'No emails data found in zip (expected emails.json or emails.csv)'});
+    }
+
     args.json.map((post: any) => {
         const thisPostHTML: any = args?.posts?.find((item: any) => item.name === `${post.slug}.md`);
         post.html = thisPostHTML?.html ?? '';
