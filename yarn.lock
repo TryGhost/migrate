@@ -6172,10 +6172,10 @@ file-entry-cache@^6.0.1:
   dependencies:
     flat-cache "^3.0.4"
 
-file-type@21.3.2:
-  version "21.3.2"
-  resolved "https://registry.yarnpkg.com/file-type/-/file-type-21.3.2.tgz#b28bb3a19ea4b03f59af31546b9d95ee8a3623eb"
-  integrity sha512-DLkUvGwep3poOV2wpzbHCOnSKGk1LzyXTv+aHFgN2VFl96wnp8YA9YjO2qPzg5PuL8q/SW9Pdi6WTkYOIh995w==
+file-type@21.3.3:
+  version "21.3.3"
+  resolved "https://registry.yarnpkg.com/file-type/-/file-type-21.3.3.tgz#af49dfd82c1b3666920a2e23074389bd427b66b9"
+  integrity sha512-pNwbwz8c3aZ+GvbJnIsCnDjKvgCZLHxkFWLEFxU3RMa+Ey++ZSEfisvsWQMcdys6PpxQjWUOIDi1fifXsW3YRg==
   dependencies:
     "@tokenizer/inflate" "^0.4.1"
     strtok3 "^10.3.4"
