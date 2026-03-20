@@ -30,8 +30,8 @@
     "access": "public"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "8.57.0",
-    "@typescript-eslint/parser": "8.57.0",
+    "@typescript-eslint/eslint-plugin": "8.57.1",
+    "@typescript-eslint/parser": "8.57.1",
     "c8": "11.0.0",
     "eslint": "8.57.1",
     "eslint-plugin-ghost": "3.5.0",
