@@ -41,6 +41,6 @@
     "@tryghost/debug": "2.0.3",
     "@tryghost/errors": "3.0.3",
     "@tryghost/mg-fs-utils": "0.12.14",
-    "@tryghost/string": "0.3.1"
+    "@tryghost/string": "0.3.2"
   }
 }
