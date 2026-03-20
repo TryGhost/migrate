@@ -129,6 +129,10 @@ const processTags = (categories, options = {}) => {
         'legal_regulatory'
     ];
 
+    if (options.customTaxonomies && Array.isArray(options.customTaxonomies)) {
+        allowedTerms = allowedTerms.concat(options.customTaxonomies);
+    }
+
     const categoriesArray = ensureArray(categories);
 
     for (const taxonomy of categoriesArray) {
@@ -146,7 +150,6 @@ const processTags = (categories, options = {}) => {
                 }
             });
         } else if (includeTags && allowedTerms.includes(domain)) {
-            // Only include tags if options.tags is not false
             tags.push({
                 url: `/tag/${nicename}`,
                 data: {
