@@ -31,7 +31,7 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "fast-xml-parser": "5.5.7",
+    "fast-xml-parser": "5.5.8",
     "jsdom": "28.1.0"
   }
 }
