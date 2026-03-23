@@ -236,6 +236,52 @@ describe('Process', function () {
         assert.deepEqual(author.data.slug, 'hermione-example-com');
     });
 
+    it('Can include custom taxonomy terms as tags', async function () {
+        const categories = [
+            {'@_domain': 'category', '@_nicename': 'company-news', '#text': 'Company News'},
+            {'@_domain': 'post_tag', '@_nicename': 'programming', '#text': 'Programming'},
+            {'@_domain': 'country', '@_nicename': 'czech-republic', '#text': 'Czech Republic'},
+            {'@_domain': 'city', '@_nicename': 'prague', '#text': 'Prague'}
+        ];
+
+        const tags = process.processTags(categories, {tags: true, customTaxonomies: ['country']});
+        const slugs = tags.map(t => t.data.slug);
+
+        assert.ok(slugs.includes('company-news'), 'should include category');
+        assert.ok(slugs.includes('programming'), 'should include post_tag');
+        assert.ok(slugs.includes('czech-republic'), 'should include custom taxonomy term');
+        assert.ok(!slugs.includes('prague'), 'should not include taxonomy not in customTaxonomies');
+    });
+
+    it('Does not include custom taxonomy terms when customTaxonomies is not set', function () {
+        const categories = [
+            {'@_domain': 'category', '@_nicename': 'company-news', '#text': 'Company News'},
+            {'@_domain': 'country', '@_nicename': 'czech-republic', '#text': 'Czech Republic'}
+        ];
+
+        const tags = process.processTags(categories, {tags: true});
+        const slugs = tags.map(t => t.data.slug);
+
+        assert.ok(slugs.includes('company-news'), 'should include category');
+        assert.ok(!slugs.includes('czech-republic'), 'should not include custom taxonomy when not configured');
+    });
+
+    it('Can include multiple custom taxonomies', function () {
+        const categories = [
+            {'@_domain': 'category', '@_nicename': 'news', '#text': 'News'},
+            {'@_domain': 'country', '@_nicename': 'romania', '#text': 'Romania'},
+            {'@_domain': 'city', '@_nicename': 'bucharest', '#text': 'Bucharest'}
+        ];
+
+        const tags = process.processTags(categories, {tags: true, customTaxonomies: ['country', 'city']});
+        const slugs = tags.map(t => t.data.slug);
+
+        assert.equal(tags.length, 3);
+        assert.ok(slugs.includes('news'));
+        assert.ok(slugs.includes('romania'));
+        assert.ok(slugs.includes('bucharest'));
+    });
+
     it('Can extract featured image alt text and caption', async function () {
         let ctx = {
             options: {
