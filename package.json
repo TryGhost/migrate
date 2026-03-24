@@ -16,6 +16,7 @@
   ],
   "scripts": {
     "dev": "NODE_ENV=development NODE_OPTIONS='--import tsx --conditions=development' migrate",
+    "dev:lessmemory": "NODE_OPTIONS=\"--max-old-space-size=2024 --import tsx --conditions=development\" NODE_ENV=development migrate",
     "dev:morememory": "NODE_OPTIONS=\"--max-old-space-size=8192 --import tsx --conditions=development\" NODE_ENV=development migrate",
     "dev:debug": "DEBUG_COLORS=true DEBUG=@tryghost*,migrate:* NODE_ENV=development NODE_OPTIONS='--import tsx --conditions=development' migrate",
     "migrate": "migrate",
