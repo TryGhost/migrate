@@ -73,8 +73,10 @@ const processWPMeta = async (post) => {
                 value = unserialize(value);
             }
         } catch (error) {
-            // If unserializing fails, log the error but don't throw. The serialized data is returned
-            console.log(key, value, error); // eslint-disable-line no-console
+            // If unserializing fails, silently fail in prod, but log the error locally. The serialized data is returned
+            if (process?.env?.NODE_ENV !== 'production') {
+                console.log(key, value, error); // eslint-disable-line no-console
+            }
         }
 
         // Convert empty serialized arrays to empty arrays, which `php-serialize` doesn't do
