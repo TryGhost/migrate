@@ -393,20 +393,30 @@ const processPost = async (post, users, options) => {
 const processPosts = async (xml, users, options) => {
     let postsOutput = [];
 
-    const items = ensureArray(xml?.rss?.channel?.item);
+    const items = xml?.rss?.channel?.item;
+    const itemsArray = ensureArray(items);
 
-    for (const post of items) {
+    let allowedTypes = ['post', 'page'];
+
+    if (options.cpt) {
+        allowedTypes = allowedTypes.concat(options.cpt);
+    }
+
+    for (let i = 0; i < itemsArray.length; i++) {
+        const post = itemsArray[i];
         const postType = getText(post['wp:post_type']);
-
-        let allowedTypes = ['post', 'page'];
-
-        if (options.cpt) {
-            allowedTypes = allowedTypes.concat(options.cpt);
-        }
 
         if (allowedTypes.includes(postType)) {
             postsOutput.push(await processPost(post, users, options));
         }
+
+        // Null out the source item to free its content:encoded HTML from memory
+        itemsArray[i] = null;
+    }
+
+    // Clear the original items reference on the XML object
+    if (xml?.rss?.channel) {
+        xml.rss.channel.item = null;
     }
 
     return postsOutput;
@@ -483,6 +493,9 @@ const all = async (input, {options}) => {
 
     const parser = new XMLParser(parserOptions);
     const xml = parser.parse(input);
+
+    // Release the raw XML string now that it's parsed
+    input = null; // eslint-disable-line no-param-reassign
 
     // grab the URL of the site we're importing
     options.url = getText(xml?.rss?.channel?.link);
