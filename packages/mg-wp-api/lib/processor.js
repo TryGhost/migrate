@@ -1069,6 +1069,11 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         }
     }
 
+    // Remove bold/italic/emphasis/strong tags from headings — they're redundant
+    for (const el of parsed.$('h1 b, h1 strong, h1 i, h1 em, h2 b, h2 strong, h2 i, h2 em, h3 b, h3 strong, h3 i, h3 em, h4 b, h4 strong, h4 i, h4 em, h5 b, h5 strong, h5 i, h5 em, h6 b, h6 strong, h6 i, h6 em')) {
+        replaceWith(el, el.innerHTML);
+    }
+
     // Some header elements contain span children to use custom inline styling. Wrap 'em in HTML cards.
     for (const styledSpan of parsed.$('h1 > span[style], h2 > span[style], h3 > span[style], h4 > span[style], h5 > span[style], h6 > span[style]')) {
         let heading = styledSpan.parentElement;

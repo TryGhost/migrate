@@ -263,7 +263,7 @@ describe('Process WordPress REST API JSON', function () {
 
         const data = post.data;
 
-        assert.equal(data.html, '\n<h2><strong>This is my strong headline thing.</strong></h2>\n\n\n\n<p><em>Note: this article contains awesomeness</em></p>');
+        assert.equal(data.html, '\n<h2>This is my strong headline thing.</h2>\n\n\n\n<p><em>Note: this article contains awesomeness</em></p>');
     });
 
     it('Can use the first available author is none is set ', async function () {
@@ -781,6 +781,14 @@ describe('Process WordPress HTML', function () {
         '  color:\n' +
         '    green:\n' +
         '      sage: true</code></pre>');
+    });
+
+    it('Can remove bold and italic tags from headings', async function () {
+        const html = '<h1><strong>Bold Heading</strong></h1><h2><b>Also Bold</b></h2><h3><em>Italic Heading</em></h3><h4><i>Also Italic</i></h4>';
+
+        const processed = await processor.processContent({html});
+
+        assert.equal(processed, '<h1>Bold Heading</h1><h2>Also Bold</h2><h3>Italic Heading</h3><h4>Also Italic</h4>');
     });
 });
 
