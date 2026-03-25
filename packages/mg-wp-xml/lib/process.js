@@ -3,6 +3,8 @@ import {XMLParser} from 'fast-xml-parser';
 import {slugify} from '@tryghost/string';
 import errors from '@tryghost/errors';
 import MarkdownIt from 'markdown-it';
+import SimpleDom from 'simple-dom';
+import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 import MgWpAPI from '@tryghost/mg-wp-api';
 import {domUtils, youtubeUtils} from '@tryghost/mg-utils';
 import {isSerialized, unserialize} from 'php-serialize';
@@ -88,6 +90,55 @@ const processWPMeta = async (post) => {
     }
 
     return metaData;
+};
+
+const durationToSeconds = (duration) => {
+    const parts = duration.split(':').map(Number);
+    if (parts.length === 3) {
+        return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+    } else if (parts.length === 2) {
+        return (parts[0] * 60) + parts[1];
+    }
+    return parseInt(duration) * 60;
+};
+
+const processEnclosureAudio = (metaData, title) => {
+    const enclosure = metaData?.enclosure;
+    if (!enclosure || typeof enclosure !== 'string') {
+        return null;
+    }
+
+    const lines = enclosure.split('\n');
+    if (lines.length < 3) {
+        return null;
+    }
+
+    const audioUrl = lines[0].trim();
+    const mimeType = lines[2].trim();
+
+    if (!mimeType.startsWith('audio/')) {
+        return null;
+    }
+
+    const cardOpts = {
+        env: {dom: new SimpleDom.Document()},
+        payload: {
+            src: audioUrl,
+            title: title
+        }
+    };
+
+    // Try to extract duration from the serialized PHP data
+    const serializedLine = lines.find(l => l.includes('duration'));
+    if (serializedLine) {
+        const durationMatch = serializedLine.match(/"(\d{1,2}:\d{2}(?::\d{2})?)"/);
+        if (durationMatch) {
+            cardOpts.payload.duration = durationToSeconds(durationMatch[1]);
+        }
+    }
+
+    const buildCard = audioCard.render(cardOpts);
+    return buildCard.nodeValue;
 };
 
 // The feature images is not "connected" to the post, other than it's located
@@ -337,6 +388,13 @@ const processPost = async (post, users, options, fileCache) => {
         options: options,
         fileCache: fileCache
     });
+
+    // Check for audio enclosure in post metadata and prepend audio card
+    const metaData = await processWPMeta(post);
+    const audioCardHTML = processEnclosureAudio(metaData, postObj.data.title);
+    if (audioCardHTML) {
+        postObj.data.html = `${audioCardHTML}${postObj.data.html}`;
+    }
 
     if (categories.length >= 1) {
         postObj.data.tags = processTags(categories, options);

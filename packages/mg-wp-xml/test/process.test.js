@@ -656,6 +656,27 @@ describe('Process', function () {
         assert.deepEqual(duplicateAuthorPost.data.authors[0].data.slug, 'alice-smith');
         assert.deepEqual(duplicateAuthorPost.data.authors[1].data.slug, 'bob-jones');
     });
+
+    it('Can convert audio enclosure metadata to audio card', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                posts: true,
+                url: 'https://example.com'
+            }
+        };
+
+        const input = await readSync('has-audio-enclosure.xml');
+        const processed = await process.all(input, ctx);
+        const post = processed.posts[0];
+
+        assert.ok(post.data.html.includes('kg-audio-card'), 'Should contain an audio card');
+        assert.ok(post.data.html.includes('http://media.libsyn.com/media/example/podcast.mp3'), 'Should contain the audio URL');
+        assert.ok(post.data.html.includes('My Podcast Episode'), 'Should contain the post title as audio title');
+        assert.ok(post.data.html.includes('29:24'), 'Should contain the formatted duration');
+        assert.ok(post.data.html.includes('This is the episode description'), 'Should still contain the post content');
+    });
 });
 
 describe('HTML Processing', function () {
