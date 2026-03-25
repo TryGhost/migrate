@@ -1095,6 +1095,30 @@ const hello () => {
 
         assert.equal(convertedHtml, 'Hello  World');
     });
+
+    it('Can convert embed shortcode with youtu.be URL to iframe', async function () {
+        let html = '[embed]https://youtu.be/dQw4w9WgXcQ[/embed]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.equal(convertedHtml, '<iframe loading="lazy" title="" width="160" height="90" src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>');
+    });
+
+    it('Can convert embed shortcode with youtube.com URL to iframe', async function () {
+        let html = '[embed]https://www.youtube.com/watch?v=dQw4w9WgXcQ[/embed]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.equal(convertedHtml, '<iframe loading="lazy" title="" width="160" height="90" src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>');
+    });
+
+    it('Leaves embed shortcode content as-is for non-YouTube URLs', async function () {
+        let html = '[embed]https://example.com/some-page[/embed]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.equal(convertedHtml, 'https://example.com/some-page');
+    });
 });
 
 describe('wpCDNToLocal', function () {

@@ -451,6 +451,20 @@ const processShortcodes = async ({html, options}) => {
         return `<div class="kg-card kg-button-card ${positionClass}"><a href="${href}" class="kg-btn kg-btn-accent">${content || ''}</a></div>`;
     });
 
+    shortcodes.add('embed', ({content}) => {
+        const embedUrl = content?.trim();
+        if (!embedUrl) {
+            return '';
+        }
+        if (/youtu\.?be/.test(embedUrl)) {
+            const videoID = getYouTubeID(embedUrl);
+            if (videoID) {
+                return `<iframe loading="lazy" title="" width="160" height="90" src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>`;
+            }
+        }
+        return content;
+    });
+
     // We don't want to change these, but only retain what's inside.
     shortcodes.unwrap('row');
     shortcodes.unwrap('column');
