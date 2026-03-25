@@ -434,6 +434,14 @@ const processShortcodes = async ({html, options}) => {
         return `<br></br>`;
     });
 
+    shortcodes.add('youtube', ({attrs}) => {
+        const videoID = attrs?.id;
+        if (!videoID) {
+            return '';
+        }
+        return `<iframe loading="lazy" title="" width="160" height="90" src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>`;
+    });
+
     // We don't want to change these, but only retain what's inside.
     shortcodes.unwrap('row');
     shortcodes.unwrap('column');

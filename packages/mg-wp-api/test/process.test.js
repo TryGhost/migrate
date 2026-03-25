@@ -1055,6 +1055,22 @@ const hello () => {
 
         assert.equal(convertedHtml, '[gallery ids="123,234,345,456" columns="4" size="full"]');
     });
+
+    it('Can convert youtube shortcode to iframe', async function () {
+        let html = 'Hello [youtube id="dQw4w9WgXcQ"] World';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.equal(convertedHtml, 'Hello <iframe loading="lazy" title="" width="160" height="90" src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe> World');
+    });
+
+    it('Can handle youtube shortcode with no id', async function () {
+        let html = 'Hello [youtube] World';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.equal(convertedHtml, 'Hello  World');
+    });
 });
 
 describe('wpCDNToLocal', function () {
