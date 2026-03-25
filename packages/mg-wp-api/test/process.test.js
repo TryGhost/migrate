@@ -1064,6 +1064,30 @@ const hello () => {
         assert.equal(convertedHtml, 'Hello <iframe loading="lazy" title="" width="160" height="90" src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe> World');
     });
 
+    it('Can convert button shortcode to Ghost button', async function () {
+        let html = '[button href="https://example.com/story" primary="true" centered="true" newwindow="true"]<em><strong>Read the full story on Studio Notes</strong></em>[/button]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.equal(convertedHtml, '<div class="kg-card kg-button-card kg-align-center"><a href="https://example.com/story" class="kg-btn kg-btn-accent"><em><strong>Read the full story on Studio Notes</strong></em></a></div>');
+    });
+
+    it('Can convert button shortcode without centered', async function () {
+        let html = '[button href="https://example.com/story"]Click here[/button]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.equal(convertedHtml, '<div class="kg-card kg-button-card kg-align-left"><a href="https://example.com/story" class="kg-btn kg-btn-accent">Click here</a></div>');
+    });
+
+    it('Can handle button shortcode with no href', async function () {
+        let html = '[button]Click here[/button]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.equal(convertedHtml, 'Click here');
+    });
+
     it('Can handle youtube shortcode with no id', async function () {
         let html = 'Hello [youtube] World';
 

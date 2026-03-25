@@ -442,6 +442,15 @@ const processShortcodes = async ({html, options}) => {
         return `<iframe loading="lazy" title="" width="160" height="90" src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>`;
     });
 
+    shortcodes.add('button', ({attrs, content}) => {
+        const href = attrs?.href;
+        if (!href) {
+            return content || '';
+        }
+        const positionClass = attrs?.centered === true ? 'kg-align-center' : 'kg-align-left';
+        return `<div class="kg-card kg-button-card ${positionClass}"><a href="${href}" class="kg-btn kg-btn-accent">${content || ''}</a></div>`;
+    });
+
     // We don't want to change these, but only retain what's inside.
     shortcodes.unwrap('row');
     shortcodes.unwrap('column');
