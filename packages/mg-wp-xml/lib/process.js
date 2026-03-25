@@ -227,11 +227,12 @@ const processHTMLContent = async (args) => {
         excerptSelector: args.excerptSelector,
         postUrl: args.postUrl,
         featureImageSrc: args.featureImageSrc ?? false,
-        options: args.options
+        options: args.options,
+        fileCache: args.fileCache
     });
 };
 
-const processPost = async (post, users, options) => {
+const processPost = async (post, users, options, fileCache) => {
     const {addTag, url, excerpt, excerptSelector, featureImageCaption} = options;
     const postTypeVal = getText(post['wp:post_type']);
     const postType = (postTypeVal === 'page') ? 'page' : 'post';
@@ -333,7 +334,8 @@ const processPost = async (post, users, options) => {
         excerptSelector: (!excerpt && excerptSelector) ? excerptSelector : false,
         postUrl: postObj.url,
         featureImageSrc: featureImage?.url ?? null,
-        options: options
+        options: options,
+        fileCache: fileCache
     });
 
     if (categories.length >= 1) {
@@ -390,7 +392,7 @@ const processPost = async (post, users, options) => {
     return postObj;
 };
 
-const processPosts = async (xml, users, options) => {
+const processPosts = async (xml, users, options, fileCache) => {
     let postsOutput = [];
 
     const items = xml?.rss?.channel?.item;
@@ -407,7 +409,7 @@ const processPosts = async (xml, users, options) => {
         const postType = getText(post['wp:post_type']);
 
         if (allowedTypes.includes(postType)) {
-            postsOutput.push(await processPost(post, users, options));
+            postsOutput.push(await processPost(post, users, options, fileCache));
         }
 
         // Null out the source item to free its content:encoded HTML from memory
@@ -480,7 +482,7 @@ const processUsers = (xml) => {
     return usersOutput;
 };
 
-const all = async (input, {options}) => {
+const all = async (input, {options, fileCache}) => {
     const {drafts, pages, posts} = options;
     const output = {
         posts: [],
@@ -505,7 +507,7 @@ const all = async (input, {options}) => {
     output.users = processUsers(xml);
 
     options.attachments = await processAttachments(xml);
-    output.posts = await processPosts(xml, output.users, options);
+    output.posts = await processPosts(xml, output.users, options, fileCache);
 
     if (options.postsBefore && options.postsAfter) {
         const startDate = new Date(options.postsAfter);
