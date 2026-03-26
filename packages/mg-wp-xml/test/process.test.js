@@ -591,6 +591,26 @@ describe('Process', function () {
         });
     });
 
+    it('Can unserialize postmeta containing PHP stdClass objects', async function () {
+        // WordPress plugins like Smush serialize data with O:8:"stdClass" objects.
+        // php-serialize defaults to strict mode which throws on unknown classes.
+        const post = {
+            'wp:postmeta': {
+                'wp:meta_key': 'img_optimize_data',
+                'wp:meta_value': 'a:2:{s:5:"stats";a:3:{s:4:"time";d:0.16999999999999998;s:5:"bytes";i:6031;s:7:"percent";d:1.47;}s:5:"sizes";a:2:{s:6:"medium";O:8:"stdClass":3:{s:5:"bytes";i:288;s:7:"percent";d:1.8799999999999999;s:10:"size_before";i:15304;}s:9:"thumbnail";O:8:"stdClass":3:{s:5:"bytes";i:67;s:7:"percent";d:0.91000000000000003;s:10:"size_before";i:7354;}}}'
+            }
+        };
+
+        const metaValues = await processWPMeta(post);
+
+        assert.equal(metaValues.img_optimize_data.stats.bytes, 6031);
+        assert.equal(metaValues.img_optimize_data.stats.percent, 1.47);
+        assert.equal(metaValues.img_optimize_data.sizes.medium.bytes, 288);
+        assert.equal(metaValues.img_optimize_data.sizes.medium.size_before, 15304);
+        assert.equal(metaValues.img_optimize_data.sizes.thumbnail.bytes, 67);
+        assert.equal(metaValues.img_optimize_data.sizes.thumbnail.size_before, 7354);
+    });
+
     it('Can extract multiple authors from Co-Authors Plus format', async function () {
         let ctx = {
             options: {

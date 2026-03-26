@@ -84,13 +84,13 @@ const processWPMeta = async (post) => {
 
         try {
             if (isSerialized(value)) {
-                value = unserialize(value);
+                value = unserialize(value, {}, {strict: false});
             }
         } catch (error) {
             // XML parsing can alter byte counts (e.g. \r\n → \n), causing
             // PHP serialized string length mismatches. Try fixing and retrying.
             try {
-                value = unserialize(fixSerializedLengths(value));
+                value = unserialize(fixSerializedLengths(value), {}, {strict: false});
             } catch (retryError) {
                 // If still failing, silently fail in prod, but log the error locally
                 if (process?.env?.NODE_ENV !== 'production') {
