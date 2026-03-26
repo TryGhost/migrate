@@ -9,6 +9,18 @@ import MgWpAPI from '@tryghost/mg-wp-api';
 import {domUtils, youtubeUtils} from '@tryghost/mg-utils';
 import {isSerialized, unserialize} from 'php-serialize';
 
+/**
+ * Fix byte counts in PHP serialized strings that may have been altered
+ * by XML parsing (e.g. \r\n → \n normalization changes actual byte length
+ * but the declared s:N: count still reflects the original).
+ */
+const fixSerializedLengths = (value) => {
+    return value.replace(/s:\d+:"([\s\S]*?)";/g, (match, content) => {
+        const byteLength = Buffer.byteLength(content, 'utf8');
+        return `s:${byteLength}:"${content}";`;
+    });
+};
+
 const {parseFragment} = domUtils;
 const {getYouTubeID} = youtubeUtils;
 
@@ -75,9 +87,15 @@ const processWPMeta = async (post) => {
                 value = unserialize(value);
             }
         } catch (error) {
-            // If unserializing fails, silently fail in prod, but log the error locally. The serialized data is returned
-            if (process?.env?.NODE_ENV !== 'production') {
-                console.log(key, value, error); // eslint-disable-line no-console
+            // XML parsing can alter byte counts (e.g. \r\n → \n), causing
+            // PHP serialized string length mismatches. Try fixing and retrying.
+            try {
+                value = unserialize(fixSerializedLengths(value));
+            } catch (retryError) {
+                // If still failing, silently fail in prod, but log the error locally
+                if (process?.env?.NODE_ENV !== 'production') {
+                    console.log(key, value, retryError); // eslint-disable-line no-console
+                }
             }
         }
 

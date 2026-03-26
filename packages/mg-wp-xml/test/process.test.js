@@ -571,6 +571,26 @@ describe('Process', function () {
         });
     });
 
+    it('Can unserialize postmeta with mismatched byte counts from XML newline normalization', async function () {
+        // XML parsers normalize \r\n to \n, but PHP serialize byte counts
+        // reflect the original \r\n. This simulates that mismatch.
+        const post = {
+            'wp:postmeta': {
+                'wp:meta_key': 'td_post_theme_settings',
+                // s:69 simulates the original \r\n byte count; actual content is 68 bytes after XML normalization
+                'wp:meta_value': 'a:1:{s:11:"td_subtitle";s:69:"Lorem ipsum dolor sit amet, préservé à travers la même façon. \n";}'
+            }
+        };
+
+        const metaValues = await processWPMeta(post);
+
+        assert.deepEqual(metaValues, {
+            td_post_theme_settings: {
+                td_subtitle: 'Lorem ipsum dolor sit amet, préservé à travers la même façon. \n'
+            }
+        });
+    });
+
     it('Can extract multiple authors from Co-Authors Plus format', async function () {
         let ctx = {
             options: {
