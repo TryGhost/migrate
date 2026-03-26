@@ -12,8 +12,8 @@
     "dev": "migrate",
     "migrate": "migrate",
     "test": "node --test 'test/**/*.test.js'",
-    "lint": "eslint . --ext .js --cache",
-    "posttest": "yarn lint"
+    "posttest": "yarn lint",
+    "lint": "eslint . --ext .js --cache"
   },
   "files": [
     "bin",

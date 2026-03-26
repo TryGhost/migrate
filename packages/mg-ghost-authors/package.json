@@ -23,8 +23,8 @@
     "build": "rm -rf build && rm -rf tsconfig.tsbuildinfo && tsc --build --sourceMap",
     "prepare": "yarn build",
     "lint": "eslint src/ --ext .ts --cache",
-    "posttest": "yarn lint",
-    "test": "rm -rf build && yarn build --force && c8 --src src --all --reporter text --reporter cobertura node --test 'build/test/**/*.test.js'"
+    "test": "rm -rf build && yarn build --force && c8 --src src --all --reporter text --reporter cobertura node --test 'build/test/**/*.test.js'",
+    "posttest": "yarn lint"
   },
   "publishConfig": {
     "access": "public"

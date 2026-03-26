@@ -9,8 +9,8 @@
   "scripts": {
     "dev": "echo \"Implement me!\"",
     "test": "TZ=utc node --test 'test/**/*.test.js'",
-    "lint": "eslint . --ext .js --cache",
-    "posttest": "yarn lint"
+    "posttest": "yarn lint",
+    "lint": "eslint . --ext .js --cache"
   },
   "files": [
     "index.js",

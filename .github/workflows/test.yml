@@ -17,6 +17,5 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
-      - run: yarn global add lerna
       - run: yarn install
-      - run: yarn test
+      - run: yarn test:ci

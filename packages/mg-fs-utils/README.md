@@ -21,7 +21,7 @@ CACHE_PATH=/path/to/cache
 
 ## Develop
 
-This is a mono repository, managed with [lerna](https://lernajs.io/).
+This is a mono repository, managed with [Nx](https://nx.dev/) and yarn workspaces.
 
 Follow the instructions for the top-level repo.
 1. `git clone` this repo & `cd` into it as usual

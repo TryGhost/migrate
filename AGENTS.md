@@ -8,7 +8,7 @@ This is a Ghost blog migration toolkit - a monorepo with 45+ packages for migrat
 
 ## Package Manager & Dependencies
 
-- **Always use `yarn` (v1) for all commands.** This repository uses yarn workspaces with Lerna, not npm.
+- **Always use `yarn` (v1) for all commands.** This repository uses yarn workspaces with Nx, not npm.
 - Install dependencies with `yarn` and pass the `exact` flag, like `yarn add -E lodash`. If the dependency is for development, pass the `dev` flag, like `yarn add -E -D lodash`
 - **Always pin exact versions.** Use `"1.2.3"`, not `"^1.2.3"` or `"~1.2.3"`.
 
@@ -217,8 +217,8 @@ Place test fixtures in `test/fixtures/` (JS) or `src/test/fixtures/` (TS).
      "scripts": {
        "build": "tsc --build",
        "test": "yarn build && node --test build/test",
-       "lint": "eslint src/ --ext .ts --cache",
-       "posttest": "yarn lint"
+       "posttest": "yarn lint",
+       "lint": "eslint src/ --ext .ts --cache"
      },
      "devDependencies": {
        "@typescript-eslint/eslint-plugin": "8.38.0",
