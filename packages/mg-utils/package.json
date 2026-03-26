@@ -17,8 +17,8 @@
   "scripts": {
     "build": "tsc --build",
     "test": "yarn build && c8 --100 node --test 'build/test/**/*.test.js'",
-    "lint": "eslint src/ --ext .ts --cache",
-    "posttest": "yarn lint"
+    "posttest": "yarn lint",
+    "lint": "eslint src/ --ext .ts --cache"
   },
   "devDependencies": {
     "@types/jsdom": "28.0.1",

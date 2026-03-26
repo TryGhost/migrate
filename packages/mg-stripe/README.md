@@ -79,7 +79,7 @@ migrate stripe revert
 
 ## Develop
 
-This is a mono repository, managed with [lerna](https://lerna.js.org).
+This is a mono repository, managed with [Nx](https://nx.dev/) and yarn workspaces.
 Follow the instructions for the top-level repo.
 
 ### Install

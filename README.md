@@ -54,12 +54,10 @@ Each source comes with optional flags to customise the migration:
 
 ## Develop
 
-This is a mono repository, managed with [lerna](https://lernajs.io/).
+This is a mono repository, managed with [Nx](https://nx.dev/) and yarn workspaces.
 
 1. `git clone` this repo & `cd` into it as usual
-2. `yarn setup` is mapped to `lerna bootstrap`
-   - installs all external dependencies
-   - links all internal dependencies
+2. `yarn setup` to install all dependencies
 
 
 ## Run
@@ -87,9 +85,19 @@ yarn dev [source]
 
 ## Publish
 
-- `yarn ship` is an alias for `lerna publish`
+- `yarn ship` to interactively version bump and publish
+    - Uses `nx release` under the hood — prompts per-package for the bump level
     - Publishes all packages which have changed
     - Also updates any packages which depend on changed packages
+
+### First release of a new package
+
+When publishing a package for the first time, use `yarn ship:first-release`. This tells `nx release` to skip looking for previous git tags or npm registry versions, which would otherwise fail for an unpublished package.
+
+1. Create the package in `packages/` (see CLAUDE.md for the template)
+2. Set `"version": "0.0.0"` in its `package.json`
+3. Commit and merge to `main`
+4. Run `yarn ship:first-release` — select the initial version when prompted
 
 
 # Copyright & License

@@ -19,8 +19,8 @@
     "build": "rm -rf build && rm -rf tsconfig.tsbuildinfo && tsc --build --sourceMap",
     "prepare": "yarn build",
     "lint": "eslint src/ --ext .ts --cache",
-    "posttest": "yarn lint",
-    "test": "rm -rf build && yarn build --force && NODE_ENV=test c8 --src src --all --check-coverage --100 --reporter text --reporter cobertura node --test --test-concurrency=1 'build/test/**/*.test.js'"
+    "test": "rm -rf build && yarn build --force && NODE_ENV=test c8 --src src --all --check-coverage --100 --reporter text --reporter cobertura node --test --test-concurrency=1 'build/test/**/*.test.js'",
+    "posttest": "yarn lint"
   },
   "files": [
     "build"

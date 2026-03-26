@@ -9,8 +9,8 @@
   "scripts": {
     "dev": "echo \"Implement me!\"",
     "test": "c8 --check-coverage --lines 100 --branches 100 --functions 100 --statements 100 node --test 'test/**/*.test.js'",
-    "lint": "eslint . --ext .js --cache",
-    "posttest": "yarn lint"
+    "posttest": "yarn lint",
+    "lint": "eslint . --ext .js --cache"
   },
   "files": [
     "index.js",

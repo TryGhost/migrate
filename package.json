@@ -22,19 +22,22 @@
     "migrate": "migrate",
     "presetup": "yarn",
     "setup": "yarn install",
-    "test:only": "lerna run test",
-    "test": "lerna run test,lint",
-    "lint": "lerna run lint",
-    "build": "lerna run build",
-    "build:watch": "lerna run build:watch",
-    "preship": "yarn build && yarn test",
-    "ship": "lerna publish --no-private",
+    "test:only": "nx run-many -t test --parallel=10 --outputStyle=dynamic-legacy",
+    "test": "nx run-many -t test lint --parallel=10 --outputStyle=dynamic-legacy",
+    "test:ci": "nx run-many -t test lint --outputStyle=dynamic",
+    "lint": "nx run-many -t lint --parallel=10 --outputStyle=dynamic-legacy",
+    "build": "nx run-many -t build --parallel=10 --outputStyle=dynamic-legacy",
+    "build:watch": "nx run-many -t build:watch --parallel=10 --outputStyle=dynamic-legacy",
+    "ship": "nx release version --git-push --git-remote ${GHOST_UPSTREAM:-origin}",
+    "ship:first-release": "yarn ship --first-release",
     "update": "git pull origin main && yarn"
   },
   "devDependencies": {
     "@tryghost/errors": "3.0.3",
     "eslint": "8.57.1",
     "eslint-plugin-ghost": "3.5.0",
+    "nx": "22.6.1",
+    "@nx/js": "22.6.1",
     "tsx": "4.21.0"
   }
 }

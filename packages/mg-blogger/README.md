@@ -77,7 +77,7 @@ This will fetch posts only from 2 sites, and add a 'Blog Posts' tag to each post
 
 ## Develop
 
-This is a mono repository, managed with [lerna](https://lerna.js.org).
+This is a mono repository, managed with [Nx](https://nx.dev/) and yarn workspaces.
 
 Follow the instructions for the top-level repo.
 1. `git clone` this repo & `cd` into it as usual
