@@ -3,8 +3,6 @@ import {XMLParser} from 'fast-xml-parser';
 import {slugify} from '@tryghost/string';
 import errors from '@tryghost/errors';
 import MarkdownIt from 'markdown-it';
-import SimpleDom from 'simple-dom';
-import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 import MgWpAPI from '@tryghost/mg-wp-api';
 import {domUtils, youtubeUtils} from '@tryghost/mg-utils';
 import {isSerialized, unserialize} from 'php-serialize';
@@ -110,17 +108,7 @@ const processWPMeta = async (post) => {
     return metaData;
 };
 
-const durationToSeconds = (duration) => {
-    const parts = duration.split(':').map(Number);
-    if (parts.length === 3) {
-        return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
-    } else if (parts.length === 2) {
-        return (parts[0] * 60) + parts[1];
-    }
-    return parseInt(duration) * 60;
-};
-
-const processEnclosureAudio = (metaData, title) => {
+const processEnclosureAudio = (metaData) => {
     const enclosure = metaData?.enclosure;
     if (!enclosure || typeof enclosure !== 'string') {
         return null;
@@ -138,25 +126,9 @@ const processEnclosureAudio = (metaData, title) => {
         return null;
     }
 
-    const cardOpts = {
-        env: {dom: new SimpleDom.Document()},
-        payload: {
-            src: audioUrl,
-            title: title
-        }
-    };
+    const fileName = audioUrl.split('/').pop();
 
-    // Try to extract duration from the serialized PHP data
-    const serializedLine = lines.find(l => l.includes('duration'));
-    if (serializedLine) {
-        const durationMatch = serializedLine.match(/"(\d{1,2}:\d{2}(?::\d{2})?)"/);
-        if (durationMatch) {
-            cardOpts.payload.duration = durationToSeconds(durationMatch[1]);
-        }
-    }
-
-    const buildCard = audioCard.render(cardOpts);
-    return buildCard.nodeValue;
+    return `<!--kg-card-begin: html--><audio controls style="width: 100%"><source src="${audioUrl}" type="${mimeType}"><p>Download <a href="${audioUrl}" download="${fileName}">${fileName}</a></p></audio><!--kg-card-end: html-->`;
 };
 
 // The feature images is not "connected" to the post, other than it's located
@@ -409,7 +381,7 @@ const processPost = async (post, users, options, fileCache) => {
 
     // Check for audio enclosure in post metadata and prepend audio card
     const metaData = await processWPMeta(post);
-    const audioCardHTML = processEnclosureAudio(metaData, postObj.data.title);
+    const audioCardHTML = processEnclosureAudio(metaData);
     if (audioCardHTML) {
         postObj.data.html = `${audioCardHTML}${postObj.data.html}`;
     }

@@ -711,10 +711,7 @@ describe('Process', function () {
         const processed = await process.all(input, ctx);
         const post = processed.posts[0];
 
-        assert.ok(post.data.html.includes('kg-audio-card'), 'Should contain an audio card');
-        assert.ok(post.data.html.includes('http://media.libsyn.com/media/example/podcast.mp3'), 'Should contain the audio URL');
-        assert.ok(post.data.html.includes('My Podcast Episode'), 'Should contain the post title as audio title');
-        assert.ok(post.data.html.includes('29:24'), 'Should contain the formatted duration');
+        assert.ok(post.data.html.includes('<!--kg-card-begin: html--><audio controls style="width: 100%"><source src="http://media.libsyn.com/media/example/podcast.mp3" type="audio/mpeg"><p>Download <a href="http://media.libsyn.com/media/example/podcast.mp3" download="podcast.mp3">podcast.mp3</a></p></audio><!--kg-card-end: html-->'), 'Should contain an HTML audio element with source and download link');
         assert.ok(post.data.html.includes('This is the episode description'), 'Should still contain the post content');
     });
 });
