@@ -382,7 +382,8 @@ const processPost = async (post, users, options, fileCache) => {
     // Check for audio enclosure in post metadata and prepend audio card
     const metaData = await processWPMeta(post);
     const audioCardHTML = processEnclosureAudio(metaData);
-    if (audioCardHTML) {
+    const hasLibsynEmbed = parseFragment(postObj.data.html).$('iframe[src*="libsyn.com"]').length > 0;
+    if (audioCardHTML && !hasLibsynEmbed) {
         postObj.data.html = `${audioCardHTML}${postObj.data.html}`;
     }
 

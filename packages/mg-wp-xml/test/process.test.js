@@ -714,6 +714,25 @@ describe('Process', function () {
         assert.ok(post.data.html.includes('<!--kg-card-begin: html--><audio controls style="width: 100%"><source src="http://media.libsyn.com/media/example/podcast.mp3" type="audio/mpeg"><p>Download <a href="http://media.libsyn.com/media/example/podcast.mp3" download="podcast.mp3">podcast.mp3</a></p></audio><!--kg-card-end: html-->'), 'Should contain an HTML audio element with source and download link');
         assert.ok(post.data.html.includes('This is the episode description'), 'Should still contain the post content');
     });
+
+    it('Does not prepend audio element when post contains a libsyn embed', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                posts: true,
+                url: 'https://example.com'
+            }
+        };
+
+        const input = await readSync('has-audio-enclosure-with-libsyn-embed.xml');
+        const processed = await process.all(input, ctx);
+        const post = processed.posts[0];
+
+        assert.ok(!post.data.html.includes('<audio'), 'Should not contain an audio element');
+        assert.ok(post.data.html.includes('<iframe') && post.data.html.includes('libsyn.com'), 'Should still contain the libsyn iframe');
+        assert.ok(post.data.html.includes('This is the episode description'), 'Should still contain the post content');
+    });
 });
 
 describe('HTML Processing', function () {
