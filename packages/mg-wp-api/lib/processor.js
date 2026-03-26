@@ -670,66 +670,68 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         img.setAttribute('src', dataSrc);
     }
 
-    let libsynPodcasts = parsed.$('iframe[src*="libsyn.com/embed/"]').map(async (el) => {
-        if (!allowRemoteScraping) {
-            return;
-        }
-
-        let iframeSrc = el.getAttribute('src');
-        let libsynIdRegex = new RegExp('/id/([0-9]{1,})/');
-        let matches = iframeSrc.match(libsynIdRegex);
-        let showId = matches[1];
-
-        let newReqURL = `https://oembed.libsyn.com/embed?item_id=${showId}`;
-
-        let scrapeConfig = {
-            title: {
-                selector: 'meta[property="og:title"]',
-                attr: 'content'
-            },
-            durationSeconds: {
-                selector: 'meta[property="music:duration"]',
-                attr: 'content'
-            },
-            duration: {
-                selector: 'meta[property="music:duration"]',
-                attr: 'content',
-                convert: (data) => {
-                    return (data - (data %= 60)) / 60 + (9 < data ? ':' : ':0') + data;
-                }
-            },
-            image: {
-                selector: 'meta[property="og:image"]',
-                attr: 'content'
-            },
-            audioSrc: {
-                selector: 'meta[name="twitter:player:stream"]',
-                attr: 'content'
+    if (options?.convertLibsynEmbed) {
+        let libsynPodcasts = parsed.$('iframe[src*="libsyn.com/embed/"]').map(async (el) => {
+            if (!allowRemoteScraping) {
+                return;
             }
-        };
 
-        let filename = newReqURL.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        let {responseData} = await webScraper.scrapeUrl(newReqURL, scrapeConfig, filename);
+            let iframeSrc = el.getAttribute('src');
+            let libsynIdRegex = new RegExp('/id/([0-9]{1,})/');
+            let matches = iframeSrc.match(libsynIdRegex);
+            let showId = matches[1];
 
-        let audioHTML = `
-            <div class="kg-card kg-audio-card">
-                <img src="${responseData.image}" alt="audio-thumbnail" class="kg-audio-thumbnail">
-                <div class="kg-audio-player-container">
-                    <audio src="${responseData.audioSrc}" preload="metadata"></audio>
-                    <div class="kg-audio-title">${responseData.title}</div>
-                    <div class="kg-audio-player">
-                        <span class="kg-audio-current-time">0:00</span>
-                        <div class="kg-audio-time">/<span class="kg-audio-duration">${responseData.duration}</span></div>
-                        <input type="range" class="kg-audio-seek-slider" max="${responseData.durationSeconds}" value="0">
+            let newReqURL = `https://oembed.libsyn.com/embed?item_id=${showId}`;
+
+            let scrapeConfig = {
+                title: {
+                    selector: 'meta[property="og:title"]',
+                    attr: 'content'
+                },
+                durationSeconds: {
+                    selector: 'meta[property="music:duration"]',
+                    attr: 'content'
+                },
+                duration: {
+                    selector: 'meta[property="music:duration"]',
+                    attr: 'content',
+                    convert: (data) => {
+                        return (data - (data %= 60)) / 60 + (9 < data ? ':' : ':0') + data;
+                    }
+                },
+                image: {
+                    selector: 'meta[property="og:image"]',
+                    attr: 'content'
+                },
+                audioSrc: {
+                    selector: 'meta[name="twitter:player:stream"]',
+                    attr: 'content'
+                }
+            };
+
+            let filename = newReqURL.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            let {responseData} = await webScraper.scrapeUrl(newReqURL, scrapeConfig, filename);
+
+            let audioHTML = `
+                <div class="kg-card kg-audio-card">
+                    <img src="${responseData.image}" alt="audio-thumbnail" class="kg-audio-thumbnail">
+                    <div class="kg-audio-player-container">
+                        <audio src="${responseData.audioSrc}" preload="metadata"></audio>
+                        <div class="kg-audio-title">${responseData.title}</div>
+                        <div class="kg-audio-player">
+                            <span class="kg-audio-current-time">0:00</span>
+                            <div class="kg-audio-time">/<span class="kg-audio-duration">${responseData.duration}</span></div>
+                            <input type="range" class="kg-audio-seek-slider" max="${responseData.durationSeconds}" value="0">
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
 
-        replaceWith(el, audioHTML);
-    });
+            replaceWith(el, audioHTML);
+        });
 
-    await Promise.all(libsynPodcasts);
+        await Promise.all(libsynPodcasts);
+    }
 
     for (const el of parsed.$('script.podigee-podcast-player')) {
         let configUrl = el.getAttribute('data-configuration');

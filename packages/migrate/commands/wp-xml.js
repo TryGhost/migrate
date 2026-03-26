@@ -148,6 +148,12 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--convertLibsynEmbed',
+        defaultValue: false,
+        desc: 'Convert Libsyn iframe embeds to audio cards'
+    },
+    {
+        type: 'boolean',
         flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'

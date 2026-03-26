@@ -195,6 +195,12 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--convertLibsynEmbed',
+        defaultValue: false,
+        desc: 'Convert Libsyn iframe embeds to audio cards'
+    },
+    {
+        type: 'boolean',
         flags: '--trustSelfSignedCert',
         defaultValue: false,
         desc: 'Trust self-signed certificates (such as for local installs)'

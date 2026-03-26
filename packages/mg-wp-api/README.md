@@ -115,9 +115,12 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--fallBackHTMLCard`** 
     - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
     - bool - default: `true`
-- **`--removeSelectors`** 
+- **`--removeSelectors`**
     - `Pass in a string of CSS selectors for elements that will be removed, e.g. '.ads, script[src*="adnetwork.com"]'`
     - string - default: `null`
+- **`--convertLibsynEmbed`**
+    - bool - default: `false`
+    - Convert Libsyn iframe embeds to audio cards
 - **`--trustSelfSignedCert`** 
     - Trust self-signed certificates (such as for local installs)
     - bool - default: `false`
