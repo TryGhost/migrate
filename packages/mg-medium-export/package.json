@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@tryghost/debug": "2.0.3",
-    "@tryghost/kg-default-cards": "10.2.10",
+    "@tryghost/kg-default-cards": "10.2.11",
     "@tryghost/mg-fs-utils": "0.16.7",
     "@tryghost/mg-utils": "0.1.2",
     "@tryghost/string": "0.3.1",
