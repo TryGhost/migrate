@@ -55,10 +55,48 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
         }
     });
 
+    // Convert sponsored content tables to Ghost HTML cards
+    parsed.$('table').forEach((el) => {
+        const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+        if (/sponsored content/i.test(text)) {
+            const tdEl = parsed.$('td', el)[0] || el;
+
+            // Convert text-only inner divs to <p> tags; skip divs containing images
+            parsed.$('div', tdEl).forEach((div) => {
+                const inner = serializeChildren(div);
+                if (parsed.$('img', div).length > 0) {
+                    return;
+                }
+                if (inner.trim().length > 0) {
+                    replaceWith(div, `<p>${inner}</p>`);
+                } else {
+                    div.remove();
+                }
+            });
+
+            // Remove bare <br> elements that are direct children of td
+            parsed.$('br', tdEl).forEach((br) => {
+                if (br.parentElement === tdEl) {
+                    br.remove();
+                }
+            });
+
+            const content = serializeChildren(tdEl);
+            const wrapper = el.parentElement;
+            const target = wrapper && wrapper.tagName === 'DIV' ? wrapper : el;
+            replaceWith(target, `<!--kg-card-begin: html--><div class="mg-sponsored">${content}</div><!--kg-card-end: html-->`);
+        }
+    });
+
     // Convert images to Ghost image cards
     parsed.$('img').forEach((el) => {
         // Skip images inside generic embeds (handled separately as bookmark cards)
         if (parents(el, '.generic-embed--root').length > 0) {
+            return;
+        }
+
+        // Skip images already inside Ghost card or sponsored content divs
+        if (parents(el, '[class*="kg-"]').length > 0 || parents(el, '.mg-sponsored').length > 0) {
             return;
         }
 
@@ -195,8 +233,11 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
         el.removeAttribute('style');
     });
 
-    // Unwrap divs, but preserve Ghost card divs
-    parsed.$('div:not([class*="kg-card"])').forEach((el) => {
+    // Unwrap divs, but preserve Ghost card and sponsored content divs
+    parsed.$('div:not([class*="kg-"]):not(.mg-sponsored)').forEach((el) => {
+        if (parents(el, '.mg-sponsored').length > 0) {
+            return;
+        }
         replaceWith(el, serializeChildren(el));
     });
 

@@ -141,7 +141,7 @@ describe('beehiiv API processor', () => {
         it('converts generic embeds to bookmark cards', () => {
             const html = '<div id="content-blocks"><div class="generic-embed--root"><a href="https://example.com">Link</a><div class="generic-embed--title"><p>Title</p></div><div class="generic-embed--description"><p>Description</p></div><div class="generic-embed--image"><img src="https://example.com/image.jpg" /></div></div></div>';
             const result = processHTML({post: {url: 'test', data: {html}} as any});
-            assert.equal(result, '<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.com"><div class="kg-bookmark-title">Title</div><div class="kg-bookmark-description">Description</div><div class="kg-bookmark-metadata"></div><img src="https://example.com/image.jpg" alt></a></figure>');
+            assert.equal(result, '<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.com"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Title</div><div class="kg-bookmark-description">Description</div><div class="kg-bookmark-metadata"></div></div><div class="kg-bookmark-thumbnail"><img src="https://example.com/image.jpg" alt></div></a></figure>');
         });
 
         it('handles generic embeds with missing sub-elements without crashing', () => {
@@ -190,6 +190,41 @@ describe('beehiiv API processor', () => {
             const html = '<div id="content-blocks"><p>Text <img alt="" src="https://example.com/img.jpg" /> more text</p></div>';
             const result = processHTML({post: {url: 'test', data: {html}} as any});
             assert.equal(result, '<p>Text  more text</p><figure class="kg-card kg-image-card"><img src="https://example.com/img.jpg" class="kg-image" alt loading="lazy"></figure>');
+        });
+
+        it('converts sponsored content tables to Ghost HTML cards with text in p tags', () => {
+            const html = `<div id="content-blocks"><div style="padding: 8px 5px 8px 5px;"><table bgcolor="#1A4D3A" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:25px 0; border-radius:20px;"><tbody><tr><td align="center" style="padding: 50px 30px;"><div style="color:#1A4D3A; font-size:12px; font-weight:bold; background:#FFFFFF; padding:5px 12px; border-radius:15px; display:inline-block; margin-bottom:20px;"> Sponsored Content </div><br><br><h2 style="color:#FEFEFE;"> Ad Heading </h2><br><br><div style="text-align: center;"><a href="https://example.com"><img src="https://example.com/ad.jpg" alt="Ad image" style="width: 400px;"></a></div><br><br><div style="font-size:20px; line-height:1.6; text-align: left; color: #FEFEFE;"> Some ad text </div><a href="https://example.com" style="display:inline-block; background:#F9FFF6; color:#1A4D3A;">Learn more</a></td></tr></tbody></table></div></div>`;
+            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            assert.ok(result.startsWith('<!--kg-card-begin: html--><div class="mg-sponsored">'));
+            assert.ok(result.includes('<p> Sponsored Content </p>'), 'text from divs is wrapped in p tags');
+            assert.ok(result.includes('<p> Some ad text </p>'), 'ad text from divs is wrapped in p tags');
+            assert.ok(result.includes('Ad Heading'));
+            assert.ok(result.includes('<img src="https://example.com/ad.jpg"'), 'image stays as raw img');
+            assert.ok(!result.includes('kg-image-card'), 'image should not be converted to Ghost image card');
+            assert.ok(result.includes('Learn more'));
+            assert.ok(result.endsWith('<!--kg-card-end: html-->'));
+        });
+
+        it('converts sponsored content tables without wrapper div', () => {
+            const html = `<div id="content-blocks"><table><tbody><tr><td><div> Sponsored Content </div><p>Ad text</p></td></tr></tbody></table></div>`;
+            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            assert.ok(result.startsWith('<!--kg-card-begin: html--><div class="mg-sponsored">'));
+            assert.ok(result.includes('<p> Sponsored Content </p>'));
+            assert.ok(result.includes('Ad text'));
+        });
+
+        it('removes empty divs and preserves image divs in sponsored content', () => {
+            const html = `<div id="content-blocks"><table><tbody><tr><td><div> Sponsored Content </div><div></div><div style="text-align:center"><a href="https://example.com"><img src="https://example.com/ad.jpg" alt="Ad"></a></div></td></tr></tbody></table></div>`;
+            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            assert.ok(result.includes('<img src="https://example.com/ad.jpg"'), 'image preserved in div');
+            assert.ok(result.includes('<p> Sponsored Content </p>'), 'text div converted to p');
+        });
+
+        it('handles sponsored content table without td element', () => {
+            const html = `<div id="content-blocks"><table><tbody><tr><th> Sponsored Content </th></tr></tbody></table></div>`;
+            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            assert.ok(result.startsWith('<!--kg-card-begin: html--><div class="mg-sponsored">'));
+            assert.ok(result.includes('Sponsored Content'));
         });
 
         it('removes empty paragraphs', () => {
