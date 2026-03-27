@@ -40,7 +40,7 @@
   "dependencies": {
     "@tryghost/errors": "3.0.3",
     "@tryghost/html-to-mobiledoc": "3.2.21",
-    "@tryghost/kg-html-to-lexical": "1.2.38",
+    "@tryghost/kg-html-to-lexical": "1.2.43",
     "@tryghost/listr-smart-renderer": "0.5.24",
     "@tryghost/mg-json": "0.12.0",
     "@tryghost/validator": "2.0.3",
