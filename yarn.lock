@@ -4201,12 +4201,12 @@
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-1.1.2.tgz#ccb91445360179a04e7fe6aff78c00ffc1eeaf82"
   integrity sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==
 
-"@tryghost/admin-api@1.14.6":
-  version "1.14.6"
-  resolved "https://registry.yarnpkg.com/@tryghost/admin-api/-/admin-api-1.14.6.tgz#7748904acd5fd63ccef8edf1eefd444ca9f67f8c"
-  integrity sha512-GZ14THA09fCUIxveB1iC50v9GyCqCy3xbvAM51Q4XVhTmycz1BZaWfH2n+X+JXnfN3nIzQQwgSjp/RxMglQ9Mg==
+"@tryghost/admin-api@1.14.7":
+  version "1.14.7"
+  resolved "https://registry.yarnpkg.com/@tryghost/admin-api/-/admin-api-1.14.7.tgz#58c45c9d72a12a060d3bd9240d2f2ca4f18654da"
+  integrity sha512-0SmxuxhWFYT3qc3LKZcsM7EbKiqgVB+pkOR6ydvJS7XGxHyNxOFziTmnSCGdwTxuS+o+EB/T1KW8QGJnJJhrAA==
   dependencies:
-    axios "1.13.5"
+    axios "1.13.6"
     form-data "4.0.5"
     jsonwebtoken "9.0.3"
 
@@ -4271,12 +4271,12 @@
     "@stdlib/utils-copy" "^0.2.0"
     uuid "^9.0.0"
 
-"@tryghost/html-to-mobiledoc@3.2.21":
-  version "3.2.21"
-  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-3.2.21.tgz#ad58f75a56dbb6554f4116f852910738fc0e9095"
-  integrity sha512-+fG+IhHUmfV/fOpt2d/4UeizTd8wkDv6Y7bNxtPmsiKS2bQ1r3R0EtnleX8N38xJsfVa9rAeu+a3WwLEClH+Tg==
+"@tryghost/html-to-mobiledoc@3.2.24":
+  version "3.2.24"
+  resolved "https://registry.yarnpkg.com/@tryghost/html-to-mobiledoc/-/html-to-mobiledoc-3.2.24.tgz#cbf732bb638d52aaa7afd36660705627b1a202f9"
+  integrity sha512-SEwkTasZBQguwOLM7suRw51gqcYkZjgB9bSzpOzQBUKfjNoBN6Ee4F+bPHSkuxF6Zh5nFEXUEalVzQLF2BYJXQ==
   dependencies:
-    "@tryghost/kg-parser-plugins" "4.2.20"
+    "@tryghost/kg-parser-plugins" "4.2.23"
     "@tryghost/mobiledoc-kit" "^0.12.4-ghost.1"
     jsdom "^29.0.0"
 
@@ -4308,20 +4308,25 @@
   optionalDependencies:
     sharp "^0.32.0"
 
-"@tryghost/image-transform@1.4.12":
-  version "1.4.12"
-  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.4.12.tgz#5b25aaeb306b54193646d03ee4156030ef0bbaa6"
-  integrity sha512-m4lKc6nr2aVhpskx3njpNk8oATdocVwi9tbV4SgwYRonS+79vtflUWO75n26PCpcQn5SnqeZucHDcGw2QzOb8A==
+"@tryghost/image-transform@1.4.13":
+  version "1.4.13"
+  resolved "https://registry.yarnpkg.com/@tryghost/image-transform/-/image-transform-1.4.13.tgz#5c08ee3e6f61a2e2bd7786c0c73bc474079e9d45"
+  integrity sha512-HkIXzNkNVPteAsucNcCpdLtsQr7332RufOgFyubb1hRkrj90swt5QWmAYCJX/HN1cb7mZr+xImqPwYNmsQ18jA==
   dependencies:
     "@tryghost/errors" "2.2.1"
-    fs-extra "11.3.3"
+    fs-extra "11.3.4"
   optionalDependencies:
-    sharp "^0.34.2"
+    sharp "^0.34.5"
 
 "@tryghost/kg-clean-basic-html@4.2.20":
   version "4.2.20"
   resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-4.2.20.tgz#0cd8b95582e439e73f7f9aa6c4ee4b7e9957ba29"
   integrity sha512-NT/VcVDGNVa5++Og6B9RwoOosunBeLh4ztk5plvcUeFetHF416JJvQJcyiVWYJyx1DChKgMljbr69ffDPHw1OQ==
+
+"@tryghost/kg-clean-basic-html@4.2.22":
+  version "4.2.22"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-clean-basic-html/-/kg-clean-basic-html-4.2.22.tgz#3cb809653283a35d0002d5f87b4071eff973b35a"
+  integrity sha512-qQkFsxw9uWcWruzyFFJuqMORestbuaz8eovWGg68kDX1MxX/KIBeM2Rtwg0pl63ZutmqnUhUcTHLXChhD9oJFw==
 
 "@tryghost/kg-default-cards@10.2.10":
   version "10.2.10"
@@ -4411,12 +4416,12 @@
     markdown-it-sup "^2.0.0"
     semver "^7.7.0"
 
-"@tryghost/kg-parser-plugins@4.2.20":
-  version "4.2.20"
-  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-4.2.20.tgz#38b68a6ff802572617081c148f460a39e3742e2c"
-  integrity sha512-K1r4fZxMYc/eJkf/UHDLeNb8qwOVPudhg5RAM6ESpdKoAZe3R2tUemYMyJfvVhKfUwn9VT8rsRIkBCVppgZYsg==
+"@tryghost/kg-parser-plugins@4.2.23":
+  version "4.2.23"
+  resolved "https://registry.yarnpkg.com/@tryghost/kg-parser-plugins/-/kg-parser-plugins-4.2.23.tgz#601b00755ba28b5dfbb025e7052e07f3d63fd44d"
+  integrity sha512-xmub6XZ2r04D+i5P77LbU3hpqlGRK2BLPO0w7TouH70D9+alkWMobns0otqCG/aPlWxi4Pe8gjBymnl27zj0Zw==
   dependencies:
-    "@tryghost/kg-clean-basic-html" "4.2.20"
+    "@tryghost/kg-clean-basic-html" "4.2.22"
 
 "@tryghost/kg-utils@1.0.31":
   version "1.0.31"
@@ -4566,10 +4571,10 @@
   dependencies:
     unidecode "^0.1.8"
 
-"@tryghost/string@0.3.1":
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.3.1.tgz#83ba5fb48c8285915b39dbe2425c9bf76d9c16c7"
-  integrity sha512-p1wyN6p5Ds6IQkoYwIJkabhQ10WIY+t8yf3/Uf/BNADTg66R0jYF8wmXgFYpBwm55rXwM/92cROwvopIbFKtYg==
+"@tryghost/string@0.3.2":
+  version "0.3.2"
+  resolved "https://registry.yarnpkg.com/@tryghost/string/-/string-0.3.2.tgz#a86773fe460e198a7176e7333d1225d6319c9060"
+  integrity sha512-tPgTU4o/4m1TBMoSChHm4n7XvXq+x6GJ//B0MdVPK57Rb0GEThsV347C2Fr5+1q71EdICrLbFPYh0vAqEM/eoA==
   dependencies:
     unidecode "1.1.0"
 
@@ -5336,16 +5341,7 @@ aws4@^1.8.0:
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.13.2.tgz#0aa167216965ac9474ccfa83892cfb6b3e1e52ef"
   integrity sha512-lHe62zvbTB5eEABUVi/AwVh0ZKY9rMMDhmm+eeyuuUQbQ3+J+fONVQOZyj+DdrvD4BY33uYniyRJ4UJIaSKAfw==
 
-axios@1.13.5:
-  version "1.13.5"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.13.5.tgz#5e464688fa127e11a660a2c49441c009f6567a43"
-  integrity sha512-cz4ur7Vb0xS4/KUN0tPWe44eqxrIu31me+fbang3ijiNscE129POzipJJA6zniq2C/Z6sJCjMimjS8Lc/GAs8Q==
-  dependencies:
-    follow-redirects "^1.15.11"
-    form-data "^4.0.5"
-    proxy-from-env "^1.1.0"
-
-axios@^1.12.0, axios@^1.3.4:
+axios@1.13.6, axios@^1.12.0, axios@^1.3.4:
   version "1.13.6"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.13.6.tgz#c3f92da917dc209a15dd29936d20d5089b6b6c98"
   integrity sha512-ChTCHMouEe2kn713WHbQGcuYrr6fXTBiu460OTwWrWob16g1bXn4vtz07Ope7ewMozJAnEquLk5lWQWtBig9DQ==
@@ -7586,15 +7582,6 @@ fs-extra@11.1.1:
   version "11.1.1"
   resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-11.1.1.tgz#da69f7c39f3b002378b0954bb6ae7efdc0876e2d"
   integrity sha512-MGIE4HOvQCeUCzmlHs0vXpih4ysz4wg9qiSAu6cd42lVwPbTM1TjV7RusoyQqMmk/95gdQZX72u+YW+c3eEpFQ==
-  dependencies:
-    graceful-fs "^4.2.0"
-    jsonfile "^6.0.1"
-    universalify "^2.0.0"
-
-fs-extra@11.3.3:
-  version "11.3.3"
-  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-11.3.3.tgz#a27da23b72524e81ac6c3815cc0179b8c74c59ee"
-  integrity sha512-VWSRii4t0AFm6ixFFmLLx1t7wS1gh+ckoa84aOeapGum0h+EZd1EhEumSB+ZdDLnEPuucsVB9oB7cxJHap6Afg==
   dependencies:
     graceful-fs "^4.2.0"
     jsonfile "^6.0.1"
@@ -11091,7 +11078,7 @@ sharp@0.32.1:
     tar-fs "^2.1.1"
     tunnel-agent "^0.6.0"
 
-sharp@0.34.5, sharp@^0.34.2:
+sharp@0.34.5, sharp@^0.34.5:
   version "0.34.5"
   resolved "https://registry.yarnpkg.com/sharp/-/sharp-0.34.5.tgz#b6f148e4b8c61f1797bde11a9d1cfebbae2c57b0"
   integrity sha512-Ou9I5Ft9WNcCbXrU9cMgPBcCK8LiwLqcbywW3t4oDV37n1pzpuNLsYiAV8eODnjbtQlSDwZ2cUEeQz4E54Hltg==
