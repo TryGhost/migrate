@@ -35,7 +35,7 @@
     "c8": "11.0.0",
     "eslint": "8.57.1",
     "sinon": "21.0.3",
-    "typescript": "5.9.3"
+    "typescript": "6.0.2"
   },
   "dependencies": {
     "@tryghost/errors": "3.0.3",
