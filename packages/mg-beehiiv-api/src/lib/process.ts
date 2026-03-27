@@ -84,7 +84,7 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
             const content = serializeChildren(tdEl);
             const wrapper = el.parentElement;
             const target = wrapper && wrapper.tagName === 'DIV' ? wrapper : el;
-            replaceWith(target, `<!--kg-card-begin: html--><div class="mg-sponsored">${content}</div><!--kg-card-end: html-->`);
+            replaceWith(target, `<!--kg-card-begin: html--><div class="mg-sponsored" data-mg-skip="image-card">${content}</div><!--kg-card-end: html-->`);
         }
     });
 
@@ -95,8 +95,8 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
             return;
         }
 
-        // Skip images already inside Ghost card or sponsored content divs
-        if (parents(el, '[class*="kg-"]').length > 0 || parents(el, '.mg-sponsored').length > 0) {
+        // Skip images inside elements marked to skip image card conversion
+        if (parents(el, '[data-mg-skip="image-card"]').length > 0) {
             return;
         }
 
@@ -233,9 +233,9 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
         el.removeAttribute('style');
     });
 
-    // Unwrap divs, but preserve Ghost card and sponsored content divs
-    parsed.$('div:not([class*="kg-"]):not(.mg-sponsored)').forEach((el) => {
-        if (parents(el, '.mg-sponsored').length > 0) {
+    // Unwrap divs, but preserve Ghost card and data-mg-skip divs
+    parsed.$('div:not([class*="kg-"]):not([data-mg-skip])').forEach((el) => {
+        if (parents(el, '[data-mg-skip]').length > 0) {
             return;
         }
         replaceWith(el, serializeChildren(el));

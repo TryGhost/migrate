@@ -195,7 +195,7 @@ describe('beehiiv API processor', () => {
         it('converts sponsored content tables to Ghost HTML cards with text in p tags', () => {
             const html = `<div id="content-blocks"><div style="padding: 8px 5px 8px 5px;"><table bgcolor="#1A4D3A" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:25px 0; border-radius:20px;"><tbody><tr><td align="center" style="padding: 50px 30px;"><div style="color:#1A4D3A; font-size:12px; font-weight:bold; background:#FFFFFF; padding:5px 12px; border-radius:15px; display:inline-block; margin-bottom:20px;"> Sponsored Content </div><br><br><h2 style="color:#FEFEFE;"> Ad Heading </h2><br><br><div style="text-align: center;"><a href="https://example.com"><img src="https://example.com/ad.jpg" alt="Ad image" style="width: 400px;"></a></div><br><br><div style="font-size:20px; line-height:1.6; text-align: left; color: #FEFEFE;"> Some ad text </div><a href="https://example.com" style="display:inline-block; background:#F9FFF6; color:#1A4D3A;">Learn more</a></td></tr></tbody></table></div></div>`;
             const result = processHTML({post: {url: 'test', data: {html}} as any});
-            assert.ok(result.startsWith('<!--kg-card-begin: html--><div class="mg-sponsored">'));
+            assert.ok(result.startsWith('<!--kg-card-begin: html--><div class="mg-sponsored" data-mg-skip="image-card">'));
             assert.ok(result.includes('<p> Sponsored Content </p>'), 'text from divs is wrapped in p tags');
             assert.ok(result.includes('<p> Some ad text </p>'), 'ad text from divs is wrapped in p tags');
             assert.ok(result.includes('Ad Heading'));
@@ -208,7 +208,7 @@ describe('beehiiv API processor', () => {
         it('converts sponsored content tables without wrapper div', () => {
             const html = `<div id="content-blocks"><table><tbody><tr><td><div> Sponsored Content </div><p>Ad text</p></td></tr></tbody></table></div>`;
             const result = processHTML({post: {url: 'test', data: {html}} as any});
-            assert.ok(result.startsWith('<!--kg-card-begin: html--><div class="mg-sponsored">'));
+            assert.ok(result.startsWith('<!--kg-card-begin: html--><div class="mg-sponsored" data-mg-skip="image-card">'));
             assert.ok(result.includes('<p> Sponsored Content </p>'));
             assert.ok(result.includes('Ad text'));
         });
@@ -223,7 +223,7 @@ describe('beehiiv API processor', () => {
         it('handles sponsored content table without td element', () => {
             const html = `<div id="content-blocks"><table><tbody><tr><th> Sponsored Content </th></tr></tbody></table></div>`;
             const result = processHTML({post: {url: 'test', data: {html}} as any});
-            assert.ok(result.startsWith('<!--kg-card-begin: html--><div class="mg-sponsored">'));
+            assert.ok(result.startsWith('<!--kg-card-begin: html--><div class="mg-sponsored" data-mg-skip="image-card">'));
             assert.ok(result.includes('Sponsored Content'));
         });
 
