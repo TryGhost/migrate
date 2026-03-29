@@ -2,6 +2,10 @@
 import type {DatabaseModels} from './database.js';
 
 export function withTransaction<T>(db: DatabaseModels, callback: () => T): T {
+    if (db.inTransaction) {
+        return callback();
+    }
+
     db.db.exec('BEGIN');
     db.inTransaction = true;
     try {
