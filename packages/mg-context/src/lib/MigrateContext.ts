@@ -88,6 +88,9 @@ export default class MigrateContext extends MigrateBase {
     }
 
     async init() {
+        if (this.#db) {
+            throw new errors.InternalServerError({message: 'MigrateContext is already initialized. Call close() before reinitializing.'});
+        }
         const storage = this.#ephemeral ? ':memory:' : this.#dbPath;
         this.#db = createDatabase(storage);
     }
