@@ -1118,6 +1118,48 @@ describe('MigrateContext', () => {
 
             await instance.close();
         });
+
+        it('withTransaction is a no-op wrapper when already in a transaction', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Nested TX');
+            post.set('slug', 'nested-tx');
+            post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            await post.save(instance.db);
+
+            // Outer transaction via ctx.transaction, inner via withTransaction
+            await instance.transaction(async () => {
+                withTransaction(instance.db, () => {
+                    instance.db.stmts.updatePost.run(
+                        JSON.stringify({title: 'Updated In Nested', slug: 'nested-tx'}),
+                        '{}', '{}', 'lexical', null, post.ghostId,
+                        '2023-11-23T00:00:00.000Z', null, null,
+                        post.dbId
+                    );
+                });
+            });
+
+            const allPosts = await instance.getAllPosts();
+            assert.equal(allPosts[0].data.title, 'Updated In Nested');
+
+            await instance.close();
+        });
+    });
+
+    describe('init guard', () => {
+        it('Throws when init() is called twice without close()', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            await assert.rejects(
+                () => instance.init(),
+                {message: 'MigrateContext is already initialized. Call close() before reinitializing.'}
+            );
+
+            await instance.close();
+        });
     });
 
     describe('Cache bypass paths', () => {
