@@ -7,7 +7,7 @@ import PostContext, {PostConstructorOptions} from './PostContext.js';
 import TagContext from './TagContext.js';
 import AuthorContext from './AuthorContext.js';
 import {createDatabase, type DatabaseModels} from './database.js';
-import {withTransaction, findByIds, findByColumn, buildDateWhere, buildFullWhere, countWhere, findPostsWhere, findPostIdColumnsWhere} from './db-helpers.js';
+import {withTransaction, findByIds, findByColumn, buildDateWhere, buildFullWhere, countWhere, findPostsWhere, findPostIdColumnsWhere, findAllPostIdsWhere, findPostsByIds} from './db-helpers.js';
 
 export type FindPostsOptions = {
     slug?: string;
@@ -184,11 +184,15 @@ export default class MigrateContext extends MigrateBase {
     // eslint-disable-next-line no-unused-vars
     async forEachPost(callback: (post: PostContext) => Promise<void>, {batchSize = 100, filter, progress}: ForEachPostOptions = {}) {
         const where = this.#buildFilterWhere(filter);
-        const total = countWhere(this.db, where);
+        // Snapshot matching IDs up front so mutations during iteration
+        // cannot shift pagination (e.g. changing a date or tag used in the filter).
+        const allIds = findAllPostIdsWhere(this.db, where);
+        const total = allIds.length;
         let processed = 0;
 
         for (let offset = 0; offset < total; offset += batchSize) {
-            const rows = findPostsWhere(this.db, where, batchSize, offset);
+            const batchIds = allIds.slice(offset, offset + batchSize);
+            const rows = findPostsByIds(this.db, batchIds);
 
             for (const row of rows) {
                 const post = PostContext.fromRow(row, this.db);

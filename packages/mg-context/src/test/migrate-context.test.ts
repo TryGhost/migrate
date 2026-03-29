@@ -5,7 +5,7 @@ import {join} from 'node:path';
 import {readFile, unlink, rm} from 'node:fs/promises';
 import errors from '@tryghost/errors';
 import {MigrateContext, PostContext, TagContext, AuthorContext, type PostFilter} from '../index.js';
-import {withTransaction} from '../lib/db-helpers.js';
+import {withTransaction, findPostsByIds} from '../lib/db-helpers.js';
 
 describe('MigrateContext', () => {
     it('Is instance of', () => {
@@ -1175,6 +1175,16 @@ describe('MigrateContext', () => {
         });
     });
 
+    describe('findPostsByIds', () => {
+        it('Returns empty array for empty ID list', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+            const result = findPostsByIds(instance.db, []);
+            assert.deepEqual(result, []);
+            await instance.close();
+        });
+    });
+
     describe('init guard', () => {
         it('Throws when init() is called twice without close()', async () => {
             const instance: any = new MigrateContext();
@@ -1710,6 +1720,17 @@ describe('MigrateContext', () => {
                 const lastCall = progressCalls[progressCalls.length - 1];
                 assert.equal(lastCall[0], 2);
                 assert.equal(lastCall[1], 2);
+            });
+
+            it('forEachPost on empty context processes zero posts', async () => {
+                const empty: any = new MigrateContext();
+                await empty.init();
+                let count = 0;
+                await empty.forEachPost(async () => {
+                    count += 1;
+                });
+                assert.equal(count, 0);
+                await empty.close();
             });
         });
 

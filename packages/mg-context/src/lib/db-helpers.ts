@@ -124,3 +124,16 @@ export function findPostsWhere(db: DatabaseModels, where: WhereClause, limit: nu
 export function findPostIdColumnsWhere(db: DatabaseModels, where: WhereClause, limit: number, offset: number): any[] {
     return db.db.prepare(`SELECT id, ghost_id FROM Posts ${where.sql} ORDER BY id ASC LIMIT ? OFFSET ?`).all(...where.params, limit, offset);
 }
+
+export function findAllPostIdsWhere(db: DatabaseModels, where: WhereClause): number[] {
+    const rows = db.db.prepare(`SELECT id FROM Posts ${where.sql} ORDER BY id ASC`).all(...where.params) as any[];
+    return rows.map((r: any) => r.id as number);
+}
+
+export function findPostsByIds(db: DatabaseModels, ids: number[]): any[] {
+    if (ids.length === 0) {
+        return [];
+    }
+    const placeholders = ids.map(() => '?').join(',');
+    return db.db.prepare(`SELECT * FROM Posts WHERE id IN (${placeholders}) ORDER BY id ASC`).all(...ids);
+}
