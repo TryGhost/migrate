@@ -103,6 +103,10 @@ export default class MigrateContext extends MigrateBase {
     }
 
     async transaction<T>(callback: () => T | Promise<T>): Promise<T> {
+        if (this.db.inTransaction) {
+            return await callback();
+        }
+
         this.db.db.exec('BEGIN');
         this.db.inTransaction = true;
         try {

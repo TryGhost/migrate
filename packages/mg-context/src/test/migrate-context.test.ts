@@ -1148,6 +1148,33 @@ describe('MigrateContext', () => {
         });
     });
 
+    describe('nested transaction', () => {
+        it('ctx.transaction() passes through when already in a transaction', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Outer TX');
+            post.set('slug', 'outer-tx');
+            post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            await post.save(instance.db);
+
+            await instance.transaction(async () => {
+                // Nested transaction should not issue BEGIN
+                await instance.transaction(async () => {
+                    const posts = await instance.getAllPosts();
+                    posts[0].set('title', 'Nested Update');
+                    await posts[0].save(instance.db);
+                });
+            });
+
+            const allPosts = await instance.getAllPosts();
+            assert.equal(allPosts[0].data.title, 'Nested Update');
+
+            await instance.close();
+        });
+    });
+
     describe('init guard', () => {
         it('Throws when init() is called twice without close()', async () => {
             const instance: any = new MigrateContext();
