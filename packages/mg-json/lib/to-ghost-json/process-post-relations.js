@@ -108,7 +108,7 @@ export default (json) => {
 
             if (!tag) {
                 tag = postTag;
-                tag.data.id = new ObjectID();
+                tag.data.id = tag.data.id || new ObjectID();
                 json.tags.push(tag);
             }
 

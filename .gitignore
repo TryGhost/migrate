@@ -75,6 +75,9 @@ ghost-import*.*
 ghost-members*.*
 gh-*
 tmp/
+*.db
+*.db-shm
+*.db-wal
 
 # TypeScript
 packages/**/build/

@@ -1,11 +1,14 @@
 import baseTemplate from './base-template.js';
-import stripMeta from './meta-to-ghost.js';
+import stripMeta, {resetSlugs} from './meta-to-ghost.js';
 import processPostRelations from './process-post-relations.js';
 import validate from './validate.js';
 import reorderTags from './reorder-tags.js';
 import {removeEmptyUsers} from './remove-empty.js';
 
 export default async (input, options = {}, ctx) => {
+    // Reset module-level slug deduplication state so each call is independent
+    resetSlugs();
+
     // Construct a basic Ghost JSON template
     let output = baseTemplate();
 

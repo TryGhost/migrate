@@ -13,3 +13,5 @@ export {
     TagContext,
     AuthorContext
 };
+
+export type {WrittenFile, ForEachPostOptions, PostFilter} from './lib/MigrateContext.js';

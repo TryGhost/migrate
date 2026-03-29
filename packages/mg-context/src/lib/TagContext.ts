@@ -1,5 +1,7 @@
 import {z} from 'zod/v4';
+import {randomBytes} from 'node:crypto';
 import MigrateBase from './MigrateBase.js';
+import type {DatabaseModels} from './database.js';
 
 export const tagZodSchema = z.object({
     name: z.string().max(255),
@@ -51,5 +53,49 @@ export default class TagContext extends MigrateBase {
             const [key, value] = item;
             this.data[key] = value;
         });
+    }
+
+    save(db: DatabaseModels) {
+        // Check slug cache first — avoids DB round-trip for already-known tags
+        if (!this.dbId && this.data.slug && db.tagCache.has(this.data.slug)) {
+            const cached = db.tagCache.get(this.data.slug)!;
+            this.dbId = cached.dbId;
+            this.ghostId = cached.ghostId;
+            return;
+        }
+
+        const tagData = JSON.stringify(this.data);
+
+        if (!this.ghostId) {
+            this.ghostId = randomBytes(12).toString('hex');
+        }
+
+        if (this.dbId) {
+            db.stmts.updateTagById.run(tagData, this.data.slug, this.data.name, this.ghostId, this.dbId);
+        } else {
+            const existing = this.data.slug ? db.stmts.findTagBySlug.get(this.data.slug) as any : null;
+
+            if (existing) {
+                this.dbId = existing.id as number;
+                this.ghostId = (existing.ghost_id as string) || this.ghostId;
+                db.stmts.updateTagById.run(tagData, this.data.slug, this.data.name, this.ghostId, this.dbId);
+            } else {
+                const result = db.stmts.insertTag.run(tagData, this.data.slug, this.data.name, this.ghostId);
+                this.dbId = Number(result.lastInsertRowid);
+            }
+        }
+
+        // Populate cache after successful save
+        if (this.data.slug && this.dbId && this.ghostId) {
+            db.tagCache.set(this.data.slug, {dbId: this.dbId, ghostId: this.ghostId});
+        }
+    }
+
+    static fromRow(row: any): TagContext {
+        const data = JSON.parse(row.data);
+        const tag = new TagContext(data);
+        tag.dbId = row.id as number;
+        tag.ghostId = row.ghost_id as string;
+        return tag;
     }
 }

@@ -23,6 +23,10 @@ const removeMeta = (resource) => {
 
 let slugs = {};
 
+export const resetSlugs = () => {
+    slugs = {};
+};
+
 // Ghost's post/tag slug max length (MySQL utf8mb4 index limit)
 const GHOST_SLUG_MAX = 191;
 const DEDUP_SUFFIX_LENGTH = 25; // '-' + 24-char ObjectID

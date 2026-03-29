@@ -2,3 +2,5 @@
 /tsconfig.tsbuildinfo
 /tmp
 .env
+/examples/*.db
+/export
