@@ -1,5 +1,9 @@
 // Run this with: `npx tsx scripts/generate-large-export.ts`
+import {dirname, join} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {MigrateContext} from '../src/index.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let _maxMemoryConsumption = 0;
 let _dtOfMaxMemoryConsumption: Date | undefined;
@@ -52,7 +56,7 @@ async function main() {
 
     const startTime = Date.now();
 
-    const ctx = new MigrateContext({dbPath: '/Users/paul/Sites/migrate/packages/mg-context/scripts/yolo.db', ephemeral: false});
+    const ctx = new MigrateContext({dbPath: join(__dirname, 'posts.db'), ephemeral: false});
     await ctx.init();
 
     try {

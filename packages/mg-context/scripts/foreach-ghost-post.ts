@@ -1,8 +1,12 @@
 // Run this with: `npx tsx scripts/foreach-ghost-post.ts`
+import {dirname, join} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {MigrateContext} from '../src/index.js';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 async function main() {
-    const ctx = new MigrateContext({dbPath: '/Users/paul/Sites/migrate/packages/mg-context/scripts/yolo.db', ephemeral: false});
+    const ctx = new MigrateContext({dbPath: join(__dirname, 'posts.db'), ephemeral: false});
     await ctx.init();
 
     const startTime = Date.now();
