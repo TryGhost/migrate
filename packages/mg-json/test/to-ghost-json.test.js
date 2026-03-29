@@ -298,6 +298,35 @@ describe('toGhostJSON', function () {
         assert.equal(output.data.users[0].email, 'joe@example.com');
     });
 
+    it('Resets slug deduplication state between calls', async function () {
+        const makeInput = slug => ({
+            posts: [{
+                url: 'https://example.com/post',
+                data: {
+                    slug,
+                    title: 'Test Post',
+                    status: 'published',
+                    published_at: '2024-01-01T00:00:00.000Z',
+                    html: '<p>Content</p>',
+                    tags: [{url: 'tag', data: {name: 'Shared Tag', slug: 'shared-tag'}}],
+                    author: {url: 'author', data: {name: 'Author', slug: 'shared-author', roles: ['Author']}}
+                }
+            }]
+        });
+
+        const output1 = await toGhostJSON(makeInput('post-1'));
+        const output2 = await toGhostJSON(makeInput('post-2'));
+
+        // Slugs in the second call should not be renamed
+        assert.equal(output2.data.posts[0].slug, 'post-2');
+        assert.equal(output2.data.tags[0].slug, 'shared-tag');
+        assert.equal(output2.data.users[0].slug, 'shared-author');
+
+        // Both calls should produce identical tag/user slugs
+        assert.equal(output1.data.tags[0].slug, output2.data.tags[0].slug);
+        assert.equal(output1.data.users[0].slug, output2.data.users[0].slug);
+    });
+
     it('Keeps deduplicated slugs within Ghost 191-char limit', async function () {
         // Two posts with the same long slug: dedupe truncates the base to 166 chars,
         // then appends -<ObjectID> (25 chars), keeping the total <= 191

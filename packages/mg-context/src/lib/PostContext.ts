@@ -1,9 +1,11 @@
 import {z} from 'zod/v4';
+import {randomBytes} from 'node:crypto';
 import mobiledocConverter from '@tryghost/html-to-mobiledoc';
 import lexicalConverter from '@tryghost/kg-html-to-lexical';
 import MigrateBase from './MigrateBase.js';
 import TagContext, {TagObject, TagDataObject} from './TagContext.js';
 import AuthorContext, {AuthorObject, AuthorDataObject} from './AuthorContext.js';
+import type {DatabaseModels} from './database.js';
 
 export const postZodSchema = z.object({
     title: z.string().max(255),
@@ -50,15 +52,20 @@ export type PostConstructorOptions = {
     source?: Object;
     meta?: Object;
     contentFormat?: 'mobiledoc' | 'lexical' | 'html';
+    lookupKey?: string;
 };
 
 export default class PostContext extends MigrateBase {
     #source: any;
     #meta: any;
     #contentFormat: 'mobiledoc' | 'lexical' | 'html';
+    #lookupKey: string | null = null;
+    #warnOnLookupKeyDuplicate = false;
+    #duplicateSkipped = false;
+    #htmlDirty = true;
     data: any = {};
 
-    constructor({source = {}, meta = {}, contentFormat = 'html'}: PostConstructorOptions = {}) {
+    constructor({source = {}, meta = {}, contentFormat = 'lexical', lookupKey}: PostConstructorOptions = {}) {
         super();
 
         // Source data from another platform
@@ -68,35 +75,101 @@ export default class PostContext extends MigrateBase {
 
         this.#contentFormat = contentFormat;
 
+        if (lookupKey) {
+            this.#lookupKey = lookupKey;
+        }
+
         this.schema = postZodSchema;
         this.initializeData();
+    }
+
+    get lookupKey(): string | null {
+        return this.#lookupKey;
+    }
+
+    set lookupKey(value: string | null) {
+        this.#lookupKey = value;
+    }
+
+    get warnOnLookupKeyDuplicate(): boolean {
+        return this.#warnOnLookupKeyDuplicate;
+    }
+
+    set warnOnLookupKeyDuplicate(value: boolean) {
+        this.#warnOnLookupKeyDuplicate = value;
     }
 
     get meta() {
         return this.#meta;
     }
 
+    get htmlDirty(): boolean {
+        return this.#htmlDirty;
+    }
+
     set(prop: string, value: any) {
+        super.set(prop, value);
         if (prop === 'html') {
-            if (this.#contentFormat === 'mobiledoc') {
-                super.set('mobiledoc', mobiledocConverter.toMobiledoc(value));
-            } else if (this.#contentFormat === 'lexical') {
-                super.set('lexical', lexicalConverter.htmlToLexical(value));
-            }
+            this.#htmlDirty = true;
+            // Invalidate cached conversion
+            this.data.lexical = null;
+            this.data.mobiledoc = null;
+        }
+        return this;
+    }
+
+    convertContent() {
+        if (!this.#htmlDirty || this.#contentFormat === 'html') {
+            this.#htmlDirty = false;
+            return;
         }
 
-        super.set(prop, value);
+        if (this.#contentFormat === 'lexical') {
+            this.data.lexical = this.data.html
+                ? JSON.stringify(lexicalConverter.htmlToLexical(this.data.html))
+                : null;
+            this.data.mobiledoc = null;
+        } else if (this.#contentFormat === 'mobiledoc') {
+            this.data.mobiledoc = this.data.html
+                ? JSON.stringify(mobiledocConverter.toMobiledoc(this.data.html))
+                : null;
+            this.data.lexical = null;
+        }
 
-        return this;
+        this.#htmlDirty = false;
     }
 
     get getFinal(): any {
         const result = super.getFinal;
 
+        // Inject ghost IDs into nested tags and authors
+        if (result.data.tags) {
+            result.data.tags = result.data.tags.map((tag: any) => {
+                if (tag.ghostId) {
+                    return {data: {id: tag.ghostId, ...tag.data}};
+                }
+                return tag;
+            });
+        }
+        if (result.data.authors) {
+            result.data.authors = result.data.authors.map((author: any) => {
+                if (author.ghostId) {
+                    return {data: {id: author.ghostId, ...author.data}};
+                }
+                return author;
+            });
+        }
+
         if (this.#contentFormat === 'lexical') {
+            if (!result.data.lexical && result.data.html) {
+                result.data.lexical = JSON.stringify(lexicalConverter.htmlToLexical(result.data.html));
+            }
             result.data.html = null;
             result.data.mobiledoc = null;
         } else if (this.#contentFormat === 'mobiledoc') {
+            if (!result.data.mobiledoc && result.data.html) {
+                result.data.mobiledoc = JSON.stringify(mobiledocConverter.toMobiledoc(result.data.html));
+            }
             result.data.html = null;
             result.data.lexical = null;
         } else {
@@ -235,5 +308,203 @@ export default class PostContext extends MigrateBase {
 
             return authors;
         });
+    }
+
+    save(db: DatabaseModels) {
+        if (this.#duplicateSkipped) {
+            return;
+        }
+
+        const isInsert = !this.dbId;
+
+        // Serialize post data excluding tags and authors
+        const postData: any = {};
+        for (const key of Object.keys(this.data)) {
+            if (key !== 'tags' && key !== 'authors') {
+                postData[key] = this.data[key];
+            }
+        }
+
+        const serializedData = JSON.stringify(postData);
+        const serializedSource = JSON.stringify(this.#source);
+        const serializedMeta = JSON.stringify(this.#meta);
+        /* c8 ignore next 3 -- dates are always Date instances from set()/fromRow(); ternary is defensive */
+        const createdAt = this.data.created_at instanceof Date ? this.data.created_at.toISOString() : this.data.created_at;
+        const updatedAt = this.data.updated_at instanceof Date ? this.data.updated_at.toISOString() : this.data.updated_at;
+        const publishedAt = this.data.published_at instanceof Date ? this.data.published_at.toISOString() : this.data.published_at;
+
+        if (!this.ghostId) {
+            this.ghostId = randomBytes(12).toString('hex');
+        }
+
+        if (this.dbId) {
+            db.stmts.updatePost.run(
+                serializedData, serializedSource, serializedMeta,
+                this.#contentFormat, this.#lookupKey, this.ghostId,
+                createdAt, updatedAt, publishedAt,
+                this.dbId
+            );
+        } else {
+            // Check for existing post by lookup_key
+            if (this.#lookupKey) {
+                const existing = db.stmts.findPostByLookupKey.get(this.#lookupKey) as any;
+                if (existing) {
+                    this.dbId = existing.id as number;
+                    this.ghostId = existing.ghost_id as string;
+                    this.#duplicateSkipped = true;
+                    if (this.#warnOnLookupKeyDuplicate) {
+                        // eslint-disable-next-line no-console
+                        console.warn(`Duplicate post skipped for lookup_key: ${this.#lookupKey}`);
+                    }
+                    return;
+                }
+            }
+
+            const result = db.stmts.insertPost.run(
+                serializedData, serializedSource, serializedMeta,
+                this.#contentFormat, this.#lookupKey, this.ghostId,
+                createdAt, updatedAt, publishedAt
+            );
+            this.dbId = Number(result.lastInsertRowid);
+        }
+
+        // Handle tags - only delete existing join rows on update
+        if (!isInsert) {
+            db.stmts.deletePostTagsByPostId.run(this.dbId);
+        }
+        for (let i = 0; i < this.data.tags.length; i++) {
+            const tag = this.data.tags[i];
+            if (tag instanceof TagContext) {
+                tag.save(db);
+                db.stmts.insertPostTag.run(this.dbId, tag.dbId, i);
+            }
+        }
+
+        // Handle authors - only delete existing join rows on update
+        if (!isInsert) {
+            db.stmts.deletePostAuthorsByPostId.run(this.dbId);
+        }
+        for (let i = 0; i < this.data.authors.length; i++) {
+            const author = this.data.authors[i];
+            if (author instanceof AuthorContext) {
+                author.save(db);
+                db.stmts.insertPostAuthor.run(this.dbId, author.dbId, i);
+            }
+        }
+    }
+
+    static readonly META_FIELDS = [
+        'og_image',
+        'og_title',
+        'og_description',
+        'twitter_image',
+        'twitter_title',
+        'twitter_description',
+        'meta_title',
+        'meta_description',
+        'feature_image_alt',
+        'feature_image_caption'
+    ];
+
+    static toGhostPost(row: any): {post: any; meta: any; didConvert: boolean} {
+        const rawData = JSON.parse(row.data);
+        const contentFormat = row.content_format;
+        const ghostId = row.ghost_id as string;
+        let didConvert = false;
+
+        // Use pre-converted content if available, otherwise convert
+        if (contentFormat === 'lexical') {
+            if (!rawData.lexical && rawData.html) {
+                rawData.lexical = JSON.stringify(lexicalConverter.htmlToLexical(rawData.html));
+                didConvert = true;
+            }
+            rawData.html = null;
+            rawData.mobiledoc = null;
+        } else if (contentFormat === 'mobiledoc') {
+            if (!rawData.mobiledoc && rawData.html) {
+                rawData.mobiledoc = JSON.stringify(mobiledocConverter.toMobiledoc(rawData.html));
+                didConvert = true;
+            }
+            rawData.html = null;
+            rawData.lexical = null;
+        } else {
+            rawData.mobiledoc = null;
+            rawData.lexical = null;
+        }
+
+        // Extract meta fields into posts_meta entry
+        const metaEntry: any = {};
+        let hasMeta = false;
+        for (const field of PostContext.META_FIELDS) {
+            if (rawData[field] !== null && rawData[field] !== undefined) {
+                metaEntry[field] = rawData[field];
+                hasMeta = true;
+            }
+            delete rawData[field];
+        }
+
+        // Remove nested tags/authors — junction tables handle these
+        delete rawData.tags;
+        delete rawData.authors;
+
+        // Build the flat post object with ghost ID
+        const post = ghostId ? {id: ghostId, ...rawData} : rawData;
+
+        // Build meta with post_id reference
+        const meta = hasMeta ? {post_id: ghostId, ...metaEntry} : null;
+
+        return {post, meta, didConvert};
+    }
+
+    static fromRow(row: any, db: DatabaseModels): PostContext {
+        const rawData = JSON.parse(row.data);
+        const source = JSON.parse(row.source);
+        const meta = JSON.parse(row.meta);
+        const contentFormat = row.content_format;
+
+        // Convert date strings back to Date objects
+        const dateFields = ['created_at', 'updated_at', 'published_at'];
+        for (const field of dateFields) {
+            if (rawData[field] && typeof rawData[field] === 'string') {
+                rawData[field] = new Date(rawData[field]);
+            }
+        }
+
+        const lookupKey = row.lookup_key as string | null;
+        const post = new PostContext({source, meta, contentFormat, lookupKey: lookupKey ?? undefined});
+        post.dbId = row.id as number;
+        post.ghostId = row.ghost_id as string;
+
+        // Set scalar data directly (bypass set() to avoid re-conversion)
+        for (const [key, value] of Object.entries(rawData)) {
+            if (key !== 'tags' && key !== 'authors') {
+                post.data[key] = value;
+            }
+        }
+
+        // Post was loaded from DB; nothing has been modified yet
+        post.#htmlDirty = false;
+
+        // Load tags via join table
+        const postTags = db.stmts.findPostTagsByPostId.all(post.dbId) as any[];
+
+        for (const pt of postTags) {
+            const tagRow = db.stmts.findTagById.get(pt.tag_id) as any;
+            if (tagRow) {
+                post.data.tags.push(TagContext.fromRow(tagRow));
+            }
+        }
+
+        // Load authors via join table
+        const postAuthors = db.stmts.findPostAuthorsByPostId.all(post.dbId) as any[];
+
+        for (const pa of postAuthors) {
+            const authorRow = db.stmts.findAuthorById.get(pa.author_id) as any;
+            if (authorRow) {
+                post.data.authors.push(AuthorContext.fromRow(authorRow));
+            }
+        }
+
+        return post;
     }
 }
