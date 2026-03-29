@@ -71,11 +71,11 @@ await post.save(context.db);
 
 After mutating a post, call `await post.save(context.db)` to persist changes to the database.
 
-When you call `post.set('html', '<p>...</p>')`, the content is automatically converted based on the `contentFormat`:
+When you call `post.set('html', '<p>...</p>')`, cached `lexical` and `mobiledoc` values are invalidated but conversion is deferred. The HTML is only converted to the target format when explicitly needed — by calling `convertContent()`, accessing `getFinal`, or during `writeGhostJson()`. The `contentFormat` (default `'lexical'`) controls which format is generated:
 
-- **`lexical`** (default): Both `html` and `lexical` are populated. The HTML is automatically converted to Lexical format. `mobiledoc` will be `null`.
+- **`lexical`** (default): HTML is converted to Lexical format. `mobiledoc` will be `null`.
 - **`html`**: Only `html` is populated in the export. `mobiledoc` and `lexical` will be `null`.
-- **`mobiledoc`**: Both `html` and `mobiledoc` are populated. The HTML is automatically converted to Mobiledoc format. `lexical` will be `null`.
+- **`mobiledoc`**: HTML is converted to Mobiledoc format. `lexical` will be `null`.
 
 ### Add a tag
 
@@ -186,14 +186,14 @@ Each `WrittenFile` object contains:
 
 ### Export tags or users only
 
-You can export just tags or just users as standalone JSON files, without posts or junction tables:
+You can export just tags or just users as standalone JSON files, without posts or junction tables. Only tags and users that are referenced by at least one post are included — orphan entities with no post associations are omitted.
 
 ```js
-// Export all tags
+// Export tags referenced by posts
 const tagFile = await context.writeGhostTagsJson('/path/to/output/');
 // Writes tags.json — { meta, data: { tags: [...] } }
 
-// Export all users
+// Export users referenced by posts
 const userFile = await context.writeGhostUsersJson('/path/to/output/');
 // Writes users.json — { meta, data: { users: [...] } }
 ```
