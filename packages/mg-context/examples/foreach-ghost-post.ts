@@ -1,4 +1,4 @@
-// Run this with: `npx tsx scripts/foreach-ghost-post.ts`
+// Run this with: `npx tsx examples/foreach-ghost-post.ts`
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {MigrateContext} from '../src/index.js';

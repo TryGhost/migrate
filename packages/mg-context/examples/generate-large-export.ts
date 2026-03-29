@@ -1,4 +1,4 @@
-// Run this with: `npx tsx scripts/generate-large-export.ts`
+// Run this with: `npx tsx examples/generate-large-export.ts`
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {MigrateContext} from '../src/index.js';
