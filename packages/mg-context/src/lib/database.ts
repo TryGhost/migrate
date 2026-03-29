@@ -136,7 +136,7 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         findTagsBySlug: db.prepare('SELECT * FROM Tags WHERE slug = ?'),
         findTagsByName: db.prepare('SELECT * FROM Tags WHERE name = ?'),
         findAllTags: db.prepare('SELECT * FROM Tags'),
-        findUsedTags: db.prepare('SELECT DISTINCT t.* FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id'),
+        findUsedTags: db.prepare('SELECT DISTINCT t.* FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id ORDER BY t.id ASC'),
 
         // Authors
         insertAuthor: db.prepare('INSERT INTO Authors (data, slug, name, email, ghost_id) VALUES (?, ?, ?, ?, ?)'),
@@ -149,7 +149,7 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         findAuthorsByName: db.prepare('SELECT * FROM Authors WHERE name = ?'),
         findAuthorsByEmail: db.prepare('SELECT * FROM Authors WHERE email = ?'),
         findAllAuthors: db.prepare('SELECT * FROM Authors'),
-        findUsedAuthors: db.prepare('SELECT DISTINCT a.* FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id'),
+        findUsedAuthors: db.prepare('SELECT DISTINCT a.* FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id ORDER BY a.id ASC'),
 
         // PostTag junction
         insertPostTag: db.prepare('INSERT INTO PostTags (post_id, tag_id, sort_order) VALUES (?, ?, ?)'),
