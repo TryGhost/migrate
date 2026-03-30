@@ -442,11 +442,13 @@ export default class MigrateContext extends MigrateBase {
 
             const postsTags = postTagRows.map((r: any) => ({
                 post_id: ghostIdMap.get(r.post_id),
-                tag_id: tagGhostIds.get(r.tag_id)
+                tag_id: tagGhostIds.get(r.tag_id),
+                sort_order: r.sort_order
             }));
             const postsAuthors = postAuthorRows.map((r: any) => ({
                 post_id: ghostIdMap.get(r.post_id),
-                author_id: authorGhostIds.get(r.author_id)
+                author_id: authorGhostIds.get(r.author_id),
+                sort_order: r.sort_order
             }));
 
             // Stream file: posts are loaded and written in sub-batches

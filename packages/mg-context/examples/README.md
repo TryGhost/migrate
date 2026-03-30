@@ -26,6 +26,14 @@ npx tsx examples/generate-large-export.ts
 npx tsx examples/generate-large-export.ts --insert false
 ```
 
+## reorder-tags-authors.ts
+
+Demonstrates tag and author ordering. Creates a post with several tags and authors, then shows how to reorder them using `setTagOrder`, `setAuthorOrder`, `setPrimaryTag`, and `addTag` with a `sortOrder` option. Verifies that order persists through save/load cycles and that `sort_order` appears in the exported Ghost JSON.
+
+```bash
+npx tsx examples/reorder-tags-authors.ts
+```
+
 ## foreach-ghost-post.ts
 
 Reads posts from an existing on-disk database (`posts.db`) and iterates over them in Ghost JSON format using `forEachGhostPost`. Each post is logged with its slug, title, tag count, and author count. Requires a database that was previously populated (e.g. by `generate-large-export.ts`).

@@ -305,6 +305,36 @@ describe('PostContext', function () {
             assert.equal(instance.data.tags.length, 1);
         });
 
+        it('Can add a tag at a specific sort order', function () {
+            const instance: any = new PostContext();
+            instance.addTag({name: 'First Tag', slug: 'first-tag'});
+            instance.addTag({name: 'Third Tag', slug: 'third-tag'});
+            instance.addTag({name: 'Second Tag', slug: 'second-tag', sortOrder: 1});
+
+            assert.equal(instance.data.tags.length, 3);
+            assert.equal(instance.data.tags[0].data.slug, 'first-tag');
+            assert.equal(instance.data.tags[1].data.slug, 'second-tag');
+            assert.equal(instance.data.tags[2].data.slug, 'third-tag');
+        });
+
+        it('Can add a tag at sort order 0', function () {
+            const instance: any = new PostContext();
+            instance.addTag({name: 'Second Tag', slug: 'second-tag'});
+            instance.addTag({name: 'First Tag', slug: 'first-tag', sortOrder: 0});
+
+            assert.equal(instance.data.tags[0].data.slug, 'first-tag');
+            assert.equal(instance.data.tags[1].data.slug, 'second-tag');
+        });
+
+        it('Appends tag when sort order exceeds array length', function () {
+            const instance: any = new PostContext();
+            instance.addTag({name: 'First Tag', slug: 'first-tag'});
+            instance.addTag({name: 'Second Tag', slug: 'second-tag', sortOrder: 99});
+
+            assert.equal(instance.data.tags.length, 2);
+            assert.equal(instance.data.tags[1].data.slug, 'second-tag');
+        });
+
         it('Can reorder tags', function () {
             const instance: any = new PostContext();
             instance.addTag({
@@ -510,6 +540,36 @@ describe('PostContext', function () {
             assert.equal(instance.data.authors[0].data.name, 'My Author');
             assert.equal(instance.data.authors[0].data.slug, 'my-author');
             assert.equal(instance.data.authors.length, 1);
+        });
+
+        it('Can add an author at a specific sort order', function () {
+            const instance: any = new PostContext();
+            instance.addAuthor({name: 'First Author', slug: 'first-author', email: 'first@example.com'});
+            instance.addAuthor({name: 'Third Author', slug: 'third-author', email: 'third@example.com'});
+            instance.addAuthor({name: 'Second Author', slug: 'second-author', email: 'second@example.com', sortOrder: 1});
+
+            assert.equal(instance.data.authors.length, 3);
+            assert.equal(instance.data.authors[0].data.slug, 'first-author');
+            assert.equal(instance.data.authors[1].data.slug, 'second-author');
+            assert.equal(instance.data.authors[2].data.slug, 'third-author');
+        });
+
+        it('Can add an author at sort order 0', function () {
+            const instance: any = new PostContext();
+            instance.addAuthor({name: 'Second Author', slug: 'second-author', email: 'second@example.com'});
+            instance.addAuthor({name: 'First Author', slug: 'first-author', email: 'first@example.com', sortOrder: 0});
+
+            assert.equal(instance.data.authors[0].data.slug, 'first-author');
+            assert.equal(instance.data.authors[1].data.slug, 'second-author');
+        });
+
+        it('Appends author when sort order exceeds array length', function () {
+            const instance: any = new PostContext();
+            instance.addAuthor({name: 'First Author', slug: 'first-author', email: 'first@example.com'});
+            instance.addAuthor({name: 'Second Author', slug: 'second-author', email: 'second@example.com', sortOrder: 99});
+
+            assert.equal(instance.data.authors.length, 2);
+            assert.equal(instance.data.authors[1].data.slug, 'second-author');
         });
 
         it('Can reorder authors', function () {

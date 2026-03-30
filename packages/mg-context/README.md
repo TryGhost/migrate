@@ -359,13 +359,24 @@ Persist the post and its tag/author relationships to the database.
 
 ### Tags
 
-#### `post.addTag(tag): TagContext | false`
+Tags have a `sort_order` that is tracked automatically. When tags are added, their position in the list becomes their sort order. The sort order is persisted to the database and included in the exported Ghost JSON as a 1-based integer (`sort_order: 1, 2, 3, ...`).
+
+#### `post.addTag(tag, options?): TagContext | false`
 
 Add a tag by object or `TagContext`. Returns `false` if the slug already exists on this post.
 
 ```js
 post.addTag({name: 'News', slug: 'news'});
+
+// Insert at a specific position (0-based index)
+post.addTag({name: 'Breaking', slug: 'breaking', sortOrder: 0});
 ```
+
+| Option      | Type     | Required | Description                                      |
+|-------------|----------|----------|--------------------------------------------------|
+| `name`      | `string` | Yes      | Tag name                                         |
+| `slug`      | `string` | Yes      | Tag slug                                         |
+| `sortOrder` | `number` | No       | Position to insert at. Appends if out of bounds. |
 
 #### `post.removeTag(slug): void`
 
@@ -375,23 +386,44 @@ Remove a tag by slug.
 
 Check if the post has a specific tag.
 
-#### `post.setPrimaryTag(tag): void`
+#### `post.setPrimaryTag({name, slug}): void`
 
-Set a tag as primary (moves it to position 0). Adds the tag if it doesn't exist.
+Set a tag as primary (moves it to sort order 1). Adds the tag if it doesn't exist.
 
 #### `post.setTagOrder(callback): void`
 
-Reorder tags. The callback receives the tags array and should return the reordered array.
+Reorder tags. The callback receives an array of `TagContext` instances and must return the same instances in the desired order. Access tag properties via `tag.data.slug`, `tag.data.name`, etc.
+
+```js
+// Move internal tags to the end
+post.setTagOrder((tags) => {
+    const regular = tags.filter(t => !t.data.slug.startsWith('hash-'));
+    const internal = tags.filter(t => t.data.slug.startsWith('hash-'));
+    return [...regular, ...internal];
+});
+```
 
 ### Authors
 
-#### `post.addAuthor(author): AuthorContext | false`
+Authors follow the same ordering model as tags — `sort_order` is tracked automatically, persisted, and exported as a 1-based integer.
+
+#### `post.addAuthor(author, options?): AuthorContext | false`
 
 Add an author by object or `AuthorContext`. Returns `false` if the slug already exists on this post.
 
 ```js
 post.addAuthor({name: 'Alice', slug: 'alice', email: 'alice@example.com'});
+
+// Insert at a specific position
+post.addAuthor({name: 'Bob', slug: 'bob', email: 'bob@example.com', sortOrder: 0});
 ```
+
+| Option      | Type     | Required | Description                                      |
+|-------------|----------|----------|--------------------------------------------------|
+| `name`      | `string` | Yes      | Author name                                      |
+| `slug`      | `string` | Yes      | Author slug                                      |
+| `email`     | `string` | Yes      | Author email                                     |
+| `sortOrder` | `number` | No       | Position to insert at. Appends if out of bounds. |
 
 #### `post.removeAuthor(slug): void`
 
@@ -401,13 +433,18 @@ Remove an author by slug.
 
 Check if the post has a specific author.
 
-#### `post.setPrimaryAuthor(author): void`
+#### `post.setPrimaryAuthor({name, slug, email}): void`
 
-Set an author as primary (moves them to position 0). Adds the author if they don't exist.
+Set an author as primary (moves them to sort order 1). Adds the author if they don't exist.
 
 #### `post.setAuthorOrder(callback): void`
 
-Reorder authors. The callback receives the authors array and should return the reordered array.
+Reorder authors. The callback receives an array of `AuthorContext` instances and must return the same instances in the desired order. Access author properties via `author.data.slug`, `author.data.name`, etc.
+
+```js
+// Reverse the author order
+post.setAuthorOrder((authors) => [...authors].reverse());
+```
 
 ### Source & metadata
 
@@ -532,6 +569,7 @@ new AuthorContext({name: 'Alice', slug: 'alice', email: 'alice@example.com'})
 The [examples/](examples/) directory contains runnable scripts demonstrating common patterns:
 
 - **generate-and-export.ts** — Create 500 posts in-memory and export to Ghost JSON
+- **reorder-tags-authors.ts** — Reorder tags and authors using `setTagOrder`, `setPrimaryTag`, and `addTag` with `sortOrder`
 - **generate-large-export.ts** — Stress-test with 500k posts, benchmarking memory and performance
 - **foreach-ghost-post.ts** — Iterate an existing database and log each post as Ghost JSON
 

@@ -574,6 +574,74 @@ describe('MigrateContext', () => {
         await instance.close();
     });
 
+    it('Exports sort_order in posts_tags and posts_authors', async () => {
+        const instance: any = new MigrateContext();
+        await instance.init();
+
+        const post = await instance.addPost();
+        post.set('title', 'Sort Order Test');
+        post.set('slug', 'sort-order-test');
+        post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+        post.addTag({name: 'Tag A', slug: 'tag-a'});
+        post.addTag({name: 'Tag B', slug: 'tag-b'});
+        post.addTag({name: 'Tag C', slug: 'tag-c'});
+        post.addAuthor({name: 'Author A', slug: 'author-a', email: 'a@example.com'});
+        post.addAuthor({name: 'Author B', slug: 'author-b', email: 'b@example.com'});
+        await post.save(instance.db);
+
+        const writtenFiles = await instance.writeGhostJson(tmpdir(), {filename: 'sort-order-test'});
+        const ghostJSON = JSON.parse(await readFile(writtenFiles[0].path, 'utf-8'));
+
+        assert.equal(ghostJSON.data.posts_tags.length, 3);
+        assert.equal(ghostJSON.data.posts_tags[0].sort_order, 1);
+        assert.equal(ghostJSON.data.posts_tags[1].sort_order, 2);
+        assert.equal(ghostJSON.data.posts_tags[2].sort_order, 3);
+
+        assert.equal(ghostJSON.data.posts_authors.length, 2);
+        assert.equal(ghostJSON.data.posts_authors[0].sort_order, 1);
+        assert.equal(ghostJSON.data.posts_authors[1].sort_order, 2);
+
+        await unlink(writtenFiles[0].path);
+        await instance.close();
+    });
+
+    it('Preserves sort_order after reordering tags', async () => {
+        const instance: any = new MigrateContext();
+        await instance.init();
+
+        const post = await instance.addPost();
+        post.set('title', 'Reorder Test');
+        post.set('slug', 'reorder-test');
+        post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+        post.addTag({name: 'Alpha', slug: 'alpha'});
+        post.addTag({name: 'Beta', slug: 'beta'});
+        post.addTag({name: 'Gamma', slug: 'gamma'});
+        post.addAuthor({name: 'Test Author', slug: 'test-author', email: 'test@example.com'});
+        await post.save(instance.db);
+
+        // Reload and reorder
+        const posts = await instance.getAllPosts();
+        const loaded = posts[0];
+        loaded.setPrimaryTag({name: 'Gamma', slug: 'gamma'});
+        loaded.save(instance.db);
+
+        const writtenFiles = await instance.writeGhostJson(tmpdir(), {filename: 'reorder-test'});
+        const ghostJSON = JSON.parse(await readFile(writtenFiles[0].path, 'utf-8'));
+
+        // Gamma should now be sort_order 1 (primary)
+        const gammaTag = ghostJSON.data.tags.find((t: any) => t.slug === 'gamma');
+        const gammaJoin = ghostJSON.data.posts_tags.find((pt: any) => pt.tag_id === gammaTag.id);
+        assert.equal(gammaJoin.sort_order, 1);
+
+        // Alpha should now be sort_order 2
+        const alphaTag = ghostJSON.data.tags.find((t: any) => t.slug === 'alpha');
+        const alphaJoin = ghostJSON.data.posts_tags.find((pt: any) => pt.tag_id === alphaTag.id);
+        assert.equal(alphaJoin.sort_order, 2);
+
+        await unlink(writtenFiles[0].path);
+        await instance.close();
+    });
+
     it('Can write Ghost JSON to file', async () => {
         const instance: any = new MigrateContext();
         await instance.init();

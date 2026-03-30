@@ -204,7 +204,9 @@ export default class PostContext extends MigrateBase {
         return this.data.tags.some((tag: TagDataObject) => tag.data.name === tagName);
     }
 
-    addTag(value: TagContext | TagObject) {
+    addTag(value: TagContext | (TagObject & {sortOrder?: number})) {
+        let sortOrder: number | undefined;
+
         // Exit early if the tag already exists
         if (value instanceof TagContext) {
             if (value && this.hasTagSlug(value.data.slug)) {
@@ -214,15 +216,18 @@ export default class PostContext extends MigrateBase {
             if (value && this.hasTagSlug(value.slug)) {
                 return false;
             }
+            ({sortOrder, ...value} = value);
         }
 
-        if (value instanceof TagContext) {
-            this.data.tags.push(value);
+        const tag = value instanceof TagContext ? value : new TagContext({initialData: value});
+
+        if (sortOrder !== undefined && sortOrder >= 0 && sortOrder < this.data.tags.length) {
+            this.data.tags.splice(sortOrder, 0, tag);
         } else {
-            const newTag = new TagContext({initialData: value});
-            this.data.tags.push(newTag);
-            return newTag;
+            this.data.tags.push(tag);
         }
+
+        return value instanceof TagContext ? undefined : tag;
     }
 
     removeTag(tagSlug: string) {
@@ -231,7 +236,7 @@ export default class PostContext extends MigrateBase {
         });
     }
 
-    setTagOrder(callback: Function) {
+    setTagOrder(callback: {(tags: TagContext[]): TagContext[]}) { // eslint-disable-line no-unused-vars
         this.data.tags = callback(this.data.tags);
     }
 
@@ -264,8 +269,10 @@ export default class PostContext extends MigrateBase {
         return this.data.authors.some((author: AuthorDataObject) => author.data.email === authorEmail);
     }
 
-    addAuthor(value: AuthorContext | AuthorObject) {
-        // Exit early if the tag already exists
+    addAuthor(value: AuthorContext | (AuthorObject & {sortOrder?: number})) {
+        let sortOrder: number | undefined;
+
+        // Exit early if the author already exists
         if (value instanceof AuthorContext) {
             if (value && this.hasAuthorSlug(value.data.slug)) {
                 return false;
@@ -274,22 +281,25 @@ export default class PostContext extends MigrateBase {
             if (value && this.hasAuthorSlug(value.slug)) {
                 return false;
             }
+            ({sortOrder, ...value} = value);
         }
 
-        if (value instanceof AuthorContext) {
-            this.data.authors.push(value);
+        const author = value instanceof AuthorContext ? value : new AuthorContext({initialData: value});
+
+        if (sortOrder !== undefined && sortOrder >= 0 && sortOrder < this.data.authors.length) {
+            this.data.authors.splice(sortOrder, 0, author);
         } else {
-            const newAuthor = new AuthorContext({initialData: value});
-            this.data.authors.push(newAuthor);
-            return newAuthor;
+            this.data.authors.push(author);
         }
+
+        return value instanceof AuthorContext ? undefined : author;
     }
 
     removeAuthor(authorSlug: string) {
         this.data.authors = this.data.authors.filter((author: AuthorDataObject) => author.data.slug !== authorSlug);
     }
 
-    setAuthorOrder(callback: Function) {
+    setAuthorOrder(callback: {(authors: AuthorContext[]): AuthorContext[]}) { // eslint-disable-line no-unused-vars
         this.data.authors = callback(this.data.authors);
     }
 
@@ -300,8 +310,8 @@ export default class PostContext extends MigrateBase {
             this.addAuthor(value);
         }
 
-        this.setAuthorOrder((authors: AuthorObject[]) => {
-            const targetAuthorIndex = authors.findIndex((el: AuthorObject) => el.name === value.slug);
+        this.setAuthorOrder((authors: AuthorContext[]) => {
+            const targetAuthorIndex = authors.findIndex((el: any) => el.data.slug === value.slug);
             const targetAuthor = authors.splice(targetAuthorIndex, 1)[0];
 
             authors.splice(0, 0, targetAuthor);
@@ -376,7 +386,7 @@ export default class PostContext extends MigrateBase {
             const tag = this.data.tags[i];
             if (tag instanceof TagContext) {
                 tag.save(db);
-                db.stmts.insertPostTag.run(this.dbId, tag.dbId, i);
+                db.stmts.insertPostTag.run(this.dbId, tag.dbId, i + 1);
             }
         }
 
@@ -388,7 +398,7 @@ export default class PostContext extends MigrateBase {
             const author = this.data.authors[i];
             if (author instanceof AuthorContext) {
                 author.save(db);
-                db.stmts.insertPostAuthor.run(this.dbId, author.dbId, i);
+                db.stmts.insertPostAuthor.run(this.dbId, author.dbId, i + 1);
             }
         }
     }
