@@ -32,6 +32,6 @@
   },
   "dependencies": {
     "fast-xml-parser": "5.5.9",
-    "jsdom": "28.1.0"
+    "jsdom": "29.0.1"
   }
 }
