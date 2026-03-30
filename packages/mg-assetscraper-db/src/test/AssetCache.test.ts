@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import {describe, it, beforeEach} from 'node:test';
+import {DatabaseSync} from 'node:sqlite';
+import {join} from 'node:path';
+import {mkdirSync} from 'node:fs';
 import AssetCache from '../lib/AssetCache.js';
-import {validate as uuidValidate} from 'uuid';
 import fsUtils from '@tryghost/mg-fs-utils';
 
 describe('AssetCache from scratch', () => {
@@ -33,6 +35,8 @@ describe('AssetCache from scratch', () => {
 
         // Check we return a newly created object
         assert.equal(newItem.src, '/wp-content/2024/11/01/lorem.jpg');
+        assert.ok(newItem.createdAt, 'createdAt should be set on insert');
+        assert.ok(newItem.updatedAt, 'updatedAt should be set on insert');
 
         // And now get all and check the object is the same
         const result = await assetCache.getAll();
@@ -45,13 +49,13 @@ describe('AssetCache from scratch', () => {
     it('Does not add the same item twice', async () => {
         // Add the item first, and get its ID
         const firstInsert = await assetCache.add('/wp-content/2024/11/01/lorem.jpg');
-        const firstInsertID = firstInsert.uuid;
+        const firstInsertID = firstInsert.id;
 
         // Try to insert the same item again
         const secondInsert = await assetCache.add('/wp-content/2024/11/01/lorem.jpg');
 
-        // Check the ID of the second ID as it should be the same as the fist (i.e. it didn't insert)
-        assert.equal(secondInsert.uuid, firstInsertID);
+        // Check the ID of the second ID as it should be the same as the first (i.e. it didn't insert)
+        assert.equal(secondInsert.id, firstInsertID);
 
         // And for good measure, check we only have one item in the DB
         const result = await assetCache.getAll();
@@ -84,6 +88,11 @@ describe('AssetCache from scratch', () => {
         assert.equal(result.src, '/wp-content/2024/11/01/lorem.jpg');
     });
 
+    it('Returns null when finding a non-existent src', async () => {
+        const result = await assetCache.findBySrc('/does-not-exist.jpg');
+        assert.equal(result, null);
+    });
+
     // test.skip('Returns empty array if it cannot find any items', async () => {
     //     await assetCache.add('/wp-content/2024/11/01/lorem.jpg');
     //     await assetCache.add('/wp-content/2024/11/01/ipsum.jpg');
@@ -97,6 +106,8 @@ describe('AssetCache from scratch', () => {
     it('Can update a single item', async () => {
         // Insert an item and then update it
         const item = await assetCache.add('/wp-content/2024/11/01/lorem.jpg');
+        const createdAt = item.createdAt;
+
         await assetCache.update(item.id, 'localPath', '/content/images/wp-content/2024/11/01/lorem.jpg');
         await assetCache.update(item.id, 'status', 200);
 
@@ -104,6 +115,112 @@ describe('AssetCache from scratch', () => {
 
         assert.equal(result[0].localPath, '/content/images/wp-content/2024/11/01/lorem.jpg');
         assert.equal(result[0].status, 200);
+        assert.equal(result[0].createdAt, createdAt, 'createdAt should not change on update');
+        assert.ok(result[0].updatedAt, 'updatedAt should be set after update');
+    });
+
+    it('Throws when updating an invalid field', async () => {
+        const item = await assetCache.add('/wp-content/2024/11/01/lorem.jpg');
+
+        assert.throws(() => {
+            assetCache.update(item.id, 'invalid' as any, 'value');
+        }, {message: 'Cannot update field: invalid'});
+    });
+
+    it('Re-adds a row that was deleted from a previous migration run', async () => {
+        // Simulate a previous run: add an item with a localPath
+        const item = await assetCache.add('/wp-content/2024/11/01/lorem.jpg');
+        await assetCache.update(item.id, 'localPath', '/content/images/lorem.jpg');
+        await assetCache.update(item.id, 'status', 200);
+
+        // User deletes the row externally (e.g. to force re-download)
+        const fileCache = new fsUtils.FileCache('assetcache-tests');
+        const dbPath = join(fileCache.tmpDir, 'assets-cache', 'assets.db');
+        const db = new DatabaseSync(dbPath);
+        db.exec(`DELETE FROM Assets WHERE src = '/wp-content/2024/11/01/lorem.jpg'`);
+        db.close();
+
+        // Next migration run: a new AssetCache instance opens the same DB
+        const assetCache2 = new AssetCache({fileCache});
+        const reAdded = assetCache2.add('/wp-content/2024/11/01/lorem.jpg');
+
+        // Should be a fresh row with no localPath
+        assert.equal(reAdded.src, '/wp-content/2024/11/01/lorem.jpg');
+        assert.equal(reAdded.localPath, null);
+        assert.equal(reAdded.status, null);
+    });
+
+    it('Works with an existing Sequelize-created database', async () => {
+        const fileCache = new fsUtils.FileCache('assetcache-tests');
+        const dbDir = join(fileCache.tmpDir, 'assets-cache');
+        mkdirSync(dbDir, {recursive: true});
+        const dbPath = join(dbDir, 'assets.db');
+
+        const oldDb = new DatabaseSync(dbPath);
+        oldDb.exec(`
+            DROP TABLE IF EXISTS Assets;
+            CREATE TABLE Assets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                src VARCHAR(255),
+                status DOUBLE PRECISION,
+                localPath VARCHAR(255),
+                skip VARCHAR(255),
+                createdAt DATETIME NOT NULL,
+                updatedAt DATETIME NOT NULL
+            );
+            INSERT INTO Assets (src, status, localPath, createdAt, updatedAt)
+                VALUES ('https://example.com/img.jpg', 200, '/content/images/img.jpg', '2024-01-01', '2024-01-01');
+        `);
+        oldDb.close();
+
+        const cache = new AssetCache({fileCache});
+
+        // Existing rows preserved
+        const all = cache.getAll();
+        assert.equal(all.length, 1);
+        assert.equal(all[0].src, 'https://example.com/img.jpg');
+        assert.equal(all[0].createdAt, '2024-01-01');
+
+        // New inserts work
+        const newItem = cache.add('https://example.com/new.jpg');
+        assert.equal(newItem.src, 'https://example.com/new.jpg');
+        assert.ok(newItem.createdAt);
+    });
+
+    it('Adds timestamp columns to a table missing them', async () => {
+        const fileCache = new fsUtils.FileCache('assetcache-tests');
+        const dbDir = join(fileCache.tmpDir, 'assets-cache');
+        mkdirSync(dbDir, {recursive: true});
+        const dbPath = join(dbDir, 'assets.db');
+
+        // Simulate a DB without timestamp columns
+        const oldDb = new DatabaseSync(dbPath);
+        oldDb.exec(`
+            DROP TABLE IF EXISTS Assets;
+            CREATE TABLE Assets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                src TEXT NOT NULL,
+                status INTEGER,
+                localPath TEXT,
+                skip TEXT
+            );
+            INSERT INTO Assets (src, status, localPath)
+                VALUES ('https://example.com/img.jpg', 200, '/content/images/img.jpg');
+        `);
+        oldDb.close();
+
+        const cache = new AssetCache({fileCache});
+
+        // Existing rows preserved
+        const all = cache.getAll();
+        assert.equal(all.length, 1);
+        assert.equal(all[0].src, 'https://example.com/img.jpg');
+        assert.equal(all[0].localPath, '/content/images/img.jpg');
+
+        // New inserts get timestamps
+        const newItem = cache.add('https://example.com/new.jpg');
+        assert.ok(newItem.createdAt);
+        assert.ok(newItem.updatedAt);
     });
 
     // test('Can delete a single item', async () => {

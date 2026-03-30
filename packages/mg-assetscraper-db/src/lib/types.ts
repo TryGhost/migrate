@@ -162,6 +162,8 @@ export interface AssetCacheEntry {
     status?: number;
     localPath?: string;
     skip?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export interface AssetCacheOptions {
