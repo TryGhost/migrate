@@ -364,7 +364,6 @@ const processPosts = async (posts, options) => {
 
     for (let i = 0; i < posts.length; i++) {
         results.push(await processPost(posts[i], options));
-        posts[i] = null;
     }
 
     return results;

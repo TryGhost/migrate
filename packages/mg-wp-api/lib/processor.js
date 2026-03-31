@@ -1325,9 +1325,9 @@ const processPosts = async (posts, users, options, errors, fileCache) => { // es
     const results = [];
 
     for (let i = 0; i < posts.length; i++) {
-        if (posts[i]) {
-            results.push(await processPost(posts[i], users, options, errors, fileCache));
-            posts[i] = null;
+        const post = posts[i];
+        if (post) {
+            results.push(await processPost(post, users, options, errors, fileCache));
         }
     }
 

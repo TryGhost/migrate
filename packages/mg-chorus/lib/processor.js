@@ -122,9 +122,9 @@ const processPost = (data, options) => {
 const processPosts = (posts, options) => {
     const results = [];
     for (let i = 0; i < posts.length; i++) {
-        if (posts[i]) {
-            results.push(processPost(posts[i], options));
-            posts[i] = null;
+        const post = posts[i];
+        if (post) {
+            results.push(processPost(post, options));
         }
     }
     return results;

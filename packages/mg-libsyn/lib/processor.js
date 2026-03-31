@@ -169,9 +169,9 @@ const processPost = (libsynPost, author, tags, options, errors) => { // eslint-d
 const processPosts = (posts, author, tags, options, errors) => { // eslint-disable-line no-shadow
     const results = [];
     for (let i = 0; i < posts.length; i++) {
-        if (posts[i]) {
-            results.push(processPost(posts[i], author, tags, options, errors));
-            posts[i] = null;
+        const post = posts[i];
+        if (post) {
+            results.push(processPost(post, author, tags, options, errors));
         }
     }
     return results;

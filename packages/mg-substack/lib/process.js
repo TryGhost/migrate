@@ -864,9 +864,9 @@ export default async (input, ctx) => {
     if (input.posts && input.posts.length > 0) {
         output.posts = [];
         for (let i = 0; i < input.posts.length; i++) {
-            if (input.posts[i]) {
-                output.posts.push(processPost(input.posts[i], siteUrl, options));
-                input.posts[i] = null;
+            const post = input.posts[i];
+            if (post) {
+                output.posts.push(processPost(post, siteUrl, options));
             }
         }
     }

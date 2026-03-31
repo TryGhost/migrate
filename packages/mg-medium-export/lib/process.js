@@ -13,9 +13,9 @@ export default (input, options) => {
     if (input.posts && input.posts.length > 0) {
         output.posts = [];
         for (let i = 0; i < input.posts.length; i++) {
-            if (input.posts[i]) {
-                output.posts.push(processPost({name: input.posts[i].name, html: input.posts[i].html, globalUser, options}));
-                input.posts[i] = null;
+            const post = input.posts[i];
+            if (post) {
+                output.posts.push(processPost({name: post.name, html: post.html, globalUser, options}));
             }
         }
     }

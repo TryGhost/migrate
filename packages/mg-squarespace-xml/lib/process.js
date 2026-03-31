@@ -274,12 +274,12 @@ const processPosts = (items, users, options) => {
     const postsOutput = [];
 
     for (let i = 0; i < items.length; i++) {
-        if (items[i]) {
-            const result = processPost(items[i], i, items, users, options);
+        const item = items[i];
+        if (item) {
+            const result = processPost(item, i, items, users, options);
             if (result) {
                 postsOutput.push(result);
             }
-            items[i] = null;
         }
     }
 
