@@ -83,102 +83,102 @@ const processTags = ({tagLinks}) => {
 };
 
 const processFeatureImage = ({html, post, options}) => {
-    const parsed = domUtils.parseFragment(html);
+    return domUtils.processFragment(html, (parsed) => {
+        // Look for data-is-featured
+        let featured = parsed.$('[data-is-featured]')[0] || null;
 
-    // Look for data-is-featured
-    let featured = parsed.$('[data-is-featured]')[0] || null;
+        // Look for an image that appears before content
+        let allSections = parsed.$(sectionTags.join(','));
+        let foundImg = false;
+        let preImageTags = [];
 
-    // Look for an image that appears before content
-    let allSections = parsed.$(sectionTags.join(','));
-    let foundImg = false;
-    let preImageTags = [];
+        allSections.forEach((el) => {
+            if (!foundImg) {
+                preImageTags.push(el.tagName.toLowerCase());
+            }
 
-    allSections.forEach((el) => {
-        if (!foundImg) {
-            preImageTags.push(el.tagName.toLowerCase());
+            if (!foundImg && el.tagName.toLowerCase() === 'img') {
+                foundImg = el;
+            }
+        });
+
+        // We don't have a designated feature image, but there's an image above the content so use that image instead
+        if (!featured && !preImageTags.includes('p')) {
+            featured = foundImg;
+
+            if (options?.addPlatformTag) {
+                // tag it with #auto-feature-image so we can tell the difference
+                post.data.tags.push({
+                    data: {
+                        name: '#auto-feature-image'
+                    }
+                });
+            }
         }
 
-        if (!foundImg && el.tagName.toLowerCase() === 'img') {
-            foundImg = el;
+        if (featured) {
+            post.data.feature_image = featured.getAttribute('src');
+            post.data.feature_image_alt = featured.getAttribute('alt') || null;
+            const figure = featured.closest('figure');
+            const figcaption = figure ? figure.querySelector('figcaption') : null;
+            post.data.feature_image_caption = figcaption ? domUtils.serializeChildren(figcaption).trim() : null;
+
+            if (figure) {
+                figure.remove();
+            }
         }
+
+        return parsed.html().trim();
     });
-
-    // We don't have a designated feature image, but there's an image above the content so use that image instead
-    if (!featured && !preImageTags.includes('p')) {
-        featured = foundImg;
-
-        if (options?.addPlatformTag) {
-            // tag it with #auto-feature-image so we can tell the difference
-            post.data.tags.push({
-                data: {
-                    name: '#auto-feature-image'
-                }
-            });
-        }
-    }
-
-    if (featured) {
-        post.data.feature_image = featured.getAttribute('src');
-        post.data.feature_image_alt = featured.getAttribute('alt') || null;
-        const figure = featured.closest('figure');
-        const figcaption = figure ? figure.querySelector('figcaption') : null;
-        post.data.feature_image_caption = figcaption ? domUtils.serializeChildren(figcaption).trim() : null;
-
-        if (figure) {
-            figure.remove();
-        }
-    }
-
-    return parsed.html().trim();
 };
 
 export default ({name, html, globalUser, options}) => {
-    const parsed = domUtils.parseFragment(html);
+    return domUtils.processFragment(html, (parsed) => {
+        let post = processMeta({name, parsed, options});
 
-    let post = processMeta({name, parsed, options});
+        // Process author
+        const pAuthor = parsed.$('.p-author')[0];
+        if (pAuthor) {
+            post.data.author = processAuthor({pAuthor});
+        } else if (globalUser) {
+            post.data.author = globalUser;
+        }
 
-    // Process author
-    const pAuthor = parsed.$('.p-author')[0];
-    if (pAuthor) {
-        post.data.author = processAuthor({pAuthor});
-    } else if (globalUser) {
-        post.data.author = globalUser;
-    }
+        post.data.tags = [];
 
-    post.data.tags = [];
+        if (options?.addTag) {
+            post.data.tags.push({
+                url: 'migrator-added-tag',
+                data: {
+                    name: options.addTag
+                }
+            });
+        }
 
-    if (options?.addTag) {
-        post.data.tags.push({
-            url: 'migrator-added-tag',
-            data: {
-                name: options.addTag
-            }
-        });
-    }
+        // Process tags
+        const tagLinks = parsed.$('.p-tags a');
+        if (tagLinks.length) {
+            post.data.tags = [...post.data.tags, ...processTags({tagLinks})];
+        }
 
-    // Process tags
-    const tagLinks = parsed.$('.p-tags a');
-    if (tagLinks.length) {
-        post.data.tags = [...post.data.tags, ...processTags({tagLinks})];
-    }
+        if (options?.addPlatformTag) {
+            post.data.tags.push({
+                url: 'migrator-added-platform-tag',
+                data: {
+                    name: '#medium'
+                }
+            });
+        }
 
-    if (options?.addPlatformTag) {
-        post.data.tags.push({
-            url: 'migrator-added-platform-tag',
-            data: {
-                name: '#medium'
-            }
-        });
-    }
+        // Process content
+        const eContent = parsed.$('.e-content')[0];
+        const contentHtml = eContent ? domUtils.serializeChildren(eContent) : '';
+        post = processContent({html: contentHtml, post});
 
-    // Process content
-    const eContent = parsed.$('.e-content')[0];
-    const contentHtml = eContent ? domUtils.serializeChildren(eContent) : '';
-    post = processContent({html: contentHtml, post});
+        // Grab the featured image
+        // Do this last so that we can add tags to indicate feature image style
+        post.data.html = processFeatureImage({html: post.data.html, post, options});
 
-    // Grab the featured image
-    // Do this last so that we can add tags to indicate feature image style
-    post.data.html = processFeatureImage({html: post.data.html, post, options});
-
-    return post;
+        return post;
+    });
 };

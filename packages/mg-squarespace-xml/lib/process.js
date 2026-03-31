@@ -33,97 +33,91 @@ const processContent = (html, options) => {
         return '';
     }
 
-    const parsed = domUtils.parseFragment(html);
+    return domUtils.processFragment(html, (parsed) => {
+        if (options?.removeSelectors) {
+            parsed.$(options.removeSelectors).forEach((el) => {
+                el.remove();
+            });
+        }
 
-    if (options?.removeSelectors) {
-        parsed.$(options.removeSelectors).forEach((el) => {
+        parsed.$('.sqs-audio-embed').forEach((el) => {
+            let audioSrc = el.getAttribute('data-url');
+            let audioTitle = el.getAttribute('data-title');
+
+            let cardOpts = {
+                env: {dom: new SimpleDom.Document()},
+                payload: {
+                    src: audioSrc,
+                    title: audioTitle
+                }
+            };
+
+            const buildCard = audioCard.render(cardOpts);
+            const cardHTML = buildCard.nodeValue;
+
+            domUtils.replaceWith(el, cardHTML);
+        });
+
+        parsed.$('.newsletter-form-wrapper').forEach((el) => {
             el.remove();
         });
-    }
 
-    parsed.$('.sqs-audio-embed').forEach((el) => {
-        let audioSrc = el.getAttribute('data-url');
-        let audioTitle = el.getAttribute('data-title');
-
-        let cardOpts = {
-            env: {dom: new SimpleDom.Document()},
-            payload: {
-                src: audioSrc,
-                title: audioTitle
-            }
-        };
-
-        const buildCard = audioCard.render(cardOpts);
-        const cardHTML = buildCard.nodeValue;
-
-        domUtils.replaceWith(el, cardHTML);
-    });
-
-    parsed.$('.newsletter-form-wrapper').forEach((el) => {
-        el.remove();
-    });
-
-    // squarespace images without src
-    parsed.$('img[data-src]').forEach((img) => {
-        const src = img.getAttribute('data-src');
-        if (img.classList.contains('thumb-image')) {
-            // images with the `thumb-image` class might be a duplicate
-            // to prevent migrating two images, we have to remove the false node
-            // Walk backwards to find the noscript sibling
-            let sibling = img.previousElementSibling;
-            while (sibling) {
-                if (sibling.tagName === 'NOSCRIPT') {
-                    const noscriptImg = sibling.querySelector('img');
-                    if (noscriptImg && noscriptImg.getAttribute('src') === src) {
-                        img.remove();
+        // squarespace images without src
+        parsed.$('img[data-src]').forEach((img) => {
+            const src = img.getAttribute('data-src');
+            if (img.classList.contains('thumb-image')) {
+                // images with the `thumb-image` class might be a duplicate
+                // to prevent migrating two images, we have to remove the false node
+                // Walk backwards to find the noscript sibling
+                let sibling = img.previousElementSibling;
+                while (sibling) {
+                    if (sibling.tagName === 'NOSCRIPT') {
+                        const noscriptImg = sibling.querySelector('img');
+                        if (noscriptImg && noscriptImg.getAttribute('src') === src) {
+                            img.remove();
+                        }
+                        break;
                     }
-                    break;
+                    sibling = sibling.previousElementSibling;
                 }
-                sibling = sibling.previousElementSibling;
+            } else {
+                img.setAttribute('src', img.getAttribute('data-src'));
             }
-        } else {
-            img.setAttribute('src', img.getAttribute('data-src'));
-        }
+        });
+
+        parsed.$('figure blockquote').forEach((el) => {
+            const nextSibling = el.nextElementSibling;
+            let captionText = '';
+            if (nextSibling && nextSibling.tagName === 'FIGCAPTION') {
+                captionText = `<br><br>${domUtils.serializeChildren(nextSibling)}`;
+                nextSibling.remove();
+            }
+            el.innerHTML = `<p>${domUtils.serializeChildren(el)}${captionText}</p>`;
+        });
+
+        parsed.$('.sqs-video-wrapper').forEach((el) => {
+            const theHtml = decode(el.getAttribute('data-html'));
+            const embedWrapper = el.closest('.embed-block-wrapper');
+            const parent = embedWrapper ? embedWrapper.parentElement : null;
+
+            if (parent) {
+                domUtils.replaceWith(parent, `<figure class="kg-card kg-embed-card">${theHtml}</figure>`);
+            }
+        });
+
+        // TODO: this should be a parser plugin
+        // Wrap nested lists in HTML card
+        parsed.$('ul li ul, ol li ol, ol li ul, ul li ol').forEach((nestedList) => {
+            // Walk up to the nearest parent ul/ol (equivalent to parentsUntil('ul, ol').parent())
+            let topList = nestedList.parentElement?.closest('ul, ol');
+            if (topList) {
+                domUtils.insertBefore(topList, '<!--kg-card-begin: html-->');
+                domUtils.insertAfter(topList, '<!--kg-card-end: html-->');
+            }
+        });
+
+        return parsed.html().trim();
     });
-
-    parsed.$('figure blockquote').forEach((el) => {
-        const nextSibling = el.nextElementSibling;
-        let captionText = '';
-        if (nextSibling && nextSibling.tagName === 'FIGCAPTION') {
-            captionText = `<br><br>${domUtils.serializeChildren(nextSibling)}`;
-            nextSibling.remove();
-        }
-        el.innerHTML = `<p>${domUtils.serializeChildren(el)}${captionText}</p>`;
-    });
-
-    parsed.$('.sqs-video-wrapper').forEach((el) => {
-        const theHtml = decode(el.getAttribute('data-html'));
-        const embedWrapper = el.closest('.embed-block-wrapper');
-        const parent = embedWrapper ? embedWrapper.parentElement : null;
-
-        if (parent) {
-            domUtils.replaceWith(parent, `<figure class="kg-card kg-embed-card">${theHtml}</figure>`);
-        }
-    });
-
-    // TODO: this should be a parser plugin
-    // Wrap nested lists in HTML card
-    parsed.$('ul li ul, ol li ol, ol li ul, ul li ol').forEach((nestedList) => {
-        // Walk up to the nearest parent ul/ol (equivalent to parentsUntil('ul, ol').parent())
-        let topList = nestedList.parentElement?.closest('ul, ol');
-        if (topList) {
-            domUtils.insertBefore(topList, '<!--kg-card-begin: html-->');
-            domUtils.insertAfter(topList, '<!--kg-card-end: html-->');
-        }
-    });
-
-    // Convert HTML back to a string
-    html = parsed.html();
-
-    // Trim whitespace
-    html = html.trim();
-
-    return html;
 };
 
 // The feature images is not "connected" to the post, other than it's located

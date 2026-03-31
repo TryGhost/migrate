@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
+import errors from '@tryghost/errors';
 import {
     parseFragment,
     serializeNode,
@@ -15,7 +16,9 @@ import {
     lastParent,
     setStyle,
     isComment,
-    getCommentData
+    getCommentData,
+    processFragment,
+    processFragmentAsync
 } from '../lib/dom-utils.js';
 
 describe('parseFragment', function () {
@@ -737,5 +740,74 @@ describe('getCommentData', function () {
 
     it('returns empty string for null', function () {
         assert.equal(getCommentData(null), '');
+    });
+});
+
+describe('close', function () {
+    it('can be called on a parsed fragment', function () {
+        const parsed = parseFragment('<p>Hello</p>');
+        assert.equal(parsed.html(), '<p>Hello</p>');
+        parsed.close();
+    });
+
+    it('can be called multiple times without error', function () {
+        const parsed = parseFragment('<p>Hello</p>');
+        parsed.close();
+        parsed.close();
+    });
+});
+
+describe('processFragment', function () {
+    it('parses HTML, runs callback, and returns result', function () {
+        const result = processFragment('<p>Hello</p><p>World</p>', (parsed) => {
+            return parsed.$('p').length;
+        });
+        assert.equal(result, 2);
+    });
+
+    it('manipulates DOM and returns serialized HTML', function () {
+        const result = processFragment('<p>Keep</p><p class="remove">Drop</p>', (parsed) => {
+            for (const el of parsed.$('.remove')) {
+                el.remove();
+            }
+            return parsed.html();
+        });
+        assert.equal(result, '<p>Keep</p>');
+    });
+
+    it('closes fragment even if callback throws', function () {
+        assert.throws(() => {
+            processFragment('<p>Hello</p>', () => {
+                throw new errors.InternalServerError({message: 'test error'});
+            });
+        }, {message: 'test error'});
+    });
+});
+
+describe('processFragmentAsync', function () {
+    it('parses HTML, runs async callback, and returns result', async function () {
+        const result = await processFragmentAsync('<p>Hello</p><p>World</p>', async (parsed) => {
+            await Promise.resolve();
+            return parsed.$('p').length;
+        });
+        assert.equal(result, 2);
+    });
+
+    it('manipulates DOM and returns serialized HTML', async function () {
+        const result = await processFragmentAsync('<p>Keep</p><p class="remove">Drop</p>', async (parsed) => {
+            for (const el of parsed.$('.remove')) {
+                el.remove();
+            }
+            return parsed.html();
+        });
+        assert.equal(result, '<p>Keep</p>');
+    });
+
+    it('closes fragment even if async callback throws', async function () {
+        await assert.rejects(async () => {
+            await processFragmentAsync('<p>Hello</p>', async () => {
+                throw new errors.InternalServerError({message: 'async test error'});
+            });
+        }, {message: 'async test error'});
     });
 });

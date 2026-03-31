@@ -19,7 +19,7 @@ const fixSerializedLengths = (value) => {
     });
 };
 
-const {parseFragment} = domUtils;
+const {processFragment} = domUtils;
 const {getYouTubeID} = youtubeUtils;
 
 // XML Parser configuration
@@ -239,17 +239,16 @@ const preProcessContent = async ({html, options}) => { // eslint-disable-line no
     // Join the separated lines
     html = splitIt.join('\n');
 
-    const parsed = parseFragment(html);
-
-    // Remove empty link elements, typically HTML anchors
-    for (const el of parsed.$('a')) {
-        if (el.innerHTML.length === 0) {
-            el.remove();
+    html = processFragment(html, (parsed) => {
+        // Remove empty link elements, typically HTML anchors
+        for (const el of parsed.$('a')) {
+            if (el.innerHTML.length === 0) {
+                el.remove();
+            }
         }
-    }
 
-    // convert HTML back to a string
-    html = parsed.html();
+        return parsed.html();
+    });
 
     // Convert shortcodes here to that they don't accidently get wrapped in <p> tags by MarkdownIt
     html = await MgWpAPI.process.processShortcodes({html, options});
@@ -382,7 +381,7 @@ const processPost = async (post, users, options, fileCache) => {
     // Check for audio enclosure in post metadata and prepend audio card
     const metaData = await processWPMeta(post);
     const audioCardHTML = processEnclosureAudio(metaData);
-    const hasLibsynEmbed = parseFragment(postObj.data.html).$('iframe[src*="libsyn.com"]').length > 0;
+    const hasLibsynEmbed = processFragment(postObj.data.html, p => p.$('iframe[src*="libsyn.com"]').length > 0);
     if (audioCardHTML && !hasLibsynEmbed) {
         postObj.data.html = `${audioCardHTML}${postObj.data.html}`;
     }

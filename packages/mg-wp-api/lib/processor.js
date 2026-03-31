@@ -16,6 +16,7 @@ import {domUtils, youtubeUtils} from '@tryghost/mg-utils';
 
 const {
     parseFragment,
+    processFragment,
     serializeNode,
     replaceWith,
     insertBefore,
@@ -208,9 +209,10 @@ const processExcerpt = (html, excerptSelector = false) => {
     // Set the text to convert to either be the supplied string or found text in the supplied HTML chunk
     if (excerptSelector) {
         // TODO: this should be possible by using a pseudo selector as a passed `excerptSelector`, e. g. `h2.excerpt:first-of-type`,
-        const parsed = parseFragment(html);
-        const excerptEls = parsed.$(excerptSelector);
-        excerptText = excerptEls.length > 0 ? excerptEls[0].innerHTML : '';
+        excerptText = processFragment(html, (parsed) => {
+            const excerptEls = parsed.$(excerptSelector);
+            return excerptEls.length > 0 ? excerptEls[0].innerHTML : '';
+        });
     } else {
         excerptText = html;
     }
@@ -272,38 +274,39 @@ const processShortcodes = async ({html, options}) => {
             return '';
         }
 
-        const parsed = parseFragment(content);
-        const imgEls = parsed.$('img');
-        const img = imgEls[0];
+        return processFragment(content, (parsed) => {
+            const imgEls = parsed.$('img');
+            const img = imgEls[0];
 
-        let theImageSrc = img ? (img.getAttribute('src') || '') : '';
-        let theImageWidth = img ? (img.getAttribute('width') || '') : '';
-        let theImageHeight = img ? (img.getAttribute('height') || '') : '';
-        let theImageAlt = img ? (img.getAttribute('alt') || '') : '';
-        let theImageTitle = img ? (img.getAttribute('title') || '') : '';
+            let theImageSrc = img ? (img.getAttribute('src') || '') : '';
+            let theImageWidth = img ? (img.getAttribute('width') || '') : '';
+            let theImageHeight = img ? (img.getAttribute('height') || '') : '';
+            let theImageAlt = img ? (img.getAttribute('alt') || '') : '';
+            let theImageTitle = img ? (img.getAttribute('title') || '') : '';
 
-        // Convert $ to entity
-        theImageAlt = theImageAlt.replace(/\$/gm, '&#36;');
-        theImageTitle = theImageTitle.replace(/\$/gm, '&#36;');
+            // Convert $ to entity
+            theImageAlt = theImageAlt.replace(/\$/gm, '&#36;');
+            theImageTitle = theImageTitle.replace(/\$/gm, '&#36;');
 
-        let theCaption = parsed.text().trim();
+            let theCaption = parsed.text().trim();
 
-        let cardOpts = {
-            env: {dom: new SimpleDom.Document()},
-            payload: {
-                src: theImageSrc,
-                width: theImageWidth,
-                height: theImageHeight,
-                alt: theImageAlt,
-                title: theImageTitle
+            let cardOpts = {
+                env: {dom: new SimpleDom.Document()},
+                payload: {
+                    src: theImageSrc,
+                    width: theImageWidth,
+                    height: theImageHeight,
+                    alt: theImageAlt,
+                    title: theImageTitle
+                }
+            };
+
+            if (theCaption.length) {
+                cardOpts.payload.caption = theCaption;
             }
-        };
 
-        if (theCaption.length) {
-            cardOpts.payload.caption = theCaption;
-        }
-
-        return serializer.serialize(imageCard.render(cardOpts));
+            return serializer.serialize(imageCard.render(cardOpts));
+        });
     });
 
     shortcodes.add('vc_separator', () => {
@@ -1168,7 +1171,7 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
     let {tags: fetchTags, addTag, excerptSelector, excerpt, featureImageCaption, customTaxonomies} = options;
 
     let slug = wpPost.slug;
-    let titleText = parseFragment(wpPost.title.rendered).text();
+    let titleText = processFragment(wpPost.title.rendered, parsed => parsed.text());
 
     // @note: we don't copy excerpts because WP generated excerpts aren't better than Ghost ones but are often too long.
     const post = {

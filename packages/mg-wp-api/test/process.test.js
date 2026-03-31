@@ -508,28 +508,28 @@ describe('Process WordPress HTML', function () {
         const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3"></audio><figcaption>My audio file</figcaption></figure>`;
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" style="width: 100%;"></audio><figcaption>My audio file</figcaption></figure><!--kg-card-end: html-->');
+        assert.equal(processed, '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio style="width:100%" controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3"></audio><figcaption>My audio file</figcaption></figure><!--kg-card-end: html-->');
     });
 
     it('Can process autoplay audio files', async function () {
         const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay=""></audio><figcaption>My autoplay audio file</figcaption></figure>`;
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay style="width: 100%;"></audio><figcaption>My autoplay audio file</figcaption></figure><!--kg-card-end: html-->');
+        assert.equal(processed, '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio style="width:100%" controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay></audio><figcaption>My autoplay audio file</figcaption></figure><!--kg-card-end: html-->');
     });
 
     it('Can process looped audio files', async function () {
         const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3" loop=""></audio><figcaption>My looped audio file</figcaption></figure>`;
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" loop style="width: 100%;"></audio><figcaption>My looped audio file</figcaption></figure><!--kg-card-end: html-->');
+        assert.equal(processed, '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio style="width:100%" controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" loop></audio><figcaption>My looped audio file</figcaption></figure><!--kg-card-end: html-->');
     });
 
     it('Can process looped autoplay audio files', async function () {
         const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay="" loop=""></audio><figcaption>My looped autoplay audio file</figcaption></figure>`;
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay loop style="width: 100%;"></audio><figcaption>My looped autoplay audio file</figcaption></figure><!--kg-card-end: html-->');
+        assert.equal(processed, '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio style="width:100%" controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay loop></audio><figcaption>My looped autoplay audio file</figcaption></figure><!--kg-card-end: html-->');
     });
 
     it('Can remove elements by CSS selector', async function () {
@@ -637,7 +637,7 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><a href="https://twitter.com/example/status/12345678"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure><!--kg-card-end: embed-->');
+        assert.equal(processed, '<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><a href="https://twitter.com/example/status/12345678"></a></blockquote><script charset="utf-8" src="https://platform.twitter.com/widgets.js" async></script></figure><!--kg-card-end: embed-->');
     });
 
     it('Can convert WP post embed', async function () {

@@ -9,7 +9,7 @@ import {dirname, join} from 'node:path';
 import {domUtils} from '@tryghost/mg-utils';
 import {slugify} from '@tryghost/string';
 
-const {parseFragment} = domUtils;
+const {processFragment} = domUtils;
 
 if (!process.argv[2]) {
     console.error('Please provide a path to the file'); // eslint-disable-line no-console
@@ -21,45 +21,47 @@ const destPath = join(desitnationDir, 'users.json');
 
 const html = readFileSync(process.argv[2], 'utf8');
 
-const parsed = parseFragment(html);
+const users = processFragment(html, (parsed) => {
+    let result = [];
 
-let users = [];
+    for (const el of parsed.$('tr[id^="user-"]')) {
+        const postsCell = el.querySelector('[data-colname="Posts"]');
+        const postCount = parseInt(postsCell ? postsCell.textContent.trim() : '0');
 
-for (const el of parsed.$('tr[id^="user-"]')) {
-    const postsCell = el.querySelector('[data-colname="Posts"]');
-    const postCount = parseInt(postsCell ? postsCell.textContent.trim() : '0');
-
-    if (postCount === 0) {
-        continue;
-    }
-
-    let id = parseInt(el.getAttribute('id').replace('user-', ''));
-    const emailCell = el.querySelector('[data-colname="Email"]');
-    let email = emailCell ? emailCell.textContent.trim() : '';
-    const nameCell = el.querySelector('[data-colname="Name"]');
-    let name = nameCell ? nameCell.textContent.trim() : '';
-    const usernameCell = el.querySelector('[data-colname="Username"]');
-    const usernameStrong = usernameCell ? usernameCell.querySelector('strong') : null;
-    let username = usernameStrong ? usernameStrong.textContent.trim() : '';
-    const usernameImg = usernameCell ? usernameCell.querySelector('img') : null;
-    let image = usernameImg ? usernameImg.getAttribute('src').trim().replace('s=64', 's=500') : '';
-
-    if (name.includes('—Unknown')) {
-        name = username;
-    }
-
-    let slug = slugify(name);
-
-    users.push({
-        id,
-        slug,
-        name,
-        email,
-        avatar_urls: {
-            96: image
+        if (postCount === 0) {
+            continue;
         }
-    });
-}
+
+        let id = parseInt(el.getAttribute('id').replace('user-', ''));
+        const emailCell = el.querySelector('[data-colname="Email"]');
+        let email = emailCell ? emailCell.textContent.trim() : '';
+        const nameCell = el.querySelector('[data-colname="Name"]');
+        let name = nameCell ? nameCell.textContent.trim() : '';
+        const usernameCell = el.querySelector('[data-colname="Username"]');
+        const usernameStrong = usernameCell ? usernameCell.querySelector('strong') : null;
+        let username = usernameStrong ? usernameStrong.textContent.trim() : '';
+        const usernameImg = usernameCell ? usernameCell.querySelector('img') : null;
+        let image = usernameImg ? usernameImg.getAttribute('src').trim().replace('s=64', 's=500') : '';
+
+        if (name.includes('—Unknown')) {
+            name = username;
+        }
+
+        let slug = slugify(name);
+
+        result.push({
+            id,
+            slug,
+            name,
+            email,
+            avatar_urls: {
+                96: image
+            }
+        });
+    }
+
+    return result;
+});
 
 writeFileSync(destPath, JSON.stringify(users, null, 4));
 console.log(`✅ File saved to: ${destPath}`); // eslint-disable-line no-console
