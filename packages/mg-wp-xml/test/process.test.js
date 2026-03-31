@@ -611,6 +611,28 @@ describe('Process', function () {
         assert.equal(metaValues.img_optimize_data.sizes.thumbnail.size_before, 7354);
     });
 
+    it('Can extract Yoast SEO meta title and description', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                posts: true
+            }
+        };
+        const input = await readSync('has-yoast-meta.xml');
+        const processed = await process.all(input, ctx);
+
+        // Post with Yoast metadata
+        const yoastPost = processed.posts.find(p => p.data.slug === 'my-sample-post');
+        assert.equal(yoastPost.data.meta_title, 'My Custom SEO Title for Search Engines');
+        assert.equal(yoastPost.data.meta_description, 'A short description of the post for search engine results pages');
+
+        // Post without Yoast metadata should not have meta_title or meta_description
+        const noYoastPost = processed.posts.find(p => p.data.slug === 'no-yoast');
+        assert.equal(noYoastPost.data.meta_title, undefined);
+        assert.equal(noYoastPost.data.meta_description, undefined);
+    });
+
     it('Can extract multiple authors from Co-Authors Plus format', async function () {
         let ctx = {
             options: {

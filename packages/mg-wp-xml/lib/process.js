@@ -387,6 +387,15 @@ const processPost = async (post, users, options, fileCache) => {
         postObj.data.html = `${audioCardHTML}${postObj.data.html}`;
     }
 
+    // Extract Yoast SEO meta title and description
+    if (metaData._yoast_wpseo_title) {
+        postObj.data.meta_title = metaData._yoast_wpseo_title.substring(0, 300);
+    }
+
+    if (metaData._yoast_wpseo_metadesc) {
+        postObj.data.meta_description = metaData._yoast_wpseo_metadesc.substring(0, 500);
+    }
+
     if (categories.length >= 1) {
         postObj.data.tags = processTags(categories, options);
     }
