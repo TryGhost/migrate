@@ -47,7 +47,7 @@ function prepareStatements(db: DatabaseSync): AssetCacheStatements {
  */
 function migrateSchema(db: DatabaseSync): void {
     const tableExists = db.prepare(
-        "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='Assets'"
+        'SELECT COUNT(*) as count FROM sqlite_master WHERE type=\'table\' AND name=\'Assets\''
     ).get() as any;
 
     if (!tableExists || tableExists.count === 0) {
@@ -55,7 +55,7 @@ function migrateSchema(db: DatabaseSync): void {
     }
 
     const hasCreatedAt = db.prepare(
-        "SELECT COUNT(*) as count FROM pragma_table_info('Assets') WHERE name='createdAt'"
+        'SELECT COUNT(*) as count FROM pragma_table_info(\'Assets\') WHERE name=\'createdAt\''
     ).get() as any;
 
     if (!hasCreatedAt || hasCreatedAt.count === 0) {
