@@ -32,7 +32,13 @@ export default (input, ctx) => {
     });
 
     if (input.posts && input.posts.length > 0) {
-        output.posts = input.posts.map(post => processPost(post.json, globalUser, tags, ctx));
+        output.posts = [];
+        for (let i = 0; i < input.posts.length; i++) {
+            const post = input.posts[i];
+            if (post) {
+                output.posts.push(processPost(post.json, globalUser, tags, ctx));
+            }
+        }
     }
 
     return output;

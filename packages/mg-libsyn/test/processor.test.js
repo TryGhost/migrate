@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {dirname, join} from 'node:path';
 import {describe, it} from 'node:test';
-import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
 import processor from '../lib/processor.js';
 
-const require = createRequire(import.meta.url);
-const fixture = require('./fixtures/feed.json');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const fixtureData = JSON.parse(readFileSync(join(__dirname, 'fixtures/feed.json'), 'utf8'));
+const fixture = () => structuredClone(fixtureData);
 
 describe('durationToSeconds', function () {
     it('Minutes with no seconds', function () {
@@ -41,7 +44,7 @@ describe('durationToSeconds', function () {
 describe('Process posts', function () {
     it('Can process posts', function () {
         const data = {
-            posts: fixture.rss.channel.item,
+            posts: fixture().rss.channel.item,
             author: {
                 name: 'Test Author',
                 slug: 'test-author',
@@ -61,7 +64,7 @@ describe('Process posts', function () {
 
     it('Post has required fields', function () {
         const data = {
-            posts: fixture.rss.channel.item,
+            posts: fixture().rss.channel.item,
             author: {
                 name: 'Test Author',
                 slug: 'test-author',
@@ -118,7 +121,7 @@ describe('Process posts', function () {
 
     it('Can add a tag', function () {
         const data = {
-            posts: fixture.rss.channel.item,
+            posts: fixture().rss.channel.item,
             author: {
                 name: 'Test Author',
                 slug: 'test-author',
@@ -152,7 +155,7 @@ describe('Process posts', function () {
 
     it('Can use feed categories', function () {
         const data = {
-            posts: fixture.rss.channel.item,
+            posts: fixture().rss.channel.item,
             tags: ['Lorem', 'Ipsum', 'dolor'],
             author: {
                 name: 'Test Author',
@@ -200,7 +203,7 @@ describe('Process posts', function () {
 
     it('Can use item categories', function () {
         const data = {
-            posts: fixture.rss.channel.item,
+            posts: fixture().rss.channel.item,
             author: {
                 name: 'Test Author',
                 slug: 'test-author',
@@ -245,7 +248,7 @@ describe('Process posts', function () {
 describe('Process content', function () {
     it('Remove empty p tags', function () {
         const data = {
-            posts: fixture.rss.channel.item,
+            posts: fixture().rss.channel.item,
             author: {
                 name: 'Test Author',
                 slug: 'test-author',
@@ -268,7 +271,7 @@ describe('Process content', function () {
 
     it('Use Libsyn embeds', function () {
         const data = {
-            posts: fixture.rss.channel.item,
+            posts: fixture().rss.channel.item,
             author: {
                 name: 'Test Author',
                 slug: 'test-author',
@@ -293,7 +296,7 @@ describe('Process content', function () {
 
     it('Use Audio cards', function () {
         const data = {
-            posts: fixture.rss.channel.item,
+            posts: fixture().rss.channel.item,
             author: {
                 name: 'Test Author',
                 slug: 'test-author',

@@ -2,7 +2,7 @@ import {join} from 'node:path';
 import _ from 'lodash';
 import {domUtils} from '@tryghost/mg-utils';
 
-const {parseFragment} = domUtils;
+const {processFragment} = domUtils;
 
 // @TODO: expand this list
 const htmlFields = ['html'];
@@ -130,24 +130,24 @@ export default class LinkFixer {
     }
 
     async processHTML(html) {
-        const parsed = parseFragment(html);
+        return processFragment(html, (parsed) => {
+            for (const el of parsed.$('a')) {
+                let href = el.getAttribute('href');
 
-        for (const el of parsed.$('a')) {
-            let href = el.getAttribute('href');
+                if (!href) {
+                    continue;
+                }
 
-            if (!href) {
-                continue;
+                // Clean the URL, matching the links stored in the linkMap
+                let updatedURL = this.cleanURL(href);
+
+                if (this.linkMap[updatedURL]) {
+                    el.setAttribute('href', this.linkMap[updatedURL]);
+                }
             }
 
-            // Clean the URL, matching the links stored in the linkMap
-            let updatedURL = this.cleanURL(href);
-
-            if (this.linkMap[updatedURL]) {
-                el.setAttribute('href', this.linkMap[updatedURL]);
-            }
-        }
-
-        return parsed.html();
+            return parsed.html();
+        });
     }
 
     async processLexical(lexical) {

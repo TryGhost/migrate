@@ -1,4 +1,5 @@
 import {domUtils} from '@tryghost/mg-utils';
+const {processFragment} = domUtils;
 
 // Keys we've seen so far
 // Profile
@@ -22,26 +23,27 @@ const mediumToGhost = {
 };
 
 export default ({html}) => {
-    const parsed = domUtils.parseFragment(html);
-    let profile = {
-        url: parsed.$('.u-url')[0]?.getAttribute('href'),
-        data: {
-            name: parsed.$('.p-name')[0]?.textContent || '',
-            profile_image: parsed.$('.u-photo')[0]?.getAttribute('src'),
-            roles: [
-                'Contributor'
-            ]
-        }
-    };
+    return processFragment(html, (parsed) => {
+        let profile = {
+            url: parsed.$('.u-url')[0]?.getAttribute('href'),
+            data: {
+                name: parsed.$('.p-name')[0]?.textContent || '',
+                profile_image: parsed.$('.u-photo')[0]?.getAttribute('src'),
+                roles: [
+                    'Contributor'
+                ]
+            }
+        };
 
-    parsed.$('ul li').forEach((el) => {
-        let [item, value] = el.textContent.split(': ');
-        let key = mediumToGhost[item.toLowerCase()] || null;
+        parsed.$('ul li').forEach((el) => {
+            let [item, value] = el.textContent.split(': ');
+            let key = mediumToGhost[item.toLowerCase()] || null;
 
-        if (key) {
-            profile.data[key] = value;
-        }
+            if (key) {
+                profile.data[key] = value;
+            }
+        });
+
+        return profile;
     });
-
-    return profile;
 };

@@ -168,7 +168,14 @@ const processPost = (data, options) => {
 };
 
 const processPosts = (posts, options) => {
-    return posts.map(post => processPost(post, options));
+    const results = [];
+    for (let i = 0; i < posts.length; i++) {
+        const post = posts[i];
+        if (post) {
+            results.push(processPost(post, options));
+        }
+    }
+    return results;
 };
 
 const all = ({result, options}) => {

@@ -1,15 +1,18 @@
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {dirname, join} from 'node:path';
 import {describe, it} from 'node:test';
-import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
 import processor from '../lib/processor.js';
 
-const require = createRequire(import.meta.url);
-const fixture = require('./fixtures/api-response.json');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const fixtureData = JSON.parse(readFileSync(join(__dirname, 'fixtures/api-response.json'), 'utf8'));
+const fixture = () => structuredClone(fixtureData);
 
 describe('Process', function () {
     it('Can convert a single post', function () {
         const ctx = {
-            result: fixture,
+            result: fixture(),
             options: {
                 url: 'https://example.com',
                 addPrimaryTag: 'Newsletter',
@@ -68,7 +71,7 @@ describe('Process', function () {
 
     it('Converts signup iframes to Portal links', function () {
         const ctx = {
-            result: fixture,
+            result: fixture(),
             options: {
                 url: 'https://example.com',
                 addPrimaryTag: 'Newsletter',

@@ -1,5 +1,5 @@
 /* eslint-disable ghost/filenames/match-exported-class */
-import {JSDOM} from 'jsdom';
+import {parseHTML} from 'linkedom';
 
 // HTML5 void elements that should be self-closing
 const VOID_ELEMENTS = new Set([
@@ -13,15 +13,15 @@ export interface ParsedFragment {
     $(selector: string, context?: Element): Element[];
     html(): string;
     text(): string;
+    close(): void;
 }
 
 /**
  * Parse HTML fragment without document wrapper
  */
 export function parseFragment(html: string | null): ParsedFragment {
-    const dom = new JSDOM(`<!DOCTYPE html><html><body>${html || ''}</body></html>`);
-    const document = dom.window.document;
-    const body = document.body;
+    const {document} = parseHTML(`<!DOCTYPE html><html><body>${html || ''}</body></html>`) as unknown as {document: Document};
+    const body = document.body as HTMLElement;
 
     return {
         document,
@@ -35,8 +35,35 @@ export function parseFragment(html: string | null): ParsedFragment {
         text(): string {
             /* c8 ignore next -- defensive fallback for null textContent */
             return body.textContent || '';
+        },
+        close(): void {
+            // No-op for linkedom (lightweight, no resources to release)
         }
     };
+}
+
+/**
+ * Parse HTML, run a callback with the parsed fragment, then auto-close.
+ */
+export function processFragment<T>(html: string | null, fn: (parsed: ParsedFragment) => T): T {
+    const parsed = parseFragment(html);
+    try {
+        return fn(parsed);
+    } finally {
+        parsed.close();
+    }
+}
+
+/**
+ * Async version of processFragment for callbacks that need to await.
+ */
+export async function processFragmentAsync<T>(html: string | null, fn: (parsed: ParsedFragment) => Promise<T>): Promise<T> {
+    const parsed = parseFragment(html);
+    try {
+        return await fn(parsed);
+    } finally {
+        parsed.close();
+    }
 }
 
 /**
@@ -122,6 +149,19 @@ export function serializeChildren(node: Node | null): string {
 }
 
 /**
+ * Parse an HTML string into a DocumentFragment
+ */
+function htmlToFragment(doc: Document, html: string): DocumentFragment {
+    const temp = doc.createElement('template');
+    temp.innerHTML = html;
+    const fragment = doc.createDocumentFragment();
+    for (const child of Array.from(temp.content.childNodes)) {
+        fragment.appendChild(child);
+    }
+    return fragment;
+}
+
+/**
  * Replace an element with new HTML content
  */
 export function replaceWith(el: Element | null, content: string | Node): void {
@@ -130,13 +170,7 @@ export function replaceWith(el: Element | null, content: string | Node): void {
     }
 
     if (typeof content === 'string') {
-        const temp = el.ownerDocument.createElement('template');
-        temp.innerHTML = content;
-        const fragment = el.ownerDocument.createDocumentFragment();
-        while (temp.content.firstChild) {
-            fragment.appendChild(temp.content.firstChild);
-        }
-        el.parentNode.replaceChild(fragment, el);
+        el.parentNode.replaceChild(htmlToFragment(el.ownerDocument, content), el);
     } else if (content && content.nodeType) {
         el.parentNode.replaceChild(content, el);
     }
@@ -151,13 +185,7 @@ export function insertBefore(el: Element | null, content: string | Node): void {
     }
 
     if (typeof content === 'string') {
-        const temp = el.ownerDocument.createElement('template');
-        temp.innerHTML = content;
-        const fragment = el.ownerDocument.createDocumentFragment();
-        while (temp.content.firstChild) {
-            fragment.appendChild(temp.content.firstChild);
-        }
-        el.parentNode.insertBefore(fragment, el);
+        el.parentNode.insertBefore(htmlToFragment(el.ownerDocument, content), el);
     } else if (content && content.nodeType) {
         el.parentNode.insertBefore(content, el);
     }
@@ -172,13 +200,7 @@ export function insertAfter(el: Element | null, content: string | Node): void {
     }
 
     if (typeof content === 'string') {
-        const temp = el.ownerDocument.createElement('template');
-        temp.innerHTML = content;
-        const fragment = el.ownerDocument.createDocumentFragment();
-        while (temp.content.firstChild) {
-            fragment.appendChild(temp.content.firstChild);
-        }
-        el.parentNode.insertBefore(fragment, el.nextSibling);
+        el.parentNode.insertBefore(htmlToFragment(el.ownerDocument, content), el.nextSibling);
     } else if (content && content.nodeType) {
         el.parentNode.insertBefore(content, el.nextSibling);
     }

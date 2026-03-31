@@ -47,7 +47,14 @@ const processPost = (ghPost) => {
 };
 
 const processPosts = (posts) => {
-    return posts.map(post => processPost(post));
+    const results = [];
+    for (let i = 0; i < posts.length; i++) {
+        const post = posts[i];
+        if (post) {
+            results.push(processPost(post));
+        }
+    }
+    return results;
 };
 
 const processAuthor = (ghAuthor) => {

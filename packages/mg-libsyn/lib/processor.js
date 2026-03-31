@@ -167,7 +167,14 @@ const processPost = (libsynPost, author, tags, options, errors) => { // eslint-d
     return post;
 };
 const processPosts = (posts, author, tags, options, errors) => { // eslint-disable-line no-shadow
-    return posts.map(post => processPost(post, author, tags, options, errors));
+    const results = [];
+    for (let i = 0; i < posts.length; i++) {
+        const post = posts[i];
+        if (post) {
+            results.push(processPost(post, author, tags, options, errors));
+        }
+    }
+    return results;
 };
 
 const all = ({result, errors, options}) => { // eslint-disable-line no-shadow

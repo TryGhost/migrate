@@ -11,7 +11,13 @@ export default (input, options) => {
     let globalUser = output.users && output.users.length === 1 ? output.users[0] : null;
 
     if (input.posts && input.posts.length > 0) {
-        output.posts = input.posts.map(post => processPost({name: post.name, html: post.html, globalUser, options}));
+        output.posts = [];
+        for (let i = 0; i < input.posts.length; i++) {
+            const post = input.posts[i];
+            if (post) {
+                output.posts.push(processPost({name: post.name, html: post.html, globalUser, options}));
+            }
+        }
     }
 
     return output;
