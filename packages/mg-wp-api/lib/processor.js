@@ -1322,13 +1322,13 @@ const processPosts = async (posts, users, options, errors, fileCache) => { // es
         posts = foundPosts;
     }
 
-    const BATCH_SIZE = 100;
     const results = [];
 
-    for (let i = 0; i < posts.length; i += BATCH_SIZE) {
-        const batch = posts.slice(i, i + BATCH_SIZE);
-        const batchResults = await Promise.all(batch.map(post => processPost(post, users, options, errors, fileCache)));
-        results.push(...batchResults);
+    for (let i = 0; i < posts.length; i++) {
+        if (posts[i]) {
+            results.push(await processPost(posts[i], users, options, errors, fileCache));
+            posts[i] = null;
+        }
     }
 
     return results;

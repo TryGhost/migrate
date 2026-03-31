@@ -273,12 +273,17 @@ const processPost = (sqPost, index, items, users, options) => {
 const processPosts = (items, users, options) => {
     const postsOutput = [];
 
-    items.forEach((sqPost, index) => {
-        postsOutput.push(processPost(sqPost, index, items, users, options));
-    });
+    for (let i = 0; i < items.length; i++) {
+        if (items[i]) {
+            const result = processPost(items[i], i, items, users, options);
+            if (result) {
+                postsOutput.push(result);
+            }
+            items[i] = null;
+        }
+    }
 
-    // don't return empty post objects
-    return postsOutput.filter(post => post);
+    return postsOutput;
 };
 
 const processUsers = (authors) => {
