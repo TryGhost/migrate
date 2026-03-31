@@ -85,10 +85,12 @@ yarn dev [source]
 
 ## Publish
 
-- `yarn ship` to interactively version bump and publish
+- `yarn ship` to interactively version bump, tag, and push to git
     - Uses `nx release` under the hood — prompts per-package for the bump level
-    - Publishes all packages which have changed
     - Also updates any packages which depend on changed packages
+- `nx release publish` to publish all tagged packages to npm
+    - Use `--projects=<package-name>` to publish specific packages (comma-delimited), e.g. `nx release publish --projects=@tryghost/mg-substack-members-csv,@tryghost/mg-substack`
+    - Use `--otp <code>` if your npm account requires two-factor authentication
 
 ### First release of a new package
 
