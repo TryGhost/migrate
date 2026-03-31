@@ -246,9 +246,9 @@ Follow existing patterns in `mg-fs-utils` or `mg-tinynews`.
 
 ## HTML & XML Parsing
 
-**Use `@tryghost/mg-utils` for all HTML and XML parsing. Do not use `cheerio`.**
+**Use `@tryghost/mg-utils` for all HTML and XML parsing. Do not use `cheerio` or `jsdom`.**
 
-See the [`mg-utils` README](packages/mg-utils/README.md) for full API documentation.
+Powered by [linkedom](https://github.com/WebReflection/linkedom) — lightweight and memory-efficient. See the [`mg-utils` README](packages/mg-utils/README.md) for full API documentation.
 
 ```javascript
 import {xmlUtils, domUtils} from '@tryghost/mg-utils';
@@ -258,10 +258,17 @@ const parsed = await xmlUtils.parseXml(xmlString);
 const channel = parsed.rss.channel;
 const items = [].concat(channel.item || []); // normalize single/array
 
-// HTML: parse, manipulate, serialize
-const frag = domUtils.parseFragment(html);
-frag.$('.unwanted').forEach(el => el.remove());
-const output = frag.html();
+// HTML: use processFragment for automatic cleanup
+const output = domUtils.processFragment(html, (frag) => {
+    frag.$('.unwanted').forEach(el => el.remove());
+    return frag.html();
+});
+
+// Async version when the callback needs to await
+const output = await domUtils.processFragmentAsync(html, async (frag) => {
+    // ... async operations ...
+    return frag.html();
+});
 ```
 
 ## Error Handling
