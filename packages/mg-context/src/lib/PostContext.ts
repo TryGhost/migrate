@@ -347,7 +347,35 @@ export default class PostContext extends MigrateBase {
             this.ghostId = randomBytes(12).toString('hex');
         }
 
-        const slug = this.data.slug;
+        let slug = this.data.slug;
+        const originalSlug = slug;
+
+        // On insert, deduplicate the slug if it already exists
+        if (!this.dbId && db.stmts.slugExists.get(slug)) {
+            let suffix = 2;
+            let candidate = `${slug}-${suffix}`;
+            while (db.stmts.slugExists.get(candidate)) {
+                suffix += 1;
+                candidate = `${slug}-${suffix}`;
+            }
+            slug = candidate;
+            this.data.slug = slug;
+
+            db.slugRenames.push({
+                oldSlug: originalSlug,
+                newSlug: slug,
+                url: this.#source.url || this.data.canonical_url || ''
+            });
+        }
+
+        // Serialize post data excluding tags and authors (after slug dedup)
+        const postData: any = {};
+        for (const key of Object.keys(this.data)) {
+            if (key !== 'tags' && key !== 'authors') {
+                postData[key] = this.data[key];
+            }
+        }
+        const serializedData = JSON.stringify(postData);
 
         if (this.dbId) {
             db.stmts.updatePost.run(

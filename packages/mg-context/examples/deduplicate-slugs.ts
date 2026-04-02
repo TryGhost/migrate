@@ -3,8 +3,8 @@
 // Demonstrates slug deduplication. When multiple posts share the same slug,
 // the oldest keeps the original; newer duplicates get -2, -3, etc.
 //
-// Deduplication runs automatically on export (writeGhostJson / forEachGhostPost).
-// After exporting, access ctx.duplicateSlugs for the list of renamed slugs.
+// Call prepareForExport() before exporting to deduplicate slugs and convert content.
+// Access ctx.duplicateSlugs for the list of renamed slugs.
 
 import {MigrateContext} from '../src/index.js';
 

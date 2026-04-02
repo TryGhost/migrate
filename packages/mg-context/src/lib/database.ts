@@ -1,11 +1,18 @@
 /* eslint-disable ghost/filenames/match-exported-class */
 import {DatabaseSync} from 'node:sqlite';
 
+export interface SlugRename {
+    oldSlug: string;
+    newSlug: string;
+    url: string;
+}
+
 export interface DatabaseModels {
     db: DatabaseSync;
     stmts: PreparedStatements;
     tagCache: Map<string, {dbId: number; ghostId: string}>;
     authorCache: Map<string, {dbId: number; ghostId: string}>;
+    slugRenames: SlugRename[];
     inTransaction: boolean;
 }
 
@@ -18,7 +25,8 @@ export interface PreparedStatements {
     findPostById: ReturnType<DatabaseSync['prepare']>;
     findPostByLookupKey: ReturnType<DatabaseSync['prepare']>;
     findPostsBySlug: ReturnType<DatabaseSync['prepare']>;
-    findPostsByDatePaginated: ReturnType<DatabaseSync['prepare']>;
+    slugExists: ReturnType<DatabaseSync['prepare']>;
+    findPostsForConversion: ReturnType<DatabaseSync['prepare']>;
     countPosts: ReturnType<DatabaseSync['prepare']>;
     findAllPostsOrdered: ReturnType<DatabaseSync['prepare']>;
     findPostsPaginated: ReturnType<DatabaseSync['prepare']>;
@@ -79,6 +87,7 @@ CREATE INDEX IF NOT EXISTS idx_posts_lookup_key ON Posts(lookup_key);
 CREATE INDEX IF NOT EXISTS idx_posts_created_at ON Posts(created_at);
 CREATE INDEX IF NOT EXISTS idx_posts_published_at ON Posts(published_at);
 CREATE INDEX IF NOT EXISTS idx_posts_slug ON Posts(slug);
+CREATE INDEX IF NOT EXISTS idx_posts_original_slug ON Posts(original_slug);
 
 CREATE TABLE IF NOT EXISTS Tags (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -131,7 +140,8 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         findPostById: db.prepare('SELECT * FROM Posts WHERE id = ?'),
         findPostByLookupKey: db.prepare('SELECT * FROM Posts WHERE lookup_key = ?'),
         findPostsBySlug: db.prepare('SELECT * FROM Posts WHERE slug = ? ORDER BY id ASC'),
-        findPostsByDatePaginated: db.prepare('SELECT id, data, source, slug FROM Posts ORDER BY COALESCE(published_at, created_at) ASC, id ASC LIMIT ? OFFSET ?'),
+        slugExists: db.prepare('SELECT 1 FROM Posts WHERE slug = ? LIMIT 1'),
+        findPostsForConversion: db.prepare('SELECT id, data, content_format FROM Posts ORDER BY id ASC LIMIT ? OFFSET ?'),
         countPosts: db.prepare('SELECT COUNT(*) as count FROM Posts'),
         findAllPostsOrdered: db.prepare('SELECT * FROM Posts ORDER BY id ASC'),
         findPostsPaginated: db.prepare('SELECT * FROM Posts ORDER BY id ASC LIMIT ? OFFSET ?'),
@@ -186,5 +196,5 @@ export function createDatabase(dbPath: string): DatabaseModels {
 
     const stmts = prepareStatements(db);
 
-    return {db, stmts, tagCache: new Map(), authorCache: new Map(), inTransaction: false};
+    return {db, stmts, tagCache: new Map(), authorCache: new Map(), slugRenames: [], inTransaction: false};
 }
