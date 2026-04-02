@@ -484,6 +484,41 @@ const dupe = await ctx.addPost({lookupKey: 'https://example.com/post-url'});
 await dupe.save(ctx.db); // skipped
 ```
 
+### Slug deduplication
+
+#### `deduplicateSlugs(): Promise<DuplicateSlugEntry[]>`
+
+Ghost requires unique slugs. When a migration source contains multiple posts with the same slug, this method renames newer duplicates by appending `-2`, `-3`, etc., while the oldest post keeps the original slug.
+
+This runs automatically the first time `writeGhostJson()` or `forEachGhostPost()` is called, so you don't need to call it manually. It only runs once — subsequent export calls reuse the cached result.
+
+After exporting, access the results via the `duplicateSlugs` getter to log renamed slugs for redirect handling:
+
+```js
+await ctx.writeGhostJson('./output/');
+
+for (const entry of ctx.duplicateSlugs) {
+    const label = entry.oldSlug === entry.newSlug ? 'kept' : 'renamed';
+    console.log(`[${label}] ${entry.newSlug}  ${entry.url}`);
+}
+```
+
+You can also call `deduplicateSlugs()` manually before exporting if you need the results earlier.
+
+#### `duplicateSlugs: DuplicateSlugEntry[]`
+
+Getter that returns the results of the most recent deduplication. Results are grouped by original slug. The first entry in each group is the retained post (`oldSlug === newSlug`), followed by the renamed ones.
+
+| Field     | Type     | Description                                                       |
+|-----------|----------|-------------------------------------------------------------------|
+| `oldSlug` | `string` | The original (duplicate) slug                                     |
+| `newSlug` | `string` | The final slug — same as `oldSlug` for the retained post          |
+| `url`     | `string` | Original URL from `source.url` or `canonical_url` (empty if none) |
+
+Ordering is determined by `published_at` (falling back to `created_at`), so the earliest post keeps the original slug. If a suffix like `-2` already belongs to a real post, it skips to `-3`, etc.
+
+See [examples/deduplicate-slugs.ts](examples/deduplicate-slugs.ts) for a complete example.
+
 ---
 
 ## TagContext
@@ -572,6 +607,7 @@ The [examples/](examples/) directory contains runnable scripts demonstrating com
 - **reorder-tags-authors.ts** — Reorder tags and authors using `setTagOrder`, `setPrimaryTag`, and `addTag` with `sortOrder`
 - **generate-large-export.ts** — Stress-test with 500k posts, benchmarking memory and performance
 - **foreach-ghost-post.ts** — Iterate an existing database and log each post as Ghost JSON
+- **deduplicate-slugs.ts** — Detect and rename duplicate slugs, then log the changes for manual redirect handling
 
 Run any example from the package directory:
 

@@ -14,8 +14,11 @@ export interface PreparedStatements {
     insertPost: ReturnType<DatabaseSync['prepare']>;
     updatePost: ReturnType<DatabaseSync['prepare']>;
     updatePostData: ReturnType<DatabaseSync['prepare']>;
+    updatePostSlug: ReturnType<DatabaseSync['prepare']>;
     findPostById: ReturnType<DatabaseSync['prepare']>;
     findPostByLookupKey: ReturnType<DatabaseSync['prepare']>;
+    findPostsBySlug: ReturnType<DatabaseSync['prepare']>;
+    findPostsByDatePaginated: ReturnType<DatabaseSync['prepare']>;
     countPosts: ReturnType<DatabaseSync['prepare']>;
     findAllPostsOrdered: ReturnType<DatabaseSync['prepare']>;
     findPostsPaginated: ReturnType<DatabaseSync['prepare']>;
@@ -68,11 +71,14 @@ CREATE TABLE IF NOT EXISTS Posts (
     ghost_id TEXT,
     created_at TEXT,
     updated_at TEXT,
-    published_at TEXT
+    published_at TEXT,
+    original_slug TEXT,
+    slug TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_posts_lookup_key ON Posts(lookup_key);
 CREATE INDEX IF NOT EXISTS idx_posts_created_at ON Posts(created_at);
 CREATE INDEX IF NOT EXISTS idx_posts_published_at ON Posts(published_at);
+CREATE INDEX IF NOT EXISTS idx_posts_slug ON Posts(slug);
 
 CREATE TABLE IF NOT EXISTS Tags (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -118,11 +124,14 @@ CREATE INDEX IF NOT EXISTS idx_postauthors_author_id ON PostAuthors(author_id);
 function prepareStatements(db: DatabaseSync): PreparedStatements {
     return {
         // Posts
-        insertPost: db.prepare('INSERT INTO Posts (data, source, meta, content_format, lookup_key, ghost_id, created_at, updated_at, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'),
-        updatePost: db.prepare('UPDATE Posts SET data = ?, source = ?, meta = ?, content_format = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ? WHERE id = ?'),
+        insertPost: db.prepare('INSERT INTO Posts (data, source, meta, content_format, lookup_key, ghost_id, created_at, updated_at, published_at, original_slug, slug) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'),
+        updatePost: db.prepare('UPDATE Posts SET data = ?, source = ?, meta = ?, content_format = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, slug = ? WHERE id = ?'),
         updatePostData: db.prepare('UPDATE Posts SET data = ? WHERE id = ?'),
+        updatePostSlug: db.prepare('UPDATE Posts SET slug = ?, data = ? WHERE id = ?'),
         findPostById: db.prepare('SELECT * FROM Posts WHERE id = ?'),
         findPostByLookupKey: db.prepare('SELECT * FROM Posts WHERE lookup_key = ?'),
+        findPostsBySlug: db.prepare('SELECT * FROM Posts WHERE slug = ? ORDER BY id ASC'),
+        findPostsByDatePaginated: db.prepare('SELECT id, data, source, slug FROM Posts ORDER BY COALESCE(published_at, created_at) ASC, id ASC LIMIT ? OFFSET ?'),
         countPosts: db.prepare('SELECT COUNT(*) as count FROM Posts'),
         findAllPostsOrdered: db.prepare('SELECT * FROM Posts ORDER BY id ASC'),
         findPostsPaginated: db.prepare('SELECT * FROM Posts ORDER BY id ASC LIMIT ? OFFSET ?'),

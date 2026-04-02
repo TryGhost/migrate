@@ -347,12 +347,14 @@ export default class PostContext extends MigrateBase {
             this.ghostId = randomBytes(12).toString('hex');
         }
 
+        const slug = this.data.slug;
+
         if (this.dbId) {
             db.stmts.updatePost.run(
                 serializedData, serializedSource, serializedMeta,
                 this.#contentFormat, this.#lookupKey, this.ghostId,
                 createdAt, updatedAt, publishedAt,
-                this.dbId
+                slug, this.dbId
             );
         } else {
             // Check for existing post by lookup_key
@@ -373,7 +375,8 @@ export default class PostContext extends MigrateBase {
             const result = db.stmts.insertPost.run(
                 serializedData, serializedSource, serializedMeta,
                 this.#contentFormat, this.#lookupKey, this.ghostId,
-                createdAt, updatedAt, publishedAt
+                createdAt, updatedAt, publishedAt,
+                slug, slug
             );
             this.dbId = Number(result.lastInsertRowid);
         }

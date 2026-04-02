@@ -51,6 +51,12 @@ export interface ForEachPostOptions {
     progress?: (processed: number, total: number) => void; // eslint-disable-line no-unused-vars
 }
 
+export interface DuplicateSlugEntry {
+    oldSlug: string;
+    newSlug: string;
+    url: string;
+}
+
 export type MigrateContextOptions = {
     contentFormat?: 'mobiledoc' | 'lexical' | 'html';
     dbPath?: string;
@@ -64,6 +70,8 @@ export default class MigrateContext extends MigrateBase {
     #ephemeral: boolean;
     #warnOnLookupKeyDuplicate: boolean;
     #db: DatabaseModels | null = null;
+    #slugsDeduped = false;
+    #duplicateSlugs: DuplicateSlugEntry[] = [];
 
     constructor({contentFormat = 'lexical', dbPath, ephemeral, warnOnLookupKeyDuplicate = false}: MigrateContextOptions = {}) {
         super();
@@ -100,6 +108,97 @@ export default class MigrateContext extends MigrateBase {
             this.#db.db.close();
             this.#db = null;
         }
+    }
+
+    get duplicateSlugs(): DuplicateSlugEntry[] {
+        return this.#duplicateSlugs;
+    }
+
+    async deduplicateSlugs(): Promise<DuplicateSlugEntry[]> {
+        if (this.#slugsDeduped) {
+            return this.#duplicateSlugs;
+        }
+        this.#slugsDeduped = true;
+        const batchSize = 500;
+        const usedSlugs = new Set<string>();
+        const renamed: DuplicateSlugEntry[] = [];
+        const updates: {id: number; newSlug: string; data: string}[] = [];
+
+        // Store raw source/data for the first occurrence of each slug,
+        // so we can include the retained post if duplicates are found.
+        const firstOccurrence = new Map<string, {source: string; data: string}>();
+
+        const total = (this.db.stmts.countPosts.get() as any).count;
+
+        for (let offset = 0; offset < total; offset += batchSize) {
+            const rows = this.db.stmts.findPostsByDatePaginated.all(batchSize, offset) as any[];
+
+            for (const row of rows) {
+                const currentSlug = row.slug as string;
+
+                if (!usedSlugs.has(currentSlug)) {
+                    usedSlugs.add(currentSlug);
+                    firstOccurrence.set(currentSlug, {
+                        source: row.source as string,
+                        data: row.data as string
+                    });
+                    continue;
+                }
+
+                // Find a unique slug, skipping any that are already taken
+                let suffix = 2;
+                let newSlug = `${currentSlug}-${suffix}`;
+                while (usedSlugs.has(newSlug)) {
+                    suffix += 1;
+                    newSlug = `${currentSlug}-${suffix}`;
+                }
+                usedSlugs.add(newSlug);
+
+                const data = JSON.parse(row.data as string);
+                const source = JSON.parse(row.source as string);
+                const url = source.url || data.canonical_url || '';
+
+                data.slug = newSlug;
+                updates.push({id: row.id as number, newSlug, data: JSON.stringify(data)});
+                renamed.push({oldSlug: currentSlug, newSlug, url});
+            }
+        }
+
+        // Apply all slug updates in a single transaction
+        if (updates.length > 0) {
+            await this.transaction(() => {
+                for (const update of updates) {
+                    this.db.stmts.updatePostSlug.run(update.newSlug, update.data, update.id);
+                }
+            });
+        }
+
+        // Build grouped result: retained post first, then renamed posts
+        const slugOrder: string[] = [];
+        const groups = new Map<string, DuplicateSlugEntry[]>();
+
+        for (const entry of renamed) {
+            if (!groups.has(entry.oldSlug)) {
+                slugOrder.push(entry.oldSlug);
+                const first = firstOccurrence.get(entry.oldSlug)!;
+                const firstSource = JSON.parse(first.source);
+                const firstData = JSON.parse(first.data);
+                groups.set(entry.oldSlug, [{
+                    oldSlug: entry.oldSlug,
+                    newSlug: entry.oldSlug,
+                    url: firstSource.url || firstData.canonical_url || ''
+                }]);
+            }
+            groups.get(entry.oldSlug)!.push(entry);
+        }
+
+        const result: DuplicateSlugEntry[] = [];
+        for (const slug of slugOrder) {
+            result.push(...groups.get(slug)!);
+        }
+
+        this.#duplicateSlugs = result;
+        return result;
     }
 
     async transaction<T>(callback: () => T | Promise<T>): Promise<T> {
@@ -234,15 +333,8 @@ export default class MigrateContext extends MigrateBase {
 
     async findPosts({slug, title, sourceAttr, tagSlug, tagName, authorSlug, authorName, authorEmail}: FindPostsOptions = {}): Promise<PostContext[] | null> {
         if (slug) {
-            const rows = this.db.stmts.findAllPostsOrdered.all() as any[];
-            const results: PostContext[] = [];
-            for (const row of rows) {
-                const data = JSON.parse(row.data as string);
-                if (data.slug === slug) {
-                    results.push(PostContext.fromRow(row, this.db));
-                }
-            }
-            return results;
+            const rows = this.db.stmts.findPostsBySlug.all(slug) as any[];
+            return rows.map((row: any) => PostContext.fromRow(row, this.db));
         } else if (title) {
             const rows = this.db.stmts.findAllPostsOrdered.all() as any[];
             const results: PostContext[] = [];
@@ -373,6 +465,7 @@ export default class MigrateContext extends MigrateBase {
 
     // eslint-disable-next-line no-unused-vars
     async forEachGhostPost(callback: (json: any, post: PostContext) => Promise<void>, {batchSize = 100, filter, progress}: ForEachPostOptions = {}) {
+        await this.deduplicateSlugs();
         const where = this.#buildFilterWhere(filter);
         const total = countWhere(this.db, where);
         let processed = 0;
@@ -398,6 +491,7 @@ export default class MigrateContext extends MigrateBase {
 
     // eslint-disable-next-line no-unused-vars
     async writeGhostJson(outputDir: string, {batchSize = 5000, filename: rawFilename = 'posts', filter, onWrite}: {batchSize?: number; filename?: string; filter?: PostFilter; onWrite?: (file: WrittenFile) => void} = {}): Promise<WrittenFile[]> {
+        await this.deduplicateSlugs();
         const filename = rawFilename.replace(/\.json$/i, '');
         await mkdir(outputDir, {recursive: true});
         const where = this.#buildFilterWhere(filter);

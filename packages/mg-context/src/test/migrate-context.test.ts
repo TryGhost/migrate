@@ -1175,7 +1175,7 @@ describe('MigrateContext', () => {
                         JSON.stringify({title: 'Rolled Back', slug: 'before-rollback'}),
                         '{}', '{}', 'lexical', null, post.ghostId,
                         '2023-11-23T00:00:00.000Z', null, null,
-                        post.dbId
+                        'before-rollback', post.dbId
                     );
                     throw new errors.InternalServerError({message: 'sync rollback'});
                 });
@@ -1204,7 +1204,7 @@ describe('MigrateContext', () => {
                         JSON.stringify({title: 'Updated In Nested', slug: 'nested-tx'}),
                         '{}', '{}', 'lexical', null, post.ghostId,
                         '2023-11-23T00:00:00.000Z', null, null,
-                        post.dbId
+                        'nested-tx', post.dbId
                     );
                 });
             });
@@ -2182,6 +2182,388 @@ describe('MigrateContext', () => {
 
             await rm(dir, {recursive: true, force: true});
             await ctx.close();
+        });
+    });
+
+    describe('deduplicateSlugs', () => {
+        it('Returns empty array when no duplicates exist', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post1 = await instance.addPost();
+            post1.set('title', 'Post A');
+            post1.set('slug', 'post-a');
+            post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post1.save(instance.db);
+
+            const post2 = await instance.addPost();
+            post2.set('title', 'Post B');
+            post2.set('slug', 'post-b');
+            post2.set('created_at', new Date('2023-01-02T00:00:00.000Z'));
+            await post2.save(instance.db);
+
+            const duplicates = await instance.deduplicateSlugs();
+            assert.equal(duplicates.length, 0);
+
+            await instance.close();
+        });
+
+        it('Deduplicates 2 posts with the same slug, oldest keeps original', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post1 = await instance.addPost({source: {url: 'https://example.com/blog/my-post'}});
+            post1.set('title', 'Older Post');
+            post1.set('slug', 'my-post');
+            post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post1.set('published_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post1.save(instance.db);
+
+            const post2 = await instance.addPost({source: {url: 'https://example.com/news/my-post'}});
+            post2.set('title', 'Newer Post');
+            post2.set('slug', 'my-post');
+            post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
+            post2.set('published_at', new Date('2023-06-01T00:00:00.000Z'));
+            await post2.save(instance.db);
+
+            const duplicates = await instance.deduplicateSlugs();
+
+            // Includes retained post + renamed post
+            assert.equal(duplicates.length, 2);
+            assert.equal(duplicates[0].oldSlug, 'my-post');
+            assert.equal(duplicates[0].newSlug, 'my-post');
+            assert.equal(duplicates[0].url, 'https://example.com/blog/my-post');
+            assert.equal(duplicates[1].oldSlug, 'my-post');
+            assert.equal(duplicates[1].newSlug, 'my-post-2');
+            assert.equal(duplicates[1].url, 'https://example.com/news/my-post');
+
+            // Verify DB was updated
+            const posts = await instance.findPosts({slug: 'my-post'});
+            assert.equal(posts.length, 1);
+            assert.equal(posts[0].data.title, 'Older Post');
+
+            const renamedPosts = await instance.findPosts({slug: 'my-post-2'});
+            assert.equal(renamedPosts.length, 1);
+            assert.equal(renamedPosts[0].data.title, 'Newer Post');
+
+            await instance.close();
+        });
+
+        it('Deduplicates 3 posts: oldest unchanged, next gets -2, newest gets -3', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post1 = await instance.addPost();
+            post1.set('title', 'Oldest');
+            post1.set('slug', 'my-post');
+            post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post1.set('published_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post1.save(instance.db);
+
+            const post2 = await instance.addPost();
+            post2.set('title', 'Middle');
+            post2.set('slug', 'my-post');
+            post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
+            post2.set('published_at', new Date('2023-06-01T00:00:00.000Z'));
+            await post2.save(instance.db);
+
+            const post3 = await instance.addPost();
+            post3.set('title', 'Newest');
+            post3.set('slug', 'my-post');
+            post3.set('created_at', new Date('2023-12-01T00:00:00.000Z'));
+            post3.set('published_at', new Date('2023-12-01T00:00:00.000Z'));
+            await post3.save(instance.db);
+
+            const duplicates = await instance.deduplicateSlugs();
+
+            // Retained + 2 renamed = 3 entries, grouped together
+            assert.equal(duplicates.length, 3);
+            assert.equal(duplicates[0].newSlug, 'my-post');
+            assert.equal(duplicates[1].newSlug, 'my-post-2');
+            assert.equal(duplicates[2].newSlug, 'my-post-3');
+
+            const oldest = await instance.findPosts({slug: 'my-post'});
+            assert.equal(oldest.length, 1);
+            assert.equal(oldest[0].data.title, 'Oldest');
+
+            await instance.close();
+        });
+
+        it('Skips to -3 when -2 slug already exists', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            // A post that naturally has the slug "my-post-2"
+            const existing = await instance.addPost();
+            existing.set('title', 'Existing -2');
+            existing.set('slug', 'my-post-2');
+            existing.set('created_at', new Date('2022-01-01T00:00:00.000Z'));
+            existing.set('published_at', new Date('2022-01-01T00:00:00.000Z'));
+            await existing.save(instance.db);
+
+            const post1 = await instance.addPost();
+            post1.set('title', 'Original');
+            post1.set('slug', 'my-post');
+            post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post1.set('published_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post1.save(instance.db);
+
+            const post2 = await instance.addPost();
+            post2.set('title', 'Duplicate');
+            post2.set('slug', 'my-post');
+            post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
+            post2.set('published_at', new Date('2023-06-01T00:00:00.000Z'));
+            await post2.save(instance.db);
+
+            const duplicates = await instance.deduplicateSlugs();
+
+            // Retained + 1 renamed = 2 entries
+            assert.equal(duplicates.length, 2);
+            assert.equal(duplicates[0].newSlug, 'my-post');
+            assert.equal(duplicates[1].newSlug, 'my-post-3');
+
+            // Verify the existing -2 post was not touched
+            const existingPosts = await instance.findPosts({slug: 'my-post-2'});
+            assert.equal(existingPosts.length, 1);
+            assert.equal(existingPosts[0].data.title, 'Existing -2');
+
+            await instance.close();
+        });
+
+        it('Includes source URL for both retained and renamed entries', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post1 = await instance.addPost({source: {url: 'https://example.com/blog/my-post'}});
+            post1.set('title', 'First');
+            post1.set('slug', 'my-post');
+            post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post1.set('published_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post1.save(instance.db);
+
+            const post2 = await instance.addPost({source: {url: 'https://example.com/news/my-post'}});
+            post2.set('title', 'Second');
+            post2.set('slug', 'my-post');
+            post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
+            post2.set('published_at', new Date('2023-06-01T00:00:00.000Z'));
+            await post2.save(instance.db);
+
+            const duplicates = await instance.deduplicateSlugs();
+
+            assert.equal(duplicates.length, 2);
+            assert.equal(duplicates[0].url, 'https://example.com/blog/my-post');
+            assert.equal(duplicates[1].url, 'https://example.com/news/my-post');
+
+            await instance.close();
+        });
+
+        it('Falls back to canonical_url when source.url is absent', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post1 = await instance.addPost();
+            post1.set('title', 'First');
+            post1.set('slug', 'my-post');
+            post1.set('canonical_url', 'https://example.com/canonical-1');
+            post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post1.set('published_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post1.save(instance.db);
+
+            const post2 = await instance.addPost();
+            post2.set('title', 'Second');
+            post2.set('slug', 'my-post');
+            post2.set('canonical_url', 'https://example.com/canonical-2');
+            post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
+            post2.set('published_at', new Date('2023-06-01T00:00:00.000Z'));
+            await post2.save(instance.db);
+
+            const duplicates = await instance.deduplicateSlugs();
+
+            assert.equal(duplicates[0].url, 'https://example.com/canonical-1');
+            assert.equal(duplicates[1].url, 'https://example.com/canonical-2');
+
+            await instance.close();
+        });
+
+        it('Uses created_at when published_at is null', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            // Draft (no published_at) created earlier should keep the slug
+            const draft = await instance.addPost();
+            draft.set('title', 'Old Draft');
+            draft.set('slug', 'my-post');
+            draft.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            await draft.save(instance.db);
+
+            const published = await instance.addPost();
+            published.set('title', 'Published Later');
+            published.set('slug', 'my-post');
+            published.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
+            published.set('published_at', new Date('2023-06-01T00:00:00.000Z'));
+            await published.save(instance.db);
+
+            const duplicates = await instance.deduplicateSlugs();
+
+            assert.equal(duplicates.length, 2);
+            assert.equal(duplicates[0].newSlug, 'my-post');
+            assert.equal(duplicates[1].newSlug, 'my-post-2');
+
+            const kept = await instance.findPosts({slug: 'my-post'});
+            assert.equal(kept[0].data.title, 'Old Draft');
+
+            await instance.close();
+        });
+
+        it('Handles multiple different duplicate slug groups', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            for (const [slug, title, date] of [
+                ['alpha', 'Alpha 1', '2023-01-01'],
+                ['alpha', 'Alpha 2', '2023-06-01'],
+                ['beta', 'Beta 1', '2023-02-01'],
+                ['beta', 'Beta 2', '2023-07-01'],
+                ['beta', 'Beta 3', '2023-12-01'],
+                ['gamma', 'Gamma Only', '2023-03-01']
+            ] as const) {
+                const post = await instance.addPost();
+                post.set('title', title);
+                post.set('slug', slug);
+                post.set('created_at', new Date(`${date}T00:00:00.000Z`));
+                post.set('published_at', new Date(`${date}T00:00:00.000Z`));
+                await post.save(instance.db);
+            }
+
+            const duplicates = await instance.deduplicateSlugs();
+
+            // alpha: retained + 1 renamed = 2, beta: retained + 2 renamed = 3, total = 5
+            assert.equal(duplicates.length, 5);
+
+            const alphas = duplicates.filter((d: any) => d.oldSlug === 'alpha');
+            assert.equal(alphas.length, 2);
+            assert.equal(alphas[0].newSlug, 'alpha');
+            assert.equal(alphas[1].newSlug, 'alpha-2');
+
+            const betas = duplicates.filter((d: any) => d.oldSlug === 'beta');
+            assert.equal(betas.length, 3);
+            assert.equal(betas[0].newSlug, 'beta');
+            assert.equal(betas[1].newSlug, 'beta-2');
+            assert.equal(betas[2].newSlug, 'beta-3');
+
+            // gamma should not appear
+            const gammas = duplicates.filter((d: any) => d.oldSlug === 'gamma');
+            assert.equal(gammas.length, 0);
+
+            // Verify grouping: all alpha entries come before all beta entries
+            const lastAlphaIdx = duplicates.findLastIndex((d: any) => d.oldSlug === 'alpha');
+            const firstBetaIdx = duplicates.findIndex((d: any) => d.oldSlug === 'beta');
+            assert.ok(lastAlphaIdx < firstBetaIdx, 'alpha group should come before beta group');
+
+            await instance.close();
+        });
+
+        it('Runs automatically on writeGhostJson and exposes results via getter', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post1 = await instance.addPost({source: {url: 'https://example.com/first'}});
+            post1.set('title', 'First');
+            post1.set('slug', 'dupe');
+            post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post1.set('published_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post1.save(instance.db);
+
+            const post2 = await instance.addPost({source: {url: 'https://example.com/second'}});
+            post2.set('title', 'Second');
+            post2.set('slug', 'dupe');
+            post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
+            post2.set('published_at', new Date('2023-06-01T00:00:00.000Z'));
+            post2.addAuthor({name: 'Test', slug: 'test', email: 'test@example.com'});
+            await post2.save(instance.db);
+
+            // No manual deduplicateSlugs() call — writeGhostJson triggers it
+            const files = await instance.writeGhostJson(tmpdir(), {filename: 'auto-dedup-test'});
+            const content = JSON.parse(await readFile(files[0].path, 'utf-8'));
+            const slugs = content.data.posts.map((p: any) => p.slug);
+
+            assert.ok(slugs.includes('dupe'));
+            assert.ok(slugs.includes('dupe-2'));
+
+            // Results accessible via getter — includes retained + renamed
+            assert.equal(instance.duplicateSlugs.length, 2);
+            assert.equal(instance.duplicateSlugs[0].oldSlug, 'dupe');
+            assert.equal(instance.duplicateSlugs[0].newSlug, 'dupe');
+            assert.equal(instance.duplicateSlugs[0].url, 'https://example.com/first');
+            assert.equal(instance.duplicateSlugs[1].newSlug, 'dupe-2');
+            assert.equal(instance.duplicateSlugs[1].url, 'https://example.com/second');
+
+            await unlink(files[0].path);
+            await instance.close();
+        });
+
+        it('Runs automatically on forEachGhostPost', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post1 = await instance.addPost();
+            post1.set('title', 'First');
+            post1.set('slug', 'same');
+            post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post1.set('published_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post1.save(instance.db);
+
+            const post2 = await instance.addPost();
+            post2.set('title', 'Second');
+            post2.set('slug', 'same');
+            post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
+            post2.set('published_at', new Date('2023-06-01T00:00:00.000Z'));
+            post2.addAuthor({name: 'Test', slug: 'test', email: 'test@example.com'});
+            await post2.save(instance.db);
+
+            const slugsSeen: string[] = [];
+            await instance.forEachGhostPost(async (json: any) => {
+                slugsSeen.push(json.slug);
+            });
+
+            assert.ok(slugsSeen.includes('same'));
+            assert.ok(slugsSeen.includes('same-2'));
+            assert.equal(instance.duplicateSlugs.length, 2);
+
+            await instance.close();
+        });
+
+        it('Only runs once even when called multiple times', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post1 = await instance.addPost();
+            post1.set('title', 'First');
+            post1.set('slug', 'once');
+            post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post1.set('published_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post1.save(instance.db);
+
+            const post2 = await instance.addPost();
+            post2.set('title', 'Second');
+            post2.set('slug', 'once');
+            post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
+            post2.set('published_at', new Date('2023-06-01T00:00:00.000Z'));
+            await post2.save(instance.db);
+
+            const first = await instance.deduplicateSlugs();
+            assert.equal(first.length, 2);
+
+            // Second call returns cached result without modifying anything
+            const second = await instance.deduplicateSlugs();
+            assert.equal(second.length, 2);
+            assert.deepEqual(first, second);
+
+            // Slug wasn't double-renamed
+            const posts = await instance.findPosts({slug: 'once-2'});
+            assert.equal(posts.length, 1);
+
+            await instance.close();
         });
     });
 });

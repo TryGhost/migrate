@@ -14,4 +14,4 @@ export {
     AuthorContext
 };
 
-export type {WrittenFile, ForEachPostOptions, PostFilter} from './lib/MigrateContext.js';
+export type {WrittenFile, ForEachPostOptions, PostFilter, DuplicateSlugEntry} from './lib/MigrateContext.js';
