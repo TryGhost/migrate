@@ -79,6 +79,7 @@ new MigrateContext(options?)
 | `contentFormat`            | `'lexical' \| 'mobiledoc' \| 'html'` | `'lexical'`         | Target format for HTML conversion on export  |
 | `dbPath`                   | `string`                             | —                   | Path to a SQLite file for persistent storage |
 | `ephemeral`                | `boolean`                            | `true` if no dbPath | Use in-memory database                       |
+| `emitEvents`               | `boolean`                            | `true`              | Emit progress events (see [Events](#events)) |
 | `warnOnLookupKeyDuplicate` | `boolean`                            | `false`             | Log when a duplicate lookupKey is skipped    |
 
 ```js
@@ -90,6 +91,9 @@ const ctx = new MigrateContext({dbPath: './migration.sqlite'});
 
 // Mobiledoc output instead of Lexical
 const ctx = new MigrateContext({contentFormat: 'mobiledoc'});
+
+// Server mode — disable events for zero overhead
+const ctx = new MigrateContext({emitEvents: false});
 ```
 
 ### Lifecycle
@@ -223,11 +227,12 @@ await ctx.forEachGhostPost(async (json, post) => {
 
 #### Iteration options
 
-| Option      | Type                         | Default | Description                                   |
-|-------------|------------------------------|---------|-----------------------------------------------|
-| `batchSize` | `number`                     | `100`   | Posts loaded per batch                        |
-| `filter`    | `PostFilter`                 | —       | Filter criteria (see [Filtering](#filtering)) |
-| `progress`  | `(processed, total) => void` | —       | Progress callback                             |
+| Option      | Type         | Default | Description                                   |
+|-------------|--------------|---------|-----------------------------------------------|
+| `batchSize` | `number`     | `100`   | Posts loaded per batch                        |
+| `filter`    | `PostFilter` | —       | Filter criteria (see [Filtering](#filtering)) |
+
+Progress is reported via the `progress` event (see [Events](#events)).
 
 ### Exporting
 
@@ -240,17 +245,12 @@ Prepare all posts for export. Must be called before `writeGhostJson()` or `forEa
 
 The method is idempotent — posts that already have converted content are skipped. Call it again after modifying posts via `forEachPost()` to re-convert changed content.
 
-| Option      | Type                         | Default | Description                    |
-|-------------|------------------------------|---------|--------------------------------|
-| `batchSize` | `number`                     | `500`   | Posts processed per batch      |
-| `progress`  | `(processed, total) => void` | —       | Progress callback              |
+| Option      | Type     | Default | Description               |
+|-------------|----------|---------|---------------------------|
+| `batchSize` | `number` | `200`   | Posts processed per batch |
 
 ```js
-await ctx.prepareForExport({
-    progress(processed, total) {
-        console.log(`${processed}/${total} posts prepared`);
-    }
-});
+await ctx.prepareForExport();
 ```
 
 #### `writeGhostJson(outputDir, options?): Promise<WrittenFile[]>`
@@ -320,6 +320,40 @@ await ctx.forEachPost(async (post) => { /* ... */ }, {
 | `publishedAt.before` / `after` / `onOrBefore` / `onOrAfter` | `Date`   | Filter by `published_at`   |
 
 Posts with `null` `published_at` (drafts) are excluded by a `publishedAt` filter.
+
+### Events
+
+MigrateContext emits events via `on`/`off`, powered by `node:events`. This lets you set up a single listener for progress across all operations instead of passing callbacks to each method.
+
+#### `on(event, listener): this`
+
+Register an event listener. Returns `this` for chaining.
+
+#### `off(event, listener): this`
+
+Remove an event listener.
+
+#### `progress` event
+
+Emitted after each batch during `prepareForExport()`, `forEachPost()`, and `forEachGhostPost()`.
+
+```js
+ctx.on('progress', (event, processed, total) => {
+    console.log(`[${event}] ${processed}/${total}`);
+});
+```
+
+| Argument    | Type     | Description                                                  |
+|-------------|----------|--------------------------------------------------------------|
+| `event`     | `string` | Operation name: `prepareForExport`, `forEachPost`, or `forEachGhostPost` |
+| `processed` | `number` | Posts processed so far                                       |
+| `total`     | `number` | Total posts to process                                       |
+
+Events can be disabled entirely at construction with `emitEvents: false` for server environments where the overhead is unwanted:
+
+```js
+const ctx = new MigrateContext({emitEvents: false});
+```
 
 ---
 

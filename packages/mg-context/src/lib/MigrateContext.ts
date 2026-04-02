@@ -1,5 +1,6 @@
 import {stat, mkdir, open, writeFile} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
+import {EventEmitter} from 'node:events';
 import errors from '@tryghost/errors';
 import mobiledocConverter from '@tryghost/html-to-mobiledoc';
 import lexicalConverter from '@tryghost/kg-html-to-lexical';
@@ -50,7 +51,6 @@ export interface PostFilter {
 export interface ForEachPostOptions {
     batchSize?: number;
     filter?: PostFilter;
-    progress?: (processed: number, total: number) => void; // eslint-disable-line no-unused-vars
 }
 
 export interface DuplicateSlugEntry {
@@ -63,6 +63,7 @@ export type MigrateContextOptions = {
     contentFormat?: 'mobiledoc' | 'lexical' | 'html';
     dbPath?: string;
     ephemeral?: boolean;
+    emitEvents?: boolean;
     warnOnLookupKeyDuplicate?: boolean;
 };
 
@@ -70,15 +71,18 @@ export default class MigrateContext extends MigrateBase {
     #contentFormat: 'mobiledoc' | 'lexical' | 'html';
     #dbPath: string;
     #ephemeral: boolean;
+    #emitEvents: boolean;
     #warnOnLookupKeyDuplicate: boolean;
     #db: DatabaseModels | null = null;
     #slugsDeduped = false;
     #duplicateSlugs: DuplicateSlugEntry[] = [];
+    #emitter = new EventEmitter();
 
-    constructor({contentFormat = 'lexical', dbPath, ephemeral, warnOnLookupKeyDuplicate = false}: MigrateContextOptions = {}) {
+    constructor({contentFormat = 'lexical', dbPath, ephemeral, emitEvents = true, warnOnLookupKeyDuplicate = false}: MigrateContextOptions = {}) {
         super();
 
         this.#contentFormat = contentFormat;
+        this.#emitEvents = emitEvents;
         this.#warnOnLookupKeyDuplicate = warnOnLookupKeyDuplicate;
 
         if (dbPath) {
@@ -110,6 +114,18 @@ export default class MigrateContext extends MigrateBase {
             this.#db.db.close();
             this.#db = null;
         }
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    on(event: string, listener: (...args: any[]) => void) {
+        this.#emitter.on(event, listener);
+        return this;
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    off(event: string, listener: (...args: any[]) => void) {
+        this.#emitter.off(event, listener);
+        return this;
     }
 
     get duplicateSlugs(): DuplicateSlugEntry[] {
@@ -166,8 +182,7 @@ export default class MigrateContext extends MigrateBase {
         return result;
     }
 
-    // eslint-disable-next-line no-unused-vars
-    async prepareForExport({batchSize = 200, progress}: {batchSize?: number; progress?: (processed: number, total: number) => void} = {}): Promise<void> {
+    async prepareForExport({batchSize = 200}: {batchSize?: number} = {}): Promise<void> {
         await this.deduplicateSlugs();
 
         const total = (this.db.stmts.countPosts.get() as any).count;
@@ -201,8 +216,8 @@ export default class MigrateContext extends MigrateBase {
             }
 
             processed += rows.length;
-            if (progress) {
-                progress(processed, total);
+            if (this.#emitEvents) {
+                this.#emitter.emit('progress', 'prepareForExport', processed, total);
             }
 
             // Yield to the event loop between batches so V8 can garbage-collect
@@ -293,7 +308,7 @@ export default class MigrateContext extends MigrateBase {
     }
 
     // eslint-disable-next-line no-unused-vars
-    async forEachPost(callback: (post: PostContext) => Promise<void>, {batchSize = 100, filter, progress}: ForEachPostOptions = {}) {
+    async forEachPost(callback: (post: PostContext) => Promise<void>, {batchSize = 100, filter}: ForEachPostOptions = {}) {
         const where = this.#buildFilterWhere(filter);
         // Snapshot matching IDs up front so mutations during iteration
         // cannot shift pagination (e.g. changing a date or tag used in the filter).
@@ -314,8 +329,8 @@ export default class MigrateContext extends MigrateBase {
                 processed += 1;
             }
 
-            if (progress) {
-                progress(processed, total);
+            if (this.#emitEvents) {
+                this.#emitter.emit('progress', 'forEachPost', processed, total);
             }
         }
     }
@@ -476,7 +491,7 @@ export default class MigrateContext extends MigrateBase {
     }
 
     // eslint-disable-next-line no-unused-vars
-    async forEachGhostPost(callback: (json: any, post: PostContext) => Promise<void>, {batchSize = 100, filter, progress}: ForEachPostOptions = {}) {
+    async forEachGhostPost(callback: (json: any, post: PostContext) => Promise<void>, {batchSize = 100, filter}: ForEachPostOptions = {}) {
         const where = this.#buildFilterWhere(filter);
         const total = countWhere(this.db, where);
         let processed = 0;
@@ -494,8 +509,8 @@ export default class MigrateContext extends MigrateBase {
                 processed += 1;
             }
 
-            if (progress) {
-                progress(processed, total);
+            if (this.#emitEvents) {
+                this.#emitter.emit('progress', 'forEachGhostPost', processed, total);
             }
         }
     }

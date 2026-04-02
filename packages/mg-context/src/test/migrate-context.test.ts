@@ -154,15 +154,13 @@ describe('MigrateContext', () => {
         await post2.save(instance.db);
 
         const progressCalls: [number, number][] = [];
+        instance.on('progress', (_event: string, processed: number, total: number) => {
+            progressCalls.push([processed, total]);
+        });
 
         await instance.forEachPost(async (post: PostContext) => {
             post.set('status', 'published');
-        }, {
-            batchSize: 1,
-            progress(processed: number, total: number) {
-                progressCalls.push([processed, total]);
-            }
-        });
+        }, {batchSize: 1});
 
         const allPosts = await instance.getAllPosts();
         assert.equal(allPosts[0].data.status, 'published');
@@ -493,13 +491,11 @@ describe('MigrateContext', () => {
             }
 
             const progressCalls: [number, number][] = [];
-
-            await instance.forEachGhostPost(async () => {}, {
-                batchSize: 2,
-                progress(processed: number, total: number) {
-                    progressCalls.push([processed, total]);
-                }
+            instance.on('progress', (_event: string, processed: number, total: number) => {
+                progressCalls.push([processed, total]);
             });
+
+            await instance.forEachGhostPost(async () => {}, {batchSize: 2});
 
             assert.deepEqual(progressCalls, [[2, 3], [3, 3]]);
 
@@ -1623,16 +1619,64 @@ describe('MigrateContext', () => {
             }
 
             const calls: [number, number][] = [];
-            await instance.prepareForExport({
-                progress(processed: number, total: number) {
-                    calls.push([processed, total]);
-                }
+            instance.on('progress', (_event: string, processed: number, total: number) => {
+                calls.push([processed, total]);
             });
+
+            await instance.prepareForExport();
 
             assert.ok(calls.length > 0);
             const last = calls[calls.length - 1];
             assert.equal(last[0], 3);
             assert.equal(last[1], 3);
+
+            await instance.close();
+        });
+
+        it('Can remove progress listener with off', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Off Test');
+            post.set('slug', 'off-test');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post.set('html', '<p>Hello</p>');
+            await post.save(instance.db);
+
+            const calls: number[] = [];
+            const listener = (_event: string, processed: number) => {
+                calls.push(processed);
+            };
+            instance.on('progress', listener);
+            instance.off('progress', listener);
+
+            await instance.prepareForExport();
+            assert.equal(calls.length, 0);
+
+            await instance.close();
+        });
+
+        it('emitEvents: false suppresses all progress events', async () => {
+            const instance: any = new MigrateContext({emitEvents: false});
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Silent');
+            post.set('slug', 'silent');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post.set('html', '<p>Hello</p>');
+            await post.save(instance.db);
+
+            const calls: any[] = [];
+            instance.on('progress', (...args: any[]) => {
+                calls.push(args);
+            });
+
+            await instance.prepareForExport();
+            await instance.forEachPost(async () => {});
+
+            assert.equal(calls.length, 0);
 
             await instance.close();
         });
@@ -1852,12 +1896,12 @@ describe('MigrateContext', () => {
 
             it('Progress reports correct filtered total', async () => {
                 const progressCalls: [number, number][] = [];
+                ctx.on('progress', (_event: string, processed: number, total: number) => {
+                    progressCalls.push([processed, total]);
+                });
                 // eslint-disable-next-line no-unused-vars
                 await ctx.forEachPost(async (_post: PostContext) => {}, {
-                    filter: {tag: {slug: 'news'}},
-                    progress(processed: number, total: number) {
-                        progressCalls.push([processed, total]);
-                    }
+                    filter: {tag: {slug: 'news'}}
                 });
                 assert.ok(progressCalls.length > 0);
                 const lastCall = progressCalls[progressCalls.length - 1];
@@ -1889,12 +1933,12 @@ describe('MigrateContext', () => {
 
             it('Tag filter with progress reports correct total', async () => {
                 const progressCalls: [number, number][] = [];
+                ctx.on('progress', (_event: string, processed: number, total: number) => {
+                    progressCalls.push([processed, total]);
+                });
                 // eslint-disable-next-line no-unused-vars
                 await ctx.forEachGhostPost(async (_json: any, _post: PostContext) => {}, {
-                    filter: {tag: {slug: 'news'}},
-                    progress(processed: number, total: number) {
-                        progressCalls.push([processed, total]);
-                    }
+                    filter: {tag: {slug: 'news'}}
                 });
                 assert.ok(progressCalls.length > 0);
                 const lastCall = progressCalls[progressCalls.length - 1];

@@ -43,12 +43,13 @@ async function main() {
             console.log(`Inserted ${batchEnd}/${POST_COUNT} posts`);
         }
 
-        // Prepare for export (deduplicate slugs, convert HTML to Lexical)
-        await ctx.prepareForExport({
-            progress(processed, total) {
-                console.log(`Converted ${processed}/${total} posts`);
-            }
+        // Listen for progress events
+        ctx.on('progress', (event, processed, total) => {
+            console.log(`[${event}] ${processed}/${total}`);
         });
+
+        // Prepare for export (deduplicate slugs, convert HTML to Lexical)
+        await ctx.prepareForExport();
 
         // Export to Ghost JSON
         const writtenFiles = await ctx.writeGhostJson('./export/', {

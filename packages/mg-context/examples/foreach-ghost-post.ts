@@ -12,18 +12,17 @@ async function main() {
     const startTime = Date.now();
 
     try {
+        ctx.on('progress', (event, processed, total) => {
+            console.log(`--- [${event}] ${processed}/${total} ---`);
+        });
+
         await ctx.prepareForExport();
 
         await ctx.forEachGhostPost(async (json, post) => {
             await new Promise(r => setTimeout(r, 250));
             console.log(`[${json.slug}] "${json.title}" — ${json.tags?.length ?? 0} tag(s), ${json.authors?.length ?? 0} author(s)`);
             console.log(json);
-        }, {
-            batchSize: 20,
-            progress(processed, total) {
-                console.log(`--- ${processed}/${total} posts processed ---`);
-            }
-        });
+        }, {batchSize: 20});
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(1);
         console.log(`Done in ${duration}s`);

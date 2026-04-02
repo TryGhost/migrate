@@ -101,8 +101,15 @@ async function main() {
         }
 
         // Second pass: update HTML on every post
+        // Centralised progress listener for all operations
+        let batchTime = Date.now();
+        ctx.on('progress', (event, processed, total) => {
+            const duration = ((Date.now() - batchTime) / 1000).toFixed(1);
+            console.log(`- [${event}] ${processed.toLocaleString()}/${total.toLocaleString()} (${duration}s)`);
+            batchTime = Date.now();
+        });
+
         console.log('Updating HTML on all posts...');
-        let updateBatchTime = Date.now();
         await ctx.forEachPost(async (post: any) => {
             // post.set('html', post.data.html + '\n<p><em>Not inserted first.</em></p>');
             post.set('meta_title', `Post meta title`);
@@ -112,22 +119,11 @@ async function main() {
                     slug: 'post-200x'
                 });
             }
-        }, {
-            batchSize: BATCH_SIZE,
-            progress(processed, total) {
-                const batchDuration = ((Date.now() - updateBatchTime) / 1000).toFixed(1);
-                console.log(`- Updated ${processed.toLocaleString()}/${total.toLocaleString()} posts (${batchDuration}s)`);
-                updateBatchTime = Date.now();
-            }
-        });
+        }, {batchSize: BATCH_SIZE});
 
         console.log('Preparing for export...');
         const prepTime = Date.now();
-        await ctx.prepareForExport({
-            progress(processed, total) {
-                console.log(`- Prepared ${processed.toLocaleString()}/${total.toLocaleString()} posts`);
-            }
-        });
+        await ctx.prepareForExport();
         const prepDuration = ((Date.now() - prepTime) / 1000).toFixed(1);
         console.log(`Prepared in ${prepDuration}s`);
 
