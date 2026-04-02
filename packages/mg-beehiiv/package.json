@@ -36,7 +36,7 @@
     "dotenv": "17.3.1",
     "eslint": "8.57.1",
     "sinon": "21.0.3",
-    "typescript": "5.9.3"
+    "typescript": "6.0.2"
   },
   "dependencies": {
     "@tryghost/debug": "2.0.3",
