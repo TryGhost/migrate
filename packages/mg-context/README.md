@@ -2,7 +2,7 @@
 
 A SQLite-backed data store for building Ghost import files. Provides a validated, typed interface for posts, tags, and authors with batched iteration for large migrations.
 
-Data is persisted to SQLite (in-memory by default), so migrations with tens of thousands of posts don't require excessive memory. Content is validated against Ghost's schema on write, and HTML is lazily converted to Lexical or Mobiledoc on export.
+Data is persisted to SQLite (in-memory by default), so migrations with tens of thousands of posts don't require excessive memory. Content is validated against Ghost's schema on write, and HTML is converted to Lexical or Mobiledoc during an explicit preparation step before export.
 
 ## Install
 
@@ -39,6 +39,9 @@ await context.forEachPost(async (post) => {
     post.set('html', html.replace('Hello world', 'Lorem ipsum'));
     post.addTag({name: 'Updated', slug: 'updated'});
 });
+
+// Prepare for export (deduplicate slugs, convert HTML to Lexical)
+await context.prepareForExport();
 
 await context.writeGhostJson('./output/');
 await context.close();
@@ -228,6 +231,28 @@ await ctx.forEachGhostPost(async (json, post) => {
 
 ### Exporting
 
+#### `prepareForExport(options?): Promise<void>`
+
+Prepare all posts for export. Must be called before `writeGhostJson()` or `forEachGhostPost()`. This:
+
+1. Deduplicates slugs (calls `deduplicateSlugs()` internally)
+2. Converts HTML to Lexical or Mobiledoc for all posts that need it
+
+The method is idempotent — posts that already have converted content are skipped. Call it again after modifying posts via `forEachPost()` to re-convert changed content.
+
+| Option      | Type                         | Default | Description                    |
+|-------------|------------------------------|---------|--------------------------------|
+| `batchSize` | `number`                     | `500`   | Posts processed per batch      |
+| `progress`  | `(processed, total) => void` | —       | Progress callback              |
+
+```js
+await ctx.prepareForExport({
+    progress(processed, total) {
+        console.log(`${processed}/${total} posts prepared`);
+    }
+});
+```
+
 #### `writeGhostJson(outputDir, options?): Promise<WrittenFile[]>`
 
 Write posts, tags, authors, and junction tables to Ghost JSON files.
@@ -312,7 +337,7 @@ Get a property value.
 
 Set a property value. Validates against the schema (type, max length, allowed values). Returns `this` for chaining.
 
-Setting `html` invalidates cached `lexical`/`mobiledoc` — conversion is deferred until export.
+Setting `html` invalidates cached `lexical`/`mobiledoc` — call `prepareForExport()` again to re-convert.
 
 #### `post.remove(prop): PostContext`
 
@@ -490,20 +515,18 @@ await dupe.save(ctx.db); // skipped
 
 Ghost requires unique slugs. When a migration source contains multiple posts with the same slug, this method renames newer duplicates by appending `-2`, `-3`, etc., while the oldest post keeps the original slug.
 
-This runs automatically the first time `writeGhostJson()` or `forEachGhostPost()` is called, so you don't need to call it manually. It only runs once — subsequent export calls reuse the cached result.
+Called automatically by `prepareForExport()`, so you typically don't need to call it directly. It only runs once — subsequent calls reuse the cached result.
 
-After exporting, access the results via the `duplicateSlugs` getter to log renamed slugs for redirect handling:
+After preparing, access the results via the `duplicateSlugs` getter to log renamed slugs for redirect handling:
 
 ```js
-await ctx.writeGhostJson('./output/');
+await ctx.prepareForExport();
 
 for (const entry of ctx.duplicateSlugs) {
     const label = entry.oldSlug === entry.newSlug ? 'kept' : 'renamed';
     console.log(`[${label}] ${entry.newSlug}  ${entry.url}`);
 }
 ```
-
-You can also call `deduplicateSlugs()` manually before exporting if you need the results earlier.
 
 #### `duplicateSlugs: DuplicateSlugEntry[]`
 

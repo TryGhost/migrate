@@ -40,7 +40,10 @@ async function main() {
 
         console.log(`Imported ${sourceData.length} posts\n`);
 
-        // 2. Export — deduplication runs automatically
+        // 2. Prepare for export (deduplicates slugs + converts content)
+        await ctx.prepareForExport();
+
+        // 3. Export to Ghost JSON
         const files = await ctx.writeGhostJson('./export/', {
             filename: 'deduplicated',
             onWrite(f) {
@@ -48,7 +51,7 @@ async function main() {
             }
         });
 
-        // 3. Log duplicate slug groups for redirect handling
+        // 4. Log duplicate slug groups for redirect handling
         //    Results are grouped by slug. The first entry in each group is the
         //    retained post (oldSlug === newSlug), followed by the renamed ones.
         if (ctx.duplicateSlugs.length > 0) {

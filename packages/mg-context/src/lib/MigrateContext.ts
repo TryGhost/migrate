@@ -1,6 +1,8 @@
 import {stat, mkdir, open, writeFile} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
 import errors from '@tryghost/errors';
+import mobiledocConverter from '@tryghost/html-to-mobiledoc';
+import lexicalConverter from '@tryghost/kg-html-to-lexical';
 
 import MigrateBase from './MigrateBase.js';
 import PostContext, {PostConstructorOptions} from './PostContext.js';
@@ -162,6 +164,53 @@ export default class MigrateContext extends MigrateBase {
 
         this.#duplicateSlugs = result;
         return result;
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    async prepareForExport({batchSize = 200, progress}: {batchSize?: number; progress?: (processed: number, total: number) => void} = {}): Promise<void> {
+        await this.deduplicateSlugs();
+
+        const total = (this.db.stmts.countPosts.get() as any).count;
+        let processed = 0;
+
+        for (let offset = 0; offset < total; offset += batchSize) {
+            const rows = this.db.stmts.findPostsForConversion.all(batchSize, offset) as any[];
+
+            this.db.db.exec('BEGIN');
+            try {
+                for (const row of rows) {
+                    const cf = row.content_format as string;
+                    if (cf !== 'lexical' && cf !== 'mobiledoc') {
+                        continue;
+                    }
+
+                    const data = JSON.parse(row.data as string);
+                    if (cf === 'lexical' && !data.lexical && data.html) {
+                        data.lexical = JSON.stringify(lexicalConverter.htmlToLexical(data.html));
+                        this.db.stmts.updatePostData.run(JSON.stringify(data), row.id as number);
+                    } else if (cf === 'mobiledoc' && !data.mobiledoc && data.html) {
+                        data.mobiledoc = JSON.stringify(mobiledocConverter.toMobiledoc(data.html));
+                        this.db.stmts.updatePostData.run(JSON.stringify(data), row.id as number);
+                    }
+                }
+                this.db.db.exec('COMMIT');
+            /* c8 ignore next 4 */
+            } catch (err) {
+                this.db.db.exec('ROLLBACK');
+                throw err;
+            }
+
+            processed += rows.length;
+            if (progress) {
+                progress(processed, total);
+            }
+
+            // Yield to the event loop between batches so V8 can garbage-collect
+            // the intermediate DOM/lexical trees created by the converter
+            await new Promise((r) => {
+                setImmediate(r);
+            });
+        }
     }
 
     async transaction<T>(callback: () => T | Promise<T>): Promise<T> {
@@ -532,19 +581,7 @@ export default class MigrateContext extends MigrateBase {
                     const rows = findPostsWhere(this.db, where, Math.min(subBatchSize, batchLimit - sub), batchOffset + sub);
 
                     for (const row of rows) {
-                        const {post, meta, didConvert} = PostContext.toGhostPost(row);
-
-                        // Cache freshly converted content back to DB for future reads
-                        if (didConvert) {
-                            const cached = JSON.parse(row.data as string);
-                            const cf = row.content_format as string;
-                            if (cf === 'lexical') {
-                                cached.lexical = post.lexical;
-                            } else if (cf === 'mobiledoc') {
-                                cached.mobiledoc = post.mobiledoc;
-                            }
-                            this.db.stmts.updatePostData.run(JSON.stringify(cached), row.id as number);
-                        }
+                        const {post, meta} = PostContext.toGhostPost(row);
 
                         if (postCount > 0) {
                             await fh.write(',\n');

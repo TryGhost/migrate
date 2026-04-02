@@ -74,6 +74,7 @@ describe('PostContext', function () {
             instance.set('updated_at', new Date('2023-11-24T12:00:00.000Z'));
             instance.set('published_at', new Date('2023-11-24T12:00:00.000Z'));
 
+            instance.convertContent();
             const final = instance.getFinal;
 
             assert.equal(final.data.html, null);
@@ -131,13 +132,14 @@ describe('PostContext', function () {
         });
     });
 
-    it('getFinal converts to mobiledoc when contentFormat is mobiledoc', function () {
+    it('getFinal uses pre-converted mobiledoc when contentFormat is mobiledoc', function () {
         const instance: any = new PostContext({contentFormat: 'mobiledoc'});
         instance.set('title', 'My Post');
         instance.set('slug', 'my-post');
         instance.set('html', '<p>Hello world</p>');
         instance.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
 
+        instance.convertContent();
         const final = instance.getFinal;
 
         assert.equal(final.data.html, null);
@@ -761,6 +763,21 @@ describe('PostContext', function () {
             assert.equal(post.data.lexical, null);
         });
 
+        it('Skips mobiledoc conversion when not dirty', () => {
+            const post: any = new PostContext({contentFormat: 'mobiledoc'});
+            post.set('title', 'Test');
+            post.set('slug', 'test');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post.set('html', '<p>Hello</p>');
+
+            post.convertContent();
+            const firstMobiledoc = post.data.mobiledoc;
+
+            // Second call is a no-op
+            post.convertContent();
+            assert.equal(post.data.mobiledoc, firstMobiledoc);
+        });
+
         it('Skips conversion when not dirty', () => {
             const post: any = new PostContext({contentFormat: 'lexical'});
             post.set('title', 'Test');
@@ -840,27 +857,30 @@ describe('PostContext', function () {
             };
         }
 
-        it('Converts to lexical and strips tags/authors', () => {
+        it('Nulls html and strips tags/authors for lexical format', () => {
             const row = mockRow({
-                data: JSON.stringify({title: 'Test', slug: 'test', html: '<p>Hi</p>', tags: [{slug: 'a'}], authors: [{slug: 'b'}]})
+                data: JSON.stringify({title: 'Test', slug: 'test', html: '<p>Hi</p>', lexical: null, tags: [{slug: 'a'}], authors: [{slug: 'b'}]})
             });
             const {post, meta} = PostContext.toGhostPost(row);
 
             assert.equal(post.id, 'abc123');
             assert.equal(post.html, null);
-            assert.ok(post.lexical);
+            assert.equal(post.lexical, null);
             assert.equal(post.tags, undefined);
             assert.equal(post.authors, undefined);
             assert.equal(meta, null);
         });
 
-        it('Converts to mobiledoc format', () => {
-            const row = mockRow({content_format: 'mobiledoc'});
+        it('Nulls html and lexical for mobiledoc format', () => {
+            const row = mockRow({
+                content_format: 'mobiledoc',
+                data: JSON.stringify({title: 'Test', slug: 'test', html: '<p>Hello</p>', mobiledoc: null, lexical: null, created_at: '2023-01-01T00:00:00.000Z'})
+            });
             const {post} = PostContext.toGhostPost(row);
 
             assert.equal(post.html, null);
             assert.equal(post.lexical, null);
-            assert.ok(post.mobiledoc);
+            assert.equal(post.mobiledoc, null);
         });
 
         it('Keeps html when format is html', () => {

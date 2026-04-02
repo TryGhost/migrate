@@ -119,9 +119,19 @@ export default class PostContext extends MigrateBase {
     }
 
     convertContent() {
-        if (!this.#htmlDirty || this.#contentFormat === 'html') {
+        if (this.#contentFormat === 'html') {
             this.#htmlDirty = false;
             return;
+        }
+
+        // Skip if HTML hasn't changed and conversion is already cached
+        if (!this.#htmlDirty) {
+            if (this.#contentFormat === 'lexical' && this.data.lexical) {
+                return;
+            }
+            if (this.#contentFormat === 'mobiledoc' && this.data.mobiledoc) {
+                return;
+            }
         }
 
         if (this.#contentFormat === 'lexical') {
@@ -161,15 +171,9 @@ export default class PostContext extends MigrateBase {
         }
 
         if (this.#contentFormat === 'lexical') {
-            if (!result.data.lexical && result.data.html) {
-                result.data.lexical = JSON.stringify(lexicalConverter.htmlToLexical(result.data.html));
-            }
             result.data.html = null;
             result.data.mobiledoc = null;
         } else if (this.#contentFormat === 'mobiledoc') {
-            if (!result.data.mobiledoc && result.data.html) {
-                result.data.mobiledoc = JSON.stringify(mobiledocConverter.toMobiledoc(result.data.html));
-            }
             result.data.html = null;
             result.data.lexical = null;
         } else {
@@ -327,15 +331,6 @@ export default class PostContext extends MigrateBase {
 
         const isInsert = !this.dbId;
 
-        // Serialize post data excluding tags and authors
-        const postData: any = {};
-        for (const key of Object.keys(this.data)) {
-            if (key !== 'tags' && key !== 'authors') {
-                postData[key] = this.data[key];
-            }
-        }
-
-        const serializedData = JSON.stringify(postData);
         const serializedSource = JSON.stringify(this.#source);
         const serializedMeta = JSON.stringify(this.#meta);
         /* c8 ignore next 3 -- dates are always Date instances from set()/fromRow(); ternary is defensive */
@@ -447,25 +442,16 @@ export default class PostContext extends MigrateBase {
         'feature_image_caption'
     ];
 
-    static toGhostPost(row: any): {post: any; meta: any; didConvert: boolean} {
+    static toGhostPost(row: any): {post: any; meta: any} {
         const rawData = JSON.parse(row.data);
         const contentFormat = row.content_format;
         const ghostId = row.ghost_id as string;
-        let didConvert = false;
 
-        // Use pre-converted content if available, otherwise convert
+        // Null out fields not needed for this content format
         if (contentFormat === 'lexical') {
-            if (!rawData.lexical && rawData.html) {
-                rawData.lexical = JSON.stringify(lexicalConverter.htmlToLexical(rawData.html));
-                didConvert = true;
-            }
             rawData.html = null;
             rawData.mobiledoc = null;
         } else if (contentFormat === 'mobiledoc') {
-            if (!rawData.mobiledoc && rawData.html) {
-                rawData.mobiledoc = JSON.stringify(mobiledocConverter.toMobiledoc(rawData.html));
-                didConvert = true;
-            }
             rawData.html = null;
             rawData.lexical = null;
         } else {
@@ -494,7 +480,7 @@ export default class PostContext extends MigrateBase {
         // Build meta with post_id reference
         const meta = hasMeta ? {post_id: ghostId, ...metaEntry} : null;
 
-        return {post, meta, didConvert};
+        return {post, meta};
     }
 
     static fromRow(row: any, db: DatabaseModels): PostContext {

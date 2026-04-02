@@ -803,6 +803,7 @@ describe('MigrateContext', () => {
             post.addAuthor({name: 'Test Author', slug: 'test-author', email: 'test@example.com'});
             await post.save(instance.db);
 
+            await instance.prepareForExport();
             const writtenFiles = await instance.writeGhostJson(tmpdir(), {filename: 'lexical-test'});
             const ghostJSON = JSON.parse(await readFile(writtenFiles[0].path, 'utf-8'));
 
@@ -829,6 +830,7 @@ describe('MigrateContext', () => {
             post.addAuthor({name: 'Test Author', slug: 'test-author', email: 'test@example.com'});
             await post.save(instance.db);
 
+            await instance.prepareForExport();
             const writtenFiles = await instance.writeGhostJson(tmpdir(), {filename: 'mobiledoc-test'});
             const ghostJSON = JSON.parse(await readFile(writtenFiles[0].path, 'utf-8'));
 
@@ -1430,7 +1432,7 @@ describe('MigrateContext', () => {
     });
 
     describe('Conversion caching', () => {
-        it('writeGhostJson caches converted content back to DB', async () => {
+        it('prepareForExport converts and caches content in DB', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
@@ -1441,26 +1443,23 @@ describe('MigrateContext', () => {
             post.set('html', '<p>Hello</p>');
             await post.save(instance.db);
 
-            // Before write: no cached lexical
+            // Before: no cached lexical
             const rowBefore = instance.db.stmts.findPostById.get(post.dbId) as any;
             assert.equal(JSON.parse(rowBefore.data).lexical, null);
 
-            // Write JSON — converts and caches
-            const dir = join(tmpdir(), `mg-cache-${Date.now()}`);
-            await instance.writeGhostJson(dir);
+            await instance.prepareForExport();
 
-            // After write: lexical cached in DB
+            // After: lexical cached in DB
             const rowAfter = instance.db.stmts.findPostById.get(post.dbId) as any;
             const stored = JSON.parse(rowAfter.data);
-            assert.ok(stored.lexical, 'lexical should be cached after writeGhostJson');
+            assert.ok(stored.lexical, 'lexical should be cached after prepareForExport');
             assert.ok(JSON.parse(stored.lexical).root);
             assert.equal(stored.html, '<p>Hello</p>', 'html should be preserved');
 
-            await rm(dir, {recursive: true, force: true});
             await instance.close();
         });
 
-        it('Second writeGhostJson skips conversion (uses cache)', async () => {
+        it('Skips posts that already have converted content', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
@@ -1473,11 +1472,12 @@ describe('MigrateContext', () => {
 
             const dir = join(tmpdir(), `mg-skip-${Date.now()}`);
 
-            // First write: converts
+            await instance.prepareForExport();
             await instance.writeGhostJson(dir);
             const file1 = JSON.parse(await readFile(join(dir, 'posts.json'), 'utf-8'));
 
-            // Second write: uses cached content (same output)
+            // Second prepare + write: uses cached content (same output)
+            await instance.prepareForExport();
             await instance.writeGhostJson(dir);
             const file2 = JSON.parse(await readFile(join(dir, 'posts.json'), 'utf-8'));
 
@@ -1487,7 +1487,7 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
-        it('Cache is invalidated when HTML changes via forEachPost', async () => {
+        it('Re-converts after HTML changes via forEachPost', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
@@ -1498,10 +1498,8 @@ describe('MigrateContext', () => {
             post.set('html', '<p>Original</p>');
             await post.save(instance.db);
 
-            const dir = join(tmpdir(), `mg-invalidate-${Date.now()}`);
-
-            // First write: converts and caches
-            await instance.writeGhostJson(dir);
+            // First prepare: converts and caches
+            await instance.prepareForExport();
             const row1 = instance.db.stmts.findPostById.get(post.dbId) as any;
             const lexical1 = JSON.parse(row1.data).lexical;
             assert.ok(lexical1);
@@ -1514,14 +1512,13 @@ describe('MigrateContext', () => {
             const rowAfterUpdate = instance.db.stmts.findPostById.get(post.dbId) as any;
             assert.equal(JSON.parse(rowAfterUpdate.data).lexical, null, 'lexical should be cleared after HTML change');
 
-            // Second write: re-converts with new HTML
-            await instance.writeGhostJson(dir);
+            // Second prepare: re-converts with new HTML
+            await instance.prepareForExport();
             const row2 = instance.db.stmts.findPostById.get(post.dbId) as any;
             const lexical2 = JSON.parse(row2.data).lexical;
             assert.ok(lexical2);
             assert.notEqual(lexical1, lexical2);
 
-            await rm(dir, {recursive: true, force: true});
             await instance.close();
         });
 
@@ -1545,7 +1542,7 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
-        it('Mobiledoc conversion is cached', async () => {
+        it('Mobiledoc conversion is cached by prepareForExport', async () => {
             const instance: any = new MigrateContext({contentFormat: 'mobiledoc'});
             await instance.init();
 
@@ -1556,8 +1553,7 @@ describe('MigrateContext', () => {
             post.set('html', '<p>Mobiledoc</p>');
             await post.save(instance.db);
 
-            const dir = join(tmpdir(), `mg-mobiledoc-cache-${Date.now()}`);
-            await instance.writeGhostJson(dir);
+            await instance.prepareForExport();
 
             const row = instance.db.stmts.findPostById.get(post.dbId) as any;
             const stored = JSON.parse(row.data);
@@ -1565,7 +1561,28 @@ describe('MigrateContext', () => {
             assert.ok(JSON.parse(stored.mobiledoc).version);
             assert.equal(stored.lexical, null);
 
-            await rm(dir, {recursive: true, force: true});
+            await instance.close();
+        });
+
+        it('Skips html-format posts', async () => {
+            const instance: any = new MigrateContext({contentFormat: 'html'});
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'HTML Only');
+            post.set('slug', 'html-only');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post.set('html', '<p>Hello</p>');
+            await post.save(instance.db);
+
+            await instance.prepareForExport();
+
+            const row = instance.db.stmts.findPostById.get(post.dbId) as any;
+            const stored = JSON.parse(row.data);
+            assert.equal(stored.html, '<p>Hello</p>');
+            assert.equal(stored.lexical, null);
+            assert.equal(stored.mobiledoc, null);
+
             await instance.close();
         });
 
@@ -1588,6 +1605,64 @@ describe('MigrateContext', () => {
             const row = instance.db.stmts.findPostById.get(post.dbId) as any;
             const stored = JSON.parse(row.data);
             assert.ok(stored.lexical);
+
+            await instance.close();
+        });
+
+        it('Reports progress during conversion', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            for (let i = 0; i < 3; i += 1) {
+                const post = await instance.addPost();
+                post.set('title', `Post ${i}`);
+                post.set('slug', `post-${i}`);
+                post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+                post.set('html', `<p>Content ${i}</p>`);
+                await post.save(instance.db);
+            }
+
+            const calls: [number, number][] = [];
+            await instance.prepareForExport({
+                progress(processed: number, total: number) {
+                    calls.push([processed, total]);
+                }
+            });
+
+            assert.ok(calls.length > 0);
+            const last = calls[calls.length - 1];
+            assert.equal(last[0], 3);
+            assert.equal(last[1], 3);
+
+            await instance.close();
+        });
+
+        it('Deduplicates slugs at insert time and reports via prepareForExport', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post1 = await instance.addPost();
+            post1.set('title', 'First');
+            post1.set('slug', 'same');
+            post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post1.set('published_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post1.save(instance.db);
+
+            const post2 = await instance.addPost();
+            post2.set('title', 'Second');
+            post2.set('slug', 'same');
+            post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
+            post2.set('published_at', new Date('2023-06-01T00:00:00.000Z'));
+            await post2.save(instance.db);
+
+            // Slug was already deduped at insert time
+            assert.equal(post2.data.slug, 'same-2');
+
+            await instance.prepareForExport();
+
+            assert.equal(instance.duplicateSlugs.length, 2);
+            assert.equal(instance.duplicateSlugs[0].newSlug, 'same');
+            assert.equal(instance.duplicateSlugs[1].newSlug, 'same-2');
 
             await instance.close();
         });
@@ -2463,7 +2538,7 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
-        it('Runs automatically on writeGhostJson and exposes results via getter', async () => {
+        it('prepareForExport deduplicates and results are used by writeGhostJson', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
@@ -2482,8 +2557,8 @@ describe('MigrateContext', () => {
             post2.addAuthor({name: 'Test', slug: 'test', email: 'test@example.com'});
             await post2.save(instance.db);
 
-            // No manual deduplicateSlugs() call — writeGhostJson triggers it
-            const files = await instance.writeGhostJson(tmpdir(), {filename: 'auto-dedup-test'});
+            await instance.prepareForExport();
+            const files = await instance.writeGhostJson(tmpdir(), {filename: 'dedup-test'});
             const content = JSON.parse(await readFile(files[0].path, 'utf-8'));
             const slugs = content.data.posts.map((p: any) => p.slug);
 
@@ -2499,37 +2574,6 @@ describe('MigrateContext', () => {
             assert.equal(instance.duplicateSlugs[1].url, 'https://example.com/second');
 
             await unlink(files[0].path);
-            await instance.close();
-        });
-
-        it('Runs automatically on forEachGhostPost', async () => {
-            const instance: any = new MigrateContext();
-            await instance.init();
-
-            const post1 = await instance.addPost();
-            post1.set('title', 'First');
-            post1.set('slug', 'same');
-            post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post1.set('published_at', new Date('2023-01-01T00:00:00.000Z'));
-            await post1.save(instance.db);
-
-            const post2 = await instance.addPost();
-            post2.set('title', 'Second');
-            post2.set('slug', 'same');
-            post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
-            post2.set('published_at', new Date('2023-06-01T00:00:00.000Z'));
-            post2.addAuthor({name: 'Test', slug: 'test', email: 'test@example.com'});
-            await post2.save(instance.db);
-
-            const slugsSeen: string[] = [];
-            await instance.forEachGhostPost(async (json: any) => {
-                slugsSeen.push(json.slug);
-            });
-
-            assert.ok(slugsSeen.includes('same'));
-            assert.ok(slugsSeen.includes('same-2'));
-            assert.equal(instance.duplicateSlugs.length, 2);
-
             await instance.close();
         });
 

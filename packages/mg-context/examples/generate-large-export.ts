@@ -121,6 +121,16 @@ async function main() {
             }
         });
 
+        console.log('Preparing for export...');
+        const prepTime = Date.now();
+        await ctx.prepareForExport({
+            progress(processed, total) {
+                console.log(`- Prepared ${processed.toLocaleString()}/${total.toLocaleString()} posts`);
+            }
+        });
+        const prepDuration = ((Date.now() - prepTime) / 1000).toFixed(1);
+        console.log(`Prepared in ${prepDuration}s`);
+
         console.log('Writing Ghost JSON...');
         const writeTime = Date.now();
         const writtenFiles = await ctx.writeGhostJson(outputPath, {

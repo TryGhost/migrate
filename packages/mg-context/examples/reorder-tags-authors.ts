@@ -107,6 +107,7 @@ async function main() {
         }
 
         // Export and show sort_order in the JSON
+        await ctx.prepareForExport();
         const files = await ctx.writeGhostJson('./export/', {filename: 'reorder-example'});
         const fs = await import('node:fs/promises');
         const json = JSON.parse(await fs.readFile(files[0].path, 'utf-8'));

@@ -12,6 +12,8 @@ async function main() {
     const startTime = Date.now();
 
     try {
+        await ctx.prepareForExport();
+
         await ctx.forEachGhostPost(async (json, post) => {
             await new Promise(r => setTimeout(r, 250));
             console.log(`[${json.slug}] "${json.title}" — ${json.tags?.length ?? 0} tag(s), ${json.authors?.length ?? 0} author(s)`);
