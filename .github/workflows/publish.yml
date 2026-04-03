@@ -52,6 +52,14 @@ jobs:
       - name: Build all packages
         run: yarn build
 
+      - name: Dump run identity (safe)
+        run: |
+          echo "repo=$GITHUB_REPOSITORY"
+          echo "workflow_ref=$GITHUB_WORKFLOW_REF"
+          echo "ref=$GITHUB_REF"
+          echo "ref_name=$GITHUB_REF_NAME"
+          echo "sha=$GITHUB_SHA"
+
       # Iterate over all packages, skip already-published versions, and publish new ones.
       # Uses npm directly instead of nx release publish to avoid yarn v1 JSON parsing issues.
       - name: Publish to npm
