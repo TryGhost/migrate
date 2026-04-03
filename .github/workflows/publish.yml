@@ -47,8 +47,8 @@ jobs:
 
       - name: Publish to npm (dry run)
         if: github.event.inputs['dry-run'] == 'true'
-        run: npx nx release publish --dry-run
+        run: npx nx release publish --packageManager npm --dry-run
 
       - name: Publish to npm
         if: github.event.inputs['dry-run'] != 'true'
-        run: npx nx release publish
+        run: npx nx release publish --packageManager npm
