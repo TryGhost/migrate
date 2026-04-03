@@ -33,6 +33,7 @@ jobs:
       FORCE_COLOR: 1
       CI: true
       NPM_CONFIG_PROVENANCE: true  # Adds build provenance attestation to published packages
+      NODE_AUTH_TOKEN: ""   # <- force-disable token auth; use OIDC trusted publishing only
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -43,22 +44,6 @@ jobs:
           node-version: 22
           registry-url: 'https://registry.npmjs.org'
           scope: '@tryghost'
-
-      - name: Debug npm config after setup-node (safe)
-        run: |
-          echo "NODE_AUTH_TOKEN=${NODE_AUTH_TOKEN:+present}"
-          echo "NPM_CONFIG_USERCONFIG=${NPM_CONFIG_USERCONFIG:+present}"
-          npm config get userconfig || true
-          npm config get registry || true
-          npm config get @tryghost:registry || true
-          # show only whether an authToken line exists, not its value
-          if [ -f "$(npm config get userconfig)" ]; then
-            if grep -q "_authToken" "$(npm config get userconfig)"; then
-              echo "userconfig contains _authToken: YES"
-            else
-              echo "userconfig contains _authToken: NO"
-            fi
-          fi
 
       - name: Install dependencies
         run: yarn install
