@@ -1,0 +1,54 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/*/package.json'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Preview what would be published without actually publishing'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+
+    # Run for nx release version commits or manual dispatch
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Published new versions')
+
+    permissions:
+      id-token: write    # OIDC token for npm trusted publishers
+      contents: read
+
+    env:
+      FORCE_COLOR: 1
+      CI: true
+      NPM_CONFIG_PROVENANCE: true
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build all packages
+        run: yarn build
+
+      - name: Publish to npm (dry run)
+        if: github.event.inputs['dry-run'] == 'true'
+        run: npx nx release publish --dry-run
+
+      - name: Publish to npm
+        if: github.event.inputs['dry-run'] != 'true'
+        run: npx nx release publish
