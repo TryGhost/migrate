@@ -49,6 +49,12 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
+      - name: Upgrade npm to v11
+        run: npm i -g npm@11.12.1
+
+      - name: Show npm version
+        run: npm -v
+
       # Build is required because published packages ship compiled output (build/)
       - name: Build all packages
         run: yarn build
@@ -61,6 +67,11 @@ jobs:
           sed -i.bak '/_authToken/d' "$npmrc" || true
           sed -i.bak '/\/\/registry\.npmjs\.org\/:_authToken/d' "$npmrc" || true
           echo "auth token lines remaining? $(grep -c _authToken "$npmrc" || true)"
+
+      - name: Check OIDC env at publish time (safe)
+        run: |
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL=${ACTIONS_ID_TOKEN_REQUEST_URL:+present}"
+          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN=${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+present}"
 
       # Iterate over all packages, skip already-published versions, and publish new ones.
       # Uses npm directly instead of nx release publish to avoid yarn v1 JSON parsing issues.
@@ -99,7 +110,7 @@ jobs:
 
             # Publish the package (--access public is required for scoped @tryghost packages)
             echo "Publishing $name@$version..."
-            if ! npm publish "$pkg" --access public $DRY_RUN_FLAG; then
+            if ! npm publish "$pkg" --access public --provenance $DRY_RUN_FLAG; then
               echo "::error::Failed to publish $name@$version"
               failed=1
             fi
