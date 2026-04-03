@@ -35,6 +35,16 @@ jobs:
       NPM_CONFIG_PROVENANCE: true  # Adds build provenance attestation to published packages
 
     steps:
+      - name: Debug env (presence only)
+        run: |
+          echo "NODE_AUTH_TOKEN=${NODE_AUTH_TOKEN:+present}"
+          echo "NPM_CONFIG_USERCONFIG=${NPM_CONFIG_USERCONFIG:+present}"
+
+      - name: Debug npmrc locations (no contents)
+        run: |
+          npm config get userconfig || true
+          npm config get globalconfig || true
+
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       # registry-url is required for npm to authenticate via the OIDC token
@@ -43,19 +53,6 @@ jobs:
           node-version: 22
           registry-url: 'https://registry.npmjs.org'
           scope: '@tryghost'
-
-      # In OIDC mode, npm whoami is not a reliable/authenticated check (it expects token auth).
-      # Print config instead to confirm registry + provenance settings.
-      - name: Debug npm config
-        run: |
-          npm config get registry
-          npm config get @tryghost:registry || true
-          npm config get provenance || true
-
-      - name: Detect OIDC availability
-        run: |
-          echo "ACTIONS_ID_TOKEN_REQUEST_URL=${ACTIONS_ID_TOKEN_REQUEST_URL:+present}"
-          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN=${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+present}"
 
       - name: Install dependencies
         run: yarn install
