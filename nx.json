@@ -16,6 +16,11 @@
         "lint"
       ],
       "cache": true
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageManager": "npm"
+      }
     }
   },
   "release": {
