@@ -2,7 +2,11 @@
   "name": "@tryghost/mg-curated-export",
   "version": "0.5.0",
   "description": "tbc",
-  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-curated-export",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TryGhost/migrate.git",
+    "directory": "packages/mg-curated-export"
+  },
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",

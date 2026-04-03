@@ -1,7 +1,11 @@
 {
   "name": "@tryghost/mg-context",
   "version": "0.3.0",
-  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-context",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TryGhost/migrate.git",
+    "directory": "packages/mg-context"
+  },
   "author": "Ghost Foundation",
   "license": "MIT",
   "type": "module",

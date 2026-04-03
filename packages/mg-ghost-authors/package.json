@@ -2,7 +2,11 @@
   "name": "@tryghost/mg-ghost-authors",
   "version": "0.2.0",
   "description": "Fetch existing Ghost users and merge with migrated authors",
-  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-ghost-authors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TryGhost/migrate.git",
+    "directory": "packages/mg-ghost-authors"
+  },
   "author": "Ghost Foundation",
   "license": "MIT",
   "type": "module",

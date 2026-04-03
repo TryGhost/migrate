@@ -1,7 +1,11 @@
 {
   "name": "@tryghost/mg-fs-utils",
   "version": "0.18.0",
-  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-fs-utils",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TryGhost/migrate.git",
+    "directory": "packages/mg-fs-utils"
+  },
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",

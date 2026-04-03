@@ -1,7 +1,11 @@
 {
   "name": "@tryghost/mg-tinynews",
   "version": "0.2.0",
-  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-tinynews",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TryGhost/migrate.git",
+    "directory": "packages/mg-tinynews"
+  },
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",

@@ -1,7 +1,11 @@
 {
   "name": "@tryghost/mg-chorus",
   "version": "0.3.0",
-  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-chorus",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TryGhost/migrate.git",
+    "directory": "packages/mg-chorus"
+  },
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",

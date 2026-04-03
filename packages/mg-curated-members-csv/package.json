@@ -1,7 +1,11 @@
 {
   "name": "@tryghost/mg-curated-members-csv",
   "version": "0.6.0",
-  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-curated-members-csv",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TryGhost/migrate.git",
+    "directory": "packages/mg-curated-members-csv"
+  },
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",

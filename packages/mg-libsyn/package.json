@@ -1,7 +1,11 @@
 {
   "name": "@tryghost/mg-libsyn",
   "version": "0.3.0",
-  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-libsyn",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TryGhost/migrate.git",
+    "directory": "packages/mg-libsyn"
+  },
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",

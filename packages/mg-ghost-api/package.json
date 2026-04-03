@@ -1,7 +1,11 @@
 {
   "name": "@tryghost/mg-ghost-api",
   "version": "0.6.0",
-  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-ghost-api",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TryGhost/migrate.git",
+    "directory": "packages/mg-ghost-api"
+  },
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",

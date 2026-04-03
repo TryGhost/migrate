@@ -1,7 +1,11 @@
 {
   "name": "@tryghost/mg-wp-xml",
   "version": "0.9.0",
-  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-xml",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TryGhost/migrate.git",
+    "directory": "packages/mg-wp-xml"
+  },
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "index.js",

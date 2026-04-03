@@ -1,7 +1,11 @@
 {
   "name": "@tryghost/mg-utils",
   "version": "0.3.0",
-  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-utils",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TryGhost/migrate.git",
+    "directory": "packages/mg-utils"
+  },
   "author": "Ghost Foundation",
   "license": "MIT",
   "type": "module",

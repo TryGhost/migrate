@@ -1,7 +1,11 @@
 {
   "name": "@tryghost/mg-mailchimp-members",
   "version": "0.6.0",
-  "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-mailchimp-members",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TryGhost/migrate.git",
+    "directory": "packages/mg-mailchimp-members"
+  },
   "author": "Ghost Foundation",
   "license": "MIT",
   "type": "module",
