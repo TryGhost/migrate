@@ -48,6 +48,11 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || 'oidc' }}
 
+      - name: Debug npm auth
+        run: |
+          npm config get registry
+          npm whoami || true
+
       - name: Install dependencies
         run: yarn install
 
