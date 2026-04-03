@@ -1,11 +1,13 @@
 name: Publish
 
 on:
+  # Trigger when package.json files change on main (i.e. version bumps from `yarn ship`)
   push:
     branches:
       - main
     paths:
       - 'packages/*/package.json'
+  # Allow manual triggering from the Actions tab (defaults to dry-run for safety)
   workflow_dispatch:
     inputs:
       dry-run:
@@ -19,21 +21,23 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
 
-    # Run for nx release version commits or manual dispatch
+    # Only run for version commits (created by `yarn ship`) or manual dispatch
+    # This prevents publishing on unrelated package.json changes (e.g. dependency updates)
     if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Published new versions')
 
     permissions:
-      id-token: write    # OIDC token for npm trusted publishers
+      id-token: write    # Required for OIDC token exchange with npm trusted publishers
       contents: read
 
     env:
       FORCE_COLOR: 1
       CI: true
-      NPM_CONFIG_PROVENANCE: true
+      NPM_CONFIG_PROVENANCE: true  # Adds build provenance attestation to published packages
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
+      # registry-url is required for npm to authenticate via the OIDC token
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 22
@@ -42,13 +46,49 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
+      # Build is required because published packages ship compiled output (build/)
       - name: Build all packages
         run: yarn build
 
-      - name: Publish to npm (dry run)
-        if: github.event.inputs['dry-run'] == 'true'
-        run: npx nx release publish --dry-run
-
+      # Iterate over all packages, skip already-published versions, and publish new ones.
+      # Uses npm directly instead of nx release publish to avoid yarn v1 JSON parsing issues.
       - name: Publish to npm
-        if: github.event.inputs['dry-run'] != 'true'
-        run: npx nx release publish
+        run: |
+          DRY_RUN_FLAG=""
+          if [ "${{ github.event.inputs.dry-run }}" = "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+          fi
+
+          failed=0
+          for pkg in packages/*/; do
+            # Skip directories without a package.json
+            [ -f "$pkg/package.json" ] || continue
+
+            # Read package metadata from package.json
+            name=$(node -p "require('./$pkg/package.json').name")
+            version=$(node -p "require('./$pkg/package.json').version")
+            private=$(node -p "require('./$pkg/package.json').private || false")
+
+            # Skip private packages
+            if [ "$private" = "true" ]; then
+              echo "Skipping $name (private)"
+              continue
+            fi
+
+            # Check if this exact version already exists on the registry — skip if so
+            # Uses grep -x for full-line matching to avoid partial hits (e.g. 1.2.3 matching 11.2.3)
+            if npm view "$name@$version" version 2>/dev/null | grep -qx "$version"; then
+              echo "Skipping $name@$version (already published)"
+              continue
+            fi
+
+            # Publish the package (--access public is required for scoped @tryghost packages)
+            echo "Publishing $name@$version..."
+            if ! npm publish "$pkg" --access public $DRY_RUN_FLAG; then
+              echo "::error::Failed to publish $name@$version"
+              failed=1
+            fi
+          done
+
+          # Fail the workflow if any package failed to publish
+          exit $failed
