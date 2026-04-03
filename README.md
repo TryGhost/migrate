@@ -85,21 +85,32 @@ yarn dev [source]
 
 ## Publish
 
-- `yarn ship` to interactively version bump, tag, and push to git
+Packages are published to npm automatically via GitHub Actions using OIDC trusted publishers — no npm token is needed.
+
+### How to release
+
+1. Run `yarn ship` locally to interactively version bump, tag, and push to git
     - Uses `nx release` under the hood — prompts per-package for the bump level
     - Also updates any packages which depend on changed packages
-- `nx release publish` to publish all tagged packages to npm
-    - Use `--projects=<package-name>` to publish specific packages (comma-delimited), e.g. `nx release publish --projects=@tryghost/mg-substack-members-csv,@tryghost/mg-substack`
-    - Use `--otp <code>` if your npm account requires two-factor authentication
+2. The push to `main` triggers the [publish workflow](.github/workflows/publish.yml), which builds and publishes all bumped packages to npm
+
+You can also trigger a dry-run from the [Actions tab](https://github.com/TryGhost/migrate/actions/workflows/publish.yml) to preview what would be published without actually publishing.
 
 ### First release of a new package
 
-When publishing a package for the first time, use `yarn ship:first-release`. This tells `nx release` to skip looking for previous git tags or npm registry versions, which would otherwise fail for an unpublished package.
+When publishing a package for the first time:
 
 1. Create the package in `packages/` (see CLAUDE.md for the template)
 2. Set `"version": "0.0.0"` in its `package.json`
 3. Commit and merge to `main`
-4. Run `yarn ship:first-release` — select the initial version when prompted
+4. Register the package as a trusted publisher:
+    ```sh
+    npm trust github <package-name> --repo TryGhost/migrate --file publish.yml --yes
+
+    # Example:
+    npm trust github @tryghost/mg-example-package --repo TryGhost/migrate --file publish.yml --yes
+    ```
+5. Run `yarn ship:first-release` — select the initial version when prompted
 
 
 # Copyright & License
