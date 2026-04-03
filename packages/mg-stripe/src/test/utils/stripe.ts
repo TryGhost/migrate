@@ -118,11 +118,13 @@ export async function createDeclinedCustomer<T extends boolean>(stripe: Stripe, 
     });
 }
 
-export function buildDiscount(overrides: Partial<Omit<Stripe.Discount, 'coupon'>> & {coupon: Stripe.Coupon}): Stripe.Discount {
+export function buildDiscount(overrides: Partial<Omit<Stripe.Discount, 'source'>> & {coupon: Stripe.Coupon}): Stripe.Discount {
+    const {coupon, ...rest} = overrides;
     return {
         id: DryRunIdGenerator.getNext('di_'),
         object: 'discount',
         customer: null,
+        customer_account: null,
         end: null,
         invoice: null,
         invoice_item: null,
@@ -130,7 +132,12 @@ export function buildDiscount(overrides: Partial<Omit<Stripe.Discount, 'coupon'>
         start: 0,
         checkout_session: null,
         subscription: null,
-        ...overrides
+        subscription_item: null,
+        ...rest,
+        source: {
+            coupon,
+            type: 'coupon' as const
+        }
     };
 }
 
@@ -163,11 +170,11 @@ export function buildProduct(overrides: Partial<Stripe.Product>): Stripe.Product
         id: DryRunIdGenerator.getNext('prod_'),
         object: 'product',
         active: true,
-        attributes: null,
         created: 0,
         description: null,
         images: [],
         livemode: false,
+        marketing_features: [],
         metadata: {},
         name: 'Test Product',
         package_dimensions: null,
@@ -197,13 +204,13 @@ export function buildPrice(overrides: Partial<Omit<Stripe.Price, 'recurring'>> &
         nickname: null,
         transform_quantity: null,
         type: 'recurring',
-        unit_amount_decimal: '100',
+        unit_amount_decimal: '100' as unknown as Stripe.Decimal,
         metadata: {},
         ...overrides,
         recurring: {
             interval: 'month',
             interval_count: 1,
-            aggregate_usage: null,
+            meter: null,
             trial_period_days: null,
             usage_type: 'licensed',
             ...overrides.recurring
@@ -212,14 +219,20 @@ export function buildPrice(overrides: Partial<Omit<Stripe.Price, 'recurring'>> &
 }
 
 const DAY = 24 * 60 * 60;
-export function buildSubscription(overrides: Partial<Omit<Stripe.Subscription, 'items' | 'customer'>> & {items: {price: Stripe.Price}[], customer: string}): Stripe.Subscription {
+export function buildSubscription(overrides: Partial<Omit<Stripe.Subscription, 'items' | 'customer'>> & {items: {price: Stripe.Price}[], customer: string, current_period_start?: number, current_period_end?: number}): Stripe.Subscription {
     const id = DryRunIdGenerator.getNext('sub_');
+    const now = Math.floor(new Date().getTime() / 1000);
+    const currentPeriodStart = overrides.current_period_start ?? now - DAY * 15;
+    const currentPeriodEnd = overrides.current_period_end ?? now + DAY * 15;
     const items: Stripe.SubscriptionItem[] = overrides.items.map((item) => {
         return {
             id: DryRunIdGenerator.getNext('si_'),
             object: 'subscription_item',
             billing_thresholds: null,
             created: 123,
+            current_period_start: currentPeriodStart,
+            current_period_end: currentPeriodEnd,
+            discounts: [],
             metadata: {},
             plan: {} as Stripe.Plan,
             subscription: id,
@@ -228,30 +241,32 @@ export function buildSubscription(overrides: Partial<Omit<Stripe.Subscription, '
             quantity: 1
         };
     });
-    const now = Math.floor(new Date().getTime() / 1000);
+    const {current_period_start: _cps, current_period_end: _cpe, ...restOverrides} = overrides;
     return {
         id,
         object: 'subscription',
         application: null,
         application_fee_percent: null,
-        automatic_tax: {enabled: false},
+        automatic_tax: {disabled_reason: null, enabled: false, liability: null},
         billing_cycle_anchor: 0,
+        billing_cycle_anchor_config: null,
+        billing_mode: {flexible: null, type: 'classic'},
         billing_thresholds: null,
         cancel_at: null,
         cancel_at_period_end: false,
         canceled_at: null,
+        customer_account: null,
         cancellation_details: null,
         collection_method: 'charge_automatically',
         created: now - DAY * 45,
         currency: 'usd',
-        current_period_end: now + DAY * 15,
-        current_period_start: now - DAY * 15,
         days_until_due: null,
         default_payment_method: null,
         default_source: null,
         description: null,
-        discount: null,
+        discounts: [],
         ended_at: null,
+        invoice_settings: {account_tax_ids: null, issuer: {type: 'self'}},
         latest_invoice: null,
         livemode: false,
         metadata: {},
@@ -270,7 +285,7 @@ export function buildSubscription(overrides: Partial<Omit<Stripe.Subscription, '
         trial_end: null,
         trial_settings: null,
         trial_start: null,
-        ...overrides,
+        ...restOverrides,
         items: {
             object: 'list',
             has_more: false,
@@ -281,27 +296,35 @@ export function buildSubscription(overrides: Partial<Omit<Stripe.Subscription, '
 }
 
 export function buildInvoiceItem(data: {price: Stripe.Price, period: Stripe.InvoiceLineItem.Period}): Stripe.InvoiceLineItem {
+    const product = typeof data.price.product === 'string' ? data.price.product : data.price.product.id;
     const invoiceItem: Stripe.InvoiceLineItem = {
         id: DryRunIdGenerator.getNext('ii_'),
         amount: data.price.unit_amount!,
         currency: 'usd',
         description: null,
         discountable: false,
-        discounts: null,
+        discounts: [],
+        discount_amounts: null,
+        invoice: null,
         livemode: false,
         metadata: {},
+        parent: null,
         period: data.period,
-        plan: null,
-        price: data.price,
-        proration: false,
+        pretax_credit_amounts: null,
+        pricing: {
+            price_details: {
+                price: data.price,
+                product
+            },
+            type: 'price_details',
+            unit_amount_decimal: data.price.unit_amount_decimal ?? null
+        },
         quantity: 1,
+        quantity_decimal: null,
         subscription: null,
-        object: 'line_item',
-        amount_excluding_tax: null,
-        discount_amounts: null,
-        proration_details: null,
-        type: 'subscription',
-        unit_amount_excluding_tax: null
+        subtotal: data.price.unit_amount!,
+        taxes: null,
+        object: 'line_item'
     };
     return invoiceItem;
 }
@@ -315,23 +338,27 @@ export function buildInvoice(overrides: Partial<Omit<Stripe.Invoice, 'lines' | '
         account_name: null,
         account_tax_ids: null,
         amount_due: 0,
+        amount_overpaid: 0,
         amount_paid: 0,
         amount_remaining: 0,
         amount_shipping: 0,
         application: null,
-        application_fee_amount: null,
         attempt_count: 0,
         attempted: false,
         automatic_tax: {
+            disabled_reason: null,
             enabled: false,
+            liability: null,
+            provider: null,
             status: null
         },
+        automatically_finalizes_at: null,
         billing_reason: null,
-        charge: null,
         collection_method: 'charge_automatically',
         created: 0,
         currency: '',
         custom_fields: null,
+        customer_account: null,
         customer_address: null,
         customer_email: null,
         customer_name: null,
@@ -342,13 +369,13 @@ export function buildInvoice(overrides: Partial<Omit<Stripe.Invoice, 'lines' | '
         default_source: null,
         default_tax_rates: [],
         description: null,
-        discount: null,
-        discounts: null,
+        discounts: [],
         due_date: null,
         effective_at: null,
         ending_balance: null,
         footer: null,
         from_invoice: null,
+        issuer: {type: 'self'},
         last_finalization_error: null,
         latest_revision: null,
         livemode: false,
@@ -356,17 +383,14 @@ export function buildInvoice(overrides: Partial<Omit<Stripe.Invoice, 'lines' | '
         next_payment_attempt: null,
         number: null,
         on_behalf_of: null,
-        paid: false,
-        paid_out_of_band: false,
-        payment_intent: null,
+        parent: null,
         payment_settings: {} as any,
         period_end: 0,
         period_start: 0,
         post_payment_credit_notes_amount: 0,
         pre_payment_credit_notes_amount: 0,
-        quote: null,
         receipt_number: null,
-        rendering_options: null,
+        rendering: null,
         shipping_cost: null,
         shipping_details: null,
         starting_balance: 0,
@@ -375,15 +399,13 @@ export function buildInvoice(overrides: Partial<Omit<Stripe.Invoice, 'lines' | '
         status_transitions: {} as any,
         subtotal: 0,
         subtotal_excluding_tax: null,
-        tax: null,
         test_clock: null,
         total: 0,
         total_discount_amounts: null,
         total_excluding_tax: null,
-        total_tax_amounts: [],
-        transfer_data: null,
+        total_pretax_credit_amounts: null,
+        total_taxes: null,
         webhooks_delivered_at: null,
-        subscription_details: null,
         ...overrides,
         lines: {
             object: 'list',

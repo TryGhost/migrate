@@ -54,7 +54,7 @@ describe('Recreating subscriptions', () => {
             return Promise.resolve({} as Stripe.Response<Stripe.Subscription>);
         });
 
-        sinon.stub(oldStripe.debugClient.subscriptions, 'del').callsFake(() => {
+        sinon.stub(oldStripe.debugClient.subscriptions, 'cancel').callsFake(() => {
             return Promise.resolve({} as Stripe.Response<Stripe.Subscription>);
         });
     });
@@ -104,7 +104,7 @@ describe('Recreating subscriptions', () => {
         // Real object importers from fake data -> actual stripe account
         const realSharedOptions = {
             dryRun: false,
-            oldStripe: new StripeAPI({apiKey: ''}), // old is invalid to prevent usage
+            oldStripe: new StripeAPI({apiKey: 'sk_test_invalid'}), // old is invalid to prevent usage
             newStripe: stripe,
             reporter
         };
@@ -123,7 +123,7 @@ describe('Recreating subscriptions', () => {
         });
     });
 
-    it('Monthly subscription', async () => {
+    it('Monthly subscription', {timeout: 60000}, async () => {
         const {customer} = await createValidCustomer(stripe.debugClient, {testClock: false});
         const fakeProduct = buildProduct({});
 
@@ -160,7 +160,7 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'active');
         assert.equal(newSubscription.start_date, oldSubscription.start_date);
-        assert.equal(newSubscription.current_period_end, oldSubscription.current_period_end);
+        assert.equal(newSubscription.items.data[0].current_period_end, oldSubscription.items.data[0].current_period_end);
         assert.equal(newSubscription.trial_end, null);
         assert.equal(newSubscription.cancel_at_period_end, oldSubscription.cancel_at_period_end);
         assert.equal(newSubscription.customer, customer.id);
@@ -186,17 +186,17 @@ describe('Recreating subscriptions', () => {
         assert.equal(newInvoices.data.length, 0);
 
         // Check upcoming invoice
-        const upcomingInvoice = await stripe.use(client => client.invoices.retrieveUpcoming({
+        const upcomingInvoice = await stripe.use(client => client.invoices.createPreview({
             customer: customer.id,
             subscription: newSubscription.id
         }));
         assert.equal(upcomingInvoice.amount_due, 100);
-        assert.equal(upcomingInvoice.lines.data[0].period.start, oldSubscription.current_period_end);
-        assert.ok(upcomingInvoice.lines.data[0].period.end >= oldSubscription.current_period_end + 27 * 24 * 60 * 60);
-        assert.ok(upcomingInvoice.lines.data[0].period.end <= oldSubscription.current_period_end + 32 * 24 * 60 * 60);
+        assert.equal(upcomingInvoice.lines.data[0].period.start, oldSubscription.items.data[0].current_period_end);
+        assert.ok(upcomingInvoice.lines.data[0].period.end >= oldSubscription.items.data[0].current_period_end + 27 * 24 * 60 * 60);
+        assert.ok(upcomingInvoice.lines.data[0].period.end <= oldSubscription.items.data[0].current_period_end + 32 * 24 * 60 * 60);
     });
 
-    it('Yearly subscription', async () => {
+    it('Yearly subscription', {timeout: 60000}, async () => {
         const {customer} = await createValidCustomer(stripe.debugClient, {testClock: false});
         const fakeProduct = buildProduct({});
 
@@ -233,7 +233,7 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'active');
         assert.equal(newSubscription.start_date, oldSubscription.start_date);
-        assert.equal(newSubscription.current_period_end, oldSubscription.current_period_end);
+        assert.equal(newSubscription.items.data[0].current_period_end, oldSubscription.items.data[0].current_period_end);
         assert.equal(newSubscription.trial_end, null);
         assert.equal(newSubscription.cancel_at_period_end, oldSubscription.cancel_at_period_end);
         assert.equal(newSubscription.customer, customer.id);
@@ -259,17 +259,17 @@ describe('Recreating subscriptions', () => {
         assert.equal(newInvoices.data.length, 0);
 
         // Check upcoming invoice
-        const upcomingInvoice = await stripe.use(client => client.invoices.retrieveUpcoming({
+        const upcomingInvoice = await stripe.use(client => client.invoices.createPreview({
             customer: customer.id,
             subscription: newSubscription.id
         }));
         assert.equal(upcomingInvoice.amount_due, 100);
-        assert.equal(upcomingInvoice.lines.data[0].period.start, oldSubscription.current_period_end);
-        assert.ok(upcomingInvoice.lines.data[0].period.end >= oldSubscription.current_period_end + 363 * 24 * 60 * 60);
-        assert.ok(upcomingInvoice.lines.data[0].period.end <= oldSubscription.current_period_end + 367 * 24 * 60 * 60);
+        assert.equal(upcomingInvoice.lines.data[0].period.start, oldSubscription.items.data[0].current_period_end);
+        assert.ok(upcomingInvoice.lines.data[0].period.end >= oldSubscription.items.data[0].current_period_end + 363 * 24 * 60 * 60);
+        assert.ok(upcomingInvoice.lines.data[0].period.end <= oldSubscription.items.data[0].current_period_end + 367 * 24 * 60 * 60);
     });
 
-    it('Multi-currency prices subscription', async () => {
+    it('Multi-currency prices subscription', {timeout: 60000}, async () => {
         const {customer} = await createValidCustomer(stripe.debugClient, {testClock: false, currency: 'eur', method: 'source'});
         const fakeProduct = buildProduct({});
 
@@ -315,7 +315,7 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'active');
         assert.equal(newSubscription.start_date, oldSubscription.start_date);
-        assert.equal(newSubscription.current_period_end, oldSubscription.current_period_end);
+        assert.equal(newSubscription.items.data[0].current_period_end, oldSubscription.items.data[0].current_period_end);
         assert.equal(newSubscription.trial_end, null);
         assert.equal(newSubscription.cancel_at_period_end, oldSubscription.cancel_at_period_end);
         assert.equal(newSubscription.customer, customer.id);
@@ -342,17 +342,17 @@ describe('Recreating subscriptions', () => {
         assert.equal(newInvoices.data.length, 0);
 
         // Check upcoming invoice
-        const upcomingInvoice = await stripe.use(client => client.invoices.retrieveUpcoming({
+        const upcomingInvoice = await stripe.use(client => client.invoices.createPreview({
             customer: customer.id,
             subscription: newSubscription.id
         }));
         assert.equal(upcomingInvoice.amount_due, 100);
-        assert.equal(upcomingInvoice.lines.data[0].period.start, oldSubscription.current_period_end);
-        assert.ok(upcomingInvoice.lines.data[0].period.end >= oldSubscription.current_period_end + 27 * 24 * 60 * 60);
-        assert.ok(upcomingInvoice.lines.data[0].period.end <= oldSubscription.current_period_end + 32 * 24 * 60 * 60);
+        assert.equal(upcomingInvoice.lines.data[0].period.start, oldSubscription.items.data[0].current_period_end);
+        assert.ok(upcomingInvoice.lines.data[0].period.end >= oldSubscription.items.data[0].current_period_end + 27 * 24 * 60 * 60);
+        assert.ok(upcomingInvoice.lines.data[0].period.end <= oldSubscription.items.data[0].current_period_end + 32 * 24 * 60 * 60);
     });
 
-    it('Subscription with a coupon', async () => {
+    it('Subscription with a coupon', {timeout: 60000}, async () => {
         const {customer} = await createValidCustomer(stripe.debugClient, {testClock: false});
         const fakeProduct = buildProduct({});
 
@@ -390,23 +390,23 @@ describe('Recreating subscriptions', () => {
             ],
             current_period_start: currentPeriodStart,
             current_period_end: currentPeriodEnd,
-            discount: buildDiscount({
+            discounts: [buildDiscount({
                 coupon: couponObj
-            })
+            })]
         });
 
         const newSubscriptionId = await subscriptionImporter.recreateAndConfirm(oldSubscription);
-        const newSubscription = await stripe.use(client => client.subscriptions.retrieve(newSubscriptionId));
+        const newSubscription = await stripe.use(client => client.subscriptions.retrieve(newSubscriptionId, {expand: ['discounts', 'discounts.source.coupon']}));
 
         // Do some basic assertions
         assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'active');
         assert.equal(newSubscription.start_date, oldSubscription.start_date);
-        assert.equal(newSubscription.current_period_end, oldSubscription.current_period_end);
+        assert.equal(newSubscription.items.data[0].current_period_end, oldSubscription.items.data[0].current_period_end);
         assert.equal(newSubscription.trial_end, null);
         assert.equal(newSubscription.cancel_at_period_end, oldSubscription.cancel_at_period_end);
-        assert.ok(newSubscription.discount?.coupon);
-        assert.equal(newSubscription.discount!.coupon!.percent_off, 50);
+        assert.ok((newSubscription.discounts?.[0] as Stripe.Discount)?.source?.coupon);
+        assert.equal(((newSubscription.discounts[0] as Stripe.Discount).source.coupon as Stripe.Coupon).percent_off, 50);
         assert.equal(newSubscription.customer, customer.id);
         assert.equal(newSubscription.description, oldSubscription.description);
 
@@ -430,17 +430,17 @@ describe('Recreating subscriptions', () => {
         assert.equal(newInvoices.data.length, 0);
 
         // Check upcoming invoice
-        const upcomingInvoice = await stripe.use(client => client.invoices.retrieveUpcoming({
+        const upcomingInvoice = await stripe.use(client => client.invoices.createPreview({
             customer: customer.id,
             subscription: newSubscription.id
         }));
         assert.equal(upcomingInvoice.amount_due, 50); // Discount has been applied to the upcoming invoice
-        assert.equal(upcomingInvoice.lines.data[0].period.start, oldSubscription.current_period_end);
-        assert.ok(upcomingInvoice.lines.data[0].period.end >= oldSubscription.current_period_end + 27 * 24 * 60 * 60);
-        assert.ok(upcomingInvoice.lines.data[0].period.end <= oldSubscription.current_period_end + 32 * 24 * 60 * 60);
+        assert.equal(upcomingInvoice.lines.data[0].period.start, oldSubscription.items.data[0].current_period_end);
+        assert.ok(upcomingInvoice.lines.data[0].period.end >= oldSubscription.items.data[0].current_period_end + 27 * 24 * 60 * 60);
+        assert.ok(upcomingInvoice.lines.data[0].period.end <= oldSubscription.items.data[0].current_period_end + 32 * 24 * 60 * 60);
     });
 
-    it('Test with a trial period', async () => {
+    it('Test with a trial period', {timeout: 60000}, async () => {
         const {customer, clock} = await createValidCustomer(stripe.debugClient, {testClock: true});
         const fakeProduct = buildProduct({});
 
@@ -479,7 +479,7 @@ describe('Recreating subscriptions', () => {
         assert.equal(newSubscription.metadata.ghost_migrate_id, oldSubscription.id);
         assert.equal(newSubscription.status, 'trialing');
         assert.equal(newSubscription.start_date, oldSubscription.start_date);
-        assert.equal(newSubscription.current_period_end, oldSubscription.trial_end);
+        assert.equal(newSubscription.items.data[0].current_period_end, oldSubscription.trial_end);
         assert.equal(newSubscription.trial_end, oldSubscription.trial_end);
         assert.equal(newSubscription.cancel_at_period_end, oldSubscription.cancel_at_period_end);
         assert.equal(newSubscription.customer, customer.id);
@@ -506,7 +506,7 @@ describe('Recreating subscriptions', () => {
         assert.equal(newInvoices.data[0].amount_paid + newInvoices.data[0].amount_remaining, 0);
 
         // Check upcoming invoice
-        const upcomingInvoice = await stripe.use(client => client.invoices.retrieveUpcoming({
+        const upcomingInvoice = await stripe.use(client => client.invoices.createPreview({
             customer: customer.id,
             subscription: newSubscription.id
         }));
