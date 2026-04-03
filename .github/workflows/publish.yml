@@ -38,10 +38,15 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       # registry-url is required for npm to authenticate via the OIDC token
+      # NODE_AUTH_TOKEN placeholder ensures npm enters the authenticated flow,
+      # where it then exchanges the GitHub OIDC token for publish access
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 22
           registry-url: 'https://registry.npmjs.org'
+          scope: '@tryghost'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || 'oidc' }}
 
       - name: Install dependencies
         run: yarn install
