@@ -52,6 +52,11 @@ jobs:
           npm config get @tryghost:registry || true
           npm config get provenance || true
 
+      - name: Detect OIDC availability
+        run: |
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL=${ACTIONS_ID_TOKEN_REQUEST_URL:+present}"
+          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN=${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+present}"
+
       - name: Install dependencies
         run: yarn install
 
