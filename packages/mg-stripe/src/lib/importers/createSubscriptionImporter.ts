@@ -8,10 +8,17 @@ import Importer, {BaseImporter} from './Importer.js';
 import {ImportError} from './ImportError.js';
 import {ReportTags, Reporter} from './Reporter.js';
 
+function getSubscriptionCoupon(subscription: Stripe.Subscription): Stripe.Coupon | undefined {
+    const firstDiscount = subscription.discounts?.find((d): d is Stripe.Discount => typeof d !== 'string');
+    const coupon = firstDiscount?.source?.coupon;
+    return typeof coupon !== 'string' ? coupon ?? undefined : undefined;
+}
+
 function tagSubscription(subscription: Stripe.Subscription, tags: ReportTags) {
     tags.addTag('Platform', (subscription.application as Stripe.Application)?.name ?? 'None');
     tags.addTag('Platform fees', (subscription.application_fee_percent ?? 0).toString() + '%');
-    tags.addTag('Coupon', subscription.discount?.coupon ? (subscription.discount?.coupon?.name ?? '(Coupon without name)') : 'None');
+    const coupon = getSubscriptionCoupon(subscription);
+    tags.addTag('Coupon', coupon ? (coupon.name ?? '(Coupon without name)') : 'None');
     tags.addTag('Status', subscription.status);
     tags.addTag('Cancel at period end', subscription.cancel_at_period_end ? 'Yes' : 'No');
 }
@@ -284,7 +291,8 @@ export function createSubscriptionImporter({oldStripe, newStripe, priceImporter,
             }
 
             Logger.vv?.info(`Getting coupon if needed`);
-            const coupon = oldSubscription.discount?.coupon ? (await couponImporter.recreate(oldSubscription.discount?.coupon)) : undefined;
+            const oldCoupon = getSubscriptionCoupon(oldSubscription);
+            const couponId = oldCoupon ? (await couponImporter.recreate(oldCoupon)) : undefined;
 
             const now = new Date().getTime() / 1000;
 
@@ -299,11 +307,11 @@ export function createSubscriptionImporter({oldStripe, newStripe, priceImporter,
                 default_payment_method: foundPaymentMethodId,
                 default_source: foundSourceId,
                 items,
-                billing_cycle_anchor: isTrial ? undefined : Math.max(minimumBillingCycleAnchor, oldSubscription.current_period_end),
+                billing_cycle_anchor: isTrial ? undefined : Math.max(minimumBillingCycleAnchor, oldSubscription.items.data[0].current_period_end),
                 backdate_start_date: oldSubscription.start_date,
                 proration_behavior: 'none', // Don't charge for backdated time
                 cancel_at_period_end: oldSubscription.cancel_at ? undefined : oldSubscription.cancel_at_period_end, // Can't set cancel_at and cancel_at_period_end at the same time (even if they make sense)
-                coupon,
+                discounts: couponId ? [{coupon: couponId}] : undefined,
                 trial_end: isTrial ? oldSubscription.trial_end! : undefined, // Stripe returns trial end in the past, but doesn't allow it to be in the past when creating a subscription
                 cancel_at: oldSubscription.cancel_at ?? undefined,
                 currency: oldSubscription.currency,
@@ -311,8 +319,8 @@ export function createSubscriptionImporter({oldStripe, newStripe, priceImporter,
                     ghost_migrate_created: oldSubscription.created,
                     ghost_migrate_id: oldSubscription.id,
                     ghost_migrate_start_date: oldSubscription.start_date,
-                    ghost_migrate_current_period_start: oldSubscription.current_period_start,
-                    ghost_migrate_current_period_end: oldSubscription.current_period_end,
+                    ghost_migrate_current_period_start: oldSubscription.items.data[0].current_period_start,
+                    ghost_migrate_current_period_end: oldSubscription.items.data[0].current_period_end,
                     ghost_migrate_trial_end: oldSubscription.trial_end
                 },
                 payment_behavior: 'error_if_incomplete' // Make sure we throw an error if we can't charge the customer
@@ -377,7 +385,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, priceImporter,
                                 start: item.period?.start,
                                 end: item.period?.end
                             },
-                            description: item.description ?? (item.price?.product as Stripe.Product).name,
+                            description: item.description ?? ((item.pricing?.price_details?.price as Stripe.Price)?.product as Stripe.Product)?.name,
                             currency: item.currency,
                             metadata: {
                                 ghost_migrate_id: item.id
@@ -452,7 +460,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, priceImporter,
                     }
                 }));
 
-                await newStripe.use(client => client.subscriptions.del(getObjectId(newSubscription)));
+                await newStripe.use(client => client.subscriptions.cancel(getObjectId(newSubscription)));
 
                 // Unpause old subscription
                 Logger.vv?.info(`Resuming old ${oldSubscription.id}`);
@@ -465,8 +473,9 @@ export function createSubscriptionImporter({oldStripe, newStripe, priceImporter,
             }
 
             // Delete coupon if not yet deleted
-            if (oldSubscription.discount?.coupon) {
-                await couponImporter.revert(oldSubscription.discount?.coupon);
+            const revertCoupon = getSubscriptionCoupon(oldSubscription);
+            if (revertCoupon) {
+                await couponImporter.revert(revertCoupon);
             }
         },
 
@@ -476,7 +485,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, priceImporter,
             if (oldSubscription.status === 'canceled') {
                 await ifNotDryRun(async () => {
                     // Cancel new subscription
-                    await newStripe.use(client => client.subscriptions.del(getObjectId(newSubscription)));
+                    await newStripe.use(client => client.subscriptions.cancel(getObjectId(newSubscription)));
                 });
 
                 tags.addTag('reason', `Old subscription was canceled during the migration`);
@@ -489,7 +498,7 @@ export function createSubscriptionImporter({oldStripe, newStripe, priceImporter,
 
             await ifNotDryRun(async () => {
                 // Cancel old subscription
-                await oldStripe.use(client => client.subscriptions.del(getObjectId(oldSubscription)));
+                await oldStripe.use(client => client.subscriptions.cancel(getObjectId(oldSubscription)));
 
                 // Unpause new subscription
                 Logger.vv?.info(`Finalizing ${newSubscription.id}`);
