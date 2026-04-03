@@ -33,7 +33,6 @@ jobs:
       FORCE_COLOR: 1
       CI: true
       NPM_CONFIG_PROVENANCE: true  # Adds build provenance attestation to published packages
-      NODE_AUTH_TOKEN: ""   # <- force-disable token auth; use OIDC trusted publishing only
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -44,6 +43,8 @@ jobs:
           node-version: 22
           registry-url: 'https://registry.npmjs.org'
           scope: '@tryghost'
+        env:
+          NODE_AUTH_TOKEN: ""
 
       - name: Install dependencies
         run: yarn install
@@ -52,18 +53,22 @@ jobs:
       - name: Build all packages
         run: yarn build
 
-      - name: Dump run identity (safe)
+      - name: Strip npm auth token from npmrc (OIDC only)
         run: |
-          echo "repo=$GITHUB_REPOSITORY"
-          echo "workflow_ref=$GITHUB_WORKFLOW_REF"
-          echo "ref=$GITHUB_REF"
-          echo "ref_name=$GITHUB_REF_NAME"
-          echo "sha=$GITHUB_SHA"
+          npmrc="$(npm config get userconfig)"
+          echo "using npmrc=$npmrc"
+          # Remove any auth token lines that force token-based auth
+          sed -i.bak '/_authToken/d' "$npmrc" || true
+          sed -i.bak '/\/\/registry\.npmjs\.org\/:_authToken/d' "$npmrc" || true
+          echo "auth token lines remaining? $(grep -c _authToken "$npmrc" || true)"
 
       # Iterate over all packages, skip already-published versions, and publish new ones.
       # Uses npm directly instead of nx release publish to avoid yarn v1 JSON parsing issues.
       - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ""
         run: |
+          unset NODE_AUTH_TOKEN
           DRY_RUN_FLAG=""
           if [ "${{ github.event.inputs.dry-run }}" = "true" ]; then
             DRY_RUN_FLAG="--dry-run"
