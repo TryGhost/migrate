@@ -3,90 +3,168 @@ name: Publish
 on:
   # Trigger when package.json files change on main (i.e. version bumps from `yarn ship`)
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - 'packages/*/package.json'
-  # Allow manual triggering from the Actions tab (defaults to dry-run for safety)
+  # Allow manual triggering from the Actions tab
   workflow_dispatch:
     inputs:
-      dry-run:
-        description: 'Preview what would be published without actually publishing'
-        required: false
-        type: boolean
-        default: true
+      mode:
+        description: How this run should exercise npm publishing
+        required: true
+        type: choice
+        options:
+          - oidc-check   # Only test the OIDC token exchange — no publish
+          - dry-run       # Preview what would be published
+          - publish       # Actually publish to npm
+        default: oidc-check
+      npm_tag:
+        # npm dist-tags control what users get when they run `npm install @tryghost/<pkg>`.
+        # "latest" is the default tag — it's what `npm install` resolves to.
+        # Use other tags (e.g. "beta", "next") to publish pre-release versions
+        # that users must opt into with `npm install @tryghost/<pkg>@beta`.
+        description: Dist-tag to use for manual runs (e.g. latest, beta)
+        required: true
+        type: string
+        default: latest
 
 jobs:
   publish:
     name: Publish to npm
     runs-on: ubuntu-latest
 
-    # Only run for version commits (created by `yarn ship`) or manual dispatch
-    # This prevents publishing on unrelated package.json changes (e.g. dependency updates)
+    # Only run for version commits (created by `yarn ship`) or manual dispatch.
+    # This prevents publishing on unrelated package.json changes (e.g. dependency updates).
     if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Published new versions')
 
     permissions:
-      id-token: write    # Required for OIDC token exchange with npm trusted publishers
       contents: read
+      id-token: write    # Required for OIDC token exchange with npm trusted publishers
 
     env:
       FORCE_COLOR: 1
       CI: true
-      NPM_CONFIG_PROVENANCE: true  # Adds build provenance attestation to published packages
+      # Enables build provenance attestation on published packages
+      NPM_CONFIG_PROVENANCE: true
+      # Prevent classic token auth from interfering with OIDC (some orgs inject NODE_AUTH_TOKEN)
+      NODE_AUTH_TOKEN: ""
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      # registry-url is required for npm to authenticate via the OIDC token
+      # First setup-node: used for building (keeps the monorepo on its expected Node version)
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
-          node-version: 24
-          registry-url: 'https://registry.npmjs.org'
-          scope: '@tryghost'
+          node-version: 22
+          cache: yarn
         env:
           NODE_AUTH_TOKEN: ""
 
       - name: Install dependencies
         run: yarn install
 
-      - name: Show npm version
-        run: npm -v
-
       # Build is required because published packages ship compiled output (build/)
       - name: Build all packages
         run: yarn build
 
-      - uses: actions/setup-node@v6
+      # Second setup-node: used for publishing only.
+      # Node 24 has better OIDC trusted publisher support in its bundled npm.
+      # registry-url is required for npm to authenticate via the OIDC token.
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
-          node-version: 24
-          registry-url: 'https://registry.npmjs.org'
-          scope: '@tryghost'
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+        env:
+          NODE_AUTH_TOKEN: ""
 
+      # Determine what this run should do based on trigger type
+      - name: Resolve publish mode
+        id: publish_mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "mode=${{ inputs.mode }}" >> "$GITHUB_OUTPUT"
+            echo "tag=${{ inputs.npm_tag }}" >> "$GITHUB_OUTPUT"
+          else
+            # Push-triggered runs always publish with the "latest" tag
+            echo "mode=publish" >> "$GITHUB_OUTPUT"
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Ensure we have the latest npm for trusted publishing support
+      - name: Upgrade npm
+        run: npm install -g npm@latest
+
+      - name: Print runtime versions
+        run: |
+          node --version
+          npm --version
+
+      # actions/setup-node writes _authToken to .npmrc which can conflict with OIDC auth.
+      # Strip it so npm falls through to OIDC token exchange.
       - name: Strip npm auth token from npmrc (OIDC only)
         run: |
+          set -euo pipefail
           npmrc="$(npm config get userconfig)"
           echo "using npmrc=$npmrc"
-          # Remove any auth token lines that force token-based auth
           sed -i.bak '/_authToken/d' "$npmrc" || true
-          sed -i.bak '/\/\/registry\.npmjs\.org\/:_authToken/d' "$npmrc" || true
           echo "auth token lines remaining? $(grep -c _authToken "$npmrc" || true)"
 
-      - name: Check OIDC env at publish time (safe)
+      # Manually test the OIDC token exchange with npm's API.
+      # This pinpoints whether GitHub is issuing the token and whether npm accepts it,
+      # so we get a clear error instead of a cryptic 404 on publish.
+      - name: Check npm OIDC exchange (probe)
         run: |
+          set -euo pipefail
+
           echo "ACTIONS_ID_TOKEN_REQUEST_URL=${ACTIONS_ID_TOKEN_REQUEST_URL:+present}"
           echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN=${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+present}"
 
+          # 1) Request a GitHub OIDC token with npm as the audience
+          OIDC_RESPONSE=$(curl --silent --show-error --fail \
+            -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm:registry.npmjs.org")
+          OIDC_TOKEN=$(node -p "JSON.parse(process.argv[1]).value" "$OIDC_RESPONSE")
+
+          # 2) Exchange it with npm for a representative package to verify trust config
+          PROBE_PKG='@tryghost/migrate'
+          ENCODED_PKG=$(node -p "encodeURIComponent(process.argv[1])" "$PROBE_PKG")
+
+          HTTP_STATUS=$(curl --silent --show-error --output oidc-exchange.json --write-out "%{http_code}" \
+            --request POST \
+            --header "Authorization: Bearer ${OIDC_TOKEN}" \
+            "https://registry.npmjs.org/-/npm/v1/oidc/token/exchange/package/${ENCODED_PKG}")
+
+          if [ "$HTTP_STATUS" != "201" ]; then
+            echo "npm OIDC exchange failed with HTTP ${HTTP_STATUS}"
+            cat oidc-exchange.json
+            exit 1
+          fi
+
+          node -p "const response=require('./oidc-exchange.json'); 'npm OIDC exchange succeeded; token expires at ' + response.expires"
+          rm oidc-exchange.json
+
+      # In oidc-check mode, stop here — we only wanted to verify the token exchange
+      - name: Stop after OIDC check
+        if: steps.publish_mode.outputs.mode == 'oidc-check'
+        run: echo "OIDC check complete; stopping (mode=oidc-check)."
+
       # Iterate over all packages, skip already-published versions, and publish new ones.
       # Uses npm directly instead of nx release publish to avoid yarn v1 JSON parsing issues.
+      # Publishes from inside each package directory for correct package resolution.
       - name: Publish to npm
+        if: steps.publish_mode.outputs.mode != 'oidc-check'
         env:
           NODE_AUTH_TOKEN: ""
         run: |
+          set -euo pipefail
           unset NODE_AUTH_TOKEN
+
           DRY_RUN_FLAG=""
-          if [ "${{ github.event.inputs.dry-run }}" = "true" ]; then
+          if [ "${{ steps.publish_mode.outputs.mode }}" = "dry-run" ]; then
             DRY_RUN_FLAG="--dry-run"
           fi
+
+          TAG="${{ steps.publish_mode.outputs.tag }}"
 
           failed=0
           for pkg in packages/*/; do
@@ -111,9 +189,11 @@ jobs:
               continue
             fi
 
-            # Publish the package (--access public is required for scoped @tryghost packages)
+            # Publish from inside the package directory for correct package resolution.
+            # --access public is required for scoped @tryghost packages.
+            # --provenance attaches build attestation via OIDC (belt-and-suspenders with env var).
             echo "Publishing $name@$version..."
-            if ! npm publish "$pkg" --access public --provenance $DRY_RUN_FLAG; then
+            if ! (cd "$pkg" && npm publish --access public --tag "$TAG" --provenance $DRY_RUN_FLAG); then
               echo "::error::Failed to publish $name@$version"
               failed=1
             fi
