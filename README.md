@@ -54,10 +54,10 @@ Each source comes with optional flags to customise the migration:
 
 ## Develop
 
-This is a mono repository, managed with [Nx](https://nx.dev/) and yarn workspaces.
+This is a mono repository, managed with [Nx](https://nx.dev/) and pnpm workspaces.
 
 1. `git clone` this repo & `cd` into it as usual
-2. `yarn setup` to install all dependencies
+2. `pnpm install` to install all dependencies
 
 
 ## Run
@@ -65,22 +65,22 @@ This is a mono repository, managed with [Nx](https://nx.dev/) and yarn workspace
 To make sure the TypeScript packages are built (immediately and after file changes), use
 
 ```sh
-yarn build:watch
+pnpm build:watch
 ```
 
-Or run `yarn build` once if you don't need the watching.
+Or run `pnpm build` once if you don't need the watching.
 
-To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
+To run a local development copy, `cd` into this directory, and use `pnpm dev` instead of `migrate` like so:
 
 ```sh
-yarn dev [source]
+pnpm dev [source]
 ```
 
 
 ## Test
 
-- `yarn lint` run just eslint
-- `yarn test` run lint and tests
+- `pnpm lint` run just eslint
+- `pnpm test` run lint and tests
 
 
 ## Publish
@@ -89,7 +89,7 @@ Packages are published to npm automatically via GitHub Actions using OIDC truste
 
 ### How to release
 
-1. Run `yarn ship` locally to interactively version bump, tag, and push to git
+1. Run `pnpm ship` locally to interactively version bump, tag, and push to git
     - Uses `nx release` under the hood — prompts per-package for the bump level
     - Also updates any packages which depend on changed packages
 2. The push to `main` triggers the [publish workflow](.github/workflows/publish.yml), which builds and publishes all bumped packages to npm
@@ -110,7 +110,7 @@ When publishing a package for the first time:
     # Example:
     npm trust github @tryghost/mg-example-package --repo TryGhost/migrate --file publish.yml --yes
     ```
-5. Run `yarn ship:first-release` — select the initial version when prompted
+5. Run `pnpm ship:first-release` — select the initial version when prompted
 
 
 # Copyright & License

@@ -20,8 +20,8 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "test": "yarn build && c8 --100 node --test 'build/test/**/*.test.js'",
-    "posttest": "yarn lint",
+    "test": "pnpm build && c8 --100 node --test 'build/test/**/*.test.js'",
+    "posttest": "pnpm lint",
     "lint": "eslint src/ --ext .ts --cache"
   },
   "devDependencies": {

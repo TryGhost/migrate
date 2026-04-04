@@ -8,37 +8,38 @@ This is a Ghost blog migration toolkit - a monorepo with 45+ packages for migrat
 
 ## Package Manager & Dependencies
 
-- **Always use `yarn` (v1) for all commands.** This repository uses yarn workspaces with Nx, not npm.
-- Install dependencies with `yarn` and pass the `exact` flag, like `yarn add -E lodash`. If the dependency is for development, pass the `dev` flag, like `yarn add -E -D lodash`
+- **Always use `pnpm` for all commands.** This repository uses pnpm workspaces with Nx.
+- Install dependencies with `pnpm add`, like `pnpm add lodash`. If the dependency is for development, pass the `-D` flag, like `pnpm add -D lodash`. Exact versions are pinned automatically via `.npmrc`.
 - **Always pin exact versions.** Use `"1.2.3"`, not `"^1.2.3"` or `"~1.2.3"`.
+- **Use `workspace:*`** for dependencies on other packages in this monorepo.
 
 ## Common Commands
 
 ### Development
 ```bash
-yarn                           # Install dependencies
-yarn dev                       # Local dev with tsx
-yarn dev:debug                 # Dev with DEBUG=@tryghost*,migrate:* enabled
+pnpm install                   # Install dependencies
+pnpm dev                       # Local dev with tsx
+pnpm dev:debug                 # Dev with DEBUG=@tryghost*,migrate:* enabled
 ```
 
 ### Building
 ```bash
-yarn build                     # Build all TypeScript packages
-yarn build:watch               # Watch mode for TypeScript
+pnpm build                     # Build all TypeScript packages
+pnpm build:watch               # Watch mode for TypeScript
 ```
 
 ### Testing
 ```bash
-yarn test                      # Run tests + lint for all packages
-yarn test:only                 # Run tests only (no lint)
+pnpm test                      # Run tests + lint for all packages
+pnpm test:only                 # Run tests only (no lint)
 
 # Single package
-cd packages/<name> && yarn test
+cd packages/<name> && pnpm test
 ```
 
 ### Linting
 ```bash
-yarn lint                      # Lint all packages
+pnpm lint                      # Lint all packages
 ```
 
 ## Project Structure
@@ -171,13 +172,13 @@ describe('MyClass', function () {
 ### Running Tests
 ```bash
 # All packages
-yarn test
+pnpm test
 
 # Single package
-cd packages/mg-<name> && yarn test
+cd packages/mg-<name> && pnpm test
 
 # With coverage (TypeScript packages)
-yarn test  # Coverage is automatic and requires 100%
+pnpm test  # Coverage is automatic and requires 100%
 ```
 
 ### Fixtures
@@ -216,8 +217,8 @@ Place test fixtures in `test/fixtures/` (JS) or `src/test/fixtures/` (TS).
      "files": ["build"],
      "scripts": {
        "build": "tsc --build",
-       "test": "yarn build && node --test build/test",
-       "posttest": "yarn lint",
+       "test": "pnpm build && node --test build/test",
+       "posttest": "pnpm lint",
        "lint": "eslint src/ --ext .ts --cache"
      },
      "devDependencies": {
@@ -228,8 +229,8 @@ Place test fixtures in `test/fixtures/` (JS) or `src/test/fixtures/` (TS).
        "typescript": "5.8.3"
      },
      "dependencies": {
-       "@tryghost/mg-context": "0.0.1",
-       "@tryghost/mg-fs-utils": "0.0.1"
+       "@tryghost/mg-context": "workspace:*",
+       "@tryghost/mg-fs-utils": "workspace:*"
      }
    }
    ```

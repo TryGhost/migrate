@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "echo \"Implement me!\"",
     "test": "c8 --check-coverage --lines 100 --branches 100 --functions 100 --statements 100 node --test 'test/**/*.test.js'",
-    "posttest": "yarn lint",
+    "posttest": "pnpm lint",
     "lint": "eslint . --ext .js --cache"
   },
   "files": [
@@ -31,8 +31,8 @@
   "dependencies": {
     "@tryghost/debug": "2.0.3",
     "@tryghost/kg-default-cards": "10.2.10",
-    "@tryghost/mg-fs-utils": "0.18.0",
-    "@tryghost/mg-utils": "0.3.0",
+    "@tryghost/mg-fs-utils": "workspace:*",
+    "@tryghost/mg-utils": "workspace:*",
     "@tryghost/string": "0.3.1",
     "simple-dom": "1.4.0"
   }

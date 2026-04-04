@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "echo \"Implement me!\"",
     "test": "node --test 'test/**/*.test.js'",
-    "posttest": "yarn lint",
+    "posttest": "pnpm lint",
     "lint": "eslint . --ext .js --cache"
   },
   "files": [
@@ -28,7 +28,7 @@
     "eslint": "8.57.1"
   },
   "dependencies": {
-    "@tryghost/mg-fs-utils": "0.18.0",
+    "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/string": "0.3.1",
     "cheerio": "1.2.0"
   }

@@ -1,7 +1,7 @@
 name: Publish
 
 on:
-  # Trigger when package.json files change on main (i.e. version bumps from `yarn ship`)
+  # Trigger when package.json files change on main (i.e. version bumps from `pnpm ship`)
   push:
     branches: [main]
     paths:
@@ -33,7 +33,7 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
 
-    # Only run for version commits (created by `yarn ship`) or manual dispatch.
+    # Only run for version commits (created by `pnpm ship`) or manual dispatch.
     # This prevents publishing on unrelated package.json changes (e.g. dependency updates).
     if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Published new versions')
 
@@ -52,19 +52,23 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
+      # Install pnpm (reads version from packageManager field in package.json)
+      - uses: pnpm/action-setup@v4
+
       # First setup-node: used for building (keeps the monorepo on its expected Node version)
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 22
+          cache: pnpm
         env:
           NODE_AUTH_TOKEN: ""
 
       - name: Install dependencies
-        run: yarn install
+        run: pnpm install
 
       # Build is required because published packages ship compiled output (build/)
       - name: Build all packages
-        run: yarn build
+        run: pnpm build
 
       # Second setup-node: used for publishing only.
       # Node 24 has better OIDC trusted publisher support in its bundled npm.
@@ -97,6 +101,7 @@ jobs:
         run: |
           node --version
           npm --version
+          pnpm --version
 
       # actions/setup-node writes _authToken to .npmrc which can conflict with OIDC auth.
       # Strip it so npm falls through to OIDC token exchange.
@@ -148,8 +153,8 @@ jobs:
         run: echo "OIDC check complete; stopping (mode=oidc-check)."
 
       # Iterate over all packages, skip already-published versions, and publish new ones.
-      # Uses npm directly instead of nx release publish to avoid yarn v1 JSON parsing issues.
-      # Publishes from inside each package directory for correct package resolution.
+      # Uses pnpm pack to resolve workspace:* references to real versions in the tarball,
+      # then npm publish for OIDC trusted publisher support.
       - name: Publish to npm
         if: steps.publish_mode.outputs.mode != 'oidc-check'
         env:
@@ -188,11 +193,12 @@ jobs:
               continue
             fi
 
-            # Publish from inside the package directory for correct package resolution.
+            # pnpm pack resolves workspace:* to real version numbers in the tarball.
+            # npm publish handles the OIDC token exchange for trusted publishers.
             # --access public is required for scoped @tryghost packages.
             # --provenance attaches build attestation via OIDC (belt-and-suspenders with env var).
             echo "Publishing $name@$version..."
-            if ! (cd "$pkg" && npm publish --access public --tag "$TAG" --provenance $DRY_RUN_FLAG); then
+            if ! (cd "$pkg" && pnpm pack && npm publish *.tgz --access public --tag "$TAG" --provenance $DRY_RUN_FLAG && rm -f *.tgz); then
               echo "::error::Failed to publish $name@$version"
               failed=1
             fi

@@ -13,7 +13,7 @@
   "scripts": {
     "dev": "echo \"Implement me!\"",
     "test": "c8 --check-coverage --lines 100 --branches 100 --functions 100 --statements 100 node --test 'test/**/*.test.js'",
-    "posttest": "yarn lint",
+    "posttest": "pnpm lint",
     "lint": "eslint . --ext .js --cache"
   },
   "files": [

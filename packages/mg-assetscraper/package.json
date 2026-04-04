@@ -13,7 +13,7 @@
   "scripts": {
     "dev": "echo \"Implement me!\"",
     "test": "node --test 'test/**/*.test.js'",
-    "posttest": "yarn lint",
+    "posttest": "pnpm lint",
     "lint": "eslint . --ext .js --cache"
   },
   "files": [
@@ -28,7 +28,7 @@
     "listr": "0.14.3"
   },
   "dependencies": {
-    "@tryghost/listr-smart-renderer": "0.7.0",
+    "@tryghost/listr-smart-renderer": "workspace:*",
     "@tryghost/logging": "4.0.3",
     "@tryghost/string": "0.3.1",
     "cheerio": "1.2.0",

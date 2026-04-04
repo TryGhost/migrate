@@ -13,7 +13,7 @@
   "scripts": {
     "dev": "echo \"Implement me!\"",
     "test": "node --test 'test/**/*.test.js'",
-    "posttest": "yarn lint",
+    "posttest": "pnpm lint",
     "lint": "eslint . --ext .js --cache"
   },
   "files": [
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@tryghost/errors": "3.0.3",
-    "@tryghost/mg-fs-utils": "0.18.0",
+    "@tryghost/mg-fs-utils": "workspace:*",
     "bluebird": "3.7.2",
     "csv-parser": "3.2.0",
     "ghost-ignition": "4.6.3",

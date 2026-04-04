@@ -21,10 +21,9 @@
     "dev": "echo \"Implement me!\"",
     "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",
     "build": "rm -rf build && rm -rf tsconfig.tsbuildinfo && tsc --build --sourceMap",
-    "prepare": "yarn build",
     "lint": "eslint src/ --ext .ts --cache",
-    "test": "rm -rf build && yarn build --force && NODE_ENV=test c8 --src src --all --check-coverage --100 --reporter text --reporter cobertura node --test --test-concurrency=1 'build/test/**/*.test.js'",
-    "posttest": "yarn lint"
+    "test": "rm -rf build && pnpm build --force && NODE_ENV=test c8 --src src --all --check-coverage --100 --reporter text --reporter cobertura node --test --test-concurrency=1 'build/test/**/*.test.js'",
+    "posttest": "pnpm lint"
   },
   "files": [
     "build"
@@ -47,8 +46,8 @@
   "dependencies": {
     "@tryghost/debug": "2.0.3",
     "@tryghost/errors": "3.0.3",
-    "@tryghost/listr-smart-renderer": "0.5.15",
-    "@tryghost/mg-fs-utils": "0.18.0",
+    "@tryghost/listr-smart-renderer": "workspace:*",
+    "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/string": "0.3.1",
     "file-type": "22.0.0",
     "fs-extra": "11.3.4",
