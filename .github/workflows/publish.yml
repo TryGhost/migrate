@@ -55,7 +55,7 @@ jobs:
       # First setup-node: used for building (keeps the monorepo on its expected Node version)
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
-          node-version: 22
+          node-version: 24
           cache: yarn
         env:
           NODE_AUTH_TOKEN: ""
