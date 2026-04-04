@@ -13,7 +13,7 @@
   "scripts": {
     "dev": "echo \"Implement me!\"",
     "test": "node --test 'test/**/*.test.js'",
-    "posttest": "yarn lint",
+    "posttest": "pnpm lint",
     "lint": "eslint . --ext .js --cache"
   },
   "files": [

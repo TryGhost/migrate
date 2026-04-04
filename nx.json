@@ -24,7 +24,7 @@
     ],
     "projectsRelationship": "independent",
     "version": {
-      "preVersionCommand": "yarn build && yarn test",
+      "preVersionCommand": "pnpm build && pnpm test",
       "preserveMatchingDependencyRanges": false,
       "git": {
         "commit": true,

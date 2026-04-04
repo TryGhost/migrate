@@ -5,12 +5,10 @@
   "author": "Ghost Foundation",
   "license": "MIT",
   "type": "module",
+  "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=22.21.1"
   },
-  "workspaces": [
-    "packages/*"
-  ],
   "eslintIgnore": [
     "**/node_modules/**"
   ],
@@ -20,8 +18,8 @@
     "dev:morememory": "NODE_OPTIONS=\"--max-old-space-size=8192 --import tsx --conditions=development\" NODE_ENV=development migrate",
     "dev:debug": "DEBUG_COLORS=true DEBUG=@tryghost*,migrate:* NODE_ENV=development NODE_OPTIONS='--import tsx --conditions=development' migrate",
     "migrate": "migrate",
-    "presetup": "yarn",
-    "setup": "yarn install",
+    "presetup": "pnpm install",
+    "setup": "pnpm install",
     "test:only": "nx run-many -t test --parallel=10 --outputStyle=dynamic-legacy",
     "test": "nx run-many -t test lint --parallel=10 --outputStyle=dynamic-legacy",
     "test:ci": "nx run-many -t test lint --outputStyle=dynamic",
@@ -29,8 +27,8 @@
     "build": "nx run-many -t build --parallel=10 --outputStyle=dynamic-legacy",
     "build:watch": "nx run-many -t build:watch --parallel=10 --outputStyle=dynamic-legacy",
     "ship": "nx release version --git-push --git-remote ${GHOST_UPSTREAM:-origin}",
-    "ship:first-release": "yarn ship --first-release",
-    "update": "git pull origin main && yarn"
+    "ship:first-release": "pnpm ship --first-release",
+    "update": "git pull origin main && pnpm install"
   },
   "devDependencies": {
     "@tryghost/errors": "3.0.3",
@@ -39,5 +37,13 @@
     "nx": "22.6.3",
     "@nx/js": "22.6.3",
     "tsx": "4.21.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "node-expat",
+      "nx",
+      "sharp"
+    ]
   }
 }

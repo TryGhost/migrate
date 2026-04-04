@@ -13,7 +13,7 @@
   "scripts": {
     "dev": "echo \"Implement me!\"",
     "test": "node --test 'test/**/*.test.js'",
-    "posttest": "yarn lint",
+    "posttest": "pnpm lint",
     "lint": "eslint . --ext .js --cache"
   },
   "files": [
@@ -25,8 +25,8 @@
   },
   "dependencies": {
     "@tryghost/errors": "3.0.3",
-    "@tryghost/mg-utils": "0.3.0",
-    "@tryghost/mg-wp-api": "0.15.0",
+    "@tryghost/mg-utils": "workspace:*",
+    "@tryghost/mg-wp-api": "workspace:*",
     "fast-glob": "3.3.3",
     "fast-xml-parser": "5.5.9",
     "markdown-it": "14.1.1",

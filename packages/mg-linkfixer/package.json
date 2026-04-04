@@ -13,7 +13,7 @@
   "scripts": {
     "dev": "echo \"Implement me!\"",
     "test": "node --test 'test/**/*.test.js'",
-    "posttest": "yarn lint",
+    "posttest": "pnpm lint",
     "lint": "eslint . --ext .js --cache"
   },
   "files": [
@@ -24,12 +24,12 @@
     "access": "public"
   },
   "devDependencies": {
-    "@tryghost/listr-smart-renderer": "0.7.0",
+    "@tryghost/listr-smart-renderer": "workspace:*",
     "eslint": "8.57.1",
     "listr": "0.14.3"
   },
   "dependencies": {
-    "@tryghost/mg-utils": "0.3.0",
+    "@tryghost/mg-utils": "workspace:*",
     "lodash": "4.18.1"
   }
 }
