@@ -1,11 +1,12 @@
 name: Publish
 
 on:
-  # Trigger when package.json files change on main (i.e. version bumps from `pnpm ship`)
-  push:
+  # Trigger after the Test workflow completes on main.
+  # This ensures tests pass before publishing.
+  workflow_run:
+    workflows: ["Test"]
+    types: [completed]
     branches: [main]
-    paths:
-      - 'packages/*/package.json'
   # Allow manual triggering from the Actions tab
   workflow_dispatch:
     inputs:
@@ -33,9 +34,13 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
 
-    # Only run for version commits (created by `pnpm ship`) or manual dispatch.
-    # This prevents publishing on unrelated package.json changes (e.g. dependency updates).
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Published new versions')
+    # Only run when:
+    # - Manual dispatch (oidc-check, dry-run, publish), OR
+    # - Test workflow completed successfully on a version commit (created by `pnpm ship`)
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       startsWith(github.event.workflow_run.head_commit.message, 'Published new versions'))
 
     permissions:
       contents: read
@@ -88,7 +93,7 @@ jobs:
             echo "mode=${{ inputs.mode }}" >> "$GITHUB_OUTPUT"
             echo "tag=${{ inputs.npm_tag }}" >> "$GITHUB_OUTPUT"
           else
-            # Push-triggered runs always publish with the "latest" tag
+            # workflow_run-triggered runs always publish with the "latest" tag
             echo "mode=publish" >> "$GITHUB_OUTPUT"
             echo "tag=latest" >> "$GITHUB_OUTPUT"
           fi
