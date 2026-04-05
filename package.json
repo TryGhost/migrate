@@ -26,7 +26,7 @@
     "lint": "nx run-many -t lint --parallel=10 --outputStyle=dynamic-legacy",
     "build": "nx run-many -t build --parallel=10 --outputStyle=dynamic-legacy",
     "build:watch": "nx run-many -t build:watch --parallel=10 --outputStyle=dynamic-legacy",
-    "ship": "nx release version --git-push --git-remote ${GHOST_UPSTREAM:-origin}",
+    "ship": "pnpm test && nx release version --git-push --git-remote ${GHOST_UPSTREAM:-origin}",
     "ship:first-release": "pnpm ship --first-release",
     "update": "git pull origin main && pnpm install"
   },
