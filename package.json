@@ -34,8 +34,8 @@
     "@tryghost/errors": "3.0.3",
     "eslint": "8.57.1",
     "eslint-plugin-ghost": "3.5.0",
-    "nx": "22.6.3",
-    "@nx/js": "22.6.3",
+    "nx": "22.6.4",
+    "@nx/js": "22.6.4",
     "tsx": "4.21.0"
   },
   "pnpm": {
