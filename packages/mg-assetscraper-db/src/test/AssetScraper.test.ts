@@ -1359,9 +1359,9 @@ describe('Asset Scraper', () => {
         });
 
         it('writeUpdatedJson writes to a custom output path', async () => {
-            const outputPath = join(tmpdir(), `ghost-custom-${Date.now()}.json`);
-            await copyFile(ghostJsonFixture, join(tmpdir(), `ghost-input-${Date.now()}.json`));
-            const inputPath = join(tmpdir(), `ghost-input-${Date.now()}.json`);
+            const ts = Date.now();
+            const outputPath = join(tmpdir(), `ghost-custom-${ts}.json`);
+            const inputPath = join(tmpdir(), `ghost-input-${ts}.json`);
             await copyFile(ghostJsonFixture, inputPath);
 
             const scraper = new AssetScraper(fileCache, {allowAllDomains: true}, inputPath);
