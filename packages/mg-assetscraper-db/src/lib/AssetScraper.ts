@@ -129,11 +129,28 @@ export default class AssetScraper {
         await this.#assetCache.init();
 
         if (this.#jsonFilePath) {
-            const fileContent = await readFile(this.#jsonFilePath, 'utf-8');
-            const ghostExport = JSON.parse(fileContent);
+            let fileContent: string;
+            try {
+                fileContent = await readFile(this.#jsonFilePath, 'utf-8');
+            } catch (err) {
+                throw new errors.InternalServerError({
+                    message: `Failed to read Ghost export file: ${this.#jsonFilePath}`,
+                    err: err instanceof Error ? err : undefined
+                });
+            }
+
+            let ghostExport: Record<string, unknown>;
+            try {
+                ghostExport = JSON.parse(fileContent);
+            } catch (err) {
+                throw new errors.ValidationError({
+                    message: `Failed to parse Ghost export file as JSON: ${this.#jsonFilePath}`,
+                    err: err instanceof Error ? err : undefined
+                });
+            }
 
             // Support both { db: [{ data: {...} }] } and { data: {...} } formats
-            const data = ghostExport?.db?.[0]?.data ?? ghostExport?.data;
+            const data = (ghostExport as any)?.db?.[0]?.data ?? (ghostExport as any)?.data;
 
             if (!data) {
                 throw new errors.ValidationError({
@@ -862,7 +879,14 @@ export default class AssetScraper {
             (this.#originalExport as any).data = this.#ctx;
         }
 
-        await writeFile(filePath, JSON.stringify(this.#originalExport, null, 4));
+        try {
+            await writeFile(filePath, JSON.stringify(this.#originalExport, null, 4));
+        } catch (err) {
+            throw new errors.InternalServerError({
+                message: `Failed to write updated Ghost export file: ${filePath}`,
+                err: err instanceof Error ? err : undefined
+            });
+        }
 
         return filePath;
     }
