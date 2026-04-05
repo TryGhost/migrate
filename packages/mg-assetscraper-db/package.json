@@ -38,7 +38,7 @@
     "@typescript-eslint/eslint-plugin": "8.58.0",
     "@typescript-eslint/parser": "8.58.0",
     "c8": "11.0.0",
-    "dotenv": "17.3.1",
+    "dotenv": "17.4.0",
     "eslint": "8.57.1",
     "nock": "14.0.11",
     "sinon": "21.0.3",
