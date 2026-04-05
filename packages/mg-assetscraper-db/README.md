@@ -50,6 +50,50 @@ await taskRunner.run();
 console.log(scraper.failedDownloads);
 ```
 
+### Scrape from a Ghost JSON export file
+
+Instead of passing data objects, you can pass a path to a Ghost JSON export file. The scraper reads the file, processes all assets, and can write an updated file with local asset paths.
+
+```javascript
+import AssetScraper from '@tryghost/mg-assetscraper-db';
+import fsUtils from '@tryghost/mg-fs-utils';
+import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
+
+const fileCache = new fsUtils.FileCache('my-migration', {
+    tmpPath: '/path/to/tmp',
+    batchName: 'batch-name'
+});
+
+const scraper = new AssetScraper(fileCache, {
+    allowAllDomains: true
+}, '/path/to/ghost.json');
+
+await scraper.init();
+
+const tasks = scraper.getTasks();
+const taskRunner = makeTaskRunner(tasks, {
+    verbose: false,
+    exitOnError: false,
+    concurrent: false
+});
+await taskRunner.run();
+
+// Write the updated JSON with local asset references
+await scraper.writeUpdatedJson();
+
+// Or write to a different path
+await scraper.writeUpdatedJson('/path/to/output.json');
+```
+
+Downloaded assets are stored under the FileCache's zip directory in Ghost's content structure (e.g. `{tmpPath}/mg/{cacheKey}/zip/content/images/...`).
+
+Both Ghost export formats are supported:
+
+- `{ db: [{ data: { posts: [...], ... } }] }` — standard Ghost export
+- `{ data: { posts: [...], ... } }` — flat format
+
+The output preserves whichever format the input used.
+
 ### Scrape from all domains
 
 Use `allowAllDomains` to scrape assets from any domain, optionally excluding specific ones. You can also supple a regular expression (as a literal or object)

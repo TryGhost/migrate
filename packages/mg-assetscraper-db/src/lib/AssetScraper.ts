@@ -1,5 +1,6 @@
 /* c8 ignore start */
 import {parse, join, extname} from 'node:path';
+import {readFile, writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import errors from '@tryghost/errors';
 import {slugify} from '@tryghost/string';
@@ -61,10 +62,12 @@ export default class AssetScraper {
     #settingsKeys: string[];
     #keys: Array<keyof GhostContentObject>;
     #ctx: AssetScraperContext;
+    #jsonFilePath: string | undefined;
+    #originalExport: Record<string, unknown> | undefined;
     #foundItems: string[];
     #failedDownloads: FailedDownload[];
 
-    constructor(fileCache: FileCache, options: AssetScraperOptions = {}, ctx: AssetScraperContext = {}) {
+    constructor(fileCache: FileCache, options: AssetScraperOptions = {}, ctxOrJsonPath: AssetScraperContext | string = {}) {
         this.#fileCache = fileCache;
 
         this.#defaultOptions = {
@@ -85,9 +88,16 @@ export default class AssetScraper {
 
         this.#blockedDomains = [...DEFAULT_BLOCKED_DOMAINS, ...(options?.blockedDomains ?? [])];
         this.#processBase64Images = options?.processBase64Images ?? false;
-        this.#warnings = (ctx.warnings) ? ctx.warnings : [];
-        this.#logger = ctx.logger;
-        this.#ctx = ctx;
+
+        if (typeof ctxOrJsonPath === 'string') {
+            this.#jsonFilePath = ctxOrJsonPath;
+            this.#ctx = {};
+            this.#warnings = [];
+        } else {
+            this.#ctx = ctxOrJsonPath;
+            this.#warnings = (ctxOrJsonPath.warnings) ? ctxOrJsonPath.warnings : [];
+            this.#logger = ctxOrJsonPath.logger;
+        }
         this.#settingsKeys = [
             'logo',
             'cover_image',
@@ -117,6 +127,23 @@ export default class AssetScraper {
 
     async init() {
         await this.#assetCache.init();
+
+        if (this.#jsonFilePath) {
+            const fileContent = await readFile(this.#jsonFilePath, 'utf-8');
+            const ghostExport = JSON.parse(fileContent);
+
+            // Support both { db: [{ data: {...} }] } and { data: {...} } formats
+            const data = ghostExport?.db?.[0]?.data ?? ghostExport?.data;
+
+            if (!data) {
+                throw new errors.ValidationError({
+                    message: 'Invalid Ghost export file: expected db[0].data or data structure'
+                });
+            }
+
+            this.#originalExport = ghostExport;
+            this.#ctx = data;
+        }
     }
 
     async getRemoteMedia(requestURL: string): Promise<RemoteMediaResponse> {
@@ -811,6 +838,33 @@ export default class AssetScraper {
 
     get failedDownloads() {
         return this.#failedDownloads;
+    }
+
+    async writeUpdatedJson(outputPath?: string): Promise<string> {
+        const filePath = outputPath ?? this.#jsonFilePath;
+
+        if (!filePath) {
+            throw new errors.ValidationError({
+                message: 'No output path specified and no input JSON file to derive one from'
+            });
+        }
+
+        if (!this.#originalExport) {
+            throw new errors.InternalServerError({
+                message: 'No Ghost export data available. Did you initialize with a JSON file?'
+            });
+        }
+
+        // Write back in the same format as the input
+        if ((this.#originalExport as any).db) {
+            (this.#originalExport as any).db[0].data = this.#ctx;
+        } else {
+            (this.#originalExport as any).data = this.#ctx;
+        }
+
+        await writeFile(filePath, JSON.stringify(this.#originalExport, null, 4));
+
+        return filePath;
     }
 
     getTasks(): ListrTask[] {

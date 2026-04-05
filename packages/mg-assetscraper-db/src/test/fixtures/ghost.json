@@ -1,0 +1,174 @@
+{
+    "db": [
+        {
+            "meta": {
+                "exported_on": 1775409738177,
+                "version": "2.0.0"
+            },
+            "data": {
+                "posts": [
+                    {
+                        "id": "9b7114425bee6e3b17baf7c0",
+                        "title": "Post 1",
+                        "slug": "post-1",
+                        "html": "<p>Hello world</p><img src=\"https://example.com/images/photo-1.jpg\"><p>More text</p>",
+                        "mobiledoc": null,
+                        "lexical": null,
+                        "feature_image": "https://example.com/images/feature-1.jpg",
+                        "og_image": "https://example.com/images/og-1.jpg",
+                        "twitter_image": null,
+                        "featured": false,
+                        "type": "post",
+                        "status": "published",
+                        "visibility": "public",
+                        "created_at": "2025-01-01T00:00:00.000Z",
+                        "updated_at": null,
+                        "published_at": "2025-01-01T00:00:00.000Z",
+                        "custom_excerpt": null,
+                        "codeinjection_head": null,
+                        "codeinjection_foot": null,
+                        "custom_template": null,
+                        "canonical_url": null
+                    },
+                    {
+                        "id": "a22153483431b691fd0178a8",
+                        "title": "Post 2",
+                        "slug": "post-2",
+                        "html": "<p>Post with <img src=\"https://example.com/images/inline-2.png\"> inline image</p>",
+                        "mobiledoc": null,
+                        "lexical": null,
+                        "feature_image": "https://example.com/images/feature-2.jpg",
+                        "og_image": null,
+                        "twitter_image": "https://example.com/images/twitter-2.jpg",
+                        "featured": false,
+                        "type": "post",
+                        "status": "published",
+                        "visibility": "public",
+                        "created_at": "2025-01-02T00:00:00.000Z",
+                        "updated_at": null,
+                        "published_at": "2025-01-02T00:00:00.000Z",
+                        "custom_excerpt": null,
+                        "codeinjection_head": null,
+                        "codeinjection_foot": null,
+                        "custom_template": null,
+                        "canonical_url": null
+                    },
+                    {
+                        "id": "3686b35d96fe6fd2a2748c81",
+                        "title": "Post 3 - Lexical",
+                        "slug": "post-3-lexical",
+                        "html": null,
+                        "mobiledoc": null,
+                        "lexical": "{\"root\":{\"children\":[{\"type\":\"image\",\"version\":1,\"src\":\"https://example.com/images/lexical-image.jpg\",\"width\":800,\"height\":600,\"title\":\"\",\"alt\":\"\",\"caption\":\"\",\"cardWidth\":\"regular\",\"href\":\"\"}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"root\",\"version\":1}}",
+                        "feature_image": null,
+                        "og_image": null,
+                        "twitter_image": null,
+                        "featured": false,
+                        "type": "post",
+                        "status": "published",
+                        "visibility": "public",
+                        "created_at": "2025-01-03T00:00:00.000Z",
+                        "updated_at": null,
+                        "published_at": "2025-01-03T00:00:00.000Z",
+                        "custom_excerpt": null,
+                        "codeinjection_head": null,
+                        "codeinjection_foot": null,
+                        "custom_template": null,
+                        "canonical_url": null
+                    }
+                ],
+                "users": [
+                    {
+                        "id": "fe835e7afaec92ba935e11a7",
+                        "name": "Alice Johnson",
+                        "slug": "alice-johnson",
+                        "email": "alice@example.com",
+                        "profile_image": "https://example.com/images/alice-profile.jpg",
+                        "cover_image": "https://example.com/images/alice-cover.jpg",
+                        "bio": null,
+                        "website": null,
+                        "location": null
+                    },
+                    {
+                        "id": "5e312ff31a13bd7df39a2ba7",
+                        "name": "Bob Smith",
+                        "slug": "bob-smith",
+                        "email": "bob@example.com",
+                        "profile_image": "https://example.com/images/bob-profile.jpg",
+                        "cover_image": null,
+                        "bio": null,
+                        "website": null,
+                        "location": null
+                    }
+                ],
+                "tags": [
+                    {
+                        "id": "1eec700430f9d8c5c58c5302",
+                        "name": "News",
+                        "slug": "news",
+                        "description": null,
+                        "feature_image": "https://example.com/images/news-tag.jpg",
+                        "og_image": null,
+                        "twitter_image": null
+                    },
+                    {
+                        "id": "22d2d5cd7d924fba69eedf23",
+                        "name": "Technology",
+                        "slug": "technology",
+                        "description": null,
+                        "feature_image": null,
+                        "og_image": "https://example.com/images/tech-og.jpg",
+                        "twitter_image": null
+                    }
+                ],
+                "settings": [
+                    {
+                        "key": "logo",
+                        "value": "https://example.com/images/site-logo.png"
+                    },
+                    {
+                        "key": "cover_image",
+                        "value": "https://example.com/images/site-cover.jpg"
+                    },
+                    {
+                        "key": "icon",
+                        "value": "https://example.com/images/site-icon.png"
+                    },
+                    {
+                        "key": "title",
+                        "value": "My Ghost Site"
+                    },
+                    {
+                        "key": "description",
+                        "value": "A test site"
+                    }
+                ],
+                "posts_authors": [
+                    {
+                        "post_id": "9b7114425bee6e3b17baf7c0",
+                        "author_id": "fe835e7afaec92ba935e11a7",
+                        "sort_order": 1
+                    },
+                    {
+                        "post_id": "a22153483431b691fd0178a8",
+                        "author_id": "5e312ff31a13bd7df39a2ba7",
+                        "sort_order": 1
+                    }
+                ],
+                "posts_tags": [
+                    {
+                        "post_id": "9b7114425bee6e3b17baf7c0",
+                        "tag_id": "1eec700430f9d8c5c58c5302",
+                        "sort_order": 1
+                    },
+                    {
+                        "post_id": "a22153483431b691fd0178a8",
+                        "tag_id": "22d2d5cd7d924fba69eedf23",
+                        "sort_order": 1
+                    }
+                ],
+                "posts_meta": []
+            }
+        }
+    ]
+}

@@ -1,0 +1,44 @@
+{
+    "meta": {
+        "exported_on": 1775409738177,
+        "version": "2.0.0"
+    },
+    "data": {
+        "posts": [
+            {
+                "id": "abc123",
+                "title": "Flat Format Post",
+                "slug": "flat-format-post",
+                "html": "<p>An image: <img src=\"https://example.com/images/flat-post.jpg\"></p>",
+                "mobiledoc": null,
+                "lexical": null,
+                "feature_image": "https://example.com/images/flat-feature.jpg",
+                "og_image": null,
+                "twitter_image": null,
+                "featured": false,
+                "type": "post",
+                "status": "published",
+                "visibility": "public",
+                "created_at": "2025-01-01T00:00:00.000Z",
+                "updated_at": null,
+                "published_at": "2025-01-01T00:00:00.000Z",
+                "custom_excerpt": null,
+                "codeinjection_head": null,
+                "codeinjection_foot": null,
+                "custom_template": null,
+                "canonical_url": null
+            }
+        ],
+        "users": [],
+        "tags": [],
+        "settings": [
+            {
+                "key": "logo",
+                "value": "https://example.com/images/flat-logo.png"
+            }
+        ],
+        "posts_authors": [],
+        "posts_tags": [],
+        "posts_meta": []
+    }
+}
