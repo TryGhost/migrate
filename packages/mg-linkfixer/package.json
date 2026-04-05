@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@tryghost/listr-smart-renderer": "workspace:*",
+    "@tryghost/mg-json": "workspace:*",
     "eslint": "8.57.1",
     "listr": "0.14.3"
   },

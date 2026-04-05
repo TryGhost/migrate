@@ -273,6 +273,9 @@ importers:
       '@tryghost/kg-default-cards':
         specifier: 10.2.10
         version: 10.2.10
+      '@tryghost/string':
+        specifier: 0.3.1
+        version: 0.3.1
       autop:
         specifier: 1.0.1
         version: 1.0.1
@@ -683,6 +686,9 @@ importers:
       '@tryghost/listr-smart-renderer':
         specifier: workspace:*
         version: link:../listr-smart-renderer
+      '@tryghost/mg-json':
+        specifier: workspace:*
+        version: link:../mg-json
       eslint:
         specifier: 8.57.1
         version: 8.57.1
@@ -806,6 +812,9 @@ importers:
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
+      '@tryghost/string':
+        specifier: 0.3.1
+        version: 0.3.1
       html-entities:
         specifier: 2.6.0
         version: 2.6.0
@@ -1081,6 +1090,9 @@ importers:
       html-to-text:
         specifier: 9.0.5
         version: 9.0.5
+      lodash:
+        specifier: 4.18.1
+        version: 4.18.1
       simple-dom:
         specifier: 1.4.0
         version: 1.4.0
@@ -1106,6 +1118,9 @@ importers:
       '@tryghost/mg-wp-api':
         specifier: workspace:*
         version: link:../mg-wp-api
+      '@tryghost/string':
+        specifier: 0.3.1
+        version: 0.3.1
       fast-glob:
         specifier: 3.3.3
         version: 3.3.3
