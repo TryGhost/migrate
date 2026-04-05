@@ -1,14 +1,10 @@
 import fetch from 'node-fetch';
-import parser from 'xml2json';
+import {xmlUtils} from '@tryghost/mg-utils';
 import errors from '@tryghost/errors';
 import {slugify} from '@tryghost/string';
 
-const rssToJson = (rss) => {
-    let json = parser.toJson(rss, {
-        object: true
-    });
-
-    return json;
+const rssToJson = async (rss) => {
+    return await xmlUtils.parseXml(rss);
 };
 
 const cachedFetch = async (fileCache, url) => {
@@ -21,7 +17,7 @@ const cachedFetch = async (fileCache, url) => {
 
         const response = await fetch(url);
         const body = await response.text();
-        const json = rssToJson(body);
+        const json = await rssToJson(body);
 
         await fileCache.writeTmpFile(json, filename);
 
@@ -55,8 +51,8 @@ const tasks = async ({url}, ctx) => {
                 };
 
                 response.rss.channel['itunes:category'].forEach((item) => {
-                    ctx.result.tags.push(item.text);
-                    ctx.result.tags.push(item['itunes:category'].text);
+                    ctx.result.tags.push(item['@_text']);
+                    ctx.result.tags.push(item['itunes:category']['@_text']);
                 });
 
                 ctx.result.posts = response.rss.channel.item;

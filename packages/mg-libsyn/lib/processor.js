@@ -19,7 +19,7 @@ const processContent = (libsynPost, options) => { // eslint-disable-line no-shad
     let html = libsynPost.description;
 
     const podcastTitle = libsynPost.title;
-    const podcastThumb = libsynPost['itunes:image'].href;
+    const podcastThumb = libsynPost['itunes:image']['@_href'];
     const podcastAudioSrc = libsynPost.link;
 
     if (useEmbed) {

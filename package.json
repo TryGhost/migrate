@@ -41,7 +41,6 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
-      "node-expat",
       "nx",
       "sharp"
     ]
