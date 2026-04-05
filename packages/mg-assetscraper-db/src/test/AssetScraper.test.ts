@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import {describe, it, before, beforeEach, afterEach} from 'node:test';
-import {readFile} from 'node:fs/promises';
+import {readFile, writeFile, copyFile} from 'node:fs/promises';
 import fs, {chownSync, rmSync} from 'node:fs';
 import {join} from 'node:path';
+import {tmpdir} from 'node:os';
 import nock from 'nock';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import fsUtils from '@tryghost/mg-fs-utils';
@@ -1251,4 +1252,181 @@ describe('Asset Scraper', () => {
      * [ ] Will follow redirects
      * [ ] Will skip blocked file types (e.g. .html)
      */
+
+    describe('Ghost JSON file input', () => {
+        const ghostJsonFixture = join(fixturesPath, 'ghost.json');
+
+        it('Reads a Ghost export JSON file and populates context', async () => {
+            const scraper = new AssetScraper(fileCache, {allowAllDomains: true}, ghostJsonFixture);
+            await scraper.init();
+
+            const tasks = scraper.getTasks();
+
+            // Should have tasks for posts, posts_meta, tags, users, settings, custom_theme_settings, snippets, newsletters
+            assert.equal(tasks.length, 8);
+            assert.equal(tasks[0].title, 'Posts');
+            assert.equal(tasks[2].title, 'Tags');
+            assert.equal(tasks[3].title, 'Users');
+            assert.equal(tasks[4].title, 'Settings');
+        });
+
+        it('Throws for invalid Ghost export structure', async () => {
+            const invalidPath = join(tmpdir(), 'invalid-ghost.json');
+            await writeFile(invalidPath, JSON.stringify({not: 'a ghost export'}));
+
+            const scraper = new AssetScraper(fileCache, {allowAllDomains: true}, invalidPath);
+
+            await assert.rejects(
+                () => scraper.init(),
+                (err: any) => {
+                    assert.match(err.message, /Invalid Ghost export file/);
+                    return true;
+                }
+            );
+
+            rmSync(invalidPath);
+        });
+
+        it('Scrapes assets and writes updated JSON', async () => {
+            // Mock all the image URLs from the fixture
+            const scope = nock('https://example.com')
+                .get('/images/photo-1.jpg').reply(200, jpgImageBuffer)
+                .get('/images/feature-1.jpg').reply(200, jpgImageBuffer)
+                .get('/images/og-1.jpg').reply(200, jpgImageBuffer)
+                .get('/images/inline-2.png').reply(200, jpgImageBuffer)
+                .get('/images/feature-2.jpg').reply(200, jpgImageBuffer)
+                .get('/images/twitter-2.jpg').reply(200, jpgImageBuffer)
+                .get('/images/lexical-image.jpg').reply(200, jpgImageBuffer)
+                .get('/images/alice-profile.jpg').reply(200, jpgImageBuffer)
+                .get('/images/alice-cover.jpg').reply(200, jpgImageBuffer)
+                .get('/images/bob-profile.jpg').reply(200, jpgImageBuffer)
+                .get('/images/news-tag.jpg').reply(200, jpgImageBuffer)
+                .get('/images/tech-og.jpg').reply(200, jpgImageBuffer)
+                .get('/images/site-logo.png').reply(200, jpgImageBuffer)
+                .get('/images/site-cover.jpg').reply(200, jpgImageBuffer)
+                .get('/images/site-icon.png').reply(200, jpgImageBuffer);
+
+            // Copy fixture to a temp file so we don't modify the original
+            const outputPath = join(tmpdir(), `ghost-output-${Date.now()}.json`);
+            await copyFile(ghostJsonFixture, outputPath);
+
+            const scraper = new AssetScraper(fileCache, {allowAllDomains: true}, outputPath);
+            await scraper.init();
+
+            const tasks = scraper.getTasks();
+            const taskRunner = makeTaskRunner(tasks, {renderer: 'silent', concurrent: false, topLevel: true});
+            await taskRunner.run();
+
+            const writtenPath = await scraper.writeUpdatedJson();
+            assert.equal(writtenPath, outputPath);
+
+            // Read and verify the output
+            const output = JSON.parse(await readFile(outputPath, 'utf-8'));
+            const data = output.db[0].data;
+
+            // Post 1 (HTML) should have local asset references
+            assert.ok(data.posts[0].feature_image.includes('__GHOST_URL__/content/images/'));
+            assert.ok(data.posts[0].html.includes('__GHOST_URL__/content/images/'));
+
+            // Post 2 (HTML) should have local asset references
+            assert.ok(data.posts[1].feature_image.includes('__GHOST_URL__/content/images/'));
+
+            // Post 3 (Lexical) should have local asset references in lexical JSON
+            assert.ok(data.posts[2].lexical.includes('__GHOST_URL__/content/images/'));
+            assert.ok(!data.posts[2].lexical.includes('https://example.com'));
+
+            // Users should have local asset references
+            assert.ok(data.users[0].profile_image.includes('__GHOST_URL__/content/images/'));
+            assert.ok(data.users[0].cover_image.includes('__GHOST_URL__/content/images/'));
+
+            // Tags should have local asset references
+            assert.ok(data.tags[0].feature_image.includes('__GHOST_URL__/content/images/'));
+
+            // Settings should have local asset references
+            const logoSetting = data.settings.find((s: any) => s.key === 'logo');
+            assert.ok(logoSetting.value.includes('__GHOST_URL__/content/images/'));
+
+            // Meta is preserved
+            assert.equal(output.db[0].meta.version, '2.0.0');
+
+            // Non-image settings are unchanged
+            const titleSetting = data.settings.find((s: any) => s.key === 'title');
+            assert.equal(titleSetting.value, 'My Ghost Site');
+
+            assert.ok(scope.isDone());
+
+            rmSync(outputPath);
+        });
+
+        it('writeUpdatedJson writes to a custom output path', async () => {
+            const outputPath = join(tmpdir(), `ghost-custom-${Date.now()}.json`);
+            await copyFile(ghostJsonFixture, join(tmpdir(), `ghost-input-${Date.now()}.json`));
+            const inputPath = join(tmpdir(), `ghost-input-${Date.now()}.json`);
+            await copyFile(ghostJsonFixture, inputPath);
+
+            const scraper = new AssetScraper(fileCache, {allowAllDomains: true}, inputPath);
+            await scraper.init();
+
+            const writtenPath = await scraper.writeUpdatedJson(outputPath);
+            assert.equal(writtenPath, outputPath);
+
+            const output = JSON.parse(await readFile(outputPath, 'utf-8'));
+            assert.ok(output.db[0].data.posts.length > 0);
+
+            rmSync(outputPath);
+            rmSync(inputPath);
+        });
+
+        it('Scrapes assets from flat format Ghost JSON (no db wrapper)', async () => {
+            const ghostFlatFixture = join(fixturesPath, 'ghost-flat.json');
+            const scope = nock('https://example.com')
+                .get('/images/flat-post.jpg').reply(200, jpgImageBuffer)
+                .get('/images/flat-feature.jpg').reply(200, jpgImageBuffer)
+                .get('/images/flat-logo.png').reply(200, jpgImageBuffer);
+
+            const outputPath = join(tmpdir(), `ghost-flat-output-${Date.now()}.json`);
+            await copyFile(ghostFlatFixture, outputPath);
+
+            const scraper = new AssetScraper(fileCache, {allowAllDomains: true}, outputPath);
+            await scraper.init();
+
+            const tasks = scraper.getTasks();
+            const taskRunner = makeTaskRunner(tasks, {renderer: 'silent', concurrent: false, topLevel: true});
+            await taskRunner.run();
+
+            const writtenPath = await scraper.writeUpdatedJson();
+            assert.equal(writtenPath, outputPath);
+
+            const output = JSON.parse(await readFile(outputPath, 'utf-8'));
+
+            // Should preserve flat format (no db wrapper)
+            assert.ok(!output.db);
+            assert.ok(output.data);
+            assert.ok(output.meta);
+            assert.equal(output.meta.version, '2.0.0');
+
+            // Posts should have local asset references
+            assert.ok(output.data.posts[0].feature_image.includes('__GHOST_URL__/content/images/'));
+            assert.ok(output.data.posts[0].html.includes('__GHOST_URL__/content/images/'));
+
+            // Settings should have local asset references
+            const logoSetting = output.data.settings.find((s: any) => s.key === 'logo');
+            assert.ok(logoSetting.value.includes('__GHOST_URL__/content/images/'));
+
+            assert.ok(scope.isDone());
+            rmSync(outputPath);
+        });
+
+        it('writeUpdatedJson throws without a JSON file source', async () => {
+            const scraper = await createScraper({}, {posts: []});
+
+            await assert.rejects(
+                () => scraper.writeUpdatedJson(),
+                (err: any) => {
+                    assert.match(err.message, /No output path specified/);
+                    return true;
+                }
+            );
+        });
+    });
 });
