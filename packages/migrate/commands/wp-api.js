@@ -3,7 +3,7 @@ import {inspect} from 'node:util';
 import {readFileSync} from 'node:fs';
 import {readJSON} from 'fs-extra/esm';
 import {ui} from '@tryghost/pretty-cli';
-import xml2json from 'xml2json';
+import {xmlUtils} from '@tryghost/mg-utils';
 import wpAPISource from '../sources/wp-api.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
 import {ghostAuthOptions} from '@tryghost/mg-ghost-authors';
@@ -261,13 +261,11 @@ const run = async (argv) => {
             context.usersJSON = await readJSON(argv.users);
         } else if (usersFileExt === 'xml') {
             const xmlData = readFileSync(argv.users, 'utf8');
-            const userXMLJSON = xml2json.toJson(xmlData, {
-                object: true
-            });
+            const userXMLJSON = await xmlUtils.parseXml(xmlData);
 
             let usersObjects = [];
 
-            userXMLJSON.root.row.forEach((user) => {
+            [].concat(userXMLJSON.root.row || []).forEach((user) => {
                 usersObjects.push({
                     id: (user.source_user_id.length) ? parseInt(user.source_user_id) : null,
                     slug: (user.user_nicename.length) ? user.user_nicename : null,

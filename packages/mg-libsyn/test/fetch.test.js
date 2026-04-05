@@ -17,7 +17,7 @@ describe('rssToJson', function () {
         const jsonFile = await readSync('feed.json');
         const jsonFixture = JSON.parse(jsonFile);
 
-        const converted = rssToJson(xmlFixture);
+        const converted = await rssToJson(xmlFixture);
 
         assert.deepEqual(converted, jsonFixture);
     });
