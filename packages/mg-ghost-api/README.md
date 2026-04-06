@@ -17,7 +17,7 @@ To use this package in your own project:
 
 or
 
-`yarn add @tryghost/mg-ghost-api`
+`pnpm add @tryghost/mg-ghost-api`
 
 
 ## Usage
@@ -88,26 +88,26 @@ See the [Filter documentation](https://docs.ghost.org/content-api/filtering) for
 
 ## Develop
 
-This is a mono repository, managed with [Nx](https://nx.dev/) and yarn workspaces.
+This is a mono repository, managed with [Nx](https://nx.dev/) and pnpm workspaces.
 
 Follow the instructions for the top-level repo.
 1. `git clone` this repo & `cd` into it as usual
-2. Run `yarn` to install top-level dependencies.
+2. Run `pnpm install` to install top-level dependencies.
 
 
 ## Run
 
-To run a local development copy, `cd` into this directory, and replace `migrate` with `yarn dev`, like so:
+To run a local development copy, `cd` into this directory, and replace `migrate` with `pnpm dev`, like so:
 
 ```sh
-yarn dev ghost --url https://example.com --apikey 1234abcd
+pnpm dev ghost --url https://example.com --apikey 1234abcd
 ```
 
 
 ## Test
 
-- `yarn lint` run just eslint
-- `yarn test` run lint and tests
+- `pnpm lint` run just eslint
+- `pnpm test` run lint and tests
 
 
 # Copyright & License

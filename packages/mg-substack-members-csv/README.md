@@ -17,7 +17,7 @@ To use this package in your own project:
 
 or
 
-`yarn add @tryghost/mg-substack-members-csv`
+`pnpm add @tryghost/mg-substack-members-csv`
 
 
 ## Usage
@@ -81,26 +81,26 @@ migrate substack-members --pathToFile /path/to/emails.csv --subs /path/to/member
 
 ## Develop
 
-This is a mono repository, managed with [Nx](https://nx.dev/) and yarn workspaces.
+This is a mono repository, managed with [Nx](https://nx.dev/) and pnpm workspaces.
 
 Follow the instructions for the top-level repo.
 1. `git clone` this repo & `cd` into it as usual
-2. Run `yarn` to install top-level dependencies.
+2. Run `pnpm install` to install top-level dependencies.
 
 
 ### Run
 
-To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
+To run a local development copy, `cd` into this directory, and use `pnpm dev` instead of `migrate` like so:
 
 ```sh
-yarn dev substack-members --pathToFile /path/to/emails.csv
+pnpm dev substack-members --pathToFile /path/to/emails.csv
 ```
 
 
 ## Test
 
-- `yarn lint` run just eslint
-- `yarn test` run lint and tests
+- `pnpm lint` run just eslint
+- `pnpm test` run lint and tests
 
 
 # Copyright & License

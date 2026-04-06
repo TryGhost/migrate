@@ -9,7 +9,7 @@ Data is persisted to SQLite (in-memory by default), so migrations with tens of t
 ```bash
 npm install @tryghost/mg-context --save
 # or
-yarn add @tryghost/mg-context
+pnpm add @tryghost/mg-context
 ```
 
 ## Quick start
@@ -674,16 +674,16 @@ npx tsx examples/generate-and-export.ts
 
 ## Develop
 
-This is a mono repository, managed with [Nx](https://nx.dev/) and yarn workspaces.
+This is a mono repository, managed with [Nx](https://nx.dev/) and pnpm workspaces.
 
 Follow the instructions for the top-level repo.
 1. `git clone` this repo & `cd` into it as usual
-2. Run `yarn` to install top-level dependencies.
+2. Run `pnpm install` to install top-level dependencies.
 
 ## Test
 
-- `yarn lint` run just eslint
-- `yarn test` run lint and tests
+- `pnpm lint` run just eslint
+- `pnpm test` run lint and tests
 
 # Copyright & License
 

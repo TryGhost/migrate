@@ -20,7 +20,7 @@ To use this package in your own project:
 
 or
 
-`yarn add @tryghost/mg-blogger`
+`pnpm add @tryghost/mg-blogger`
 
 
 ## Usage
@@ -77,26 +77,26 @@ This will fetch posts only from 2 sites, and add a 'Blog Posts' tag to each post
 
 ## Develop
 
-This is a mono repository, managed with [Nx](https://nx.dev/) and yarn workspaces.
+This is a mono repository, managed with [Nx](https://nx.dev/) and pnpm workspaces.
 
 Follow the instructions for the top-level repo.
 1. `git clone` this repo & `cd` into it as usual
-2. Run `yarn` to install top-level dependencies.
+2. Run `pnpm install` to install top-level dependencies.
 
 
 ## Run
 
-To run a local development copy, `cd` into this directory, and use `yarn dev` instead of `migrate` like so:
+To run a local development copy, `cd` into this directory, and use `pnpm dev` instead of `migrate` like so:
 
 ```sh
-yarn dev blogger --apiKey abcd --blogID 1234
+pnpm dev blogger --apiKey abcd --blogID 1234
 ```
 
 
 ## Test
 
-- `yarn lint` run just eslint
-- `yarn test` run lint and tests
+- `pnpm lint` run just eslint
+- `pnpm test` run lint and tests
 
 
 # Copyright & License

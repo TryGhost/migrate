@@ -16,7 +16,7 @@ To use this package in your own project:
 
 or
 
-`yarn add @tryghost/mg-stripe`
+`pnpm add @tryghost/mg-stripe`
 
 
 ## Usage
@@ -79,26 +79,26 @@ migrate stripe revert
 
 ## Develop
 
-This is a mono repository, managed with [Nx](https://nx.dev/) and yarn workspaces.
+This is a mono repository, managed with [Nx](https://nx.dev/) and pnpm workspaces.
 Follow the instructions for the top-level repo.
 
 ### Install
 
 1. `cd` to the top of the monorepo
-2. Run `yarn` to install dependencies.
+2. Run `pnpm install` to install dependencies.
 
 
 ### Run
 
 1. `cd` to the top of the monorepo
-1. Run `yarn dev:watch` (compiles TypeScript files)
-2. Run `yarn dev stripe <command>` to run the copy, confirm or revert command
+1. Run `pnpm dev:watch` (compiles TypeScript files)
+2. Run `pnpm dev stripe <command>` to run the copy, confirm or revert command
 
 
 ### Test
 
-- `yarn lint` to run linting
-- `yarn test` to run unit tests
+- `pnpm lint` to run linting
+- `pnpm test` to run unit tests
 
 To run E2E tests, you need a test Stripe API-key. Create a `.env` file and store it in this folder (packages/mg-stripe):
 
@@ -106,9 +106,9 @@ To run E2E tests, you need a test Stripe API-key. Create a `.env` file and store
 STRIPE_API_KEY=sk_test_xxx
 ```
 
-After that you can run the E2E tests via `yarn test:e2e`.
+After that you can run the E2E tests via `pnpm test:e2e`.
 
-To easily filter and write new E2E tests you can run it like `yarn test:e2e same-account` to only run E2E tests that match a file name.
+To easily filter and write new E2E tests you can run it like `pnpm test:e2e same-account` to only run E2E tests that match a file name.
 
 
 ## Copyright & License
