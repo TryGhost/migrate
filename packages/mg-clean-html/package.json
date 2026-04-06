@@ -27,7 +27,7 @@
     "eslint": "8.57.1"
   },
   "dependencies": {
-    "cheerio": "1.2.0",
+    "@tryghost/mg-utils": "workspace:*",
     "escape-string-regexp": "5.0.0",
     "style-to-object": "1.0.14"
   }
