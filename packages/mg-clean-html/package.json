@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-clean-html",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TryGhost/migrate.git",
@@ -15,7 +15,9 @@
       "default": "./build/index.js"
     }
   },
-  "files": ["build"],
+  "files": [
+    "build"
+  ],
   "scripts": {
     "dev": "echo \"Implement me!\"",
     "build": "rm -rf build && rm -rf tsconfig.tsbuildinfo && tsc --build --sourceMap",
