@@ -1,10 +1,19 @@
 import {domUtils} from '@tryghost/mg-utils';
-import styleToObject from 'style-to-object';
+// style-to-object's ESM types don't resolve correctly with NodeNext module resolution
+// eslint-disable-next-line
+import _styleToObject from 'style-to-object';
+const styleToObject = _styleToObject as unknown as (style: string) => Record<string, string> | null;
 import escapeStringRegexp from 'escape-string-regexp';
 
 const {serializeChildren, replaceWith, parents, isComment, getCommentData, insertBefore, insertAfter} = domUtils;
 
-const isAllowed = (el) => {
+interface CleanHTMLArgs {
+    html?: string;
+    opinionated?: boolean;
+    cards?: boolean;
+}
+
+const isAllowed = (el: Element): boolean => {
     if (el.classList.contains('instagram-media')) {
         return false;
     }
@@ -16,9 +25,9 @@ const isAllowed = (el) => {
     return true;
 };
 
-const changeTagName = (doc, el, newTag) => {
+const changeTagName = (doc: Document, el: Element, newTag: string): Element => {
     const newEl = doc.createElement(newTag);
-    for (const attr of el.attributes) {
+    for (const attr of Array.from(el.attributes)) {
         newEl.setAttribute(attr.name, attr.value);
     }
     newEl.innerHTML = el.innerHTML;
@@ -26,7 +35,7 @@ const changeTagName = (doc, el, newTag) => {
     return newEl;
 };
 
-const cleanHTML = (args) => {
+const cleanHTML = (args?: CleanHTMLArgs): string => {
     let html = args?.html ?? '';
     const opinionated = args?.opinionated ?? false;
     const cards = args?.cards ?? false;
@@ -44,7 +53,7 @@ const cleanHTML = (args) => {
                     return;
                 }
 
-                let styleAttr = el.getAttribute('style');
+                let styleAttr = el.getAttribute('style') ?? '';
                 styleAttr = styleAttr.replace(/text-align: ?(left|center|right);?/, '').trim();
                 el.setAttribute('style', styleAttr);
             });
@@ -57,10 +66,10 @@ const cleanHTML = (args) => {
                     return;
                 }
 
-                let styleAttr = el.getAttribute('style');
-                let styles = styleToObject(styleAttr);
-                let fontWeight = styles['font-weight'];
-                let weightlessStyleAttr = styleAttr.replace(/font-weight: ?([a-zA-Z0-9-]+);?/, '');
+                const styleAttr = el.getAttribute('style') ?? '';
+                const styles = styleToObject(styleAttr);
+                const fontWeight = styles?.['font-weight'] ?? '';
+                const weightlessStyleAttr = styleAttr.replace(/font-weight: ?([a-zA-Z0-9-]+);?/, '');
 
                 if (parseInt(fontWeight) >= 600 || ['bold', 'bolder'].includes(fontWeight)) {
                     const newEl = changeTagName(parsed.document, el, 'b');
@@ -77,11 +86,11 @@ const cleanHTML = (args) => {
                     return;
                 }
 
-                let styleAttr = el.getAttribute('style');
-                let styles = styleToObject(styleAttr);
-                let fontWeight = styles['font-weight'];
+                const styleAttr = el.getAttribute('style') ?? '';
+                const styles = styleToObject(styleAttr);
+                const fontWeight = styles?.['font-weight'] ?? '';
 
-                let weightlessStyleAttr = styleAttr.replace(/font-weight: ?([a-zA-Z0-9-]+);?/, '');
+                const weightlessStyleAttr = styleAttr.replace(/font-weight: ?([a-zA-Z0-9-]+);?/, '');
                 el.setAttribute('style', weightlessStyleAttr);
 
                 if (['bold', 'bolder'].includes(fontWeight) || parseInt(fontWeight) >= 600) {
@@ -97,10 +106,10 @@ const cleanHTML = (args) => {
                     return;
                 }
 
-                let styleAttr = el.getAttribute('style');
-                let styles = styleToObject(styleAttr);
-                let fontStyle = styles['font-style'];
-                let stylelessStyleAttr = styleAttr.replace(/font-style: ?([a-zA-Z0-9-]+);?/, '');
+                const styleAttr = el.getAttribute('style') ?? '';
+                const styles = styleToObject(styleAttr);
+                const fontStyle = styles?.['font-style'] ?? '';
+                const stylelessStyleAttr = styleAttr.replace(/font-style: ?([a-zA-Z0-9-]+);?/, '');
 
                 if (['italic', 'oblique'].includes(fontStyle)) {
                     const newEl = changeTagName(parsed.document, el, 'i');
@@ -117,11 +126,11 @@ const cleanHTML = (args) => {
                     return;
                 }
 
-                let styleAttr = el.getAttribute('style');
-                let styles = styleToObject(styleAttr);
-                let fontStyle = styles['font-style'];
+                const styleAttr = el.getAttribute('style') ?? '';
+                const styles = styleToObject(styleAttr);
+                const fontStyle = styles?.['font-style'] ?? '';
 
-                let stylelessStyleAttr = styleAttr.replace(/font-style: ?([a-zA-Z0-9-]+);?/, '');
+                const stylelessStyleAttr = styleAttr.replace(/font-style: ?([a-zA-Z0-9-]+);?/, '');
                 el.setAttribute('style', stylelessStyleAttr);
 
                 if (['italic', 'oblique'].includes(fontStyle)) {
@@ -137,16 +146,16 @@ const cleanHTML = (args) => {
                     return;
                 }
 
-                let styleAttr = el.getAttribute('style');
-                let styles = styleToObject(styleAttr);
-                let color = styles?.color ?? false;
+                const styleAttr = el.getAttribute('style') ?? '';
+                const styles = styleToObject(styleAttr);
+                const color = styles?.color ?? false;
 
                 if (!color) {
                     return;
                 }
 
-                let theReg = new RegExp(`color: ?${escapeStringRegexp(color)};?`);
-                let colorlessStyleAttr = styleAttr.replace(theReg, '');
+                const theReg = new RegExp(`color: ?${escapeStringRegexp(color)};?`);
+                const colorlessStyleAttr = styleAttr.replace(theReg, '');
 
                 el.setAttribute('style', colorlessStyleAttr);
             });
@@ -159,52 +168,20 @@ const cleanHTML = (args) => {
                     return;
                 }
 
-                let styleAttr = el.getAttribute('style');
-                let styles = styleToObject(styleAttr);
+                let styleAttr = el.getAttribute('style') ?? '';
+                const styles = styleToObject(styleAttr);
 
-                let background = styles.background ?? false;
-                if (background) {
-                    styleAttr = styleAttr.replace(new RegExp(`background: ?${escapeStringRegexp(background)};?`), '');
-                }
+                const bgProps = [
+                    'background', 'background-attachment', 'background-clip',
+                    'background-color', 'background-image', 'background-origin',
+                    'background-position', 'background-repeat', 'background-size'
+                ];
 
-                let backgroundAttachment = styles['background-attachment'] ?? false;
-                if (backgroundAttachment) {
-                    styleAttr = styleAttr.replace(new RegExp(`background-attachment: ?${escapeStringRegexp(backgroundAttachment)};?`), '');
-                }
-
-                let backgroundClip = styles['background-clip'] ?? false;
-                if (backgroundClip) {
-                    styleAttr = styleAttr.replace(new RegExp(`background-clip: ?${escapeStringRegexp(backgroundClip)};?`), '');
-                }
-
-                let backgroundColor = styles['background-color'] ?? false;
-                if (backgroundColor) {
-                    styleAttr = styleAttr.replace(new RegExp(`background-color: ?${escapeStringRegexp(backgroundColor)};?`), '');
-                }
-
-                let backgroundImage = styles['background-image'] ?? false;
-                if (backgroundImage) {
-                    styleAttr = styleAttr.replace(new RegExp(`background-image: ?${escapeStringRegexp(backgroundImage)};?`), '');
-                }
-
-                let backgroundOrigin = styles['background-origin'] ?? false;
-                if (backgroundOrigin) {
-                    styleAttr = styleAttr.replace(new RegExp(`background-origin: ?${escapeStringRegexp(backgroundOrigin)};?`), '');
-                }
-
-                let backgroundPosition = styles['background-position'] ?? false;
-                if (backgroundPosition) {
-                    styleAttr = styleAttr.replace(new RegExp(`background-position: ?${escapeStringRegexp(backgroundPosition)};?`), '');
-                }
-
-                let backgroundRepeat = styles['background-repeat'] ?? false;
-                if (backgroundRepeat) {
-                    styleAttr = styleAttr.replace(new RegExp(`background-repeat: ?${escapeStringRegexp(backgroundRepeat)};?`), '');
-                }
-
-                let backgroundSize = styles['background-size'] ?? false;
-                if (backgroundSize) {
-                    styleAttr = styleAttr.replace(new RegExp(`background-size: ?${escapeStringRegexp(backgroundSize)};?`), '');
+                for (const prop of bgProps) {
+                    const val = styles?.[prop] ?? false;
+                    if (val) {
+                        styleAttr = styleAttr.replace(new RegExp(`${escapeStringRegexp(prop)}: ?${escapeStringRegexp(val)};?`), '');
+                    }
                 }
 
                 el.setAttribute('style', styleAttr);
@@ -218,7 +195,7 @@ const cleanHTML = (args) => {
                     return;
                 }
 
-                let styleAttr = el.getAttribute('style').trim();
+                const styleAttr = (el.getAttribute('style') ?? '').trim();
 
                 if (styleAttr.length === 0) {
                     el.removeAttribute('style');
@@ -269,12 +246,12 @@ const cleanHTML = (args) => {
             parsed.$('ol, ul').forEach((ul) => {
                 const outermost = domUtils.lastParent(ul, 'ul, ol') ?? ul;
 
-                let hasStyle = outermost.getAttribute('style') ? true : false;
-                let hasType = outermost.getAttribute('type') || outermost.querySelectorAll('[type]').length ? true : false;
-                let hasValue = outermost.getAttribute('value') || outermost.querySelectorAll('[value]').length ? true : false;
-                let hasStart = outermost.getAttribute('start') || outermost.querySelectorAll('[start]').length ? true : false;
-                let hasOLList = outermost.querySelectorAll('ol').length ? true : false;
-                let hasULList = outermost.querySelectorAll('ul').length ? true : false;
+                const hasStyle = !!outermost.getAttribute('style');
+                const hasType = !!outermost.getAttribute('type') || !!outermost.querySelectorAll('[type]').length;
+                const hasValue = !!outermost.getAttribute('value') || !!outermost.querySelectorAll('[value]').length;
+                const hasStart = !!outermost.getAttribute('start') || !!outermost.querySelectorAll('[start]').length;
+                const hasOLList = !!outermost.querySelectorAll('ol').length;
+                const hasULList = !!outermost.querySelectorAll('ul').length;
 
                 if (hasStyle || hasType || hasValue || hasStart || hasOLList || hasULList) {
                     // If parent is not wrapped in a HTML card, wrap it in one

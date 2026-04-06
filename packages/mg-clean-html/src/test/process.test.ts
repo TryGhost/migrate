@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {cleanHTML} from '../lib/process.js';
+import {cleanHTML} from '../index.js';
 
 describe('Clean HTML', function () {
     it('Can return nothing', function () {
