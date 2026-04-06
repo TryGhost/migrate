@@ -175,6 +175,53 @@ describe('Clean HTML', function () {
         assert.equal(result, html);
     });
 
+    it('Skips opinionated cleanup inside Instagram embeds', function () {
+        let html = '<blockquote class="instagram-media">'
+            + '<p style="text-align: center;">Centered</p>'
+            + '<span style="font-weight: bold;">Bold</span>'
+            + '<a style="font-weight: bold;">Bold link</a>'
+            + '<span style="font-style: italic;">Italic</span>'
+            + '<a style="font-style: italic;">Italic link</a>'
+            + '<a style="color: red;">Red</a>'
+            + '<a style="background-color: blue;">Blue bg</a>'
+            + '<p style>Empty style</p>'
+            + '<h2><b>Header</b></h2>'
+            + '<p></p>'
+            + '</blockquote>';
+        let result = cleanHTML({
+            html,
+            opinionated: true
+        });
+        assert.equal(result, html);
+    });
+
+    it('Removes non-bold font-weight from a/p/li without wrapping in b tag', function () {
+        let html = '<p style="font-weight: 300;">Light text</p>';
+        let result = cleanHTML({
+            html,
+            opinionated: true
+        });
+        assert.equal(result, '<p>Light text</p>');
+    });
+
+    it('Removes non-italic font-style from a/p/li without wrapping in i tag', function () {
+        let html = '<p style="font-style: normal;">Normal text</p>';
+        let result = cleanHTML({
+            html,
+            opinionated: true
+        });
+        assert.equal(result, '<p>Normal text</p>');
+    });
+
+    it('Does not wrap plain lists without special attributes', function () {
+        let html = '<ul><li>One</li><li>Two</li></ul>';
+        let result = cleanHTML({
+            html,
+            cards: true
+        });
+        assert.equal(result, '<ul><li>One</li><li>Two</li></ul>');
+    });
+
     it('Removes empty attributes', function () {
         let html = '<script async="" data-not-areal-thing src="/example.js"></script>';
         let result = cleanHTML({

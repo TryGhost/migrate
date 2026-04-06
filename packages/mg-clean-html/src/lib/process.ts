@@ -53,7 +53,7 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
                     return;
                 }
 
-                let styleAttr = el.getAttribute('style') ?? '';
+                let styleAttr = el.getAttribute('style')!;
                 styleAttr = styleAttr.replace(/text-align: ?(left|center|right);?/, '').trim();
                 el.setAttribute('style', styleAttr);
             });
@@ -66,9 +66,9 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
                     return;
                 }
 
-                const styleAttr = el.getAttribute('style') ?? '';
+                const styleAttr = el.getAttribute('style')!;
                 const styles = styleToObject(styleAttr);
-                const fontWeight = styles?.['font-weight'] ?? '';
+                const fontWeight = styles!['font-weight'];
                 const weightlessStyleAttr = styleAttr.replace(/font-weight: ?([a-zA-Z0-9-]+);?/, '');
 
                 if (parseInt(fontWeight) >= 600 || ['bold', 'bolder'].includes(fontWeight)) {
@@ -86,9 +86,9 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
                     return;
                 }
 
-                const styleAttr = el.getAttribute('style') ?? '';
+                const styleAttr = el.getAttribute('style')!;
                 const styles = styleToObject(styleAttr);
-                const fontWeight = styles?.['font-weight'] ?? '';
+                const fontWeight = styles!['font-weight'];
 
                 const weightlessStyleAttr = styleAttr.replace(/font-weight: ?([a-zA-Z0-9-]+);?/, '');
                 el.setAttribute('style', weightlessStyleAttr);
@@ -106,9 +106,9 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
                     return;
                 }
 
-                const styleAttr = el.getAttribute('style') ?? '';
+                const styleAttr = el.getAttribute('style')!;
                 const styles = styleToObject(styleAttr);
-                const fontStyle = styles?.['font-style'] ?? '';
+                const fontStyle = styles!['font-style'];
                 const stylelessStyleAttr = styleAttr.replace(/font-style: ?([a-zA-Z0-9-]+);?/, '');
 
                 if (['italic', 'oblique'].includes(fontStyle)) {
@@ -126,9 +126,9 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
                     return;
                 }
 
-                const styleAttr = el.getAttribute('style') ?? '';
+                const styleAttr = el.getAttribute('style')!;
                 const styles = styleToObject(styleAttr);
-                const fontStyle = styles?.['font-style'] ?? '';
+                const fontStyle = styles!['font-style'];
 
                 const stylelessStyleAttr = styleAttr.replace(/font-style: ?([a-zA-Z0-9-]+);?/, '');
                 el.setAttribute('style', stylelessStyleAttr);
@@ -146,7 +146,7 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
                     return;
                 }
 
-                const styleAttr = el.getAttribute('style') ?? '';
+                const styleAttr = el.getAttribute('style')!;
                 const styles = styleToObject(styleAttr);
                 const color = styles?.color ?? false;
 
@@ -168,7 +168,7 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
                     return;
                 }
 
-                let styleAttr = el.getAttribute('style') ?? '';
+                let styleAttr = el.getAttribute('style')!;
                 const styles = styleToObject(styleAttr);
 
                 const bgProps = [
@@ -195,7 +195,7 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
                     return;
                 }
 
-                const styleAttr = (el.getAttribute('style') ?? '').trim();
+                const styleAttr = (el.getAttribute('style')!).trim();
 
                 if (styleAttr.length === 0) {
                     el.removeAttribute('style');
