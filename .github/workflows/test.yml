@@ -21,3 +21,5 @@ jobs:
           cache: pnpm
       - run: pnpm install
       - run: pnpm test:ci
+        env:
+          NODE_OPTIONS: '--test-reporter=dot'
