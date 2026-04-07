@@ -947,12 +947,12 @@ importers:
       '@tryghost/kg-default-cards':
         specifier: 10.2.10
         version: 10.2.10
+      '@tryghost/mg-utils':
+        specifier: workspace:*
+        version: link:../mg-utils
       '@tryghost/string':
         specifier: 0.3.1
         version: 0.3.1
-      cheerio:
-        specifier: 1.2.0
-        version: 1.2.0
       sanitize-html:
         specifier: 2.17.2
         version: 2.17.2

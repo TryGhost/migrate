@@ -1,6 +1,6 @@
 import {readFile} from 'node:fs/promises';
 import sanitizeHtml from 'sanitize-html';
-import * as cheerio from 'cheerio';
+import {domUtils} from '@tryghost/mg-utils';
 import {slugify} from '@tryghost/string';
 import {_base as debugFactory} from '@tryghost/debug';
 import {jsonToHtml} from './json-to-html.js';
@@ -202,24 +202,23 @@ const processNewsletterContent = (html, options) => { // eslint-disable-line no-
         }
     });
 
-    const $html = cheerio.load(cleanedContent, {
-        xml: {
-            decodeEntities: false
-        }
-    });
+    const cleanedHTML = domUtils.processFragment(cleanedContent, (parsed) => {
+        parsed.$('p').forEach((el) => {
+            const innerHtml = domUtils.serializeChildren(el).trim();
+            if (!innerHtml.length || innerHtml === '<br>' || innerHtml === '<br/>') {
+                el.remove();
+            }
+        });
 
-    $html('p').each((i, el) => {
-        const innerHtml = $html(el).html().trim();
-        if (!innerHtml.length || innerHtml === '<br>' || innerHtml === '<br/>') {
-            $html(el).remove();
-        }
-    });
+        // :contains is a jQuery-specific selector, so filter manually
+        parsed.$('a').forEach((el) => {
+            if ((el.textContent || '').includes('Made with Letterhead')) {
+                el.remove();
+            }
+        });
 
-    $html('a:contains("Made with Letterhead")').each((i, el) => {
-        $html(el).remove();
+        return parsed.html().trim();
     });
-
-    const cleanedHTML = $html.html().trim();
 
     return `<!--kg-card-begin: html-->${cleanedHTML}<!--kg-card-end: html-->`;
 };
