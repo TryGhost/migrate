@@ -45,7 +45,7 @@
   "dependencies": {
     "@tryghost/errors": "3.0.3",
     "@tryghost/mg-fs-utils": "workspace:*",
-    "cheerio": "1.2.0",
+    "@tryghost/mg-utils": "workspace:*",
     "markdown-it": "14.1.1",
     "markdown-it-footnote": "4.0.0"
   }
