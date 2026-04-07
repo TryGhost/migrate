@@ -42,7 +42,7 @@ export class StripeAPI {
 
     async validate() {
         try {
-            const account = await this.use(client => client.accounts.retrieve());
+            const account = await this.use(client => client.accounts.retrieve(null));
             //ui.log.ok(`Connected to Stripe account: ${account.settings?.dashboard.display_name} - ${this.mode} mode`);
 
             this.id = account.id;
