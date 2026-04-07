@@ -1,5 +1,5 @@
 import {join} from 'node:path';
-import * as cheerio from 'cheerio';
+import {domUtils} from '@tryghost/mg-utils';
 
 const processTextItem = (item, ctx, content) => {
     let itemHtmlChunks = [];
@@ -17,8 +17,8 @@ const processTextItem = (item, ctx, content) => {
     itemHtmlChunks.push(`<h3>${item.title}</h3>`);
     itemHtmlChunks.push(item.description);
 
-    const $html = cheerio.load(item.footer);
-    itemHtmlChunks.push(`<p><i>${$html.text()}</i></p>`);
+    const footerText = domUtils.processFragment(item.footer, parsed => parsed.text());
+    itemHtmlChunks.push(`<p><i>${footerText}</i></p>`);
 
     return itemHtmlChunks.join('');
 };
