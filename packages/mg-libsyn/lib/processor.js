@@ -1,7 +1,9 @@
-import * as cheerio from 'cheerio';
+import {domUtils} from '@tryghost/mg-utils';
 import {slugify, stripInvisibleChars} from '@tryghost/string';
 import SimpleDom from 'simple-dom';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
+
+const {serializeChildren, replaceWith, insertBefore, insertAfter, isComment, getCommentData} = domUtils;
 
 const durationToSeconds = (duration) => {
     if (duration.includes(':')) {
@@ -46,37 +48,38 @@ const processContent = (libsynPost, options) => { // eslint-disable-line no-shad
         return '';
     }
 
-    const $html = cheerio.load(html, {
-        xml: {
-            xmlMode: false,
-            decodeEntities: false,
-            scriptingEnabled: false
-        }
-    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+    html = domUtils.processFragment(html, (parsed) => {
+        parsed.$('p').forEach((el) => {
+            const content = serializeChildren(el).trim();
+            const noInvisibleChars = stripInvisibleChars(content);
+            const noInvisibleCharsLength = noInvisibleChars.length;
 
-    $html('p').each((i, el) => {
-        const content = $html(el).html().trim();
-        const noInvisibleChars = stripInvisibleChars(content);
-        const noInvisibleCharsLength = noInvisibleChars.length;
+            if (noInvisibleCharsLength === 0 || content === '&#xA0;' || content === '&nbsp;') {
+                el.remove();
+            }
+        });
 
-        if (noInvisibleCharsLength === 0 || content === '&#xA0;' || content === '&nbsp;') {
-            $html(el).remove();
-        }
+        parsed.$('span[style="font-weight: 400;"]').forEach((el) => {
+            replaceWith(el, serializeChildren(el).trim());
+        });
+
+        // Wrap nested lists in HTML card
+        parsed.$('ul li ul, ol li ol, ol li ul, ul li ol').forEach((nestedList) => {
+            const outermost = domUtils.lastParent(nestedList, 'ul, ol') ?? nestedList;
+
+            // Don't double-wrap
+            const prev = outermost.previousSibling;
+            if (isComment(prev) && getCommentData(prev) === 'kg-card-begin: html') {
+                return;
+            }
+
+            insertBefore(outermost, '<!--kg-card-begin: html-->');
+            insertAfter(outermost, '<!--kg-card-end: html-->');
+        });
+
+        // Convert HTML back to a string
+        return parsed.html();
     });
-
-    $html('span[style="font-weight: 400;"]').each((i, el) => {
-        $html(el).replaceWith($html(el).html().trim());
-    });
-
-    // Wrap nested lists in HTML card
-    $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {
-        let $parent = $html(nestedList).parentsUntil('ul, ol').parent();
-        $parent.before('<!--kg-card-begin: html-->');
-        $parent.after('<!--kg-card-end: html-->');
-    });
-
-    // Convert HTML back to a string
-    html = $html.html();
 
     // Remove empty attributes
     html = html.replace(/=""/g, '');
