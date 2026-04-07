@@ -1,6 +1,8 @@
-import * as cheerio from 'cheerio';
+import {domUtils} from '@tryghost/mg-utils';
 import {slugify} from '@tryghost/string';
 import {_base as debugFactory} from '@tryghost/debug';
+
+const {serializeChildren, replaceWith, insertBefore, insertAfter, isComment, getCommentData} = domUtils;
 
 const debug = debugFactory('migrate:letterdrop:processor');
 
@@ -15,73 +17,79 @@ const processContent = (html, postUrl, options) => {
     html = html.replace(/<p><br><\/p>/g, '');
     html = html.replace(/<li><br><\/li>/g, '');
 
-    const $html = cheerio.load(html, {
-        xml: {
-            decodeEntities: false,
-            scriptingEnabled: false
-        }
-    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+    html = domUtils.processFragment(html, (parsed) => {
+        // Letterdrop supplies internal links in post content with `.com/c/`, but post URLs in JSON are `.com/p/`.
+        // Lets normalise that
+        parsed.$('a').forEach((el) => {
+            let href = el.getAttribute('href');
+            let linkRegEpx = new RegExp(`${options.url}/c/`);
+            let newHref = href.replace(linkRegEpx, `${options.url}/p/`);
+            el.setAttribute('href', newHref);
+        });
 
-    // Letterdrop supplies internal links in post content with `.com/c/`, but post URLs in JSON are `.com/p/`.
-    // Lets normalise that
-    $html('a').each((i, el) => {
-        let href = $html(el).attr('href');
-        let linkRegEpx = new RegExp(`${options.url}/c/`);
-        let newHref = href.replace(linkRegEpx, `${options.url}/p/`);
-        $html(el).attr('href', newHref);
+        // Wrap nested lists in HTML card
+        parsed.$('ul li ul, ol li ol, ol li ul, ul li ol').forEach((nestedList) => {
+            const outermost = domUtils.lastParent(nestedList, 'ul, ol') ?? nestedList;
+
+            // Don't double-wrap
+            const prev = outermost.previousSibling;
+            if (isComment(prev) && getCommentData(prev) === 'kg-card-begin: html') {
+                return;
+            }
+
+            insertBefore(outermost, '<!--kg-card-begin: html-->');
+            insertAfter(outermost, '<!--kg-card-end: html-->');
+        });
+
+        parsed.$('.quill-upload-image').forEach((el) => {
+            const figure = el.querySelector('figure');
+
+            if (figure) {
+                replaceWith(el, figure);
+                figure.removeAttribute('style');
+                const figcaption = figure.querySelector('figcaption');
+                if (figcaption) {
+                    figcaption.removeAttribute('style');
+                }
+            }
+        });
+
+        parsed.$('.letterdrop-custom-button').forEach((el) => {
+            const a = el.querySelector('a');
+            const aHref = a?.getAttribute('href') ?? '';
+            const referralsRegExp = new RegExp(`${options.url}/referrals/[a-zA-Z0-9]{24}`);
+
+            if (aHref.match(referralsRegExp)) {
+                el.remove();
+            } else {
+                const buttonText = a ? serializeChildren(a) : '';
+                replaceWith(el, `<div class="kg-card kg-button-card kg-align-center"><a href="${aHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+            }
+        });
+
+        parsed.$('iframe[name="letterdrop-subscribe-input"]').forEach((el) => {
+            replaceWith(el, `<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${options.subscribeText}</a></div>`);
+        });
+
+        parsed.$('blockquote').forEach((el) => {
+            const classes = el.getAttribute('class') ?? null;
+            if (!classes) {
+                replaceWith(el, `<blockquote><p>${serializeChildren(el)}</p></blockquote>`);
+            }
+        });
+
+        parsed.$('a').forEach((el) => {
+            const href = el.getAttribute('href');
+            const theDomain = options.url.replace(/(https?:\/\/)(www.)?/, '');
+
+            if (href.includes(`${theDomain}/plans`) || href.includes(`${theDomain}/subscribe`) || href.includes(`${theDomain}/promo`)) {
+                el.setAttribute('href', options.subscribeLink);
+            }
+        });
+
+        // Convert HTML back to a string
+        return parsed.html();
     });
-
-    // Wrap nested lists in HTML card
-    $html('ul li ul, ol li ol, ol li ul, ul li ol').each((i, nestedList) => {
-        let $parent = $html(nestedList).parentsUntil('ul, ol').parent();
-        $parent.before('<!--kg-card-begin: html-->');
-        $parent.after('<!--kg-card-end: html-->');
-    });
-
-    $html('.quill-upload-image').each((i, el) => {
-        let hasFigure = $html(el).find('figure');
-
-        if (hasFigure) {
-            $html(el).replaceWith(hasFigure);
-            $html(el).removeAttr('style');
-            $html(el).find('figcaption').removeAttr('style');
-        }
-    });
-
-    $html('.letterdrop-custom-button').each((i, el) => {
-        const aHref = $html(el).find('a').attr('href');
-        const referralsRegExp = new RegExp(`${options.url}/referrals/[a-zA-Z0-9]{24}`);
-
-        if (aHref.match(referralsRegExp)) {
-            $html(el).remove();
-        } else {
-            const buttonText = $html(el).find('a').html();
-            $html(el).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${aHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
-        }
-    });
-
-    $html('iframe[name="letterdrop-subscribe-input"]').each((i, el) => {
-        $html(el).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${options.subscribeText}</a></div>`);
-    });
-
-    $html('blockquote').each((i, el) => {
-        const classes = $html(el).attr('class') ?? null;
-        if (!classes) {
-            $html(el).replaceWith(`<blockquote><p>${$html(el).html()}</p></blockquote>`);
-        }
-    });
-
-    $html('a').each((i, el) => {
-        const href = $html(el).attr('href');
-        const theDomain = options.url.replace(/(https?:\/\/)(www.)?/, '');
-
-        if (href.includes(`${theDomain}/plans`) || href.includes(`${theDomain}/subscribe`) || href.includes(`${theDomain}/promo`)) {
-            $html(el).attr('href', options.subscribeLink);
-        }
-    });
-
-    // Convert HTML back to a string
-    html = $html.html();
 
     // Remove empty attributes
     html = html.replace(/=""/g, '');
