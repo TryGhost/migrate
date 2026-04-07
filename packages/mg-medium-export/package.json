@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@tryghost/debug": "2.0.3",
-    "@tryghost/kg-default-cards": "10.2.10",
+    "@tryghost/kg-default-cards": "10.2.13",
     "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
     "@tryghost/string": "0.3.1",
