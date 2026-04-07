@@ -29,8 +29,8 @@
   "dependencies": {
     "@tryghost/debug": "2.0.3",
     "@tryghost/errors": "3.0.3",
+    "@tryghost/mg-utils": "workspace:*",
     "@tryghost/string": "0.3.1",
-    "cheerio": "1.2.0",
     "got": "15.0.0"
   }
 }

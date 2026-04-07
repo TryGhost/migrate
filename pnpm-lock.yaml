@@ -604,12 +604,12 @@ importers:
       '@tryghost/errors':
         specifier: 3.0.3
         version: 3.0.3
+      '@tryghost/mg-utils':
+        specifier: workspace:*
+        version: link:../mg-utils
       '@tryghost/string':
         specifier: 0.3.1
         version: 0.3.1
-      cheerio:
-        specifier: 1.2.0
-        version: 1.2.0
       got:
         specifier: 15.0.0
         version: 15.0.0
