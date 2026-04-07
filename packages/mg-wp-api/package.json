@@ -38,7 +38,7 @@
     "html-to-text": "9.0.5",
     "lodash": "4.18.1",
     "simple-dom": "1.4.0",
-    "tldts": "7.0.27",
+    "tldts": "7.0.28",
     "wpapi": "1.2.2"
   }
 }

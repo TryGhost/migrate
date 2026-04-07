@@ -1066,8 +1066,8 @@ importers:
         specifier: 1.4.0
         version: 1.4.0
       tldts:
-        specifier: 7.0.27
-        version: 7.0.27
+        specifier: 7.0.28
+        version: 7.0.28
       wpapi:
         specifier: 1.2.2
         version: 1.2.2
@@ -6725,8 +6725,8 @@ packages:
   tldts-core@7.0.28:
     resolution: {integrity: sha512-7W5Efjhsc3chVdFhqtaU0KtK32J37Zcr9RKtID54nG+tIpcY79CQK/veYPODxtD/LJ4Lue66jvrQzIX2Z2/pUQ==}
 
-  tldts@7.0.27:
-    resolution: {integrity: sha512-I4FZcVFcqCRuT0ph6dCDpPuO4Xgzvh+spkcTr1gK7peIvxWauoloVO0vuy1FQnijT63ss6AsHB6+OIM4aXHbPg==}
+  tldts@7.0.28:
+    resolution: {integrity: sha512-+Zg3vWhRUv8B1maGSTFdev9mjoo8Etn2Ayfs4cnjlD3CsGkxXX4QyW3j2WJ0wdjYcYmy7Lx2RDsZMhgCWafKIw==}
     hasBin: true
 
   tmp@0.2.5:
@@ -13270,7 +13270,7 @@ snapshots:
 
   tldts-core@7.0.28: {}
 
-  tldts@7.0.27:
+  tldts@7.0.28:
     dependencies:
       tldts-core: 7.0.28
 
@@ -13293,7 +13293,7 @@ snapshots:
 
   tough-cookie@6.0.1:
     dependencies:
-      tldts: 7.0.27
+      tldts: 7.0.28
 
   tr46@0.0.3: {}
 
