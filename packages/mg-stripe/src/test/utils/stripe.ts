@@ -204,7 +204,7 @@ export function buildPrice(overrides: Partial<Omit<Stripe.Price, 'recurring'>> &
         nickname: null,
         transform_quantity: null,
         type: 'recurring',
-        unit_amount_decimal: '100' as unknown as Stripe.Decimal,
+        unit_amount_decimal: Stripe.Decimal.from('100'),
         metadata: {},
         ...overrides,
         recurring: {
