@@ -1,11 +1,13 @@
 import {basename} from 'node:path';
-import * as cheerio from 'cheerio';
+import {domUtils} from '@tryghost/mg-utils';
 import autop from 'autop';
 import sanitizeHtml from 'sanitize-html';
 import {slugify} from '@tryghost/string';
 import errors from '@tryghost/errors';
 import SimpleDom from 'simple-dom';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
+
+const {serializeChildren, replaceWith, wrap} = domUtils;
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
@@ -35,54 +37,48 @@ const increaseImageSize = (src) => {
     return updatedSrc;
 };
 
-const getAllAttributes = function (el) {
-    return el.attributes || Object.keys(el.attribs).map(
-        name => ({name, value: el.attribs[name]})
-    );
-};
-
 const handleFirstImage = (args) => {
     let {postData, html} = args;
 
-    const $html = cheerio.load(html, {
-        xml: {
-            xmlMode: false,
-            decodeEntities: false,
-            scriptingEnabled: false
+    return domUtils.processFragment(html, (parsed) => {
+        const firstContentElement = parsed.body.children[0];
+
+        if (!firstContentElement) {
+            postData.html = parsed.html().trim();
+            return postData;
         }
-    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
 
-    const firstContentElement = $html('*').first();
+        if (firstContentElement.tagName === 'IMG') {
+            postData.feature_image = firstContentElement.getAttribute('src');
+            firstContentElement.remove();
+        } else if ((firstContentElement.textContent || '').trim() === '') {
+            const img = firstContentElement.querySelector('img');
+            const a = firstContentElement.querySelector('a');
+            const firstContentElementImgSrc = img?.getAttribute('src') ?? null;
+            const firstContentElementImgBasename = firstContentElementImgSrc ? basename(firstContentElementImgSrc) : null;
+            const firstContentElementAHref = a?.getAttribute('href') ?? null;
+            const firstContentElementAHrefBasename = firstContentElementAHref ? basename(firstContentElementAHref) : null;
 
-    if (firstContentElement[0].name === 'img') {
-        $html(firstContentElement).remove();
-        postData.feature_image = $html(firstContentElement).attr('src');
-    } else if ($html(firstContentElement).text().trim() === '') {
-        const firstContentElementImgSrc = $html(firstContentElement).find('img').attr('src');
-        const firstContentElementImgBasename = firstContentElementImgSrc ? basename(firstContentElementImgSrc) : null;
-        const firstContentElementAHref = $html(firstContentElement).find('a').attr('href');
-        const firstContentElementAHrefBasename = firstContentElementAHref ? basename(firstContentElementAHref) : null;
-
-        if (firstContentElementImgBasename === firstContentElementAHrefBasename) {
-            $html(firstContentElement).remove();
-            postData.feature_image = firstContentElementImgSrc;
-        } else if (firstContentElementImgSrc && !firstContentElementAHref) {
-            $html(firstContentElement).remove();
-            postData.feature_image = firstContentElementImgSrc;
-        } else {
-            const firstContentElementImgBasenameNoSize = firstContentElementImgBasename.replace(/(.*)((-=|-|=)w[0-9]{2,5}-h[0-9]{2,5}|(-=|-|=)s[0-9]{2,5})/, '$1');
-            const firstContentElementAHrefBasenameNoSize = firstContentElementAHrefBasename.replace(/(.*)((-=|-|=)w[0-9]{2,5}-h[0-9]{2,5}|(-=|-|=)s[0-9]{2,5})/, '$1');
-
-            if (firstContentElementImgBasenameNoSize === firstContentElementAHrefBasenameNoSize) {
-                $html(firstContentElement).remove();
+            if (firstContentElementImgBasename === firstContentElementAHrefBasename) {
+                firstContentElement.remove();
                 postData.feature_image = firstContentElementImgSrc;
+            } else if (firstContentElementImgSrc && !firstContentElementAHref) {
+                firstContentElement.remove();
+                postData.feature_image = firstContentElementImgSrc;
+            } else {
+                const firstContentElementImgBasenameNoSize = firstContentElementImgBasename.replace(/(.*)((-=|-|=)w[0-9]{2,5}-h[0-9]{2,5}|(-=|-|=)s[0-9]{2,5})/, '$1');
+                const firstContentElementAHrefBasenameNoSize = firstContentElementAHrefBasename.replace(/(.*)((-=|-|=)w[0-9]{2,5}-h[0-9]{2,5}|(-=|-|=)s[0-9]{2,5})/, '$1');
+
+                if (firstContentElementImgBasenameNoSize === firstContentElementAHrefBasenameNoSize) {
+                    firstContentElement.remove();
+                    postData.feature_image = firstContentElementImgSrc;
+                }
             }
         }
-    }
 
-    postData.html = $html.html().trim();
-
-    return postData;
+        postData.html = parsed.html().trim();
+        return postData;
+    });
 };
 
 const processHTMLContent = async (args) => {
@@ -90,163 +86,171 @@ const processHTMLContent = async (args) => {
 
     html = autop(html);
 
-    const $html = cheerio.load(html, {
-        xml: {
-            xmlMode: false,
-            decodeEntities: false,
-            scriptingEnabled: false
-        }
-    }, false); // This `false` is `isDocument`. If `true`, <html>, <head>, and <body> elements are introduced
+    html = domUtils.processFragment(html, (parsed) => {
+        parsed.$('div.separator').forEach((el) => {
+            replaceWith(el, `<hr><div>${serializeChildren(el).trim()}</div>`);
+        });
 
-    $html('div.separator').each((i, el) => {
-        $html(el).replaceWith(`<hr><div>${$html(el).html().trim()}</div>`);
-    });
+        parsed.$('img').forEach((el) => {
+            const imgSrc = el.getAttribute('src');
+            const largerSrc = increaseImageSize(imgSrc);
 
-    $html('img').each((i, el) => {
-        const imgSrc = $html(el).attr('src');
-        const largerSrc = increaseImageSize(imgSrc);
+            el.setAttribute('src', largerSrc);
+            el.removeAttribute('width');
+            el.removeAttribute('height');
+        });
 
-        $html(el).attr('src', largerSrc);
-        $html(el).removeAttr('width');
-        $html(el).removeAttr('height');
-    });
+        parsed.$('.tr-caption-container').forEach((el) => {
+            const img = el.querySelector('img');
+            const imgParentA = img?.closest('a');
+            const hasLink = !!imgParentA;
+            const href = hasLink ? imgParentA.getAttribute('href') : null;
+            const imgSrc = img?.getAttribute('src') ?? null;
+            const captionEl = el.querySelector('.tr-caption');
+            const caption = captionEl ? serializeChildren(captionEl) : '';
+            const cleanedExcerpt = cleanExcerpt(caption);
 
-    $html('.tr-caption-container').each((i, el) => {
-        const hasLink = $html(el).find('img').parent('a').length;
-        const href = (hasLink) ? $html(el).find('img').parent('a').attr('href') : null;
-        const imgSrc = $html(el).find('img').attr('src');
-        const caption = $html(el).find('.tr-caption').html();
-        const cleanedExcerpt = cleanExcerpt(caption);
-
-        if (!imgSrc || imgSrc.length === 0) {
-            return;
-        }
-
-        // Update image size so we get the biggest image
-        const updatedImgSrc = increaseImageSize(imgSrc);
-
-        let cardOpts = {
-            env: {dom: new SimpleDom.Document()},
-            payload: {
-                src: updatedImgSrc,
-                caption: cleanedExcerpt
+            if (!imgSrc || imgSrc.length === 0) {
+                return;
             }
-        };
 
-        if (hasLink) {
-            const updatedHref = increaseImageSize(href);
+            // Update image size so we get the biggest image
+            const updatedImgSrc = increaseImageSize(imgSrc);
 
-            if (updatedImgSrc !== updatedHref) {
-                cardOpts.payload.href = href;
+            let cardOpts = {
+                env: {dom: new SimpleDom.Document()},
+                payload: {
+                    src: updatedImgSrc,
+                    caption: cleanedExcerpt
+                }
+            };
+
+            if (hasLink) {
+                const updatedHref = increaseImageSize(href);
+
+                if (updatedImgSrc !== updatedHref) {
+                    cardOpts.payload.href = href;
+                }
             }
-        }
 
-        const newCard = serializer.serialize(imageCard.render(cardOpts));
+            const newCard = serializer.serialize(imageCard.render(cardOpts));
 
-        $html(el).replaceWith(newCard);
-    });
+            replaceWith(el, newCard);
+        });
 
-    $html('a > img').each((i, el) => {
-        const aHref = $html(el).parent().attr('href');
-        const imgSrc = $html(el).attr('src');
-
-        const updatedaHref = increaseImageSize(aHref);
-        const updatedImgSrc = increaseImageSize(imgSrc);
-
-        // Don't touch Koenig cards
-        if ($html(el).parent().attr('class')?.includes('kg-') || $html(el).attr('class')?.includes('kg-')) {
-            return;
-        }
-
-        if (updatedaHref === updatedImgSrc) {
-            $html(el).parent().replaceWith(`<img src="${imgSrc}">`);
-        }
-    });
-
-    // Convert weird lists to real lists
-    $html('span[style*="white-space: pre"]').each((i, el) => {
-        const parent = $html(el).parent('div');
-        if (parent.html()?.includes('•') || parent.html()?.includes('&#x2022;')) {
-            parent[0].tagName = 'li';
-            parent.find('span[style*="white-space: pre"]').each((ii, ell) => {
-                $html(ell).remove();
-            });
-            parent.html(parent.html().replace('&#x2022;', '').trim());
-        }
-    });
-
-    // Wrap <li>s in <ul>
-    $html('li').each((i, el) => {
-        if ($html(el).prev('ul').length) {
-            $html(el).prev('ul').append($html(el));
-        } else {
-            $html(el).wrap('<ul></ul>');
-        }
-    });
-
-    $html('div[style*="color"][style*="font-family"][style*="font-size"][style*="white-space: pre-line"]').each((i, el) => {
-        $html(el).replaceWith(`<p>${$html(el).html().trim()}</p>`);
-    });
-
-    $html('span[style*="background-color"][style*="color"][style*="font-family"][style*="font-size"][style*="white-space: pre-line"]').each((i, el) => {
-        $html(el).replaceWith(`<p>${$html(el).html().trim()}</p>`);
-    });
-
-    $html('div[style="text-align: center;"]').each((i, el) => {
-        $html(el).replaceWith(`<p>${$html(el).html().trim()}</p>`);
-    });
-
-    $html('h1, h2, h3, h4, h5, h6').each((i, el) => {
-        const attrs = getAllAttributes(el);
-
-        const styleIndex = attrs.findIndex(e => e.name === 'style');
-        if (styleIndex > -1) {
-            if (attrs[styleIndex].value === 'text-align: left;') {
-                $html(el).removeAttr(`style`);
+        parsed.$('a > img').forEach((el) => {
+            const parentA = el.parentElement;
+            if (!parentA || parentA.tagName !== 'A') {
+                return;
             }
-        }
+
+            const aHref = parentA.getAttribute('href');
+            const imgSrc = el.getAttribute('src');
+
+            const updatedaHref = increaseImageSize(aHref);
+            const updatedImgSrc = increaseImageSize(imgSrc);
+
+            // Don't touch Koenig cards
+            if (parentA.getAttribute('class')?.includes('kg-') || el.getAttribute('class')?.includes('kg-')) {
+                return;
+            }
+
+            if (updatedaHref === updatedImgSrc) {
+                replaceWith(parentA, `<img src="${imgSrc}">`);
+            }
+        });
+
+        // Convert weird lists to real lists
+        parsed.$('span[style*="white-space: pre"]').forEach((el) => {
+            const parentDiv = el.closest('div');
+            if (!parentDiv) {
+                return;
+            }
+
+            const parentHTML = serializeChildren(parentDiv);
+            if (parentHTML.includes('•') || parentHTML.includes('&#x2022;')) {
+                // Change div to li by replacing with a new li element
+                const newLi = parsed.document.createElement('li');
+                // Copy children, remove the whitespace-pre spans
+                newLi.innerHTML = serializeChildren(parentDiv);
+                newLi.querySelectorAll('span[style*="white-space: pre"]').forEach((span) => {
+                    span.remove();
+                });
+                newLi.innerHTML = newLi.innerHTML.replace('&#x2022;', '').trim();
+                replaceWith(parentDiv, newLi);
+            }
+        });
+
+        // Wrap <li>s in <ul>
+        parsed.$('li').forEach((el) => {
+            const prevSibling = el.previousElementSibling;
+            if (prevSibling && prevSibling.tagName === 'UL') {
+                prevSibling.appendChild(el);
+            } else {
+                wrap(el, '<ul></ul>');
+            }
+        });
+
+        parsed.$('div[style*="color"][style*="font-family"][style*="font-size"][style*="white-space: pre-line"]').forEach((el) => {
+            replaceWith(el, `<p>${serializeChildren(el).trim()}</p>`);
+        });
+
+        parsed.$('span[style*="background-color"][style*="color"][style*="font-family"][style*="font-size"][style*="white-space: pre-line"]').forEach((el) => {
+            replaceWith(el, `<p>${serializeChildren(el).trim()}</p>`);
+        });
+
+        parsed.$('div[style="text-align: center;"]').forEach((el) => {
+            replaceWith(el, `<p>${serializeChildren(el).trim()}</p>`);
+        });
+
+        parsed.$('h1, h2, h3, h4, h5, h6').forEach((el) => {
+            const styleAttr = el.getAttribute('style');
+            if (styleAttr === 'text-align: left;') {
+                el.removeAttribute('style');
+            }
+        });
+
+        parsed.$('h3 b').forEach((el) => {
+            replaceWith(el, serializeChildren(el));
+        });
+
+        parsed.$('div, p').forEach((el) => {
+            const attrs = el.attributes;
+            const children = el.children;
+
+            if (serializeChildren(el).trim() === '' && attrs.length === 0) {
+                el.remove();
+            } else if (serializeChildren(el) === '&#xA0;') {
+                el.remove();
+            } else if (attrs.length === 0 && children.length === 1 && children[0].tagName === 'IMG') {
+                replaceWith(el, serializeChildren(el).trim());
+            }
+        });
+
+        parsed.$('p').forEach((el) => {
+            const innerHtml = serializeChildren(el);
+            if (innerHtml.trim() === '' || innerHtml === '&#xA0;' || innerHtml.trim() === '&nbsp;') {
+                el.remove();
+            }
+        });
+
+        parsed.$('div').forEach((el) => {
+            const attrs = el.attributes;
+            const children = el.children;
+
+            if (attrs.length === 0 && children.length === 0) {
+                replaceWith(el, `<p>${serializeChildren(el).trim()}</p>`);
+            }
+        });
+
+        parsed.$('iframe[src*="youtube.com"]').forEach((el) => {
+            el.setAttribute('width', '160');
+            el.setAttribute('height', '90');
+        });
+
+        // Convert back to plain HTML
+        return parsed.html();
     });
-
-    $html('h3 b').each((i, el) => {
-        const $el = $html(el);
-        $el.replaceWith($el.html());
-    });
-
-    $html('div, p').each((i, el) => {
-        const attrs = getAllAttributes(el);
-        const children = $html(el).children();
-
-        if ($html(el).html().trim() === '' && attrs.length === 0) {
-            $html(el).remove();
-        } else if ($html(el).html() === '&#xA0;') {
-            $html(el).remove();
-        } else if (attrs.length === 0 && children.length === 1 && children[0].name === 'img') {
-            $html(el).replaceWith($html(el).html().trim());
-        }
-    });
-
-    $html('p').each((i, el) => {
-        if ($html(el).html().trim() === '' || $html(el).html() === '&#xA0;' || $html(el).html().trim() === '&nbsp;') {
-            $html(el).remove();
-        }
-    });
-
-    $html('div').each((i, el) => {
-        const attrs = getAllAttributes(el);
-        const children = $html(el).children();
-
-        if (attrs.length === 0 && children.length === 0) {
-            $html(el).replaceWith(`<p>${$html(el).html().trim()}</p>`);
-        }
-    });
-
-    $html('iframe[src*="youtube.com"]').each((i, el) => {
-        $html(el).attr('width', 160);
-        $html(el).attr('height', 90);
-    });
-
-    // Convert back to plain HTML
-    html = $html.html();
 
     // Trim whitespace
     html = html.trim();
@@ -351,8 +355,6 @@ const processPost = async (postData, options) => {
         }
     });
 
-    // console.log(post);
-
     return post;
 };
 
@@ -394,6 +396,5 @@ export default {
 export {
     cleanExcerpt,
     slugFromURL,
-    increaseImageSize,
-    getAllAttributes
+    increaseImageSize
 };
