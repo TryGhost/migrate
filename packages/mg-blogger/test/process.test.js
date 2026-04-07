@@ -1,8 +1,7 @@
 import {createRequire} from 'node:module';
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import * as cheerio from 'cheerio';
-import process, {cleanExcerpt, slugFromURL, increaseImageSize, getAllAttributes} from '../lib/process.js';
+import process, {cleanExcerpt, slugFromURL, increaseImageSize} from '../lib/process.js';
 
 const require = createRequire(import.meta.url);
 const response = require('./fixtures/response.json');
@@ -24,19 +23,6 @@ describe('Utils', function () {
 
         assert.equal(image1, 'https://3.bp.blogspot.com/-dQmeqRna7MA/V56ZIKQmPJI/AAAAAAAAJeU/1234_abcd3YT3BmCduGnz2tE4xrlp_c1gCLcB/s2000/photo.jpg');
         assert.equal(image2, 'https://3.bp.blogspot.com/-dQmeqRna7MA/V56ZIKQmPJI/AAAAAAAAJeU/1234_abcd3YT3BmCduGnz2tE4xrlp_c1gCLcB/s2000/photo.jpg');
-    });
-
-    it('getAllAttributes', function () {
-        const $html = cheerio.load('<dib><img src="https://example.com" title="Image title" alt="Image alt" /></div>');
-        const el = $html('img');
-        const attrs = getAllAttributes(el[0]);
-
-        assert.equal(attrs[0].name, 'src');
-        assert.equal(attrs[0].value, 'https://example.com');
-        assert.equal(attrs[1].name, 'title');
-        assert.equal(attrs[1].value, 'Image title');
-        assert.equal(attrs[2].name, 'alt');
-        assert.equal(attrs[2].value, 'Image alt');
     });
 });
 
