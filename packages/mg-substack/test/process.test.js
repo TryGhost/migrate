@@ -987,6 +987,92 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         assert.ok(processed.data.html.includes('<p>My content</p>'));
     });
 
+    it('Prepends video card for free posts (no paywall)', async function () {
+        const post = {
+            data: {
+                html: '<p>Intro text</p>',
+                title: 'My Video Episode',
+                slug: 'my-video-episode',
+                video_upload_src: '/content/media/my-video.mp4',
+                mux_playback_id: 'mux-playback-test-id'
+            }
+        };
+        const url = 'https://example.substack.com';
+        const options = {};
+
+        const processed = await processContent(post, url, options);
+
+        assert.ok(processed.data.html.startsWith('<figure class="kg-card kg-video-card">'));
+        assert.ok(processed.data.html.includes('/content/media/my-video.mp4'));
+        assert.ok(processed.data.html.includes('<p>Intro text</p>'));
+        assert.equal(processed.data.video_upload_src, undefined);
+        assert.equal(processed.data.mux_playback_id, undefined);
+    });
+
+    it('Places video card after paywall marker for paid posts', async function () {
+        const post = {
+            data: {
+                html: '<p>Free preview text</p><div class="paywall-jump"></div><p>Paid content</p>',
+                title: 'Paid Video Episode',
+                slug: 'paid-video-episode',
+                video_upload_src: '/content/media/paid-video.mp4',
+                mux_playback_id: 'mux-playback-test-id'
+            }
+        };
+        const url = 'https://example.substack.com';
+        const options = {};
+
+        const processed = await processContent(post, url, options);
+
+        const html = processed.data.html;
+        const paywallIdx = html.indexOf('<!--members-only-->');
+        const videoIdx = html.indexOf('<figure class="kg-card kg-video-card">');
+
+        assert.ok(paywallIdx >= 0, 'Paywall marker should exist');
+        assert.ok(videoIdx >= 0, 'Video card should exist');
+        assert.ok(videoIdx > paywallIdx, 'Video card should be after paywall marker');
+        assert.ok(html.includes('<p>Free preview text</p>'));
+        assert.ok(html.indexOf('<p>Free preview text</p>') < paywallIdx, 'Free preview should be before paywall');
+        assert.equal(processed.data.video_upload_src, undefined);
+        assert.equal(processed.data.mux_playback_id, undefined);
+    });
+
+    it('Removes native-video-embed when no video_upload_src is available', async function () {
+        const post = {
+            data: {
+                html: '<p>Intro text</p><div class="native-video-embed"></div><p>More text</p>',
+                title: 'My Post',
+                slug: 'my-post'
+            }
+        };
+        const url = 'https://example.substack.com';
+        const options = {};
+
+        const processed = await processContent(post, url, options);
+
+        assert.ok(!processed.data.html.includes('native-video-embed'));
+        assert.ok(!processed.data.html.includes('kg-video-card'));
+        assert.equal(processed.data.html, '<p>Intro text</p><p>More text</p>');
+    });
+
+    it('Cleans up mux_playback_id even without video_upload_src', async function () {
+        const post = {
+            data: {
+                html: '<p>Regular post</p>',
+                title: 'My Post',
+                slug: 'my-post',
+                mux_playback_id: 'stale-playback-id'
+            }
+        };
+        const url = 'https://example.substack.com';
+        const options = {};
+
+        const processed = await processContent(post, url, options);
+
+        assert.equal(processed.data.mux_playback_id, undefined);
+        assert.equal(processed.data.html, '<p>Regular post</p>');
+    });
+
     it('Can remove the first image if it is the same as `og:image`', async function () {
         const post = {
             data: {

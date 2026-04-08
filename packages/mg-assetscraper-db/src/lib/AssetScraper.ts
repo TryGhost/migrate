@@ -163,34 +163,25 @@ export default class AssetScraper {
         }
     }
 
-    async getRemoteMedia(requestURL: string): Promise<RemoteMediaResponse> {
-        // Enforce http - http > https redirects are commonplace
-        const updatedRequestURL = requestURL.replace(/^\/\//g, 'http://');
-
-        // Encode to handle special characters in URLs
-        const encodedRequestURL = encodeURI(updatedRequestURL);
-
-        const fetchOptions = {
-            redirect: 'follow' as const,
-            signal: AbortSignal.timeout(60000)
-        };
+    private async fetchWithProportionalTimeout(url: string): Promise<RemoteMediaResponse> {
+        const controller = new AbortController();
+        const connectionTimer = setTimeout(() => controller.abort(), 60_000);
 
         try {
-            const response = await fetch(updatedRequestURL, fetchOptions);
+            const response = await fetch(url, {
+                redirect: 'follow' as const,
+                signal: controller.signal
+            });
 
-            const arrayBuffer = await response.arrayBuffer();
-            return {
-                body: Buffer.from(arrayBuffer),
-                headers: {
-                    'content-type': response.headers.get('content-type') ?? undefined
-                },
-                statusCode: response.status
-            };
-        } catch {
+            clearTimeout(connectionTimer);
+
+            const contentLength = parseInt(response.headers.get('content-length') || '0', 10);
+            const downloadTimeoutMs = Math.max(60_000, Math.ceil(contentLength / (1024 * 1024)) * 2000 + 30_000);
+            const downloadTimer = setTimeout(() => controller.abort(), downloadTimeoutMs);
+
             try {
-                const response = await fetch(encodedRequestURL, fetchOptions);
-
                 const arrayBuffer = await response.arrayBuffer();
+                clearTimeout(downloadTimer);
                 return {
                     body: Buffer.from(arrayBuffer),
                     headers: {
@@ -198,6 +189,28 @@ export default class AssetScraper {
                     },
                     statusCode: response.status
                 };
+            } catch (err) {
+                clearTimeout(downloadTimer);
+                throw err;
+            }
+        } catch (err) {
+            clearTimeout(connectionTimer);
+            throw err;
+        }
+    }
+
+    async getRemoteMedia(requestURL: string): Promise<RemoteMediaResponse> {
+        // Enforce http - http > https redirects are commonplace
+        const updatedRequestURL = requestURL.replace(/^\/\//g, 'http://');
+
+        // Encode to handle special characters in URLs
+        const encodedRequestURL = encodeURI(updatedRequestURL);
+
+        try {
+            return await this.fetchWithProportionalTimeout(updatedRequestURL);
+        } catch {
+            try {
+                return await this.fetchWithProportionalTimeout(encodedRequestURL);
             } catch (err: any) {
                 throw new errors.InternalServerError({message: 'Failed to get remote media', err});
             }

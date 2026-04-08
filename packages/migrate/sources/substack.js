@@ -1,4 +1,7 @@
-import {readFileSync} from 'node:fs';
+import {readFileSync, existsSync} from 'node:fs';
+import {mkdir, writeFile, rm} from 'node:fs/promises';
+import {dirname, join} from 'node:path';
+import {execFile as execFileCb, spawn} from 'node:child_process';
 import {toGhostJSON} from '@tryghost/mg-json';
 import mgHtmlLexical from '@tryghost/mg-html-lexical';
 import MgWebScraper from '@tryghost/mg-webscraper';
@@ -124,6 +127,25 @@ const postProcessor = (scrapedData, data, options) => {
     if (scrapedData.scripts) {
         let tags = [];
 
+        let substackSubdomain = null;
+
+        for (const script of scrapedData.scripts) {
+            if (script.content.trim().startsWith('window._analyticsConfig')) {
+                try {
+                    let raw = script.content.trim();
+                    raw = raw.replace(/^window\._analyticsConfig[ ]+=[ ]+JSON\.parse\(/, '');
+                    raw = raw.replace(/\)$/, '');
+                    const parsed = JSON.parse(JSON.parse(raw));
+                    if (parsed?.properties?.subdomain) {
+                        substackSubdomain = parsed.properties.subdomain.trim();
+                    }
+                } catch (_) {
+                    // subdomain extraction is best-effort
+                }
+                break;
+            }
+        }
+
         scrapedData.scripts.forEach((script) => {
             if (script.content.trim().startsWith('window._analyticsConfig')) {
                 try {
@@ -131,6 +153,10 @@ const postProcessor = (scrapedData, data, options) => {
                     theContent = theContent.replace(/^window\._analyticsConfig[ ]+=[ ]+JSON\.parse\(/, '');
                     theContent = theContent.replace(/\)$/, '');
                     theContent = JSON.parse(JSON.parse(theContent));
+
+                    if (theContent?.properties?.subdomain) {
+                        substackSubdomain = theContent.properties.subdomain.trim();
+                    }
 
                     if (theContent?.properties?.section_slug && theContent?.properties?.section_name) {
                         tags.push({
@@ -160,6 +186,16 @@ const postProcessor = (scrapedData, data, options) => {
                             }
                         });
                     });
+
+                    const videoUpload = theContent.post?.videoUpload;
+                    const videoUploadId = videoUpload?.id || theContent.post?.video_upload_id;
+                    if (videoUploadId && theContent.post?.canonical_url) {
+                        const origin = new URL(theContent.post.canonical_url).origin;
+                        scrapedData.video_upload_src = `${origin}/api/v1/video/upload/${videoUploadId}/src?type=mp4`;
+                        if (videoUpload?.mux_playback_id) {
+                            scrapedData.mux_playback_id = videoUpload.mux_playback_id;
+                        }
+                    }
                 } catch (error) {
                     console.log('Error parsing tags', script.content, error); // eslint-disable-line no-console
                 }
@@ -197,6 +233,257 @@ const skipScrape = (post) => {
     return post.data.status === 'draft';
 };
 
+const execFileAsync = (cmd, args) => {
+    return new Promise((resolve, reject) => {
+        execFileCb(cmd, args, (error, stdout) => {
+            if (error) {
+                return reject(error);
+            }
+            resolve(stdout);
+        });
+    });
+};
+
+const checkFfmpeg = async () => {
+    try {
+        await execFileAsync('ffmpeg', ['-version']);
+    } catch {
+        throw new Error('ffmpeg is required for --videoPodcasts but was not found in PATH');
+    }
+};
+
+const buildCookieHeader = (cookie) => {
+    if (!cookie) {
+        return undefined;
+    }
+    if (cookie.includes('=')) {
+        return cookie;
+    }
+    return `substack.sid=${cookie}; connect.sid=${cookie}`;
+};
+
+const spawnFfmpeg = (args) => {
+    return new Promise((resolve, reject) => {
+        const proc = spawn('ffmpeg', args, {stdio: ['ignore', 'pipe', 'pipe']});
+
+        proc.on('close', (code) => {
+            if (code === 0) {
+                resolve();
+            } else {
+                reject(new Error(`ffmpeg exited with code ${code}`));
+            }
+        });
+
+        proc.on('error', reject);
+    });
+};
+
+const parseM3u8 = (text, baseUrl) => {
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+    const resolveUrl = (url) => {
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            return url;
+        }
+        const base = new URL(baseUrl);
+        base.pathname = base.pathname.replace(/[^/]*$/, '') + url;
+        return base.toString();
+    };
+
+    const isMaster = lines.some(l => l.startsWith('#EXT-X-STREAM-INF'));
+    if (isMaster) {
+        let bestBandwidth = -1;
+        let bestUrl = null;
+
+        for (let i = 0; i < lines.length; i++) {
+            const match = lines[i].match(/#EXT-X-STREAM-INF:.*BANDWIDTH=(\d+)/);
+            if (match) {
+                const bw = parseInt(match[1], 10);
+                const url = lines[i + 1];
+                if (bw > bestBandwidth && url && !url.startsWith('#')) {
+                    bestBandwidth = bw;
+                    bestUrl = resolveUrl(url);
+                }
+            }
+        }
+
+        return {type: 'master', bestRenditionUrl: bestUrl};
+    }
+
+    const segments = [];
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith('#EXTINF')) {
+            const url = lines[i + 1];
+            if (url && !url.startsWith('#')) {
+                segments.push(resolveUrl(url));
+            }
+        }
+    }
+
+    return {type: 'media', segments};
+};
+
+const fetchM3u8Segments = async (hlsUrl) => {
+    const res = await fetch(hlsUrl);
+    if (!res.ok) {
+        throw new Error(`Failed to fetch m3u8 playlist: ${res.status}`);
+    }
+    const text = await res.text();
+    const parsed = parseM3u8(text, hlsUrl);
+
+    if (parsed.type === 'master') {
+        if (!parsed.bestRenditionUrl) {
+            throw new Error('No renditions found in master playlist');
+        }
+        const mediaRes = await fetch(parsed.bestRenditionUrl);
+        if (!mediaRes.ok) {
+            throw new Error(`Failed to fetch media playlist: ${mediaRes.status}`);
+        }
+        const mediaText = await mediaRes.text();
+        const mediaParsed = parseM3u8(mediaText, parsed.bestRenditionUrl);
+        return mediaParsed.segments;
+    }
+
+    return parsed.segments;
+};
+
+const fetchSegment = async (url, onThrottle, retries = 3) => {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        const res = await fetch(url);
+
+        if (res.status === 429 || res.status === 503) {
+            const retryAfter = parseInt(res.headers.get('retry-after') || '0', 10);
+            const backoff = retryAfter > 0
+                ? retryAfter * 1000
+                : Math.min(1000 * Math.pow(2, attempt), 30_000);
+            onThrottle?.(res.status, Math.round(backoff / 1000));
+            await new Promise(r => setTimeout(r, backoff));
+            continue;
+        }
+
+        if (!res.ok) {
+            throw new Error(`Segment failed: ${res.status}`);
+        }
+        return Buffer.from(await res.arrayBuffer());
+    }
+    throw new Error(`Segment failed after ${retries} retries (rate limited)`);
+};
+
+const downloadSegments = async (segmentUrls, tmpDir, concurrency, onProgress) => {
+    let completed = 0;
+    let throttleCount = 0;
+    const total = segmentUrls.length;
+    let index = 0;
+
+    const onThrottle = (status, delaySec) => {
+        throttleCount++;
+        onProgress?.(completed, total, `${status} throttled, waiting ${delaySec}s (${throttleCount} retries)`);
+    };
+
+    const worker = async () => {
+        while (index < total) {
+            const i = index++;
+            const segPath = join(tmpDir, `seg-${String(i).padStart(6, '0')}.ts`);
+
+            if (existsSync(segPath)) {
+                completed++;
+                onProgress?.(completed, total, null);
+                continue;
+            }
+
+            const buffer = await fetchSegment(segmentUrls[i], onThrottle);
+            await writeFile(segPath, buffer);
+            completed++;
+            onProgress?.(completed, total, null);
+        }
+    };
+
+    await Promise.all(Array.from({length: Math.min(concurrency, total)}, () => worker()));
+};
+
+const downloadVideoPodcast = async (videoUploadSrc, muxPlaybackId, slug, fileCache, cookie, concurrency, onProgress) => {
+    if (!muxPlaybackId) {
+        throw new Error('No mux_playback_id available for HLS download');
+    }
+
+    const resolved = fileCache.resolveMediaFileName(`${slug}.mp4`);
+    if (existsSync(resolved.storagePath)) {
+        return resolved.outputPath;
+    }
+
+    onProgress?.(0, 0, 'fetching video token…');
+
+    const fetchOptions = {redirect: 'manual'};
+    const cookieHeader = buildCookieHeader(cookie);
+    if (cookieHeader) {
+        fetchOptions.headers = {cookie: cookieHeader};
+    }
+
+    let redirectUrl = null;
+    for (let attempt = 0; attempt <= 5; attempt++) {
+        const response = await fetch(videoUploadSrc, fetchOptions);
+
+        if (response.status === 429 || response.status === 503) {
+            const retryAfter = parseInt(response.headers.get('retry-after') || '0', 10);
+            const backoff = retryAfter > 0
+                ? retryAfter * 1000
+                : Math.min(2000 * Math.pow(2, attempt), 60_000);
+            onProgress?.(0, 0, `token API rate limited (${response.status}), retrying in ${Math.round(backoff / 1000)}s…`);
+            await new Promise(r => setTimeout(r, backoff));
+            continue;
+        }
+
+        redirectUrl = response.headers.get('location');
+
+        if (!redirectUrl) {
+            throw new Error(`No redirect from video API (status ${response.status})`);
+        }
+        break;
+    }
+
+    if (!redirectUrl) {
+        throw new Error('Video token API rate limited after 6 attempts');
+    }
+
+    const redirectParsed = new URL(redirectUrl);
+    const token = redirectParsed.searchParams.get('token');
+
+    if (!token) {
+        throw new Error(`Could not extract Mux token from redirect URL: ${redirectUrl}`);
+    }
+
+    onProgress?.(0, 0, 'fetching playlist…');
+
+    const hlsUrl = `https://stream.mux.com/${muxPlaybackId}.m3u8?token=${token}`;
+    const segmentUrls = await fetchM3u8Segments(hlsUrl);
+
+    if (segmentUrls.length === 0) {
+        throw new Error('No segments found in HLS playlist');
+    }
+
+    const tmpDir = join(fileCache.tmpDir, `hls-${slug}`);
+    await mkdir(tmpDir, {recursive: true});
+    await mkdir(dirname(resolved.storagePath), {recursive: true});
+
+    await downloadSegments(segmentUrls, tmpDir, concurrency, onProgress);
+
+    const concatList = segmentUrls.map((_, i) =>
+        `file '${join(tmpDir, `seg-${String(i).padStart(6, '0')}.ts`)}'`
+    ).join('\n');
+    await writeFile(join(tmpDir, 'concat.txt'), concatList);
+
+    await spawnFfmpeg([
+        '-f', 'concat', '-safe', '0',
+        '-i', join(tmpDir, 'concat.txt'),
+        '-c', 'copy', '-movflags', '+faststart',
+        '-y', resolved.storagePath
+    ]);
+
+    await rm(tmpDir, {recursive: true, force: true});
+
+    return resolved.outputPath;
+};
+
 /**
  * getTasks: Steps to Migrate from Medium
  *
@@ -228,13 +515,19 @@ const getTaskRunner = (options) => {
                     tmpPath: ctx.options.tmpPath
                 });
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor, skipScrape);
+                let assetDomains = [
+                    'https://cdn.substack.com',
+                    'https://substackcdn.com',
+                    'https://substack-post-media.s3.amazonaws.com',
+                    'https://api.substack.com'
+                ];
+
+                if (options.url) {
+                    assetDomains.push(options.url);
+                }
+
                 ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
-                    domains: [
-                        'https://cdn.substack.com',
-                        'https://substackcdn.com',
-                        'https://substack-post-media.s3.amazonaws.com',
-                        'https://api.substack.com'
-                    ]
+                    domains: assetDomains
                 }, ctx);
                 await ctx.assetScraper.init();
                 ctx.linkFixer = new MgLinkFixer();
@@ -266,6 +559,79 @@ const getTaskRunner = (options) => {
                 let webScraperOptions = options;
                 webScraperOptions.concurrent = 1;
                 return makeTaskRunner(tasks, webScraperOptions);
+            }
+        },
+        {
+            title: 'Download video podcasts',
+            skip: () => !options.videoPodcasts,
+            task: async (ctx, task) => {
+                await checkFfmpeg();
+
+                const videoPosts = ctx.result.posts.filter(p => p.data?.video_upload_src);
+                if (videoPosts.length === 0) {
+                    task.output = 'No video podcasts found';
+                    return;
+                }
+
+                let downloaded = 0;
+                let failed = 0;
+                let cached = 0;
+
+                const summary = () => {
+                    const parts = [];
+                    if (downloaded) parts.push(`${downloaded} done`);
+                    if (cached) parts.push(`${cached} cached`);
+                    if (failed) parts.push(`${failed} failed`);
+                    return parts.length ? ` (${parts.join(', ')})` : '';
+                };
+
+                for (let i = 0; i < videoPosts.length; i++) {
+                    const post = videoPosts[i];
+                    const label = `[${i + 1}/${videoPosts.length}]${summary()} ${post.data.slug}`;
+
+                    const resolved = ctx.fileCache.resolveMediaFileName(`${post.data.slug}.mp4`);
+                    if (existsSync(resolved.storagePath)) {
+                        post.data.video_upload_src = resolved.outputPath;
+                        cached++;
+                        task.output = `${label}: cached`;
+                        continue;
+                    }
+
+                    task.output = `${label}: fetching video token…`;
+
+                    try {
+                        const localPath = await downloadVideoPodcast(
+                            post.data.video_upload_src,
+                            post.data.mux_playback_id,
+                            post.data.slug,
+                            ctx.fileCache,
+                            options.cookie,
+                            options.videoConc || 10,
+                            (completed, total, status) => {
+                                if (total === 0 && status) {
+                                    task.output = `${label}: ${status}`;
+                                    return;
+                                }
+                                const pct = Math.round((completed / total) * 100);
+                                const info = status ? ` | ${status}` : '';
+                                task.output = `${label}: ${completed}/${total} segments (${pct}%)${info}`;
+                            }
+                        );
+                        post.data.video_upload_src = localPath;
+                        downloaded++;
+                        task.output = `${label}: done`;
+                    } catch (err) {
+                        failed++;
+                        const hint = options.cookie ? '' : ' If this is paywalled content, re-run with --cookie <substack.sid>';
+                        ctx.errors.push({
+                            message: `Failed to download video for ${post.data.slug}: ${err.message}.${hint}`,
+                            error: err
+                        });
+                        task.output = `${label}: failed – ${err.message}`;
+                    }
+                }
+
+                task.output = `Complete:${summary()}`;
             }
         },
         {
@@ -410,5 +776,8 @@ export default {
 export {
     scrapeConfig,
     postProcessor,
-    skipScrape
+    skipScrape,
+    downloadVideoPodcast,
+    buildCookieHeader,
+    parseM3u8
 };

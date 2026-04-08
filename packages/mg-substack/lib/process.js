@@ -6,6 +6,7 @@ import errors from '@tryghost/errors';
 import SimpleDom from 'simple-dom';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
+import videoCard from '@tryghost/kg-default-cards/lib/cards/video.js';
 import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
 import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
 import fileCard from '@tryghost/kg-default-cards/lib/cards/file.js';
@@ -140,7 +141,6 @@ const processContent = (post, siteUrl, options) => {
         insertAfter(el, '<!--kg-card-end: html-->');
     });
 
-    // We don't currently handle these, so remove them to clean up the document
     parsed.$('div.native-video-embed').forEach((el) => {
         el.remove();
     });
@@ -256,6 +256,9 @@ const processContent = (post, siteUrl, options) => {
             wrapper.insertAdjacentHTML('afterbegin', cardHTML);
         }
     }
+
+    // Safety cleanup in case mux_playback_id was set without video_upload_src
+    delete post.data.mux_playback_id;
 
     parsed.$('div.tweet').forEach((el) => {
         let childAnchors = parsed.$(':scope > a', el);
@@ -762,6 +765,32 @@ const processContent = (post, siteUrl, options) => {
     // convert HTML back to a string
     const wrapper = parsed.$('.migrate-substack-wrapper')[0];
     html = serializeChildren(wrapper);
+
+    // If we have a scraped video URL, embed a video card in the content.
+    // For paid posts with a paywall marker, place it after the marker so
+    // the video stays behind the paywall in Ghost. Otherwise prepend.
+    if (post.data?.video_upload_src) {
+        debug(`Post ${post.data.slug} has video podcast from scrape`);
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: post.data.video_upload_src,
+                width: 1920,
+                height: 1080
+            }
+        };
+
+        const videoCardHTML = serializer.serialize(videoCard.render(cardOpts));
+
+        if (html.includes('<!--members-only-->')) {
+            html = html.replace('<!--members-only-->', '<!--members-only-->' + videoCardHTML);
+        } else {
+            html = videoCardHTML + html;
+        }
+
+        delete post.data.video_upload_src;
+        delete post.data.mux_playback_id;
+    }
 
     // Remove empty attributes
     html = html.replace(/=""/g, '');

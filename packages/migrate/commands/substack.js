@@ -118,6 +118,24 @@ const options = [
     },
     {
         type: 'boolean',
+        flags: '--videoPodcasts',
+        defaultValue: false,
+        desc: 'Download high-quality video podcasts via HLS (requires ffmpeg)'
+    },
+    {
+        type: 'string',
+        flags: '--cookie',
+        defaultValue: null,
+        desc: 'Session cookie for paywalled content (substack.sid for *.substack.com, or connect.sid for custom domains)'
+    },
+    {
+        type: 'number',
+        flags: '--videoConc',
+        defaultValue: 10,
+        desc: 'Number of concurrent segment downloads for video podcasts (increase for faster downloads, decrease if rate limited)'
+    },
+    {
+        type: 'boolean',
         flags: '--useMetaImage',
         defaultValue: true,
         desc: 'Use "og:image" value as the feature image'
