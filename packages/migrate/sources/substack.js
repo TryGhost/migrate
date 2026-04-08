@@ -1,5 +1,5 @@
 import {readFileSync, existsSync} from 'node:fs';
-import {mkdir, writeFile, rm} from 'node:fs/promises';
+import {mkdir, writeFile, rm, rename} from 'node:fs/promises';
 import {dirname, join} from 'node:path';
 import {execFile as execFileCb, spawn} from 'node:child_process';
 import {toGhostJSON} from '@tryghost/mg-json';
@@ -12,6 +12,7 @@ import zipIngest from '@tryghost/mg-substack';
 import {slugify} from '@tryghost/string';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {createGhostUserTasks} from '@tryghost/mg-ghost-authors';
+import errors from '@tryghost/errors';
 import prettyMilliseconds from 'pretty-ms';
 
 const scrapeConfig = {
@@ -127,25 +128,6 @@ const postProcessor = (scrapedData, data, options) => {
     if (scrapedData.scripts) {
         let tags = [];
 
-        let substackSubdomain = null;
-
-        for (const script of scrapedData.scripts) {
-            if (script.content.trim().startsWith('window._analyticsConfig')) {
-                try {
-                    let raw = script.content.trim();
-                    raw = raw.replace(/^window\._analyticsConfig[ ]+=[ ]+JSON\.parse\(/, '');
-                    raw = raw.replace(/\)$/, '');
-                    const parsed = JSON.parse(JSON.parse(raw));
-                    if (parsed?.properties?.subdomain) {
-                        substackSubdomain = parsed.properties.subdomain.trim();
-                    }
-                } catch (_) {
-                    // subdomain extraction is best-effort
-                }
-                break;
-            }
-        }
-
         scrapedData.scripts.forEach((script) => {
             if (script.content.trim().startsWith('window._analyticsConfig')) {
                 try {
@@ -153,10 +135,6 @@ const postProcessor = (scrapedData, data, options) => {
                     theContent = theContent.replace(/^window\._analyticsConfig[ ]+=[ ]+JSON\.parse\(/, '');
                     theContent = theContent.replace(/\)$/, '');
                     theContent = JSON.parse(JSON.parse(theContent));
-
-                    if (theContent?.properties?.subdomain) {
-                        substackSubdomain = theContent.properties.subdomain.trim();
-                    }
 
                     if (theContent?.properties?.section_slug && theContent?.properties?.section_name) {
                         tags.push({
@@ -194,6 +172,11 @@ const postProcessor = (scrapedData, data, options) => {
                         scrapedData.video_upload_src = `${origin}/api/v1/video/upload/${videoUploadId}/src?type=mp4`;
                         if (videoUpload?.mux_playback_id) {
                             scrapedData.mux_playback_id = videoUpload.mux_playback_id;
+                        }
+                        if (videoUpload) {
+                            scrapedData.video_duration = videoUpload.duration || 0;
+                            scrapedData.video_width = videoUpload.width || 0;
+                            scrapedData.video_height = videoUpload.height || 0;
                         }
                     }
                 } catch (error) {
@@ -248,8 +231,25 @@ const checkFfmpeg = async () => {
     try {
         await execFileAsync('ffmpeg', ['-version']);
     } catch {
-        throw new Error('ffmpeg is required for --videoPodcasts but was not found in PATH');
+        throw new errors.InternalServerError({message: 'ffmpeg is required for --videoPodcasts but was not found in PATH'});
     }
+};
+
+const probeVideo = async (filePath) => {
+    const stdout = await execFileAsync('ffprobe', [
+        '-v', 'quiet',
+        '-print_format', 'json',
+        '-show_format',
+        '-show_streams',
+        filePath
+    ]);
+    const info = JSON.parse(stdout);
+    const videoStream = info.streams?.find(s => s.codec_type === 'video');
+    return {
+        duration: parseFloat(info.format?.duration || '0'),
+        width: videoStream?.width || 0,
+        height: videoStream?.height || 0
+    };
 };
 
 const buildCookieHeader = (cookie) => {
@@ -270,7 +270,7 @@ const spawnFfmpeg = (args) => {
             if (code === 0) {
                 resolve();
             } else {
-                reject(new Error(`ffmpeg exited with code ${code}`));
+                reject(new errors.InternalServerError({message: `ffmpeg exited with code ${code}`}));
             }
         });
 
@@ -326,18 +326,18 @@ const parseM3u8 = (text, baseUrl) => {
 const fetchM3u8Segments = async (hlsUrl) => {
     const res = await fetch(hlsUrl);
     if (!res.ok) {
-        throw new Error(`Failed to fetch m3u8 playlist: ${res.status}`);
+        throw new errors.InternalServerError({message: `Failed to fetch m3u8 playlist: ${res.status}`});
     }
     const text = await res.text();
     const parsed = parseM3u8(text, hlsUrl);
 
     if (parsed.type === 'master') {
         if (!parsed.bestRenditionUrl) {
-            throw new Error('No renditions found in master playlist');
+            throw new errors.InternalServerError({message: 'No renditions found in master playlist'});
         }
         const mediaRes = await fetch(parsed.bestRenditionUrl);
         if (!mediaRes.ok) {
-            throw new Error(`Failed to fetch media playlist: ${mediaRes.status}`);
+            throw new errors.InternalServerError({message: `Failed to fetch media playlist: ${mediaRes.status}`});
         }
         const mediaText = await mediaRes.text();
         const mediaParsed = parseM3u8(mediaText, parsed.bestRenditionUrl);
@@ -348,25 +348,27 @@ const fetchM3u8Segments = async (hlsUrl) => {
 };
 
 const fetchSegment = async (url, onThrottle, retries = 3) => {
-    for (let attempt = 0; attempt <= retries; attempt++) {
+    for (let attempt = 0; attempt <= retries; attempt++) { // eslint-disable-line no-plusplus
         const res = await fetch(url);
 
         if (res.status === 429 || res.status === 503) {
             const retryAfter = parseInt(res.headers.get('retry-after') || '0', 10);
             const backoff = retryAfter > 0
                 ? retryAfter * 1000
-                : Math.min(1000 * Math.pow(2, attempt), 30_000);
+                : Math.min(1000 * Math.pow(2, attempt), 30000);
             onThrottle?.(res.status, Math.round(backoff / 1000));
-            await new Promise(r => setTimeout(r, backoff));
+            await new Promise((r) => {
+                setTimeout(r, backoff);
+            });
             continue;
         }
 
         if (!res.ok) {
-            throw new Error(`Segment failed: ${res.status}`);
+            throw new errors.InternalServerError({message: `Segment failed: ${res.status}`});
         }
         return Buffer.from(await res.arrayBuffer());
     }
-    throw new Error(`Segment failed after ${retries} retries (rate limited)`);
+    throw new errors.InternalServerError({message: `Segment failed after ${retries} retries (rate limited)`});
 };
 
 const downloadSegments = async (segmentUrls, tmpDir, concurrency, onProgress) => {
@@ -376,24 +378,25 @@ const downloadSegments = async (segmentUrls, tmpDir, concurrency, onProgress) =>
     let index = 0;
 
     const onThrottle = (status, delaySec) => {
-        throttleCount++;
+        throttleCount += 1;
         onProgress?.(completed, total, `${status} throttled, waiting ${delaySec}s (${throttleCount} retries)`);
     };
 
     const worker = async () => {
         while (index < total) {
-            const i = index++;
+            const i = index;
+            index += 1;
             const segPath = join(tmpDir, `seg-${String(i).padStart(6, '0')}.ts`);
 
             if (existsSync(segPath)) {
-                completed++;
+                completed += 1;
                 onProgress?.(completed, total, null);
                 continue;
             }
 
             const buffer = await fetchSegment(segmentUrls[i], onThrottle);
             await writeFile(segPath, buffer);
-            completed++;
+            completed += 1;
             onProgress?.(completed, total, null);
         }
     };
@@ -403,7 +406,7 @@ const downloadSegments = async (segmentUrls, tmpDir, concurrency, onProgress) =>
 
 const downloadVideoPodcast = async (videoUploadSrc, muxPlaybackId, slug, fileCache, cookie, concurrency, onProgress) => {
     if (!muxPlaybackId) {
-        throw new Error('No mux_playback_id available for HLS download');
+        throw new errors.InternalServerError({message: 'No mux_playback_id available for HLS download'});
     }
 
     const resolved = fileCache.resolveMediaFileName(`${slug}.mp4`);
@@ -420,36 +423,38 @@ const downloadVideoPodcast = async (videoUploadSrc, muxPlaybackId, slug, fileCac
     }
 
     let redirectUrl = null;
-    for (let attempt = 0; attempt <= 5; attempt++) {
+    for (let attempt = 0; attempt <= 5; attempt++) { // eslint-disable-line no-plusplus
         const response = await fetch(videoUploadSrc, fetchOptions);
 
         if (response.status === 429 || response.status === 503) {
             const retryAfter = parseInt(response.headers.get('retry-after') || '0', 10);
             const backoff = retryAfter > 0
                 ? retryAfter * 1000
-                : Math.min(2000 * Math.pow(2, attempt), 60_000);
+                : Math.min(2000 * Math.pow(2, attempt), 60000);
             onProgress?.(0, 0, `token API rate limited (${response.status}), retrying in ${Math.round(backoff / 1000)}s…`);
-            await new Promise(r => setTimeout(r, backoff));
+            await new Promise((r) => {
+                setTimeout(r, backoff);
+            });
             continue;
         }
 
         redirectUrl = response.headers.get('location');
 
         if (!redirectUrl) {
-            throw new Error(`No redirect from video API (status ${response.status})`);
+            throw new errors.InternalServerError({message: `No redirect from video API (status ${response.status})`});
         }
         break;
     }
 
     if (!redirectUrl) {
-        throw new Error('Video token API rate limited after 6 attempts');
+        throw new errors.InternalServerError({message: 'Video token API rate limited after 6 attempts'});
     }
 
     const redirectParsed = new URL(redirectUrl);
     const token = redirectParsed.searchParams.get('token');
 
     if (!token) {
-        throw new Error(`Could not extract Mux token from redirect URL: ${redirectUrl}`);
+        throw new errors.InternalServerError({message: `Could not extract Mux token from redirect URL: ${redirectUrl}`});
     }
 
     onProgress?.(0, 0, 'fetching playlist…');
@@ -458,7 +463,7 @@ const downloadVideoPodcast = async (videoUploadSrc, muxPlaybackId, slug, fileCac
     const segmentUrls = await fetchM3u8Segments(hlsUrl);
 
     if (segmentUrls.length === 0) {
-        throw new Error('No segments found in HLS playlist');
+        throw new errors.InternalServerError({message: 'No segments found in HLS playlist'});
     }
 
     const tmpDir = join(fileCache.tmpDir, `hls-${slug}`);
@@ -467,18 +472,18 @@ const downloadVideoPodcast = async (videoUploadSrc, muxPlaybackId, slug, fileCac
 
     await downloadSegments(segmentUrls, tmpDir, concurrency, onProgress);
 
-    const concatList = segmentUrls.map((_, i) =>
-        `file '${join(tmpDir, `seg-${String(i).padStart(6, '0')}.ts`)}'`
-    ).join('\n');
+    const concatList = segmentUrls.map((_, i) => `file '${join(tmpDir, `seg-${String(i).padStart(6, '0')}.ts`)}'`).join('\n');
     await writeFile(join(tmpDir, 'concat.txt'), concatList);
 
+    const tmpMp4 = join(tmpDir, `${slug}.mp4`);
     await spawnFfmpeg([
         '-f', 'concat', '-safe', '0',
         '-i', join(tmpDir, 'concat.txt'),
         '-c', 'copy', '-movflags', '+faststart',
-        '-y', resolved.storagePath
+        '-y', tmpMp4
     ]);
 
+    await rename(tmpMp4, resolved.storagePath);
     await rm(tmpDir, {recursive: true, force: true});
 
     return resolved.outputPath;
@@ -567,6 +572,8 @@ const getTaskRunner = (options) => {
             task: async (ctx, task) => {
                 await checkFfmpeg();
 
+                ctx.videoMeta = {};
+
                 const videoPosts = ctx.result.posts.filter(p => p.data?.video_upload_src);
                 if (videoPosts.length === 0) {
                     task.output = 'No video podcasts found';
@@ -579,9 +586,15 @@ const getTaskRunner = (options) => {
 
                 const summary = () => {
                     const parts = [];
-                    if (downloaded) parts.push(`${downloaded} done`);
-                    if (cached) parts.push(`${cached} cached`);
-                    if (failed) parts.push(`${failed} failed`);
+                    if (downloaded) {
+                        parts.push(`${downloaded} done`);
+                    }
+                    if (cached) {
+                        parts.push(`${cached} cached`);
+                    }
+                    if (failed) {
+                        parts.push(`${failed} failed`);
+                    }
                     return parts.length ? ` (${parts.join(', ')})` : '';
                 };
 
@@ -592,7 +605,31 @@ const getTaskRunner = (options) => {
                     const resolved = ctx.fileCache.resolveMediaFileName(`${post.data.slug}.mp4`);
                     if (existsSync(resolved.storagePath)) {
                         post.data.video_upload_src = resolved.outputPath;
-                        cached++;
+                        cached += 1;
+
+                        let duration = post.data.video_duration || 0;
+                        let width = post.data.video_width || 0;
+                        let height = post.data.video_height || 0;
+
+                        if (!duration || !width || !height) {
+                            try {
+                                task.output = `${label}: cached, probing metadata…`;
+                                const probed = await probeVideo(resolved.storagePath);
+                                duration = duration || probed.duration;
+                                width = width || probed.width;
+                                height = height || probed.height;
+                            } catch {
+                                // ffprobe failed, use whatever we have
+                            }
+                        }
+
+                        ctx.videoMeta[post.data.slug] = {
+                            duration,
+                            width,
+                            height,
+                            fileName: `${post.data.slug}.mp4`
+                        };
+
                         task.output = `${label}: cached`;
                         continue;
                     }
@@ -618,10 +655,33 @@ const getTaskRunner = (options) => {
                             }
                         );
                         post.data.video_upload_src = localPath;
-                        downloaded++;
+                        downloaded += 1;
+
+                        let duration = post.data.video_duration || 0;
+                        let width = post.data.video_width || 0;
+                        let height = post.data.video_height || 0;
+
+                        if (!duration || !width || !height) {
+                            try {
+                                const probed = await probeVideo(resolved.storagePath);
+                                duration = duration || probed.duration;
+                                width = width || probed.width;
+                                height = height || probed.height;
+                            } catch {
+                                // ffprobe failed, use whatever we have
+                            }
+                        }
+
+                        ctx.videoMeta[post.data.slug] = {
+                            duration,
+                            width,
+                            height,
+                            fileName: `${post.data.slug}.mp4`
+                        };
+
                         task.output = `${label}: done`;
                     } catch (err) {
-                        failed++;
+                        failed += 1;
                         const hint = options.cookie ? '' : ' If this is paywalled content, re-run with --cookie <substack.sid>';
                         ctx.errors.push({
                             message: `Failed to download video for ${post.data.slug}: ${err.message}.${hint}`,
@@ -703,6 +763,59 @@ const getTaskRunner = (options) => {
                 } catch (error) {
                     ctx.errors.push({message: 'Failed to convert HTML to Lexical', error});
                     throw error;
+                }
+            }
+        },
+        {
+            title: 'Enrich video card metadata',
+            skip: () => !options.videoPodcasts,
+            task: (ctx) => {
+                if (!ctx.videoMeta || Object.keys(ctx.videoMeta).length === 0) {
+                    return;
+                }
+
+                // Match how mg-html-lexical resolves the posts array
+                let posts = ctx.result?.posts || [];
+                if (!posts.length && ctx.result?.data?.posts) {
+                    posts = ctx.result.data.posts;
+                }
+                if (!posts.length && ctx.result?.db?.[0]?.data?.posts) {
+                    posts = ctx.result.db[0].data.posts;
+                }
+
+                for (const post of posts) {
+                    const meta = ctx.videoMeta[post.slug];
+                    if (!meta || !post.lexical) {
+                        continue;
+                    }
+
+                    try {
+                        const lexical = JSON.parse(post.lexical);
+
+                        for (const node of lexical.root.children) {
+                            if (node.type === 'video') {
+                                node.duration = meta.duration || 0;
+                                node.fileName = meta.fileName || '';
+                                node.mimeType = 'video/mp4';
+                                if (meta.width) {
+                                    node.width = meta.width;
+                                }
+                                if (meta.height) {
+                                    node.height = meta.height;
+                                }
+                                if (post.feature_image) {
+                                    node.thumbnailSrc = post.feature_image;
+                                    node.thumbnailWidth = meta.width || node.width;
+                                    node.thumbnailHeight = meta.height || node.height;
+                                }
+                                break;
+                            }
+                        }
+
+                        post.lexical = JSON.stringify(lexical);
+                    } catch {
+                        // skip posts where lexical parsing fails
+                    }
                 }
             }
         },

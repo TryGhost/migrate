@@ -775,8 +775,8 @@ const processContent = (post, siteUrl, options) => {
             env: {dom: new SimpleDom.Document()},
             payload: {
                 src: post.data.video_upload_src,
-                width: 1920,
-                height: 1080
+                width: post.data.video_width || 1920,
+                height: post.data.video_height || 1080
             }
         };
 
@@ -790,6 +790,9 @@ const processContent = (post, siteUrl, options) => {
 
         delete post.data.video_upload_src;
         delete post.data.mux_playback_id;
+        delete post.data.video_duration;
+        delete post.data.video_width;
+        delete post.data.video_height;
     }
 
     // Remove empty attributes
@@ -859,6 +862,16 @@ const processPost = (post, siteUrl, options) => {
             data: {
                 slug: `hash-substack-access-${visibilitySlug}`,
                 name: `#substack-access-${visibilitySlug}`
+            }
+        });
+    }
+
+    if (post.data?.video_upload_src) {
+        post.data.tags.push({
+            url: 'migrator-added-tag-substack-video-podcast',
+            data: {
+                slug: 'hash-substack-video-podcast',
+                name: '#substack-video-podcast'
             }
         });
     }
