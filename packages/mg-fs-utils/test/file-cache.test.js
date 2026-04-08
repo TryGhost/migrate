@@ -628,6 +628,187 @@ describe('emptyCacheDir', function () {
     });
 });
 
+describe('emptyCacheDirSelective', function () {
+    let fileCache;
+    let tmpPath;
+
+    beforeEach(function () {
+        delete process.env.CACHE_PATH;
+        tmpPath = join(tmpdir(), `fc-selective-test-${Date.now()}`);
+        fileCache = new FileCache('test', {tmpPath});
+    });
+
+    afterEach(async function () {
+        rmSync(tmpPath, {recursive: true, force: true});
+    });
+
+    it('Returns empty result when cache base dir does not exist', async function () {
+        const result = await fileCache.emptyCacheDirSelective({scrape: true, assets: true});
+
+        assert.ok(result.directory.endsWith('mg/'));
+        assert.deepEqual(result.files, []);
+    });
+
+    it('Clears tmp/ JSON files but preserves assets-cache/ when scrape=true', async function () {
+        fileCache.cacheDir; // eslint-disable-line no-unused-expressions
+
+        await fileCache.writeTmpFile({page: 1}, 'scraped-page');
+        await fileCache.writeTmpFile({page: 2}, 'api-response');
+
+        const assetsCacheDir = join(fileCache.tmpDir, 'assets-cache');
+        mkdirSync(assetsCacheDir, {recursive: true});
+        writeFileSync(join(assetsCacheDir, 'assets.db'), 'fake-db');
+
+        const result = await fileCache.emptyCacheDirSelective({scrape: true});
+
+        assert.ok(result.files.length >= 2);
+        assert.ok(!existsSync(join(fileCache.tmpDir, 'scraped-page.json')));
+        assert.ok(!existsSync(join(fileCache.tmpDir, 'api-response.json')));
+        assert.ok(existsSync(join(assetsCacheDir, 'assets.db')));
+    });
+
+    it('Clears all content dirs and tmp/assets-cache/ when assets=true', async function () {
+        fileCache.cacheDir; // eslint-disable-line no-unused-expressions
+
+        await fileCache.writeTmpFile({page: 1}, 'scraped-page');
+
+        writeFileSync(join(fileCache.imageDir, 'photo.jpg'), 'fake-image');
+        writeFileSync(join(fileCache.mediaDir, 'clip.mp4'), 'fake-video');
+        writeFileSync(join(fileCache.filesDir, 'doc.pdf'), 'fake-pdf');
+
+        const assetsCacheDir = join(fileCache.tmpDir, 'assets-cache');
+        mkdirSync(assetsCacheDir, {recursive: true});
+        writeFileSync(join(assetsCacheDir, 'assets.db'), 'fake-db');
+
+        const result = await fileCache.emptyCacheDirSelective({assets: true});
+
+        assert.ok(result.files.length >= 4);
+        assert.ok(!existsSync(fileCache.imageDir));
+        assert.ok(!existsSync(fileCache.mediaDir));
+        assert.ok(!existsSync(fileCache.filesDir));
+        assert.ok(!existsSync(assetsCacheDir));
+        assert.ok(existsSync(join(fileCache.tmpDir, 'scraped-page.json')));
+    });
+
+    it('Clears only images when images=true', async function () {
+        fileCache.cacheDir; // eslint-disable-line no-unused-expressions
+
+        writeFileSync(join(fileCache.imageDir, 'photo.jpg'), 'fake-image');
+        writeFileSync(join(fileCache.mediaDir, 'clip.mp4'), 'fake-video');
+        writeFileSync(join(fileCache.filesDir, 'doc.pdf'), 'fake-pdf');
+
+        const result = await fileCache.emptyCacheDirSelective({images: true});
+
+        assert.equal(result.files.length, 1);
+        assert.ok(!existsSync(fileCache.imageDir));
+        assert.ok(existsSync(join(fileCache.mediaDir, 'clip.mp4')));
+        assert.ok(existsSync(join(fileCache.filesDir, 'doc.pdf')));
+    });
+
+    it('Clears only media when media=true', async function () {
+        fileCache.cacheDir; // eslint-disable-line no-unused-expressions
+
+        writeFileSync(join(fileCache.imageDir, 'photo.jpg'), 'fake-image');
+        writeFileSync(join(fileCache.mediaDir, 'clip.mp4'), 'fake-video');
+        writeFileSync(join(fileCache.filesDir, 'doc.pdf'), 'fake-pdf');
+
+        const result = await fileCache.emptyCacheDirSelective({media: true});
+
+        assert.equal(result.files.length, 1);
+        assert.ok(existsSync(join(fileCache.imageDir, 'photo.jpg')));
+        assert.ok(!existsSync(fileCache.mediaDir));
+        assert.ok(existsSync(join(fileCache.filesDir, 'doc.pdf')));
+    });
+
+    it('Clears only files when files=true', async function () {
+        fileCache.cacheDir; // eslint-disable-line no-unused-expressions
+
+        writeFileSync(join(fileCache.imageDir, 'photo.jpg'), 'fake-image');
+        writeFileSync(join(fileCache.mediaDir, 'clip.mp4'), 'fake-video');
+        writeFileSync(join(fileCache.filesDir, 'doc.pdf'), 'fake-pdf');
+
+        const result = await fileCache.emptyCacheDirSelective({files: true});
+
+        assert.equal(result.files.length, 1);
+        assert.ok(existsSync(join(fileCache.imageDir, 'photo.jpg')));
+        assert.ok(existsSync(join(fileCache.mediaDir, 'clip.mp4')));
+        assert.ok(!existsSync(fileCache.filesDir));
+    });
+
+    it('Combines granular flags to clear multiple content types', async function () {
+        fileCache.cacheDir; // eslint-disable-line no-unused-expressions
+
+        writeFileSync(join(fileCache.imageDir, 'photo.jpg'), 'fake-image');
+        writeFileSync(join(fileCache.mediaDir, 'clip.mp4'), 'fake-video');
+        writeFileSync(join(fileCache.filesDir, 'doc.pdf'), 'fake-pdf');
+
+        const result = await fileCache.emptyCacheDirSelective({images: true, media: true});
+
+        assert.equal(result.files.length, 2);
+        assert.ok(!existsSync(fileCache.imageDir));
+        assert.ok(!existsSync(fileCache.mediaDir));
+        assert.ok(existsSync(join(fileCache.filesDir, 'doc.pdf')));
+    });
+
+    it('Granular flags do not clear asset cache DB', async function () {
+        fileCache.cacheDir; // eslint-disable-line no-unused-expressions
+
+        writeFileSync(join(fileCache.imageDir, 'photo.jpg'), 'fake-image');
+
+        const assetsCacheDir = join(fileCache.tmpDir, 'assets-cache');
+        mkdirSync(assetsCacheDir, {recursive: true});
+        writeFileSync(join(assetsCacheDir, 'assets.db'), 'fake-db');
+
+        await fileCache.emptyCacheDirSelective({images: true});
+
+        assert.ok(!existsSync(fileCache.imageDir));
+        assert.ok(existsSync(join(assetsCacheDir, 'assets.db')));
+    });
+
+    it('Clears both scrape and assets when both flags are true', async function () {
+        fileCache.cacheDir; // eslint-disable-line no-unused-expressions
+
+        await fileCache.writeTmpFile({page: 1}, 'scraped-page');
+        writeFileSync(join(fileCache.imageDir, 'photo.jpg'), 'fake-image');
+
+        const assetsCacheDir = join(fileCache.tmpDir, 'assets-cache');
+        mkdirSync(assetsCacheDir, {recursive: true});
+        writeFileSync(join(assetsCacheDir, 'assets.db'), 'fake-db');
+
+        const result = await fileCache.emptyCacheDirSelective({scrape: true, assets: true});
+
+        assert.ok(result.files.length >= 3);
+        assert.ok(!existsSync(join(fileCache.tmpDir, 'scraped-page.json')));
+        assert.ok(!existsSync(fileCache.imageDir));
+        assert.ok(!existsSync(assetsCacheDir));
+    });
+
+    it('Does not delete anything when no flags are set', async function () {
+        fileCache.cacheDir; // eslint-disable-line no-unused-expressions
+
+        await fileCache.writeTmpFile({page: 1}, 'scraped-page');
+        writeFileSync(join(fileCache.imageDir, 'photo.jpg'), 'fake-image');
+
+        const result = await fileCache.emptyCacheDirSelective({});
+
+        assert.deepEqual(result.files, []);
+        assert.ok(existsSync(join(fileCache.tmpDir, 'scraped-page.json')));
+        assert.ok(existsSync(join(fileCache.imageDir, 'photo.jpg')));
+    });
+
+    it('Preserves zip/ghost-import.json when only assets=true', async function () {
+        fileCache.cacheDir; // eslint-disable-line no-unused-expressions
+
+        const importData = {db: [{data: {posts: []}}]};
+        await fileCache.writeGhostImportFile(importData);
+        writeFileSync(join(fileCache.imageDir, 'photo.jpg'), 'fake-image');
+
+        await fileCache.emptyCacheDirSelective({assets: true});
+
+        assert.ok(existsSync(join(fileCache.zipDir, 'ghost-import.json')));
+    });
+});
+
 describe('resolveFileName character handling', function () {
     it('Will not shortern the storage path is too long', async function () {
         let fileCache = new FileCache('test');

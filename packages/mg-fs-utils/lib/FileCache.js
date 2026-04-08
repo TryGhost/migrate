@@ -454,6 +454,83 @@ export default class FileCache {
     }
 
     /**
+     * Selectively empties parts of the cache across all migration directories.
+     *
+     * @param {Object} options
+     * @param {boolean} options.scrape - Clear web scraping / API response cache (tmp/ files, excluding assets-cache/)
+     * @param {boolean} options.assets - Clear all downloaded assets and the asset cache DB (shorthand for images+media+files+db)
+     * @param {boolean} options.images - Clear downloaded images only (zip/content/images)
+     * @param {boolean} options.media - Clear downloaded media only, e.g. video/audio (zip/content/media)
+     * @param {boolean} options.files - Clear downloaded files only, e.g. PDFs (zip/content/files)
+     */
+    async emptyCacheDirSelective({scrape = false, assets = false, images = false, media = false, files = false} = {}) {
+        const directory = this.cacheBaseDir + '/';
+        let deletedItems = [];
+
+        if (!existsSync(directory)) {
+            return {directory, files: deletedItems};
+        }
+
+        const migrationDirs = readdirSync(directory)
+            .map(name => join(directory, name))
+            .filter(item => lstatSync(item).isDirectory());
+
+        const clearImages = assets || images;
+        const clearMedia = assets || media;
+        const clearFiles = assets || files;
+
+        for (const migrationDir of migrationDirs) {
+            if (scrape) {
+                const tmpDir = join(migrationDir, 'tmp');
+                if (existsSync(tmpDir)) {
+                    for (const entry of readdirSync(tmpDir)) {
+                        if (entry === 'assets-cache') {
+                            continue;
+                        }
+                        const entryPath = join(tmpDir, entry);
+                        rmSync(entryPath, {recursive: true});
+                        deletedItems.push(entryPath);
+                    }
+                }
+            }
+
+            if (clearImages) {
+                const imagesDir = join(migrationDir, 'zip', 'content', 'images');
+                if (existsSync(imagesDir)) {
+                    rmSync(imagesDir, {recursive: true});
+                    deletedItems.push(imagesDir);
+                }
+            }
+
+            if (clearMedia) {
+                const mediaDir = join(migrationDir, 'zip', 'content', 'media');
+                if (existsSync(mediaDir)) {
+                    rmSync(mediaDir, {recursive: true});
+                    deletedItems.push(mediaDir);
+                }
+            }
+
+            if (clearFiles) {
+                const filesDir = join(migrationDir, 'zip', 'content', 'files');
+                if (existsSync(filesDir)) {
+                    rmSync(filesDir, {recursive: true});
+                    deletedItems.push(filesDir);
+                }
+            }
+
+            if (assets) {
+                const assetsCacheDir = join(migrationDir, 'tmp', 'assets-cache');
+                if (existsSync(assetsCacheDir)) {
+                    rmSync(assetsCacheDir, {recursive: true});
+                    deletedItems.push(assetsCacheDir);
+                }
+            }
+        }
+
+        return {directory, files: deletedItems};
+    }
+
+    /**
      * Empties the local cache directory
      */
     async emptyCacheDir() {

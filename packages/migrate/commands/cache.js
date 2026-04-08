@@ -17,6 +17,36 @@ const desc = 'Clear local migration cache';
 const options = [
     {
         type: 'boolean',
+        flags: '--scrape',
+        defaultValue: false,
+        desc: 'Clear the web scraping & API response cache'
+    },
+    {
+        type: 'boolean',
+        flags: '--assets',
+        defaultValue: false,
+        desc: 'Clear all downloaded assets and the asset cache database'
+    },
+    {
+        type: 'boolean',
+        flags: '--images',
+        defaultValue: false,
+        desc: 'Clear downloaded images only'
+    },
+    {
+        type: 'boolean',
+        flags: '--media',
+        defaultValue: false,
+        desc: 'Clear downloaded media only (video, audio)'
+    },
+    {
+        type: 'boolean',
+        flags: '--files',
+        defaultValue: false,
+        desc: 'Clear downloaded files only (PDFs, etc.)'
+    },
+    {
+        type: 'boolean',
         flags: '-V --verbose',
         defaultValue: Boolean(process?.env?.DEBUG),
         desc: 'Show verbose output'
@@ -32,12 +62,42 @@ const setup = sywac => convertOptionsToSywac(options, sywac);
 // What to do when this command is executed
 const run = async (argv) => {
     try {
-        let fsCache = new fsUtils.FileCache('test.dev', 'yolo');
+        let fsCache = new fsUtils.FileCache('test.dev', {});
         let cacheDir = fsCache.cacheBaseDir;
 
-        ui.log.info(`Emptying the directory located at: ${cacheDir}/`);
+        const selective = argv.scrape || argv.assets || argv.images || argv.media || argv.files;
+        let clear;
 
-        const clear = await fsCache.emptyCacheDir();
+        if (selective) {
+            const types = [];
+            if (argv.scrape) {
+                types.push('scrape');
+            }
+            if (argv.assets) {
+                types.push('assets');
+            }
+            if (argv.images) {
+                types.push('images');
+            }
+            if (argv.media) {
+                types.push('media');
+            }
+            if (argv.files) {
+                types.push('files');
+            }
+
+            ui.log.info(`Clearing cache (${types.join(', ')}) in: ${cacheDir}/`);
+            clear = await fsCache.emptyCacheDirSelective({
+                scrape: argv.scrape,
+                assets: argv.assets,
+                images: argv.images,
+                media: argv.media,
+                files: argv.files
+            });
+        } else {
+            ui.log.info(`Emptying the directory located at: ${cacheDir}/`);
+            clear = await fsCache.emptyCacheDir();
+        }
 
         if (argv.verbose) {
             clear.files.forEach((item) => {
