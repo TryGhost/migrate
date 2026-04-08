@@ -48,8 +48,8 @@ importers:
         specifier: 7.0.1
         version: 7.0.1
       log-update:
-        specifier: 7.2.0
-        version: 7.2.0
+        specifier: 8.0.0
+        version: 8.0.0
       strip-ansi:
         specifier: 7.2.0
         version: 7.2.0
@@ -5677,9 +5677,9 @@ packages:
     resolution: {integrity: sha512-9ie8ItPR6tjY5uYJh8K/Zrv/RMZ5VOlOWvtZdEHYSTFKZfIBPQa9tOAEeAWhd+AnIneLJ22w5fjOYtoutpWq5w==}
     engines: {node: '>=18'}
 
-  log-update@7.2.0:
-    resolution: {integrity: sha512-iLs7dGSyjZiUgvrUvuD3FndAxVJk+TywBkkkwUSm9HdYoskJalWg5qVsEiXeufPvRVPbCUmNQewg798rx+sPXg==}
-    engines: {node: '>=20'}
+  log-update@8.0.0:
+    resolution: {integrity: sha512-lddSgOt3bPASrylL54ZSpy8nBHns+vBVSoILlVOx+dei300pnLRN958rj/EdlVLKuWlSESU3qdnDZdAI7FXYGg==}
+    engines: {node: '>=22'}
 
   long-timeout@0.1.1:
     resolution: {integrity: sha512-BFRuQUqc7x2NWxfJBCyUrN8iYUYznzL9JROmRz1gZ6KlOIgmoD+njPVbb+VNn2nGMKggMsK79iUNErillsrx7w==}
@@ -12107,11 +12107,12 @@ snapshots:
       strip-ansi: 7.2.0
       wrap-ansi: 9.0.2
 
-  log-update@7.2.0:
+  log-update@8.0.0:
     dependencies:
       ansi-escapes: 7.3.0
       cli-cursor: 5.0.0
-      slice-ansi: 8.0.0
+      slice-ansi: 9.0.0
+      string-width: 8.2.0
       strip-ansi: 7.2.0
       wrap-ansi: 10.0.0
 
