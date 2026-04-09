@@ -837,8 +837,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2
       inquirer:
-        specifier: 13.3.2
-        version: 13.3.2(@types/node@24.12.2)
+        specifier: 13.4.0
+        version: 13.4.0(@types/node@24.12.2)
       ora:
         specifier: 9.3.0
         version: 9.3.0
@@ -5197,8 +5197,8 @@ packages:
   inline-style-parser@0.2.7:
     resolution: {integrity: sha512-Nb2ctOyNR8DqQoR0OwRG95uNWIC0C1lCgf5Naz5H6Ji72KZ8OcFZLz2P5sNgwlyoJ8Yif11oMuYs5pBQa86csA==}
 
-  inquirer@13.3.2:
-    resolution: {integrity: sha512-bh/OjBGxNR9qvfQj1n5bxtIF58mbOTp2InN5dKuwUK03dXcDGFsjlDinQRuXMZ4EGiJaFieUWHCAaxH2p7iUBw==}
+  inquirer@13.4.0:
+    resolution: {integrity: sha512-/RH0u1Jk6kI7hv07SIhYRxuLwKySNLs/QNUsrOtvz+EqixkB3WVtpgNPqQuQ7fqSKSp5dv5f2H0ZXOvSQU7JTg==}
     engines: {node: '>=23.5.0 || ^22.13.0 || ^21.7.0 || ^20.12.0'}
     peerDependencies:
       '@types/node': '>=18'
@@ -11646,7 +11646,7 @@ snapshots:
 
   inline-style-parser@0.2.7: {}
 
-  inquirer@13.3.2(@types/node@24.12.2):
+  inquirer@13.4.0(@types/node@24.12.2):
     dependencies:
       '@inquirer/ansi': 2.0.5
       '@inquirer/core': 11.1.8(@types/node@24.12.2)
