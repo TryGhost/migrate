@@ -17,7 +17,6 @@
     "dev": "echo \"Implement me!\"",
     "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",
     "build": "rm -rf build && rm -rf tsconfig.tsbuildinfo && tsc --build --sourceMap",
-    "prepare": "pnpm build",
     "lint": "eslint src/ --ext .ts --cache",
     "posttest": "pnpm lint",
     "test": "rm -rf build && pnpm build --force && c8 --src src --all --check-coverage --100 --reporter text --reporter cobertura node --test build/test/*.test.js"
