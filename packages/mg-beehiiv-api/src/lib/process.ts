@@ -119,6 +119,8 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
             const outerDiv = parent.parentElement;
             const target = outerDiv && outerDiv.tagName === 'DIV' ? outerDiv : parent;
             replaceWith(target, serializer.serialize(imageCard.render(cardOpts)));
+        } else if (parent.tagName === 'A') {
+            replaceWith(parent, serializer.serialize(imageCard.render(cardOpts)));
         } else {
             el.remove();
             insertAfter(parent, serializer.serialize(imageCard.render(cardOpts)));
@@ -287,22 +289,23 @@ const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string, featureS
         const hasImg = !isImg && parsed.$('img', firstElement).length > 0;
 
         if (isImg || hasImg) {
-            let theElementItself = isImg ? firstElement : parsed.$('img', firstElement)[0];
-            let firstImgSrc: any = attr(theElementItself, 'src');
+            let theImgElement = isImg ? firstElement : parsed.$('img', firstElement)[0];
+            let removeTarget = isImg ? firstElement : firstElement;
+            let firstImgSrc: any = attr(theImgElement, 'src');
 
             // Both images usually end in the same way, so we can split the URL and compare the last part
             const firstImageSplit = firstImgSrc.split('/uploads/asset/');
             const featureImageSplit = featureSrc.split('/uploads/asset/');
 
             if (firstImageSplit[1] !== undefined && featureImageSplit[1] !== undefined && firstImageSplit[1] === featureImageSplit[1]) {
-                theElementItself.remove();
+                removeTarget.remove();
             }
 
             if (featureSrc.length > 0 && firstImgSrc) {
                 let normalizedFirstSrc = firstImgSrc.replace('fit=scale-down,format=auto,onerror=redirect,quality=80', 'quality=100');
 
                 if (featureSrc === normalizedFirstSrc) {
-                    theElementItself.remove();
+                    removeTarget.remove();
                 }
             }
         }

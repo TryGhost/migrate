@@ -228,6 +228,12 @@ describe('beehiiv API processor', () => {
             assert.equal(result, '<p>Text  more text</p><figure class="kg-card kg-image-card"><img src="https://example.com/img.jpg" class="kg-image" alt loading="lazy"></figure>');
         });
 
+        it('replaces anchor-wrapped image with image card without leaving empty anchor', () => {
+            const html = '<div id="content-blocks"><a href="https://example.com/full.jpg"><img src="https://example.com/img.jpg" alt="Photo" /></a></div>';
+            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            assert.equal(result, '<figure class="kg-card kg-image-card"><img src="https://example.com/img.jpg" class="kg-image" alt="Photo" loading="lazy"></figure>');
+        });
+
         it('converts sponsored content tables to Ghost HTML cards with text in p tags', () => {
             const html = `<div id="content-blocks"><div style="padding: 8px 5px 8px 5px;"><table bgcolor="#1A4D3A" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:25px 0; border-radius:20px;"><tbody><tr><td align="center" style="padding: 50px 30px;"><div style="color:#1A4D3A; font-size:12px; font-weight:bold; background:#FFFFFF; padding:5px 12px; border-radius:15px; display:inline-block; margin-bottom:20px;"> Sponsored Content </div><br><br><h2 style="color:#FEFEFE;"> Ad Heading </h2><br><br><div style="text-align: center;"><a href="https://example.com"><img src="https://example.com/ad.jpg" alt="Ad image" style="width: 400px;"></a></div><br><br><div style="font-size:20px; line-height:1.6; text-align: left; color: #FEFEFE;"> Some ad text </div><a href="https://example.com" style="display:inline-block; background:#F9FFF6; color:#1A4D3A;">Learn more</a></td></tr></tbody></table></div></div>`;
             const result = processHTML({post: {url: 'test', data: {html}} as any});
@@ -316,11 +322,11 @@ describe('beehiiv API processor', () => {
             assert.equal(result, '<img src="https://example.com/different-image.jpg">');
         });
 
-        it('handles image wrapped in another element', () => {
+        it('removes wrapper element when image inside it matches feature image', () => {
             const html = '<figure><img src="https://example.com/uploads/asset/file/123/image.jpg" /></figure>';
             const featureSrc = 'https://cdn.example.com/uploads/asset/file/123/image.jpg';
             const result = removeDuplicateFeatureImage({html, featureSrc});
-            assert.equal(result, '<figure></figure>');
+            assert.equal(result, '');
         });
 
         it('handles html without images', () => {
