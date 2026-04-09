@@ -9,6 +9,8 @@ const __dirname = new URL('.', import.meta.url).pathname;
 const packageJSON = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8'));
 
 import beehiivCommands from '../commands/beehiiv.js';
+import beehiivApiCommands from '../commands/beehiiv-api.js';
+import beehiivApiMembersCommands from '../commands/beehiiv-api-members.js';
 import beehiivMembersCommands from '../commands/beehiiv-members.js';
 import bloggerCommands from '../commands/blogger.js';
 import buttondownCommands from '../commands/buttondown.js';
@@ -49,6 +51,8 @@ const prettyCLI = Api.get()
 prettyCLI.preface('Command line utilities for migrating content to Ghost.');
 
 prettyCLI.command(beehiivCommands);
+prettyCLI.command(beehiivApiCommands);
+prettyCLI.command(beehiivApiMembersCommands);
 prettyCLI.command(beehiivMembersCommands);
 prettyCLI.command(bloggerCommands);
 prettyCLI.command(buttondownCommands);

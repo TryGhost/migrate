@@ -38,6 +38,8 @@
     "@tryghost/mg-assetscraper-db": "workspace:*",
     "@tryghost/mg-beehiiv": "workspace:*",
     "@tryghost/mg-beehiiv-members": "workspace:*",
+    "@tryghost/mg-beehiiv-api": "workspace:*",
+    "@tryghost/mg-beehiiv-api-members": "workspace:*",
     "@tryghost/mg-blogger": "workspace:*",
     "@tryghost/mg-buttondown": "workspace:*",
     "@tryghost/mg-chorus": "workspace:*",
