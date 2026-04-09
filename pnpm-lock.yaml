@@ -106,8 +106,8 @@ importers:
         specifier: 11.0.0
         version: 11.0.0
       dotenv:
-        specifier: 17.4.0
-        version: 17.4.0
+        specifier: 17.4.1
+        version: 17.4.1
       eslint:
         specifier: 8.57.1
         version: 8.57.1
@@ -167,8 +167,8 @@ importers:
         specifier: 11.0.0
         version: 11.0.0
       dotenv:
-        specifier: 17.4.0
-        version: 17.4.0
+        specifier: 17.4.1
+        version: 17.4.1
       eslint:
         specifier: 8.57.1
         version: 8.57.1
@@ -284,8 +284,8 @@ importers:
         specifier: 11.0.0
         version: 11.0.0
       dotenv:
-        specifier: 17.4.0
-        version: 17.4.0
+        specifier: 17.4.1
+        version: 17.4.1
       eslint:
         specifier: 8.57.1
         version: 8.57.1
@@ -445,8 +445,8 @@ importers:
         specifier: 6.2.1
         version: 6.2.1
       dotenv:
-        specifier: 17.4.0
-        version: 17.4.0
+        specifier: 17.4.1
+        version: 17.4.1
       fs-extra:
         specifier: 11.3.4
         version: 11.3.4
@@ -871,8 +871,8 @@ importers:
         specifier: 11.0.0
         version: 11.0.0
       dotenv:
-        specifier: 17.4.0
-        version: 17.4.0
+        specifier: 17.4.1
+        version: 17.4.1
       eslint:
         specifier: 8.57.1
         version: 8.57.1
@@ -4450,6 +4450,10 @@ packages:
 
   dotenv@17.4.0:
     resolution: {integrity: sha512-kCKF62fwtzwYm0IGBNjRUjtJgMfGapII+FslMHIjMR5KTnwEmBmWLDRSnc3XSNP8bNy34tekgQyDT0hr7pERRQ==}
+    engines: {node: '>=12'}
+
+  dotenv@17.4.1:
+    resolution: {integrity: sha512-k8DaKGP6r1G30Lx8V4+pCsLzKr8vLmV2paqEj1Y55GdAgJuIqpRp5FfajGF8KtwMxCz9qJc6wUIJnm053d/WCw==}
     engines: {node: '>=12'}
 
   dtrace-provider@0.8.8:
@@ -10761,6 +10765,8 @@ snapshots:
   dotenv@16.4.7: {}
 
   dotenv@17.4.0: {}
+
+  dotenv@17.4.1: {}
 
   dtrace-provider@0.8.8:
     dependencies:
