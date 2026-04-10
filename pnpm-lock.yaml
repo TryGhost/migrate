@@ -388,8 +388,8 @@ importers:
         specifier: 3.0.3
         version: 3.0.3
       '@tryghost/mg-fs-utils':
-        specifier: 0.20.0
-        version: 0.20.0
+        specifier: workspace:*
+        version: link:../mg-fs-utils
       '@tryghost/string':
         specifier: 0.3.1
         version: 0.3.1
@@ -3561,9 +3561,6 @@ packages:
   '@tryghost/kg-utils@1.0.37':
     resolution: {integrity: sha512-oBFNnDLKFPdrAs/mtCLxMZgQdV6owkGuJiYeLq2axGI0jnDtFR/aaEb2+3s+YZ7jUQP88O4JxaheW1ZW3ix/Ag==}
 
-  '@tryghost/mg-fs-utils@0.20.0':
-    resolution: {integrity: sha512-Q2jK+POePDZ4Gvo7lq6R01Koln2LOBjNgyYxDVmW8HCh4/MD8zNyLytvcdaeiBLeDe9LOsUAFi0K1tD9RVMQrg==}
-
   '@tryghost/mobiledoc-kit@0.12.4-ghost.1':
     resolution: {integrity: sha512-c4aheSWH2Y7x4uSkAx08gbtvuEgPGjlu6v+FeUdSJZ1blEd+knL3zTcUAfeSiM6rgLEHxlNWtt+KFwotdf6rTA==}
 
@@ -4549,10 +4546,6 @@ packages:
 
   dotenv@16.4.7:
     resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
-    engines: {node: '>=12'}
-
-  dotenv@17.4.0:
-    resolution: {integrity: sha512-kCKF62fwtzwYm0IGBNjRUjtJgMfGapII+FslMHIjMR5KTnwEmBmWLDRSnc3XSNP8bNy34tekgQyDT0hr7pERRQ==}
     engines: {node: '>=12'}
 
   dotenv@17.4.1:
@@ -9752,25 +9745,6 @@ snapshots:
     dependencies:
       semver: 7.7.4
 
-  '@tryghost/mg-fs-utils@0.20.0':
-    dependencies:
-      '@tryghost/errors': 3.0.3
-      '@tryghost/image-transform': 1.4.12
-      '@tryghost/string': 0.3.1
-      '@tryghost/zip': 3.0.3
-      adm-zip: 0.5.17
-      csv-parse: 6.2.1
-      dotenv: 17.4.0
-      fs-extra: 11.3.4
-      lodash: 4.18.1
-      sharp: 0.34.5
-      transliteration: 2.6.1
-    transitivePeerDependencies:
-      - bare-abort-controller
-      - bare-buffer
-      - react-native-b4a
-      - supports-color
-
   '@tryghost/mobiledoc-kit@0.12.4-ghost.1':
     dependencies:
       mobiledoc-dom-renderer: 0.7.0
@@ -10896,8 +10870,6 @@ snapshots:
       dotenv: 16.4.7
 
   dotenv@16.4.7: {}
-
-  dotenv@17.4.0: {}
 
   dotenv@17.4.1: {}
 
