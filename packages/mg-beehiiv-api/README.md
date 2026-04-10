@@ -1,5 +1,8 @@
 # Migrate beehiiv API
 
+> [!IMPORTANT]
+> This package is a work in progress, and is not ready for production use yet.
+
 Migrate content from beehiiv to Ghost using the beehiiv API, and generate a `zip` file you can import into a Ghost installation.
 
 

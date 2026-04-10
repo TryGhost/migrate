@@ -1,5 +1,8 @@
 # Migrate beehiiv Members API
 
+> [!IMPORTANT]
+> This package is a work in progress, and is not ready for production use yet.
+
 Migrate members from beehiiv to Ghost using the beehiiv API, and generate CSV files you can import into a Ghost installation.
 
 
