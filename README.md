@@ -6,6 +6,8 @@ Each tool has its own detailed documentation:
 
 - [Ghost](https://github.com/TryGhost/migrate/tree/main/packages/mg-ghost-api)
 - [beehiiv](https://github.com/TryGhost/migrate/tree/main/packages/mg-beehiiv)
+- [beehiiv API](https://github.com/TryGhost/migrate/tree/main/packages/mg-beehiiv-api)
+- [beehiiv API Members](https://github.com/TryGhost/migrate/tree/main/packages/mg-beehiiv-api-members)
 - [beehiiv Members](https://github.com/TryGhost/migrate/tree/main/packages/mg-beehiiv-members)
 - [Blogger](https://github.com/TryGhost/migrate/tree/main/packages/mg-blogger)
 - [Buttondown](https://github.com/TryGhost/migrate/tree/main/packages/mg-buttondown)
