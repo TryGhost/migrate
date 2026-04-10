@@ -105,14 +105,22 @@ When publishing a package for the first time:
 1. Create the package in `packages/` (see CLAUDE.md for the template)
 2. Set `"version": "0.0.0"` in its `package.json`
 3. Commit and merge to `main`
-4. Register the package as a trusted publisher:
+4. From the repo root, version, tag, and push just the new package:
+    ```sh
+    pnpm ship:first-release --projects=@tryghost/mg-<name>
+    ```
+5. Manually publish the package to npm (CI can only update packages that already exist on npm):
+    ```sh
+    cd packages/mg-<name>
+    pnpm build && npm publish --access public
+    ```
+6. Register the package as a trusted publisher so CI can handle future releases:
     ```sh
     npm trust github <package-name> --repo TryGhost/migrate --file publish.yml --yes
 
     # Example:
     npm trust github @tryghost/mg-example-package --repo TryGhost/migrate --file publish.yml --yes
     ```
-5. Run `pnpm ship:first-release` — select the initial version when prompted
 
 
 # Copyright & License
