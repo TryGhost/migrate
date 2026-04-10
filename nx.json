@@ -26,6 +26,9 @@
     "version": {
       "preVersionCommand": "pnpm build && pnpm test",
       "preserveMatchingDependencyRanges": false,
+      "versionActionsOptions": {
+        "skipLockFileUpdate": true
+      },
       "git": {
         "commit": true,
         "tag": true,
