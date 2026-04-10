@@ -1,6 +1,5 @@
 import {domUtils} from '@tryghost/mg-utils';
 import _ from 'lodash';
-import sanitizeHtml from 'sanitize-html';
 import SimpleDom from 'simple-dom';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 import embedCard from '@tryghost/kg-default-cards/lib/cards/embed.js';
