@@ -53,6 +53,11 @@ export default class LinkFixer {
         }
     }
 
+    // Instance method for backward compatibility
+    cleanURL(url) {
+        return LinkFixer.cleanURL(url);
+    }
+
     buildMap(ctx) {
         if (!ctx?.result?.posts && !ctx?.data?.posts) {
             return;
