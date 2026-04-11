@@ -30,7 +30,7 @@
     "@tryghost/debug": "2.0.3",
     "@tryghost/errors": "3.0.3",
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/string": "0.3.1",
+    "@tryghost/string": "0.3.2",
     "got": "15.0.0"
   }
 }

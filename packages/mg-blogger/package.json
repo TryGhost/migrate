@@ -30,7 +30,7 @@
     "@tryghost/errors": "3.0.3",
     "@tryghost/kg-default-cards": "10.2.10",
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/string": "0.3.1",
+    "@tryghost/string": "0.3.2",
     "autop": "1.0.1",
     "node-fetch": "3.3.2",
     "sanitize-html": "2.17.2",
