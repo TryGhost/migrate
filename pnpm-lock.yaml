@@ -1072,8 +1072,8 @@ importers:
   packages/mg-utils:
     dependencies:
       fast-xml-parser:
-        specifier: 5.5.10
-        version: 5.5.10
+        specifier: 5.5.11
+        version: 5.5.11
       linkedom:
         specifier: 0.18.12
         version: 0.18.12
@@ -1210,8 +1210,8 @@ importers:
         specifier: 3.3.3
         version: 3.3.3
       fast-xml-parser:
-        specifier: 5.5.10
-        version: 5.5.10
+        specifier: 5.5.11
+        version: 5.5.11
       markdown-it:
         specifier: 14.1.1
         version: 14.1.1
@@ -4906,8 +4906,8 @@ packages:
   fast-xml-builder@1.1.4:
     resolution: {integrity: sha512-f2jhpN4Eccy0/Uz9csxh3Nu6q4ErKxf0XIsasomfOihuSUa3/xw6w8dnOtCDgEItQFJG8KyXPzQXzcODDrrbOg==}
 
-  fast-xml-parser@5.5.10:
-    resolution: {integrity: sha512-go2J2xODMc32hT+4Xr/bBGXMaIoiCwrwp2mMtAvKyvEFW6S/v5Gn2pBmE4nvbwNjGhpcAiOwEv7R6/GZ6XRa9w==}
+  fast-xml-parser@5.5.11:
+    resolution: {integrity: sha512-QL0eb0YbSTVWF6tTf1+LEMSgtCEjBYPpnAjoLC8SscESlAjXEIRJ7cHtLG0pLeDFaZLa4VKZLArtA/60ZS7vyA==}
     hasBin: true
 
   fastq@1.20.1:
@@ -11311,7 +11311,7 @@ snapshots:
     dependencies:
       path-expression-matcher: 1.4.0
 
-  fast-xml-parser@5.5.10:
+  fast-xml-parser@5.5.11:
     dependencies:
       fast-xml-builder: 1.1.4
       path-expression-matcher: 1.4.0
