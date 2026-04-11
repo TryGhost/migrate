@@ -27,8 +27,8 @@
   "devDependencies": {
     "@tryghost/errors": "3.0.3",
     "@types/node": "24.12.2",
-    "@typescript-eslint/eslint-plugin": "8.58.0",
-    "@typescript-eslint/parser": "8.58.0",
+    "@typescript-eslint/eslint-plugin": "8.58.1",
+    "@typescript-eslint/parser": "8.58.1",
     "c8": "11.0.0",
     "eslint": "8.57.1",
     "eslint-plugin-ghost": "3.5.0",
