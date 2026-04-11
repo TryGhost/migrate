@@ -156,6 +156,47 @@ export default class WebScraper {
         this.mergeResource(data, scrapedData);
     }
 
+    /**
+     * Scrape metadata for a single post and set the results via post.set().
+     * The post is duck-typed — it needs getSourceValue(key), set(key, value),
+     * and a webscrapeData setter. Fields not in the post's schema are silently skipped.
+     * The raw scraped response is stored on post.webscrapeData for later use.
+     *
+     * @param {Object} post Object with getSourceValue(key), set(key, value), and webscrapeData setter
+     * @param {Object} options Options including wait_after_scrape
+     */
+    async scrapePost(post, options = {}) {
+        if (!this.config.posts) {
+            return;
+        }
+
+        const url = post.getSourceValue('url');
+        if (!url) {
+            return;
+        }
+
+        const filename = slugify(url).slice(0, 250);
+        const {responseData} = await this.scrapeUrl(url, this.config.posts, filename,
+            options.wait_after_scrape || 100);
+
+        if (!responseData) {
+            return;
+        }
+
+        post.webscrapeData = responseData;
+
+        const processed = this.postProcessor(responseData, null, options);
+        for (const [key, value] of Object.entries(processed)) {
+            if (value !== null && value !== undefined && value !== '') {
+                try {
+                    post.set(key, value);
+                } catch {
+                    // skip fields not in schema
+                }
+            }
+        }
+    }
+
     hydrate(ctx) {
         let tasks = [];
         let res = ctx.result;

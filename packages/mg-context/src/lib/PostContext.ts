@@ -63,6 +63,7 @@ export default class PostContext extends MigrateBase {
     #warnOnLookupKeyDuplicate = false;
     #duplicateSkipped = false;
     #htmlDirty = true;
+    #webscrapeData: any = null;
     data: any = {};
 
     constructor({source = {}, meta = {}, contentFormat = 'lexical', lookupKey}: PostConstructorOptions = {}) {
@@ -101,6 +102,14 @@ export default class PostContext extends MigrateBase {
 
     get meta() {
         return this.#meta;
+    }
+
+    get webscrapeData(): any {
+        return this.#webscrapeData;
+    }
+
+    set webscrapeData(value: any) {
+        this.#webscrapeData = value;
     }
 
     get htmlDirty(): boolean {
@@ -333,6 +342,7 @@ export default class PostContext extends MigrateBase {
 
         const serializedSource = JSON.stringify(this.#source);
         const serializedMeta = JSON.stringify(this.#meta);
+        const serializedWebscrapeData = this.#webscrapeData ? JSON.stringify(this.#webscrapeData) : null;
         /* c8 ignore next 3 -- dates are always Date instances from set()/fromRow(); ternary is defensive */
         const createdAt = this.data.created_at instanceof Date ? this.data.created_at.toISOString() : this.data.created_at;
         const updatedAt = this.data.updated_at instanceof Date ? this.data.updated_at.toISOString() : this.data.updated_at;
@@ -377,7 +387,7 @@ export default class PostContext extends MigrateBase {
                 serializedData, serializedSource, serializedMeta,
                 this.#contentFormat, this.#lookupKey, this.ghostId,
                 createdAt, updatedAt, publishedAt,
-                slug, this.dbId
+                slug, serializedWebscrapeData, this.dbId
             );
         } else {
             // Check for existing post by lookup_key
@@ -399,7 +409,7 @@ export default class PostContext extends MigrateBase {
                 serializedData, serializedSource, serializedMeta,
                 this.#contentFormat, this.#lookupKey, this.ghostId,
                 createdAt, updatedAt, publishedAt,
-                slug, slug
+                slug, slug, serializedWebscrapeData
             );
             this.dbId = Number(result.lastInsertRowid);
         }
@@ -507,6 +517,10 @@ export default class PostContext extends MigrateBase {
             if (key !== 'tags' && key !== 'authors') {
                 post.data[key] = value;
             }
+        }
+
+        if (row.webscrape_data) {
+            post.#webscrapeData = JSON.parse(row.webscrape_data);
         }
 
         // Post was loaded from DB; nothing has been modified yet

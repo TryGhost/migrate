@@ -1223,7 +1223,7 @@ describe('MigrateContext', () => {
                         JSON.stringify({title: 'Rolled Back', slug: 'before-rollback'}),
                         '{}', '{}', 'lexical', null, post.ghostId,
                         '2023-11-23T00:00:00.000Z', null, null,
-                        'before-rollback', post.dbId
+                        'before-rollback', null, post.dbId
                     );
                     throw new errors.InternalServerError({message: 'sync rollback'});
                 });
@@ -1252,7 +1252,7 @@ describe('MigrateContext', () => {
                         JSON.stringify({title: 'Updated In Nested', slug: 'nested-tx'}),
                         '{}', '{}', 'lexical', null, post.ghostId,
                         '2023-11-23T00:00:00.000Z', null, null,
-                        'nested-tx', post.dbId
+                        'nested-tx', null, post.dbId
                     );
                 });
             });
@@ -1424,6 +1424,40 @@ describe('MigrateContext', () => {
             assert.equal(p.data.tags[1].data.name, 'Tag Two');
             assert.equal(p.data.authors.length, 1);
             assert.equal(p.data.authors[0].data.name, 'Author One');
+
+            await instance.close();
+        });
+
+        it('Preserves webscrape_data through save and load', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Scraped Post');
+            post.set('slug', 'scraped-post');
+            post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            post.webscrapeData = {meta_title: 'Scraped Title', og_image: 'https://example.com/img.jpg'};
+            await post.save(instance.db);
+
+            const loaded = await instance.getAllPosts();
+            assert.equal(loaded.length, 1);
+            assert.deepEqual(loaded[0].webscrapeData, {meta_title: 'Scraped Title', og_image: 'https://example.com/img.jpg'});
+
+            await instance.close();
+        });
+
+        it('webscrape_data defaults to null', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'No Scrape');
+            post.set('slug', 'no-scrape');
+            post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            await post.save(instance.db);
+
+            const loaded = await instance.getAllPosts();
+            assert.equal(loaded[0].webscrapeData, null);
 
             await instance.close();
         });

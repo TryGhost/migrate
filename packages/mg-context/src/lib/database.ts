@@ -85,7 +85,8 @@ CREATE TABLE IF NOT EXISTS Posts (
     updated_at TEXT,
     published_at TEXT,
     original_slug TEXT,
-    slug TEXT
+    slug TEXT,
+    webscrape_data TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_posts_lookup_key ON Posts(lookup_key);
 CREATE INDEX IF NOT EXISTS idx_posts_created_at ON Posts(created_at);
@@ -144,8 +145,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_links_old_url ON Links(old_url);
 function prepareStatements(db: DatabaseSync): PreparedStatements {
     return {
         // Posts
-        insertPost: db.prepare('INSERT INTO Posts (data, source, meta, content_format, lookup_key, ghost_id, created_at, updated_at, published_at, original_slug, slug) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'),
-        updatePost: db.prepare('UPDATE Posts SET data = ?, source = ?, meta = ?, content_format = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, slug = ? WHERE id = ?'),
+        insertPost: db.prepare('INSERT INTO Posts (data, source, meta, content_format, lookup_key, ghost_id, created_at, updated_at, published_at, original_slug, slug, webscrape_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'),
+        updatePost: db.prepare('UPDATE Posts SET data = ?, source = ?, meta = ?, content_format = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, slug = ?, webscrape_data = ? WHERE id = ?'),
         updatePostData: db.prepare('UPDATE Posts SET data = ? WHERE id = ?'),
         updatePostSlug: db.prepare('UPDATE Posts SET slug = ?, data = ? WHERE id = ?'),
         findPostById: db.prepare('SELECT * FROM Posts WHERE id = ?'),

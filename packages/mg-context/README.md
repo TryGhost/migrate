@@ -572,6 +572,25 @@ Replace the metadata object.
 
 Get a single metadata value.
 
+### Web scrape data
+
+#### `post.webscrapeData: any`
+
+Get or set the raw web scrape response for this post. Stored as a JSON blob in a dedicated `webscrape_data` column on the Posts table. Defaults to `null`.
+
+This is set automatically by [mg-webscraper](../mg-webscraper)'s `scrapePost` method, preserving the raw scraped response before any post-processing. Use it to access or reprocess scraped metadata in later pipeline steps without re-scraping.
+
+```js
+// Set during scraping (done automatically by scrapePost)
+post.webscrapeData = {meta_title: 'Page Title', og_image: 'https://example.com/img.jpg'};
+
+// Read later in the pipeline
+const scraped = post.webscrapeData;
+if (scraped?.og_image) {
+    post.set('feature_image', scraped.og_image);
+}
+```
+
 ### Deduplication
 
 #### `post.lookupKey: string | null`
