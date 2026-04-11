@@ -166,6 +166,51 @@ await ctx.transaction(async () => {
 });
 ```
 
+### Links
+
+MigrateContext stores URL mappings for link fixing — old URLs that should be rewritten to new relative Ghost paths. Links are stored in a dedicated `Links` table with an indexed lookup column.
+
+#### `addLink(oldUrl, newUrl): void`
+
+Store a URL mapping. Keys should be cleaned URLs (`host/path`, no protocol or query params) to match how LinkFixer normalizes hrefs. Duplicate `oldUrl` entries are silently ignored (first write wins).
+
+```js
+ctx.addLink('example.com/my-post/', '/my-post/');
+ctx.addLink('example.com/tag/news/', '/tag/news/');
+ctx.addLink('example.com/author/alice/', '/author/alice/');
+```
+
+For multi-domain support, store an entry for each domain:
+
+```js
+const hosts = ['example.com', 'olddomain.com'];
+for (const host of hosts) {
+    ctx.addLink(`${host}/my-post/`, '/my-post/');
+}
+```
+
+#### `findLink(oldUrl): string | null`
+
+Look up a single URL mapping. Returns the new URL or `null` if no match. This is an indexed lookup — fast enough to call per-link within a single post's content.
+
+```js
+ctx.findLink('example.com/my-post/');    // '/my-post/'
+ctx.findLink('example.com/unknown/');    // null
+```
+
+Designed to be used as a lookup function with [mg-linkfixer](../mg-linkfixer)'s `fixPost`:
+
+```js
+import LinkFixer from '@tryghost/mg-linkfixer';
+
+const linkFixer = new LinkFixer();
+const lookup = (url) => ctx.findLink(url);
+
+await ctx.forEachPost(async (post) => {
+    await linkFixer.fixPost(post, lookup);
+});
+```
+
 ### Finding entities
 
 #### `findPosts(options): Promise<PostContext[] | null>`

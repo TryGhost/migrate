@@ -66,6 +66,10 @@ export interface PreparedStatements {
     deletePostAuthorsByPostId: ReturnType<DatabaseSync['prepare']>;
     findPostAuthorsByPostId: ReturnType<DatabaseSync['prepare']>;
     findPostAuthorsByAuthorId: ReturnType<DatabaseSync['prepare']>;
+
+    // Links
+    insertLink: ReturnType<DatabaseSync['prepare']>;
+    findLink: ReturnType<DatabaseSync['prepare']>;
 }
 
 const SCHEMA = `
@@ -128,6 +132,13 @@ CREATE TABLE IF NOT EXISTS PostAuthors (
 );
 CREATE INDEX IF NOT EXISTS idx_postauthors_post_id ON PostAuthors(post_id);
 CREATE INDEX IF NOT EXISTS idx_postauthors_author_id ON PostAuthors(author_id);
+
+CREATE TABLE IF NOT EXISTS Links (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    old_url TEXT NOT NULL,
+    new_url TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_links_old_url ON Links(old_url);
 `;
 
 function prepareStatements(db: DatabaseSync): PreparedStatements {
@@ -180,7 +191,11 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         insertPostAuthor: db.prepare('INSERT INTO PostAuthors (post_id, author_id, sort_order) VALUES (?, ?, ?)'),
         deletePostAuthorsByPostId: db.prepare('DELETE FROM PostAuthors WHERE post_id = ?'),
         findPostAuthorsByPostId: db.prepare('SELECT * FROM PostAuthors WHERE post_id = ? ORDER BY sort_order ASC'),
-        findPostAuthorsByAuthorId: db.prepare('SELECT * FROM PostAuthors WHERE author_id = ?')
+        findPostAuthorsByAuthorId: db.prepare('SELECT * FROM PostAuthors WHERE author_id = ?'),
+
+        // Links
+        insertLink: db.prepare('INSERT OR IGNORE INTO Links (old_url, new_url) VALUES (?, ?)'),
+        findLink: db.prepare('SELECT new_url FROM Links WHERE old_url = ? LIMIT 1')
     };
 }
 

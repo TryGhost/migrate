@@ -140,6 +140,27 @@ describe('LinkFixer', function () {
         assert.ok(!datelessPosts[0].html.includes('<a href="/eos-quia-quos-voluptas-aliquam-et-et-omnis.html">Sunt tempore nisi similique</a>'));
     });
 
+    it('Does not replace external links in Lexical', async function () {
+        const fixer = new linkFixer();
+        fixer.linkMap = {
+            'example.com/my-post/': '/my-post/'
+        };
+
+        const lexical = JSON.stringify({
+            root: {
+                children: [
+                    {type: 'link', url: 'https://example.com/my-post/'},
+                    {type: 'link', url: 'https://external.com/other/'}
+                ]
+            }
+        });
+        const result = await fixer.processLexical(lexical);
+        const parsed = JSON.parse(result);
+
+        assert.equal(parsed.root.children[0].url, '/my-post/');
+        assert.equal(parsed.root.children[1].url, 'https://external.com/other/');
+    });
+
     it('Does replace tag links that were migrated', async function () {
         assert.ok(!datelessPosts[1].html.includes('<a href="https://example.com/category/cakes/fruit/">dolor</a>'));
         assert.ok(datelessPosts[1].html.includes('<a href="/tag/fruit/">dolor</a>'));
@@ -165,5 +186,241 @@ describe('LinkFixer', function () {
 
         assert.ok(datelessPosts[5].html.includes('<a href="/substack-url/">Substack-like URL</a>'));
         assert.ok(!datelessPosts[5].html.includes('<a href="https://example.com/p/substack-url/?s=w">Substack-like URL</a>'));
+    });
+});
+
+describe('expandForDomains', function () {
+    it('Cross-populates linkMap entries for all provided domains', function () {
+        const ctx = {
+            options: {
+                url: 'https://example.com'
+            },
+            result: {
+                posts: [
+                    {
+                        url: 'https://example.com/my-post/',
+                        data: {slug: 'my-post'}
+                    }
+                ]
+            }
+        };
+
+        const fixer = new linkFixer();
+        fixer.buildMap(ctx);
+        fixer.expandForDomains(['https://example.com', 'https://olddomain.com']);
+
+        assert.equal(fixer.linkMap['example.com/my-post/'], '/my-post/');
+        assert.equal(fixer.linkMap['olddomain.com/my-post/'], '/my-post/');
+    });
+
+    it('Cross-populates tags and authors across all domains', function () {
+        const ctx = {
+            options: {
+                url: 'https://example.com'
+            },
+            result: {
+                posts: [
+                    {
+                        url: 'https://example.com/my-post/',
+                        data: {
+                            slug: 'my-post',
+                            tags: [
+                                {
+                                    url: 'https://example.com/category/recipes/',
+                                    data: {slug: 'recipes'}
+                                }
+                            ],
+                            author: {
+                                url: 'https://example.com/author/jane/',
+                                data: {slug: 'jane'}
+                            }
+                        }
+                    }
+                ]
+            }
+        };
+
+        const fixer = new linkFixer();
+        fixer.buildMap(ctx);
+        fixer.expandForDomains(['https://example.com', 'https://olddomain.com']);
+
+        assert.equal(fixer.linkMap['example.com/category/recipes/'], '/tag/recipes/');
+        assert.equal(fixer.linkMap['olddomain.com/category/recipes/'], '/tag/recipes/');
+        assert.equal(fixer.linkMap['example.com/author/jane/'], '/author/jane/');
+        assert.equal(fixer.linkMap['olddomain.com/author/jane/'], '/author/jane/');
+    });
+
+    it('Is a no-op with a single URL', function () {
+        const fixer = new linkFixer();
+        fixer.linkMap = {'example.com/post/': '/post/'};
+
+        fixer.expandForDomains('https://example.com');
+
+        assert.equal(Object.keys(fixer.linkMap).length, 1);
+    });
+
+    it('Is a no-op with no URLs', function () {
+        const fixer = new linkFixer();
+        fixer.linkMap = {'example.com/post/': '/post/'};
+
+        fixer.expandForDomains(null);
+
+        assert.equal(Object.keys(fixer.linkMap).length, 1);
+    });
+
+    it('Fixes HTML links from alternate domains after expansion', async function () {
+        const fixer = new linkFixer();
+        fixer.linkMap = {
+            'example.com/target-post/': '/target-post/'
+        };
+        fixer.expandForDomains(['https://example.com', 'https://olddomain.com']);
+
+        const html = '<p><a href="https://olddomain.com/target-post/">old link</a></p>';
+        const result = await fixer.processHTML(html);
+
+        assert.ok(result.includes('<a href="/target-post/">old link</a>'));
+        assert.ok(!result.includes('olddomain.com'));
+    });
+
+    it('Fixes Lexical links from alternate domains after expansion', async function () {
+        const fixer = new linkFixer();
+        fixer.linkMap = {
+            'example.com/target-post/': '/target-post/'
+        };
+        fixer.expandForDomains(['https://example.com', 'https://olddomain.com']);
+
+        const lexical = JSON.stringify({
+            root: {
+                children: [{
+                    type: 'link',
+                    url: 'https://olddomain.com/target-post/'
+                }]
+            }
+        });
+        const result = await fixer.processLexical(lexical);
+        const parsed = JSON.parse(result);
+
+        assert.equal(parsed.root.children[0].url, '/target-post/');
+    });
+});
+
+describe('cleanURL', function () {
+    it('Is accessible as a static method', function () {
+        assert.equal(linkFixer.cleanURL('https://example.com/my-post/?ref=home'), 'example.com/my-post/');
+    });
+});
+
+describe('buildMap with posts from different domains', function () {
+    it('Detects dated permalinks using the post URL domain', function () {
+        const ctx = {
+            options: {
+                datedPermalinks: '/yyyy/mm/dd/'
+            },
+            result: {
+                posts: [
+                    {
+                        url: 'https://olddomain.com/2020/06/27/my-post/',
+                        data: {slug: 'my-post'}
+                    }
+                ]
+            }
+        };
+
+        const fixer = new linkFixer();
+        fixer.buildMap(ctx);
+
+        assert.equal(fixer.linkMap['olddomain.com/2020/06/27/my-post/'], '/2020/06/27/my-post/');
+    });
+});
+
+describe('fixPost', function () {
+    function makePost(data) {
+        const store = {...data};
+        return {
+            get(field) {
+                return store[field] ?? null;
+            },
+            set(field, value) {
+                store[field] = value;
+            },
+            getData() {
+                return store;
+            }
+        };
+    }
+
+    it('Fixes HTML links using a lookup function', async function () {
+        const fixer = new linkFixer();
+        const lookup = (url) => {
+            const map = {
+                'example.com/target-post/': '/target-post/',
+                'example.com/about/': '/about/'
+            };
+            return map[url] || null;
+        };
+
+        const post = makePost({
+            html: '<p><a href="https://example.com/target-post/">link</a> and <a href="https://external.com/other/">external</a></p>'
+        });
+
+        await fixer.fixPost(post, lookup);
+
+        assert.ok(post.getData().html.includes('<a href="/target-post/">link</a>'));
+        assert.ok(post.getData().html.includes('<a href="https://external.com/other/">external</a>'));
+    });
+
+    it('Fixes Lexical links using a lookup function', async function () {
+        const fixer = new linkFixer();
+        const lookup = (url) => {
+            if (url === 'example.com/target-post/') {
+                return '/target-post/';
+            }
+            return null;
+        };
+
+        const lexical = JSON.stringify({
+            root: {
+                children: [
+                    {type: 'link', url: 'https://example.com/target-post/'},
+                    {type: 'link', url: 'https://external.com/other/'}
+                ]
+            }
+        });
+
+        const post = makePost({lexical});
+        await fixer.fixPost(post, lookup);
+
+        const result = JSON.parse(post.getData().lexical);
+        assert.equal(result.root.children[0].url, '/target-post/');
+        assert.equal(result.root.children[1].url, 'https://external.com/other/');
+    });
+
+    it('Skips fields that are null or empty', async function () {
+        const fixer = new linkFixer();
+        const lookup = () => null;
+
+        const post = makePost({html: null, lexical: null});
+        await fixer.fixPost(post, lookup);
+
+        assert.equal(post.getData().html, null);
+        assert.equal(post.getData().lexical, null);
+    });
+
+    it('Strips query params before lookup', async function () {
+        const fixer = new linkFixer();
+        const lookup = (url) => {
+            if (url === 'example.com/my-post/') {
+                return '/my-post/';
+            }
+            return null;
+        };
+
+        const post = makePost({
+            html: '<p><a href="https://example.com/my-post/?ref=footer">click</a></p>'
+        });
+
+        await fixer.fixPost(post, lookup);
+
+        assert.ok(post.getData().html.includes('<a href="/my-post/">click</a>'));
     });
 });

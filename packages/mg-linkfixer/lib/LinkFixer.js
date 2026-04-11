@@ -41,7 +41,7 @@ export default class LinkFixer {
      * cleanURL('https://exampleurl.com/sample-page/');
      * => exampleurl.com/sample-page/
      */
-    cleanURL(url) {
+    static cleanURL(url) {
         try {
             const urlParts = new URL(url);
             const cleanedURL = join(urlParts.host, urlParts.pathname);
@@ -71,13 +71,13 @@ export default class LinkFixer {
             const postURLDomain = new URL(url);
 
             // We need to handle the domain with http: and https:, so build part of the regexp pattern that accounts for both
-            const siteURL = new URL(ctx.options.url || postURLDomain.origin);
+            const siteURL = new URL(postURLDomain.origin);
 
             siteURL.protocol = 'http:';
-            const siteURLHttp = siteURL.toString().replace(/\/$/, ''); // Trim trailing slashes
+            const siteURLHttp = siteURL.toString().replace(/\/$/, '');
 
             siteURL.protocol = 'https:';
-            const siteURLHttps = siteURL.toString().replace(/\/$/, ''); // Trim trailing slashes
+            const siteURLHttps = siteURL.toString().replace(/\/$/, '');
 
             const siteURLBothProtocols = `(?:${siteURLHttp}|${siteURLHttps})`;
 
@@ -124,9 +124,36 @@ export default class LinkFixer {
 
         // Remove the protocol, ensuring we treat `http` and `https` sites in the same way
         Object.keys(this.linkMap).forEach((key) => {
-            let updatedURL = this.cleanURL(key);
+            let updatedURL = LinkFixer.cleanURL(key);
             this.linkMap[updatedURL] = this.linkMap[key];
         });
+    }
+
+    /**
+     * Cross-populate the linkMap so that every known path is accessible via every provided domain.
+     * Call after buildMap() when the source site used multiple domains.
+     * @param {String|String[]} urls One or more site URLs
+     */
+    expandForDomains(urls) {
+        const siteURLs = [].concat(urls || []).filter(Boolean);
+        if (siteURLs.length < 2) {
+            return;
+        }
+        const hosts = siteURLs.map(u => new URL(u).host);
+        const pathMap = {};
+        for (const [key, value] of Object.entries(this.linkMap)) {
+            for (const host of hosts) {
+                if (key.startsWith(host + '/')) {
+                    pathMap[key.slice(host.length)] = value;
+                    break;
+                }
+            }
+        }
+        for (const [path, value] of Object.entries(pathMap)) {
+            for (const host of hosts) {
+                this.linkMap[host + path] = value;
+            }
+        }
     }
 
     async processHTML(html) {
@@ -139,7 +166,7 @@ export default class LinkFixer {
                 }
 
                 // Clean the URL, matching the links stored in the linkMap
-                let updatedURL = this.cleanURL(href);
+                let updatedURL = LinkFixer.cleanURL(href);
 
                 if (this.linkMap[updatedURL]) {
                     el.setAttribute('href', this.linkMap[updatedURL]);
@@ -155,15 +182,68 @@ export default class LinkFixer {
 
         const mappedObject = mapObject(parsedLexical, (key, value) => {
             if (key === 'url') {
-                let updatedURL = this.cleanURL(value);
+                let updatedURL = LinkFixer.cleanURL(value);
 
-                return this.linkMap[updatedURL];
+                return this.linkMap[updatedURL] || value;
             } else {
                 return value;
             }
         });
 
         return JSON.stringify(mappedObject);
+    }
+
+    /**
+     * Fix links in a single post using a lookup function instead of the in-memory linkMap.
+     * The post is duck-typed — it only needs get(field) and set(field, value) methods.
+     * The lookupFn receives a cleaned URL (host/path, no protocol or query params) and
+     * should return the new relative path, or null/undefined if no match.
+     *
+     * @param {Object} post Object with get(field) and set(field, value) methods
+     * @param {Function} lookupFn (cleanedUrl: string) => string | null
+     */
+    async fixPost(post, lookupFn) {
+        for (const field of htmlFields) {
+            const value = post.get(field);
+            if (!value) {
+                continue;
+            }
+
+            const fixed = await processFragment(value, (parsed) => {
+                for (const el of parsed.$('a')) {
+                    const href = el.getAttribute('href');
+                    if (!href) {
+                        continue;
+                    }
+
+                    const cleanedURL = LinkFixer.cleanURL(href);
+                    const newURL = lookupFn(cleanedURL);
+                    if (newURL) {
+                        el.setAttribute('href', newURL);
+                    }
+                }
+                return parsed.html();
+            });
+
+            post.set(field, fixed);
+        }
+
+        for (const field of lexicalFields) {
+            const value = post.get(field);
+            if (!value) {
+                continue;
+            }
+
+            const parsed = JSON.parse(value);
+            const mapped = mapObject(parsed, (key, val) => {
+                if (key === 'url') {
+                    const cleanedURL = LinkFixer.cleanURL(val);
+                    return lookupFn(cleanedURL) || val;
+                }
+                return val;
+            });
+            post.set(field, JSON.stringify(mapped));
+        }
     }
 
     fix(ctx, task) {

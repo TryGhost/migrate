@@ -463,6 +463,15 @@ export default class MigrateContext extends MigrateBase {
         }
     }
 
+    addLink(oldUrl: string, newUrl: string): void {
+        this.db.stmts.insertLink.run(oldUrl, newUrl);
+    }
+
+    findLink(oldUrl: string): string | null {
+        const row = this.db.stmts.findLink.get(oldUrl) as any;
+        return row ? row.new_url as string : null;
+    }
+
     async findTags({slug, name}: FindTagsOptions = {}): Promise<TagContext[] | null> {
         if (slug) {
             const rows = this.db.stmts.findTagsBySlug.all(slug) as any[];

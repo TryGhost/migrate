@@ -426,6 +426,56 @@ describe('MigrateContext', () => {
         });
     });
 
+    describe('addLink / findLink', () => {
+        it('Stores and retrieves links', async () => {
+            const instance = new MigrateContext();
+            await instance.init();
+
+            instance.addLink('example.com/my-post/', '/my-post/');
+            instance.addLink('example.com/other-post/', '/other-post/');
+
+            assert.equal(instance.findLink('example.com/my-post/'), '/my-post/');
+            assert.equal(instance.findLink('example.com/other-post/'), '/other-post/');
+
+            await instance.close();
+        });
+
+        it('Ignores duplicate old_url entries', async () => {
+            const instance = new MigrateContext();
+            await instance.init();
+
+            instance.addLink('example.com/my-post/', '/my-post/');
+            instance.addLink('example.com/my-post/', '/different-path/');
+
+            assert.equal(instance.findLink('example.com/my-post/'), '/my-post/');
+
+            await instance.close();
+        });
+
+        it('Returns null when no match exists', async () => {
+            const instance = new MigrateContext();
+            await instance.init();
+
+            assert.equal(instance.findLink('example.com/missing/'), null);
+
+            await instance.close();
+        });
+
+        it('Finds a single link by old_url', async () => {
+            const instance = new MigrateContext();
+            await instance.init();
+
+            instance.addLink('example.com/my-post/', '/my-post/');
+            instance.addLink('example.com/other-post/', '/other-post/');
+
+            assert.equal(instance.findLink('example.com/my-post/'), '/my-post/');
+            assert.equal(instance.findLink('example.com/other-post/'), '/other-post/');
+            assert.equal(instance.findLink('example.com/missing/'), null);
+
+            await instance.close();
+        });
+    });
+
     describe('forEachGhostPost', () => {
         it('Iterates all posts with valid Ghost JSON', async () => {
             const instance: any = new MigrateContext();
