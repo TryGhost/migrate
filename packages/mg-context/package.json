@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@tryghost/errors": "3.0.3",
-    "@tryghost/html-to-mobiledoc": "3.2.21",
+    "@tryghost/html-to-mobiledoc": "3.2.26",
     "@tryghost/kg-html-to-lexical": "1.2.38",
     "@tryghost/listr-smart-renderer": "workspace:*",
     "@tryghost/mg-json": "workspace:*",
