@@ -3,7 +3,6 @@ import {URL} from 'node:url';
 import {tmpdir} from 'node:os';
 import {createHash} from 'node:crypto';
 import * as dotenv from 'dotenv';
-import _ from 'lodash';
 import {writeFileSync, readdirSync, rmSync, lstatSync, existsSync} from 'node:fs';
 import {writeFile} from 'node:fs/promises';
 import {outputJson, outputJsonSync, mkdirpSync, readJson, remove, outputFile} from 'fs-extra/esm';
@@ -232,7 +231,7 @@ export default class FileCache {
         }
 
         // @TODO: use content type on request to infer this, rather than assuming jpeg?
-        if (type === 'images' && !_.includes(knownImageExtensions, ext)) {
+        if (type === 'images' && !knownImageExtensions.includes(ext)) {
             if (!ext) {
                 filename += '.jpeg';
             } else {
@@ -363,8 +362,13 @@ export default class FileCache {
         const fileName = options.filename || false;
         const filePath = join(this.cacheDir, `report-${fileName}.csv`);
 
-        const dedupedData = _.uniqBy(report.data, (e) => {
-            return e.src;
+        const seen = new Set();
+        const dedupedData = report.data.filter((e) => {
+            if (seen.has(e.src)) {
+                return false;
+            }
+            seen.add(e.src);
+            return true;
         });
 
         const fileData = csv.jsonToCSV(dedupedData);
@@ -438,7 +442,7 @@ export default class FileCache {
     hasFile(filename, type) {
         let pathToCheck = filename;
 
-        if (type && !_.includes(['tmp', 'json', 'image', 'zip'], type)) {
+        if (type && !['tmp', 'json', 'image', 'zip'].includes(type)) {
             throw new errors.NotFoundError({message: 'Unknown file type'});
         } else if (type) {
             pathToCheck = join(this[`${type}Dir`], filename);
