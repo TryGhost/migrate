@@ -51,7 +51,7 @@
     "@tryghost/listr-smart-renderer": "workspace:*",
     "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/string": "0.3.1",
-    "file-type": "22.0.0",
+    "file-type": "22.0.1",
     "fs-extra": "11.3.4",
     "heic-convert": "2.1.0",
     "sharp": "0.34.5",
