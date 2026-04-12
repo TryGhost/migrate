@@ -1,5 +1,4 @@
 import {domUtils} from '@tryghost/mg-utils';
-import _ from 'lodash';
 import SimpleDom from 'simple-dom';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 import embedCard from '@tryghost/kg-default-cards/lib/cards/embed.js';
@@ -8,6 +7,10 @@ import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
 const {parseFragment, serializeChildren, serializeNode, replaceWith, insertAfter, attr, parents} = domUtils;
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
+
+const htmlUnescapeMap: Record<string, string> = {'&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': '\''};
+const htmlUnescapeRegex = /&(?:amp|lt|gt|quot|#39);/g;
+const unescapeHTML = (str: string) => str.replace(htmlUnescapeRegex, match => htmlUnescapeMap[match]);
 
 const getYouTubeID = (url: string) => {
     const arr = url.split(/(vi\/|v%3D|v=|\/v\/|youtu\.be\/|\/embed\/)/);
@@ -186,8 +189,8 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
         const imageEl = parsed.$('.generic-embed--image img', el)[0] as Element | undefined;
 
         const href = anchorEl ? attr(anchorEl, 'href') : null;
-        const title = titleEl ? _.unescape(titleEl.textContent!) : '';
-        const description = descEl ? _.unescape(descEl.textContent!) : '';
+        const title = titleEl ? unescapeHTML(titleEl.textContent!) : '';
+        const description = descEl ? unescapeHTML(descEl.textContent!) : '';
         const image = imageEl ? attr(imageEl, 'src') : null;
 
         let cardOpts = {
