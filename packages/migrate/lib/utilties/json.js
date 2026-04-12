@@ -3,23 +3,20 @@ import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {slugify} from '@tryghost/string';
 import {hydrate} from '@tryghost/mg-json';
-import _ from 'lodash';
-
 function findResourceRoot(ctx) {
-    let root = 'result';
-    let posts = ctx.result.posts;
-
-    if (!posts && ctx.result.data && ctx.result.data.posts) {
-        posts = ctx.result.data.posts;
-        root = 'result.data';
+    if (ctx.result?.posts) {
+        return ctx.result;
     }
 
-    if (!posts && ctx.result.db && ctx.result.db[0] && ctx.result.db[0].data && ctx.result.db[0].data.posts) {
-        posts = ctx.result.db[0].data.posts;
-        root = 'result.db[0].data';
+    if (ctx.result?.data?.posts) {
+        return ctx.result.data;
     }
 
-    return root;
+    if (ctx.result?.db?.[0]?.data?.posts) {
+        return ctx.result.db[0].data;
+    }
+
+    return ctx.result;
 }
 
 const jsonTasks = {
@@ -53,9 +50,9 @@ const jsonTasks = {
                     // @TODO: clean this up!
                     let root = findResourceRoot(ctx);
 
-                    let posts = _.get(ctx, `${root}.posts`);
-                    let tags = _.get(ctx, `${root}.tags`);
-                    let users = _.get(ctx, `${root}.users`);
+                    let posts = root.posts;
+                    let tags = root.tags;
+                    let users = root.users;
 
                     let resources = posts;
 
@@ -97,7 +94,7 @@ const jsonTasks = {
                 try {
                     // @TODO: clean this up!
                     let root = findResourceRoot(ctx);
-                    let users = _.get(ctx, `${root}.users`);
+                    let users = root.users;
 
                     let tasks = users.map((user) => {
                         return {

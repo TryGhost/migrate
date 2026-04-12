@@ -1317,9 +1317,6 @@ importers:
       listr:
         specifier: 0.14.3
         version: 0.14.3
-      lodash:
-        specifier: 4.18.1
-        version: 4.18.1
       pretty-ms:
         specifier: 9.3.0
         version: 9.3.0
