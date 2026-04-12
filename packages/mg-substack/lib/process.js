@@ -13,12 +13,13 @@ import {decode} from 'html-entities';
 import {parseSrcset} from 'srcset';
 import {_base as debugFactory} from '@tryghost/debug';
 import {slugify} from '@tryghost/string';
-import _ from 'lodash';
 
 const {parseFragment, serializeChildren, replaceWith, insertBefore, insertAfter, attr, parents} = domUtils;
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 const debug = debugFactory('migrate:substack:process');
+
+const startCase = str => str.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
 const getFiles = async (filePath) => {
     let filenames = await fs.readdir(filePath);
@@ -784,7 +785,7 @@ const processPost = (post, siteUrl, options) => {
         url: `${siteUrl}/tag/${typeSlugSlugify}`,
         data: {
             slug: typeSlugSlugify,
-            name: _.startCase(typeSlug)
+            name: startCase(typeSlug)
         }
     });
 
