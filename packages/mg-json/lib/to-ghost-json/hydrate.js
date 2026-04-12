@@ -1,8 +1,8 @@
 import {slugify} from '@tryghost/string';
 import {decode} from 'html-entities';
+import {stringUtils} from '@tryghost/mg-utils';
 
-const startCase = str => str.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-const kebabCase = str => str.replace(/[\s_]+/g, '-').replace(/[A-Z]/g, c => `-${c.toLowerCase()}`).replace(/^-/, '').toLowerCase();
+const {startCase, kebabCase} = stringUtils;
 /**
  * Hydrate Ghost objects
  * Extend object with the minimum data needed for an import to succeed

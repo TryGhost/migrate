@@ -20,7 +20,8 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "test": "pnpm build && c8 --100 node --test 'build/test/**/*.test.js'",
+    "test": "c8 --100 node --test 'build/test/**/*.test.js'",
+    "test:local": "pnpm build && pnpm test",
     "posttest": "pnpm lint",
     "lint": "eslint src/ --ext .ts --cache"
   },

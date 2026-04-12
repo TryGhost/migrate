@@ -161,16 +161,17 @@ There are two API paths depending on how your pipeline is structured:
 
 Both `fixPost` and `processHTML` normalize URLs before looking them up — stripping the protocol and query parameters to produce a `host/path` key (e.g. `https://example.com/my-post/?ref=home` becomes `example.com/my-post/`). If the link map keys don't use the same format, lookups silently fail.
 
-`cleanURL` is exported as a named export so that ingest code writing link map entries can use the exact same normalization:
+`cleanURL` lives in [mg-utils](../mg-utils) as `stringUtils.cleanURL` and is re-exported here for convenience:
 
 ```javascript
+import {stringUtils} from '@tryghost/mg-utils';
+const {cleanURL} = stringUtils;
+
+// or via mg-linkfixer
 import {cleanURL} from '@tryghost/mg-linkfixer';
 
 cleanURL('https://example.com/my-post/?ref=home');
 // => 'example.com/my-post/'
-
-cleanURL('http://olddomain.com/category/news/');
-// => 'olddomain.com/category/news/'
 
 // Use it when populating the link map during ingest
 context.addLink(cleanURL(postUrl), `/${slug}/`);
@@ -178,7 +179,7 @@ context.addLink(cleanURL(tagUrl), `/tag/${tagSlug}/`);
 context.addLink(cleanURL(authorUrl), `/author/${authorSlug}/`);
 ```
 
-Also available as a static method on the class: `LinkFixer.cleanURL(url)`.
+Also available as `LinkFixer.cleanURL(url)` and `instance.cleanURL(url)` for backward compatibility.
 
 ## Develop
 

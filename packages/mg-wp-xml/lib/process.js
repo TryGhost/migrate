@@ -4,7 +4,7 @@ import {slugify} from '@tryghost/string';
 import errors from '@tryghost/errors';
 import MarkdownIt from 'markdown-it';
 import MgWpAPI from '@tryghost/mg-wp-api';
-import {domUtils, youtubeUtils} from '@tryghost/mg-utils';
+import {domUtils, youtubeUtils, stringUtils} from '@tryghost/mg-utils';
 import {isSerialized, unserialize} from 'php-serialize';
 
 /**
@@ -206,10 +206,7 @@ const processTags = (categories, options = {}) => {
     return categoriesOutput.concat(tags);
 };
 
-const stripHtml = (html) => {
-    // Remove HTML tags, new line characters, and trim white-space
-    return html.replace(/<[^>]+>/g, '').replace(/\r?\n|\r/g, ' ').trim();
-};
+const {stripHtml} = stringUtils;
 
 const preProcessContent = async ({html, options}) => { // eslint-disable-line no-shadow
     // Drafts can have empty post bodies

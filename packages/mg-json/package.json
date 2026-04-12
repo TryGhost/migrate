@@ -27,6 +27,7 @@
     "eslint": "8.57.1"
   },
   "dependencies": {
+    "@tryghost/mg-utils": "workspace:*",
     "@tryghost/string": "0.3.1",
     "bson-objectid": "2.0.4",
     "html-entities": "2.6.0",

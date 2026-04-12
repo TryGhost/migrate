@@ -1,7 +1,7 @@
 import {promises as fs} from 'node:fs';
 import {join, basename} from 'node:path';
 import url from 'node:url';
-import {domUtils} from '@tryghost/mg-utils';
+import {domUtils, stringUtils} from '@tryghost/mg-utils';
 import errors from '@tryghost/errors';
 import SimpleDom from 'simple-dom';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
@@ -16,10 +16,10 @@ import {slugify} from '@tryghost/string';
 
 const {parseFragment, serializeChildren, replaceWith, insertBefore, insertAfter, attr, parents} = domUtils;
 
+const {startCase} = stringUtils;
+
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 const debug = debugFactory('migrate:substack:process');
-
-const startCase = str => str.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
 const getFiles = async (filePath) => {
     let filenames = await fs.readdir(filePath);

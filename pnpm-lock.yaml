@@ -138,6 +138,9 @@ importers:
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
+      '@tryghost/mg-utils':
+        specifier: workspace:*
+        version: link:../mg-utils
       '@tryghost/string':
         specifier: 0.3.1
         version: 0.3.1
@@ -662,6 +665,9 @@ importers:
 
   packages/mg-json:
     dependencies:
+      '@tryghost/mg-utils':
+        specifier: workspace:*
+        version: link:../mg-utils
       '@tryghost/string':
         specifier: 0.3.1
         version: 0.3.1

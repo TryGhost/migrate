@@ -11,7 +11,9 @@ import SimpleDom from 'simple-dom';
 import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
-import {domUtils, youtubeUtils} from '@tryghost/mg-utils';
+import {domUtils, youtubeUtils, stringUtils} from '@tryghost/mg-utils';
+
+const {unescapeHTML, stripHtml} = stringUtils;
 
 const {
     parseFragment,
@@ -33,21 +35,12 @@ const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
 const debug = debugFactory('migrate:wp-api:processor');
 
-const htmlUnescapeMap = {'&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': '\''};
-const htmlUnescapeRegex = /&(?:amp|lt|gt|quot|#39);/g;
-const unescapeHTML = str => str.replace(htmlUnescapeRegex, match => htmlUnescapeMap[match]);
-
 const chunkArray = (arr, size) => {
     const chunks = [];
     for (let i = 0; i < arr.length; i += size) {
         chunks.push(arr.slice(i, i + size));
     }
     return chunks;
-};
-
-const stripHtml = (html) => {
-    // Remove HTML tags, new line characters, and trim white-space
-    return html.replace(/<[^>]+>/g, '').replace(/\r?\n|\r/g, ' ').trim();
 };
 
 const wpCDNToLocal = (imgUrl) => {

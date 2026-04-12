@@ -1,7 +1,7 @@
-import {join} from 'node:path';
-import {domUtils} from '@tryghost/mg-utils';
+import {domUtils, stringUtils} from '@tryghost/mg-utils';
 
 const {processFragment} = domUtils;
+const {cleanURL} = stringUtils;
 
 // @TODO: expand this list
 const htmlFields = ['html'];
@@ -27,34 +27,13 @@ export default class LinkFixer {
         this.linkMap = {};
     }
 
-    /**
-     * Clean the URL
-     * @param {String} url The given URL
-     * @returns {String} A cleaned URL with no protocol or parameters
-     *
-     * @example
-     * cleanURL('https://exampleurl.com/sample-page/child-sample-page/?dolor=simet');
-     * => exampleurl.com/sample-page/child-sample-page/
-     *
-     * @example
-     * cleanURL('https://exampleurl.com/sample-page/');
-     * => exampleurl.com/sample-page/
-     */
+    // Delegate to shared utility; kept as static + instance for backward compatibility
     static cleanURL(url) {
-        try {
-            const urlParts = new URL(url);
-            const cleanedURL = join(urlParts.host, urlParts.pathname);
-
-            return cleanedURL;
-        } catch (error) {
-            // If it's an invalid URL, return the original string
-            return url;
-        }
+        return cleanURL(url);
     }
 
-    // Instance method for backward compatibility
     cleanURL(url) {
-        return LinkFixer.cleanURL(url);
+        return cleanURL(url);
     }
 
     buildMap(ctx) {

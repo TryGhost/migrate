@@ -4,13 +4,10 @@ import SimpleDom from 'simple-dom';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 import embedCard from '@tryghost/kg-default-cards/lib/cards/embed.js';
 import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
+import {youtubeUtils} from '@tryghost/mg-utils';
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
-
-const getYouTubeID = (url: string) => {
-    const arr = url.split(/(vi\/|v%3D|v=|\/v\/|youtu\.be\/|\/embed\/)/);
-    return undefined !== arr[2] ? arr[2].split(/[^\w-]/i)[0] : arr[0];
-};
+const {getYouTubeID} = youtubeUtils;
 
 const isURL = (urlString: string | undefined) => {
     if (undefined === urlString) {
