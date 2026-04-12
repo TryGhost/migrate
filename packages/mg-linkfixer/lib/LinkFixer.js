@@ -1,5 +1,4 @@
 import {join} from 'node:path';
-import _ from 'lodash';
 import {domUtils} from '@tryghost/mg-utils';
 
 const {processFragment} = domUtils;
@@ -8,8 +7,8 @@ const {processFragment} = domUtils;
 const htmlFields = ['html'];
 const lexicalFields = ['lexical'];
 
-const isHTMLField = field => _.includes(htmlFields, field);
-const isLexicalField = field => _.includes(lexicalFields, field);
+const isHTMLField = field => htmlFields.includes(field);
+const isLexicalField = field => lexicalFields.includes(field);
 
 function mapObject(obj, fn) {
     return Object.fromEntries(
@@ -255,17 +254,17 @@ export default class LinkFixer {
         let tasks = [];
         let json = ctx.result;
 
-        if (_.size(this.linkMap) === 0) {
+        if (Object.keys(this.linkMap).length === 0) {
             task.skip('Link map not available');
             return;
         }
 
         // For each resource type e.g. posts, users
-        _.forEach(json.data, (resources, type) => {
+        for (const [type, resources] of Object.entries(json.data)) {
             // For each individual resource
-            _.forEach(resources, (resource) => {
+            for (const resource of resources) {
                 // For each field
-                _.forEach(resource, (value, field) => {
+                for (const [field, value] of Object.entries(resource)) {
                     if (isLexicalField(field)) {
                         tasks.push({
                             title: `${type}: ${resource.slug} ${field}`,
@@ -292,9 +291,9 @@ export default class LinkFixer {
                             }
                         });
                     }
-                });
-            });
-        });
+                }
+            }
+        }
 
         return tasks;
     }

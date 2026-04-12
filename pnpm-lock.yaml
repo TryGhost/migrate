@@ -731,9 +731,6 @@ importers:
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
-      lodash:
-        specifier: 4.18.1
-        version: 4.18.1
     devDependencies:
       '@tryghost/listr-smart-renderer':
         specifier: workspace:*

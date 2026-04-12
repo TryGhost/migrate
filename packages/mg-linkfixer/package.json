@@ -30,7 +30,6 @@
     "listr": "0.14.3"
   },
   "dependencies": {
-    "@tryghost/mg-utils": "workspace:*",
-    "lodash": "4.18.1"
+    "@tryghost/mg-utils": "workspace:*"
   }
 }
