@@ -484,6 +484,52 @@ export default class MigrateContext extends MigrateBase {
         }
     }
 
+    // eslint-disable-next-line no-unused-vars
+    async forEachTag(callback: (tag: TagContext) => Promise<void>, {batchSize = 100}: {batchSize?: number} = {}) {
+        const allIds = (this.db.stmts.findUsedTagIds.all() as any[]).map((r: any) => r.id as number);
+        const total = allIds.length;
+        let processed = 0;
+
+        for (let offset = 0; offset < total; offset += batchSize) {
+            const batchIds = allIds.slice(offset, offset + batchSize);
+            const rows = findByIds(this.db, 'Tags', batchIds);
+
+            for (const row of rows) {
+                const tag = TagContext.fromRow(row);
+                await callback(tag);
+                tag.save(this.db);
+                processed += 1;
+            }
+
+            if (this.#emitEvents) {
+                this.#emitter.emit('progress', 'forEachTag', processed, total);
+            }
+        }
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    async forEachAuthor(callback: (author: AuthorContext) => Promise<void>, {batchSize = 100}: {batchSize?: number} = {}) {
+        const allIds = (this.db.stmts.findUsedAuthorIds.all() as any[]).map((r: any) => r.id as number);
+        const total = allIds.length;
+        let processed = 0;
+
+        for (let offset = 0; offset < total; offset += batchSize) {
+            const batchIds = allIds.slice(offset, offset + batchSize);
+            const rows = findByIds(this.db, 'Authors', batchIds);
+
+            for (const row of rows) {
+                const author = AuthorContext.fromRow(row);
+                await callback(author);
+                author.save(this.db);
+                processed += 1;
+            }
+
+            if (this.#emitEvents) {
+                this.#emitter.emit('progress', 'forEachAuthor', processed, total);
+            }
+        }
+    }
+
     async findAuthors({slug, name, email}: FindAuthorsOptions = {}): Promise<AuthorContext[] | null> {
         if (slug) {
             const rows = this.db.stmts.findAuthorsBySlug.all(slug) as any[];

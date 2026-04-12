@@ -803,6 +803,45 @@ export default class AssetScraper {
         }
     }
 
+    /**
+     * Process assets for a single object (post, tag, or author) using get/set methods.
+     * The object is duck-typed — it needs get(field) and set(field, value).
+     * Downloads and localizes images in content fields (html, lexical, codeinjection)
+     * and image URL fields (feature_image, og_image, profile_image, etc.).
+     * Fields not in the object's schema are silently skipped.
+     */
+    async processAssets(obj: {get(field: string): any; set(field: string, value: any): any}): Promise<void> {
+        const contentFields = ['html', 'lexical', 'codeinjection_head', 'codeinjection_foot'];
+
+        for (const field of contentFields) {
+            let value: string | null;
+            try {
+                value = obj.get(field);
+            } catch {
+                continue;
+            }
+            if (value) {
+                obj.set(field, await this.inlineContent(value));
+            }
+        }
+
+        for (const key of this.#keys) {
+            let value: string | null;
+            try {
+                value = obj.get(key);
+            } catch {
+                continue;
+            }
+            if (!value || typeof value !== 'string') {
+                continue;
+            }
+
+            const absoluteSrc = await this.normalizeUrl(value);
+            const newSrc = await this.downloadExtractSave(absoluteSrc, absoluteSrc);
+            obj.set(key, this.localizeSrc(newSrc.path));
+        }
+    }
+
     async doSettingsObject(settings: SettingsItem[]): Promise<void> {
         for (const [index, {key, value}] of settings.entries()) {
             if (settings[index].key === 'codeinjection_head') {

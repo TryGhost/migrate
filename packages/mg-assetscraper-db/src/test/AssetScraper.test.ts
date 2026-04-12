@@ -1429,4 +1429,94 @@ describe('Asset Scraper', () => {
             );
         });
     });
+
+    describe('processAssets', () => {
+        it('Processes content and image fields via get/set', async () => {
+            mockImage('/image.jpg');
+            mockImage('/feature.jpg');
+
+            const scraper = await createScraper();
+
+            const fields: Record<string, any> = {
+                html: '<img src="https://example.com/image.jpg">',
+                feature_image: 'https://example.com/feature.jpg',
+                og_image: null,
+                lexical: null,
+                codeinjection_head: null,
+                codeinjection_foot: null
+            };
+
+            const post = {
+                get(field: string) {
+                    if (!(field in fields)) {
+                        throw new Error(`Unknown field: ${field}`);
+                    }
+                    return fields[field];
+                },
+                set(field: string, value: any) {
+                    fields[field] = value;
+                }
+            };
+
+            await scraper.processAssets(post);
+
+            assert.ok(fields.html.includes('__GHOST_URL__/content/images/'));
+            assert.ok(!fields.html.includes('https://example.com/image.jpg'));
+            assert.ok(fields.feature_image.includes('__GHOST_URL__/content/images/'));
+            assert.ok(!fields.feature_image.includes('https://example.com/feature.jpg'));
+        });
+
+        it('Skips fields not in post schema', async () => {
+            const scraper = await createScraper();
+
+            const fields: Record<string, any> = {
+                html: null
+            };
+
+            const post = {
+                get(field: string) {
+                    if (field in fields) {
+                        return fields[field];
+                    }
+                    throw new Error(`Unknown field: ${field}`);
+                },
+                set(field: string, value: any) {
+                    fields[field] = value;
+                }
+            };
+
+            await scraper.processAssets(post);
+
+            assert.equal(fields.html, null);
+        });
+
+        it('Skips null and empty content fields', async () => {
+            const scraper = await createScraper();
+
+            const fields: Record<string, any> = {
+                html: null,
+                lexical: null,
+                feature_image: null,
+                codeinjection_head: null,
+                codeinjection_foot: null
+            };
+
+            const post = {
+                get(field: string) {
+                    if (field in fields) {
+                        return fields[field];
+                    }
+                    throw new Error(`Unknown field: ${field}`);
+                },
+                set(field: string, value: any) {
+                    fields[field] = value;
+                }
+            };
+
+            await scraper.processAssets(post);
+
+            assert.equal(fields.html, null);
+            assert.equal(fields.feature_image, null);
+        });
+    });
 });

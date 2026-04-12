@@ -94,6 +94,35 @@ Both Ghost export formats are supported:
 
 The output preserves whichever format the input used.
 
+### Per-object usage with MigrateContext
+
+Use `processAssets` when working with [mg-context](../mg-context)'s `MigrateContext`. It's duck-typed — it works with any object that has `get(field)` and `set(field, value)` methods, so it handles posts, tags, and authors equally. Fields not in the object's schema are silently skipped.
+
+It processes two categories of fields:
+
+1. **Content fields** (`html`, `lexical`, `codeinjection_head`, `codeinjection_foot`) — scans the content string for asset URLs, downloads them, and replaces URLs inline
+2. **Image URL fields** (`feature_image`, `og_image`, `twitter_image`, `profile_image`, `cover_image`, etc.) — downloads the image at the URL and replaces it with a local `__GHOST_URL__/content/images/...` path
+
+Process posts, tags, and authors in separate loops. Tags and authors are much smaller sets than posts, so they get their own passes rather than being processed redundantly on every post:
+
+```javascript
+await context.forEachPost(async (post) => {
+    await scraper.processAssets(post);
+});
+
+await context.forEachTag(async (tag) => {
+    await scraper.processAssets(tag);
+});
+
+await context.forEachAuthor(async (author) => {
+    await scraper.processAssets(author);
+});
+```
+
+No explicit `save()` is needed — `forEachPost`, `forEachTag`, and `forEachAuthor` each save automatically after the callback returns. The asset cache deduplicates downloads across all three loops, so the same image URL is only fetched once.
+
+The old `getTasks()` method is still available for the legacy pipeline.
+
 ### Scrape from all domains
 
 Use `allowAllDomains` to scrape assets from any domain, optionally excluding specific ones. You can also supple a regular expression (as a literal or object)

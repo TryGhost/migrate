@@ -364,6 +364,63 @@ describe('MigrateContext', () => {
         });
     });
 
+    describe('forEachTag', () => {
+        it('Iterates and saves all used tags', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Post');
+            post.set('slug', 'post');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post.addTag({name: 'Alpha', slug: 'alpha'});
+            post.addTag({name: 'Beta', slug: 'beta'});
+            await post.save(instance.db);
+
+            const slugs: string[] = [];
+            await instance.forEachTag(async (tag: any) => {
+                slugs.push(tag.data.slug);
+                tag.set('description', `Desc for ${tag.data.slug}`);
+            });
+
+            assert.deepEqual(slugs, ['alpha', 'beta']);
+
+            // Verify saves persisted
+            const tags = await instance.findTags({slug: 'alpha'});
+            assert.equal(tags![0].data.description, 'Desc for alpha');
+
+            await instance.close();
+        });
+    });
+
+    describe('forEachAuthor', () => {
+        it('Iterates and saves all used authors', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Post');
+            post.set('slug', 'post');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post.addAuthor({name: 'Alice', slug: 'alice', email: 'alice@example.com'});
+            await post.save(instance.db);
+
+            const slugs: string[] = [];
+            await instance.forEachAuthor(async (author: any) => {
+                slugs.push(author.data.slug);
+                author.set('bio', 'Updated bio');
+            });
+
+            assert.deepEqual(slugs, ['alice']);
+
+            // Verify saves persisted
+            const authors = await instance.findAuthors({slug: 'alice'});
+            assert.equal(authors![0].data.bio, 'Updated bio');
+
+            await instance.close();
+        });
+    });
+
     describe('findAuthors', () => {
         let reusedInstance: any;
 

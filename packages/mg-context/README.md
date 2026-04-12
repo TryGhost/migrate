@@ -246,7 +246,7 @@ Find authors by `slug`, `name`, or `email`.
 
 Load all posts. Use `forEachPost` for large datasets to avoid loading everything into memory.
 
-### Iterating posts
+### Iterating
 
 #### `forEachPost(callback, options?): Promise<void>`
 
@@ -258,6 +258,34 @@ await ctx.forEachPost(async (post) => {
     // post is saved automatically after callback
 }, {batchSize: 200});
 ```
+
+#### `forEachTag(callback, options?): Promise<void>`
+
+Iterate all tags that are referenced by at least one post, in batches. Each tag is automatically saved after the callback.
+
+```js
+await ctx.forEachTag(async (tag) => {
+    tag.set('description', `Articles about ${tag.data.name}`);
+});
+```
+
+| Option      | Type     | Default | Description            |
+|-------------|----------|---------|------------------------|
+| `batchSize` | `number` | `100`   | Tags loaded per batch |
+
+#### `forEachAuthor(callback, options?): Promise<void>`
+
+Iterate all authors that are referenced by at least one post, in batches. Each author is automatically saved after the callback.
+
+```js
+await ctx.forEachAuthor(async (author) => {
+    author.set('bio', 'Updated bio');
+});
+```
+
+| Option      | Type     | Default | Description              |
+|-------------|----------|---------|--------------------------|
+| `batchSize` | `number` | `100`   | Authors loaded per batch |
 
 #### `forEachGhostPost(callback, options?): Promise<void>`
 

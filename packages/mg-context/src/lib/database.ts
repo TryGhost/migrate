@@ -41,6 +41,7 @@ export interface PreparedStatements {
     findTagsByName: ReturnType<DatabaseSync['prepare']>;
     findAllTags: ReturnType<DatabaseSync['prepare']>;
     findUsedTags: ReturnType<DatabaseSync['prepare']>;
+    findUsedTagIds: ReturnType<DatabaseSync['prepare']>;
 
     // Authors
     insertAuthor: ReturnType<DatabaseSync['prepare']>;
@@ -54,6 +55,7 @@ export interface PreparedStatements {
     findAuthorsByEmail: ReturnType<DatabaseSync['prepare']>;
     findAllAuthors: ReturnType<DatabaseSync['prepare']>;
     findUsedAuthors: ReturnType<DatabaseSync['prepare']>;
+    findUsedAuthorIds: ReturnType<DatabaseSync['prepare']>;
 
     // PostTag junction
     insertPostTag: ReturnType<DatabaseSync['prepare']>;
@@ -168,6 +170,7 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         findTagsByName: db.prepare('SELECT * FROM Tags WHERE name = ?'),
         findAllTags: db.prepare('SELECT * FROM Tags'),
         findUsedTags: db.prepare('SELECT DISTINCT t.* FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id ORDER BY t.id ASC'),
+        findUsedTagIds: db.prepare('SELECT DISTINCT t.id FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id ORDER BY t.id ASC'),
 
         // Authors
         insertAuthor: db.prepare('INSERT INTO Authors (data, slug, name, email, ghost_id) VALUES (?, ?, ?, ?, ?)'),
@@ -181,6 +184,7 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         findAuthorsByEmail: db.prepare('SELECT * FROM Authors WHERE email = ?'),
         findAllAuthors: db.prepare('SELECT * FROM Authors'),
         findUsedAuthors: db.prepare('SELECT DISTINCT a.* FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id ORDER BY a.id ASC'),
+        findUsedAuthorIds: db.prepare('SELECT DISTINCT a.id FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id ORDER BY a.id ASC'),
 
         // PostTag junction
         insertPostTag: db.prepare('INSERT INTO PostTags (post_id, tag_id, sort_order) VALUES (?, ?, ?)'),
