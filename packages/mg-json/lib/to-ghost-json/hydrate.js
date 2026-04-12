@@ -1,6 +1,8 @@
-import _ from 'lodash';
 import {slugify} from '@tryghost/string';
 import {decode} from 'html-entities';
+
+const startCase = str => str.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+const kebabCase = str => str.replace(/[\s_]+/g, '-').replace(/[A-Z]/g, c => `-${c.toLowerCase()}`).replace(/^-/, '').toLowerCase();
 /**
  * Hydrate Ghost objects
  * Extend object with the minimum data needed for an import to succeed
@@ -22,7 +24,7 @@ const fakeEmail = (nameSlug, domain) => `${nameSlug}@${domain}`;
 const hydrateUser = (input, options) => {
     // Handle the case where we have a slug but no name
     if (!input.name && input.slug) {
-        input.name = _.startCase(input.slug);
+        input.name = startCase(input.slug);
     } else if (!input.name) {
         // Else if there's no name or slug, we'll have to use a fake
         input.name = fakeName;
@@ -35,7 +37,7 @@ const hydrateUser = (input, options) => {
 
     // Handle the case where there is no email by generating one based on slug or name
     if (!input.email) {
-        input.email = fakeEmail(input.slug || _.kebabCase(input.name), options?.email || fakeEmailDomain);
+        input.email = fakeEmail(input.slug || kebabCase(input.name), options?.email || fakeEmailDomain);
     }
 
     // @TODO: log some sort of warning for things like this?
@@ -94,7 +96,7 @@ const hydratePost = (input, options) => {
     input.title = decode(input.title);
 
     // @TODO: log some sort of warning for things like this?
-    if (!_.includes(['published', 'draft', 'scheduled'], input.status)) {
+    if (!['published', 'draft', 'scheduled'].includes(input.status)) {
         input.status = 'draft';
     }
 

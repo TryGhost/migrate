@@ -671,9 +671,6 @@ importers:
       html-entities:
         specifier: 2.6.0
         version: 2.6.0
-      lodash:
-        specifier: 4.18.1
-        version: 4.18.1
       node-email-verifier:
         specifier: 4.0.0
         version: 4.0.0

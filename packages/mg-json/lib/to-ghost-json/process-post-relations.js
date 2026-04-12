@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import ObjectID from 'bson-objectid';
 import schema from '../utils/schema.js';
 
@@ -18,10 +17,10 @@ export default (json) => {
         // Only use plural key when it's actually an array (e.g. authors: [a, b]).
         // When single-author Co-Authors Plus posts set authors: undefined and author: <person>,
         // we must not take this branch or we'd process no one and orphan the post.
-        if (_.has(postData, pluralForm) && Array.isArray(postData[pluralForm])) {
+        if (pluralForm in postData && Array.isArray(postData[pluralForm])) {
             relations = postData[pluralForm];
             delete postData[pluralForm];
-        } else if (_.has(postData, relation)) {
+        } else if (relation in postData) {
             relations.push(postData[relation]);
             delete postData[relation];
         }
@@ -30,7 +29,7 @@ export default (json) => {
     };
 
     const findMatchingItem = (match, location) => {
-        if (!_.has(json, location)) {
+        if (!(location in json)) {
             return;
         }
         const matchData = match.data || match;
@@ -43,7 +42,7 @@ export default (json) => {
                 return item;
             } else if (itemData.name && matchData.name && itemData.name === matchData.name) {
                 return item;
-            } else if (!_.isNil(item.url || match.url) && item.url === match.url) {
+            } else if ((item.url ?? match.url) != null && item.url === match.url) { // eslint-disable-line eqeqeq
                 return item;
             }
         });
@@ -54,19 +53,19 @@ export default (json) => {
         if (!author) {
             return author;
         }
-        if (_.has(author, 'data') && _.isObject(author.data)) {
+        if ('data' in author && typeof author.data === 'object' && author.data !== null) {
             return author;
         }
         return {
             url: author.url || author.slug || '',
-            data: _.has(author, 'data') ? author.data : author
+            data: 'data' in author ? author.data : author
         };
     };
 
     const processPostAuthors = (postData) => {
         let postAuthors = findPostRelations(postData, 'author');
 
-        _.each(postAuthors, (author) => {
+        postAuthors.forEach((author) => {
             author = normaliseAuthor(author);
             if (!author || !(author.data || author)) {
                 return;
@@ -103,7 +102,7 @@ export default (json) => {
     const processPostTags = (postData) => {
         let postTags = findPostRelations(postData, 'tag');
 
-        _.each(postTags, (postTag) => {
+        postTags.forEach((postTag) => {
             let tag = findMatchingItem(postTag, 'tags');
 
             if (!tag) {

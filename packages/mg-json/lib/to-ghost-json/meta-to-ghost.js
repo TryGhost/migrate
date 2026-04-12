@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import ObjectID from 'bson-objectid';
 import schema from '../utils/schema.js';
 import hydrate from './hydrate.js';
@@ -36,7 +35,7 @@ const deduplicateSlugs = (obj, type) => {
         slugs[type] = [];
     }
 
-    if (_.includes(slugs[type], obj.slug)) {
+    if (slugs[type].includes(obj.slug)) {
         // @TODO: log some sort of warning for things like this?
         const objectID = new ObjectID();
         const maxBaseLength = GHOST_SLUG_MAX - DEDUP_SUFFIX_LENGTH;
@@ -58,7 +57,7 @@ const ensureValid = (resource, type, options) => {
         obj = deduplicateSlugs(obj, type);
     }
 
-    if (_.has(hydrate, type)) {
+    if (type in hydrate) {
         obj = hydrate[type](obj, options);
     }
 
@@ -68,10 +67,10 @@ const ensureValid = (resource, type, options) => {
 const normalizeKey = (key) => {
     let outputKey = null;
 
-    if (_.includes(schema.RESOURCES, key)) {
+    if (schema.RESOURCES.includes(key)) {
         outputKey = key;
         // If this key is singular, convert to plural form
-    } else if (_.includes(_.keys(schema.RESOURCE_SINGULAR_TO_PLURAL), key)) {
+    } else if (key in schema.RESOURCE_SINGULAR_TO_PLURAL) {
         outputKey = schema.RESOURCE_SINGULAR_TO_PLURAL[key];
     }
 
@@ -79,7 +78,7 @@ const normalizeKey = (key) => {
 };
 
 const normalizeValue = (value) => {
-    if (!_.isArray(value)) {
+    if (!Array.isArray(value)) {
         value = [value];
     }
 
@@ -91,7 +90,7 @@ const normalizeValue = (value) => {
  * Iterate over each key and return only ones that we recognise
  */
 export default (input, options) => {
-    return _.reduce(input, (data, inputValue, inputKey) => {
+    return Object.entries(input).reduce((data, [inputKey, inputValue]) => {
         let key = normalizeKey(inputKey);
         let entries = normalizeValue(inputValue);
 
@@ -100,7 +99,7 @@ export default (input, options) => {
             return data;
         }
 
-        data[key] = _.map(entries, entry => ensureValid(entry, key, options));
+        data[key] = entries.map(entry => ensureValid(entry, key, options));
 
         return data;
     }, {});
