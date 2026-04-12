@@ -20,9 +20,10 @@
   "scripts": {
     "dev": "echo \"Implement me!\"",
     "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",
-    "build": "rm -rf build && rm -rf tsconfig.tsbuildinfo && tsc --build --sourceMap",
+    "build": "tsc --build --sourceMap",
     "lint": "eslint src/ --ext .ts --cache",
-    "test": "rm -rf build && pnpm build --force && NODE_ENV=test c8 --src src --all --check-coverage --100 --reporter text --reporter cobertura node --test --test-concurrency=1 'build/test/**/*.test.js'",
+    "test": "NODE_ENV=test c8 --src src --all --check-coverage --100 --reporter text --reporter cobertura node --test --test-concurrency=1 'build/test/**/*.test.js'",
+    "test:local": "pnpm build && pnpm test",
     "posttest": "pnpm lint"
   },
   "files": [

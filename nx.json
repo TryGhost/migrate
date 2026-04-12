@@ -12,6 +12,7 @@
     },
     "test": {
       "dependsOn": [
+        "build",
         "^build",
         "lint"
       ],

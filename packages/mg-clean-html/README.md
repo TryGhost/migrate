@@ -41,6 +41,7 @@ pnpm dev curate --pathToZip /path/to/export.zip
 
 - `pnpm lint` run just eslint
 - `pnpm test` run lint and tests
+- `pnpm test:local` build and run tests (for single-package development)
 
 
 # Copyright & License

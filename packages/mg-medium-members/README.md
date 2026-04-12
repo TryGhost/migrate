@@ -72,6 +72,7 @@ pnpm dev medium-members <commands>
 
 - `pnpm lint` run just eslint
 - `pnpm test` run lint and tests
+- `pnpm test:local` build and run tests (for single-package development)
 
 
 # Copyright & License
