@@ -9,7 +9,7 @@ This is a Ghost blog migration toolkit - a monorepo with 45+ packages for migrat
 ## Package Manager & Dependencies
 
 - **Always use `pnpm` for all commands.** This repository uses pnpm workspaces with Nx.
-- Install dependencies with `pnpm add`, like `pnpm add lodash`. If the dependency is for development, pass the `-D` flag, like `pnpm add -D lodash`. Exact versions are pinned automatically via `.npmrc`.
+- Install dependencies with `pnpm add`, like `pnpm add some-package`. If the dependency is for development, pass the `-D` flag, like `pnpm add -D some-package`. Exact versions are pinned automatically via `.npmrc`.
 - **Always pin exact versions.** Use `"1.2.3"`, not `"^1.2.3"` or `"~1.2.3"`.
 - **Use `workspace:*`** for dependencies on other packages in this monorepo.
 
@@ -77,10 +77,10 @@ packages/
 2. **Use `import`, never `require()`**:
    ```javascript
    // Correct
-   import _ from 'lodash';
+   import errors from '@tryghost/errors';
 
    // Wrong
-   const _ = require('lodash');
+   const errors = require('@tryghost/errors');
    ```
 
 3. **Export patterns**:
@@ -287,6 +287,7 @@ throw new errors.InternalServerError({
 
 ## Code Style
 
+- **Do not use lodash.** Use native JS instead: `Array.find`, `Array.includes`, `Object.entries`, `Array.isArray`, `for...of`, etc. Lodash is being actively removed from this codebase.
 - ESLint with `eslint-plugin-ghost` is enforced
 - No console.log in production (use `// eslint-disable-next-line no-console` if needed)
 - Use async/await, not promise chains
