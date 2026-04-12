@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import scrapeIt from 'scrape-it';
 import omitEmpty from 'omit-empty';
 import errors from '@tryghost/errors';
@@ -49,9 +48,7 @@ const makeMetaObject = (item: any): any => {
 };
 
 const findMatchIn = (existing: any[], match: any): any => {
-    return _.find(existing, (item) => {
-        return item.url === match.url;
-    });
+    return existing.find(item => item.url === match.url);
 };
 
 const ScrapeError = ({url, code, originalError}: {url: string; code?: string; originalError?: Error}): any => {
@@ -84,7 +81,7 @@ export default class WebScraper {
     constructor(fileCache: FileCache, config: ScrapeConfig, postProcessor?: PostProcessor, skipFn?: SkipFn) {
         this.fileCache = fileCache;
         this.config = config;
-        this.postProcessor = postProcessor || _.identity;
+        this.postProcessor = postProcessor || ((x: any) => x);
         this.skipFn = skipFn;
     }
 
@@ -98,9 +95,9 @@ export default class WebScraper {
             // if we find a match, and the existing data isn't an array, copy data properties across
             /* c8 ignore next 4 -- defensive: only reachable if existing is a non-array object */
             if (matchedItem && !Array.isArray(result)) {
-                _.each(newItem.data, (datum: any, key: string) => {
+                for (const [key, datum] of Object.entries(newItem.data)) {
                     matchedItem.data[key] = datum;
-                });
+                }
             } else {
                 result.push(newItem);
             }
@@ -116,23 +113,23 @@ export default class WebScraper {
             return newItem;
         }
 
-        _.each(newItem.data, (datum: any, key: string) => {
+        for (const [key, datum] of Object.entries(newItem.data)) {
             existing.data[key] = datum;
-        });
+        }
 
         return existing;
     }
 
     mergeResource(resource: any, scrapedData: any): any {
-        _.each(scrapedData, (value: any, key: string) => {
-            if (_.isArray(value)) {
+        for (const [key, value] of Object.entries(scrapedData)) {
+            if (Array.isArray(value)) {
                 resource[key] = this.mergeRelations(resource[key], value);
-            } else if (_.isObject(value)) {
+            } else if (typeof value === 'object' && value !== null) {
                 resource[key] = this.mergeObject(resource[key], value);
             } else {
                 resource[key] = value;
             }
-        });
+        }
 
         return resource;
     }
