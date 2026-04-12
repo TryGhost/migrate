@@ -1,7 +1,6 @@
 import url from 'node:url';
 import {readFileSync} from 'node:fs';
 import {basename} from 'node:path';
-import _ from 'lodash';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import Shortcodes from '@tryghost/mg-shortcodes';
 import {slugify} from '@tryghost/string';
@@ -33,6 +32,18 @@ const {getYouTubeID} = youtubeUtils;
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
 const debug = debugFactory('migrate:wp-api:processor');
+
+const htmlUnescapeMap = {'&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': '\''};
+const htmlUnescapeRegex = /&(?:amp|lt|gt|quot|#39);/g;
+const unescapeHTML = str => str.replace(htmlUnescapeRegex, match => htmlUnescapeMap[match]);
+
+const chunkArray = (arr, size) => {
+    const chunks = [];
+    for (let i = 0; i < arr.length; i += size) {
+        chunks.push(arr.slice(i, i + size));
+    }
+    return chunks;
+};
 
 const stripHtml = (html) => {
     // Remove HTML tags, new line characters, and trim white-space
@@ -121,7 +132,7 @@ const processTerm = (wpTerm) => {
         url: wpTerm.link,
         data: {
             slug: wpTerm.slug,
-            name: _.unescape(wpTerm.name)
+            name: unescapeHTML(wpTerm.name)
         }
     };
 };
@@ -182,7 +193,7 @@ const processCoAuthors = (wpTerms, users) => {
                         url: term.link,
                         data: {
                             slug: term.slug,
-                            name: _.unescape(term.name)
+                            name: unescapeHTML(term.name)
                         }
                     });
                 }
@@ -344,9 +355,7 @@ const processShortcodes = async ({html, options}) => {
 
                 images = attrs.ids.split(',').map((i) => {
                     let idInt = parseInt(i.trim());
-                    let foundAttachment = _.find(attachments, (item) => {
-                        return parseInt(item.id) === idInt;
-                    });
+                    let foundAttachment = attachments.find(item => parseInt(item.id) === idInt);
                     return foundAttachment;
                 });
 
@@ -356,7 +365,7 @@ const processShortcodes = async ({html, options}) => {
                 });
             }
 
-            const imageChunks = _.chunk(images, 9);
+            const imageChunks = chunkArray(images, 9);
 
             let galleryHtmlChunks = [];
 
@@ -1308,9 +1317,7 @@ const processPosts = async (posts, users, options, errors, fileCache) => { // es
         // Filter…
         let foundPosts = [];
         onlyURLsObj.forEach((urlObj) => {
-            let foundPost = _.find(posts, {
-                link: urlObj.url
-            });
+            let foundPost = posts.find(post => post.link === urlObj.url);
 
             if (foundPost) {
                 foundPosts.push(foundPost);
@@ -1347,16 +1354,10 @@ const all = async (ctx) => {
             let passedUsers = usersJSON;
             console.log(`Passed a users file with ${passedUsers.length} entries, processing now!`); // eslint-disable-line no-console
             await passedUsers.map((passedUser) => { // eslint-disable-line array-callback-return
-                const matchedUser = _.find(input.users, (fetchedUser) => {
-                    if (fetchedUser.id && passedUser.id && fetchedUser.id === passedUser.id) {
-                        return fetchedUser;
-                    } else if (fetchedUser.slug && passedUser.slug && fetchedUser.slug === passedUser.slug) {
-                        return fetchedUser;
-                    } else if (fetchedUser.name && passedUser.name && fetchedUser.name === passedUser.name) {
-                        return fetchedUser;
-                    } else {
-                        return false;
-                    }
+                const matchedUser = input.users.find((fetchedUser) => {
+                    return (fetchedUser.id && passedUser.id && fetchedUser.id === passedUser.id)
+                        || (fetchedUser.slug && passedUser.slug && fetchedUser.slug === passedUser.slug)
+                        || (fetchedUser.name && passedUser.name && fetchedUser.name === passedUser.name);
                 });
                 mergedUsers.push(Object.assign({}, passedUser, matchedUser));
             });

@@ -1169,9 +1169,6 @@ importers:
       html-to-text:
         specifier: 9.0.5
         version: 9.0.5
-      lodash:
-        specifier: 4.18.1
-        version: 4.18.1
       simple-dom:
         specifier: 1.4.0
         version: 1.4.0
