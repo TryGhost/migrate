@@ -118,8 +118,8 @@ importers:
         specifier: 14.0.12
         version: 14.0.12
       sinon:
-        specifier: 21.0.3
-        version: 21.0.3
+        specifier: 21.1.0
+        version: 21.1.0
       typescript:
         specifier: 6.0.2
         version: 6.0.2
@@ -176,8 +176,8 @@ importers:
         specifier: 8.57.1
         version: 8.57.1
       sinon:
-        specifier: 21.0.3
-        version: 21.0.3
+        specifier: 21.1.0
+        version: 21.1.0
       typescript:
         specifier: 6.0.2
         version: 6.0.2
@@ -293,8 +293,8 @@ importers:
         specifier: 8.57.1
         version: 8.57.1
       sinon:
-        specifier: 21.0.3
-        version: 21.0.3
+        specifier: 21.1.0
+        version: 21.1.0
       typescript:
         specifier: 6.0.2
         version: 6.0.2
@@ -370,8 +370,8 @@ importers:
         specifier: 8.57.1
         version: 8.57.1
       sinon:
-        specifier: 21.0.3
-        version: 21.0.3
+        specifier: 21.1.0
+        version: 21.1.0
       typescript:
         specifier: 6.0.2
         version: 6.0.2
@@ -616,8 +616,8 @@ importers:
         specifier: 8.57.1
         version: 8.57.1
       sinon:
-        specifier: 21.0.3
-        version: 21.0.3
+        specifier: 21.1.0
+        version: 21.1.0
       typescript:
         specifier: 6.0.2
         version: 6.0.2
@@ -782,8 +782,8 @@ importers:
         specifier: 8.57.1
         version: 8.57.1
       sinon:
-        specifier: 21.0.3
-        version: 21.0.3
+        specifier: 21.1.0
+        version: 21.1.0
       typescript:
         specifier: 6.0.2
         version: 6.0.2
@@ -844,8 +844,8 @@ importers:
         specifier: 8.57.1
         version: 8.57.1
       sinon:
-        specifier: 21.0.3
-        version: 21.0.3
+        specifier: 21.1.0
+        version: 21.1.0
       typescript:
         specifier: 6.0.2
         version: 6.0.2
@@ -951,8 +951,8 @@ importers:
         specifier: 8.57.1
         version: 8.57.1
       sinon:
-        specifier: 21.0.3
-        version: 21.0.3
+        specifier: 21.1.0
+        version: 21.1.0
       typescript:
         specifier: 6.0.2
         version: 6.0.2
@@ -2690,8 +2690,8 @@ packages:
   '@sinonjs/fake-timers@15.3.0':
     resolution: {integrity: sha512-m2xozxSfCIxjDdvbhIWazlP2i2aha/iUmbl94alpsIbd3iLTfeXgfBVbwyWogB6l++istyGZqamgA/EcqYf+Bg==}
 
-  '@sinonjs/samsam@9.0.3':
-    resolution: {integrity: sha512-ZgYY7Dc2RW+OUdnZ1DEHg00lhRt+9BjymPKHog4PRFzr1U3MbK57+djmscWyKxzO1qfunHqs4N45WWyKIFKpiQ==}
+  '@sinonjs/samsam@10.0.2':
+    resolution: {integrity: sha512-8lVwD1Df1BmzoaOLhMcGGcz/Jyr5QY2KSB75/YK1QgKzoabTeLdIVyhXNZK9ojfSKSdirbXqdbsXXqP9/Ve8+A==}
 
   '@stdlib/array-float32@0.2.3':
     resolution: {integrity: sha512-LxdKGrpsCehFDgU+nw7r3/NL+g8pe9zcDn/6fvNwiuy0AiunX/+c8lin9qUy/FEhrbU6aFXepFM2Ql/9YQD+TA==}
@@ -6373,8 +6373,8 @@ packages:
   simple-html-tokenizer@0.5.11:
     resolution: {integrity: sha512-C2WEK/Z3HoSFbYq8tI7ni3eOo/NneSPRoPpcM7WdLjFOArFuyXEjAoCdOC3DgMfRyziZQ1hCNR4mrNdWEvD0og==}
 
-  sinon@21.0.3:
-    resolution: {integrity: sha512-0x8TQFr8EjADhSME01u1ZK31yv2+bd6Z5NrBCHVM+n4qL1wFqbxftmeyi3bwlr49FbbzRfrqSFOpyHCOh/YmYA==}
+  sinon@21.1.0:
+    resolution: {integrity: sha512-eyGgN8TGu8LZ3cNFatmeK+kM3T3ZjxZ+742ua4wMcm1yK6AQoQVibm2HnM+b1DT/a5ErAtmYL0R0c4ooDEcqNQ==}
 
   slice-ansi@0.0.4:
     resolution: {integrity: sha512-up04hB2hR92PgjpyU3y/eg91yIBILyjVY26NvvciY3EVVPjybkMszMpXQ9QAkcS3I5rtJBDLoTxxg+qvW8c7rw==}
@@ -6538,6 +6538,10 @@ packages:
     resolution: {integrity: sha512-FT3QLMasz0YyCd4uIi5HNe+3t/onxMyEho7C3PSqmti3Twgy2rXT4fmkTz6wRL6bTF4uzPcfkUCa8u4JWHw8Ag==}
     engines: {node: '>= 6.0'}
     deprecated: Please upgrade to superagent v10.2.2+, see release notes at https://github.com/forwardemail/superagent/releases/tag/v10.2.2 - maintenance is supported by Forward Email @ https://forwardemail.net
+
+  supports-color@10.2.2:
+    resolution: {integrity: sha512-SS+jx45GF1QjgEXQx4NJZV9ImqmO2NPz5FNsIHrsDjh2YsHnawpan7SNQ1o8NuhrbHZy9AZhIoCUiCeaW/C80g==}
+    engines: {node: '>=18'}
 
   supports-color@2.0.0:
     resolution: {integrity: sha512-KKNVtd6pCYgPIKU4cp2733HWYCpplQhddZLBUryaAHou723x+FRzQ5Df824Fj+IyyuiQTRoub4SnIFfIcrp70g==}
@@ -8427,7 +8431,7 @@ snapshots:
     dependencies:
       '@sinonjs/commons': 3.0.1
 
-  '@sinonjs/samsam@9.0.3':
+  '@sinonjs/samsam@10.0.2':
     dependencies:
       '@sinonjs/commons': 3.0.1
       type-detect: 4.1.0
@@ -12612,13 +12616,13 @@ snapshots:
 
   simple-html-tokenizer@0.5.11: {}
 
-  sinon@21.0.3:
+  sinon@21.1.0:
     dependencies:
       '@sinonjs/commons': 3.0.1
       '@sinonjs/fake-timers': 15.3.0
-      '@sinonjs/samsam': 9.0.3
+      '@sinonjs/samsam': 10.0.2
       diff: 8.0.4
-      supports-color: 7.2.0
+      supports-color: 10.2.2
 
   slice-ansi@0.0.4: {}
 
@@ -12797,6 +12801,8 @@ snapshots:
       readable-stream: 3.6.2
     transitivePeerDependencies:
       - supports-color
+
+  supports-color@10.2.2: {}
 
   supports-color@2.0.0: {}
 
