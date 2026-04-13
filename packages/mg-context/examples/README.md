@@ -41,3 +41,11 @@ Reads posts from an existing on-disk database (`posts.db`) and iterates over the
 ```bash
 npx tsx examples/foreach-ghost-post.ts
 ```
+
+## stream-posts.ts
+
+Iterates **50,000 posts** using `streamPosts()` and tracks peak memory usage. On the first run, posts are inserted into `stream-posts.db`. Subsequent runs reuse the existing database. Useful for verifying that the generator-based iteration keeps memory bounded.
+
+```bash
+npx tsx examples/stream-posts.ts
+```

@@ -298,6 +298,57 @@ await ctx.forEachGhostPost(async (json, post) => {
 }, {batchSize: 50});
 ```
 
+#### `streamPosts(options?): AsyncGenerator<PostContext>`
+
+Async generator that yields posts one at a time. Unlike `forEachPost`, posts are not auto-saved — you control when to persist changes. Ideal for feeding posts into a concurrent task queue.
+
+```js
+for await (const post of ctx.streamPosts({batchSize: 200})) {
+    const html = post.get('html');
+    post.set('html', html.toUpperCase());
+    post.save(ctx.db);
+}
+```
+
+Or with a task queue:
+
+```js
+async function* postTasks() {
+    for await (const post of ctx.streamPosts()) {
+        yield {
+            title: post.get('slug'),
+            task: async () => {
+                // process post concurrently
+                post.set('html', transform(post.get('html')));
+                post.save(ctx.db);
+            }
+        };
+    }
+}
+
+await queue.run(postTasks());
+```
+
+#### `streamTags(options?): AsyncGenerator<TagContext>`
+
+Async generator that yields tags referenced by at least one post. Tags are not auto-saved.
+
+```js
+for await (const tag of ctx.streamTags()) {
+    console.log(tag.data.slug, tag.data.name);
+}
+```
+
+#### `streamAuthors(options?): AsyncGenerator<AuthorContext>`
+
+Async generator that yields authors referenced by at least one post. Authors are not auto-saved.
+
+```js
+for await (const author of ctx.streamAuthors()) {
+    console.log(author.data.slug, author.data.name);
+}
+```
+
 #### Iteration options
 
 | Option      | Type         | Default | Description                                   |
@@ -408,7 +459,7 @@ Remove an event listener.
 
 #### `progress` event
 
-Emitted after each batch during `prepareForExport()`, `forEachPost()`, and `forEachGhostPost()`.
+Emitted after each batch during `prepareForExport()`, `forEachPost()`, `forEachGhostPost()`, `streamPosts()`, `streamTags()`, and `streamAuthors()`.
 
 ```js
 ctx.on('progress', (event, processed, total) => {
@@ -418,7 +469,7 @@ ctx.on('progress', (event, processed, total) => {
 
 | Argument    | Type     | Description                                                  |
 |-------------|----------|--------------------------------------------------------------|
-| `event`     | `string` | Operation name: `prepareForExport`, `forEachPost`, or `forEachGhostPost` |
+| `event`     | `string` | Operation name: `prepareForExport`, `forEachPost`, `forEachGhostPost`, `streamPosts`, `streamTags`, or `streamAuthors` |
 | `processed` | `number` | Posts processed so far                                       |
 | `total`     | `number` | Total posts to process                                       |
 
@@ -757,6 +808,7 @@ The [examples/](examples/) directory contains runnable scripts demonstrating com
 - **generate-large-export.ts** — Stress-test with 500k posts, benchmarking memory and performance
 - **foreach-ghost-post.ts** — Iterate an existing database and log each post as Ghost JSON
 - **deduplicate-slugs.ts** — Detect and rename duplicate slugs, then log the changes for manual redirect handling
+- **stream-posts.ts** — Iterate 50k posts with `streamPosts()`, tracking peak memory usage
 
 Run any example from the package directory:
 
