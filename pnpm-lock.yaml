@@ -865,6 +865,9 @@ importers:
         specifier: 7.0.2
         version: 7.0.2
     devDependencies:
+      '@tryghost/mg-context':
+        specifier: workspace:*
+        version: link:../mg-context
       '@types/node':
         specifier: 24.12.2
         version: 24.12.2

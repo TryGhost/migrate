@@ -15,7 +15,6 @@ export interface SqliteReaderOptions {
     dbPath: string;
     timeoutMs?: number;
     readonly?: boolean;
-    fileMustExist?: boolean;
     database?: SqliteDatabase;
 }
 

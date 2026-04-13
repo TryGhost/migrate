@@ -155,13 +155,20 @@ export class Queue {
     }
 
     async #shouldSkip(task: Task): Promise<boolean> {
-        if (task.skip === undefined) {
+        try {
+            if (task.skip === undefined) {
+                return false;
+            }
+            if (typeof task.skip === 'boolean') {
+                return task.skip;
+            }
+            return await task.skip();
+        } catch {
+            // A throwing skip predicate is a bug in caller code.
+            // Treat as "don't skip" so the task runs and fails visibly
+            // rather than crashing the queue.
             return false;
         }
-        if (typeof task.skip === 'boolean') {
-            return task.skip;
-        }
-        return task.skip();
     }
 
     async #runSubtasks(

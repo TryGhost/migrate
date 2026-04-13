@@ -70,6 +70,14 @@ Streams rows from a SQLite database as queue tasks using `SqliteReader`. Require
 npx tsx examples/sqlite-reader.ts
 ```
 
+## mg-context.ts
+
+Creates an mg-context database with 500 posts, then uses `ctx.streamPosts()` to yield posts as queue tasks for concurrent processing.
+
+```bash
+npx tsx examples/mg-context.ts
+```
+
 ## other.ts
 
 A minimal end-to-end example using the dynamic renderer with `keepOnScreen`. Sequential root tasks with parallel subtasks showing task hierarchy.

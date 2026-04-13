@@ -701,6 +701,25 @@ describe('Queue', () => {
                 assert.deepEqual(renderer.completedTitles(), ['async-run']);
             });
 
+            it('treats throwing skip function as "don\'t skip" so task runs', async () => {
+                const renderer = new TestRenderer();
+                const queue = new Queue({concurrency: 1, renderer});
+
+                const stats = await queue.run([
+                    {
+                        title: 'throwing-skip',
+                        skip: () => {
+                            throw new Error('skip broke');
+                        },
+                        task: async () => {}
+                    }
+                ]);
+
+                assert.equal(stats.completed, 1);
+                assert.equal(stats.skipped, 0);
+                assert.deepEqual(renderer.completedTitles(), ['throwing-skip']);
+            });
+
             it('does not call onTaskStart for pre-skipped tasks', async () => {
                 const renderer = new TestRenderer();
                 const queue = new Queue({concurrency: 2, renderer});

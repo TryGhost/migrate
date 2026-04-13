@@ -28,7 +28,7 @@ const queue = new Queue({concurrency: 5});
 const stats = await queue.run(tasks);
 
 // stats = {
-//     completed: 2,
+//     completed: 1,
 //     skipped: 0,
 //     errors: [{title: 'Task 1', error: Error}]
 // }
@@ -492,7 +492,6 @@ Options:
 - `dbPath: string` - Path to SQLite database file
 - `timeoutMs?: number` - SQLite busy timeout in milliseconds (default: `5000`)
 - `readonly?: boolean` - Open connection in readonly mode
-- `fileMustExist?: boolean` - Require existing DB file
 - `database?: SqliteDatabase` - Inject existing DB instance (useful for tests)
 
 Methods:
@@ -515,6 +514,7 @@ The [examples/](examples/) directory contains runnable scripts, each demonstrati
 - **subtasks.ts** — Parallel and sequential child tasks via `Subtasks`
 - **abort-signal.ts** — Cooperative cancellation with `ctx.signal`
 - **sqlite-reader.ts** — Streaming SQLite rows as queue tasks
+- **mg-context.ts** — Reading from an mg-context database with SqliteReader
 - **other.ts** — Minimal end-to-end with dynamic renderer and task hierarchy
 
 Run any example from the package directory:

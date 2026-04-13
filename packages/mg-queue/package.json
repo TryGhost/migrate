@@ -28,6 +28,7 @@
     "access": "public"
   },
   "devDependencies": {
+    "@tryghost/mg-context": "workspace:*",
     "@types/node": "24.12.2",
     "@typescript-eslint/eslint-plugin": "8.0.0",
     "@typescript-eslint/parser": "8.0.0",
