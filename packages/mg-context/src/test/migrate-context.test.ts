@@ -2062,6 +2062,57 @@ describe('MigrateContext', () => {
             });
         });
 
+        describe('streamPosts', () => {
+            it('yields all posts as PostContext objects', async () => {
+                const titles: string[] = [];
+                for await (const post of ctx.streamPosts()) {
+                    titles.push(post.data.title);
+                }
+                assert.equal(titles.length, 5);
+            });
+
+            it('supports filter option', async () => {
+                const titles: string[] = [];
+                for await (const post of ctx.streamPosts({filter: {tag: {slug: 'news'}}})) {
+                    titles.push(post.data.title);
+                }
+                assert.deepEqual(titles, ['Post A', 'Post B']);
+            });
+
+            it('yields zero posts on empty context', async () => {
+                const empty: any = new MigrateContext();
+                await empty.init();
+                let count = 0;
+                for await (const _post of empty.streamPosts()) { // eslint-disable-line no-unused-vars
+                    count += 1;
+                }
+                assert.equal(count, 0);
+                await empty.close();
+            });
+        });
+
+        describe('streamTags', () => {
+            it('yields all used tags', async () => {
+                const slugs: string[] = [];
+                for await (const tag of ctx.streamTags()) {
+                    slugs.push(tag.data.slug);
+                }
+                assert.ok(slugs.includes('news'));
+                assert.ok(slugs.includes('tech'));
+            });
+        });
+
+        describe('streamAuthors', () => {
+            it('yields all used authors', async () => {
+                const slugs: string[] = [];
+                for await (const author of ctx.streamAuthors()) {
+                    slugs.push(author.data.slug);
+                }
+                assert.ok(slugs.includes('alice'));
+                assert.ok(slugs.includes('bob'));
+            });
+        });
+
         describe('forEachGhostPost', () => {
             it('Tag filter works read-only', async () => {
                 const titles: string[] = [];

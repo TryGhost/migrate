@@ -1,0 +1,5 @@
+/build
+/tsconfig.tsbuildinfo
+/tmp
+.env
+*.db

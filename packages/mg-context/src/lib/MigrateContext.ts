@@ -335,6 +335,45 @@ export default class MigrateContext extends MigrateBase {
         }
     }
 
+    async *streamPosts({batchSize = 100, filter}: ForEachPostOptions = {}): AsyncGenerator<PostContext> {
+        const where = this.#buildFilterWhere(filter);
+        const allIds = findAllPostIdsWhere(this.db, where);
+
+        yield* this.#streamByIds(allIds, batchSize, 'streamPosts', ids => findPostsByIds(this.db, ids), row => PostContext.fromRow(row, this.db));
+    }
+
+    async *streamTags({batchSize = 100}: {batchSize?: number} = {}): AsyncGenerator<TagContext> {
+        const allIds = (this.db.stmts.findUsedTagIds.all() as any[]).map((r: any) => r.id as number);
+
+        yield* this.#streamByIds(allIds, batchSize, 'streamTags', ids => findByIds(this.db, 'Tags', ids), row => TagContext.fromRow(row));
+    }
+
+    async *streamAuthors({batchSize = 100}: {batchSize?: number} = {}): AsyncGenerator<AuthorContext> {
+        const allIds = (this.db.stmts.findUsedAuthorIds.all() as any[]).map((r: any) => r.id as number);
+
+        yield* this.#streamByIds(allIds, batchSize, 'streamAuthors', ids => findByIds(this.db, 'Authors', ids), row => AuthorContext.fromRow(row));
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    async *#streamByIds<T>(allIds: number[], batchSize: number, eventName: string, fetchBatch: (ids: number[]) => any[], toEntity: (row: any) => T): AsyncGenerator<T> {
+        const total = allIds.length;
+        let processed = 0;
+
+        for (let offset = 0; offset < total; offset += batchSize) {
+            const batchIds = allIds.slice(offset, offset + batchSize);
+            const rows = fetchBatch(batchIds);
+
+            for (const row of rows) {
+                yield toEntity(row);
+                processed += 1;
+            }
+
+            if (this.#emitEvents) {
+                this.#emitter.emit('progress', eventName, processed, total);
+            }
+        }
+    }
+
     async addPost(post?: PostContext | PostConstructorOptions): Promise<PostContext> {
         let newPost: PostContext;
 
