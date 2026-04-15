@@ -1,5 +1,5 @@
 import errors from '@tryghost/errors';
-import {authedClient} from './fetch.js';
+import {authedClient, discover} from './fetch.js';
 
 const listPublications = async (apiKey: string) => {
     const url = new URL(`https://api.beehiiv.com/v2/publications`);
@@ -16,7 +16,17 @@ const listPublications = async (apiKey: string) => {
 
     const data = await response.json();
 
-    return data.data;
+    let pubData = data.data;
+
+    // Get post count for each publication
+    for (const pub of pubData) {
+        // Sleep for 100 ms to avoid hitting rate limits
+        await new Promise(resolve => setTimeout(resolve, 100)); // eslint-disable-line no-promise-executor-return
+        let postCount = await discover(apiKey, pub.id);
+        pub.postCount = postCount;
+    }
+
+    return pubData;
 };
 
 export {
