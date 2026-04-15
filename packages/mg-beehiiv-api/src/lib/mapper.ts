@@ -77,6 +77,18 @@ const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?
         }
     });
 
+    if (options?.addTag) {
+        const addTagName = options.addTag.trim();
+        const addTagSlug = slugify(addTagName);
+        mappedData.data.tags.push({
+            url: `migrator-added-tag-${addTagSlug}`,
+            data: {
+                slug: addTagSlug,
+                name: addTagName
+            }
+        });
+    }
+
     return mappedData;
 };
 

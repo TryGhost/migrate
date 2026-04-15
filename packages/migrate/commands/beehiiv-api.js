@@ -68,6 +68,12 @@ const options = [
         desc: 'Provide a path that existing "comment" anchors will link to e.g. "#comments" or "#ghost-comments-root" (# characters need to be escaped with a \\)'
     },
     {
+        type: 'string',
+        flags: '--addTag',
+        defaultValue: null,
+        desc: 'Provide a tag name which should be added to every post in this migration'
+    },
+    {
         type: 'boolean',
         flags: '--cache',
         defaultValue: true,

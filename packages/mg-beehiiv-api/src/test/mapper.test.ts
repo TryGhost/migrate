@@ -150,6 +150,24 @@ describe('beehiiv API Mapper', () => {
             assert.equal(beehiivTag.data.name, '#beehiiv');
         });
 
+        it('adds custom tag when addTag option is provided', () => {
+            const postData = createMockPostData({content_tags: []});
+            const result = mapPost({postData, options: {addTag: ' From beehiiv '}});
+
+            const customTag = result.data.tags.find((t: any) => t.data.slug === 'from-beehiiv');
+            assert.ok(customTag);
+            assert.equal(customTag.data.name, 'From beehiiv');
+            assert.equal(customTag.url, 'migrator-added-tag-from-beehiiv');
+        });
+
+        it('does not add custom tag when addTag option is not provided', () => {
+            const postData = createMockPostData({content_tags: ['News']});
+            const result = mapPost({postData});
+
+            // Should have content tag + #beehiiv only
+            assert.equal(result.data.tags.length, 2);
+        });
+
         it('handles null subtitle', () => {
             const postData = createMockPostData({subtitle: null});
             const result = mapPost({postData});

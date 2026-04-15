@@ -70,6 +70,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--commentLink`**
     - Provide a path that existing comment anchors will link to e.g. `#ghost-comments-root` (`#` characters need to be escaped with a `\`)
     - string - default: `#ghost-comments-root`
+- **`--addTag`**
+    - Provide a tag name which should be added to every post in this migration (wrap in single quotes if the name has spaces, e.g. `'From beehiiv'`)
+    - string - default: `null`
 - **`--cache`**
     - Persist local cache after migration is complete (Only if `--zip` is `true`)
     - bool - default: `true`
