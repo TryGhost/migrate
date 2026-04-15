@@ -853,11 +853,11 @@ importers:
   packages/mg-queue:
     dependencies:
       '@tryghost/debug':
-        specifier: 0.1.35
-        version: 0.1.35
+        specifier: 2.0.3
+        version: 2.0.3
       '@tryghost/errors':
-        specifier: 1.3.8
-        version: 1.3.8
+        specifier: 3.0.3
+        version: 3.0.3
       chalk:
         specifier: 5.6.2
         version: 5.6.2
@@ -3524,14 +3524,8 @@ packages:
   '@tryghost/admin-api@1.14.6':
     resolution: {integrity: sha512-GZ14THA09fCUIxveB1iC50v9GyCqCy3xbvAM51Q4XVhTmycz1BZaWfH2n+X+JXnfN3nIzQQwgSjp/RxMglQ9Mg==}
 
-  '@tryghost/debug@0.1.35':
-    resolution: {integrity: sha512-NNKMKV6xuaOaXjTJ/NBMWEzfSkFLahtxARlyYbFuxb9y95jhyJb2+mu9Zsd+gKWZZIkP7ACkWqyooTm4rr9eCQ==}
-
   '@tryghost/debug@2.0.3':
     resolution: {integrity: sha512-qMlZc/1/OwbN8U/X4p5yFwqAbQZPcIZK9hwHRP/iTs+giYYQT7ZmWvsbxZYcvCIcA91Ia/PO7HZnOvinNF5ZHg==}
-
-  '@tryghost/errors@1.3.8':
-    resolution: {integrity: sha512-2+4ExAAWM0rFWC7FlzxQMzIvIEQKt/vQLxLyqJqCmAcJa4i2uqUPJHqd/X5BBRuSTuftgca7EAo7adESbHEkZw==}
 
   '@tryghost/errors@2.2.1':
     resolution: {integrity: sha512-7zR5Wu9UMalFZbWZs3nN3MzJg6mKek11W51AP8UGz5sN4fQofoeLwXHLI/AuT7nDuWiJZHsJcI1EGJg0iQHV3g==}
@@ -3593,9 +3587,6 @@ packages:
 
   '@tryghost/pretty-cli@3.0.3':
     resolution: {integrity: sha512-lAA6brlgQ5uyEDlpHdet7IZrspPYP5bRe6GVsnKQJ/RCTFoOC8fGhIy5E9UV37c6Ym4Jcjm/Z9adWXWiq4xhMg==}
-
-  '@tryghost/root-utils@0.3.38':
-    resolution: {integrity: sha512-ARn8wC6qv867lCr7BZ+IS8S/88K5go0j6HgQFhP27rKje4b40PsxH/P3rO4Ez2NzF/Do8ywFrTWHoLCSsCazXQ==}
 
   '@tryghost/root-utils@2.0.3':
     resolution: {integrity: sha512-7fF7QLwiOoVzHVd5Qci8gsrqFIrZP5FwVrwGjSxjjF5hoOtgPn7HLdHLyIHUY9T5KgJ1/69i573E/EA+4kmAfA==}
@@ -7234,10 +7225,6 @@ packages:
     resolution: {integrity: sha512-XQegIaBTVUjSHliKqcnFqYypAd4S+WCYt5NIeRs6w/UAry7z8Y9j5ZwRRL4kzq9U3sD6v+85er9FvkEaBpji2w==}
     hasBin: true
 
-  uuid@9.0.1:
-    resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
-    hasBin: true
-
   v8-to-istanbul@9.3.0:
     resolution: {integrity: sha512-kiGUalWN+rgBJ/1OHZsBtU4rXZOfj/7rKQxULKlIzwzQSvMJUUNgPwJEEh7gU6xEVxC0ahoOBvN2YI8GH6FNgA==}
     engines: {node: '>=10.12.0'}
@@ -9739,24 +9726,10 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@tryghost/debug@0.1.35':
-    dependencies:
-      '@tryghost/root-utils': 0.3.38
-      debug: 4.4.3
-    transitivePeerDependencies:
-      - supports-color
-
   '@tryghost/debug@2.0.3':
     dependencies:
       '@tryghost/root-utils': 2.0.3
       debug: 4.4.3
-    transitivePeerDependencies:
-      - supports-color
-
-  '@tryghost/errors@1.3.8':
-    dependencies:
-      '@stdlib/utils-copy': 0.2.3
-      uuid: 9.0.1
     transitivePeerDependencies:
       - supports-color
 
@@ -9919,11 +9892,6 @@ snapshots:
     dependencies:
       chalk: 5.6.2
       sywac: 1.3.0
-
-  '@tryghost/root-utils@0.3.38':
-    dependencies:
-      caller: 1.1.0
-      find-root: 1.1.0
 
   '@tryghost/root-utils@2.0.3':
     dependencies:
@@ -14093,8 +14061,6 @@ snapshots:
       which-typed-array: 1.1.20
 
   uuid@13.0.0: {}
-
-  uuid@9.0.1: {}
 
   v8-to-istanbul@9.3.0:
     dependencies:
