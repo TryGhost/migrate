@@ -108,10 +108,17 @@ describe('beehiiv API Members Mapper', () => {
             assert.equal(result.subscribed_to_emails, false);
         });
 
-        it('maps stripe_customer_id when present', () => {
+        it('maps stripe_customer_id when includeStripe is true', () => {
             const subscription = {...baseSubscription, stripe_customer_id: 'cus_abc123'};
-            const result = mapSubscription(subscription);
+            const result = mapSubscription(subscription, {includeStripe: true});
             assert.equal(result.stripe_customer_id, 'cus_abc123');
+        });
+
+        it('excludes stripe_customer_id and sets complimentary_plan when includeStripe is false', () => {
+            const subscription = {...baseSubscription, subscription_tier: 'premium' as const, stripe_customer_id: 'cus_abc123'};
+            const result = mapSubscription(subscription, {includeStripe: false});
+            assert.equal(result.stripe_customer_id, '');
+            assert.equal(result.complimentary_plan, true);
         });
 
         it('sets complimentary_plan true for premium without stripe_customer_id', () => {
@@ -249,6 +256,53 @@ describe('beehiiv API Members Mapper', () => {
         it('returns empty arrays for empty input', () => {
             const result = mapSubscriptions([]);
             assert.deepEqual(result, {free: [], paid: []});
+        });
+
+        it('excludes stripe_customer_id when includeStripe is false', () => {
+            const subscriptions: BeehiivSubscription[] = [
+                {
+                    id: 'sub-1',
+                    email: 'paid@test.com',
+                    status: 'active',
+                    created: 1704067200,
+                    subscription_tier: 'premium',
+                    subscription_premium_tier_names: ['Gold Plan'],
+                    stripe_customer_id: 'cus_paid123',
+                    custom_fields: [],
+                    tags: []
+                }
+            ];
+
+            const result = mapSubscriptions(subscriptions, {includeStripe: false});
+
+            assert.equal(result.free.length, 1);
+            assert.equal(result.paid.length, 0);
+            assert.equal(result.free[0].stripe_customer_id, '');
+            assert.equal(result.free[0].complimentary_plan, true);
+            assert.ok(result.free[0].labels.includes('beehiiv-tier-premium'));
+            assert.ok(result.free[0].labels.includes('beehiiv-premium-gold-plan'));
+        });
+
+        it('keeps paid member as paid when includeStripe is true', () => {
+            const subscriptions: BeehiivSubscription[] = [
+                {
+                    id: 'sub-1',
+                    email: 'paid@test.com',
+                    status: 'active',
+                    created: 1704067200,
+                    subscription_tier: 'premium',
+                    subscription_premium_tier_names: [],
+                    stripe_customer_id: 'cus_paid123',
+                    custom_fields: [],
+                    tags: []
+                }
+            ];
+
+            const result = mapSubscriptions(subscriptions, {includeStripe: true});
+
+            assert.equal(result.free.length, 0);
+            assert.equal(result.paid.length, 1);
+            assert.equal(result.paid[0].stripe_customer_id, 'cus_paid123');
         });
 
         it('categorizes complimentary premium as free', () => {

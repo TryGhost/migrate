@@ -12,7 +12,7 @@ const extractName = (customFields: Array<{name: string; value: string}>): string
     return combinedName.length > 0 ? combinedName : null;
 };
 
-const mapSubscription = (subscription: BeehiivSubscription): GhostMemberObject => {
+const mapSubscription = (subscription: BeehiivSubscription, options: {includeStripe?: boolean} = {includeStripe: true}): GhostMemberObject => {
     const labels: string[] = [];
 
     // Add status label
@@ -38,31 +38,32 @@ const mapSubscription = (subscription: BeehiivSubscription): GhostMemberObject =
     }
 
     // Determine if this is a complimentary plan
-    // A member is on a complimentary plan if they have premium access but no Stripe customer ID
+    // A member is on a complimentary plan if they have premium access but no Stripe customer ID,
+    // or if they had a Stripe ID but includeStripe is false
     const isPremium = subscription.subscription_tier === 'premium';
     const hasStripeId = Boolean(subscription.stripe_customer_id);
-    const complimentaryPlan = isPremium && !hasStripeId;
+    const complimentaryPlan = isPremium && (!hasStripeId || !options.includeStripe);
 
     return {
         email: subscription.email,
         name: extractName(subscription.custom_fields || []),
         note: null,
         subscribed_to_emails: subscription.status === 'active',
-        stripe_customer_id: subscription.stripe_customer_id || '',
+        stripe_customer_id: options.includeStripe ? (subscription.stripe_customer_id || '') : '',
         complimentary_plan: complimentaryPlan,
         labels,
         created_at: new Date(subscription.created * 1000)
     };
 };
 
-const mapSubscriptions = (subscriptions: BeehiivSubscription[]): MappedMembers => {
+const mapSubscriptions = (subscriptions: BeehiivSubscription[], options: {includeStripe?: boolean} = {includeStripe: true}): MappedMembers => {
     const result: MappedMembers = {
         free: [],
         paid: []
     };
 
     subscriptions.forEach((subscription) => {
-        const member = mapSubscription(subscription);
+        const member = mapSubscription(subscription, options);
 
         if (member.stripe_customer_id) {
             result.paid.push(member);
@@ -74,14 +75,14 @@ const mapSubscriptions = (subscriptions: BeehiivSubscription[]): MappedMembers =
     return result;
 };
 
-export const mapMembersTasks = (_options: any, ctx: any) => {
+export const mapMembersTasks = (options: any, ctx: any) => {
     const tasks = [
         {
             title: 'Mapping subscriptions to Ghost member format',
             task: async (_: any, task: any) => {
                 try {
                     const subscriptions: BeehiivSubscription[] = ctx.result.subscriptions || [];
-                    ctx.result.members = mapSubscriptions(subscriptions);
+                    ctx.result.members = mapSubscriptions(subscriptions, options);
 
                     const freeCount = ctx.result.members.free.length;
                     const paidCount = ctx.result.members.paid.length;

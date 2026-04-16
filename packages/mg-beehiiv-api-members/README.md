@@ -69,6 +69,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--zip`**
     - Create a zip file
     - bool - default: `false`
+- **`--includeStripe`**
+    - Include Stripe customer IDs for paid members. When set to false, paid members will be imported as complimentary members instead.
+    - bool - default: `true`
 
 A more complex migration command could look like this:
 
