@@ -113,6 +113,9 @@ When publishing a package for the first time:
     ```sh
     cd packages/mg-<name>
     pnpm build && npm publish --access public
+
+    # If the package has a prerelease tag, add --tag pre
+    pnpm build && npm publish --access public --tag pre
     ```
 6. Register the package as a trusted publisher so CI can handle future releases:
     ```sh
