@@ -487,6 +487,25 @@ const processContent = (post, siteUrl, options) => {
         el.remove();
     });
 
+    parsed.$('.mention-wrap').forEach((el) => {
+        const attrsRaw = attr(el, 'data-attrs');
+
+        let attrs;
+
+        try {
+            attrs = JSON.parse(attrsRaw);
+        } catch (error) {
+            return;
+        }
+
+        const name = attrs.name;
+        const id = attrs.id;
+
+        if (name && id) {
+            replaceWith(el, `<a href="https://open.substack.com/users/${id}">${name}</a>`);
+        }
+    });
+
     parsed.$('.digest-post-embed').forEach((el) => {
         const attrsRaw = attr(el, 'data-attrs');
 
