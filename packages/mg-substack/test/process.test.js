@@ -126,6 +126,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         assert.ok(typeof data === 'object' && data !== null);
 
         assert.equal(data.slug, 'plain-text');
+        assert.equal(data.comment_id, '123401');
         assert.equal(data.published_at, '2019-07-26T20:48:19.814Z');
         assert.equal(data.updated_at, '2019-07-26T20:48:19.814Z');
         assert.equal(data.created_at, '2019-07-26T20:48:19.814Z');

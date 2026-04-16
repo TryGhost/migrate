@@ -22,6 +22,7 @@ const mapConfig = (data, options) => {
         substackData: data,
         data: {
             slug: slug,
+            comment_id: data.post_id.replace(/\..*$/, ''),
             published_at: data.post_date || dateNow,
             updated_at: data.post_date || dateNow,
             created_at: data.post_date || dateNow,
