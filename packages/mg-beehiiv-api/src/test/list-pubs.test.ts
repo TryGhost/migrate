@@ -16,6 +16,7 @@ describe('beehiiv API List Publications', () => {
     describe('listPublications', () => {
         it('makes authenticated request to publications endpoint', async () => {
             const mockData = {data: [{id: 'pub-1', name: 'Test Publication'}]};
+            // First call: listPublications, second call: discover for each pub
             fetchMock.mock.mockImplementation(() => Promise.resolve({
                 ok: true,
                 json: () => Promise.resolve(mockData)
@@ -23,26 +24,38 @@ describe('beehiiv API List Publications', () => {
 
             await listPublications('test-api-key');
 
-            assert.equal(fetchMock.mock.callCount(), 1);
+            // 1 call for publications + 1 call for discover per pub
+            assert.equal(fetchMock.mock.callCount(), 2);
             const [calledUrl, options] = fetchMock.mock.calls[0].arguments;
             assert.equal(calledUrl.toString(), 'https://api.beehiiv.com/v2/publications?expand%5B%5D=stats');
             assert.equal(options.method, 'GET');
             assert.equal(options.headers.Authorization, 'Bearer test-api-key');
         });
 
-        it('returns publications data', async () => {
+        it('returns publications data with post counts', async () => {
             const publications = [
                 {id: 'pub-1', name: 'Publication One'},
                 {id: 'pub-2', name: 'Publication Two'}
             ];
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({data: publications})
-            }));
+            fetchMock.mock.mockImplementation((url: URL) => {
+                if (url.pathname.endsWith('/posts')) {
+                    return Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 42})
+                    });
+                }
+                return Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve({data: publications})
+                });
+            });
 
             const result = await listPublications('test-api-key');
 
-            assert.deepEqual(result, publications);
+            assert.equal(result.length, 2);
+            assert.equal(result[0].name, 'Publication One');
+            assert.equal(result[0].postCount, 42);
+            assert.equal(result[1].postCount, 42);
         });
 
         it('throws error on failed request with context', async () => {
