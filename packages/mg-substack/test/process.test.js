@@ -1423,6 +1423,22 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         assert.equal(processed.data.html, '<p>Lorem ipsum.</p><!--kg-card-begin: html--><div class="latex-rendered" data-attrs="{&quot;persistentExpression&quot;:&quot;ABC_{\\text{Terminal}}ABCTerminal&quot;,&quot;id&quot;:&quot;ACASDWEARE&quot;}" data-component-name="LatexBlockToDOM"></div><!--kg-card-end: html--><p>Dolore magna.</p>');
     });
+
+    it('Can convert mention spans to links', async function () {
+        const post = {
+            data: {
+                html: '<p>Thanks <span class="mention-wrap" data-attrs="{&quot;name&quot;:&quot;Test User&quot;,&quot;id&quot;:12345678,&quot;type&quot;:&quot;user&quot;,&quot;url&quot;:null,&quot;photo_url&quot;:&quot;https://example.com/photo.png&quot;,&quot;uuid&quot;:&quot;00000000-0000-0000-0000-000000000000&quot;}" data-component-name="MentionToDOM"></span> for the tip!</p>'
+            }
+        };
+        const url = 'https://example.com';
+        const options = {
+            useFirstImage: false
+        };
+
+        const processed = await processContent(post, url, options);
+
+        assert.equal(processed.data.html, '<p>Thanks <a href="https://open.substack.com/users/12345678">Test User</a> for the tip!</p>');
+    });
 });
 
 describe('Image handling', function () {
