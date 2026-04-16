@@ -29,7 +29,7 @@
     "@tryghost/string": "0.3.1",
     "@tryghost/mg-wp-api": "workspace:*",
     "fast-glob": "3.3.3",
-    "fast-xml-parser": "5.5.11",
+    "fast-xml-parser": "5.5.12",
     "markdown-it": "14.1.1",
     "php-serialize": "5.1.3"
   }
