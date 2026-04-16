@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-queue",
-  "version": "0.2.0-0",
+  "version": "0.3.0-0",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-queue",
   "author": "Ghost Foundation",
   "license": "MIT",
