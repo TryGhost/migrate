@@ -39,6 +39,6 @@
   "dependencies": {
     "@tryghost/errors": "3.0.3",
     "@tryghost/mg-fs-utils": "workspace:*",
-    "@tryghost/string": "0.2.21"
+    "@tryghost/string": "0.3.2"
   }
 }
