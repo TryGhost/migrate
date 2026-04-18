@@ -34,7 +34,7 @@
     "@tryghost/mg-shortcodes": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
     "@tryghost/mg-webscraper": "workspace:*",
-    "@tryghost/string": "0.3.1",
+    "@tryghost/string": "0.3.2",
     "html-to-text": "9.0.5",
     "simple-dom": "1.4.0",
     "tldts": "7.0.28",
