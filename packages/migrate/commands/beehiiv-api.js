@@ -145,12 +145,7 @@ const run = async (argv) => {
                 return;
             }
 
-            console.table(getPubs.map(pub => ({ // eslint-disable-line no-console
-                name: pub.name,
-                id: pub.id,
-                created: new Date(pub.created * 1000),
-                subscribers: pub.stats?.active_subscriptions || '-'
-            })));
+            console.table(getPubs); // eslint-disable-line no-console
 
             ui.log.warn('No publication ID provided. Please provide an ID using the --id flag to run the migration.');
 

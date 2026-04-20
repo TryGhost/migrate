@@ -15,16 +15,17 @@ describe('beehiiv API List Publications', () => {
 
     describe('listPublications', () => {
         it('makes authenticated request to publications endpoint', async () => {
-            const mockData = {data: [{id: 'pub-1', name: 'Test Publication'}]};
-            // First call: listPublications, second call: discover for each pub
             fetchMock.mock.mockImplementation(() => Promise.resolve({
                 ok: true,
-                json: () => Promise.resolve(mockData)
+                json: () => Promise.resolve({
+                    data: [{id: 'pub-1', name: 'Test', created: 1700078400, stats: {active_subscriptions: 100, active_premium_subscriptions: 10, active_free_subscriptions: 90}}],
+                    total_results: 1
+                })
             }));
 
             await listPublications('test-api-key');
 
-            // 1 call for publications + 1 call for discover per pub
+            // 1 call for publications + 1 call for posts per pub
             assert.equal(fetchMock.mock.callCount(), 2);
             const [calledUrl, options] = fetchMock.mock.calls[0].arguments;
             assert.equal(calledUrl.toString(), 'https://api.beehiiv.com/v2/publications?expand%5B%5D=stats');
@@ -32,30 +33,98 @@ describe('beehiiv API List Publications', () => {
             assert.equal(options.headers.Authorization, 'Bearer test-api-key');
         });
 
-        it('returns publications data with post counts', async () => {
-            const publications = [
-                {id: 'pub-1', name: 'Publication One'},
-                {id: 'pub-2', name: 'Publication Two'}
-            ];
+        it('returns full PublicationData shape', async () => {
+            const apiPub = {
+                id: 'pub_abc123',
+                name: 'Test Newsletter',
+                created: 1700000000,
+                stats: {
+                    active_subscriptions: 500,
+                    active_premium_subscriptions: 50,
+                    active_free_subscriptions: 450
+                }
+            };
+
             fetchMock.mock.mockImplementation((url: URL) => {
                 if (url.pathname.endsWith('/posts')) {
                     return Promise.resolve({
                         ok: true,
-                        json: () => Promise.resolve({total_results: 42})
+                        json: () => Promise.resolve({
+                            total_results: 100,
+                            data: [{web_url: 'https://example.beehiiv.com/p/first-post'}]
+                        })
                     });
                 }
                 return Promise.resolve({
                     ok: true,
-                    json: () => Promise.resolve({data: publications})
+                    json: () => Promise.resolve({data: [apiPub]})
                 });
             });
 
             const result = await listPublications('test-api-key');
 
-            assert.equal(result.length, 2);
-            assert.equal(result[0].name, 'Publication One');
-            assert.equal(result[0].postCount, 42);
-            assert.equal(result[1].postCount, 42);
+            assert.equal(result.length, 1);
+            assert.deepEqual(result[0], {
+                id: 'pub_abc123',
+                name: 'Test Newsletter',
+                created: new Date(1700000000 * 1000),
+                allSubscribers: 500,
+                paidSubscribers: 50,
+                freeSubscribers: 450,
+                postCount: 100,
+                url: 'https://example.beehiiv.com'
+            });
+        });
+
+        it('handles publications with no posts', async () => {
+            const apiPub = {
+                id: 'pub-1',
+                name: 'Empty Pub',
+                created: 1700000000,
+                stats: {active_subscriptions: 0, active_premium_subscriptions: 0, active_free_subscriptions: 0}
+            };
+
+            fetchMock.mock.mockImplementation((url: URL) => {
+                if (url.pathname.endsWith('/posts')) {
+                    return Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 0, data: []})
+                    });
+                }
+                return Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve({data: [apiPub]})
+                });
+            });
+
+            const result = await listPublications('test-api-key');
+
+            assert.equal(result[0].postCount, 0);
+            assert.equal(result[0].url, undefined);
+            assert.equal(result[0].allSubscribers, 0);
+        });
+
+        it('defaults subscriber counts to 0 when stats are missing', async () => {
+            const apiPub = {id: 'pub-1', name: 'No Stats', created: 1700000000};
+
+            fetchMock.mock.mockImplementation((url: URL) => {
+                if (url.pathname.endsWith('/posts')) {
+                    return Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 5, data: [{web_url: 'https://example.com/p/post'}]})
+                    });
+                }
+                return Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve({data: [apiPub]})
+                });
+            });
+
+            const result = await listPublications('test-api-key');
+
+            assert.equal(result[0].allSubscribers, 0);
+            assert.equal(result[0].paidSubscribers, 0);
+            assert.equal(result[0].freeSubscribers, 0);
         });
 
         it('throws error on failed request with context', async () => {
