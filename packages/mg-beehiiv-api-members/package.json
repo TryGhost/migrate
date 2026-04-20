@@ -34,7 +34,7 @@
     "@typescript-eslint/parser": "8.58.2",
     "c8": "11.0.0",
     "eslint": "8.57.1",
-    "typescript": "6.0.2"
+    "typescript": "6.0.3"
   },
   "dependencies": {
     "@tryghost/errors": "3.0.3",
