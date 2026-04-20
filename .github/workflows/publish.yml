@@ -61,7 +61,7 @@ jobs:
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5
 
       # First setup-node: used for building (keeps the monorepo on its expected Node version)
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: 22
           cache: pnpm
@@ -78,7 +78,7 @@ jobs:
       # Second setup-node: used for publishing only.
       # Node 24 has better OIDC trusted publisher support in its bundled npm.
       # registry-url is required for npm to authenticate via the OIDC token.
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: 24.x
           registry-url: https://registry.npmjs.org
