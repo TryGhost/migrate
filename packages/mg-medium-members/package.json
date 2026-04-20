@@ -40,7 +40,7 @@
     "c8": "11.0.0",
     "eslint": "8.57.1",
     "sinon": "21.1.2",
-    "typescript": "6.0.2"
+    "typescript": "6.0.3"
   },
   "dependencies": {
     "@tryghost/debug": "2.0.3",

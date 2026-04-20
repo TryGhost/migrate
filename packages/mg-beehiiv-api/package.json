@@ -35,7 +35,7 @@
     "c8": "11.0.0",
     "dotenv": "17.4.2",
     "eslint": "8.57.1",
-    "typescript": "6.0.2"
+    "typescript": "6.0.3"
   },
   "dependencies": {
     "@tryghost/debug": "2.0.3",
