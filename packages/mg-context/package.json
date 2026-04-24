@@ -33,21 +33,14 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/node": "24.12.2",
-    "@typescript-eslint/eslint-plugin": "8.59.0",
-    "@typescript-eslint/parser": "8.59.0",
-    "c8": "11.0.0",
-    "eslint": "8.57.1",
-    "typescript": "6.0.3"
+    "@types/node": "24.12.2"
   },
   "dependencies": {
     "@tryghost/errors": "3.0.3",
     "@tryghost/html-to-mobiledoc": "3.2.21",
     "@tryghost/kg-html-to-lexical": "1.2.38",
     "@tryghost/listr-smart-renderer": "workspace:*",
-    "@tryghost/mg-json": "workspace:*",
     "@tryghost/validator": "2.0.3",
-    "@typescript-eslint/eslint-plugin": "8.59.0",
     "@typescript-eslint/parser": "8.59.0",
     "c8": "11.0.0",
     "eslint": "8.57.1",

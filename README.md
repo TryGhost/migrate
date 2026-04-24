@@ -85,6 +85,17 @@ pnpm dev [source]
 - `pnpm test` run lint and tests
 
 
+## Dependency management
+
+[Knip](https://knip.dev/) is used to find unused dependencies, exports, and files across the monorepo. Run it with:
+
+```sh
+pnpm knip
+```
+
+Some dependencies are intentionally kept despite not being directly imported (e.g. optional peer dependencies like `sharp`). These are listed in `knip.json` under `ignoreDependencies` for the relevant workspace.
+
+
 ## Publish
 
 Packages are published to npm automatically via GitHub Actions using OIDC trusted publishers — no npm token is needed.

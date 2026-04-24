@@ -2,7 +2,6 @@ declare module '@tryghost/errors';
 declare module '@tryghost/kg-default-cards/lib/cards/image.js';
 declare module '@tryghost/kg-default-cards/lib/cards/embed.js';
 declare module '@tryghost/kg-default-cards/lib/cards/bookmark.js';
-declare module '@tryghost/mg-fs-utils';
 declare module '@tryghost/string';
 declare module 'sanitize-html';
 

@@ -1,8 +1,8 @@
 import input from '@inquirer/input';
 import select from '@inquirer/select';
 import chalk from 'chalk';
-import {exec as exexSyc} from 'child_process';
-import util from 'util';
+import {exec as exexSyc} from 'node:child_process';
+import util from 'node:util';
 import {Logger} from './Logger.js';
 import {Options} from './Options.js';
 import {StripeAPI} from './StripeAPI.js';

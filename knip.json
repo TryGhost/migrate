@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "tags": [
+    "-lintignore"
+  ],
+  "ignore": [
+    "**/examples/**",
+    "packages/mg-wp-api/utils/users-html-to-json.js"
+  ],
+  "workspaces": {
+    ".": {},
+    "packages/mg-fs-utils": {
+      "ignoreDependencies": ["sharp"]
+    },
+    "packages/mg-queue": {
+      "ignoreDependencies": ["@tryghost/mg-context"]
+    }
+  }
+}

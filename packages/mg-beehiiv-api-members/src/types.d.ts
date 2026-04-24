@@ -1,5 +1,4 @@
 declare module '@tryghost/errors';
-declare module '@tryghost/mg-fs-utils';
 declare module '@tryghost/string';
 
 type BeehiivSubscription = {

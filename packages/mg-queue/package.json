@@ -30,16 +30,12 @@
   "devDependencies": {
     "@tryghost/mg-context": "workspace:*",
     "@types/node": "24.12.2",
-    "@typescript-eslint/eslint-plugin": "8.59.0",
     "@typescript-eslint/parser": "8.59.0",
     "c8": "11.0.0",
     "eslint": "8.57.1",
-    "tsx": "4.21.0",
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@tryghost/debug": "2.0.3",
-    "@tryghost/errors": "3.0.3",
     "chalk": "5.6.2",
     "log-update": "8.0.0"
   }

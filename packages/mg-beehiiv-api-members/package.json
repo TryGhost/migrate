@@ -30,7 +30,6 @@
   },
   "devDependencies": {
     "@types/node": "24.12.2",
-    "@typescript-eslint/eslint-plugin": "8.59.0",
     "@typescript-eslint/parser": "8.59.0",
     "c8": "11.0.0",
     "eslint": "8.57.1",
@@ -38,7 +37,6 @@
   },
   "dependencies": {
     "@tryghost/errors": "3.0.3",
-    "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/string": "0.2.21"
   }
 }

@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import Stripe from 'stripe';
 import DryRunIdGenerator from '../../lib/DryRunIdGenerator.js';
-import assert from 'assert/strict';
 
 export function getStripeTestAPIKey() {
     if (!process.env.STRIPE_API_KEY) {

@@ -4,9 +4,9 @@ import {Logger} from '../Logger.js';
 import {Options} from '../Options.js';
 import {StripeConnector} from '../StripeConnector.js';
 import {Reporter, ReportingCategory} from '../importers/Reporter.js';
-import util from 'util';
+import util from 'node:util';
 import Stripe from 'stripe';
-import {exec as _exec} from 'child_process';
+import {exec as _exec} from 'node:child_process';
 const exec = util.promisify(_exec);
 
 export async function resend(options: Options) {

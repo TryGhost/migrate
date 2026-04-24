@@ -72,7 +72,6 @@
     "@tryghost/string": "0.3.1",
     "chalk": "5.6.2",
     "fs-extra": "11.3.4",
-    "listr": "0.14.3",
     "pretty-ms": "9.3.0",
     "update-notifier": "7.3.1"
   }

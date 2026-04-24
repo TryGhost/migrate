@@ -28,15 +28,17 @@
     "build:watch": "nx run-many -t build:watch --parallel=10 --outputStyle=dynamic-legacy",
     "ship": "pnpm test && nx release version --git-push --git-remote ${GHOST_UPSTREAM:-origin}",
     "ship:first-release": "pnpm ship --first-release",
-    "update": "git pull origin main && pnpm install"
+    "update": "git pull origin main && pnpm install",
+    "knip": "knip"
   },
   "devDependencies": {
-    "@tryghost/errors": "3.0.3",
+    "@types/node": "24.12.2",
     "eslint": "8.57.1",
     "eslint-plugin-ghost": "3.5.0",
+    "knip": "6.6.2",
     "nx": "22.6.5",
-    "@nx/js": "22.6.5",
-    "tsx": "4.21.0"
+    "tsx": "4.21.0",
+    "typescript": "6.0.3"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

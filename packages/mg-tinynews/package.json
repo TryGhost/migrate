@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "@tryghost/debug": "2.0.3",
-    "@tryghost/errors": "3.0.3",
     "@tryghost/kg-default-cards": "10.2.10",
     "@tryghost/mg-utils": "workspace:*",
     "@tryghost/string": "0.3.1",
