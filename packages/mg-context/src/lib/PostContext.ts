@@ -7,7 +7,7 @@ import TagContext, {TagObject, TagDataObject} from './TagContext.js';
 import AuthorContext, {AuthorObject, AuthorDataObject} from './AuthorContext.js';
 import type {DatabaseModels} from './database.js';
 
-export const postZodSchema = z.object({
+const postZodSchema = z.object({
     title: z.string().max(255),
     slug: z.string().max(191),
     html: z.string().max(1000000000).nullable(),
@@ -41,12 +41,6 @@ export const postZodSchema = z.object({
     tags: z.array(z.any()).max(500).default([]),
     authors: z.array(z.any()).max(500).default([])
 });
-
-export type PostObject = z.infer<typeof postZodSchema>;
-
-export type PostDataObject = {
-    data: PostObject;
-};
 
 export type PostConstructorOptions = {
     source?: Object;

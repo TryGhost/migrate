@@ -69,6 +69,6 @@ const mapContent = async (args: {options: any, posts?: object[], json: buttondow
 };
 
 export {
-    mapPosts,
+    
     mapContent
 };

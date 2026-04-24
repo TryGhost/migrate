@@ -7,7 +7,7 @@ import {Queue} from '../Queue.js';
 import {ReuseLastCall} from '../ReuseLastCall.js';
 import {ReportTags, Reporter, ReportingCategory} from './Reporter.js';
 
-export type ImportProvider<T> = {
+type ImportProvider<T> = {
     /**
      *
      */

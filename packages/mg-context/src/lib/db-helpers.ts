@@ -38,7 +38,7 @@ export function findByColumn(db: DatabaseModels, table: string, column: string, 
     return db.db.prepare(`SELECT * FROM ${table} WHERE ${column} IN (${placeholders})${order}`).all(...ids);
 }
 
-export interface WhereClause {
+interface WhereClause {
     sql: string;
     params: (string | number | null)[];
 }

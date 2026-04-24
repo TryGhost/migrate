@@ -4,7 +4,7 @@ import ghValidate from '@tryghost/validator';
 import MigrateBase from './MigrateBase.js';
 import type {DatabaseModels} from './database.js';
 
-export const authorZodSchema = z.object({
+const authorZodSchema = z.object({
     name: z.string().max(191),
     slug: z.string().max(191),
     email: z.string().max(191).refine(val => ghValidate.isEmail(val), {message: 'Invalid email address'}),

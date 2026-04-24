@@ -3,7 +3,7 @@ import {randomBytes} from 'node:crypto';
 import MigrateBase from './MigrateBase.js';
 import type {DatabaseModels} from './database.js';
 
-export const tagZodSchema = z.object({
+const tagZodSchema = z.object({
     name: z.string().max(255),
     slug: z.string().max(191),
     description: z.string().max(500).nullable(),

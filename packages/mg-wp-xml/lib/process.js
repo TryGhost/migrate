@@ -629,6 +629,5 @@ export default {
 };
 
 export {
-    processWPMeta,
-    processHTMLContent
+    processWPMeta
 };

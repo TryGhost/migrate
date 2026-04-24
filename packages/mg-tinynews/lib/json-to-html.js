@@ -290,7 +290,6 @@ const jsonToHtml = (blocks) => {
 
 export {
     jsonToHtml,
-    getYouTubeID,
     formatChildStyles,
     EntryList,
     EntryText,

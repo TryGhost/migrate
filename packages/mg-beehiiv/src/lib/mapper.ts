@@ -144,6 +144,5 @@ export {
     fullImageURL,
     parsePostsCSV,
     mapPost,
-    mapPosts,
     mapContent
 };

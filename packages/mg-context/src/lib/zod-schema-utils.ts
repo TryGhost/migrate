@@ -1,6 +1,6 @@
 import {z} from 'zod/v4';
 
-export type FieldInfo = {
+type FieldInfo = {
     type: string;
     required: boolean;
     maxLength?: number;

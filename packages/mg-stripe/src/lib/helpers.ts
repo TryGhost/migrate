@@ -4,7 +4,7 @@ import {Options} from './Options.js';
 import {ErrorGroup} from './importers/ErrorGroup.js';
 import {ImportWarning} from './importers/ImportWarning.js';
 
-export function dateToUnix(date?: Date | null) {
+function dateToUnix(date?: Date | null) {
     if (!date) {
         return;
     }

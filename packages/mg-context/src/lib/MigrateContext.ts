@@ -12,7 +12,7 @@ import AuthorContext from './AuthorContext.js';
 import {createDatabase, type DatabaseModels} from './database.js';
 import {withTransaction, findByIds, findByColumn, buildDateWhere, buildFullWhere, countWhere, findPostsWhere, findPostIdColumnsWhere, findAllPostIdsWhere, findPostsByIds} from './db-helpers.js';
 
-export type FindPostsOptions = {
+type FindPostsOptions = {
     slug?: string;
     title?: string;
     sourceAttr?: any;
@@ -23,12 +23,12 @@ export type FindPostsOptions = {
     authorEmail?: string;
 };
 
-export type FindTagsOptions = {
+type FindTagsOptions = {
     slug?: string;
     name?: string;
 };
 
-export type FindAuthorsOptions = {
+type FindAuthorsOptions = {
     slug?: string;
     name?: string;
     email?: string;
@@ -59,7 +59,7 @@ export interface DuplicateSlugEntry {
     url: string;
 }
 
-export type MigrateContextOptions = {
+type MigrateContextOptions = {
     contentFormat?: 'mobiledoc' | 'lexical' | 'html';
     dbPath?: string;
     ephemeral?: boolean;

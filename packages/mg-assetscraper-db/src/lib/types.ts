@@ -166,7 +166,7 @@ export interface AssetCacheEntry {
     updatedAt?: string;
 }
 
-export interface AssetCacheOptions {
+interface AssetCacheOptions {
     fileCache: FileCache;
 }
 

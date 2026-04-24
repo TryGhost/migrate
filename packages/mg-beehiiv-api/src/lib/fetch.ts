@@ -92,6 +92,5 @@ export const fetchTasks = async (options: any, ctx: any) => {
 };
 
 export {
-    authedClient,
-    discover
+    authedClient
 };

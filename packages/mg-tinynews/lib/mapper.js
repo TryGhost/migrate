@@ -339,9 +339,6 @@ const mapContent = async (args) => {
 };
 
 export {
-    textOnly,
     mapPostPageConfig,
-    mapNewsletterConfig,
-    processNewsletterContent,
     mapContent
 };
