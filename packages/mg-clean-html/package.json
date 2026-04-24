@@ -11,7 +11,7 @@
   "type": "module",
   "exports": {
     ".": {
-      "development": "./src/index.ts",
+      "source": "./src/index.ts",
       "default": "./build/index.js"
     }
   },

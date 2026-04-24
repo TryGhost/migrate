@@ -13,10 +13,10 @@
     "**/node_modules/**"
   ],
   "scripts": {
-    "dev": "NODE_ENV=development NODE_OPTIONS='--import tsx --conditions=development' ./packages/migrate/bin/cli.js",
-    "dev:lessmemory": "NODE_OPTIONS=\"--max-old-space-size=2024 --import tsx --conditions=development\" NODE_ENV=development ./packages/migrate/bin/cli.js",
-    "dev:morememory": "NODE_OPTIONS=\"--max-old-space-size=8192 --import tsx --conditions=development\" NODE_ENV=development ./packages/migrate/bin/cli.js",
-    "dev:debug": "DEBUG_COLORS=true DEBUG=@tryghost*,migrate:* NODE_ENV=development NODE_OPTIONS='--import tsx --conditions=development' ./packages/migrate/bin/cli.js",
+    "dev": "NODE_ENV=development NODE_OPTIONS='--import tsx --conditions=source' ./packages/migrate/bin/cli.js",
+    "dev:lessmemory": "NODE_OPTIONS=\"--max-old-space-size=2024 --import tsx --conditions=source\" NODE_ENV=development ./packages/migrate/bin/cli.js",
+    "dev:morememory": "NODE_OPTIONS=\"--max-old-space-size=8192 --import tsx --conditions=source\" NODE_ENV=development ./packages/migrate/bin/cli.js",
+    "dev:debug": "DEBUG_COLORS=true DEBUG=@tryghost*,migrate:* NODE_ENV=development NODE_OPTIONS='--import tsx --conditions=source' ./packages/migrate/bin/cli.js",
     "migrate": "migrate",
     "presetup": "pnpm install",
     "setup": "pnpm install",

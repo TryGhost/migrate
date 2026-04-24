@@ -120,7 +120,7 @@ TypeScript packages live in `src/` and compile to `build/`.
   "type": "module",
   "exports": {
     ".": {
-      "development": "./src/index.ts",
+      "source": "./src/index.ts",
       "default": "./build/index.js"
     }
   },
@@ -210,7 +210,7 @@ Place test fixtures in `test/fixtures/` (JS) or `src/test/fixtures/` (TS).
      "type": "module",
      "exports": {
        ".": {
-         "development": "./src/index.ts",
+         "source": "./src/index.ts",
          "default": "./build/index.js"
        }
      },

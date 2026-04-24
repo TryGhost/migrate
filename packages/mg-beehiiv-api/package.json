@@ -9,7 +9,7 @@
   "types": "build/types.d.ts",
   "exports": {
     ".": {
-      "development": "./src/index.ts",
+      "source": "./src/index.ts",
       "default": "./build/index.js"
     }
   },
