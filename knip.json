@@ -7,6 +7,7 @@
     "**/examples/**",
     "packages/mg-wp-api/utils/users-html-to-json.js"
   ],
+  "ignoreBinaries": ["migrate"],
   "workspaces": {
     ".": {},
     "packages/mg-fs-utils": {
