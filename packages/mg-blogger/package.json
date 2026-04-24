@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-blogger",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TryGhost/migrate.git",
