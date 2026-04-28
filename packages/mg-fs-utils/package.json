@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-fs-utils",
-  "version": "0.23.2",
+  "version": "0.23.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TryGhost/migrate.git",

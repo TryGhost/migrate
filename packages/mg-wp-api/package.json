@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-wp-api",
-  "version": "0.20.2",
+  "version": "0.20.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TryGhost/migrate.git",
