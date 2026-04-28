@@ -610,4 +610,21 @@ describe('Shortcode processing', function () {
         assert.ok(!parsed.includes('premium_content'));
         assert.ok(!parsed.includes('plan_setup'));
     });
+
+    it('Handles $ characters in content without infinite loop', function () {
+        const shortcodes = new Shortcodes();
+
+        shortcodes.add('caption', ({content}) => {
+            return content || '';
+        });
+
+        const html = '[caption id="" align="alignnone" width="686"]<img src="https://example.com/is/image/product?$sfcc-product$&amp;wid=1146" alt="Shoes" /> Credit: Example[/caption]';
+
+        const parsed = shortcodes.parse(html);
+
+        assert.ok(!parsed.includes('[caption'));
+        assert.ok(!parsed.includes('[/caption]'));
+        assert.ok(parsed.includes('$sfcc-product$'));
+        assert.ok(parsed.includes('Credit: Example'));
+    });
 });

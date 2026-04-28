@@ -189,7 +189,8 @@ export default class Shortcodes {
             // content = content?.trim();
 
             if (theCall) {
-                text = text.replace(knownShortcode.match[0], theCall({attrs, content}));
+                const replacement = theCall({attrs, content});
+                text = text.replace(knownShortcode.match[0], () => replacement);
                 this.html = text;
             }
         }
