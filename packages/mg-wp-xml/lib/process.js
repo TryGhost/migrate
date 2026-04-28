@@ -371,7 +371,7 @@ const processPost = async (post, users, options, fileCache) => {
         excerptSelector: (!excerpt && excerptSelector) ? excerptSelector : false,
         postUrl: postObj.url,
         featureImageSrc: featureImage?.url ?? null,
-        options: options,
+        options: {...options, skipShortcodes: true},
         fileCache: fileCache
     });
 

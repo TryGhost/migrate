@@ -497,7 +497,9 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     let allowRemoteScraping = !options?.scrape?.includes('none');
 
-    html = await processShortcodes({html, options});
+    if (!options.skipShortcodes) {
+        html = await processShortcodes({html, options});
+    }
 
     // Drafts can have empty post bodies
     if (!html) {
