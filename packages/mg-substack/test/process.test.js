@@ -560,6 +560,66 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         assert.equal(mapped.posts[0].substackId, '123403.thread');
     });
 
+    it('Excludes CSV rows that have no corresponding HTML file', async function () {
+        const inputCSVString = readFileSync(inputCSVPath, {encoding: 'utf8'});
+        const inputCSV = csv.parseString(inputCSVString);
+
+        // Add rows without matching HTML files
+        inputCSV.push({
+            post_id: '999901.no-html-post',
+            post_date: '2024-01-01T00:00:00.000Z',
+            is_published: 'TRUE',
+            email_sent_at: '',
+            type: 'newsletter',
+            audience: 'everyone',
+            title: 'Post Without HTML',
+            subtitle: '',
+            podcast_url: ''
+        });
+        inputCSV.push({
+            post_id: '999902.also-no-html',
+            post_date: '2024-02-01T00:00:00.000Z',
+            is_published: 'TRUE',
+            email_sent_at: '',
+            type: 'newsletter',
+            audience: 'everyone',
+            title: 'Another Post Without HTML',
+            subtitle: '',
+            podcast_url: ''
+        });
+
+        let input = {
+            meta: inputCSV,
+            posts: []
+        };
+
+        readdirSync(inputPostsPath).forEach((file) => {
+            let theHtml = readFileSync(resolve(inputPostsPath, file), {encoding: 'utf8'});
+            input.posts.push({name: file, html: theHtml});
+        });
+
+        const ctx = {
+            options: {
+                posts: true,
+                podcasts: true,
+                drafts: true,
+                pages: true,
+                threads: true,
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com'
+            }
+        };
+
+        const mapped = await map(input, ctx.options);
+
+        // Only the 5 posts with HTML files should be included, not the 2 extras
+        assert.equal(mapped.posts.length, 5);
+
+        const ids = mapped.posts.map(p => p.substackId);
+        assert.ok(!ids.includes('999901.no-html-post'));
+        assert.ok(!ids.includes('999902.also-no-html'));
+    });
+
     it('Can migrate only podcast', async function () {
         const ctx = {
             options: {

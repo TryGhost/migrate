@@ -72,18 +72,25 @@ export default async (input, options) => {
         return new errors.NoContentError({message: 'Input file is empty'});
     }
 
-    // Inline the HTML we have with the CSV data
-    input.meta.map((post) => {
-        const thisPostHTML = input.posts.find(item => item.name.includes(post.post_id));
-        post.html = thisPostHTML?.html ?? '';
-        return post;
+    // Drive from HTML files we have, pulling in CSV metadata for each
+    const csvMeta = input.meta;
+    input = input.posts.map((htmlPost) => {
+        const postId = htmlPost.name.replace(/\.html$/, '');
+        const meta = csvMeta.find(item => item.post_id === postId);
+        if (meta) {
+            meta.html = htmlPost.html;
+        }
+        return meta;
+    }).filter(Boolean);
+
+    // Preserve consistent ordering (chronological, with numeric ID as tiebreaker)
+    input.sort((a, b) => {
+        const dateDiff = new Date(a.post_date) - new Date(b.post_date);
+        if (dateDiff !== 0) {
+            return dateDiff;
+        }
+        return parseInt(a.post_id) - parseInt(b.post_id);
     });
-
-    // Delete the posts array
-    delete input.posts;
-
-    // Reassign the CSV array to input var
-    input = input.meta;
 
     if (!options.posts) {
         debug(`Ignoring posts`);
