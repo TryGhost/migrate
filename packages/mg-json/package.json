@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-json",
-  "version": "0.19.1",
+  "version": "0.19.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TryGhost/migrate.git",
