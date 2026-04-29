@@ -1,5 +1,6 @@
 import {join} from 'node:path';
 import {readFileSync} from 'node:fs';
+import {readdir, copyFile} from 'node:fs/promises';
 import fsUtils from '@tryghost/mg-fs-utils';
 import csvIngest from '@tryghost/mg-substack-members-csv';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
@@ -143,6 +144,29 @@ const getTaskRunner = (options) => {
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
                     ctx.errors.push({message: 'Failed to write and upload ZIP file', error});
+                    throw error;
+                }
+            }
+        },
+        {
+            title: 'Write CSV files',
+            enabled: () => !options.zip && !options.outputSingleCSV,
+            task: async (ctx, task) => {
+                try {
+                    let timer = Date.now();
+                    const csvFinalPath = options.outputPath || process.cwd();
+                    const entries = await readdir(ctx.fileCache.zipDir);
+                    const csvFiles = entries.filter(f => f.endsWith('.csv'));
+
+                    await Promise.all(csvFiles.map(f => copyFile(
+                        join(ctx.fileCache.zipDir, f),
+                        join(csvFinalPath, f)
+                    )));
+
+                    ctx.outputFiles = csvFiles.map(f => join(csvFinalPath, f));
+                    task.output = `Successfully wrote ${csvFiles.length} CSV file(s) to ${csvFinalPath} in ${prettyMilliseconds(Date.now() - timer)}`;
+                } catch (error) {
+                    ctx.errors.push({message: 'Failed to write CSV files to output path', error});
                     throw error;
                 }
             }

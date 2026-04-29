@@ -38,7 +38,7 @@ const options = [
     {
         type: 'boolean',
         flags: '--zip',
-        defaultValue: true,
+        defaultValue: false,
         desc: 'Create a zip file (set to false to skip)'
     },
     {
