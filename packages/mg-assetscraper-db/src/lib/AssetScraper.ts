@@ -170,13 +170,57 @@ export default class AssetScraper {
         // Encode to handle special characters in URLs
         const encodedRequestURL = encodeURI(updatedRequestURL);
 
-        const fetchOptions = {
-            redirect: 'follow' as const,
-            signal: AbortSignal.timeout(60000)
-        };
-
         try {
-            const response = await fetch(updatedRequestURL, fetchOptions);
+            return await this.fetchWithCookies(updatedRequestURL);
+        } catch {
+            try {
+                return await this.fetchWithCookies(encodedRequestURL);
+            } catch (err: any) {
+                throw new errors.InternalServerError({message: 'Failed to get remote media', err});
+            }
+        }
+    }
+
+    /**
+     * Fetch a URL while persisting Set-Cookie headers across redirects.
+     * Node's fetch with redirect:'follow' does not send cookies set by
+     * intermediate redirects, which breaks cookie-gated hotlink protection
+     * (e.g. WordPress "Media Permalink Lock" plugin).
+     */
+    private async fetchWithCookies(url: string): Promise<RemoteMediaResponse> {
+        const cookies = new Map<string, string>();
+        let currentUrl = url;
+
+        for (let i = 0; i < 10; i++) {
+            const headers: Record<string, string> = {};
+            if (cookies.size > 0) {
+                headers.cookie = Array.from(cookies.values()).join('; ');
+            }
+
+            const response = await fetch(currentUrl, {
+                redirect: 'manual',
+                signal: AbortSignal.timeout(60000),
+                headers
+            });
+
+            // Persist cookies from Set-Cookie headers across redirects
+            for (const setCookie of response.headers.getSetCookie()) {
+                const nameValue = setCookie.split(';')[0].trim();
+                const eqIndex = nameValue.indexOf('=');
+                if (eqIndex > 0) {
+                    cookies.set(nameValue.slice(0, eqIndex), nameValue);
+                }
+            }
+
+            // Follow redirects manually
+            if (response.status >= 300 && response.status < 400) {
+                const location = response.headers.get('location');
+                if (!location) {
+                    break;
+                }
+                currentUrl = new URL(location, currentUrl).href;
+                continue;
+            }
 
             const arrayBuffer = await response.arrayBuffer();
             return {
@@ -186,22 +230,9 @@ export default class AssetScraper {
                 },
                 statusCode: response.status
             };
-        } catch {
-            try {
-                const response = await fetch(encodedRequestURL, fetchOptions);
-
-                const arrayBuffer = await response.arrayBuffer();
-                return {
-                    body: Buffer.from(arrayBuffer),
-                    headers: {
-                        'content-type': response.headers.get('content-type') ?? undefined
-                    },
-                    statusCode: response.status
-                };
-            } catch (err: any) {
-                throw new errors.InternalServerError({message: 'Failed to get remote media', err});
-            }
         }
+
+        throw new errors.InternalServerError({message: 'Too many redirects'});
     }
 
     async extractFileDataFromResponse(requestURL: string, response: RemoteMediaResponse): Promise<MediaData | null> {
@@ -210,7 +241,6 @@ export default class AssetScraper {
         let body = response.body;
 
         // Attempt to get the file extension from the file itself
-        // If that fails, or if `.ext` is undefined, get the extension from the file path in the catch
         try {
             const fileInfo = await fileTypeFromBuffer(body);
             if (fileInfo) {
@@ -218,10 +248,20 @@ export default class AssetScraper {
                 fileMime = fileInfo.mime;
             }
         } catch {
-            const headers = response.headers;
-            fileMime = headers['content-type'];
-            // const extensionFromPath = parse(requestURL).ext.split(/[^a-z]/i).filter(Boolean)[0];
-            // extension = mime.extension(contentType) || extensionFromPath;
+            // fileTypeFromBuffer threw — fall through to content-type/URL fallback below
+        }
+
+        // If fileTypeFromBuffer didn't detect the type, fall back to the content-type header and URL extension
+        if (!extension || !fileMime) {
+            const contentType = response.headers['content-type'];
+            if (contentType) {
+                fileMime = contentType.split(';')[0].trim();
+            }
+
+            const extensionFromPath = extname(new URL(requestURL).pathname).replace(/^\./, '').split(/[^a-z0-9]/i).filter(Boolean)[0];
+            if (extensionFromPath) {
+                extension = extensionFromPath;
+            }
         }
 
         // If mime is in array, it needs converting to a supported image format.

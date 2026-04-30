@@ -488,6 +488,29 @@ describe('Asset Scraper', () => {
             assert.ok(requestMock.isDone());
         });
 
+        it('getRemoteMedia follows cookie-gated redirects', async () => {
+            // Simulate a server that 302s with a Set-Cookie, then serves the file
+            // when the cookie is present on the follow-up request
+            const requestMock = nock('https://example.com')
+                .get('/audio.mp3')
+                .reply(302, '', {
+                    'set-cookie': 'mplk=abc123; expires=Thu, 01 Jan 2099 00:00:00 GMT; Max-Age=5',
+                    location: '/audio.mp3'
+                })
+                .get('/audio.mp3')
+                .matchHeader('cookie', 'mplk=abc123')
+                .reply(200, mp3AudioBuffer, {'content-type': 'audio/mpeg'});
+
+            const assetScraper = await createScraper({});
+            const response = await assetScraper.getRemoteMedia('https://example.com/audio.mp3');
+
+            assert.ok(requestMock.isDone());
+            assert.equal(response.statusCode, 200);
+            assert.equal(response.headers['content-type'], 'audio/mpeg');
+            assert.ok(Buffer.isBuffer(response.body));
+            assert.ok(response.body.length > 0);
+        });
+
         it('extractFileDataFromResponse', async () => {
             const requestMock = mockImage();
             const assetScraper = await createScraper({});
@@ -534,6 +557,28 @@ describe('Asset Scraper', () => {
             assert.equal(responseData.fileName, 'photo.jpg');
             assert.equal(responseData.fileMime, 'image/jpeg');
             assert.equal(responseData.extension, '.jpg');
+        });
+
+        it('extractFileDataFromResponse falls back to content-type header and URL extension', async () => {
+            const assetScraper = await createScraper({});
+
+            // Simulate a response where fileTypeFromBuffer cannot detect the type
+            // (e.g. an MP3 without recognizable magic bytes) but the content-type header is set
+            const response = {
+                body: Buffer.from('not-a-recognizable-binary-format'),
+                headers: {'content-type': 'audio/mpeg'},
+                statusCode: 200
+            };
+
+            const responseData: any = await assetScraper.extractFileDataFromResponse(
+                'https://example.com/podcast.mp3',
+                response
+            );
+
+            assert.ok(responseData);
+            assert.equal(responseData.fileMime, 'audio/mpeg');
+            assert.equal(responseData.fileName, 'podcast.mp3');
+            assert.equal(responseData.extension, '.mp3');
         });
 
         it.todo('Will follow redirects');
