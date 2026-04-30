@@ -35,7 +35,7 @@
   "devDependencies": {
     "@types/node": "24.12.2",
     "listr2": "10.2.1",
-    "@typescript-eslint/parser": "8.59.0",
+    "@typescript-eslint/parser": "8.59.1",
     "c8": "11.0.0",
     "eslint": "8.57.1",
     "nock": "14.0.13",
