@@ -36,11 +36,11 @@
     "@types/node": "24.12.2"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.3",
-    "@tryghost/html-to-mobiledoc": "3.2.21",
+    "@tryghost/errors": "3.2.0",
+    "@tryghost/html-to-mobiledoc": "3.3.1",
     "@tryghost/kg-html-to-lexical": "1.2.38",
     "@tryghost/listr-smart-renderer": "workspace:*",
-    "@tryghost/validator": "2.0.3",
+    "@tryghost/validator": "2.1.0",
     "@typescript-eslint/parser": "8.59.1",
     "c8": "11.0.0",
     "eslint": "8.57.1",
