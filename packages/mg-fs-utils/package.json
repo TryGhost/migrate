@@ -28,10 +28,10 @@
     "eslint": "8.57.1"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.3",
-    "@tryghost/image-transform": "1.4.12",
-    "@tryghost/string": "0.3.1",
-    "@tryghost/zip": "3.0.3",
+    "@tryghost/errors": "3.2.0",
+    "@tryghost/image-transform": "1.4.14",
+    "@tryghost/string": "0.3.3",
+    "@tryghost/zip": "3.2.0",
     "adm-zip": "0.5.17",
     "csv-parse": "6.2.1",
     "dotenv": "17.4.2",

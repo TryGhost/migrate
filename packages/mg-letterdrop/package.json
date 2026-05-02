@@ -27,9 +27,9 @@
     "eslint": "8.57.1"
   },
   "dependencies": {
-    "@tryghost/debug": "2.0.3",
+    "@tryghost/debug": "2.2.0",
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/string": "0.3.1",
+    "@tryghost/string": "0.3.3",
     "got": "15.0.3"
   }
 }
