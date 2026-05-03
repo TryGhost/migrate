@@ -38,7 +38,7 @@
     "@typescript-eslint/parser": "8.59.1",
     "c8": "11.0.0",
     "eslint": "8.57.1",
-    "nock": "14.0.13",
+    "nock": "14.0.14",
     "typescript": "6.0.3"
   },
   "dependencies": {
