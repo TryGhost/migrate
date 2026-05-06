@@ -10,8 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: ['22.21.1']
-    name: Node ${{ matrix.node }}
+        include:
+          - node: '22.21.1'
+            optional: false
+          - node: '24'
+            optional: true
+          - node: '26'
+            optional: true
+    continue-on-error: ${{ matrix.optional }}
+    name: Node ${{ matrix.node }}${{ matrix.optional && ' (optional)' || '' }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d # v6
