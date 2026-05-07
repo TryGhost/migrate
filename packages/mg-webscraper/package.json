@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-webscraper",
-  "version": "0.16.3",
+  "version": "0.17.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TryGhost/migrate.git",
