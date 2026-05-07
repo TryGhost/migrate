@@ -456,6 +456,12 @@ importers:
       '@tryghost/admin-api':
         specifier: 1.14.6
         version: 1.14.6
+      '@tryghost/errors':
+        specifier: 3.0.3
+        version: 3.0.3
+      '@tryghost/mg-context':
+        specifier: workspace:*
+        version: link:../mg-context
     devDependencies:
       '@types/node':
         specifier: 24.12.2
@@ -1090,6 +1096,9 @@ importers:
       '@tryghost/mg-chorus':
         specifier: workspace:*
         version: link:../mg-chorus
+      '@tryghost/mg-context':
+        specifier: workspace:*
+        version: link:../mg-context
       '@tryghost/mg-curated-export':
         specifier: workspace:*
         version: link:../mg-curated-export

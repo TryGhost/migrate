@@ -1,5 +1,8 @@
 import GhostAdminAPI from '@tryghost/admin-api';
-import type {Post, User, BrowseResponse} from '@tryghost/admin-api';
+import type {Post, BrowseResponse} from '@tryghost/admin-api';
+import errors from '@tryghost/errors';
+import type {MigrateContext} from '@tryghost/mg-context';
+import {mapPost, type GhostApiPost} from './mapper.js';
 
 export interface BaseOptions {
     url: string;
@@ -34,23 +37,12 @@ export interface DiscoverResult {
     batches: {
         posts: number;
         pages: number;
-        users: number;
     };
-}
-
-export interface FileCache {
-    hasFile(filename: string, type: string): boolean;
-    readTmpJSONFile(filename: string): Promise<unknown>;
-    writeTmpFile(data: unknown, filename: string): Promise<void>;
 }
 
 export interface TaskContext {
-    fileCache: FileCache;
+    migrateContext: MigrateContext;
     options: {limit: number | string};
-    result: {
-        posts: Post[];
-        users: User[];
-    };
 }
 
 export interface ListrTask {
@@ -58,18 +50,15 @@ export interface ListrTask {
     task: (ctx: TaskContext) => Promise<void>;
 }
 
-export type FetchType = 'posts' | 'pages' | 'users';
+export type FetchType = 'posts' | 'pages';
 
 const contentStats = async (options: BaseOptions): Promise<ContentStatsResult> => {
-    const requestOptions = {
+    const site = new GhostAdminAPI({
         url: options.url,
         version: 'v6.0',
         key: options.apikey
-    };
+    });
 
-    const site = new GhostAdminAPI(requestOptions);
-
-    // Request the smallest amount of data possible
     const posts = await site.posts.browse({limit: 1, fields: 'title'});
     const pages = await site.pages.browse({limit: 1, fields: 'title'});
     const users = await site.users.browse({limit: 1, fields: 'name'});
@@ -82,13 +71,11 @@ const contentStats = async (options: BaseOptions): Promise<ContentStatsResult> =
 };
 
 const discover = async (options: DiscoverOptions): Promise<DiscoverResult> => {
-    const requestOptions = {
+    const site = new GhostAdminAPI({
         url: options.url,
         version: 'v6.0',
         key: options.apikey
-    };
-
-    const site = new GhostAdminAPI(requestOptions);
+    });
 
     const posts = options.posts ? await site.posts.browse({limit: options.limit, filter: options.postFilter ?? null}) : null;
     const pages = options.pages ? await site.pages.browse({limit: options.limit, filter: options.postFilter ?? null}) : null;
@@ -103,69 +90,37 @@ const discover = async (options: DiscoverOptions): Promise<DiscoverResult> => {
         },
         batches: {
             posts: posts?.meta?.pagination.pages ?? 0,
-            pages: pages?.meta?.pagination.pages ?? 0,
-            users: users.meta?.pagination.pages ?? 0
+            pages: pages?.meta?.pagination.pages ?? 0
         }
     };
 };
 
-const cachedFetch = async (
-    fileCache: FileCache,
+const fetchPage = async (
     api: DiscoverResult,
     type: FetchType,
     options: FetchOptions,
     page: number
-): Promise<BrowseResponse<Post> | BrowseResponse<User>> => {
-    const filename = `gh_api_${type}_${options.limit}_${page}.json`;
-
-    if (fileCache.hasFile(filename, 'tmp')) {
-        return await fileCache.readTmpJSONFile(filename) as BrowseResponse<Post> | BrowseResponse<User>;
-    }
-
-    let response: BrowseResponse<Post> | BrowseResponse<User>;
-
-    const postParams = {
-        formats: 'html',
+): Promise<BrowseResponse<Post>> => {
+    const params = {
+        formats: 'lexical',
         limit: options.limit,
         page: page,
-        filter: options.postFilter || null
+        filter: (type === 'posts' ? options.postFilter : options.pageFilter) || null
     };
 
-    const pageParams = {
-        formats: 'html',
-        limit: options.limit,
-        page: page,
-        filter: options.pageFilter || null
-    };
+    const response = type === 'posts'
+        ? await api.site.posts.browse(params, {source: 'html'})
+        : await api.site.pages.browse(params, {source: 'html'});
 
-    const userParams = {
-        limit: options.limit,
-        page: page
-    };
-
-    if (type === 'posts') {
-        const posts = await api.site.posts.browse(postParams, {source: 'html'});
-        posts.forEach((item) => {
-            item.type = 'post';
-        });
-        response = posts;
-    } else if (type === 'pages') {
-        const pages = await api.site.pages.browse(pageParams, {source: 'html'});
-        pages.forEach((item) => {
-            item.type = 'page';
-        });
-        response = pages;
-    } else {
-        response = await api.site.users.browse(userParams);
-    }
-
-    await fileCache.writeTmpFile(response, filename);
+    const ghostType = type === 'posts' ? 'post' : 'page';
+    response.forEach((item) => {
+        item.type = ghostType;
+    });
 
     return response;
 };
 
 const buildTasks = (
-    fileCache: FileCache,
     tasks: ListrTask[],
     api: DiscoverResult,
     type: FetchType,
@@ -176,16 +131,13 @@ const buildTasks = (
             title: `Fetching ${type}, page ${page} of ${api.batches[type]}`,
             task: async (ctx) => {
                 try {
-                    const response = await cachedFetch(fileCache, api, type, options, page);
-
-                    // This is weird, but we don't yet deal with pages as a separate concept in imports
-                    const resultKey: 'posts' | 'users' = type === 'pages' || type === 'posts' ? 'posts' : 'users';
-
-                    if (resultKey === 'posts') {
-                        ctx.result.posts = ctx.result.posts.concat(response as BrowseResponse<Post>);
-                    } else {
-                        ctx.result.users = ctx.result.users.concat(response as BrowseResponse<User>);
-                    }
+                    const response = await fetchPage(api, type, options, page);
+                    await ctx.migrateContext.transaction(async () => {
+                        for (const ghPost of response) {
+                            const post = await mapPost(ghPost as unknown as GhostApiPost, ctx.migrateContext);
+                            post.save(ctx.migrateContext.db);
+                        }
+                    });
                 } catch (error) {
                     console.error(`Failed to fetch ${type}, page ${page} of ${api.batches[type]}`, error); // eslint-disable-line no-console
                     throw error;
@@ -198,18 +150,17 @@ const buildTasks = (
 const tasks = async (options: FetchOptions, ctx: TaskContext): Promise<ListrTask[]> => {
     const {limit} = ctx.options;
 
+    if (!ctx.migrateContext) {
+        throw new errors.IncorrectUsageError({
+            message: 'mg-ghost-api fetch.tasks requires ctx.migrateContext to be set by the caller'
+        });
+    }
+
     const api = await discover({...options, limit});
 
     const taskList: ListrTask[] = [];
-
-    ctx.result = {
-        posts: [],
-        users: []
-    };
-
-    buildTasks(ctx.fileCache, taskList, api, 'posts', options);
-    buildTasks(ctx.fileCache, taskList, api, 'pages', options);
-    buildTasks(ctx.fileCache, taskList, api, 'users', options);
+    buildTasks(taskList, api, 'posts', options);
+    buildTasks(taskList, api, 'pages', options);
 
     return taskList;
 };

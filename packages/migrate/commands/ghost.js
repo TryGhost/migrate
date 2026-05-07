@@ -52,7 +52,7 @@ const options = [
     {
         type: 'array',
         flags: '-s --scrape',
-        choices: ['all', 'web', 'assets', 'none', 'img', 'media', 'files'],
+        choices: ['all', 'assets', 'none', 'img', 'media', 'files'],
         defaultValue: 'all',
         desc: 'Configure scraping tasks (all = web + assets, web = metadata only, assets = download assets only). Legacy aliases for assets: img, media, files'
     },
@@ -73,6 +73,12 @@ const options = [
         flags: '-l, --limit',
         defaultValue: 15,
         desc: 'Number of items fetched in a batch i.e. batch size'
+    },
+    {
+        type: 'number',
+        flags: '--postsPerFile',
+        defaultValue: 2000,
+        desc: 'Maximum posts written per output JSON file (chunks the Ghost import zip)'
     },
     {
         type: 'string',

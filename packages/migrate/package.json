@@ -46,6 +46,7 @@
     "@tryghost/mg-curated-export": "workspace:*",
     "@tryghost/mg-curated-members-csv": "workspace:*",
     "@tryghost/mg-fs-utils": "workspace:*",
+    "@tryghost/mg-context": "workspace:*",
     "@tryghost/mg-ghost-api": "workspace:*",
     "@tryghost/mg-ghost-authors": "workspace:*",
     "@tryghost/mg-html-lexical": "workspace:*",

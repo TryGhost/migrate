@@ -1,12 +1,10 @@
 import {readFileSync} from 'node:fs';
+import {join} from 'node:path';
 import ghostAPI from '@tryghost/mg-ghost-api';
-import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
-import {toGhostJSON} from '@tryghost/mg-json';
+import {MigrateContext} from '@tryghost/mg-context';
 import MgAssetScraper from '@tryghost/mg-assetscraper-db';
-import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
-import {createGhostUserTasks} from '@tryghost/mg-ghost-authors';
 import prettyMilliseconds from 'pretty-ms';
 
 const initialize = (options) => {
@@ -17,22 +15,25 @@ const initialize = (options) => {
 
             ctx.allowScrape = {
                 all: ctx.options.scrape.includes('all'),
-                assets: ctx.options.scrape.includes('all') || ctx.options.scrape.includes('assets') || ctx.options.scrape.includes('img') || ctx.options.scrape.includes('media') || ctx.options.scrape.includes('files'),
-                web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
+                assets: ctx.options.scrape.includes('all') || ctx.options.scrape.includes('assets') || ctx.options.scrape.includes('img') || ctx.options.scrape.includes('media') || ctx.options.scrape.includes('files')
             };
 
-            // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
             ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(ctx.options.url);
             ctx.fileCache = new fsUtils.FileCache(`ghost-${ctx.options.cacheName}`, {
                 tmpPath: ctx.options.tmpPath,
                 batchName: options.batch
             });
+
+            ctx.migrateContext = new MigrateContext({
+                contentFormat: 'lexical',
+                dbPath: join(ctx.fileCache.tmpDir, 'mg-context.sqlite')
+            });
+            await ctx.migrateContext.init();
+
             ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
                 allowAllDomains: true
             }, ctx);
             await ctx.assetScraper.init();
-
-            ctx.linkFixer = new MgLinkFixer();
 
             task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
 
@@ -73,7 +74,6 @@ const getFullTaskList = (options) => {
         {
             title: 'Fetch Content from Ghost API',
             task: async (ctx) => {
-                // 1. Read all content from the API
                 try {
                     let tasks = await ghostAPI.fetch.tasks(options, ctx);
 
@@ -90,83 +90,43 @@ const getFullTaskList = (options) => {
             }
         },
         {
-            title: 'Process Ghost API JSON',
-            task: async (ctx) => {
-                // 2. Convert Ghost API JSON into a format that the migrate tools understand
-                try {
-                    ctx.result = await ghostAPI.process.all(ctx);
-                    await ctx.fileCache.writeTmpFile(ctx.result, 'gh-processed-data.json');
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to process content', error});
-                    throw error;
-                }
-            }
-        },
-        ...createGhostUserTasks(options),
-        {
-            title: 'Build Link Map',
-            task: async (ctx) => {
-                // 3. Create a map of all known links for use later
-                try {
-                    ctx.linkFixer.buildMap(ctx);
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to build link map', error});
-                    throw error;
-                }
-            }
-        },
-        {
-            title: 'Format data as Ghost JSON',
-            task: async (ctx) => {
-                // 4. Format the data as a valid Ghost JSON file
-                try {
-                    ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to format data as Ghost JSON', error});
-                    throw error;
-                }
-            }
-        },
-        {
             title: 'Fetch images via AssetScraper',
             skip: ctx => !ctx.allowScrape.assets,
             task: async (ctx) => {
-                // 5. Format the data as a valid Ghost JSON file
-                let tasks = ctx.assetScraper.getTasks();
-                return makeTaskRunner(tasks, {
-                    verbose: options.verbose,
-                    exitOnError: false,
-                    concurrent: false
-                });
-            }
-        },
-        {
-            title: 'Update links in content via LinkFixer',
-            task: async (ctx, task) => {
-                // 6. Process the content looking for known links, and update them to new links
-                let tasks = ctx.linkFixer.fix(ctx, task);
-                return makeTaskRunner(tasks, options);
-            }
-        },
-        {
-            title: 'Convert HTML -> MobileDoc',
-            task: (ctx) => {
-                // 7. Convert post HTML -> MobileDoc
                 try {
-                    let tasks = mgHtmlMobiledoc.convert(ctx); // eslint-disable-line no-shadow
-                    return makeTaskRunner(tasks, options);
+                    await ctx.migrateContext.forEachPost(async (post) => {
+                        await ctx.assetScraper.processAssets(post);
+                    });
+                    await ctx.migrateContext.forEachTag(async (tag) => {
+                        await ctx.assetScraper.processAssets(tag);
+                    });
+                    await ctx.migrateContext.forEachAuthor(async (author) => {
+                        await ctx.assetScraper.processAssets(author);
+                    });
                 } catch (error) {
-                    ctx.errors.push({message: 'Failed to convert HTML to Mobiledoc', error});
+                    ctx.errors.push({message: 'Failed to fetch images via AssetScraper', error});
                     throw error;
                 }
             }
         },
         {
-            title: 'Write Ghost import JSON File',
+            title: 'Prepare data for export',
             task: async (ctx) => {
-                // 8. Write a valid Ghost import zip
                 try {
-                    await ctx.fileCache.writeGhostImportFile(ctx.result);
+                    await ctx.migrateContext.prepareForExport();
+                } catch (error) {
+                    ctx.errors.push({message: 'Failed to prepare data for export', error});
+                    throw error;
+                }
+            }
+        },
+        {
+            title: 'Write Ghost import JSON file(s)',
+            task: async (ctx) => {
+                try {
+                    await ctx.migrateContext.writeGhostJson(ctx.fileCache.zipDir, {
+                        batchSize: options.postsPerFile
+                    });
                     await ctx.fileCache.writeErrorJSONFile(ctx.errors);
                 } catch (error) {
                     ctx.errors.push({message: 'Failed to write Ghost import JSON file', error});
@@ -178,24 +138,19 @@ const getFullTaskList = (options) => {
             title: 'Write Ghost import zip',
             skip: () => !options.zip,
             task: async (ctx, task) => {
-                // 9. Write a valid Ghost import zip
                 const isStorage = (options?.outputStorage && typeof options.outputStorage === 'object') ?? false;
 
                 try {
                     let timer = Date.now();
                     const zipFinalPath = options.outputPath || process.cwd();
-                    // zip the file and save it temporarily
                     ctx.outputFile = await fsUtils.zip.write(zipFinalPath, ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
 
                     if (isStorage) {
                         const storage = options.outputStorage;
                         const localFilePath = ctx.outputFile.path;
 
-                        // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
-                        // Upload the file to the storage
                         ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-ghost-${ctx.options.cacheName}.zip`});
-                        // now that the file is uploaded to the storage, delete the local zip file
                         await fsUtils.zip.deleteFile(localFilePath);
                     }
 
@@ -203,6 +158,16 @@ const getFullTaskList = (options) => {
                 } catch (error) {
                     ctx.errors.push({message: 'Failed to write and upload ZIP file', error});
                     throw error;
+                }
+            }
+        },
+        {
+            title: 'Close MigrateContext',
+            task: async (ctx) => {
+                try {
+                    await ctx.migrateContext.close();
+                } catch (error) {
+                    ctx.errors.push({message: 'Failed to close MigrateContext', error});
                 }
             }
         },
@@ -230,7 +195,6 @@ const getTaskRunner = (options) => {
         tasks = getFullTaskList(options);
     }
 
-    // Configure a new Listr task manager, we can use different renderers for different configs
     return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
 };
 
