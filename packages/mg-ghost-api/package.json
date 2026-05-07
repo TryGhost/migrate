@@ -8,23 +8,37 @@
   },
   "author": "Ghost Foundation",
   "license": "MIT",
-  "main": "index.js",
   "type": "module",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "default": "./build/index.js"
+    }
+  },
   "scripts": {
     "dev": "echo \"Implement me!\"",
-    "test": "node --test 'test/**/*.test.js'",
-    "posttest": "pnpm lint",
-    "lint": "eslint . --ext .js --cache"
+    "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",
+    "build": "tsc --build --sourceMap",
+    "lint": "eslint src/ --ext .ts --cache",
+    "test": "c8 --src src --all --reporter text --reporter cobertura node --test 'build/test/**/*.test.js'",
+    "test:local": "pnpm build && pnpm test",
+    "posttest": "pnpm lint"
   },
   "files": [
-    "index.js",
-    "lib"
+    "build"
   ],
   "publishConfig": {
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.57.1"
+    "@types/node": "24.12.2",
+    "@typescript-eslint/parser": "8.59.1",
+    "c8": "11.0.0",
+    "eslint": "8.57.1",
+    "eslint-plugin-ghost": "3.5.0",
+    "typescript": "6.0.3"
   },
   "dependencies": {
     "@tryghost/admin-api": "1.14.6"

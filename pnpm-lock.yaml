@@ -457,9 +457,24 @@ importers:
         specifier: 1.14.6
         version: 1.14.6
     devDependencies:
+      '@types/node':
+        specifier: 24.12.2
+        version: 24.12.2
+      '@typescript-eslint/parser':
+        specifier: 8.59.1
+        version: 8.59.1(eslint@8.57.1)(typescript@6.0.3)
+      c8:
+        specifier: 11.0.0
+        version: 11.0.0
       eslint:
         specifier: 8.57.1
         version: 8.57.1
+      eslint-plugin-ghost:
+        specifier: 3.5.0
+        version: 3.5.0(@babel/core@7.29.0)(eslint@8.57.1)
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
 
   packages/mg-ghost-authors:
     dependencies:
@@ -9613,8 +9628,8 @@ snapshots:
 
   '@typescript-eslint/project-service@8.56.1(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.56.1(typescript@5.9.3)
-      '@typescript-eslint/types': 8.56.1
+      '@typescript-eslint/tsconfig-utils': 8.59.1(typescript@5.9.3)
+      '@typescript-eslint/types': 8.59.1
       debug: 4.4.3
       typescript: 5.9.3
     transitivePeerDependencies:
