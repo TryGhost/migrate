@@ -725,7 +725,8 @@ export default class AssetScraper {
                 'image/svg+xml': 'svg',
                 'image/avif': 'avif',
                 'image/heif': 'heif',
-                'image/heic': 'heic'
+                'image/heic': 'heic',
+                'image/tiff': 'tif'
             };
             extension = mimeToExtMap[mimeType] || 'jpg';
         }

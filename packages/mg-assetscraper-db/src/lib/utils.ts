@@ -10,10 +10,12 @@ const knownMediaTypes = ['video/mp4', 'video/webm', 'video/ogg', 'audio/mpeg', '
 const knownFileTypes = ['application/pdf', 'application/json', 'application/ld+json', 'application/vnd.oasis.opendocument.presentation', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.text', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/rtf', 'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/xml', 'application/atom+xml'
 ];
 
-export const needsConverting = ['image/avif', 'image/heif', 'image/heic'];
+export const needsConverting = ['image/avif', 'image/heif', 'image/heic', 'image/tiff'];
 
 /**
- * Convert HEIC/HEIF/AVIF images to supported formats (JPEG or WebP)
+ * Convert HEIC/HEIF/AVIF/TIFF images to supported formats (JPEG or WebP).
+ * Ghost's media allow-list does not include TIFF, so we re-encode to WebP via
+ * sharp (libvips) the same way we do for AVIF.
  * @param buffer - The image buffer to convert
  * @param fileMime - The mime type of the image
  * @returns Object with converted buffer, extension, and mime type

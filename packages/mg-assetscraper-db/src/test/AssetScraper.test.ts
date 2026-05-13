@@ -29,6 +29,7 @@ describe('Asset Scraper', () => {
     }
     let avifImageBuffer: Buffer;
     let heicImageBuffer: Buffer;
+    let tiffImageBuffer: Buffer;
     let mp4VideoBuffer: Buffer;
     let mp3AudioBuffer: Buffer;
 
@@ -36,6 +37,11 @@ describe('Asset Scraper', () => {
         jpgImageBuffer = await readFile(join(fixturesPath, '/image.jpg'));
         avifImageBuffer = await readFile(join(fixturesPath, '/image.avif'));
         heicImageBuffer = await readFile(join(fixturesPath, '/image.heic'));
+        // Generate a small TIFF fixture at runtime to avoid checking in a binary file
+        const sharp = (await import('sharp')).default;
+        tiffImageBuffer = await sharp({
+            create: {width: 8, height: 8, channels: 3, background: {r: 255, g: 0, b: 0}}
+        }).tiff().toBuffer();
         mp4VideoBuffer = await readFile(join(fixturesPath, '/video.mp4'));
         mp3AudioBuffer = await readFile(join(fixturesPath, '/audio.mp3'));
     });
@@ -557,6 +563,23 @@ describe('Asset Scraper', () => {
             assert.equal(responseData.fileName, 'photo.jpg');
             assert.equal(responseData.fileMime, 'image/jpeg');
             assert.equal(responseData.extension, '.jpg');
+        });
+
+        it('extractFileDataFromResponse tiff to webp', async () => {
+            const requestMock = nock('https://example.com')
+                .get('/assets/2025/03/photo.tif')
+                .reply(200, tiffImageBuffer);
+
+            const assetScraper = await createScraper({});
+
+            const response = await assetScraper.getRemoteMedia('https://example.com/assets/2025/03/photo.tif');
+            const responseData: any = await assetScraper.extractFileDataFromResponse('https://example.com/assets/2025/03/photo.tif', response);
+
+            assert.ok(requestMock.isDone());
+            assert.equal(responseData.fileBuffer.constructor.name, 'Buffer');
+            assert.equal(responseData.fileName, 'photo.webp');
+            assert.equal(responseData.fileMime, 'image/webp');
+            assert.equal(responseData.extension, '.webp');
         });
 
         it('extractFileDataFromResponse falls back to content-type header and URL extension', async () => {
