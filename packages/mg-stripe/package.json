@@ -43,7 +43,7 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@inquirer/input": "5.0.12",
+    "@inquirer/input": "5.0.13",
     "@inquirer/prompts": "8.4.2",
     "@inquirer/select": "5.1.4",
     "@tryghost/pretty-cli": "3.0.3",
