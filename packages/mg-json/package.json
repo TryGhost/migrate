@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/string": "0.3.1",
+    "@tryghost/string": "0.3.4",
     "bson-objectid": "2.0.4",
     "html-entities": "2.6.0",
     "node-email-verifier": "4.0.0"

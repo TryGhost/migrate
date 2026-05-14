@@ -40,7 +40,7 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.3",
+    "@tryghost/errors": "3.2.1",
     "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
     "markdown-it": "14.1.1",
