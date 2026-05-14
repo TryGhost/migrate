@@ -360,8 +360,8 @@ importers:
         specifier: workspace:*
         version: link:../listr-smart-renderer
       '@tryghost/validator':
-        specifier: 2.0.3
-        version: 2.0.3
+        specifier: 3.1.1
+        version: 3.1.1
       '@typescript-eslint/parser':
         specifier: 8.59.1
         version: 8.59.1(eslint@8.57.1)(typescript@6.0.3)
@@ -3610,6 +3610,9 @@ packages:
   '@tryghost/errors@3.0.3':
     resolution: {integrity: sha512-0hRFMQvsNPbojPS7xDuJEe4eNzWSQ6v2rLFXlTCeY7K7Lh4GXRmsI846SxPXwH8moaWIsrLP4xTnmIp8Tgs/Lw==}
 
+  '@tryghost/errors@3.2.1':
+    resolution: {integrity: sha512-KM7Xe9qaR4a0RTjgcggS10NDMZbkYlLz0ePYIQ/0FbkEZtTqWwRrOn4BeQe587FpZ5DoXbiXxNE5vBMfZBPl+Q==}
+
   '@tryghost/html-to-mobiledoc@3.2.21':
     resolution: {integrity: sha512-+fG+IhHUmfV/fOpt2d/4UeizTd8wkDv6Y7bNxtPmsiKS2bQ1r3R0EtnleX8N38xJsfVa9rAeu+a3WwLEClH+Tg==}
 
@@ -3683,8 +3686,8 @@ packages:
   '@tryghost/url-utils@5.1.2':
     resolution: {integrity: sha512-GGZRfdVdk7jE1puqfBCeaAMeQ/Gd0NUkbqhj4gRSCWKW97JDpoiu5Fwyutt3vq3U3X4ZsfLfKs0NtAfUez0oog==}
 
-  '@tryghost/validator@2.0.3':
-    resolution: {integrity: sha512-k8XZIaeSjqL+zzYzYkUO491tqvduXZGAkDkimsDABPeVE5SNSFXQGaHcMb97YQa0Br1lRDKQl08KY2UboTv0zA==}
+  '@tryghost/validator@3.1.1':
+    resolution: {integrity: sha512-GIBONNQs7BP7FEKf8XxDk+roLVf86rQle3YWbe4IajqAcHoto952RAARwSAvYOhmqroBfX2++9BAyXEER+Ys9Q==}
 
   '@tryghost/zip@3.0.3':
     resolution: {integrity: sha512-gp8z5JYH5h1MGeS+MQSTsrf33XxSTOgFHJCLstcxIV5hg2pxSzo7N4Gg3+CrqrqIqLNO0aEkOkikAFtArpPwdQ==}
@@ -3842,6 +3845,7 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@yarnpkg/lockfile@1.1.0':
     resolution: {integrity: sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==}
@@ -5544,9 +5548,6 @@ packages:
   lodash.upperfirst@4.3.1:
     resolution: {integrity: sha512-sReKOYJIJf74dhJONhU4e0/shzi1trVbSWDOhKYE5XV2O+H7Sb2Dihwuc7xWxVl+DgFPyTqIN3zMfT9cq5iWDg==}
 
-  lodash@4.17.23:
-    resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
-
   lodash@4.18.1:
     resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
 
@@ -6294,6 +6295,7 @@ packages:
 
   sliced@1.0.1:
     resolution: {integrity: sha512-VZBmZP8WU3sMOZm1bdgTadsQbcscK0UM8oKxKVBs4XAhUo2Xxzm/OFMGBkPusxw9xL3Uy8LrzEqGqJhclsr0yA==}
+    deprecated: Unsupported
 
   slick@1.12.2:
     resolution: {integrity: sha512-4qdtOGcBjral6YIBCWJ0ljFSKNLz9KkhbWtuGvUyRowl1kxfuE1x/Z/aJcaiilpb3do9bl5K7/1h9XC5wWpY/A==}
@@ -6718,10 +6720,6 @@ packages:
 
   validator@13.15.35:
     resolution: {integrity: sha512-TQ5pAGhd5whStmqWvYF4OjQROlmv9SMFVt37qoCBdqRffuuklWYQlCNnEs2ZaIBD1kZRNnikiZOS1eqgkar0iw==}
-    engines: {node: '>= 0.10'}
-
-  validator@7.2.0:
-    resolution: {integrity: sha512-c8NGTUYeBEcUIGeMppmNVKHE7wwfm3mYbNZxV+c5mlv9fDHI7Ad3p07qfNrn/CvpdkK2k61fOLRO2sTEhgQXmg==}
     engines: {node: '>= 0.10'}
 
   vfile-location@2.0.6:
@@ -9346,6 +9344,8 @@ snapshots:
 
   '@tryghost/errors@3.0.3': {}
 
+  '@tryghost/errors@3.2.1': {}
+
   '@tryghost/html-to-mobiledoc@3.2.21':
     dependencies:
       '@tryghost/kg-parser-plugins': 4.2.20
@@ -9526,13 +9526,13 @@ snapshots:
       remark-footnotes: 1.0.0
       unist-util-visit: 2.0.3
 
-  '@tryghost/validator@2.0.3':
+  '@tryghost/validator@3.1.1':
     dependencies:
-      '@tryghost/errors': 3.0.3
+      '@tryghost/errors': 3.2.1
       '@tryghost/tpl': 2.2.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       moment-timezone: 0.5.48
-      validator: 7.2.0
+      validator: 13.15.35
 
   '@tryghost/zip@3.0.3':
     dependencies:
@@ -11596,8 +11596,6 @@ snapshots:
 
   lodash.upperfirst@4.3.1: {}
 
-  lodash@4.17.23: {}
-
   lodash@4.18.1: {}
 
   log-symbols@4.1.0:
@@ -12979,8 +12977,6 @@ snapshots:
       spdx-expression-parse: 3.0.1
 
   validator@13.15.35: {}
-
-  validator@7.2.0: {}
 
   vfile-location@2.0.6: {}
 
