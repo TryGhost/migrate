@@ -33,7 +33,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/node": "24.12.2",
+    "@types/node": "24.12.4",
     "@typescript-eslint/eslint-plugin": "8.59.1",
     "@typescript-eslint/parser": "8.59.1",
     "c8": "11.0.0",

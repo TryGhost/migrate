@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@tryghost/mg-context": "workspace:*",
-    "@types/node": "24.12.2",
+    "@types/node": "24.12.4",
     "@typescript-eslint/parser": "8.59.1",
     "c8": "11.0.0",
     "eslint": "8.57.1",
