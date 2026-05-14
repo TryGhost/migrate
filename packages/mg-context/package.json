@@ -41,7 +41,7 @@
     "@tryghost/kg-html-to-lexical": "1.2.38",
     "@tryghost/listr-smart-renderer": "workspace:*",
     "@tryghost/validator": "2.0.3",
-    "@typescript-eslint/parser": "8.59.1",
+    "@typescript-eslint/parser": "8.59.3",
     "c8": "11.0.0",
     "eslint": "8.57.1",
     "typescript": "6.0.3",
