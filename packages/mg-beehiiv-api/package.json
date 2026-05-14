@@ -36,10 +36,10 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.3",
+    "@tryghost/errors": "3.2.1",
     "@tryghost/kg-default-cards": "10.2.5",
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/string": "0.2.21",
+    "@tryghost/string": "0.3.4",
     "simple-dom": "1.4.0"
   }
 }

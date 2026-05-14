@@ -27,7 +27,7 @@
     "eslint": "8.57.1"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.3",
+    "@tryghost/errors": "3.2.1",
     "@tryghost/mg-fs-utils": "workspace:*"
   }
 }

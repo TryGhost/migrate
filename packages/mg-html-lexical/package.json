@@ -41,7 +41,7 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.3",
+    "@tryghost/errors": "3.2.1",
     "@tryghost/kg-html-to-lexical": "1.2.38"
   }
 }

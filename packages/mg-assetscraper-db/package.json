@@ -42,10 +42,10 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.3",
+    "@tryghost/errors": "3.2.1",
     "@tryghost/listr-smart-renderer": "workspace:*",
     "@tryghost/mg-fs-utils": "workspace:*",
-    "@tryghost/string": "0.3.1",
+    "@tryghost/string": "0.3.4",
     "file-type": "22.0.1",
     "heic-convert": "2.1.0",
     "sharp": "0.34.5",
