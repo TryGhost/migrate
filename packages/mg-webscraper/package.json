@@ -34,8 +34,8 @@
   },
   "devDependencies": {
     "@types/node": "24.12.2",
-    "@typescript-eslint/eslint-plugin": "8.59.1",
-    "@typescript-eslint/parser": "8.59.1",
+    "@typescript-eslint/eslint-plugin": "8.59.3",
+    "@typescript-eslint/parser": "8.59.3",
     "c8": "11.0.0",
     "eslint": "8.57.1",
     "nock": "14.0.14",
