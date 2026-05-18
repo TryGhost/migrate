@@ -804,8 +804,8 @@ importers:
         specifier: 8.4.2
         version: 8.4.2(@types/node@24.12.2)
       '@inquirer/select':
-        specifier: 5.1.4
-        version: 5.1.4(@types/node@24.12.2)
+        specifier: 5.1.5
+        version: 5.1.5(@types/node@24.12.2)
       '@tryghost/pretty-cli':
         specifier: 3.0.3
         version: 3.0.3
@@ -2325,8 +2325,8 @@ packages:
       '@types/node':
         optional: true
 
-  '@inquirer/select@5.1.4':
-    resolution: {integrity: sha512-2kWcGKPMLAXAWRp1AH1SLsQmX+j0QjeljyXMUji9WMZC8nRDO0b7qquIGr6143E7KMLt3VAIGNXzwa/6PXQs4Q==}
+  '@inquirer/select@5.1.5':
+    resolution: {integrity: sha512-6SRg6kHfK/sjLXOsuqNebuir+sjwrf/iWuRUnXgB2slzEewppI1WfzeS16XxDcOQmXBruMmmB9Cgrz7wsAxqMg==}
     engines: {node: '>=23.5.0 || ^22.13.0 || ^21.7.0 || ^20.12.0'}
     peerDependencies:
       '@types/node': '>=18'
@@ -8054,7 +8054,7 @@ snapshots:
       '@inquirer/password': 5.0.12(@types/node@24.12.2)
       '@inquirer/rawlist': 5.2.8(@types/node@24.12.2)
       '@inquirer/search': 4.1.8(@types/node@24.12.2)
-      '@inquirer/select': 5.1.4(@types/node@24.12.2)
+      '@inquirer/select': 5.1.5(@types/node@24.12.2)
     optionalDependencies:
       '@types/node': 24.12.2
 
@@ -8073,10 +8073,10 @@ snapshots:
     optionalDependencies:
       '@types/node': 24.12.2
 
-  '@inquirer/select@5.1.4(@types/node@24.12.2)':
+  '@inquirer/select@5.1.5(@types/node@24.12.2)':
     dependencies:
       '@inquirer/ansi': 2.0.5
-      '@inquirer/core': 11.1.9(@types/node@24.12.2)
+      '@inquirer/core': 11.1.10(@types/node@24.12.2)
       '@inquirer/figures': 2.0.5
       '@inquirer/type': 4.0.5(@types/node@24.12.2)
     optionalDependencies:
