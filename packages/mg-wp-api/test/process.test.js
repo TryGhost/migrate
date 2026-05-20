@@ -1109,7 +1109,7 @@ const hello () => {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        assert.equal(convertedHtml, '<iframe loading="lazy" title="" width="160" height="90" src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>');
+        assert.equal(convertedHtml, '<figure class="kg-card kg-embed-card"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" width="160" height="90" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></figure>');
     });
 
     it('Can convert embed shortcode with youtube.com URL to iframe', async function () {
@@ -1117,7 +1117,7 @@ const hello () => {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        assert.equal(convertedHtml, '<iframe loading="lazy" title="" width="160" height="90" src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>');
+        assert.equal(convertedHtml, '<figure class="kg-card kg-embed-card"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" width="160" height="90" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></figure>');
     });
 
     it('Leaves embed shortcode content as-is for non-YouTube URLs', async function () {
@@ -1126,6 +1126,223 @@ const hello () => {
         let convertedHtml = await processor.processShortcodes({html});
 
         assert.equal(convertedHtml, 'https://example.com/some-page');
+    });
+
+    it('Can convert embed shortcode with Vimeo URL', async function () {
+        let html = '[embed]https://vimeo.com/123456789[/embed]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('player.vimeo.com/video/123456789'));
+        assert.ok(convertedHtml.includes('<figure class="kg-card kg-embed-card">'));
+    });
+
+    it('Can convert embed shortcode with Spotify URL', async function () {
+        let html = '[embed]https://open.spotify.com/track/4PTG3Z6ehGkBFwjybzWkR8[/embed]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('open.spotify.com/embed/track/4PTG3Z6ehGkBFwjybzWkR8'));
+        assert.ok(convertedHtml.includes('<figure class="kg-card kg-embed-card">'));
+    });
+
+    it('Can convert embed shortcode with Twitter URL', async function () {
+        let html = '[embed]https://twitter.com/user/status/1234567890[/embed]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('twitter-tweet'));
+        assert.ok(convertedHtml.includes('<!--kg-card-begin: embed-->'));
+    });
+});
+
+describe('processUnknownEmbedShortcodes (catch-all)', function () {
+    it('Converts unknown shortcode with YouTube URL as content', async function () {
+        let html = '[myvideo]https://www.youtube.com/watch?v=dQw4w9WgXcQ[/myvideo]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('youtube.com/embed/dQw4w9WgXcQ'));
+        assert.ok(convertedHtml.includes('<figure class="kg-card kg-embed-card">'));
+    });
+
+    it('Converts unknown shortcode with Vimeo URL as content', async function () {
+        let html = '[wp_video]https://vimeo.com/987654321[/wp_video]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('player.vimeo.com/video/987654321'));
+        assert.ok(convertedHtml.includes('<figure class="kg-card kg-embed-card">'));
+    });
+
+    it('Converts unknown shortcode with YouTube embed URL in attribute', async function () {
+        let html = '[video_embed url="https://www.youtube.com/embed/dQw4w9WgXcQ"]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('youtube.com/embed/dQw4w9WgXcQ'));
+        assert.ok(convertedHtml.includes('<figure class="kg-card kg-embed-card">'));
+    });
+
+    it('Converts unknown shortcode with YouTube URL in any attribute name', async function () {
+        let html = '[myshortcode video="https://www.youtube.com/watch?v=abc123" autoplay="false"]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('youtube.com/embed/abc123'));
+        assert.ok(convertedHtml.includes('<figure class="kg-card kg-embed-card">'));
+    });
+
+    it('Converts unknown shortcode with unquoted URL attribute', async function () {
+        let html = '[yt_player src=https://youtu.be/dQw4w9WgXcQ responsive=true]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('youtube.com/embed/dQw4w9WgXcQ'));
+        assert.ok(convertedHtml.includes('<figure class="kg-card kg-embed-card">'));
+    });
+
+    it('Does NOT convert unknown shortcode with mixed text content containing a URL', async function () {
+        let html = '[callout]Check out this video https://www.youtube.com/watch?v=dQw4w9WgXcQ and subscribe[/callout]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(!convertedHtml.includes('<figure class="kg-card kg-embed-card">'));
+        assert.ok(convertedHtml.includes('[callout]'));
+    });
+
+    it('Converts unknown shortcode with Instagram URL', async function () {
+        let html = '[ig_embed]https://www.instagram.com/p/CxYz123AbC/[/ig_embed]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('instagram.com/p/CxYz123AbC/'));
+        assert.ok(convertedHtml.includes('<blockquote'));
+        assert.ok(convertedHtml.includes('instagram.com/embed.js'));
+    });
+
+    it('Converts unknown shortcode with Bluesky URL', async function () {
+        let html = '[social_embed]https://bsky.app/profile/user.bsky.social/post/3abc123def[/social_embed]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('bsky.app/profile/user.bsky.social/post/3abc123def'));
+        assert.ok(convertedHtml.includes('<blockquote>'));
+    });
+
+    it('Converts unknown shortcode with TikTok URL', async function () {
+        let html = '[tiktok_video]https://www.tiktok.com/@user/video/7123456789012345678[/tiktok_video]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('tiktok.com/@user/video/7123456789012345678'));
+        assert.ok(convertedHtml.includes('<blockquote>'));
+    });
+
+    it('Converts unknown shortcode with Dailymotion URL', async function () {
+        let html = '[dm_video]https://www.dailymotion.com/video/x7tgad[/dm_video]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('dailymotion.com/embed/video/x7tgad'));
+        assert.ok(convertedHtml.includes('<figure class="kg-card kg-embed-card">'));
+    });
+
+    it('Converts unknown shortcode with SoundCloud URL', async function () {
+        let html = '[sc_player]https://soundcloud.com/artist-name/track-name[/sc_player]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('soundcloud.com/artist-name/track-name'));
+        assert.ok(convertedHtml.includes('<iframe'));
+    });
+
+    it('Leaves unknown shortcode with non-embed URL as-is', async function () {
+        let html = '[my_shortcode]https://example.com/some-page[/my_shortcode]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.equal(convertedHtml, '[my_shortcode]https://example.com/some-page[/my_shortcode]');
+    });
+
+    it('Leaves unknown shortcode with non-URL content as-is', async function () {
+        let html = '[notice]This is a simple notice box[/notice]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.equal(convertedHtml, '[notice]This is a simple notice box[/notice]');
+    });
+
+    it('Handles multiple unknown embed shortcodes in one HTML string', async function () {
+        let html = '<p>Video 1:</p>[vid1]https://youtu.be/abc123[/vid1]<p>Video 2:</p>[vid2]https://vimeo.com/456789[/vid2]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('youtube.com/embed/abc123'));
+        assert.ok(convertedHtml.includes('player.vimeo.com/video/456789'));
+    });
+
+    it('Converts self-closing shortcode with positional URL', async function () {
+        let html = '[video_player https://www.youtube.com/watch?v=test123]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('youtube.com/embed/test123'));
+        assert.ok(convertedHtml.includes('<figure class="kg-card kg-embed-card">'));
+    });
+
+    it('Converts X.com (new Twitter) URL in unknown shortcode', async function () {
+        let html = '[tweet_embed]https://x.com/user/status/9876543210[/tweet_embed]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('twitter-tweet'));
+        assert.ok(convertedHtml.includes('x.com/user/status/9876543210'));
+    });
+
+    it('Converts Spotify embed URL format', async function () {
+        let html = '[music]https://open.spotify.com/embed/album/1DFixLWuPkv3KT3TnV35m3[/music]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.ok(convertedHtml.includes('open.spotify.com/embed/album/1DFixLWuPkv3KT3TnV35m3'));
+        assert.ok(convertedHtml.includes('<figure class="kg-card kg-embed-card">'));
+    });
+
+    it('Known [youtube] shortcode is handled by its own handler, not the catch-all', async function () {
+        let html = '[youtube id="dQw4w9WgXcQ"]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        // The known handler produces a bare iframe with loading="lazy" and referrerpolicy attrs
+        // The catch-all would produce a <figure class="kg-card kg-embed-card"> wrapper
+        assert.ok(convertedHtml.includes('loading="lazy"'), 'Should have loading="lazy" from known handler');
+        assert.ok(convertedHtml.includes('referrerpolicy="strict-origin-when-cross-origin"'), 'Should have referrerpolicy from known handler');
+        assert.ok(!convertedHtml.includes('<figure class="kg-card kg-embed-card">'), 'Should NOT have kg-embed-card wrapper from catch-all');
+    });
+
+    it('Known [embed] shortcode is handled by its own handler, not the catch-all', async function () {
+        let html = '[embed]https://youtu.be/dQw4w9WgXcQ[/embed]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        // The known [embed] handler uses matchEmbedUrl which produces the figure wrapper
+        assert.ok(convertedHtml.includes('<figure class="kg-card kg-embed-card">'));
+        assert.ok(convertedHtml.includes('youtube.com/embed/dQw4w9WgXcQ'));
+        // Verify shortcode is fully consumed (no leftover [embed] tags)
+        assert.ok(!convertedHtml.includes('[embed]'));
+        assert.ok(!convertedHtml.includes('[/embed]'));
+    });
+
+    it('Known [audio] shortcode is not affected by catch-all', async function () {
+        let html = '[audio mp3="https://example.com/podcast.mp3"]';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        // Should be handled by the known audio handler, producing an <audio> element
+        assert.ok(convertedHtml.includes('<audio'));
+        assert.ok(convertedHtml.includes('podcast.mp3'));
+        assert.ok(!convertedHtml.includes('<figure class="kg-card kg-embed-card">'));
     });
 });
 

@@ -12,6 +12,7 @@ import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
 import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
 import {domUtils, youtubeUtils, stringUtils} from '@tryghost/mg-utils';
+import {matchEmbedUrl, buildEmbedHtml} from './embed-utils.js';
 
 const {unescapeHTML, stripHtml} = stringUtils;
 
@@ -461,11 +462,9 @@ const processShortcodes = async ({html, options}) => {
         if (!embedUrl) {
             return '';
         }
-        if (/youtu\.?be/.test(embedUrl)) {
-            const videoID = getYouTubeID(embedUrl);
-            if (videoID) {
-                return `<iframe loading="lazy" title="" width="160" height="90" src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>`;
-            }
+        const match = matchEmbedUrl(embedUrl);
+        if (match) {
+            return buildEmbedHtml(match);
         }
         return content;
     });
@@ -484,7 +483,78 @@ const processShortcodes = async ({html, options}) => {
     shortcodes.unwrap('et_pb_column');
     shortcodes.unwrap('et_pb_row');
 
-    return shortcodes.parse(html);
+    let result = shortcodes.parse(html);
+
+    result = processUnknownEmbedShortcodes(result);
+
+    return result;
+};
+
+const SHORTCODE_REGEX = /\[([a-zA-Z_][\w-]*)(?<attrs>\s[\s\S]*?)?\](?:(?<content>[\s\S]*?)\[\/\1\])?/g;
+const SINGLE_URL_REGEX = /^https?:\/\/\S+$/;
+
+const processUnknownEmbedShortcodes = (html) => {
+    if (!html) {
+        return html;
+    }
+
+    return html.replace(SHORTCODE_REGEX, (fullMatch, _name, attrsString, content) => {
+        // Check content first — must be a single URL (no surrounding text)
+        if (content) {
+            const trimmed = content.trim();
+            if (SINGLE_URL_REGEX.test(trimmed)) {
+                const match = matchEmbedUrl(trimmed);
+                if (match) {
+                    return buildEmbedHtml(match);
+                }
+            }
+        }
+
+        // Check attribute values for recognisable embed URLs
+        if (attrsString) {
+            const attrValues = extractAttrValues(attrsString);
+            for (const value of attrValues) {
+                const match = matchEmbedUrl(value);
+                if (match) {
+                    return buildEmbedHtml(match);
+                }
+            }
+        }
+
+        return fullMatch;
+    });
+};
+
+const extractAttrValues = (attrsString) => {
+    const values = [];
+    // Match quoted values: key="value" or key='value'
+    const quotedRegex = /[\w-]+\s*=\s*"([^"]*?)"|[\w-]+\s*=\s*'([^']*?)'/g;
+    let match;
+
+    while ((match = quotedRegex.exec(attrsString)) !== null) {
+        const value = match[1] ?? match[2];
+        if (value) {
+            values.push(value);
+        }
+    }
+
+    // Match unquoted values: key=value (no spaces in value)
+    const unquotedRegex = /[\w-]+\s*=\s*([^\s"'][^\s]*)/g;
+    while ((match = unquotedRegex.exec(attrsString)) !== null) {
+        if (match[1]) {
+            values.push(match[1]);
+        }
+    }
+
+    // Match positional (bare) values that look like URLs
+    const positionalRegex = /(?:^|\s)(https?:\/\/\S+)/g;
+    while ((match = positionalRegex.exec(attrsString)) !== null) {
+        if (match[1]) {
+            values.push(match[1]);
+        }
+    }
+
+    return values;
 };
 
 /**
@@ -1379,6 +1449,7 @@ export default {
     processCoAuthors,
     processExcerpt,
     processShortcodes,
+    processUnknownEmbedShortcodes,
     processContent,
     processPost,
     processPosts,
