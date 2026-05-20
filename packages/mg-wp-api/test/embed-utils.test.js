@@ -317,3 +317,56 @@ describe('buildEmbedHtml', function () {
         assert.ok(html.includes('href="https://www.tiktok.com/@username/video/7123456789012345678"'));
     });
 });
+
+describe('URL sanitization', function () {
+    it('Escapes double quotes in URL attributes', function () {
+        const match = matchEmbedUrl('https://twitter.com/user/status/123');
+        assert.ok(match);
+        // Manually craft a match with an injected URL to test the builder
+        const malicious = {...match, url: 'https://twitter.com/user/status/123"onmouseover="alert(1)'};
+        const html = malicious.buildEmbedHtml(malicious.id, malicious.groups, malicious.url);
+        assert.ok(!html.includes('"onmouseover="alert(1)'));
+    });
+
+    it('Escapes angle brackets in URL attributes', function () {
+        const match = matchEmbedUrl('https://soundcloud.com/artist/track');
+        assert.ok(match);
+        const malicious = {...match, url: 'https://soundcloud.com/artist/track<script>alert(1)</script>'};
+        const html = malicious.buildEmbedHtml(malicious.id, malicious.groups, malicious.url);
+        assert.ok(!html.includes('<script>alert(1)</script>'));
+    });
+
+    it('Rejects javascript: protocol URLs', function () {
+        const match = matchEmbedUrl('https://twitter.com/user/status/456');
+        assert.ok(match);
+        const malicious = {...match, url: 'javascript:alert(1)'};
+        const html = malicious.buildEmbedHtml(malicious.id, malicious.groups, malicious.url);
+        assert.equal(html, '');
+    });
+
+    it('Rejects data: protocol URLs', function () {
+        const match = matchEmbedUrl('https://soundcloud.com/artist/track');
+        assert.ok(match);
+        const malicious = {...match, url: 'data:text/html,<script>alert(1)</script>'};
+        const html = malicious.buildEmbedHtml(malicious.id, malicious.groups, malicious.url);
+        assert.equal(html, '');
+    });
+
+    it('Rejects invalid URLs that fail URL constructor', function () {
+        const match = matchEmbedUrl('https://bsky.app/profile/user.bsky.social/post/abc123');
+        assert.ok(match);
+        const malicious = {...match, url: 'not-a-valid-url'};
+        const html = malicious.buildEmbedHtml(malicious.id, malicious.groups, malicious.url);
+        assert.equal(html, '');
+    });
+
+    it('URL with injection payload is sanitized in output', function () {
+        const result = matchEmbedUrl('https://twitter.com/user/status/123" onclick="alert(1)" data-x="');
+        // The regex matches (captures ID "123"), but output must be safe
+        assert.ok(result);
+        const html = buildEmbedHtml(result);
+        // The quotes are percent-encoded by URL constructor, so no attribute breakout
+        assert.ok(!html.includes('href="https://twitter.com/user/status/123"'));
+        assert.ok(html.includes('%22'));
+    });
+});

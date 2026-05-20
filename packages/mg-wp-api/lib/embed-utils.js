@@ -1,3 +1,23 @@
+const escapeHtmlAttr = (str) => {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+};
+
+const sanitizeUrl = (url) => {
+    try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return null;
+        }
+        return escapeHtmlAttr(parsed.href);
+    } catch {
+        return null;
+    }
+};
+
 const EMBED_SERVICES = [
     {
         name: 'youtube',
@@ -71,7 +91,11 @@ const EMBED_SERVICES = [
             /(?:https?:\/\/)?w\.soundcloud\.com\/player\/\?url=/i
         ],
         buildEmbedHtml(_id, _groups, originalUrl) {
-            return `<figure class="kg-card kg-embed-card"><iframe src="${originalUrl}" width="100%" height="166" frameborder="0" allow="autoplay"></iframe></figure>`;
+            const safe = sanitizeUrl(originalUrl);
+            if (!safe) {
+                return '';
+            }
+            return `<figure class="kg-card kg-embed-card"><iframe src="${safe}" width="100%" height="166" frameborder="0" allow="autoplay"></iframe></figure>`;
         },
         extractId(url) {
             for (const pattern of this.patterns) {
@@ -90,7 +114,11 @@ const EMBED_SERVICES = [
             /(?:https?:\/\/)?(?:www\.)?x\.com\/\w+\/status\/(\d+)/i
         ],
         buildEmbedHtml(_id, _groups, originalUrl) {
-            return `<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><a href="${originalUrl}"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure><!--kg-card-end: embed-->`;
+            const safe = sanitizeUrl(originalUrl);
+            if (!safe) {
+                return '';
+            }
+            return `<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><a href="${safe}"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure><!--kg-card-end: embed-->`;
         }
     },
     {
@@ -100,7 +128,11 @@ const EMBED_SERVICES = [
             /(?:https?:\/\/)?(?:www\.)?instagram\.com\/reel\/([\w-]+)/i
         ],
         buildEmbedHtml(_id, _groups, originalUrl) {
-            return `<figure class="kg-card kg-embed-card"><blockquote class="instagram-media" data-instgrm-permalink="${originalUrl}"><a href="${originalUrl}"></a></blockquote><script async src="//www.instagram.com/embed.js"></script></figure>`;
+            const safe = sanitizeUrl(originalUrl);
+            if (!safe) {
+                return '';
+            }
+            return `<figure class="kg-card kg-embed-card"><blockquote class="instagram-media" data-instgrm-permalink="${safe}"><a href="${safe}"></a></blockquote><script async src="//www.instagram.com/embed.js"></script></figure>`;
         }
     },
     {
@@ -109,7 +141,11 @@ const EMBED_SERVICES = [
             /(?:https?:\/\/)?bsky\.app\/profile\/[\w.:-]+\/post\/([\w]+)/i
         ],
         buildEmbedHtml(_id, _groups, originalUrl) {
-            return `<figure class="kg-card kg-embed-card"><blockquote><a href="${originalUrl}"></a></blockquote></figure>`;
+            const safe = sanitizeUrl(originalUrl);
+            if (!safe) {
+                return '';
+            }
+            return `<figure class="kg-card kg-embed-card"><blockquote><a href="${safe}"></a></blockquote></figure>`;
         }
     },
     {
@@ -118,7 +154,11 @@ const EMBED_SERVICES = [
             /(?:https?:\/\/)?(?:www\.)?tiktok\.com\/@[\w.-]+\/video\/(\d+)/i
         ],
         buildEmbedHtml(_id, _groups, originalUrl) {
-            return `<figure class="kg-card kg-embed-card"><blockquote><a href="${originalUrl}"></a></blockquote></figure>`;
+            const safe = sanitizeUrl(originalUrl);
+            if (!safe) {
+                return '';
+            }
+            return `<figure class="kg-card kg-embed-card"><blockquote><a href="${safe}"></a></blockquote></figure>`;
         }
     }
 ];
