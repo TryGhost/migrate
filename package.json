@@ -40,12 +40,5 @@
     "nx": "22.7.2",
     "tsx": "4.22.2",
     "typescript": "6.0.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "nx",
-      "sharp"
-    ]
   }
 }
