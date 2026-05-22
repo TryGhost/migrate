@@ -240,7 +240,7 @@ export function buildSubscription(overrides: Partial<Omit<Stripe.Subscription, '
             quantity: 1
         };
     });
-    const {current_period_start: _cps, current_period_end: _cpe, ...restOverrides} = overrides;
+    const {current_period_start: _cps, current_period_end: _cpe, managed_payments: managedPayments, ...restOverrides} = overrides;
     return {
         id,
         object: 'subscription',
@@ -285,6 +285,7 @@ export function buildSubscription(overrides: Partial<Omit<Stripe.Subscription, '
         trial_settings: null,
         trial_start: null,
         ...restOverrides,
+        managed_payments: managedPayments ?? null,
         items: {
             object: 'list',
             has_more: false,
