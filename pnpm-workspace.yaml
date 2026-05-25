@@ -1,2 +1,10 @@
 packages:
   - "packages/*"
+
+allowBuilds:
+  esbuild: true
+  nx: true
+  sharp: true
+
+minimumReleaseAgeExclude:
+  - tldts-core@7.1.2
