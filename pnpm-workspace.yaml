@@ -1,7 +1,7 @@
 packages:
   - "packages/*"
 
-onlyBuiltDependencies:
-  - esbuild
-  - nx
-  - sharp
+allowBuilds:
+  esbuild: true
+  nx: true
+  sharp: true
