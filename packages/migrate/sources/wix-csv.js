@@ -9,6 +9,13 @@ import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {createGhostUserTasks} from '@tryghost/mg-ghost-authors';
 import prettyMilliseconds from 'pretty-ms';
 
+// Small dependency seam so source initialization can be tested without real cache/scraper setup.
+const dependencies = {
+    AssetScraper: MgAssetScraper,
+    FileCache: fsUtils.FileCache,
+    LinkFixer: MgLinkFixer
+};
+
 const initialize = (options) => {
     return {
         title: 'Initializing Workspace',
@@ -19,17 +26,17 @@ const initialize = (options) => {
             };
 
             ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(ctx.options.url);
-            ctx.fileCache = new fsUtils.FileCache(`wix-csv-${ctx.options.cacheName}`, {
+            ctx.fileCache = new dependencies.FileCache(`wix-csv-${ctx.options.cacheName}`, {
                 tmpPath: ctx.options.tmpPath
             });
-            ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
+            ctx.assetScraper = new dependencies.AssetScraper(ctx.fileCache, {
                 domains: [
-                    'http://static.wixstatic.com',
-                    'https://static.wixstatic.com'
+                    'http://static\\.wixstatic\\.com',
+                    'https://static\\.wixstatic\\.com'
                 ]
             }, ctx);
             await ctx.assetScraper.init();
-            ctx.linkFixer = new MgLinkFixer();
+            ctx.linkFixer = new dependencies.LinkFixer();
 
             task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
         }
@@ -165,6 +172,7 @@ const getTaskRunner = (options) => {
 };
 
 export default {
+    dependencies,
     initialize,
     getFullTaskList,
     getTaskRunner

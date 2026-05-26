@@ -38,4 +38,53 @@ describe('Wix CSV command', function () {
             'Clearing cached files'
         ]);
     });
+
+    it('uses escaped Wix static media domains for asset matching', async function () {
+        const calls = [];
+        const ctx = {
+            options: {
+                scrape: ['assets'],
+                url: 'https://example.com',
+                tmpPath: null
+            },
+            errors: [],
+            linkFixer: null
+        };
+        const task = {};
+        const OriginalFileCache = wixCSVSource.dependencies.FileCache;
+        const OriginalAssetScraper = wixCSVSource.dependencies.AssetScraper;
+        const OriginalLinkFixer = wixCSVSource.dependencies.LinkFixer;
+
+        wixCSVSource.dependencies.FileCache = class {
+            constructor(name, options) {
+                this.name = name;
+                this.options = options;
+            }
+
+            get cacheDir() {
+                return '/tmp/wix-csv-test';
+            }
+        };
+        wixCSVSource.dependencies.AssetScraper = class {
+            constructor(fileCache, options) {
+                calls.push({fileCache, options});
+            }
+
+            async init() {}
+        };
+        wixCSVSource.dependencies.LinkFixer = class {};
+
+        try {
+            await wixCSVSource.initialize(ctx.options).task(ctx, task);
+        } finally {
+            wixCSVSource.dependencies.FileCache = OriginalFileCache;
+            wixCSVSource.dependencies.AssetScraper = OriginalAssetScraper;
+            wixCSVSource.dependencies.LinkFixer = OriginalLinkFixer;
+        }
+
+        assert.deepEqual(calls[0].options.domains, [
+            'http://static\\.wixstatic\\.com',
+            'https://static\\.wixstatic\\.com'
+        ]);
+    });
 });
