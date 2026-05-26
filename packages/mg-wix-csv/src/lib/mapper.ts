@@ -192,7 +192,7 @@ const mapContent = async (args: {options: any}) => {
     const mappedPosts = await mapPosts({pathToFile: args.options.posts, options: args.options});
 
     if (mappedPosts.length < 1) {
-        return new errors.NoContentError({message: 'Input file is empty'});
+        throw new errors.NoContentError({message: 'Input file is empty'});
     }
 
     output.posts = mappedPosts;

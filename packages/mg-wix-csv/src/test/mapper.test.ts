@@ -157,14 +157,13 @@ describe('Wix CSV mapper', () => {
         assert.equal(mapped.data.author.data.name, 'Fallback Author');
     });
 
-    it('returns a NoContentError for empty CSV files', async () => {
-        const result = await mapContent({
+    it('throws a NoContentError for empty CSV files', async () => {
+        await assert.rejects(mapContent({
             options: {
                 posts: join(fixturesPath, 'empty.csv')
             }
+        }), {
+            message: 'Input file is empty'
         });
-
-        assert.ok(result instanceof Error);
-        assert.equal(result.message, 'Input file is empty');
     });
 });
