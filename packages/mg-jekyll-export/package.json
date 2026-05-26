@@ -34,6 +34,6 @@
     "@tryghost/pretty-cli": "3.0.3",
     "@tryghost/string": "0.3.1",
     "front-matter": "4.0.2",
-    "markdown-it": "14.1.1"
+    "markdown-it": "14.2.0"
   }
 }

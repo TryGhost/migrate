@@ -43,7 +43,7 @@
     "@tryghost/errors": "3.0.3",
     "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
-    "markdown-it": "14.1.1",
+    "markdown-it": "14.2.0",
     "markdown-it-footnote": "4.0.0"
   }
 }
