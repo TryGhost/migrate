@@ -65,6 +65,26 @@ const htmlCard = (html: string) => {
     ].join('\n');
 };
 
+const sanitizeHref = (value?: string) => {
+    if (!value) {
+        return null;
+    }
+
+    const trimmedValue = value.trim();
+
+    try {
+        const url = new URL(trimmedValue);
+
+        if (!['http:', 'https:', 'mailto:', 'tel:'].includes(url.protocol)) {
+            return null;
+        }
+
+        return trimmedValue;
+    } catch (error) {
+        return null;
+    }
+};
+
 const paragraphsFromPlainText = (plainText?: string) => {
     return (plainText || '')
         .split(/\n{2,}/)
@@ -86,7 +106,7 @@ const renderText = (node: WixNode, options: {stripBold?: boolean} = {}) => {
     const linkText = textParts?.[2] || '';
     const trailingWhitespace = textParts?.[3] || '';
     let text = escapeHtml(linkText);
-    const linkUrl = decorations.find(decoration => decoration.type === 'LINK')?.linkData?.link?.url;
+    const linkUrl = sanitizeHref(decorations.find(decoration => decoration.type === 'LINK')?.linkData?.link?.url);
 
     for (const decoration of decorations) {
         if (decoration.type === 'BOLD' && !options.stripBold) {
@@ -142,7 +162,7 @@ const renderImage = (node: WixNode) => {
 
 const renderButton = (node: WixNode) => {
     const text = escapeHtml(node.buttonData?.text || '');
-    const url = node.buttonData?.link?.url;
+    const url = sanitizeHref(node.buttonData?.link?.url);
     const alignment = (node.buttonData?.containerData?.alignment || 'CENTER').toLowerCase();
     const alignmentClass = ['left', 'center', 'right'].includes(alignment) ? `kg-align-${alignment}` : 'kg-align-center';
 
@@ -245,5 +265,6 @@ export {
     htmlCard,
     paragraphsFromPlainText,
     renderNode,
-    richContentToHtml
+    richContentToHtml,
+    sanitizeHref
 };

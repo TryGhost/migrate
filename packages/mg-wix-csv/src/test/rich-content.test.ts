@@ -5,7 +5,8 @@ import {
     htmlCard,
     paragraphsFromPlainText,
     renderNode,
-    richContentToHtml
+    richContentToHtml,
+    sanitizeHref
 } from '../lib/rich-content.js';
 
 describe('Wix rich content converter', () => {
@@ -13,6 +14,12 @@ describe('Wix rich content converter', () => {
         assert.equal(escapeHtml('<a href="x">It\'s</a>'), '&lt;a href=&quot;x&quot;&gt;It&#39;s&lt;/a&gt;');
         assert.equal(htmlCard('<p>Body</p>'), '<!--kg-card-begin: html-->\n<div class="mg-html-card">\n<p>Body</p>\n</div>\n<!--kg-card-end: html-->');
         assert.equal(paragraphsFromPlainText('One\nline\n\nTwo'), '<p>One<br>line</p>\n<p>Two</p>');
+        assert.equal(sanitizeHref(' https://example.com/path '), 'https://example.com/path');
+        assert.equal(sanitizeHref('mailto:hello@example.com'), 'mailto:hello@example.com');
+        assert.equal(sanitizeHref('tel:+15551234567'), 'tel:+15551234567');
+        assert.equal(sanitizeHref('javascript:alert(1)'), null);
+        assert.equal(sanitizeHref('/relative-path'), null);
+        assert.equal(sanitizeHref(), null);
     });
 
     it('converts common block and inline nodes', () => {
@@ -56,6 +63,7 @@ describe('Wix rich content converter', () => {
         assert.equal(renderNode({type: 'TEXT'}), '');
         assert.equal(renderNode({type: 'TEXT', textData: {text: 'No URL', decorations: [{type: 'LINK'}]}}), 'No URL');
         assert.equal(renderNode({type: 'TEXT', textData: {text: ' It ', decorations: [{type: 'LINK', linkData: {link: {url: 'https://example.com'}}}]}}), ' <a href="https://example.com">It</a> ');
+        assert.equal(renderNode({type: 'TEXT', textData: {text: 'Bad link', decorations: [{type: 'LINK', linkData: {link: {url: 'data:text/html,unsafe'}}}]}}), 'Bad link');
     });
 
     it('converts images, buttons, and tables', () => {
@@ -88,6 +96,7 @@ describe('Wix rich content converter', () => {
         assert.equal(renderNode({type: 'BUTTON', buttonData: {text: 'Go', link: {url: 'https://example.com'}, containerData: {alignment: 'CENTER'}}}), '<div class="kg-card kg-button-card kg-align-center"><a href="https://example.com" class="kg-btn kg-btn-accent">Go</a></div>');
         assert.equal(renderNode({type: 'BUTTON', buttonData: {text: 'Left', link: {url: 'https://example.com'}, containerData: {alignment: 'LEFT'}}}), '<div class="kg-card kg-button-card kg-align-left"><a href="https://example.com" class="kg-btn kg-btn-accent">Left</a></div>');
         assert.equal(renderNode({type: 'BUTTON', buttonData: {text: 'Bad alignment', link: {url: 'https://example.com'}, containerData: {alignment: 'AUTO'}}}), '<div class="kg-card kg-button-card kg-align-center"><a href="https://example.com" class="kg-btn kg-btn-accent">Bad alignment</a></div>');
+        assert.equal(renderNode({type: 'BUTTON', buttonData: {text: 'Unsafe', link: {url: 'javascript:alert(1)'}}}), '<p>Unsafe</p>');
         assert.equal(renderNode({type: 'BUTTON', buttonData: {text: 'No link'}}), '<p>No link</p>');
         assert.equal(renderNode({type: 'BUTTON', buttonData: {}}), '');
 
