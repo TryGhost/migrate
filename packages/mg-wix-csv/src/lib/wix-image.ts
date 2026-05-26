@@ -19,10 +19,19 @@ const parseWixImageUri = (value: string) => {
     }
 
     const params = new URLSearchParams(match[3] || '');
+    let id;
+    let filename;
+
+    try {
+        id = decodeURIComponent(match[1]);
+        filename = decodeURIComponent(match[2]);
+    } catch {
+        return null;
+    }
 
     return {
-        id: decodeURIComponent(match[1]),
-        filename: decodeURIComponent(match[2])
+        id,
+        filename
     };
 };
 

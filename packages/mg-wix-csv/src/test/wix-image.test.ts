@@ -30,6 +30,8 @@ describe('Wix image URL helpers', () => {
             id: 'id',
             filename: 'file.jpg'
         });
+        assert.equal(parseWixImageUri('wix:image://v1/%ZZ/file.jpg'), null);
+        assert.equal(parseWixImageUri('wix:image://v1/id/%ZZ.jpg'), null);
         assert.equal(parseWixImageUri('bad'), null);
     });
 
