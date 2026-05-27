@@ -276,8 +276,8 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       markdown-it:
-        specifier: 14.1.1
-        version: 14.1.1
+        specifier: 14.2.0
+        version: 14.2.0
       markdown-it-footnote:
         specifier: 4.0.0
         version: 4.0.0
@@ -572,8 +572,8 @@ importers:
         specifier: 4.0.2
         version: 4.0.2
       markdown-it:
-        specifier: 14.1.1
-        version: 14.1.1
+        specifier: 14.2.0
+        version: 14.2.0
     devDependencies:
       eslint:
         specifier: 8.57.1
@@ -1061,8 +1061,8 @@ importers:
         specifier: 5.8.0
         version: 5.8.0
       markdown-it:
-        specifier: 14.1.1
-        version: 14.1.1
+        specifier: 14.2.0
+        version: 14.2.0
       php-serialize:
         specifier: 5.1.3
         version: 5.1.3
@@ -5619,8 +5619,8 @@ packages:
   markdown-it-sup@2.0.0:
     resolution: {integrity: sha512-5VgmdKlkBd8sgXuoDoxMpiU+BiEt3I49GItBzzw7Mxq9CxvnhE/k09HFli09zgfFDRixDQDfDxi0mgBCXtaTvA==}
 
-  markdown-it@14.1.1:
-    resolution: {integrity: sha512-BuU2qnTti9YKgK5N+IeMubp14ZUKUUw7yeJbkjtosvHiP0AZ5c8IAgEMk79D0eC8F23r4Ac/q8cAIFdm2FtyoA==}
+  markdown-it@14.2.0:
+    resolution: {integrity: sha512-1TGiQiJVRQ3NPmZH6sx5Cfnmg6GQm9jvC1ch4TK511NjSJvjzKLzn5pPfZRNZkRPZP0HqCioSndqH8v2nRaWVQ==}
     hasBin: true
 
   markdown-table@1.1.3:
@@ -9441,7 +9441,7 @@ snapshots:
   '@tryghost/kg-markdown-html-renderer@7.1.2':
     dependencies:
       '@tryghost/kg-utils': 1.0.31
-      markdown-it: 14.1.1
+      markdown-it: 14.2.0
       markdown-it-footnote: 4.0.0
       markdown-it-image-lazy-loading: 2.0.1
       markdown-it-lazy-headers: 0.1.3
@@ -9453,7 +9453,7 @@ snapshots:
   '@tryghost/kg-markdown-html-renderer@7.1.8':
     dependencies:
       '@tryghost/kg-utils': 1.0.37
-      markdown-it: 14.1.1
+      markdown-it: 14.2.0
       markdown-it-footnote: 4.0.0
       markdown-it-image-lazy-loading: 2.0.1
       markdown-it-lazy-headers: 0.1.3
@@ -9465,7 +9465,7 @@ snapshots:
   '@tryghost/kg-markdown-html-renderer@7.1.9':
     dependencies:
       '@tryghost/kg-utils': 1.0.37
-      markdown-it: 14.1.1
+      markdown-it: 14.2.0
       markdown-it-footnote: 4.0.0
       markdown-it-image-lazy-loading: 2.0.1
       markdown-it-lazy-headers: 0.1.3
@@ -11679,7 +11679,7 @@ snapshots:
 
   markdown-it-sup@2.0.0: {}
 
-  markdown-it@14.1.1:
+  markdown-it@14.2.0:
     dependencies:
       argparse: 2.0.1
       entities: 4.5.0
