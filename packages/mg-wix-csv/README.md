@@ -49,3 +49,8 @@ For updated Wix CSV exports, `Categories` may contain readable names such as `Ta
 - `Plain Content` is used as fallback content when `Rich Content` is empty or invalid.
 - `Internal ID` is mapped to Ghost `comment_id`.
 - Wix image URLs are converted to original static media URLs, for example `https://static.wixstatic.com/media/<media-id>`.
+
+
+# Copyright & License
+
+Copyright (c) 2013-2026 Ghost Foundation - Released under the [MIT license](LICENSE).
