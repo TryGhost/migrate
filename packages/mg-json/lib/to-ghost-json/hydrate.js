@@ -19,7 +19,8 @@ const {startCase, kebabCase} = stringUtils;
  */
 const fakeName = 'Example User';
 const fakeEmailDomain = `example.com`;
-const fakeEmail = (nameSlug, domain) => `${nameSlug}@${domain}`;
+// The local part (before the @) must be 50 chars or fewer to pass Ghost's email validation
+const fakeEmail = (nameSlug, domain) => `${nameSlug.slice(0, 50).replace(/-+$/, '')}@${domain}`;
 
 const hydrateUser = (input, options) => {
     // Handle the case where we have a slug but no name

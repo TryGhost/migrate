@@ -1,0 +1,33 @@
+{
+  "posts": [
+    {
+      "url": "https://example.com/post",
+      "data": {
+        "title": "Blog Post Title",
+        "slug": "blog-post-title",
+        "status": "published",
+        "published_at": "2018-08-11T11:23:34.123Z",
+        "html": "<p>Content</p>",
+        "author": {
+          "url": "https://example.com/author",
+          "data": {
+            "name": "Example Author With An Extremely Long Display Name For Testing Email Truncation",
+            "slug": "example-author-with-an-extremely-long-display-name-for-testing-email-truncation"
+          }
+        }
+      }
+    }
+  ],
+  "users": [
+    {
+      "url": "https://example.com/author",
+      "data": {
+        "name": "Example Author With An Extremely Long Display Name For Testing Email Truncation",
+        "slug": "example-author-with-an-extremely-long-display-name-for-testing-email-truncation",
+        "roles": [
+          "Contributor"
+        ]
+      }
+    }
+  ]
+}

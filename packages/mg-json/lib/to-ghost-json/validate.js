@@ -68,7 +68,8 @@ export default async (json) => {
             }
 
             if (!isEmailValid) {
-                item.data.email = `${slugify(item?.data?.slug || item?.data?.name || 'author')}@example.com`;
+                // The local part (before the @) must be 50 chars or fewer to pass Ghost's email validation
+                item.data.email = `${slugify(item?.data?.slug || item?.data?.name || 'author').slice(0, 50).replace(/-+$/, '')}@example.com`;
             }
 
             json.users[index] = item;

@@ -8,6 +8,7 @@ const singlePostOnlyFixture = require('./fixtures/single-post-only.json');
 const singlePostWithEmptyTagFixture = require('./fixtures/single-post-with-empty-tag.json');
 const singlePostAuthorFixture = require('./fixtures/single-post-author.json');
 const singlePostAuthorBadEmailFixture = require('./fixtures/single-post-author-bad-email.json');
+const singlePostAuthorLongSlugFixture = require('./fixtures/single-post-author-long-slug.json');
 const multiPostOnlyFixture = require('./fixtures/multi-post-only.json');
 const singlePostWithBadTagOrderFixture = require('./fixtures/single-post-with-bad-tag-order.json');
 const singlePostOnlyLongMetaFixture = require('./fixtures/single-post-only-long-meta.json');
@@ -296,6 +297,16 @@ describe('toGhostJSON', function () {
         const output = await toGhostJSON(singlePostAuthorBadEmailFixture);
 
         assert.equal(output.data.users[0].email, 'joe@example.com');
+    });
+
+    it('Trims the local part of a generated email to 50 characters when the slug is too long', async function () {
+        const output = await toGhostJSON(singlePostAuthorLongSlugFixture);
+
+        const email = output.data.users[0].email;
+        const localPart = email.split('@')[0];
+
+        assert.equal(email, 'example-author-with-an-extremely-long-display-name@example.com');
+        assert.ok(localPart.length <= 50);
     });
 
     it('Resets slug deduplication state between calls', async function () {
