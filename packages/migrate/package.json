@@ -67,6 +67,7 @@
     "@tryghost/mg-tinynews-members": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
     "@tryghost/mg-webscraper": "workspace:*",
+    "@tryghost/mg-wix-csv": "workspace:*",
     "@tryghost/mg-wp-api": "workspace:*",
     "@tryghost/mg-wp-xml": "workspace:*",
     "@tryghost/pretty-cli": "3.0.3",
