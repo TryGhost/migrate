@@ -1030,8 +1030,8 @@ importers:
         specifier: 1.4.0
         version: 1.4.0
       tldts:
-        specifier: 7.1.2
-        version: 7.1.2
+        specifier: 7.4.0
+        version: 7.4.0
       wpapi:
         specifier: 1.2.2
         version: 1.2.2
@@ -6481,11 +6481,11 @@ packages:
     resolution: {integrity: sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg==}
     engines: {node: '>=12.0.0'}
 
-  tldts-core@7.1.2:
-    resolution: {integrity: sha512-26EbERPLf5wkNFKW+7egxArSPN1Nqipe/PIe1nvhpNu8HqQeY2pYdOeQk4sAiADv/e03VzHkLY0PPohKv1JMAQ==}
+  tldts-core@7.4.1:
+    resolution: {integrity: sha512-sc2nGvGbixlJRHwTh/qQdPXTxJU1UDJboGPQm4d/01YUJ9r/u6aeIulQvEaxUlvKDN7hb1qCLjax+jhVAPLa/g==}
 
-  tldts@7.1.2:
-    resolution: {integrity: sha512-RUX5sQm8bl03ycwQ6nSgJiKw9FZWhA8GBzxX6X1lsG3xKzFIW+lYLLpM30FQbDD6XjTWa/VkF15VxjnAMWYJAQ==}
+  tldts@7.4.0:
+    resolution: {integrity: sha512-yHBe+zVfzNZ3QfTPW/Z6KK1G2t340gFjMHqI/4KKSt/abzYydzuCnpqdaF5gCCABby+9Yfbj59oR5F2Fd5CBzg==}
     hasBin: true
 
   tmp@0.2.4:
@@ -12771,11 +12771,11 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
 
-  tldts-core@7.1.2: {}
+  tldts-core@7.4.1: {}
 
-  tldts@7.1.2:
+  tldts@7.4.0:
     dependencies:
-      tldts-core: 7.1.2
+      tldts-core: 7.4.1
 
   tmp@0.2.4: {}
 
@@ -12791,7 +12791,7 @@ snapshots:
 
   tough-cookie@6.0.1:
     dependencies:
-      tldts: 7.1.2
+      tldts: 7.4.0
 
   tr46@0.0.3: {}
 
