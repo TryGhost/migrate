@@ -41,6 +41,6 @@
   },
   "dependencies": {
     "@tryghost/mg-fs-utils": "workspace:*",
-    "@tryghost/string": "0.3.1"
+    "@tryghost/string": "0.3.4"
   }
 }

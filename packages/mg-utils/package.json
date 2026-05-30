@@ -26,7 +26,7 @@
     "lint": "eslint src/ --ext .ts --cache"
   },
   "devDependencies": {
-    "@tryghost/errors": "3.0.3",
+    "@tryghost/errors": "3.2.2",
     "@types/node": "24.12.4",
     "@typescript-eslint/eslint-plugin": "8.60.0",
     "@typescript-eslint/parser": "8.60.0",

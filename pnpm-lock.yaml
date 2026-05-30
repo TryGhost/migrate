@@ -63,8 +63,8 @@ importers:
   packages/mg-assetscraper-db:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/listr-smart-renderer':
         specifier: workspace:*
         version: link:../listr-smart-renderer
@@ -72,8 +72,8 @@ importers:
         specifier: workspace:*
         version: link:../mg-fs-utils
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       file-type:
         specifier: 22.0.1
         version: 22.0.1
@@ -121,8 +121,8 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       cheerio:
         specifier: 1.2.0
         version: 1.2.0
@@ -152,8 +152,8 @@ importers:
   packages/mg-beehiiv-api:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/kg-default-cards':
         specifier: 10.2.5
         version: 10.2.5
@@ -161,8 +161,8 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.2.21
-        version: 0.2.21
+        specifier: 0.3.4
+        version: 0.3.4
       simple-dom:
         specifier: 1.4.0
         version: 1.4.0
@@ -186,11 +186,11 @@ importers:
   packages/mg-beehiiv-api-members:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/string':
-        specifier: 0.2.21
-        version: 0.2.21
+        specifier: 0.3.4
+        version: 0.3.4
     devDependencies:
       '@types/node':
         specifier: 24.12.4
@@ -214,8 +214,8 @@ importers:
         specifier: workspace:*
         version: link:../mg-fs-utils
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
     devDependencies:
       '@types/node':
         specifier: 24.12.4
@@ -236,8 +236,8 @@ importers:
   packages/mg-blogger:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/kg-default-cards':
         specifier: 10.2.10
         version: 10.2.10
@@ -245,8 +245,8 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       autop:
         specifier: 1.0.1
         version: 1.0.1
@@ -267,8 +267,8 @@ importers:
   packages/mg-buttondown:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
@@ -301,14 +301,14 @@ importers:
   packages/mg-chorus:
     dependencies:
       '@tryghost/debug':
-        specifier: 2.0.3
-        version: 2.0.3
+        specifier: 2.2.1
+        version: 2.2.1
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
     devDependencies:
       eslint:
         specifier: 8.57.1
@@ -348,11 +348,11 @@ importers:
   packages/mg-context:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/html-to-mobiledoc':
-        specifier: 3.2.21
-        version: 3.2.21
+        specifier: 3.3.1
+        version: 3.3.1
       '@tryghost/kg-html-to-lexical':
         specifier: 1.2.38
         version: 1.2.38(@lexical/selection@0.13.1(lexical@0.13.1))(@lexical/utils@0.13.1(lexical@0.13.1))
@@ -360,8 +360,8 @@ importers:
         specifier: workspace:*
         version: link:../listr-smart-renderer
       '@tryghost/validator':
-        specifier: 3.1.1
-        version: 3.1.1
+        specifier: 3.1.2
+        version: 3.1.2
       '@typescript-eslint/parser':
         specifier: 8.60.0
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
@@ -391,11 +391,11 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/pretty-cli':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.1
+        version: 3.2.1
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
     devDependencies:
       eslint:
         specifier: 8.57.1
@@ -414,17 +414,17 @@ importers:
   packages/mg-fs-utils:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/image-transform':
-        specifier: 1.4.12
-        version: 1.4.12
+        specifier: 1.4.15
+        version: 1.4.15
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       '@tryghost/zip':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.3.2
+        version: 3.3.2
       adm-zip:
         specifier: 0.5.17
         version: 0.5.17
@@ -454,11 +454,11 @@ importers:
   packages/mg-ghost-api:
     dependencies:
       '@tryghost/admin-api':
-        specifier: 1.14.6
-        version: 1.14.6
+        specifier: 1.14.9
+        version: 1.14.9
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/mg-context':
         specifier: workspace:*
         version: link:../mg-context
@@ -485,11 +485,11 @@ importers:
   packages/mg-ghost-authors:
     dependencies:
       '@tryghost/admin-api':
-        specifier: 1.14.6
-        version: 1.14.6
+        specifier: 1.14.9
+        version: 1.14.9
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
     devDependencies:
       '@types/node':
         specifier: 24.12.4
@@ -513,8 +513,8 @@ importers:
   packages/mg-html-lexical:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/kg-html-to-lexical':
         specifier: 1.2.38
         version: 1.2.38(@lexical/selection@0.13.1(lexical@0.13.1))(@lexical/utils@0.13.1(lexical@0.13.1))
@@ -541,11 +541,11 @@ importers:
   packages/mg-html-mobiledoc:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/html-to-mobiledoc':
-        specifier: 3.2.21
-        version: 3.2.21
+        specifier: 3.3.1
+        version: 3.3.1
     devDependencies:
       eslint:
         specifier: 8.57.1
@@ -554,8 +554,8 @@ importers:
   packages/mg-jekyll-export:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
@@ -563,11 +563,11 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/pretty-cli':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.1
+        version: 3.2.1
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       front-matter:
         specifier: 4.0.2
         version: 4.0.2
@@ -585,8 +585,8 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       bson-objectid:
         specifier: 2.0.4
         version: 2.0.4
@@ -604,14 +604,14 @@ importers:
   packages/mg-letterdrop:
     dependencies:
       '@tryghost/debug':
-        specifier: 2.0.3
-        version: 2.0.3
+        specifier: 2.2.1
+        version: 2.2.1
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       got:
         specifier: 15.0.5
         version: 15.0.5
@@ -623,8 +623,8 @@ importers:
   packages/mg-libsyn:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/kg-default-cards':
         specifier: 10.2.10
         version: 10.2.10
@@ -632,8 +632,8 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       node-fetch:
         specifier: 3.3.2
         version: 3.3.2
@@ -686,8 +686,8 @@ importers:
   packages/mg-medium-export:
     dependencies:
       '@tryghost/debug':
-        specifier: 2.0.3
-        version: 2.0.3
+        specifier: 2.2.1
+        version: 2.2.1
       '@tryghost/kg-default-cards':
         specifier: 10.2.10
         version: 10.2.10
@@ -698,8 +698,8 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       simple-dom:
         specifier: 1.4.0
         version: 1.4.0
@@ -714,8 +714,8 @@ importers:
   packages/mg-medium-members:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
     devDependencies:
       '@types/node':
         specifier: 24.12.4
@@ -770,8 +770,8 @@ importers:
   packages/mg-squarespace-xml:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/kg-default-cards':
         specifier: 10.2.10
         version: 10.2.10
@@ -779,8 +779,8 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       html-entities:
         specifier: 2.6.0
         version: 2.6.0
@@ -807,8 +807,8 @@ importers:
         specifier: 5.2.0
         version: 5.2.0(@types/node@24.12.4)
       '@tryghost/pretty-cli':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.1
+        version: 3.2.1
       chalk:
         specifier: 5.6.2
         version: 5.6.2
@@ -847,11 +847,11 @@ importers:
   packages/mg-substack:
     dependencies:
       '@tryghost/debug':
-        specifier: 2.0.3
-        version: 2.0.3
+        specifier: 2.2.1
+        version: 2.2.1
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/kg-default-cards':
         specifier: 10.2.10
         version: 10.2.10
@@ -862,8 +862,8 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       he:
         specifier: 1.2.0
         version: 1.2.0
@@ -884,8 +884,8 @@ importers:
   packages/mg-substack-members-csv:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
@@ -897,8 +897,8 @@ importers:
   packages/mg-tinynews:
     dependencies:
       '@tryghost/debug':
-        specifier: 2.0.3
-        version: 2.0.3
+        specifier: 2.2.1
+        version: 2.2.1
       '@tryghost/kg-default-cards':
         specifier: 10.2.10
         version: 10.2.10
@@ -906,8 +906,8 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       sanitize-html:
         specifier: 2.17.4
         version: 2.17.4
@@ -939,8 +939,8 @@ importers:
         version: 0.18.12
     devDependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@types/node':
         specifier: 24.12.4
         version: 24.12.4
@@ -966,11 +966,11 @@ importers:
   packages/mg-webscraper:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       omit-empty:
         specifier: 1.0.0
         version: 1.0.0
@@ -1003,8 +1003,8 @@ importers:
   packages/mg-wp-api:
     dependencies:
       '@tryghost/debug':
-        specifier: 2.0.3
-        version: 2.0.3
+        specifier: 2.2.1
+        version: 2.2.1
       '@tryghost/kg-default-cards':
         specifier: 10.2.10
         version: 10.2.10
@@ -1021,8 +1021,8 @@ importers:
         specifier: workspace:*
         version: link:../mg-webscraper
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       html-to-text:
         specifier: 10.0.0
         version: 10.0.0
@@ -1043,8 +1043,8 @@ importers:
   packages/mg-wp-xml:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.2
+        version: 3.2.2
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
@@ -1052,8 +1052,8 @@ importers:
         specifier: workspace:*
         version: link:../mg-wp-api
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       fast-glob:
         specifier: 3.3.3
         version: 3.3.3
@@ -1175,11 +1175,11 @@ importers:
         specifier: workspace:*
         version: link:../mg-wp-xml
       '@tryghost/pretty-cli':
-        specifier: 3.0.3
-        version: 3.0.3
+        specifier: 3.2.1
+        version: 3.2.1
       '@tryghost/string':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.4
+        version: 0.3.4
       chalk:
         specifier: 5.6.2
         version: 5.6.2
@@ -3598,29 +3598,30 @@ packages:
   '@tokenizer/token@0.3.0':
     resolution: {integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==}
 
-  '@tryghost/admin-api@1.14.6':
-    resolution: {integrity: sha512-GZ14THA09fCUIxveB1iC50v9GyCqCy3xbvAM51Q4XVhTmycz1BZaWfH2n+X+JXnfN3nIzQQwgSjp/RxMglQ9Mg==}
+  '@tryghost/admin-api@1.14.9':
+    resolution: {integrity: sha512-QuE+iaTYSvqHa8fFvU6TH860E07k7ZgO1UOQ8M9U8Rd9ISvDW7scfDZ8wbAnk24VQaIfine7sUwYhep0ukZ2cw==}
 
-  '@tryghost/debug@2.0.3':
-    resolution: {integrity: sha512-qMlZc/1/OwbN8U/X4p5yFwqAbQZPcIZK9hwHRP/iTs+giYYQT7ZmWvsbxZYcvCIcA91Ia/PO7HZnOvinNF5ZHg==}
+  '@tryghost/debug@2.2.1':
+    resolution: {integrity: sha512-DDBU8UA/23DENO4nFRZmiLAMu6XBxbtTmHJBYa/LbhIHIlwsdWSvnaiCDrSn+Fnasuw1kte5pk9mLBkXw0TPvA==}
 
   '@tryghost/errors@2.2.1':
     resolution: {integrity: sha512-7zR5Wu9UMalFZbWZs3nN3MzJg6mKek11W51AP8UGz5sN4fQofoeLwXHLI/AuT7nDuWiJZHsJcI1EGJg0iQHV3g==}
 
-  '@tryghost/errors@3.0.3':
-    resolution: {integrity: sha512-0hRFMQvsNPbojPS7xDuJEe4eNzWSQ6v2rLFXlTCeY7K7Lh4GXRmsI846SxPXwH8moaWIsrLP4xTnmIp8Tgs/Lw==}
+  '@tryghost/errors@3.2.2':
+    resolution: {integrity: sha512-oJz0cQ5dVJJRitOKsQANUI5pVvyERfBvS58miBznLUhk22iwh5olSnuuYtLdODLlxcaYAiXx/uDr/LzNHb0Jtg==}
 
-  '@tryghost/errors@3.2.1':
-    resolution: {integrity: sha512-KM7Xe9qaR4a0RTjgcggS10NDMZbkYlLz0ePYIQ/0FbkEZtTqWwRrOn4BeQe587FpZ5DoXbiXxNE5vBMfZBPl+Q==}
+  '@tryghost/html-to-mobiledoc@3.3.1':
+    resolution: {integrity: sha512-VH9JVk/2Mt+FTjNUQYT4zbO3XkDGNiuBFuF+f2HYFB050c12FftTPtCF578Lj+zUm+slZLljaJMW+czl7aH/7g==}
 
-  '@tryghost/html-to-mobiledoc@3.2.21':
-    resolution: {integrity: sha512-+fG+IhHUmfV/fOpt2d/4UeizTd8wkDv6Y7bNxtPmsiKS2bQ1r3R0EtnleX8N38xJsfVa9rAeu+a3WwLEClH+Tg==}
-
-  '@tryghost/image-transform@1.4.12':
-    resolution: {integrity: sha512-m4lKc6nr2aVhpskx3njpNk8oATdocVwi9tbV4SgwYRonS+79vtflUWO75n26PCpcQn5SnqeZucHDcGw2QzOb8A==}
+  '@tryghost/image-transform@1.4.15':
+    resolution: {integrity: sha512-Fo2j++Xg7jVtsNXvsErEcFOESDIqW+Akf97Z+4qQVTKA2zamOKFS+qUmYsBDK0Rw5i/NyXj08EzFYDH031BJMQ==}
 
   '@tryghost/kg-clean-basic-html@4.2.20':
     resolution: {integrity: sha512-NT/VcVDGNVa5++Og6B9RwoOosunBeLh4ztk5plvcUeFetHF416JJvQJcyiVWYJyx1DChKgMljbr69ffDPHw1OQ==}
+    engines: {node: ^22.13.1 || ^24.0.0}
+
+  '@tryghost/kg-clean-basic-html@4.3.1':
+    resolution: {integrity: sha512-yYAheQjp26TYHgl7UuZj8sQ+e+XdEp3YMF/qgMoInbnJAsAFhIFoLe2EQ7tYbk4YKsmLCDCgnW1iazuB21XrSg==}
     engines: {node: ^22.13.1 || ^24.0.0}
 
   '@tryghost/kg-default-cards@10.2.10':
@@ -3652,9 +3653,9 @@ packages:
     resolution: {integrity: sha512-j+JzQO6OScSSypFrLYqMf/GtibZCSlfq+kizs2QCNhVtgwq+5AWQxA7fctb6Ljqx+rCiEE6uBgOlzZZUbk4xBg==}
     engines: {node: ^22.13.1}
 
-  '@tryghost/kg-parser-plugins@4.2.20':
-    resolution: {integrity: sha512-K1r4fZxMYc/eJkf/UHDLeNb8qwOVPudhg5RAM6ESpdKoAZe3R2tUemYMyJfvVhKfUwn9VT8rsRIkBCVppgZYsg==}
-    engines: {node: ^22.13.1 || ^24.0.0}
+  '@tryghost/kg-parser-plugins@4.3.1':
+    resolution: {integrity: sha512-E8M+jlPmuU9OHa1SWtU5Pc+zP5dbZetXrNVuxlzlBdysAUh9MPfz1C9bxaZ7um7TuqNechl6t2WSUJezueYN2g==}
+    engines: {node: ^22.13.1}
 
   '@tryghost/kg-utils@1.0.31':
     resolution: {integrity: sha512-TJRTu3XCxfqclueDjs8cVi3p9o5lYrIIkA6abNl4EAHvT9FtR6nY0FQgEgDwtDDjpaWq+VKcDyo48abvAG456g==}
@@ -3665,11 +3666,11 @@ packages:
   '@tryghost/mobiledoc-kit@0.12.4-ghost.1':
     resolution: {integrity: sha512-c4aheSWH2Y7x4uSkAx08gbtvuEgPGjlu6v+FeUdSJZ1blEd+knL3zTcUAfeSiM6rgLEHxlNWtt+KFwotdf6rTA==}
 
-  '@tryghost/pretty-cli@3.0.3':
-    resolution: {integrity: sha512-lAA6brlgQ5uyEDlpHdet7IZrspPYP5bRe6GVsnKQJ/RCTFoOC8fGhIy5E9UV37c6Ym4Jcjm/Z9adWXWiq4xhMg==}
+  '@tryghost/pretty-cli@3.2.1':
+    resolution: {integrity: sha512-FpghCxZU8ZGgcMDhlI12oUM6krTVFKL1vUQSuqyheHMcViy8Kx+ZXYQl1n6ycA+BOaJAkYwYr+di7WAGiqMxqA==}
 
-  '@tryghost/root-utils@2.2.0':
-    resolution: {integrity: sha512-xqjlS197TqhKmAZpLrnkHbpxHzL3iHdw7Pd2sBXc/LJOHTvMFXJ1QAwjDY87OIREZIthg/t+LsCo8PpE9uaAsA==}
+  '@tryghost/root-utils@2.2.1':
+    resolution: {integrity: sha512-vMAS8fk9fOZL4JVSmDlwXkPr48n4ofEhDRq95GOCO8FMHod75JGdOBus08diAv97ca6VYcpT4LmkFecQZOub/A==}
 
   '@tryghost/string@0.2.17':
     resolution: {integrity: sha512-c7/uco8GpUw+tohWtFr0R/zlHHvyXLX3g6+HX3Y52GLTjKsspc0N5GF7l5Y9I0+rwMBcBz9DCWMsTGeLgQBPtQ==}
@@ -3677,20 +3678,20 @@ packages:
   '@tryghost/string@0.2.21':
     resolution: {integrity: sha512-ILG3h+I432rlgD46tHrugkxEnJ8mh73JxKco4B/uIlBDv5evZjq9psIXt595ZA0Q8DuKMQKZUeVZYV9GBLA1eQ==}
 
-  '@tryghost/string@0.3.1':
-    resolution: {integrity: sha512-p1wyN6p5Ds6IQkoYwIJkabhQ10WIY+t8yf3/Uf/BNADTg66R0jYF8wmXgFYpBwm55rXwM/92cROwvopIbFKtYg==}
+  '@tryghost/string@0.3.4':
+    resolution: {integrity: sha512-eI8B3lEgfv8RQFbQnP7H4KnlhrDkqrh+lAcNLXHyUAoqb5MwqlrHAIAQZxpl5CLW9agBJ8w1UO7ZrcseHEL8Ww==}
 
-  '@tryghost/tpl@2.2.0':
-    resolution: {integrity: sha512-6OFCFHNzJxbZ0HXiLIAKJz5OkT6cdZId19m6UZ2+xN8oBg14iZwhoHoBWCzKNDrFN53t3N5JHM3oa/WtoB+BKw==}
+  '@tryghost/tpl@2.2.1':
+    resolution: {integrity: sha512-QxMGABOsxAcWTs/pDn6jH6Bv2MJhrmqiBAGGf87Maz1whLv2VgjKY0wSZf7xEx8FoL5TZrUH1AgV//DjTGFSrA==}
 
   '@tryghost/url-utils@5.1.2':
     resolution: {integrity: sha512-GGZRfdVdk7jE1puqfBCeaAMeQ/Gd0NUkbqhj4gRSCWKW97JDpoiu5Fwyutt3vq3U3X4ZsfLfKs0NtAfUez0oog==}
 
-  '@tryghost/validator@3.1.1':
-    resolution: {integrity: sha512-GIBONNQs7BP7FEKf8XxDk+roLVf86rQle3YWbe4IajqAcHoto952RAARwSAvYOhmqroBfX2++9BAyXEER+Ys9Q==}
+  '@tryghost/validator@3.1.2':
+    resolution: {integrity: sha512-s3+Q6TWhhkP4FGfPyMk7Y+kca7nqBX+iV222zRv1+tcvslmA1Ci28atMEsH7U0wnCxtkv/n08DTKU+vslYUM8w==}
 
-  '@tryghost/zip@3.0.3':
-    resolution: {integrity: sha512-gp8z5JYH5h1MGeS+MQSTsrf33XxSTOgFHJCLstcxIV5hg2pxSzo7N4Gg3+CrqrqIqLNO0aEkOkikAFtArpPwdQ==}
+  '@tryghost/zip@3.3.2':
+    resolution: {integrity: sha512-Zg+kJfQzwPb6ntRrYfVEl1jpBNTNWAFKdCccOhdCi+GYdm0DZUNOglWxVkYltLmn7lo668qPAfFOhvnpjEPiTw==}
 
   '@tybys/wasm-util@0.10.2':
     resolution: {integrity: sha512-RoBvJ2X0wuKlWFIjrwffGw1IqZHKQqzIchKaadZZfnNpsAYp2mM0h36JtPCjNDAHGgYez/15uMBpfGwchhiMgg==}
@@ -3947,9 +3948,6 @@ packages:
 
   autop@1.0.1:
     resolution: {integrity: sha512-3NMIIe6mZtFs6m3Mqyh3iDjfBI8g4sJvFL6RgXcLxUSNLfNqud53mvFeUhMmXgdGcHSCQKTsY+3eOiy0gVD1PQ==}
-
-  axios@1.13.5:
-    resolution: {integrity: sha512-cz4ur7Vb0xS4/KUN0tPWe44eqxrIu31me+fbang3ijiNscE129POzipJJA6zniq2C/Z6sJCjMimjS8Lc/GAs8Q==}
 
   axios@1.16.0:
     resolution: {integrity: sha512-6hp5CwvTPlN2A31g5dxnwAX0orzM7pmCRDLnZSX772mv8WDqICwFjowHuPs04Mc8deIld1+ejhtaMn5vp6b+1w==}
@@ -4926,10 +4924,6 @@ packages:
   fs-constants@1.0.0:
     resolution: {integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow==}
 
-  fs-extra@11.3.3:
-    resolution: {integrity: sha512-VWSRii4t0AFm6ixFFmLLx1t7wS1gh+ckoa84aOeapGum0h+EZd1EhEumSB+ZdDLnEPuucsVB9oB7cxJHap6Afg==}
-    engines: {node: '>=14.14'}
-
   fs-extra@11.3.5:
     resolution: {integrity: sha512-eKpRKAovdpZtR1WopLHxlBWvAgPny3c4gX1G5Jhwmmw4XJj0ifSD5qB5TOo8hmA0wlRKDAOAhEE1yVPgs6Fgcg==}
     engines: {node: '>=14.14'}
@@ -5347,6 +5341,15 @@ packages:
   js-yaml@4.1.1:
     resolution: {integrity: sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==}
     hasBin: true
+
+  jsdom@29.0.2:
+    resolution: {integrity: sha512-9VnGEBosc/ZpwyOsJBCQ/3I5p7Q5ngOY14a9bf5btenAORmZfDse1ZEheMiWcJ3h81+Fv7HmJFdS0szo/waF2w==}
+    engines: {node: ^20.19.0 || ^22.13.0 || >=24.0.0}
+    peerDependencies:
+      canvas: ^3.0.0
+    peerDependenciesMeta:
+      canvas:
+        optional: true
 
   jsdom@29.1.1:
     resolution: {integrity: sha512-ECi4Fi2f7BdJtUKTflYRTiaMxIB0O6zfR1fX0GXpUrf6flp8QIYn1UT20YQqdSOfk2dfkCwS8LAFoJDEppNK5Q==}
@@ -6022,9 +6025,6 @@ packages:
 
   proto-list@1.2.4:
     resolution: {integrity: sha512-vtK/94akxsTMhe0/cbfpR+syPuszcuwhqVjJq26CuNDgFGj682oRBXOP5MJpv2r7JtE8MsiepGIqvvOTBwn2vA==}
-
-  proxy-from-env@1.1.0:
-    resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
 
   proxy-from-env@2.1.0:
     resolution: {integrity: sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA==}
@@ -9324,17 +9324,17 @@ snapshots:
 
   '@tokenizer/token@0.3.0': {}
 
-  '@tryghost/admin-api@1.14.6':
+  '@tryghost/admin-api@1.14.9':
     dependencies:
-      axios: 1.13.5
+      axios: 1.16.0
       form-data: 4.0.5
       jsonwebtoken: 9.0.3
     transitivePeerDependencies:
       - debug
 
-  '@tryghost/debug@2.0.3':
+  '@tryghost/debug@2.2.1':
     dependencies:
-      '@tryghost/root-utils': 2.2.0
+      '@tryghost/root-utils': 2.2.1
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
@@ -9346,29 +9346,29 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@tryghost/errors@3.0.3': {}
+  '@tryghost/errors@3.2.2': {}
 
-  '@tryghost/errors@3.2.1': {}
-
-  '@tryghost/html-to-mobiledoc@3.2.21':
+  '@tryghost/html-to-mobiledoc@3.3.1':
     dependencies:
-      '@tryghost/kg-parser-plugins': 4.2.20
+      '@tryghost/kg-parser-plugins': 4.3.1
       '@tryghost/mobiledoc-kit': 0.12.4-ghost.1
-      jsdom: 29.1.1
+      jsdom: 29.0.2
     transitivePeerDependencies:
       - '@noble/hashes'
       - canvas
 
-  '@tryghost/image-transform@1.4.12':
+  '@tryghost/image-transform@1.4.15':
     dependencies:
       '@tryghost/errors': 2.2.1
-      fs-extra: 11.3.3
+      fs-extra: 11.3.5
     optionalDependencies:
       sharp: 0.34.5
     transitivePeerDependencies:
       - supports-color
 
   '@tryghost/kg-clean-basic-html@4.2.20': {}
+
+  '@tryghost/kg-clean-basic-html@4.3.1': {}
 
   '@tryghost/kg-default-cards@10.2.10':
     dependencies:
@@ -9479,9 +9479,9 @@ snapshots:
       markdown-it-sup: 2.0.0
       semver: 7.8.1
 
-  '@tryghost/kg-parser-plugins@4.2.20':
+  '@tryghost/kg-parser-plugins@4.3.1':
     dependencies:
-      '@tryghost/kg-clean-basic-html': 4.2.20
+      '@tryghost/kg-clean-basic-html': 4.3.1
 
   '@tryghost/kg-utils@1.0.31':
     dependencies:
@@ -9496,12 +9496,12 @@ snapshots:
       mobiledoc-dom-renderer: 0.7.0
       mobiledoc-text-renderer: 0.4.0
 
-  '@tryghost/pretty-cli@3.0.3':
+  '@tryghost/pretty-cli@3.2.1':
     dependencies:
       chalk: 5.6.2
       sywac: 1.3.0
 
-  '@tryghost/root-utils@2.2.0':
+  '@tryghost/root-utils@2.2.1':
     dependencies:
       caller: 1.1.0
       find-root: 1.1.0
@@ -9514,11 +9514,11 @@ snapshots:
     dependencies:
       unidecode: 0.1.8
 
-  '@tryghost/string@0.3.1':
+  '@tryghost/string@0.3.4':
     dependencies:
       unidecode: 1.1.0
 
-  '@tryghost/tpl@2.2.0': {}
+  '@tryghost/tpl@2.2.1': {}
 
   '@tryghost/url-utils@5.1.2':
     dependencies:
@@ -9530,17 +9530,17 @@ snapshots:
       remark-footnotes: 1.0.0
       unist-util-visit: 2.0.3
 
-  '@tryghost/validator@3.1.1':
+  '@tryghost/validator@3.1.2':
     dependencies:
-      '@tryghost/errors': 3.2.1
-      '@tryghost/tpl': 2.2.0
+      '@tryghost/errors': 3.2.2
+      '@tryghost/tpl': 2.2.1
       lodash: 4.18.1
       moment-timezone: 0.5.48
       validator: 13.15.35
 
-  '@tryghost/zip@3.0.3':
+  '@tryghost/zip@3.3.2':
     dependencies:
-      '@tryghost/errors': 3.0.3
+      '@tryghost/errors': 3.2.2
       archiver: 7.0.1
       extract-zip: 2.0.1
     transitivePeerDependencies:
@@ -9871,14 +9871,6 @@ snapshots:
       when-exit: 2.1.5
 
   autop@1.0.1: {}
-
-  axios@1.13.5:
-    dependencies:
-      follow-redirects: 1.16.0
-      form-data: 4.0.5
-      proxy-from-env: 1.1.0
-    transitivePeerDependencies:
-      - debug
 
   axios@1.16.0:
     dependencies:
@@ -10988,12 +10980,6 @@ snapshots:
 
   fs-constants@1.0.0: {}
 
-  fs-extra@11.3.3:
-    dependencies:
-      graceful-fs: 4.2.11
-      jsonfile: 6.2.1
-      universalify: 2.0.1
-
   fs-extra@11.3.5:
     dependencies:
       graceful-fs: 4.2.11
@@ -11395,6 +11381,32 @@ snapshots:
   js-yaml@4.1.1:
     dependencies:
       argparse: 2.0.1
+
+  jsdom@29.0.2:
+    dependencies:
+      '@asamuzakjp/css-color': 5.1.11
+      '@asamuzakjp/dom-selector': 7.1.1
+      '@bramus/specificity': 2.4.2
+      '@csstools/css-syntax-patches-for-csstree': 1.1.4(css-tree@3.2.1)
+      '@exodus/bytes': 1.15.1
+      css-tree: 3.2.1
+      data-urls: 7.0.0
+      decimal.js: 10.6.0
+      html-encoding-sniffer: 6.0.0
+      is-potential-custom-element-name: 1.0.1
+      lru-cache: 11.5.0
+      parse5: 8.0.1
+      saxes: 6.0.0
+      symbol-tree: 3.2.4
+      tough-cookie: 6.0.1
+      undici: 7.25.0
+      w3c-xmlserializer: 5.0.0
+      webidl-conversions: 8.0.1
+      whatwg-mimetype: 5.0.0
+      whatwg-url: 16.0.1
+      xml-name-validator: 5.0.0
+    transitivePeerDependencies:
+      - '@noble/hashes'
 
   jsdom@29.1.1:
     dependencies:
@@ -12213,8 +12225,6 @@ snapshots:
   propagate@2.0.1: {}
 
   proto-list@1.2.4: {}
-
-  proxy-from-env@1.1.0: {}
 
   proxy-from-env@2.1.0: {}
 
