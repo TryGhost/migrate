@@ -1,10 +1,10 @@
 import {extname} from 'path';
-import {xmlUtils, domUtils} from '@tryghost/mg-utils';
+import {xmlUtils, domUtils, cardUtils} from '@tryghost/mg-utils';
 import {slugify} from '@tryghost/string';
 import SimpleDom from 'simple-dom';
-import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 import errors from '@tryghost/errors';
 import {decode} from 'html-entities';
+const audioCard = cardUtils.getCard('audio');
 
 const htmlToTextTrimmed = (html, max) => {
     let noHtml = html.replace(/<[^>]+>/g, ' ').replace(/\r?\n|\r/g, ' ').replace(/ {2,}/, ' ').trim();

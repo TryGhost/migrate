@@ -1,13 +1,13 @@
 import * as cheerio from 'cheerio';
 import sanitizeHtml from 'sanitize-html';
 import SimpleDom from 'simple-dom';
-import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
-import embedCard from '@tryghost/kg-default-cards/lib/cards/embed.js';
-import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
-import {youtubeUtils} from '@tryghost/mg-utils';
+import {youtubeUtils, cardUtils} from '@tryghost/mg-utils';
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 const {getYouTubeID} = youtubeUtils;
+const imageCard = cardUtils.getCard('image');
+const embedCard = cardUtils.getCard('embed');
+const bookmarkCard = cardUtils.getCard('bookmark');
 
 const isURL = (urlString: string | undefined) => {
     if (undefined === urlString) {

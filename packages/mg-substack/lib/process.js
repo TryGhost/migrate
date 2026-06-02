@@ -1,14 +1,9 @@
 import {promises as fs} from 'node:fs';
 import {join, basename} from 'node:path';
 import url from 'node:url';
-import {domUtils, stringUtils} from '@tryghost/mg-utils';
+import {domUtils, stringUtils, cardUtils} from '@tryghost/mg-utils';
 import errors from '@tryghost/errors';
 import SimpleDom from 'simple-dom';
-import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
-import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
-import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
-import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
-import fileCard from '@tryghost/kg-default-cards/lib/cards/file.js';
 import {decode} from 'html-entities';
 import {parseSrcset} from 'srcset';
 import {_base as debugFactory} from '@tryghost/debug';
@@ -20,6 +15,11 @@ const {startCase} = stringUtils;
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 const debug = debugFactory('migrate:substack:process');
+const imageCard = cardUtils.getCard('image');
+const audioCard = cardUtils.getCard('audio');
+const galleryCard = cardUtils.getCard('gallery');
+const bookmarkCard = cardUtils.getCard('bookmark');
+const fileCard = cardUtils.getCard('file');
 
 const getFiles = async (filePath) => {
     let filenames = await fs.readdir(filePath);

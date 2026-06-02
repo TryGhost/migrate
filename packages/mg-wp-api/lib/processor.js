@@ -8,10 +8,7 @@ import MgFsUtils from '@tryghost/mg-fs-utils';
 import {htmlToText} from 'html-to-text';
 import {_base as debugFactory} from '@tryghost/debug';
 import SimpleDom from 'simple-dom';
-import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
-import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
-import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
-import {domUtils, youtubeUtils, stringUtils} from '@tryghost/mg-utils';
+import {domUtils, youtubeUtils, stringUtils, cardUtils} from '@tryghost/mg-utils';
 import {matchEmbedUrl, buildEmbedHtml} from './embed-utils.js';
 
 const {unescapeHTML, stripHtml} = stringUtils;
@@ -35,6 +32,9 @@ const {getYouTubeID} = youtubeUtils;
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 
 const debug = debugFactory('migrate:wp-api:processor');
+const galleryCard = cardUtils.getCard('gallery');
+const imageCard = cardUtils.getCard('image');
+const bookmarkCard = cardUtils.getCard('bookmark');
 
 const chunkArray = (arr, size) => {
     const chunks = [];

@@ -1,11 +1,14 @@
 import {z} from 'zod/v4';
 import {randomBytes} from 'node:crypto';
+import {createRequire} from 'node:module';
 import mobiledocConverter from '@tryghost/html-to-mobiledoc';
-import lexicalConverter from '@tryghost/kg-html-to-lexical';
 import MigrateBase from './MigrateBase.js';
 import TagContext, {TagObject, TagDataObject} from './TagContext.js';
 import AuthorContext, {AuthorObject, AuthorDataObject} from './AuthorContext.js';
 import type {DatabaseModels} from './database.js';
+
+const require = createRequire(import.meta.url);
+const lexicalConverter = require('@tryghost/kg-html-to-lexical') as typeof import('@tryghost/kg-html-to-lexical');
 
 const postZodSchema = z.object({
     title: z.string().max(255),

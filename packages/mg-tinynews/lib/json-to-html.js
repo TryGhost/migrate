@@ -1,8 +1,9 @@
 import SimpleDom from 'simple-dom';
-import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
+import {cardUtils} from '@tryghost/mg-utils';
 import {TextNode} from './text.js';
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
+const imageCard = cardUtils.getCard('image');
 
 // From https://gist.github.com/takien/4077195
 const getYouTubeID = (url) => {

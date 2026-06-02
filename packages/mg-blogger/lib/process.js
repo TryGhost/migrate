@@ -1,15 +1,15 @@
 import {basename} from 'node:path';
-import {domUtils} from '@tryghost/mg-utils';
+import {domUtils, cardUtils} from '@tryghost/mg-utils';
 import autop from 'autop';
 import sanitizeHtml from 'sanitize-html';
 import {slugify} from '@tryghost/string';
 import errors from '@tryghost/errors';
 import SimpleDom from 'simple-dom';
-import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 
 const {serializeChildren, replaceWith, wrap} = domUtils;
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
+const imageCard = cardUtils.getCard('image');
 
 const cleanExcerpt = (htmlContent) => {
     // Convert to text only

@@ -1,9 +1,9 @@
-import {domUtils} from '@tryghost/mg-utils';
+import {domUtils, cardUtils} from '@tryghost/mg-utils';
 import {slugify, stripInvisibleChars} from '@tryghost/string';
 import SimpleDom from 'simple-dom';
-import audioCard from '@tryghost/kg-default-cards/lib/cards/audio.js';
 
 const {serializeChildren, replaceWith, insertBefore, insertAfter, isComment, getCommentData} = domUtils;
+const audioCard = cardUtils.getCard('audio');
 
 const durationToSeconds = (duration) => {
     if (duration.includes(':')) {
