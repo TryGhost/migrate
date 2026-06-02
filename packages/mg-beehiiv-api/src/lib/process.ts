@@ -1,14 +1,14 @@
-import {domUtils, youtubeUtils, stringUtils} from '@tryghost/mg-utils';
+import {domUtils, youtubeUtils, stringUtils, cardUtils} from '@tryghost/mg-utils';
 import SimpleDom from 'simple-dom';
-import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
-import embedCard from '@tryghost/kg-default-cards/lib/cards/embed.js';
-import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
 
 const {parseFragment, serializeChildren, serializeNode, replaceWith, insertAfter, attr, parents} = domUtils;
 const {unescapeHTML} = stringUtils;
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 const {getYouTubeID} = youtubeUtils;
+const imageCard = cardUtils.getCard('image');
+const embedCard = cardUtils.getCard('embed');
+const bookmarkCard = cardUtils.getCard('bookmark');
 
 const isURL = (urlString: string | undefined) => {
     if (undefined === urlString) {

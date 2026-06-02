@@ -1,9 +1,9 @@
 import {stat, mkdir, open, writeFile} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
 import {EventEmitter} from 'node:events';
+import {createRequire} from 'node:module';
 import errors from '@tryghost/errors';
 import mobiledocConverter from '@tryghost/html-to-mobiledoc';
-import lexicalConverter from '@tryghost/kg-html-to-lexical';
 
 import MigrateBase from './MigrateBase.js';
 import PostContext, {PostConstructorOptions} from './PostContext.js';
@@ -11,6 +11,9 @@ import TagContext from './TagContext.js';
 import AuthorContext from './AuthorContext.js';
 import {createDatabase, type DatabaseModels} from './database.js';
 import {withTransaction, findByIds, findByColumn, buildDateWhere, buildFullWhere, countWhere, findPostsWhere, findPostIdColumnsWhere, findAllPostIdsWhere, findPostsByIds} from './db-helpers.js';
+
+const require = createRequire(import.meta.url);
+const lexicalConverter = require('@tryghost/kg-html-to-lexical') as typeof import('@tryghost/kg-html-to-lexical');
 
 type FindPostsOptions = {
     slug?: string;

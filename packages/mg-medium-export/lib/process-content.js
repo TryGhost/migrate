@@ -1,8 +1,8 @@
-import {domUtils} from '@tryghost/mg-utils';
+import {domUtils, cardUtils} from '@tryghost/mg-utils';
 import SimpleDom from 'simple-dom';
-import galleryCard from '@tryghost/kg-default-cards/lib/cards/gallery.js';
-import bookmarkCard from '@tryghost/kg-default-cards/lib/cards/bookmark.js';
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
+const galleryCard = cardUtils.getCard('gallery');
+const bookmarkCard = cardUtils.getCard('bookmark');
 
 const doReplace = (str) => {
     const replaceParts = [

@@ -1,4 +1,4 @@
-import {htmlToLexical} from '@tryghost/kg-html-to-lexical';
+import {createRequire} from 'node:module';
 import errors from '@tryghost/errors';
 import {convertToHTMLCard} from './convert-to-html-card.js';
 
@@ -18,6 +18,11 @@ const emptyParagraph = {
     indent: 0,
     type: 'paragraph',
     version: 1
+};
+
+const require = createRequire(import.meta.url);
+const {htmlToLexical} = require('@tryghost/kg-html-to-lexical') as {
+    htmlToLexical: typeof import('@tryghost/kg-html-to-lexical')['htmlToLexical'];
 };
 
 const convertPost = (post: postOptions, htmlCard = false) => {
