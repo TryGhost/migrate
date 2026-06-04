@@ -35,6 +35,7 @@ import substackMembersCommands from '../commands/substack-members.js';
 import substackCommands from '../commands/substack.js';
 import tinynewsCommands from '../commands/tinynews.js';
 import tinynewsMembersCommands from '../commands/tinynews-members.js';
+import wixCSVCommands from '../commands/wix-csv.js';
 import wpApiCommands from '../commands/wp-api.js';
 import wpXMLCommands from '../commands/wp-xml.js';
 
@@ -77,6 +78,7 @@ prettyCLI.command(substackMembersCommands);
 prettyCLI.command(substackCommands);
 prettyCLI.command(tinynewsCommands);
 prettyCLI.command(tinynewsMembersCommands);
+prettyCLI.command(wixCSVCommands);
 prettyCLI.command(wpApiCommands);
 prettyCLI.command(wpXMLCommands);
 

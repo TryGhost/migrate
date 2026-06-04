@@ -26,6 +26,7 @@ Each tool has its own detailed documentation:
 - [Substack members](https://github.com/TryGhost/migrate/tree/main/packages/mg-substack-members-csv)
 - [Tiny News](https://github.com/TryGhost/migrate/tree/main/packages/mg-tinynews)
 - [Tiny News Members](https://github.com/TryGhost/migrate/tree/main/packages/mg-tinynews-members)
+- [Wix CSV](https://github.com/TryGhost/migrate/tree/main/packages/mg-wix-csv)
 - [WordPress API](https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-api)
 - [WordPress XML](https://github.com/TryGhost/migrate/tree/main/packages/mg-wp-xml)
 

@@ -1,0 +1,3 @@
+Author,Main Category,Title,Excerpt,ID,Tags,Featured,Slug,Plain Content,Cover Image,Published Date,Categories,Rich Content,Post Page URL,Last Published Date,Internal ID
+Jane Writer,Market News,Hello Wix,Custom excerpt,post-1,"[""tag-id""]",TRUE,hello-wix,"Plain text fallback",wix:image://v1/example_media_image~mv2.jpg/example_media_image~mv2.jpg#originWidth=6016&originHeight=4016,2025-10-01T10:00:00Z,Tax Planning,"{""nodes"":[{""type"":""PARAGRAPH"",""nodes"":[{""type"":""TEXT"",""textData"":{""text"":""Hello "",""decorations"":[]}},{""type"":""TEXT"",""textData"":{""text"":""world"",""decorations"":[{""type"":""BOLD""}]}}]}]}",/post/hello-wix,2025-10-02T10:00:00Z,internal-1
+,,Draft Wix,,post-2,[],FALSE,,Draft plain,,,"" ,"not-json",/post/draft-wix,,internal-2

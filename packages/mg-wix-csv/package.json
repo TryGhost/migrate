@@ -1,0 +1,49 @@
+{
+  "name": "@tryghost/mg-wix-csv",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TryGhost/migrate.git",
+    "directory": "packages/mg-wix-csv"
+  },
+  "author": "Ghost Foundation",
+  "license": "MIT",
+  "type": "module",
+  "main": "build/index.js",
+  "types": "build/types.d.ts",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "default": "./build/index.js"
+    }
+  },
+  "scripts": {
+    "dev": "echo \"Implement me!\"",
+    "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",
+    "build": "tsc --build --sourceMap",
+    "lint": "eslint src/ --ext .ts --cache",
+    "test": "c8 --src src --all --check-coverage --100 --reporter text --reporter cobertura node --test 'build/test/**/*.test.js'",
+    "test:local": "pnpm build && pnpm test",
+    "posttest": "pnpm lint"
+  },
+  "files": [
+    "build"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "24.12.4",
+    "@typescript-eslint/parser": "8.59.4",
+    "c8": "11.0.0",
+    "eslint": "8.57.1",
+    "typescript": "6.0.3"
+  },
+  "dependencies": {
+    "@tryghost/errors": "3.0.3",
+    "@tryghost/kg-default-cards": "10.2.10",
+    "@tryghost/mg-fs-utils": "workspace:*",
+    "@tryghost/string": "0.3.1",
+    "simple-dom": "1.4.0"
+  }
+}
