@@ -131,10 +131,10 @@ When publishing a package for the first time:
     ```
 6. Register the package as a trusted publisher so CI can handle future releases:
     ```sh
-    npm trust github <package-name> --repo TryGhost/migrate --file publish.yml --yes
+    npm trust github <package-name> --repo TryGhost/migrate --file publish.yml --allow-publish --yes
 
     # Example:
-    npm trust github @tryghost/mg-example-package --repo TryGhost/migrate --file publish.yml --yes
+    npm trust github @tryghost/mg-example-package --repo TryGhost/migrate --file publish.yml --allow-publish --yes
     ```
 
 
