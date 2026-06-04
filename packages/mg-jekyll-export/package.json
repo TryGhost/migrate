@@ -25,15 +25,15 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.57.1"
+    "eslint": "catalog:"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.3",
+    "@tryghost/errors": "catalog:",
     "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/pretty-cli": "3.0.3",
-    "@tryghost/string": "0.3.1",
+    "@tryghost/pretty-cli": "catalog:",
+    "@tryghost/string": "catalog:",
     "front-matter": "4.0.2",
-    "markdown-it": "14.2.0"
+    "markdown-it": "catalog:"
   }
 }

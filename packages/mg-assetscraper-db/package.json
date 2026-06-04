@@ -33,22 +33,22 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/node": "24.12.4",
-    "listr2": "10.2.1",
-    "@typescript-eslint/parser": "8.60.0",
-    "c8": "11.0.0",
-    "eslint": "8.57.1",
-    "nock": "14.0.15",
-    "typescript": "6.0.3"
+    "@types/node": "catalog:",
+    "listr2": "catalog:",
+    "@typescript-eslint/parser": "catalog:",
+    "c8": "catalog:",
+    "eslint": "catalog:",
+    "nock": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.3",
+    "@tryghost/errors": "catalog:",
     "@tryghost/listr-smart-renderer": "workspace:*",
     "@tryghost/mg-fs-utils": "workspace:*",
-    "@tryghost/string": "0.3.1",
+    "@tryghost/string": "catalog:",
     "file-type": "22.0.1",
     "heic-convert": "2.1.0",
-    "sharp": "0.34.5",
-    "transliteration": "2.6.1"
+    "sharp": "catalog:",
+    "transliteration": "catalog:"
   }
 }

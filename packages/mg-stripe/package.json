@@ -33,21 +33,21 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/node": "24.12.4",
+    "@types/node": "catalog:",
     "@types/sinon": "21.0.1",
-    "@typescript-eslint/parser": "8.60.0",
-    "c8": "11.0.0",
-    "dotenv": "17.4.2",
-    "eslint": "8.57.1",
+    "@typescript-eslint/parser": "catalog:",
+    "c8": "catalog:",
+    "dotenv": "catalog:",
+    "eslint": "catalog:",
     "sinon": "22.0.0",
-    "typescript": "6.0.3"
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@inquirer/input": "5.1.2",
     "@inquirer/prompts": "8.5.2",
     "@inquirer/select": "5.2.1",
-    "@tryghost/pretty-cli": "3.0.3",
-    "chalk": "5.6.2",
+    "@tryghost/pretty-cli": "catalog:",
+    "chalk": "catalog:",
     "ora": "9.4.0",
     "stripe": "22.1.1"
   }

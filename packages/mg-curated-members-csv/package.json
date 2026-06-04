@@ -24,7 +24,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.57.1"
+    "eslint": "catalog:"
   },
   "dependencies": {
     "@tryghost/mg-fs-utils": "workspace:*"

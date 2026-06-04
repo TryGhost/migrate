@@ -30,8 +30,8 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.57.1",
-    "nock": "14.0.15"
+    "eslint": "catalog:",
+    "nock": "catalog:"
   },
   "dependencies": {
     "@tryghost/listr-smart-renderer": "workspace:*",
@@ -70,10 +70,10 @@
     "@tryghost/mg-wix-csv": "workspace:*",
     "@tryghost/mg-wp-api": "workspace:*",
     "@tryghost/mg-wp-xml": "workspace:*",
-    "@tryghost/pretty-cli": "3.0.3",
-    "@tryghost/string": "0.3.1",
-    "chalk": "5.6.2",
-    "fs-extra": "11.3.5",
+    "@tryghost/pretty-cli": "catalog:",
+    "@tryghost/string": "catalog:",
+    "chalk": "catalog:",
+    "fs-extra": "catalog:",
     "pretty-ms": "9.3.0",
     "update-notifier": "7.3.1"
   }

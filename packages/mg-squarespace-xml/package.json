@@ -24,14 +24,14 @@
     "access": "public"
   },
   "devDependencies": {
-    "c8": "11.0.0",
-    "eslint": "8.57.1"
+    "c8": "catalog:",
+    "eslint": "catalog:"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.3",
+    "@tryghost/errors": "catalog:",
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/string": "0.3.1",
-    "html-entities": "2.6.0",
-    "simple-dom": "1.4.0"
+    "@tryghost/string": "catalog:",
+    "html-entities": "catalog:",
+    "simple-dom": "catalog:"
   }
 }

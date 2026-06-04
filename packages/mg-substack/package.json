@@ -24,17 +24,17 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.57.1"
+    "eslint": "catalog:"
   },
   "dependencies": {
-    "@tryghost/debug": "2.0.3",
-    "@tryghost/errors": "3.0.3",
+    "@tryghost/debug": "catalog:",
+    "@tryghost/errors": "catalog:",
     "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/string": "0.3.1",
+    "@tryghost/string": "catalog:",
     "he": "1.2.0",
-    "html-entities": "2.6.0",
-    "simple-dom": "1.4.0",
+    "html-entities": "catalog:",
+    "simple-dom": "catalog:",
     "srcset": "5.0.3"
   }
 }

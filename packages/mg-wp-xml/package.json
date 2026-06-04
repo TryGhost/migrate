@@ -24,13 +24,13 @@
     "access": "public"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.3",
+    "@tryghost/errors": "catalog:",
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/string": "0.3.1",
+    "@tryghost/string": "catalog:",
     "@tryghost/mg-wp-api": "workspace:*",
     "fast-glob": "3.3.3",
-    "fast-xml-parser": "5.8.0",
-    "markdown-it": "14.2.0",
+    "fast-xml-parser": "catalog:",
+    "markdown-it": "catalog:",
     "php-serialize": "5.1.3"
   }
 }

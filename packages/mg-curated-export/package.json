@@ -25,12 +25,12 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.57.1"
+    "eslint": "catalog:"
   },
   "dependencies": {
     "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/pretty-cli": "3.0.3",
-    "@tryghost/string": "0.3.1"
+    "@tryghost/pretty-cli": "catalog:",
+    "@tryghost/string": "catalog:"
   }
 }

@@ -24,13 +24,13 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.57.1"
+    "eslint": "catalog:"
   },
   "dependencies": {
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/string": "0.3.1",
+    "@tryghost/string": "catalog:",
     "bson-objectid": "2.0.4",
-    "html-entities": "2.6.0",
+    "html-entities": "catalog:",
     "node-email-verifier": "4.0.0"
   }
 }

@@ -5,7 +5,7 @@
   "author": "Ghost Foundation",
   "license": "MIT",
   "type": "module",
-  "packageManager": "pnpm@10.34.1",
+  "packageManager": "pnpm@11.5.0",
   "engines": {
     "node": ">=22.21.1"
   },
@@ -33,19 +33,12 @@
   },
   "devDependencies": {
     "@nx/js": "22.7.5",
-    "@types/node": "24.12.4",
-    "eslint": "8.57.1",
-    "eslint-plugin-ghost": "3.5.0",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "eslint-plugin-ghost": "catalog:",
     "knip": "6.15.0",
     "nx": "22.7.5",
     "tsx": "4.22.4",
-    "typescript": "6.0.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "nx",
-      "sharp"
-    ]
+    "typescript": "catalog:"
   }
 }
