@@ -1,8 +1,25 @@
+import {createRequire} from 'node:module';
 import SimpleDom from 'simple-dom';
-import imageCard from '@tryghost/kg-default-cards/lib/cards/image.js';
 import {wixMediaIdToUrl} from './wix-image.js';
 
+const require = createRequire(import.meta.url);
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
+
+type SerializableNode = {
+    readonly nodeType: number;
+    readonly nodeName: string;
+    readonly nodeValue: string | null;
+    readonly nextSibling: SerializableNode | null;
+    readonly firstChild: SerializableNode | null;
+};
+
+type Card = {
+    name: string;
+    render: (args: unknown) => SerializableNode;
+};
+
+const {cards} = require('@tryghost/kg-default-cards') as {cards: Card[]};
+const imageCard = cards.find(card => card.name === 'image') as Card;
 
 type WixNode = {
     type?: string;

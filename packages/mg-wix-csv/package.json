@@ -34,14 +34,14 @@
   },
   "devDependencies": {
     "@types/node": "24.12.4",
-    "@typescript-eslint/parser": "8.59.4",
+    "@typescript-eslint/parser": "8.60.0",
     "c8": "11.0.0",
     "eslint": "8.57.1",
     "typescript": "6.0.3"
   },
   "dependencies": {
     "@tryghost/errors": "3.0.3",
-    "@tryghost/kg-default-cards": "10.2.10",
+    "@tryghost/kg-default-cards": "10.3.2",
     "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/string": "0.3.1",
     "simple-dom": "1.4.0"

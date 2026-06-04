@@ -985,8 +985,8 @@ importers:
         specifier: 3.0.3
         version: 3.0.3
       '@tryghost/kg-default-cards':
-        specifier: 10.2.10
-        version: 10.2.10
+        specifier: 10.3.2
+        version: 10.3.2
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
@@ -1001,8 +1001,8 @@ importers:
         specifier: 24.12.4
         version: 24.12.4
       '@typescript-eslint/parser':
-        specifier: 8.59.4
-        version: 8.59.4(eslint@8.57.1)(typescript@6.0.3)
+        specifier: 8.60.0
+        version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
         specifier: 11.0.0
         version: 11.0.0

@@ -1,7 +1,6 @@
 declare module '@tryghost/mg-fs-utils';
 declare module '@tryghost/errors';
 declare module '@tryghost/string';
-declare module '@tryghost/kg-default-cards/lib/cards/image.js';
 declare module 'simple-dom';
 
 type wixCSVPostDataObject = {
