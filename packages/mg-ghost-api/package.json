@@ -33,16 +33,16 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/node": "24.12.4",
-    "@typescript-eslint/parser": "8.60.0",
-    "c8": "11.0.0",
-    "eslint": "8.57.1",
-    "eslint-plugin-ghost": "3.5.0",
-    "typescript": "6.0.3"
+    "@types/node": "catalog:",
+    "@typescript-eslint/parser": "catalog:",
+    "c8": "catalog:",
+    "eslint": "catalog:",
+    "eslint-plugin-ghost": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
-    "@tryghost/admin-api": "1.14.6",
-    "@tryghost/errors": "3.0.3",
+    "@tryghost/admin-api": "catalog:",
+    "@tryghost/errors": "catalog:",
     "@tryghost/mg-context": "workspace:*"
   }
 }

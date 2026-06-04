@@ -24,13 +24,13 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.57.1"
+    "eslint": "catalog:"
   },
   "dependencies": {
-    "@tryghost/errors": "3.0.3",
+    "@tryghost/errors": "catalog:",
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/string": "0.3.1",
-    "node-fetch": "3.3.2",
-    "simple-dom": "1.4.0"
+    "@tryghost/string": "catalog:",
+    "node-fetch": "catalog:",
+    "simple-dom": "catalog:"
   }
 }

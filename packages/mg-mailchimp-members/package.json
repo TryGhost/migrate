@@ -33,11 +33,11 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/node": "24.12.4",
-    "@typescript-eslint/parser": "8.60.0",
-    "c8": "11.0.0",
-    "eslint": "8.57.1",
-    "typescript": "6.0.3"
+    "@types/node": "catalog:",
+    "@typescript-eslint/parser": "catalog:",
+    "c8": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@tryghost/mg-fs-utils": "workspace:*"

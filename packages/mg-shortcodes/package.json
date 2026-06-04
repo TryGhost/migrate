@@ -24,6 +24,6 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.57.1"
+    "eslint": "catalog:"
   }
 }

@@ -24,17 +24,17 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "8.57.1"
+    "eslint": "catalog:"
   },
   "dependencies": {
-    "@tryghost/debug": "2.0.3",
+    "@tryghost/debug": "catalog:",
     "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/mg-shortcodes": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
     "@tryghost/mg-webscraper": "workspace:*",
-    "@tryghost/string": "0.3.1",
+    "@tryghost/string": "catalog:",
     "html-to-text": "10.0.0",
-    "simple-dom": "1.4.0",
+    "simple-dom": "catalog:",
     "tldts": "7.4.2",
     "wpapi": "1.2.2"
   }

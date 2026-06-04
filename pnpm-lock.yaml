@@ -4,6 +4,96 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@tryghost/admin-api':
+      specifier: 1.14.6
+      version: 1.14.6
+    '@tryghost/debug':
+      specifier: 2.0.3
+      version: 2.0.3
+    '@tryghost/errors':
+      specifier: 3.0.3
+      version: 3.0.3
+    '@tryghost/html-to-mobiledoc':
+      specifier: 3.2.21
+      version: 3.2.21
+    '@tryghost/kg-default-cards':
+      specifier: 10.3.2
+      version: 10.3.2
+    '@tryghost/kg-html-to-lexical':
+      specifier: 1.3.2
+      version: 1.3.2
+    '@tryghost/pretty-cli':
+      specifier: 3.0.3
+      version: 3.0.3
+    '@tryghost/string':
+      specifier: 0.3.1
+      version: 0.3.1
+    '@types/node':
+      specifier: 24.12.4
+      version: 24.12.4
+    '@typescript-eslint/eslint-plugin':
+      specifier: 8.60.0
+      version: 8.60.0
+    '@typescript-eslint/parser':
+      specifier: 8.60.0
+      version: 8.60.0
+    c8:
+      specifier: 11.0.0
+      version: 11.0.0
+    chalk:
+      specifier: 5.6.2
+      version: 5.6.2
+    dotenv:
+      specifier: 17.4.2
+      version: 17.4.2
+    eslint:
+      specifier: 8.57.1
+      version: 8.57.1
+    eslint-plugin-ghost:
+      specifier: 3.5.0
+      version: 3.5.0
+    fast-xml-parser:
+      specifier: 5.8.0
+      version: 5.8.0
+    fs-extra:
+      specifier: 11.3.5
+      version: 11.3.5
+    html-entities:
+      specifier: 2.6.0
+      version: 2.6.0
+    listr2:
+      specifier: 10.2.1
+      version: 10.2.1
+    log-update:
+      specifier: 8.0.0
+      version: 8.0.0
+    markdown-it:
+      specifier: 14.2.0
+      version: 14.2.0
+    nock:
+      specifier: 14.0.15
+      version: 14.0.15
+    node-fetch:
+      specifier: 3.3.2
+      version: 3.3.2
+    sanitize-html:
+      specifier: 2.17.4
+      version: 2.17.4
+    sharp:
+      specifier: 0.34.5
+      version: 0.34.5
+    simple-dom:
+      specifier: 1.4.0
+      version: 1.4.0
+    transliteration:
+      specifier: 2.6.1
+      version: 2.6.1
+    typescript:
+      specifier: 6.0.3
+      version: 6.0.3
+
 importers:
 
   .:
@@ -12,13 +102,13 @@ importers:
         specifier: 22.7.5
         version: 22.7.5(@babel/traverse@7.29.0)(nx@22.7.5)
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       eslint-plugin-ghost:
-        specifier: 3.5.0
+        specifier: 'catalog:'
         version: 3.5.0(@babel/core@7.29.0)(eslint@8.57.1)
       knip:
         specifier: 6.15.0
@@ -30,13 +120,13 @@ importers:
         specifier: 4.22.4
         version: 4.22.4
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/listr-smart-renderer:
     dependencies:
       chalk:
-        specifier: 5.6.2
+        specifier: 'catalog:'
         version: 5.6.2
       cli-truncate:
         specifier: 6.0.0
@@ -48,13 +138,13 @@ importers:
         specifier: 5.0.0
         version: 5.0.0
       listr2:
-        specifier: 10.2.1
+        specifier: 'catalog:'
         version: 10.2.1
       log-symbols:
         specifier: 7.0.1
         version: 7.0.1
       log-update:
-        specifier: 8.0.0
+        specifier: 'catalog:'
         version: 8.0.0
       strip-ansi:
         specifier: 7.2.0
@@ -63,7 +153,7 @@ importers:
   packages/mg-assetscraper-db:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/listr-smart-renderer':
         specifier: workspace:*
@@ -72,7 +162,7 @@ importers:
         specifier: workspace:*
         version: link:../mg-fs-utils
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       file-type:
         specifier: 22.0.1
@@ -81,32 +171,32 @@ importers:
         specifier: 2.1.0
         version: 2.1.0
       sharp:
-        specifier: 0.34.5
+        specifier: 'catalog:'
         version: 0.34.5
       transliteration:
-        specifier: 2.6.1
+        specifier: 'catalog:'
         version: 2.6.1
     devDependencies:
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       listr2:
-        specifier: 10.2.1
+        specifier: 'catalog:'
         version: 10.2.1
       nock:
-        specifier: 14.0.15
+        specifier: 'catalog:'
         version: 14.0.15
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-beehiiv:
@@ -118,38 +208,38 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       cheerio:
         specifier: 1.2.0
         version: 1.2.0
       sanitize-html:
-        specifier: 2.17.4
+        specifier: 'catalog:'
         version: 2.17.4
       simple-dom:
-        specifier: 1.4.0
+        specifier: 'catalog:'
         version: 1.4.0
     devDependencies:
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-beehiiv-api:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/mg-utils':
         specifier: workspace:*
@@ -158,48 +248,48 @@ importers:
         specifier: 0.2.21
         version: 0.2.21
       simple-dom:
-        specifier: 1.4.0
+        specifier: 'catalog:'
         version: 1.4.0
     devDependencies:
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-beehiiv-api-members:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/string':
         specifier: 0.2.21
         version: 0.2.21
     devDependencies:
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-beehiiv-members:
@@ -208,57 +298,57 @@ importers:
         specifier: workspace:*
         version: link:../mg-fs-utils
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
     devDependencies:
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-blogger:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       autop:
         specifier: 1.0.1
         version: 1.0.1
       node-fetch:
-        specifier: 3.3.2
+        specifier: 'catalog:'
         version: 3.3.2
       sanitize-html:
-        specifier: 2.17.4
+        specifier: 'catalog:'
         version: 2.17.4
       simple-dom:
-        specifier: 1.4.0
+        specifier: 'catalog:'
         version: 1.4.0
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-buttondown:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
@@ -267,42 +357,42 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       markdown-it:
-        specifier: 14.2.0
+        specifier: 'catalog:'
         version: 14.2.0
       markdown-it-footnote:
         specifier: 4.0.0
         version: 4.0.0
     devDependencies:
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-chorus:
     dependencies:
       '@tryghost/debug':
-        specifier: 2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-clean-html:
@@ -318,34 +408,34 @@ importers:
         version: 1.0.14
     devDependencies:
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       eslint-plugin-ghost:
-        specifier: 3.5.0
+        specifier: 'catalog:'
         version: 3.5.0(@babel/core@7.29.0)(eslint@8.57.1)
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-context:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/html-to-mobiledoc':
-        specifier: 3.2.21
+        specifier: 'catalog:'
         version: 3.2.21
       '@tryghost/kg-html-to-lexical':
-        specifier: 1.3.2
+        specifier: 'catalog:'
         version: 1.3.2(@lexical/selection@0.13.1(lexical@0.13.1))(@lexical/utils@0.13.1(lexical@0.13.1))
       '@tryghost/listr-smart-renderer':
         specifier: workspace:*
@@ -354,23 +444,23 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
       zod:
         specifier: 4.4.3
         version: 4.4.3
     devDependencies:
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
 
   packages/mg-curated-export:
@@ -382,14 +472,14 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/pretty-cli':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-curated-members-csv:
@@ -399,19 +489,19 @@ importers:
         version: link:../mg-fs-utils
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-fs-utils:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/image-transform':
         specifier: 1.4.12
         version: 1.4.12
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       '@tryghost/zip':
         specifier: 3.0.3
@@ -423,129 +513,129 @@ importers:
         specifier: 6.2.1
         version: 6.2.1
       dotenv:
-        specifier: 17.4.2
+        specifier: 'catalog:'
         version: 17.4.2
       fs-extra:
-        specifier: 11.3.5
+        specifier: 'catalog:'
         version: 11.3.5
       sharp:
-        specifier: 0.34.5
+        specifier: 'catalog:'
         version: 0.34.5
       transliteration:
-        specifier: 2.6.1
+        specifier: 'catalog:'
         version: 2.6.1
     devDependencies:
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-ghost-api:
     dependencies:
       '@tryghost/admin-api':
-        specifier: 1.14.6
+        specifier: 'catalog:'
         version: 1.14.6
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/mg-context':
         specifier: workspace:*
         version: link:../mg-context
     devDependencies:
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       eslint-plugin-ghost:
-        specifier: 3.5.0
+        specifier: 'catalog:'
         version: 3.5.0(@babel/core@7.29.0)(eslint@8.57.1)
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-ghost-authors:
     dependencies:
       '@tryghost/admin-api':
-        specifier: 1.14.6
+        specifier: 'catalog:'
         version: 1.14.6
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
     devDependencies:
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       eslint-plugin-ghost:
-        specifier: 3.5.0
+        specifier: 'catalog:'
         version: 3.5.0(@babel/core@7.29.0)(eslint@8.57.1)
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-html-lexical:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/kg-html-to-lexical':
-        specifier: 1.3.2
+        specifier: 'catalog:'
         version: 1.3.2(@lexical/selection@0.13.1(lexical@0.13.1))(@lexical/utils@0.13.1(lexical@0.13.1))
     devDependencies:
       '@tryghost/listr-smart-renderer':
         specifier: workspace:*
         version: link:../listr-smart-renderer
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-html-mobiledoc:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/html-to-mobiledoc':
-        specifier: 3.2.21
+        specifier: 'catalog:'
         version: 3.2.21
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-jekyll-export:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
@@ -554,20 +644,20 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/pretty-cli':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       front-matter:
         specifier: 4.0.2
         version: 4.0.2
       markdown-it:
-        specifier: 14.2.0
+        specifier: 'catalog:'
         version: 14.2.0
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-json:
@@ -576,61 +666,61 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       bson-objectid:
         specifier: 2.0.4
         version: 2.0.4
       html-entities:
-        specifier: 2.6.0
+        specifier: 'catalog:'
         version: 2.6.0
       node-email-verifier:
         specifier: 4.0.0
         version: 4.0.0
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-letterdrop:
     dependencies:
       '@tryghost/debug':
-        specifier: 2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       got:
         specifier: 15.0.5
         version: 15.0.5
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-libsyn:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       node-fetch:
-        specifier: 3.3.2
+        specifier: 'catalog:'
         version: 3.3.2
       simple-dom:
-        specifier: 1.4.0
+        specifier: 'catalog:'
         version: 1.4.0
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-linkfixer:
@@ -646,7 +736,7 @@ importers:
         specifier: workspace:*
         version: link:../mg-json
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-mailchimp-members:
@@ -656,25 +746,25 @@ importers:
         version: link:../mg-fs-utils
     devDependencies:
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-medium-export:
     dependencies:
       '@tryghost/debug':
-        specifier: 2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
@@ -683,98 +773,98 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       simple-dom:
-        specifier: 1.4.0
+        specifier: 'catalog:'
         version: 1.4.0
     devDependencies:
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-medium-members:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
     devDependencies:
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-queue:
     dependencies:
       chalk:
-        specifier: 5.6.2
+        specifier: 'catalog:'
         version: 5.6.2
       log-update:
-        specifier: 8.0.0
+        specifier: 'catalog:'
         version: 8.0.0
     devDependencies:
       '@tryghost/mg-context':
         specifier: workspace:*
         version: link:../mg-context
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-shortcodes:
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-squarespace-xml:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       html-entities:
-        specifier: 2.6.0
+        specifier: 'catalog:'
         version: 2.6.0
       simple-dom:
-        specifier: 1.4.0
+        specifier: 'catalog:'
         version: 1.4.0
     devDependencies:
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-stripe:
@@ -789,10 +879,10 @@ importers:
         specifier: 5.2.1
         version: 5.2.1(@types/node@24.12.4)
       '@tryghost/pretty-cli':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       chalk:
-        specifier: 5.6.2
+        specifier: 'catalog:'
         version: 5.6.2
       ora:
         specifier: 9.4.0
@@ -802,37 +892,37 @@ importers:
         version: 22.1.1(@types/node@24.12.4)
     devDependencies:
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@types/sinon':
         specifier: 21.0.1
         version: 21.0.1
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       dotenv:
-        specifier: 17.4.2
+        specifier: 'catalog:'
         version: 17.4.2
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       sinon:
         specifier: 22.0.0
         version: 22.0.0
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-substack:
     dependencies:
       '@tryghost/debug':
-        specifier: 2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
@@ -841,58 +931,58 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       he:
         specifier: 1.2.0
         version: 1.2.0
       html-entities:
-        specifier: 2.6.0
+        specifier: 'catalog:'
         version: 2.6.0
       simple-dom:
-        specifier: 1.4.0
+        specifier: 'catalog:'
         version: 1.4.0
       srcset:
         specifier: 5.0.3
         version: 5.0.3
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-substack-members-csv:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-tinynews:
     dependencies:
       '@tryghost/debug':
-        specifier: 2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       sanitize-html:
-        specifier: 2.17.4
+        specifier: 'catalog:'
         version: 2.17.4
       simple-dom:
-        specifier: 1.4.0
+        specifier: 'catalog:'
         version: 1.4.0
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-tinynews-members:
@@ -902,53 +992,53 @@ importers:
         version: link:../mg-fs-utils
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-utils:
     dependencies:
       '@tryghost/kg-default-cards':
-        specifier: 10.3.2
+        specifier: 'catalog:'
         version: 10.3.2
       fast-xml-parser:
-        specifier: 5.8.0
+        specifier: 'catalog:'
         version: 5.8.0
       linkedom:
         specifier: 0.18.12
         version: 0.18.12
     devDependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/eslint-plugin':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(@typescript-eslint/parser@8.60.0(eslint@8.57.1)(typescript@6.0.3))(eslint@8.57.1)(typescript@6.0.3)
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       eslint-plugin-ghost:
-        specifier: 3.5.0
+        specifier: 'catalog:'
         version: 3.5.0(@babel/core@7.29.0)(eslint@8.57.1)
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-webscraper:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       omit-empty:
         specifier: 1.0.0
@@ -958,65 +1048,65 @@ importers:
         version: 6.1.12
     devDependencies:
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/eslint-plugin':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(@typescript-eslint/parser@8.60.0(eslint@8.57.1)(typescript@6.0.3))(eslint@8.57.1)(typescript@6.0.3)
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       nock:
-        specifier: 14.0.15
+        specifier: 'catalog:'
         version: 14.0.15
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-wix-csv:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/kg-default-cards':
-        specifier: 10.3.2
+        specifier: 'catalog:'
         version: 10.3.2
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       simple-dom:
-        specifier: 1.4.0
+        specifier: 'catalog:'
         version: 1.4.0
     devDependencies:
       '@types/node':
-        specifier: 24.12.4
+        specifier: 'catalog:'
         version: 24.12.4
       '@typescript-eslint/parser':
-        specifier: 8.60.0
+        specifier: 'catalog:'
         version: 8.60.0(eslint@8.57.1)(typescript@6.0.3)
       c8:
-        specifier: 11.0.0
+        specifier: 'catalog:'
         version: 11.0.0
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
 
   packages/mg-wp-api:
     dependencies:
       '@tryghost/debug':
-        specifier: 2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
@@ -1031,13 +1121,13 @@ importers:
         specifier: workspace:*
         version: link:../mg-webscraper
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       html-to-text:
         specifier: 10.0.0
         version: 10.0.0
       simple-dom:
-        specifier: 1.4.0
+        specifier: 'catalog:'
         version: 1.4.0
       tldts:
         specifier: 7.4.2
@@ -1047,13 +1137,13 @@ importers:
         version: 1.2.2
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
 
   packages/mg-wp-xml:
     dependencies:
       '@tryghost/errors':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/mg-utils':
         specifier: workspace:*
@@ -1062,16 +1152,16 @@ importers:
         specifier: workspace:*
         version: link:../mg-wp-api
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       fast-glob:
         specifier: 3.3.3
         version: 3.3.3
       fast-xml-parser:
-        specifier: 5.8.0
+        specifier: 'catalog:'
         version: 5.8.0
       markdown-it:
-        specifier: 14.2.0
+        specifier: 'catalog:'
         version: 14.2.0
       php-serialize:
         specifier: 5.1.3
@@ -1188,16 +1278,16 @@ importers:
         specifier: workspace:*
         version: link:../mg-wp-xml
       '@tryghost/pretty-cli':
-        specifier: 3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@tryghost/string':
-        specifier: 0.3.1
+        specifier: 'catalog:'
         version: 0.3.1
       chalk:
-        specifier: 5.6.2
+        specifier: 'catalog:'
         version: 5.6.2
       fs-extra:
-        specifier: 11.3.5
+        specifier: 'catalog:'
         version: 11.3.5
       pretty-ms:
         specifier: 9.3.0
@@ -1207,10 +1297,10 @@ importers:
         version: 7.3.1
     devDependencies:
       eslint:
-        specifier: 8.57.1
+        specifier: 'catalog:'
         version: 8.57.1
       nock:
-        specifier: 14.0.15
+        specifier: 'catalog:'
         version: 14.0.15
 
 packages:
@@ -3779,12 +3869,6 @@ packages:
     peerDependencies:
       typescript: '>=4.8.4 <6.0.0'
 
-  '@typescript-eslint/tsconfig-utils@8.59.4':
-    resolution: {integrity: sha512-DLCpnKgD4alVxTBSKulK+gU1KCqOgUXfDRDXh2mZgzokQKa/70ax93I2uVO3m/LLvIAtWZIFoiifudmIqAxpMA==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      typescript: '>=4.8.4 <6.1.0'
-
   '@typescript-eslint/tsconfig-utils@8.60.0':
     resolution: {integrity: sha512-BZPR3RGYlAXnly6ymAxfkVn5rCbZzQNou0rxv3GfWZ8cTQp+hhVd73khbGLAd8k1TlAPLISH337M+tAgAnaJDQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -3807,10 +3891,6 @@ packages:
 
   '@typescript-eslint/types@8.56.1':
     resolution: {integrity: sha512-dbMkdIUkIkchgGDIv7KLUpa0Mda4IYjo4IAMJUZ+3xNoUXxMsk9YtKpTHSChRS85o+H9ftm51gsK1dZReY9CVw==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@typescript-eslint/types@8.59.4':
-    resolution: {integrity: sha512-F1o7WJcCq+bc8dwcO/YsSEOudAH8RDtaOhM6wcAQhcUsFhnWQl81JKy48q1hoxAU0qrzM89+31GYh1515Zde3Q==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@typescript-eslint/types@8.60.0':
@@ -9395,7 +9475,7 @@ snapshots:
 
   '@tryghost/zip@3.0.3':
     dependencies:
-      '@tryghost/errors': 3.0.3
+      '@tryghost/errors': 3.2.1
       archiver: 7.0.1
       extract-zip: 2.0.1
     transitivePeerDependencies:
@@ -9496,8 +9576,8 @@ snapshots:
 
   '@typescript-eslint/project-service@8.56.1(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.59.4(typescript@5.9.3)
-      '@typescript-eslint/types': 8.59.4
+      '@typescript-eslint/tsconfig-utils': 8.60.0(typescript@5.9.3)
+      '@typescript-eslint/types': 8.60.0
       debug: 4.4.3
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -9526,7 +9606,7 @@ snapshots:
     dependencies:
       typescript: 5.9.3
 
-  '@typescript-eslint/tsconfig-utils@8.59.4(typescript@5.9.3)':
+  '@typescript-eslint/tsconfig-utils@8.60.0(typescript@5.9.3)':
     dependencies:
       typescript: 5.9.3
 
@@ -9559,8 +9639,6 @@ snapshots:
       - supports-color
 
   '@typescript-eslint/types@8.56.1': {}
-
-  '@typescript-eslint/types@8.59.4': {}
 
   '@typescript-eslint/types@8.60.0': {}
 
@@ -10302,7 +10380,7 @@ snapshots:
       '@babel/core': 7.29.0
       '@babel/eslint-parser': 7.28.6(@babel/core@7.29.0)(eslint@8.57.1)
       '@glimmer/syntax': 0.95.0
-      '@typescript-eslint/tsconfig-utils': 8.59.4(typescript@5.9.3)
+      '@typescript-eslint/tsconfig-utils': 8.60.0(typescript@5.9.3)
       content-tag: 2.0.3
       eslint-scope: 7.2.2
       html-tags: 3.3.1

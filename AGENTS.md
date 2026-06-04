@@ -9,9 +9,12 @@ This is a Ghost blog migration toolkit - a monorepo with 45+ packages for migrat
 ## Package Manager & Dependencies
 
 - **Always use `pnpm` for all commands.** This repository uses pnpm workspaces with Nx.
-- Install dependencies with `pnpm add`, like `pnpm add some-package`. If the dependency is for development, pass the `-D` flag, like `pnpm add -D some-package`. Exact versions are pinned automatically via `.npmrc`.
-- **Always pin exact versions.** Use `"1.2.3"`, not `"^1.2.3"` or `"~1.2.3"`.
+- Install dependencies with `pnpm add`, like `pnpm add some-package`. If the dependency is for development, pass the `-D` flag, like `pnpm add -D some-package`. Exact versions are pinned automatically via `savePrefix: ""` in `pnpm-workspace.yaml`.
+- **Always pin exact versions.** Use `"1.2.3"` in `pnpm-workspace.yaml` catalog entries or single-package dependency specs, not `"^1.2.3"` or `"~1.2.3"`.
 - **Use `workspace:*`** for dependencies on other packages in this monorepo.
+- **Use the default catalog for shared dependency versions.** If a dependency is used by more than one workspace package, define the exact version once in the `catalog` section of `pnpm-workspace.yaml` and reference it from package manifests with `"catalog:"`.
+- **Keep single-use dependencies local.** If a dependency is only used by one package and is not already in the catalog, keep the exact version in that package's `package.json`.
+- Before adding or changing a dependency, check whether it already exists in `pnpm-workspace.yaml`. Reuse the catalog entry when present instead of adding a duplicate exact version.
 
 ## Common Commands
 
@@ -222,11 +225,11 @@ Place test fixtures in `test/fixtures/` (JS) or `src/test/fixtures/` (TS).
        "lint": "eslint src/ --ext .ts --cache"
      },
      "devDependencies": {
-       "@typescript-eslint/eslint-plugin": "8.38.0",
-       "@typescript-eslint/parser": "8.38.0",
-       "eslint": "8.57.0",
-       "eslint-plugin-ghost": "3.4.4",
-       "typescript": "5.8.3"
+       "@typescript-eslint/eslint-plugin": "catalog:",
+       "@typescript-eslint/parser": "catalog:",
+       "eslint": "catalog:",
+       "eslint-plugin-ghost": "catalog:",
+       "typescript": "catalog:"
      },
      "dependencies": {
        "@tryghost/mg-context": "workspace:*",

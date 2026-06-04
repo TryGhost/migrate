@@ -25,14 +25,14 @@
     "access": "public"
   },
   "devDependencies": {
-    "c8": "11.0.0",
-    "eslint": "8.57.1"
+    "c8": "catalog:",
+    "eslint": "catalog:"
   },
   "dependencies": {
-    "@tryghost/debug": "2.0.3",
+    "@tryghost/debug": "catalog:",
     "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/string": "0.3.1",
-    "simple-dom": "1.4.0"
+    "@tryghost/string": "catalog:",
+    "simple-dom": "catalog:"
   }
 }
