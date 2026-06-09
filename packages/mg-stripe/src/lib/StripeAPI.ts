@@ -18,7 +18,7 @@ export class StripeAPI {
     constructor({apiKey}: {apiKey: string}) {
         this.#apiKey = apiKey;
         this.#client = new Stripe(apiKey, {
-            apiVersion: '2026-04-22.dahlia',
+            apiVersion: '2026-05-27.dahlia',
             telemetry: false
         });
         this.mode = apiKey.includes('_test_') ? 'test' : 'live';
