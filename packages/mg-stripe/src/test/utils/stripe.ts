@@ -250,6 +250,7 @@ export function buildSubscription(overrides: Partial<Omit<Stripe.Subscription, '
         billing_cycle_anchor: 0,
         billing_cycle_anchor_config: null,
         billing_mode: {flexible: null, type: 'classic'},
+        billing_schedules: [],
         billing_thresholds: null,
         cancel_at: null,
         cancel_at_period_end: false,
