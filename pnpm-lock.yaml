@@ -1130,8 +1130,8 @@ importers:
         specifier: 'catalog:'
         version: 1.4.0
       tldts:
-        specifier: 7.4.2
-        version: 7.4.2
+        specifier: 7.4.3
+        version: 7.4.3
       wpapi:
         specifier: 1.2.2
         version: 1.2.2
@@ -6599,6 +6599,10 @@ packages:
 
   tldts@7.4.2:
     resolution: {integrity: sha512-kCwffuaH8ntKtygnWe1b4BJKWiCUH30n5KfoTr6IchcXOwR7chAOFJxFrH3vjANafUYrIA4a7SDL+nn7SiR4Sw==}
+    hasBin: true
+
+  tldts@7.4.3:
+    resolution: {integrity: sha512-A3BDQBeeukYPzB4QdQ1DtdlUmp4x2OCH8n5UVhEWbyANxNep8GavottKzd1xYKFJKjUgMyPT7EzOfnBO55s8Sg==}
     hasBin: true
 
   tmp@0.2.6:
@@ -12799,6 +12803,10 @@ snapshots:
   tldts-core@7.4.3: {}
 
   tldts@7.4.2:
+    dependencies:
+      tldts-core: 7.4.3
+
+  tldts@7.4.3:
     dependencies:
       tldts-core: 7.4.3
 
