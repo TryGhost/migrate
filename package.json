@@ -32,12 +32,12 @@
     "knip": "knip"
   },
   "devDependencies": {
-    "@nx/js": "22.7.5",
+    "@nx/js": "23.0.0",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-ghost": "catalog:",
     "knip": "6.17.1",
-    "nx": "22.7.5",
+    "nx": "23.0.0",
     "tsx": "4.22.4",
     "typescript": "catalog:"
   }
