@@ -30,6 +30,6 @@
     "@tryghost/debug": "catalog:",
     "@tryghost/mg-utils": "workspace:*",
     "@tryghost/string": "catalog:",
-    "got": "15.0.5"
+    "got": "15.0.6"
   }
 }
