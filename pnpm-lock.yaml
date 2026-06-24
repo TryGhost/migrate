@@ -694,8 +694,8 @@ importers:
         specifier: 'catalog:'
         version: 0.3.5
       got:
-        specifier: 15.0.5
-        version: 15.0.5
+        specifier: 15.0.6
+        version: 15.0.6
     devDependencies:
       eslint:
         specifier: 'catalog:'
@@ -5205,8 +5205,8 @@ packages:
     resolution: {integrity: sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==}
     engines: {node: '>= 0.4'}
 
-  got@15.0.5:
-    resolution: {integrity: sha512-PMIMaZuYUCK43+Z9JWEXea4kkX2b3301m81D5TS6QpfG4PmNyirzEdO/Oa2OHAN4GsjnPfvWCWsshKN2rq4/gQ==}
+  got@15.0.6:
+    resolution: {integrity: sha512-6DEiZOte0BMR/QUFlk7CTBtcLpnJx/gAGnmApWtnHvM2i+LssgCaC3Kl3x+SZ/laTbYlmcaabylkwS0t97Y4BA==}
     engines: {node: '>=22'}
 
   graceful-fs@4.2.10:
@@ -11194,7 +11194,7 @@ snapshots:
 
   gopd@1.2.0: {}
 
-  got@15.0.5:
+  got@15.0.6:
     dependencies:
       '@sindresorhus/is': 8.1.0
       byte-counter: 0.1.0
