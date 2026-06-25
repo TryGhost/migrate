@@ -55,7 +55,6 @@ packages/
 ├── mg-assetscraper/      # Media asset downloading
 ├── mg-webscraper/        # Web scraping utilities
 ├── mg-json/              # Ghost JSON formatting
-├── mg-html-mobiledoc/    # HTML → MobileDoc conversion
 ├── mg-html-lexical/      # HTML → Lexical conversion
 ├── mg-<source>-*/        # Source adapters (medium, wp, substack, etc.)
 └── mg-<source>-members/  # Member import adapters
