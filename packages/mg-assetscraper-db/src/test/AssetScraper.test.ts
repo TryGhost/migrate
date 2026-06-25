@@ -343,7 +343,6 @@ describe('Asset Scraper', () => {
         const snippetObj = {
             id: '6238521c2b4615001234abcd',
             name: 'My Image Snippet',
-            mobiledoc: '{"version":"0.3.2","atoms":[],"cards":[["image",{"src":"https://example.com/image.jpg","width":367,"height":790}]],"markups":[],"sections":[[10,0]]}',
             created_at: '2022-03-21T10:23:24.000Z',
             updated_at: '2023-06-07T10:37:07.000Z',
             lexical: '{"namespace":"KoenigEditor","nodes":[{"type":"image","src":"https://example.com/image.jpg","width":367,"height":790}],"syncedAt":"2023-06-07T10:37:07.233Z"}'

@@ -88,7 +88,6 @@ export interface GhostContentObject extends GhostImageKeys {
     name?: string;
     lexical?: string;
     html?: string;
-    mobiledoc?: string;
     codeinjection_head?: string;
     codeinjection_foot?: string;
 }
