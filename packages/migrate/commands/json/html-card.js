@@ -20,7 +20,7 @@ const setup = (sywac) => {
     });
 };
 
-const desc = 'Convert all html fields to mobiledoc using html cards (non-lossy)';
+const desc = 'Convert all html fields to Lexical using html cards (non-lossy)';
 
 const paramsDesc = ['Path to a Ghost JSON file to convert'];
 
