@@ -48,7 +48,7 @@
     "@inquirer/select": "5.2.1",
     "@tryghost/pretty-cli": "catalog:",
     "chalk": "catalog:",
-    "ora": "9.4.0",
+    "ora": "9.4.1",
     "stripe": "22.2.2"
   }
 }
