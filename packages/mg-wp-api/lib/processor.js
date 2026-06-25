@@ -558,7 +558,7 @@ const extractAttrValues = (attrsString) => {
 };
 
 /**
- * The rationale behind transforming the content is to allow `mg-html-mobiledoc` to do its best job
+ * The rationale behind transforming the content is to allow the HTML conversion to do its best job
  * In some cases, transformation isn't needed as the parser handles it correctly.
  * In other cases, we need to *do* change the HTML structure, and this is where that happens.
  */
@@ -1112,7 +1112,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     }
 
     // Unwrap WP gallery blocks
-    // Case: WP gallery blocks have figures in figures which trips up the HTML to mobiledoc conversion
+    // Case: WP gallery blocks have figures in figures which trips up the HTML conversion
     for (const el of parsed.$('.wp-block-gallery')) {
         replaceWith(el, el.innerHTML);
     }
