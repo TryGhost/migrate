@@ -888,8 +888,8 @@ importers:
         specifier: 9.4.1
         version: 9.4.1
       stripe:
-        specifier: 22.2.2
-        version: 22.2.2(@types/node@24.13.2)
+        specifier: 22.2.3
+        version: 22.2.3(@types/node@24.13.2)
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -6520,8 +6520,8 @@ packages:
     resolution: {integrity: sha512-1tB5mhVo7U+ETBKNf92xT4hrQa3pm0MZ0PQvuDnWgAAGHDsfp4lPSpiS6psrSiet87wyGPh9ft6wmhOMQ0hDiw==}
     engines: {node: '>=14.16'}
 
-  stripe@22.2.2:
-    resolution: {integrity: sha512-lRXLiarjW/I2QVa6QuFfz1Ma7Dc2yBQ7vlYH6NEmp5htMJNQGfiWExmOv0McfqY5wMCGV8DLuCvsyVRIPJlUUQ==}
+  stripe@22.2.3:
+    resolution: {integrity: sha512-9lrggvLtjO4Ef5WXH4t50ckHJcJgTD72xFB+KJgZCSszAH9zMV1BqU6PwmWbRLdcdX7LK6PbErBapiGK7pIb+g==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/node': '>=18'
@@ -12725,7 +12725,7 @@ snapshots:
 
   strip-json-comments@5.0.3: {}
 
-  stripe@22.2.2(@types/node@24.13.2):
+  stripe@22.2.3(@types/node@24.13.2):
     optionalDependencies:
       '@types/node': 24.13.2
 
