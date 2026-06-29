@@ -10,7 +10,6 @@
                 "title": "Flat Format Post",
                 "slug": "flat-format-post",
                 "html": "<p>An image: <img src=\"https://example.com/images/flat-post.jpg\"></p>",
-                "mobiledoc": null,
                 "lexical": null,
                 "feature_image": "https://example.com/images/flat-feature.jpg",
                 "og_image": null,

@@ -1,5 +1,5 @@
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
-import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
+import mgHtmlLexical from '@tryghost/mg-html-lexical';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {slugify} from '@tryghost/string';
 import {hydrate} from '@tryghost/mg-json';
@@ -21,7 +21,7 @@ function findResourceRoot(ctx) {
 
 const jsonTasks = {
     html: (options) => {
-        let title = 'Convert HTML -> MobileDoc';
+        let title = 'Convert HTML -> Lexical';
 
         if (options.htmlCard) {
             title += ' [HTML Card]';
@@ -32,7 +32,7 @@ const jsonTasks = {
             title: title,
             task: (ctx) => {
                 try {
-                    let tasks = mgHtmlMobiledoc.convert(ctx, options.htmlCard);
+                    let tasks = mgHtmlLexical.convert(ctx, options.htmlCard);
                     return makeTaskRunner(tasks, options);
                 } catch (error) {
                     ctx.errors.push(error);

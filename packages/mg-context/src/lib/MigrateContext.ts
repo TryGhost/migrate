@@ -3,10 +3,9 @@ import {join, resolve} from 'node:path';
 import {EventEmitter} from 'node:events';
 import {createRequire} from 'node:module';
 import errors from '@tryghost/errors';
-import mobiledocConverter from '@tryghost/html-to-mobiledoc';
 
 import MigrateBase from './MigrateBase.js';
-import PostContext, {PostConstructorOptions} from './PostContext.js';
+import PostContext, {PostConstructorOptions, normalizeContentFormat, type ContentFormat} from './PostContext.js';
 import TagContext from './TagContext.js';
 import AuthorContext from './AuthorContext.js';
 import {createDatabase, type DatabaseModels} from './database.js';
@@ -63,7 +62,7 @@ export interface DuplicateSlugEntry {
 }
 
 type MigrateContextOptions = {
-    contentFormat?: 'mobiledoc' | 'lexical' | 'html';
+    contentFormat?: ContentFormat;
     dbPath?: string;
     ephemeral?: boolean;
     emitEvents?: boolean;
@@ -71,7 +70,7 @@ type MigrateContextOptions = {
 };
 
 export default class MigrateContext extends MigrateBase {
-    #contentFormat: 'mobiledoc' | 'lexical' | 'html';
+    #contentFormat: ContentFormat;
     #dbPath: string;
     #ephemeral: boolean;
     #emitEvents: boolean;
@@ -84,7 +83,7 @@ export default class MigrateContext extends MigrateBase {
     constructor({contentFormat = 'lexical', dbPath, ephemeral, emitEvents = true, warnOnLookupKeyDuplicate = false}: MigrateContextOptions = {}) {
         super();
 
-        this.#contentFormat = contentFormat;
+        this.#contentFormat = normalizeContentFormat(contentFormat);
         this.#emitEvents = emitEvents;
         this.#warnOnLookupKeyDuplicate = warnOnLookupKeyDuplicate;
 
@@ -197,17 +196,25 @@ export default class MigrateContext extends MigrateBase {
             this.db.db.exec('BEGIN');
             try {
                 for (const row of rows) {
-                    const cf = row.content_format as string;
-                    if (cf !== 'lexical' && cf !== 'mobiledoc') {
+                    const cf = normalizeContentFormat(row.content_format);
+                    if (cf === 'html') {
                         continue;
                     }
 
                     const data = JSON.parse(row.data as string);
-                    if (cf === 'lexical' && !data.lexical && data.html) {
+                    let changed = false;
+
+                    if (!data.lexical && data.html) {
                         data.lexical = JSON.stringify(lexicalConverter.htmlToLexical(data.html));
-                        this.db.stmts.updatePostData.run(JSON.stringify(data), row.id as number);
-                    } else if (cf === 'mobiledoc' && !data.mobiledoc && data.html) {
-                        data.mobiledoc = JSON.stringify(mobiledocConverter.toMobiledoc(data.html));
+                        changed = true;
+                    }
+
+                    if (data.mobiledoc !== null) {
+                        data.mobiledoc = null;
+                        changed = true;
+                    }
+
+                    if (changed) {
                         this.db.stmts.updatePostData.run(JSON.stringify(data), row.id as number);
                     }
                 }

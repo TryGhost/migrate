@@ -50,7 +50,6 @@
     "@tryghost/mg-ghost-api": "workspace:*",
     "@tryghost/mg-ghost-authors": "workspace:*",
     "@tryghost/mg-html-lexical": "workspace:*",
-    "@tryghost/mg-html-mobiledoc": "workspace:*",
     "@tryghost/mg-jekyll-export": "workspace:*",
     "@tryghost/mg-json": "workspace:*",
     "@tryghost/mg-letterdrop": "workspace:*",

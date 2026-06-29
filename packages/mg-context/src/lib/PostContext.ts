@@ -1,7 +1,6 @@
 import {z} from 'zod/v4';
 import {randomBytes} from 'node:crypto';
 import {createRequire} from 'node:module';
-import mobiledocConverter from '@tryghost/html-to-mobiledoc';
 import MigrateBase from './MigrateBase.js';
 import TagContext, {TagObject, TagDataObject} from './TagContext.js';
 import AuthorContext, {AuthorObject, AuthorDataObject} from './AuthorContext.js';
@@ -9,6 +8,12 @@ import type {DatabaseModels} from './database.js';
 
 const require = createRequire(import.meta.url);
 const lexicalConverter = require('@tryghost/kg-html-to-lexical') as typeof import('@tryghost/kg-html-to-lexical');
+
+export type ContentFormat = 'lexical' | 'html';
+
+export function normalizeContentFormat(contentFormat: unknown): ContentFormat {
+    return contentFormat === 'html' ? 'html' : 'lexical';
+}
 
 const postZodSchema = z.object({
     title: z.string().max(255),
@@ -48,14 +53,14 @@ const postZodSchema = z.object({
 export type PostConstructorOptions = {
     source?: Object;
     meta?: Object;
-    contentFormat?: 'mobiledoc' | 'lexical' | 'html';
+    contentFormat?: ContentFormat;
     lookupKey?: string;
 };
 
 export default class PostContext extends MigrateBase {
     #source: any;
     #meta: any;
-    #contentFormat: 'mobiledoc' | 'lexical' | 'html';
+    #contentFormat: ContentFormat;
     #lookupKey: string | null = null;
     #warnOnLookupKeyDuplicate = false;
     #duplicateSkipped = false;
@@ -71,7 +76,7 @@ export default class PostContext extends MigrateBase {
 
         this.#meta = meta;
 
-        this.#contentFormat = contentFormat;
+        this.#contentFormat = normalizeContentFormat(contentFormat);
 
         if (lookupKey) {
             this.#lookupKey = lookupKey;
@@ -135,9 +140,6 @@ export default class PostContext extends MigrateBase {
             if (this.#contentFormat === 'lexical' && this.data.lexical) {
                 return;
             }
-            if (this.#contentFormat === 'mobiledoc' && this.data.mobiledoc) {
-                return;
-            }
         }
 
         if (this.#contentFormat === 'lexical') {
@@ -145,11 +147,6 @@ export default class PostContext extends MigrateBase {
                 ? JSON.stringify(lexicalConverter.htmlToLexical(this.data.html))
                 : null;
             this.data.mobiledoc = null;
-        } else if (this.#contentFormat === 'mobiledoc') {
-            this.data.mobiledoc = this.data.html
-                ? JSON.stringify(mobiledocConverter.toMobiledoc(this.data.html))
-                : null;
-            this.data.lexical = null;
         }
 
         this.#htmlDirty = false;
@@ -179,9 +176,6 @@ export default class PostContext extends MigrateBase {
         if (this.#contentFormat === 'lexical') {
             result.data.html = null;
             result.data.mobiledoc = null;
-        } else if (this.#contentFormat === 'mobiledoc') {
-            result.data.html = null;
-            result.data.lexical = null;
         } else {
             result.data.mobiledoc = null;
             result.data.lexical = null;
@@ -451,16 +445,13 @@ export default class PostContext extends MigrateBase {
 
     static toGhostPost(row: any): {post: any; meta: any} {
         const rawData = JSON.parse(row.data);
-        const contentFormat = row.content_format;
+        const contentFormat = normalizeContentFormat(row.content_format);
         const ghostId = row.ghost_id as string;
 
         // Null out fields not needed for this content format
         if (contentFormat === 'lexical') {
             rawData.html = null;
             rawData.mobiledoc = null;
-        } else if (contentFormat === 'mobiledoc') {
-            rawData.html = null;
-            rawData.lexical = null;
         } else {
             rawData.mobiledoc = null;
             rawData.lexical = null;
@@ -494,7 +485,7 @@ export default class PostContext extends MigrateBase {
         const rawData = JSON.parse(row.data);
         const source = JSON.parse(row.source);
         const meta = JSON.parse(row.meta);
-        const contentFormat = row.content_format;
+        const contentFormat = normalizeContentFormat(row.content_format);
 
         // Convert date strings back to Date objects
         const dateFields = ['created_at', 'updated_at', 'published_at'];

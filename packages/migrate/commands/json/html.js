@@ -24,7 +24,7 @@ const setup = (sywac) => {
     });
 };
 
-const desc = 'Convert all html fields to WYSIWYG mobiledoc (potentially lossy)';
+const desc = 'Convert all html fields to Lexical (potentially lossy)';
 
 const paramsDesc = ['Path to a Ghost JSON file to convert'];
 

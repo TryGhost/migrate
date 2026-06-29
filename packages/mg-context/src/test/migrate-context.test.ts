@@ -920,33 +920,6 @@ describe('MigrateContext', () => {
             await unlink(writtenFiles[0].path);
             await instance.close();
         });
-
-        it('Can export with Mobiledoc only', async () => {
-            const instance: any = new MigrateContext({contentFormat: 'mobiledoc'});
-            await instance.init();
-
-            const post = await instance.addPost();
-            post.set('title', 'Mobiledoc Only Post');
-            post.set('slug', 'mobiledoc-only-post');
-            post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
-            post.set('html', '<p>Hello world</p>');
-            post.addAuthor({name: 'Test Author', slug: 'test-author', email: 'test@example.com'});
-            await post.save(instance.db);
-
-            await instance.prepareForExport();
-            const writtenFiles = await instance.writeGhostJson(tmpdir(), {filename: 'mobiledoc-test'});
-            const ghostJSON = JSON.parse(await readFile(writtenFiles[0].path, 'utf-8'));
-
-            assert.equal(ghostJSON.data.posts.length, 1);
-            assert.equal(ghostJSON.data.posts[0].html, null);
-            assert.ok(ghostJSON.data.posts[0].mobiledoc);
-            assert.equal(typeof ghostJSON.data.posts[0].mobiledoc, 'string');
-            assert.ok(JSON.parse(ghostJSON.data.posts[0].mobiledoc).version);
-            assert.equal(ghostJSON.data.posts[0].lexical, null);
-
-            await unlink(writtenFiles[0].path);
-            await instance.close();
-        });
     });
 
     describe('Standalone save', () => {
@@ -1679,24 +1652,50 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
-        it('Mobiledoc conversion is cached by prepareForExport', async () => {
-            const instance: any = new MigrateContext({contentFormat: 'mobiledoc'});
+        it('Lexical conversion is cached by prepareForExport', async () => {
+            const instance: any = new MigrateContext();
             await instance.init();
 
             const post = await instance.addPost();
-            post.set('title', 'Mobiledoc Test');
-            post.set('slug', 'mobiledoc-test');
+            post.set('title', 'Lexical Test');
+            post.set('slug', 'lexical-test');
             post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Mobiledoc</p>');
+            post.set('html', '<p>Lexical</p>');
             await post.save(instance.db);
 
             await instance.prepareForExport();
 
             const row = instance.db.stmts.findPostById.get(post.dbId) as any;
             const stored = JSON.parse(row.data);
-            assert.ok(stored.mobiledoc);
-            assert.ok(JSON.parse(stored.mobiledoc).version);
-            assert.equal(stored.lexical, null);
+            assert.ok(stored.lexical);
+            assert.ok(JSON.parse(stored.lexical).root);
+            assert.equal(stored.mobiledoc, null);
+
+            await instance.close();
+        });
+
+        it('Clears stale mobiledoc during prepareForExport', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Stale Mobiledoc');
+            post.set('slug', 'stale-mobiledoc');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post.set('html', '<p>Hello</p>');
+            await post.save(instance.db);
+
+            const row = instance.db.stmts.findPostById.get(post.dbId) as any;
+            const data = JSON.parse(row.data);
+            data.mobiledoc = '{"version":"0.3.1","atoms":[],"cards":[]}';
+            instance.db.stmts.updatePostData.run(JSON.stringify(data), post.dbId);
+
+            await instance.prepareForExport();
+
+            const updatedRow = instance.db.stmts.findPostById.get(post.dbId) as any;
+            const stored = JSON.parse(updatedRow.data);
+            assert.ok(stored.lexical);
+            assert.equal(stored.mobiledoc, null);
 
             await instance.close();
         });

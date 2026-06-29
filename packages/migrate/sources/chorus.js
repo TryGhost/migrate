@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';
 import chorusIngest from '@tryghost/mg-chorus';
 import {toGhostJSON} from '@tryghost/mg-json';
-import mgHtmlMobiledoc from '@tryghost/mg-html-mobiledoc';
+import mgHtmlLexical from '@tryghost/mg-html-lexical';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
@@ -118,14 +118,14 @@ const getFullTaskList = (options) => {
             }
         },
         {
-            title: 'Convert HTML -> MobileDoc',
+            title: 'Convert HTML -> Lexical',
             task: (ctx) => {
-                // 8. Convert post HTML -> MobileDoc
+                // 8. Convert post HTML -> Lexical
                 try {
-                    let tasks = mgHtmlMobiledoc.convert(ctx);
+                    let tasks = mgHtmlLexical.convert(ctx);
                     return makeTaskRunner(tasks, options);
                 } catch (error) {
-                    ctx.errors.push({message: 'Failed to convert HTML -> MobileDoc', error});
+                    ctx.errors.push({message: 'Failed to convert HTML -> Lexical', error});
                     throw error;
                 }
             }

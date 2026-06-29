@@ -2,7 +2,7 @@
 
 A SQLite-backed data store for building Ghost import files. Provides a validated, typed interface for posts, tags, and authors with batched iteration for large migrations.
 
-Data is persisted to SQLite (in-memory by default), so migrations with tens of thousands of posts don't require excessive memory. Content is validated against Ghost's schema on write, and HTML is converted to Lexical or Mobiledoc during an explicit preparation step before export.
+Data is persisted to SQLite (in-memory by default), so migrations with tens of thousands of posts don't require excessive memory. Content is validated against Ghost's schema on write, and HTML is converted to Lexical during an explicit preparation step before export.
 
 ## Install
 
@@ -76,7 +76,7 @@ new MigrateContext(options?)
 
 | Option                     | Type                                 | Default             | Description                                  |
 |----------------------------|--------------------------------------|---------------------|----------------------------------------------|
-| `contentFormat`            | `'lexical' \| 'mobiledoc' \| 'html'` | `'lexical'`         | Target format for HTML conversion on export  |
+| `contentFormat`            | `'lexical' \| 'html'`                | `'lexical'`         | Target format for HTML conversion on export  |
 | `dbPath`                   | `string`                             | —                   | Path to a SQLite file for persistent storage |
 | `ephemeral`                | `boolean`                            | `true` if no dbPath | Use in-memory database                       |
 | `emitEvents`               | `boolean`                            | `true`              | Emit progress events (see [Events](#events)) |
@@ -88,9 +88,6 @@ const ctx = new MigrateContext();
 
 // Persistent file-based
 const ctx = new MigrateContext({dbPath: './migration.sqlite'});
-
-// Mobiledoc output instead of Lexical
-const ctx = new MigrateContext({contentFormat: 'mobiledoc'});
 
 // Server mode — disable events for zero overhead
 const ctx = new MigrateContext({emitEvents: false});
@@ -365,7 +362,7 @@ Progress is reported via the `progress` event (see [Events](#events)).
 Prepare all posts for export. Must be called before `writeGhostJson()` or `forEachGhostPost()`. This:
 
 1. Deduplicates slugs (calls `deduplicateSlugs()` internally)
-2. Converts HTML to Lexical or Mobiledoc for all posts that need it
+2. Converts HTML to Lexical for all posts that need it
 
 The method is idempotent — posts that already have converted content are skipped. Call it again after modifying posts via `forEachPost()` to re-convert changed content.
 
@@ -495,7 +492,7 @@ Get a property value.
 
 Set a property value. Validates against the schema (type, max length, allowed values). Returns `this` for chaining.
 
-Setting `html` invalidates cached `lexical`/`mobiledoc` — call `prepareForExport()` again to re-convert.
+Setting `html` invalidates cached `lexical` — call `prepareForExport()` again to re-convert.
 
 #### `post.remove(prop): PostContext`
 
@@ -513,7 +510,7 @@ Persist the post and its tag/author relationships to the database.
 | `slug`                  | `string`  | 191   | —          | **Required**                              |
 | `html`                  | `string?` | —     | `null`     | Source HTML content                       |
 | `lexical`               | `string?` | —     | `null`     | Auto-generated on export                  |
-| `mobiledoc`             | `string?` | —     | `null`     | Auto-generated on export                  |
+| `mobiledoc`             | `string?` | —     | `null`     | Legacy Ghost field, always exported null  |
 | `status`                | `enum`    | —     | `'draft'`  | `published`, `draft`, `scheduled`, `sent` |
 | `type`                  | `enum`    | —     | `'post'`   | `post`, `page`                            |
 | `visibility`            | `enum`    | —     | `'public'` | `public`, `members`, `paid`               |
