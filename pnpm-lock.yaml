@@ -64,8 +64,8 @@ catalogs:
       specifier: 2.6.0
       version: 2.6.0
     listr2:
-      specifier: 10.2.1
-      version: 10.2.1
+      specifier: 10.2.2
+      version: 10.2.2
     log-update:
       specifier: 8.0.0
       version: 8.0.0
@@ -139,7 +139,7 @@ importers:
         version: 5.0.0
       listr2:
         specifier: 'catalog:'
-        version: 10.2.1
+        version: 10.2.2
       log-symbols:
         specifier: 7.0.1
         version: 7.0.1
@@ -191,7 +191,7 @@ importers:
         version: 8.57.1
       listr2:
         specifier: 'catalog:'
-        version: 10.2.1
+        version: 10.2.2
       nock:
         specifier: 'catalog:'
         version: 14.0.16
@@ -5636,8 +5636,8 @@ packages:
   linkify-it@5.0.1:
     resolution: {integrity: sha512-wVoTjP4Q6R0NW5hiZkVJaFZPWgtXfoGF+6LucL3/FtiNjmcHhYjEr5f1Kqjirc1nBW07J/ZuRFumqr2oqccEWg==}
 
-  listr2@10.2.1:
-    resolution: {integrity: sha512-7I5knELsJKTUjXG+A6BkKAiGkW1i25fNa/xlUl9hFtk15WbE9jndA89xu5FzQKrY5llajE1hfZZFMILXkDHk/Q==}
+  listr2@10.2.2:
+    resolution: {integrity: sha512-JtNtbZj8q5BnDMR7trpwvwk3RIrANtIVzEUm8w7amp6xelLgyuq+4WZoTH913XaQAoH/cNdYhaNzBPA2U3xbDw==}
     engines: {node: '>=22.13.0'}
 
   locate-path@5.0.0:
@@ -11603,7 +11603,7 @@ snapshots:
     dependencies:
       uc.micro: 2.1.0
 
-  listr2@10.2.1:
+  listr2@10.2.2:
     dependencies:
       cli-truncate: 5.2.0
       eventemitter3: 5.0.4
