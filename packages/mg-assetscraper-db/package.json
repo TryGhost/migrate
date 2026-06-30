@@ -46,6 +46,7 @@
     "@tryghost/listr-smart-renderer": "workspace:*",
     "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/string": "catalog:",
+    "escape-string-regexp": "catalog:",
     "file-type": "22.0.1",
     "heic-convert": "2.1.0",
     "sharp": "catalog:",

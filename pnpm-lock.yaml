@@ -45,6 +45,9 @@ catalogs:
     dotenv:
       specifier: 17.4.2
       version: 17.4.2
+    escape-string-regexp:
+      specifier: 5.0.0
+      version: 5.0.0
     eslint:
       specifier: 8.57.1
       version: 8.57.1
@@ -167,6 +170,9 @@ importers:
       '@tryghost/string':
         specifier: 'catalog:'
         version: 0.3.5
+      escape-string-regexp:
+        specifier: 'catalog:'
+        version: 5.0.0
       file-type:
         specifier: 22.0.1
         version: 22.0.1
@@ -404,7 +410,7 @@ importers:
         specifier: workspace:*
         version: link:../mg-utils
       escape-string-regexp:
-        specifier: 5.0.0
+        specifier: 'catalog:'
         version: 5.0.0
       style-to-object:
         specifier: 1.0.14

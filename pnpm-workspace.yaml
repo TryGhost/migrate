@@ -24,6 +24,7 @@ catalog:
   "c8": "11.0.0"
   "chalk": "5.6.2"
   "dotenv": "17.4.2"
+  "escape-string-regexp": "5.0.0"
   "eslint": "8.57.1"
   "eslint-plugin-ghost": "3.5.0"
   "fast-xml-parser": "5.8.0"

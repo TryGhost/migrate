@@ -6,6 +6,7 @@ import errors from '@tryghost/errors';
 import {slugify} from '@tryghost/string';
 // Subtasks are created via task.newListr() instead of makeTaskRunner
 import {fileTypeFromBuffer} from 'file-type';
+import escapeStringRegexp from 'escape-string-regexp';
 import AssetCache from './AssetCache.js';
 import {needsConverting, convertImageBuffer, getFolderForMimeType, normalizePathSegment} from './utils.js';
 
@@ -594,7 +595,7 @@ export default class AssetScraper {
         for (const domain of this.#allowedDomains) {
             // NOTE: the src could end with a quote, apostrophe or double-backslash, comma, space, or ) - hence the termination symbols
             const srcTerminationSymbols = `("|\\)|'|(?=(?:,https?))| |<|\\\\|&quot;|$)`;
-            const regex = new RegExp(`(${domain}.*?)(${srcTerminationSymbols})`, 'igm');
+            const regex = new RegExp(`(${escapeStringRegexp(domain)}.*?)(${srcTerminationSymbols})`, 'igm');
             const matches = content.matchAll(regex);
 
             // Simplify the matches so we only get the result needed

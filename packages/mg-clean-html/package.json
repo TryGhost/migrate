@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@tryghost/mg-utils": "workspace:*",
-    "escape-string-regexp": "5.0.0",
+    "escape-string-regexp": "catalog:",
     "style-to-object": "1.0.14"
   }
 }
