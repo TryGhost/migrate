@@ -6,6 +6,7 @@ autoInstallPeers: true
 
 overrides:
   trim: "^1.0.1"
+  parse-link-header: "^2.0.0"
 
 catalog:
   "@tryghost/admin-api": "1.14.10"
