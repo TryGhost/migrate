@@ -4,6 +4,9 @@ packages:
 savePrefix: ""
 autoInstallPeers: true
 
+overrides:
+  trim: "^1.0.1"
+
 catalog:
   "@tryghost/admin-api": "1.14.10"
   "@tryghost/debug": "2.2.3"
