@@ -8,6 +8,7 @@ import {decode} from 'html-entities';
 import {parseSrcset} from 'srcset';
 import {_base as debugFactory} from '@tryghost/debug';
 import {slugify} from '@tryghost/string';
+import escapeStringRegexp from 'escape-string-regexp';
 
 const {parseFragment, serializeChildren, replaceWith, insertBefore, insertAfter, attr, parents} = domUtils;
 
@@ -48,7 +49,7 @@ const largeImageUrl = (path) => {
     }
 
     if (path.includes('https://bucketeer-')) {
-        path = path.replace(/https:\/\/.*.s3.amazonaws.com/gmi, 'https://substack-post-media.s3.amazonaws.com');
+        path = path.replace(/https:\/\/.*\.s3\.amazonaws\.com/gmi, 'https://substack-post-media.s3.amazonaws.com');
     }
 
     return path;
@@ -585,7 +586,7 @@ const processContent = (post, siteUrl, options) => {
     parsed.$('p.button-wrapper').forEach((button) => {
         let buttons = parsed.$(':scope > a.button', button);
         if (buttons.length === 1 && siteUrl) {
-            let siteRegex = new RegExp(`^(?:${siteUrl}(?:\\/?)(?:p\\/)?)([a-zA-Z-_\\d]*)(?:\\/?)`, 'gi');
+            let siteRegex = new RegExp(`^(?:${escapeStringRegexp(siteUrl)}(?:\\/?)(?:p\\/)?)([a-zA-Z-_\\d]*)(?:\\/?)`, 'gi');
             let buttonLink = buttons[0];
             let buttonHref = attr(buttonLink, 'href');
             let buttonText = buttonLink.textContent;
@@ -673,7 +674,7 @@ const processContent = (post, siteUrl, options) => {
     if (options.noSubscribeButtons) {
         parsed.$('a').forEach((anchor) => {
             let href = attr(anchor, 'href');
-            let linkRegex = new RegExp(`^(${siteUrl})?(/subscribe)(.*)`, 'gi');
+            let linkRegex = new RegExp(`^(${escapeStringRegexp(siteUrl)})?(/subscribe)(.*)`, 'gi');
 
             if (!href) {
                 return;
@@ -688,7 +689,7 @@ const processContent = (post, siteUrl, options) => {
     } else if (options.subscribeLink) {
         parsed.$('a').forEach((anchor) => {
             let href = attr(anchor, 'href');
-            let linkRegex = new RegExp(`^(${siteUrl})?(/subscribe)(.*)`, 'gi');
+            let linkRegex = new RegExp(`^(${escapeStringRegexp(siteUrl)})?(/subscribe)(.*)`, 'gi');
 
             if (!href) {
                 return;

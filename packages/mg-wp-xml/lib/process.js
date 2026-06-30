@@ -218,7 +218,7 @@ const preProcessContent = async ({html, options}) => { // eslint-disable-line no
     const splitIt = html.split(/\r?\n/);
 
     // Regexp to find lines that only contain a YouTube link
-    const youTubeLine = new RegExp('^((?:https?:)?\\/\\/)?((?:www|m)\\.)?((?:youtube(?:-nocookie)?\\.com|youtu.be))(\\/(?:[\\w\\-]+\\?v=|embed\\/|live\\/|v\\/)?)([\\w\\-]+)(\\S+)?$');
+    const youTubeLine = new RegExp('^((?:https?:)?\\/\\/)?((?:www|m)\\.)?((?:youtube(?:-nocookie)?\\.com|youtu\\.be))(\\/(?:[\\w\\-]+\\?v=|embed\\/|live\\/|v\\/)?)([\\w\\-]+)(\\S+)?$');
 
     // For each line, test against the regexp above
     splitIt.forEach((line, index, theArray) => {

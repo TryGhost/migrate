@@ -32,6 +32,7 @@
     "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
     "@tryghost/string": "catalog:",
+    "escape-string-regexp": "catalog:",
     "he": "1.2.0",
     "html-entities": "catalog:",
     "simple-dom": "catalog:",

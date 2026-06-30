@@ -686,6 +686,9 @@ importers:
       '@tryghost/string':
         specifier: 'catalog:'
         version: 0.3.5
+      escape-string-regexp:
+        specifier: 'catalog:'
+        version: 5.0.0
       got:
         specifier: 15.0.6
         version: 15.0.6
@@ -721,6 +724,9 @@ importers:
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
+      escape-string-regexp:
+        specifier: 'catalog:'
+        version: 5.0.0
     devDependencies:
       '@tryghost/listr-smart-renderer':
         specifier: workspace:*
@@ -926,6 +932,9 @@ importers:
       '@tryghost/string':
         specifier: 'catalog:'
         version: 0.3.5
+      escape-string-regexp:
+        specifier: 'catalog:'
+        version: 5.0.0
       he:
         specifier: 1.2.0
         version: 1.2.0

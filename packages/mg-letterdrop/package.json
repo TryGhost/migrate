@@ -30,6 +30,7 @@
     "@tryghost/debug": "catalog:",
     "@tryghost/mg-utils": "workspace:*",
     "@tryghost/string": "catalog:",
+    "escape-string-regexp": "catalog:",
     "got": "15.0.6"
   }
 }

@@ -1,4 +1,5 @@
 import {domUtils, stringUtils} from '@tryghost/mg-utils';
+import escapeStringRegexp from 'escape-string-regexp';
 
 const {processFragment} = domUtils;
 const {cleanURL} = stringUtils;
@@ -57,10 +58,10 @@ export default class LinkFixer {
             const siteURL = new URL(postURLDomain.origin);
 
             siteURL.protocol = 'http:';
-            const siteURLHttp = siteURL.toString().replace(/\/$/, '');
+            const siteURLHttp = escapeStringRegexp(siteURL.toString().replace(/\/$/, ''));
 
             siteURL.protocol = 'https:';
-            const siteURLHttps = siteURL.toString().replace(/\/$/, '');
+            const siteURLHttps = escapeStringRegexp(siteURL.toString().replace(/\/$/, ''));
 
             const siteURLBothProtocols = `(?:${siteURLHttp}|${siteURLHttps})`;
 

@@ -1,6 +1,7 @@
 import {domUtils} from '@tryghost/mg-utils';
 import {slugify} from '@tryghost/string';
 import {_base as debugFactory} from '@tryghost/debug';
+import escapeStringRegexp from 'escape-string-regexp';
 
 const {serializeChildren, replaceWith, insertBefore, insertAfter, isComment, getCommentData} = domUtils;
 
@@ -22,7 +23,7 @@ const processContent = (html, postUrl, options) => {
         // Lets normalise that
         parsed.$('a').forEach((el) => {
             let href = el.getAttribute('href');
-            let linkRegEpx = new RegExp(`${options.url}/c/`);
+            let linkRegEpx = new RegExp(`${escapeStringRegexp(options.url)}/c/`);
             let newHref = href.replace(linkRegEpx, `${options.url}/p/`);
             el.setAttribute('href', newHref);
         });
@@ -57,7 +58,7 @@ const processContent = (html, postUrl, options) => {
         parsed.$('.letterdrop-custom-button').forEach((el) => {
             const a = el.querySelector('a');
             const aHref = a?.getAttribute('href') ?? '';
-            const referralsRegExp = new RegExp(`${options.url}/referrals/[a-zA-Z0-9]{24}`);
+            const referralsRegExp = new RegExp(`${escapeStringRegexp(options.url)}/referrals/[a-zA-Z0-9]{24}`);
 
             if (aHref.match(referralsRegExp)) {
                 el.remove();
@@ -80,7 +81,7 @@ const processContent = (html, postUrl, options) => {
 
         parsed.$('a').forEach((el) => {
             const href = el.getAttribute('href');
-            const theDomain = options.url.replace(/(https?:\/\/)(www.)?/, '');
+            const theDomain = options.url.replace(/(https?:\/\/)(www\.)?/, '');
 
             if (href.includes(`${theDomain}/plans`) || href.includes(`${theDomain}/subscribe`) || href.includes(`${theDomain}/promo`)) {
                 el.setAttribute('href', options.subscribeLink);
