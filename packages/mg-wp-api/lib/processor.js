@@ -1,4 +1,3 @@
-import url from 'node:url';
 import {readFileSync} from 'node:fs';
 import {basename} from 'node:path';
 import MgWebScraper from '@tryghost/mg-webscraper';
@@ -973,13 +972,28 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             continue;
         }
 
-        let parsedUrl = url.parse(src);
-
-        if (parsedUrl.search) {
-            // remove possible query params
-            parsedUrl.search = null;
+        // The permalink is untrusted source content that flows into the iframe src and
+        // is later re-serialized to HTML. Only allow well-formed http(s) Instagram URLs:
+        // this rejects javascript:/data: schemes and foreign hosts, and WHATWG URL
+        // parsing percent-encodes any HTML meta-characters in the path.
+        let parsedUrl;
+        try {
+            parsedUrl = new URL(src);
+        } catch {
+            continue;
         }
-        src = url.format(parsedUrl, {search: false});
+
+        const isHttpUrl = parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+        const host = parsedUrl.hostname.toLowerCase();
+        const isInstagramHost = host === 'instagram.com' || host === 'instagr.am' || host.endsWith('.instagram.com');
+
+        if (!isHttpUrl || !isInstagramHost) {
+            continue;
+        }
+
+        // Remove any query params, then use the normalised (percent-encoded) URL
+        parsedUrl.search = '';
+        src = parsedUrl.href;
 
         // Trim the trailing slash from src if it exists
         if (src.endsWith('/')) {

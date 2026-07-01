@@ -400,6 +400,58 @@ describe('Process WordPress HTML', function () {
         assert.equal(processed, `<p>This is an example page. It\u2019s different from a blog post.</p><ul><li>Lorem</li><li>Ipsum</li></ul><p><strong>Dolor</strong> <a href="https://ghost.org" title="Try Ghost">sit</a> <em>amet</em>.</p>`);
     });
 
+    describe('Instagram embeds', function () {
+        it('Builds an iframe embed from a valid Instagram permalink', async function () {
+            const html = `<blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/CxYz123AbC/"></blockquote>`;
+
+            const processed = await processor.processContent({html});
+
+            assert.ok(processed.includes('<figure class="instagram">'));
+            assert.ok(processed.includes('<iframe src="https://www.instagram.com/p/CxYz123AbC/embed/captioned/"'));
+        });
+
+        it('Strips query params from the permalink', async function () {
+            const html = `<blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/CxYz123AbC/?utm_source=ig"></blockquote>`;
+
+            const processed = await processor.processContent({html});
+
+            assert.ok(processed.includes('<iframe src="https://www.instagram.com/p/CxYz123AbC/embed/captioned/"'));
+            assert.ok(!processed.includes('utm_source'));
+        });
+
+        it('Does not build an iframe for a javascript: permalink', async function () {
+            const html = `<blockquote class="instagram-media" data-instgrm-permalink="javascript:alert(1)"></blockquote>`;
+
+            const processed = await processor.processContent({html});
+
+            // The unsafe permalink is skipped: no iframe is created, the blockquote is left untouched
+            assert.ok(!processed.includes('<iframe'));
+            assert.ok(!processed.includes('embed/captioned'));
+        });
+
+        it('Does not build an iframe for a non-Instagram host', async function () {
+            const html = `<blockquote class="instagram-media" data-instgrm-permalink="https://evil.example.com/foo"></blockquote>`;
+
+            const processed = await processor.processContent({html});
+
+            assert.ok(!processed.includes('<iframe'));
+            assert.ok(!processed.includes('embed/captioned'));
+        });
+
+        it('Percent-encodes HTML meta-characters in the permalink so they cannot break out of the src', async function () {
+            // A crafted permalink on a real Instagram host, with HTML meta-characters in the path
+            const html = `<blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/abc&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;/"></blockquote>`;
+
+            const processed = await processor.processContent({html});
+
+            // An iframe is still built (valid host), but the meta-characters are percent-encoded
+            assert.ok(processed.includes('<iframe src="https://www.instagram.com/p/abc%22%3E%3Cscript%3Ealert(1)%3C/script%3E/embed/captioned/"'));
+            // No raw HTML injection survives
+            assert.ok(!processed.includes('"><script>'));
+            assert.ok(!processed.includes('<script>alert(1)'));
+        });
+    });
+
     it('Can wrap a nested unordered list in a HTML card', async function () {
         const html = `<ul><li>Lorem</li><li>Ipsum<ul><li>Sit Amet</li></ul></li></ul>`;
 
