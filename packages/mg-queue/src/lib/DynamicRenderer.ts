@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import logUpdate from 'log-update';
+import {createLogUpdate} from 'log-update';
 import chalk from 'chalk';
 import type {Renderer, QueueStats, TaskInfo} from './Renderer.js';
 
@@ -12,8 +12,23 @@ interface RunningTask {
     status: 'pending' | 'running' | 'completed' | 'skipped' | 'failed';
 }
 
+/**
+ * The subset of `log-update` this renderer drives. Injectable so tests can capture
+ * output instead of writing ANSI escapes to the real `process.stdout`: raw writes
+ * there corrupt the `node --test` IPC stream (each test file reports results to its
+ * parent over stdout), which surfaces intermittently as
+ * "Unable to deserialize cloned data due to invalid or unsupported version".
+ */
+export interface LiveOutput {
+    (text: string): void;
+    clear(): void;
+    done(): void;
+}
+
 export interface DynamicRendererOptions {
     keepOnScreen?: boolean;
+    /** Live-updating output sink. Defaults to `log-update` bound to `process.stdout`. */
+    output?: LiveOutput;
 }
 
 export class DynamicRenderer implements Renderer {
@@ -25,9 +40,11 @@ export class DynamicRenderer implements Renderer {
     #interval: ReturnType<typeof setInterval> | null = null;
     #keepOnScreen: boolean;
     #persistentMode = false;
+    #output: LiveOutput;
 
     constructor(options?: DynamicRendererOptions) {
         this.#keepOnScreen = options?.keepOnScreen ?? false;
+        this.#output = options?.output ?? createLogUpdate(process.stdout);
     }
 
     #taskKey(info: TaskInfo): string {
@@ -147,9 +164,9 @@ export class DynamicRenderer implements Renderer {
         this.#stopInterval();
         if (this.#persistentMode) {
             this.#render();
-            logUpdate.done();
+            this.#output.done();
         } else {
-            logUpdate.clear();
+            this.#output.clear();
         }
         if (!this.#persistentMode) {
             let summary = chalk.green(`✓ ${stats.completed}`);
@@ -259,6 +276,6 @@ export class DynamicRenderer implements Renderer {
         }
         lines.push(status);
 
-        logUpdate(lines.join('\n'));
+        this.#output(lines.join('\n'));
     }
 }

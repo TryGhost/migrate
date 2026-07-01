@@ -1641,16 +1641,26 @@ describe('Queue', () => {
 
     describe('renderer shorthand strings', () => {
         it('accepts "dynamic" as renderer', async () => {
-            const queue = new Queue({
-                concurrency: 1,
-                renderer: 'dynamic'
-            });
+            // The 'dynamic' shorthand builds a DynamicRenderer bound to process.stdout.
+            // Suppress its ANSI output during the run so it can't corrupt the
+            // `node --test` IPC stream (see DynamicRenderer's LiveOutput note).
+            const originalWrite = process.stdout.write.bind(process.stdout);
+            process.stdout.write = (() => true) as typeof process.stdout.write;
 
-            const stats = await queue.run([
-                {title: 'task', task: async () => {}}
-            ]);
+            try {
+                const queue = new Queue({
+                    concurrency: 1,
+                    renderer: 'dynamic'
+                });
 
-            assert.equal(stats.completed, 1);
+                const stats = await queue.run([
+                    {title: 'task', task: async () => {}}
+                ]);
+
+                assert.equal(stats.completed, 1);
+            } finally {
+                process.stdout.write = originalWrite;
+            }
         });
 
         it('accepts "verbose" as renderer', async () => {

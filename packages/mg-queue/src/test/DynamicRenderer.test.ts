@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict';
 import {describe, it, beforeEach, afterEach} from 'node:test';
-import logUpdate from 'log-update';
 
-import {DynamicRenderer, TaskInfo} from '../index.js';
+import {DynamicRenderer, TaskInfo, LiveOutput} from '../index.js';
 
 function info(title: string, depth = 0, parentTitle?: string, taskId?: number): TaskInfo {
     return {title, depth, parentTitle, taskId};
@@ -11,8 +10,15 @@ function info(title: string, depth = 0, parentTitle?: string, taskId?: number): 
 describe('DynamicRenderer', () => {
     let consoleLogs: string[] = [];
     let originalConsoleLog: typeof console.log;
-    let originalLogUpdateClear: typeof logUpdate.clear;
-    let originalLogUpdateDone: typeof logUpdate.done;
+
+    // Injected in place of log-update so tests never write ANSI to the real
+    // process.stdout, which intermittently corrupts the `node --test` IPC stream.
+    let output: LiveOutput;
+    let outputCalls: {clear: number; done: number; renders: string[]};
+
+    const makeRenderer = (options: {keepOnScreen?: boolean} = {}) => {
+        return new DynamicRenderer({...options, output});
+    };
 
     beforeEach(() => {
         consoleLogs = [];
@@ -22,19 +28,37 @@ describe('DynamicRenderer', () => {
         console.log = (msg: string) => {
             consoleLogs.push(msg);
         };
-        originalLogUpdateClear = logUpdate.clear;
-        originalLogUpdateDone = logUpdate.done;
+
+        outputCalls = {clear: 0, done: 0, renders: []};
+        output = Object.assign(
+            (text: string) => {
+                outputCalls.renders.push(text);
+            },
+            {
+                clear: () => {
+                    outputCalls.clear += 1;
+                },
+                done: () => {
+                    outputCalls.done += 1;
+                }
+            }
+        );
     });
 
     afterEach(() => {
         // eslint-disable-next-line no-console
         console.log = originalConsoleLog;
-        logUpdate.clear = originalLogUpdateClear;
-        logUpdate.done = originalLogUpdateDone;
+    });
+
+    it('defaults to log-update on process.stdout when no output is injected', () => {
+        // Construct with the default output (no render is triggered, so nothing is
+        // written to stdout) to cover the createLogUpdate(process.stdout) fallback
+        const renderer = new DynamicRenderer();
+        assert.ok(renderer instanceof DynamicRenderer);
     });
 
     it('tracks running tasks', async () => {
-        const renderer = new DynamicRenderer();
+        const renderer = makeRenderer();
 
         renderer.onTaskStart(info('task-1'));
         renderer.onTaskStart(info('task-2'));
@@ -51,7 +75,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('tracks failed tasks', async () => {
-        const renderer = new DynamicRenderer();
+        const renderer = makeRenderer();
 
         renderer.onTaskStart(info('task-1'));
         const error = new Error('fail');
@@ -73,7 +97,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('shows only completed count when no failures', async () => {
-        const renderer = new DynamicRenderer();
+        const renderer = makeRenderer();
 
         renderer.onTaskStart(info('task-1'));
         renderer.onTaskComplete(info('task-1'));
@@ -86,7 +110,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('updates spinner frame on interval', async () => {
-        const renderer = new DynamicRenderer();
+        const renderer = makeRenderer();
 
         renderer.onTaskStart(info('task-1'));
 
@@ -104,7 +128,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('shows each running task on its own line', async () => {
-        const renderer = new DynamicRenderer();
+        const renderer = makeRenderer();
 
         // Start multiple tasks
         renderer.onTaskStart(info('task-1'));
@@ -128,7 +152,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('shows skipped count in summary', async () => {
-        const renderer = new DynamicRenderer();
+        const renderer = makeRenderer();
 
         renderer.onTaskStart(info('task-1'));
         renderer.onTaskComplete(info('task-1'));
@@ -141,7 +165,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('shows all counts when tasks are skipped and failed', async () => {
-        const renderer = new DynamicRenderer();
+        const renderer = makeRenderer();
 
         renderer.onTaskStart(info('task-1'));
         renderer.onTaskComplete(info('task-1'));
@@ -157,7 +181,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('shows skipped count during render cycle', async () => {
-        const renderer = new DynamicRenderer();
+        const renderer = makeRenderer();
 
         // Skip a task first
         renderer.onTaskSkip(info('skipped-task'));
@@ -179,7 +203,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('outputs error details at end with stack trace', async () => {
-        const renderer = new DynamicRenderer();
+        const renderer = makeRenderer();
 
         renderer.onTaskStart(info('failing-task'));
         const error = new Error('Something went wrong');
@@ -195,7 +219,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('outputs error message when no stack trace', async () => {
-        const renderer = new DynamicRenderer();
+        const renderer = makeRenderer();
 
         renderer.onTaskStart(info('failing-task'));
         const error = new Error('No stack error');
@@ -209,7 +233,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('tracks tasks at different depths correctly', async () => {
-        const renderer = new DynamicRenderer();
+        const renderer = makeRenderer();
 
         renderer.onTaskStart(info('parent', 0));
         renderer.onTaskStart(info('child', 1));
@@ -223,7 +247,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('groups subtasks under their parent task', async () => {
-        const renderer = new DynamicRenderer();
+        const renderer = makeRenderer();
 
         // Start parent and subtasks
         renderer.onTaskStart(info('parent', 0));
@@ -246,7 +270,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('renders orphan subtasks when parent completes first', async () => {
-        const renderer = new DynamicRenderer();
+        const renderer = makeRenderer();
 
         // Start parent and subtasks
         renderer.onTaskStart(info('parent', 0));
@@ -271,7 +295,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('tracks duplicate titles separately when taskId is provided', async () => {
-        const renderer = new DynamicRenderer();
+        const renderer = makeRenderer();
 
         renderer.onTaskStart({title: 'duplicate', depth: 0, taskId: 1});
         renderer.onTaskStart({title: 'duplicate', depth: 0, taskId: 2});
@@ -286,7 +310,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('renders pending tasks when keepOnScreen is enabled', async () => {
-        const renderer = new DynamicRenderer({keepOnScreen: true});
+        const renderer = makeRenderer({keepOnScreen: true});
 
         renderer.onTaskPending(info('parent', 0, undefined, 1));
         renderer.onTaskPending(info('child', 1, 'parent', 2));
@@ -302,53 +326,26 @@ describe('DynamicRenderer', () => {
     });
 
     it('does not enable keep-on-screen mode for subtask-only pending events', async () => {
-        let clearCalls = 0;
-        let doneCalls = 0;
-        logUpdate.clear = () => {
-            clearCalls += 1;
-        };
-        logUpdate.done = () => {
-            doneCalls += 1;
-        };
-
-        const renderer = new DynamicRenderer({keepOnScreen: true});
+        const renderer = makeRenderer({keepOnScreen: true});
         renderer.onTaskPending(info('child', 1, 'parent', 2));
         renderer.onQueueEnd({completed: 0, skipped: 0, errors: []});
 
-        assert.equal(clearCalls, 1);
-        assert.equal(doneCalls, 0);
+        assert.equal(outputCalls.clear, 1);
+        assert.equal(outputCalls.done, 0);
     });
 
     it('clears output on queue end by default', async () => {
-        let clearCalls = 0;
-        let doneCalls = 0;
-        logUpdate.clear = () => {
-            clearCalls += 1;
-        };
-        logUpdate.done = () => {
-            doneCalls += 1;
-        };
-
-        const renderer = new DynamicRenderer();
+        const renderer = makeRenderer();
         renderer.onTaskStart(info('task-1'));
         renderer.onTaskComplete(info('task-1'));
         renderer.onQueueEnd({completed: 1, skipped: 0, errors: []});
 
-        assert.equal(clearCalls, 1);
-        assert.equal(doneCalls, 0);
+        assert.equal(outputCalls.clear, 1);
+        assert.equal(outputCalls.done, 0);
     });
 
     it('keeps completed tasks on screen when keepOnScreen is enabled', async () => {
-        let clearCalls = 0;
-        let doneCalls = 0;
-        logUpdate.clear = () => {
-            clearCalls += 1;
-        };
-        logUpdate.done = () => {
-            doneCalls += 1;
-        };
-
-        const renderer = new DynamicRenderer({keepOnScreen: true});
+        const renderer = makeRenderer({keepOnScreen: true});
         renderer.onTaskPending(info('Uppercasing titles', 0, undefined, 1));
         renderer.onTaskPending(info('Adding content', 0, undefined, 2));
         renderer.onTaskStart(info('Uppercasing titles'));
@@ -362,22 +359,13 @@ describe('DynamicRenderer', () => {
         renderer.onTaskComplete(info('Adding content'));
         renderer.onQueueEnd({completed: 2, skipped: 0, errors: []});
 
-        assert.equal(clearCalls, 0);
-        assert.equal(doneCalls, 1);
+        assert.equal(outputCalls.clear, 0);
+        assert.equal(outputCalls.done, 1);
         assert.equal(consoleLogs.length, 0);
     });
 
     it('keeps only depth-0 tasks on screen in keep-on-screen mode', async () => {
-        let clearCalls = 0;
-        let doneCalls = 0;
-        logUpdate.clear = () => {
-            clearCalls += 1;
-        };
-        logUpdate.done = () => {
-            doneCalls += 1;
-        };
-
-        const renderer = new DynamicRenderer({keepOnScreen: true});
+        const renderer = makeRenderer({keepOnScreen: true});
         renderer.onTaskPending(info('root', 0, undefined, 1));
         renderer.onTaskStart(info('root', 0, undefined, 1));
         renderer.onTaskStart(info('child', 1, 'root', 2));
@@ -385,21 +373,12 @@ describe('DynamicRenderer', () => {
         renderer.onTaskComplete(info('root', 0, undefined, 1));
         renderer.onQueueEnd({completed: 2, skipped: 0, errors: []});
 
-        assert.equal(clearCalls, 0);
-        assert.equal(doneCalls, 1);
+        assert.equal(outputCalls.clear, 0);
+        assert.equal(outputCalls.done, 1);
     });
 
     it('keeps failed depth-0 tasks on screen in keep-on-screen mode', async () => {
-        let clearCalls = 0;
-        let doneCalls = 0;
-        logUpdate.clear = () => {
-            clearCalls += 1;
-        };
-        logUpdate.done = () => {
-            doneCalls += 1;
-        };
-
-        const renderer = new DynamicRenderer({keepOnScreen: true});
+        const renderer = makeRenderer({keepOnScreen: true});
         renderer.onTaskPending(info('parent', 0, undefined, 1));
         renderer.onTaskStart(info('parent', 0, undefined, 1));
         renderer.onTaskStart(info('child', 1, 'parent', 2));
@@ -407,12 +386,12 @@ describe('DynamicRenderer', () => {
         renderer.onTaskError(info('parent', 0, undefined, 1), new Error('parent failed'));
         renderer.onQueueEnd({completed: 0, skipped: 0, errors: [{title: 'parent', error: new Error('parent failed')}]});
 
-        assert.equal(clearCalls, 0);
-        assert.equal(doneCalls, 1);
+        assert.equal(outputCalls.clear, 0);
+        assert.equal(outputCalls.done, 1);
     });
 
     it('renders skipped and failed root tasks in persistent mode', async () => {
-        const renderer = new DynamicRenderer({keepOnScreen: true});
+        const renderer = makeRenderer({keepOnScreen: true});
 
         renderer.onTaskPending(info('task-1', 0, undefined, 1));
         renderer.onTaskPending(info('task-2', 0, undefined, 2));
@@ -438,7 +417,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('renders child tasks in various states during render cycle', async () => {
-        const renderer = new DynamicRenderer({keepOnScreen: true});
+        const renderer = makeRenderer({keepOnScreen: true});
 
         renderer.onTaskPending(info('parent', 0, undefined, 1));
         renderer.onTaskStart(info('parent', 0, undefined, 1));
@@ -460,7 +439,7 @@ describe('DynamicRenderer', () => {
     });
 
     it('renders orphan subtasks in various states during render cycle', async () => {
-        const renderer = new DynamicRenderer({keepOnScreen: true});
+        const renderer = makeRenderer({keepOnScreen: true});
 
         renderer.onTaskPending(info('parent', 0, undefined, 1));
         renderer.onTaskStart(info('parent', 0, undefined, 1));
@@ -486,21 +465,12 @@ describe('DynamicRenderer', () => {
     });
 
     it('does not persist rows without pending events even when keepOnScreen is enabled', async () => {
-        let clearCalls = 0;
-        let doneCalls = 0;
-        logUpdate.clear = () => {
-            clearCalls += 1;
-        };
-        logUpdate.done = () => {
-            doneCalls += 1;
-        };
-
-        const renderer = new DynamicRenderer({keepOnScreen: true});
+        const renderer = makeRenderer({keepOnScreen: true});
         renderer.onTaskStart(info('generator-task'));
         renderer.onTaskComplete(info('generator-task'));
         renderer.onQueueEnd({completed: 1, skipped: 0, errors: []});
 
-        assert.equal(clearCalls, 1);
-        assert.equal(doneCalls, 0);
+        assert.equal(outputCalls.clear, 1);
+        assert.equal(outputCalls.done, 0);
     });
 });
