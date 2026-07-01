@@ -30,14 +30,16 @@ function cleanBioText(bioHtml: string | undefined | null): string | undefined {
     // Strip HTML tags
     let bioText = bioHtml.replace(/<[^>]+>/g, '');
 
-    // Decode common HTML entities
+    // Decode common HTML entities. `&amp;` must be decoded last: doing it first
+    // double-unescapes already-escaped entities (e.g. `&amp;lt;`, the literal text
+    // `&lt;`, would wrongly become `<` instead of `&lt;`).
     bioText = bioText
-        .replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, '\'')
-        .replace(/&nbsp;/g, ' ');
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&');
 
     // Remove extra whitespace and newlines, then trim
     bioText = bioText.replace(/\s+/g, ' ').trim();

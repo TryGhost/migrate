@@ -106,6 +106,37 @@ describe('mergeUsersWithGhost', function () {
         assert.equal(result[0].data.bio, 'Ghost bio with HTML');
     });
 
+    it('decodes HTML entities without double-unescaping &amp;', function () {
+        const sourceUsers: MigratedUser[] = [
+            {
+                url: '/author/john-doe',
+                data: {
+                    slug: 'john-doe',
+                    name: 'John Doe',
+                    email: 'john@example.com'
+                    // No source bio, so the cleaned Ghost bio is used
+                }
+            }
+        ];
+
+        const ghostUsers: GhostUser[] = [
+            {
+                id: 'ghost-123',
+                slug: 'john-d',
+                name: 'John D.',
+                email: 'john@example.com',
+                // `&amp;lt;`/`&amp;gt;` are the escaped forms of the literal text
+                // `&lt;`/`&gt;` — they must decode to that literal text, not be
+                // double-unescaped into `<`/`>`. Plain entities still decode normally.
+                bio: 'Tom &amp; Jerry wrote &amp;lt;hello&amp;gt; &lt;here&gt;'
+            }
+        ];
+
+        const result = mergeUsersWithGhost(sourceUsers, ghostUsers);
+
+        assert.equal(result[0].data.bio, 'Tom & Jerry wrote &lt;hello&gt; <here>');
+    });
+
     it('prefers Ghost bio when option is set', function () {
         const sourceUsers: MigratedUser[] = [
             {
