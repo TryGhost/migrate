@@ -44,11 +44,13 @@ const readFiles = async (files, postsDir) => {
 };
 
 const largeImageUrl = (path) => {
-    if (path.includes('https://substackcdn.com/image/fetch/')) {
+    const substackCdnUrl = URL.parse(path);
+    if (substackCdnUrl?.hostname === 'substackcdn.com' && substackCdnUrl.pathname.startsWith('/image/fetch/')) {
         path = decodeURIComponent(path.split('/').pop());
     }
 
-    if (path.includes('https://bucketeer-')) {
+    const bucketeerUrl = URL.parse(path);
+    if (bucketeerUrl?.hostname.startsWith('bucketeer-')) {
         path = path.replace(/https:\/\/.*\.s3\.amazonaws\.com/gmi, 'https://substack-post-media.s3.amazonaws.com');
     }
 

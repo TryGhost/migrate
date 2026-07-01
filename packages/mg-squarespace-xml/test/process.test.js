@@ -567,3 +567,14 @@ describe('Process', function () {
         assert.ok(processed.includes('sqs-video-wrapper'));
     });
 });
+
+describe('processFeatureImage', function () {
+    it('Ignores an attachment_url that is not a valid URL', function () {
+        const items = [
+            {},
+            {'wp:attachment_url': 'not-a-valid-url'}
+        ];
+
+        assert.equal(process.processFeatureImage(items, 0), undefined);
+    });
+});

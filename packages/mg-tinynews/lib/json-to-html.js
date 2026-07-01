@@ -252,25 +252,29 @@ const jsonToHtml = (blocks) => {
         } else if (itemType === 'image') {
             html.push(EntryImage(block));
         } else if (itemType === 'embed') {
-            if (block.link.includes('https://twitter.com')) {
+            const embedUrl = URL.parse(block.link);
+            const embedHost = embedUrl?.hostname ?? '';
+            const embedPath = embedUrl?.pathname ?? '';
+
+            if (embedHost === 'twitter.com') {
                 html.push(EntryTwitterEmbed(block));
-            } else if (block.link.includes('https://www.tiktok.com')) {
+            } else if (embedHost === 'www.tiktok.com') {
                 html.push(EntryTikTokEmbed(block));
-            } else if (block.link.includes('https://www.facebook.com')) {
+            } else if (embedHost === 'www.facebook.com') {
                 html.push(EntryFacebookEmbed(block));
-            } else if (block.link.includes('https://vimeo.com')) {
+            } else if (embedHost === 'vimeo.com') {
                 html.push(EntryVimeoEmbed(block));
-            } else if (block.link.includes('https://www.youtube.com') || block.link.includes('https://youtu.be')) {
+            } else if (embedHost === 'www.youtube.com' || embedHost === 'youtu.be') {
                 html.push(EntryYoutubeEmbed(block));
-            } else if (block.link.includes('https://podcasts.apple.com')) {
+            } else if (embedHost === 'podcasts.apple.com') {
                 html.push(EntryApplePodcastsEmbed(block));
-            } else if (block.link.includes('https://open.spotify.com/episode/') || block.link.includes('https://open.spotify.com/show/')) {
+            } else if (embedHost === 'open.spotify.com' && (embedPath.startsWith('/episode/') || embedPath.startsWith('/show/'))) {
                 html.push(EntrySpotifyEmbed(block));
-            } else if (block.link.includes('https://www.instagram.com/p/')) {
+            } else if (embedHost === 'www.instagram.com' && embedPath.startsWith('/p/')) {
                 html.push(EntryInstagramPostEmbed(block));
-            } else if (block.link.includes('https://www.instagram.com/reel/')) {
+            } else if (embedHost === 'www.instagram.com' && embedPath.startsWith('/reel/')) {
                 html.push(EntryInstagramReelEmbed(block));
-            } else if (block.link.includes('https://docs.google.com')) {
+            } else if (embedHost === 'docs.google.com') {
                 html.push(EntryGoogleDocsEmbed(block));
             } else {
                 // eslint-disable-next-line no-console

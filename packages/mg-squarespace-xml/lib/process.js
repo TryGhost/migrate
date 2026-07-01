@@ -129,8 +129,9 @@ const processFeatureImage = (items, index) => {
         let itemText = nextItem['wp:attachment_url'];
         let itemExt = extname(itemText);
         let allowedExt = ['.jpg', '.jpeg', '.gif', '.png', '.svg', '.svgz', '.ico', '.webp'];
+        let itemHost = URL.parse(itemText)?.hostname ?? '';
 
-        if (allowedExt.includes(itemExt) || itemText.includes('images.unsplash.com')) {
+        if (allowedExt.includes(itemExt) || itemHost === 'images.unsplash.com') {
             return itemText;
         }
     }
