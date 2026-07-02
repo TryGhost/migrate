@@ -1046,8 +1046,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       scrape-it:
-        specifier: 6.1.12
-        version: 6.1.12
+        specifier: 6.1.13
+        version: 6.1.13
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -6292,8 +6292,8 @@ packages:
   scrape-it-core@1.0.2:
     resolution: {integrity: sha512-gXtUSsL/ikNMTz1678Bge++kfuV0o2fGtkMB+tRO2+J9fyZBkjvFJqjbAFYjb9SHsgb0hT0v0nWa3MVk0rvhsA==}
 
-  scrape-it@6.1.12:
-    resolution: {integrity: sha512-z7ccxo5X16J+bV3RCqlrbyaahMxvzyuhW0VCUoYx8z1joahPkr6aJMChhxmiFE4C3ufTLJTNAOTaCE2tMjCdnw==}
+  scrape-it@6.1.13:
+    resolution: {integrity: sha512-waDcxcERptcBOcJhHLasxtdwoy74VCnI3C9lKEZ3SQ8fuXJKjzOmOyN+5p21mx3RAVMi3ihJk2wnTzyjnQIxag==}
 
   selderee@0.12.0:
     resolution: {integrity: sha512-b1YMh3+DHZp59DLna3qVwQ5iOla/nrI6mLBNW02XxU77M3046Df6VLkoaJyFz20VsGIG5kkp+FK0kg4K4HnUFw==}
@@ -12380,7 +12380,7 @@ snapshots:
       obj-def: 1.0.10
       typpy: 2.4.0
 
-  scrape-it@6.1.12:
+  scrape-it@6.1.13:
     dependencies:
       assured: 1.0.16
       cheerio: 1.2.0
