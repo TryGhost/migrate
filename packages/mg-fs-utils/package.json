@@ -33,7 +33,7 @@
     "@tryghost/string": "catalog:",
     "@tryghost/zip": "3.3.4",
     "adm-zip": "0.5.18",
-    "csv-parse": "7.0.0",
+    "csv-parse": "7.0.1",
     "dotenv": "catalog:",
     "fs-extra": "catalog:",
     "sharp": "catalog:",
