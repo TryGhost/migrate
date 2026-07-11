@@ -36,7 +36,7 @@
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-ghost": "catalog:",
-    "knip": "6.24.0",
+    "knip": "6.25.0",
     "nx": "23.0.1",
     "tsx": "4.23.0",
     "typescript": "catalog:"
