@@ -38,6 +38,6 @@
   "dependencies": {
     "@tryghost/kg-default-cards": "catalog:",
     "fast-xml-parser": "catalog:",
-    "linkedom": "0.18.12"
+    "linkedom": "0.18.13"
   }
 }
