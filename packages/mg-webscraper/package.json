@@ -45,6 +45,6 @@
     "@tryghost/errors": "catalog:",
     "@tryghost/string": "catalog:",
     "omit-empty": "1.0.0",
-    "scrape-it": "6.1.13"
+    "scrape-it": "6.1.14"
   }
 }
