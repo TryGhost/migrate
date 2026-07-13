@@ -35,7 +35,7 @@
     "@tryghost/string": "catalog:",
     "html-to-text": "10.0.0",
     "simple-dom": "catalog:",
-    "tldts": "7.4.7",
+    "tldts": "7.4.8",
     "wpapi": "1.2.2"
   }
 }
