@@ -59,36 +59,6 @@ const scrapeConfig = {
                 return x.slice(0, 499);
             }
         },
-        authors: {
-            selector: 'script[type="application/ld+json"]',
-            convert: (x) => {
-                if (!x) {
-                    return;
-                }
-
-                let ldJSON = JSON.parse(x);
-                let theAuthors = [];
-
-                // Ensure ldJSON.author is an array
-                if (ldJSON.author && !Array.isArray(ldJSON.author)) {
-                    ldJSON.author = [ldJSON.author];
-                }
-
-                ldJSON.author.forEach((person) => {
-                    const personNameSlug = slugify(person.name);
-                    theAuthors.push({
-                        url: slugify(person.url),
-                        data: {
-                            name: person.name,
-                            slug: personNameSlug,
-                            email: `${personNameSlug}@example.com`
-                        }
-                    });
-                });
-
-                return theAuthors;
-            }
-        },
         scripts: {
             listItem: 'script',
             data: {
@@ -105,22 +75,6 @@ const scrapeConfig = {
 };
 
 const postProcessor = (scrapedData, data, options) => {
-    if (options?.useMetaAuthor && scrapedData.authors) {
-        let usersArray = [];
-
-        scrapedData.authors.forEach((user) => {
-            usersArray.push({
-                data: {
-                    slug: user.data.slug,
-                    name: `${user.data.name}`,
-                    email: user.data.email
-                }
-            });
-        });
-
-        scrapedData.authors = usersArray;
-    }
-
     if (scrapedData.scripts) {
         let tags = [];
 
@@ -162,6 +116,34 @@ const postProcessor = (scrapedData, data, options) => {
                     });
                 } catch (error) {
                     console.log('Error parsing tags', script.content, error); // eslint-disable-line no-console
+                }
+            } else if (options?.useMetaAuthor && (script.content.trim().includes('"@type": "NewsArticle"') || script.content.trim().includes('"@type":"NewsArticle"'))) {
+                try {
+                    let theContent = script.content.trim();
+                    theContent = JSON.parse(theContent);
+
+                    if (theContent?.author) {
+                        const usersArray = [];
+
+                        theContent.author.forEach((user) => {
+                            const userId = user.identifier.replace('user:', '').trim();
+                            const userSlug = slugify(user.url.replace('https://substack.com/@', '').replace(`https://substack.com/profile/${userId}-`, '').trim());
+
+                            usersArray.push({
+                                url: user.url,
+                                data: {
+                                    slug: userSlug,
+                                    name: user.name.trim(),
+                                    email: `${userSlug}@example.com`,
+                                    profile_image: user?.image?.contentUrl ?? null
+                                }
+                            });
+                        });
+
+                        scrapedData.authors = usersArray;
+                    }
+                } catch (error) {
+                    console.log('Error parsing authors', script.content, error); // eslint-disable-line no-console
                 }
             }
         });

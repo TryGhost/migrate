@@ -212,9 +212,10 @@ describe('Substack E2E Migration', function () {
         const postUsers = users.filter(u => authorIds.includes(u.id));
 
         assert.equal(postUsers.length, 1);
-        assert.equal(postUsers[0].slug, 'test-author');
+        assert.equal(postUsers[0].slug, 'testauthor');
         assert.equal(postUsers[0].name, 'Test Author');
-        assert.equal(postUsers[0].email, 'test-author@example.com');
+        assert.equal(postUsers[0].email, 'testauthor@example.com');
+        assert.equal(postUsers[0].profile_image, null);
     });
 
     it('extracts tags from scripts and adds platform/type/access tags', function () {

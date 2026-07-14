@@ -13,6 +13,10 @@ const mockFileCache = {
     writeTmpFile: mock.fn(async () => '/mock/tmp/file')
 };
 
+// These vars are only here so the assertions look cleaner
+const personProfileImage = 'https://substackcdn.com/image/fetch/$s_!kPbC!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2F6fd93f54-1d00-4731-a251-4d6c8e8eac87_500x500.jpeg';
+const organizationProfileImage = 'https://substackcdn.com/image/fetch/$s_!qgp7!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F1234abcd-a32f-4340-acf4-832d26f11a78_220x220.png';
+
 describe('Web Scrap Config & Post Processor', function () {
     it('Scrapes a text post', async function () {
         const helloWorldHTML = await readFile(new URL('./fixtures/substack-hello-world.html', import.meta.url));
@@ -26,7 +30,9 @@ describe('Web Scrap Config & Post Processor', function () {
         const ctx = {
             fileCache: mockFileCache,
             errors: [],
-            options: {},
+            options: {
+                useMetaAuthor: true
+            },
             result: {
                 posts: [
                     {
@@ -59,15 +65,17 @@ describe('Web Scrap Config & Post Processor', function () {
 
         assert.equal(scrapedData.authors.length, 2);
 
-        assert.equal(scrapedData.authors[0].url, 'https-substack-com-example');
+        assert.equal(scrapedData.authors[0].url, 'https://substack.com/@example');
         assert.equal(scrapedData.authors[0].data.name, 'Author Name');
-        assert.equal(scrapedData.authors[0].data.slug, 'author-name');
-        assert.equal(scrapedData.authors[0].data.email, 'author-name@example.com');
+        assert.equal(scrapedData.authors[0].data.slug, 'example');
+        assert.equal(scrapedData.authors[0].data.email, 'example@example.com');
+        assert.equal(scrapedData.authors[0].data.profile_image, personProfileImage);
 
-        assert.equal(scrapedData.authors[1].url, 'https-substack-com-other');
+        assert.equal(scrapedData.authors[1].url, 'https://substack.com/@other');
         assert.equal(scrapedData.authors[1].data.name, 'Other Name');
-        assert.equal(scrapedData.authors[1].data.slug, 'other-name');
-        assert.equal(scrapedData.authors[1].data.email, 'other-name@example.com');
+        assert.equal(scrapedData.authors[1].data.slug, 'other');
+        assert.equal(scrapedData.authors[1].data.email, 'other@example.com');
+        assert.equal(scrapedData.authors[1].data.profile_image, personProfileImage);
 
         assert.equal(scrapedData.tags.length, 3);
         assert.equal(scrapedData.tags[0].url, '/substack-section/world-sports-cricket');
@@ -93,7 +101,9 @@ describe('Web Scrap Config & Post Processor', function () {
         const ctx = {
             fileCache: mockFileCache,
             errors: [],
-            options: {},
+            options: {
+                useMetaAuthor: true
+            },
             result: {
                 posts: [
                     {
@@ -117,10 +127,11 @@ describe('Web Scrap Config & Post Processor', function () {
 
         assert.equal(scrapedData.authors.length, 1);
 
-        assert.equal(scrapedData.authors[0].url, 'https-exaple-org');
+        assert.equal(scrapedData.authors[0].url, 'https://exaple.org');
         assert.equal(scrapedData.authors[0].data.name, 'Example Org');
-        assert.equal(scrapedData.authors[0].data.slug, 'example-org');
-        assert.equal(scrapedData.authors[0].data.email, 'example-org@example.com');
+        assert.equal(scrapedData.authors[0].data.slug, 'https-exaple-org');
+        assert.equal(scrapedData.authors[0].data.email, 'https-exaple-org@example.com');
+        assert.equal(scrapedData.authors[0].data.profile_image, organizationProfileImage);
     });
 
     it('Scrapes a podcast', async function () {
@@ -135,7 +146,9 @@ describe('Web Scrap Config & Post Processor', function () {
         const ctx = {
             fileCache: mockFileCache,
             errors: [],
-            options: {},
+            options: {
+                useMetaAuthor: true
+            },
             result: {
                 posts: [
                     {
@@ -165,10 +178,11 @@ describe('Web Scrap Config & Post Processor', function () {
         assert.equal(scrapedData.twitter_image, 'https://substackcdn.com/image/fetch/$s_!H502!,f_auto,q_auto:best,fl_progressive:steep/https%3A%2F%2Fexample.substack.com%2Fapi%2Fv1%2Fpost_preview%2F166728633%2Ftwitter.jpg%3Fversion%3D4');
         assert.equal(scrapedData.twitter_title, 'An audio episode');
         assert.equal(scrapedData.twitter_description, 'And a subtitle for it');
-        assert.equal(scrapedData.authors[0].url, 'https-substack-com-example');
+        assert.equal(scrapedData.authors[0].url, 'https://substack.com/@example');
         assert.equal(scrapedData.authors[0].data.name, 'Author Name');
-        assert.equal(scrapedData.authors[0].data.slug, 'author-name');
-        assert.equal(scrapedData.authors[0].data.email, 'author-name@example.com');
+        assert.equal(scrapedData.authors[0].data.slug, 'example');
+        assert.equal(scrapedData.authors[0].data.email, 'example@example.com');
+        assert.equal(scrapedData.authors[0].data.profile_image, personProfileImage);
         assert.equal(scrapedData.podcast_audio_src, 'https://api.substack.com/api/v1/audio/upload/92883946-10da-4958-93e3-0dcddb733b51/src?token=462fde6a-20c4-4eb6-af74-0c2461536ad7');
     });
 });
