@@ -63,7 +63,7 @@ jobs:
       # First setup-node: used for building (keeps the monorepo on its expected Node version)
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
         env:
           NODE_AUTH_TOKEN: ""
