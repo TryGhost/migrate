@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/migrate",
-  "version": "0.65.1",
+  "version": "0.65.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TryGhost/migrate.git",
