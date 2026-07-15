@@ -1313,7 +1313,7 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => {
             post.data.feature_image_caption =
                 featureImageCaption !== false && wpImage.caption ? stripHtml(wpImage.caption.rendered) : null;
         } catch (error) {
-            console.log(error, wpPost); // eslint-disable-line no-console
+            console.log('Failed to set feature image for post', wpPost?.id, error); // eslint-disable-line no-console
         }
     }
 
