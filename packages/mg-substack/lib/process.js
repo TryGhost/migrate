@@ -51,20 +51,27 @@ const largeImageUrl = path => {
 
     const bucketeerUrl = URL.parse(path);
     if (bucketeerUrl?.hostname.startsWith('bucketeer-')) {
-        path = path.replace(/https:\/\/.*\.s3\.amazonaws\.com/gim, 'https://substack-post-media.s3.amazonaws.com');
+        path = path.replace(/https:\/\/[^/]*\.s3\.amazonaws\.com/gim, 'https://substack-post-media.s3.amazonaws.com');
     }
 
     return path;
 };
 
 const getUnsizedImageName = str => {
-    const noSizeRegex = /(.*)(_[0-9]{1,4}x[0-9]{1,4}.[a-z]{2,4})/gim;
+    // Match the size suffix (e.g. `_1200x800.jpg`) directly rather than with a
+    // leading `(.*)` capture, which is vulnerable to polynomial backtracking.
+    const sizeSuffixRegex = /_[0-9]{1,4}x[0-9]{1,4}.[a-z]{2,4}/gi;
     let srcParts = str.split(/\/|%2F/);
     let last = srcParts.slice(-1)[0];
-    let matches = noSizeRegex.exec(last);
 
-    if (matches) {
-        return matches[1];
+    // Greedy `(.*)` settled on the last occurrence, so mirror that here
+    let lastMatch = null;
+    for (const match of last.matchAll(sizeSuffixRegex)) {
+        lastMatch = match;
+    }
+
+    if (lastMatch) {
+        return last.slice(0, lastMatch.index);
     } else {
         return str;
     }
