@@ -22,7 +22,17 @@ const isURL = (urlString: string | undefined) => {
     }
 };
 
-const processHTML = ({html, postData, allData, options}: {html: string, postData?: mappedDataObject, allData?: any, options?: any}) => {
+const processHTML = ({
+    html,
+    postData,
+    allData,
+    options
+}: {
+    html: string;
+    postData?: mappedDataObject;
+    allData?: any;
+    options?: any;
+}) => {
     // First, clean up the email HTML to remove bits we don't want or change up
 
     // Let's do some regexp magic to remove some beehiiv variables
@@ -78,10 +88,12 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         $html(parentTable).remove();
     });
 
-    $html('h1 strong, h1 b, h2 strong, h2 b, h3 strong, h3 b, h4 strong, h4 b, h5 strong, h5 b, h6 strong, h6 b').each((i: any, el: any) => {
-        const text = $html(el).html().trim();
-        $html(el).replaceWith(text);
-    });
+    $html('h1 strong, h1 b, h2 strong, h2 b, h3 strong, h3 b, h4 strong, h4 b, h5 strong, h5 b, h6 strong, h6 b').each(
+        (i: any, el: any) => {
+            const text = $html(el).html().trim();
+            $html(el).replaceWith(text);
+        }
+    );
 
     $html('table.j').each((i: any, el: any) => {
         const tdContent = $html(el).find('td').html().trim();
@@ -93,38 +105,46 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
 
     $html('table.d3[align="center"]').each((i: any, el: any) => {
         const parent = $html(el).parent('td[align="center"]');
-        const text = $html(el).text().replace(/(\r\n|\n|\r|&nbsp;)/gm, ' ').replace(/(\s{2,})/gm, ' ').trim();
-        $html(parent).replaceWith(`<div class="kg-card kg-quote-card kg-align-center"><blockquote class="kg-blockquote"><p>${text}</p></blockquote></div>`);
+        const text = $html(el)
+            .text()
+            .replace(/(\r\n|\n|\r|&nbsp;)/gm, ' ')
+            .replace(/(\s{2,})/gm, ' ')
+            .trim();
+        $html(parent).replaceWith(
+            `<div class="kg-card kg-quote-card kg-align-center"><blockquote class="kg-blockquote"><p>${text}</p></blockquote></div>`
+        );
     });
 
     // Galleries
     $html('table.mob-w-full').each((i: any, el: any) => {
         let allImages: string[] = [];
 
-        $html(el).find('td.mob-stack').each((ii: any, ell: any) => {
-            const img = $html(ell).find('img');
-            const pText = $html(ell).find('p').text().trim();
+        $html(el)
+            .find('td.mob-stack')
+            .each((ii: any, ell: any) => {
+                const img = $html(ell).find('img');
+                const pText = $html(ell).find('p').text().trim();
 
-            let cardOpts: any = {
-                env: {dom: new SimpleDom.Document()},
-                payload: {
-                    src: img.attr('src'),
-                    alt: img.attr('alt')
+                let cardOpts: any = {
+                    env: {dom: new SimpleDom.Document()},
+                    payload: {
+                        src: img.attr('src'),
+                        alt: img.attr('alt')
+                    }
+                };
+
+                if (pText && pText.length > 0) {
+                    cardOpts.payload.caption = pText;
                 }
-            };
 
-            if (pText && pText.length > 0) {
-                cardOpts.payload.caption = pText;
-            }
+                const isInLink = $html(img).parents('a').length;
 
-            const isInLink = $html(img).parents('a').length;
+                if (isInLink) {
+                    cardOpts.payload.href = $html(img).parents('a').attr('href');
+                }
 
-            if (isInLink) {
-                cardOpts.payload.href = $html(img).parents('a').attr('href');
-            }
-
-            allImages.push(serializer.serialize(imageCard.render(cardOpts)));
-        });
+                allImages.push(serializer.serialize(imageCard.render(cardOpts)));
+            });
 
         $html(el).replaceWith(allImages.join(''));
     });
@@ -256,7 +276,9 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
         const theSrc = $html(el).attr('src');
         let theAlt = $html(el).attr('alt');
 
-        const secondTr = ($html(parentTable).find('tr').eq(1).find('p').length) ? $html(parentTable).find('tr').eq(1).find('p') : false;
+        const secondTr = $html(parentTable).find('tr').eq(1).find('p').length
+            ? $html(parentTable).find('tr').eq(1).find('p')
+            : false;
         const theText = $html(secondTr)?.html()?.trim() ?? false;
 
         if (!theAlt) {
@@ -286,7 +308,9 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
     $html('a[style="color:#FFFFFF;font-size:18px;padding:0px 14px;text-decoration:none;"]').each((i: any, el: any) => {
         const buttonText = $html(el).text();
         const buttonHref = $html(el).attr('href');
-        $html(el).replaceWith(`<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+        $html(el).replaceWith(
+            `<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`
+        );
     });
 
     if (options?.url && options?.subscribeLink) {
@@ -336,9 +360,30 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
     // Pass the cleaned HTML through the sanitizer to only include specific elements
     const sanitizedHtml = sanitizeHtml(bodyHtml, {
         allowedTags: [
-            'b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'blockquote',
-            'figure', 'figcaption', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-            'div', 'hr', 'iframe', 'span'
+            'b',
+            'i',
+            'em',
+            'strong',
+            'a',
+            'p',
+            'br',
+            'ul',
+            'ol',
+            'li',
+            'blockquote',
+            'figure',
+            'figcaption',
+            'img',
+            'h1',
+            'h2',
+            'h3',
+            'h4',
+            'h5',
+            'h6',
+            'div',
+            'hr',
+            'iframe',
+            'span'
         ],
         allowedAttributes: {
             a: ['href', 'title', 'rel', 'target', 'class'],
@@ -355,7 +400,7 @@ const processHTML = ({html, postData, allData, options}: {html: string, postData
     return sanitizedHtml.trim();
 };
 
-const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string, featureSrc: string}) => {
+const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string; featureSrc: string}) => {
     let $html = cheerio.load(html, {
         xml: {
             xmlMode: true,
@@ -379,7 +424,10 @@ const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string, featureS
         }
 
         if (featureSrc.length > 0 && firstImgSrc) {
-            let normalizedFirstSrc = firstImgSrc.replace('fit=scale-down,format=auto,onerror=redirect,quality=80', 'quality=100');
+            let normalizedFirstSrc = firstImgSrc.replace(
+                'fit=scale-down,format=auto,onerror=redirect,quality=80',
+                'quality=100'
+            );
 
             if (featureSrc === normalizedFirstSrc) {
                 $html(theElementItself).remove();
@@ -390,8 +438,4 @@ const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string, featureS
     return $html.html();
 };
 
-export {
-    getYouTubeID,
-    processHTML,
-    removeDuplicateFeatureImage
-};
+export {getYouTubeID, processHTML, removeDuplicateFeatureImage};

@@ -1,5 +1,5 @@
 export class ImportError extends Error {
-    constructor({message, cause}: {message: string, cause?: Error}) {
+    constructor({message, cause}: {message: string; cause?: Error}) {
         super(message);
         this.cause = cause;
     }

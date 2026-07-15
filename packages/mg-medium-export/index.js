@@ -8,6 +8,4 @@ export default (pathToZip, options) => {
     return output;
 };
 
-export {
-    contentStats
-};
+export {contentStats};

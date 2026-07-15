@@ -6,12 +6,12 @@ const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 const imageCard = cardUtils.getCard('image');
 
 // From https://gist.github.com/takien/4077195
-const getYouTubeID = (url) => {
+const getYouTubeID = url => {
     const arr = url.split(/(vi\/|v%3D|v=|\/v\/|youtu\.be\/|\/embed\/)/);
     return undefined !== arr[2] ? arr[2].split(/[^\w-]/i)[0] : arr[0];
 };
 
-const formatChildStyles = (child) => {
+const formatChildStyles = child => {
     let html = [];
 
     if (child?.link) {
@@ -51,15 +51,15 @@ const formatChildStyles = (child) => {
     return html.join('');
 };
 
-const EntryList = (block) => {
-    const listTypeEl = (block.listType === 'NUMBER') ? 'ol' : 'ul';
+const EntryList = block => {
+    const listTypeEl = block.listType === 'NUMBER' ? 'ol' : 'ul';
 
     let html = [];
 
     html.push(`<${listTypeEl}>`);
 
-    block.items.forEach((item) => {
-        item.children.forEach((child) => {
+    block.items.forEach(item => {
+        item.children.forEach(child => {
             html.push(`<li>${formatChildStyles(child)}</li>`);
         });
     });
@@ -69,18 +69,18 @@ const EntryList = (block) => {
     return html.join('');
 };
 
-const EntryText = (block) => {
+const EntryText = block => {
     return TextNode({node: block});
 };
 
-const EntryImage = (block) => {
+const EntryImage = block => {
     if (block.children.length === 0) {
         return;
     }
 
     let html = [];
 
-    block.children.forEach((child) => {
+    block.children.forEach(child => {
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
             payload: {
@@ -100,11 +100,11 @@ const EntryImage = (block) => {
     return html.join('');
 };
 
-const EntryHeading = (block) => {
+const EntryHeading = block => {
     return TextNode({node: block});
 };
 
-const EntryBlockquote = (block) => {
+const EntryBlockquote = block => {
     if (block.children[0].content.trim() === '') {
         return;
     }
@@ -113,7 +113,7 @@ const EntryBlockquote = (block) => {
 
     html.push('<blockquote><p>');
 
-    block.children.forEach((child) => {
+    block.children.forEach(child => {
         if (child.content.trim() === '') {
             return;
         }
@@ -132,13 +132,13 @@ const EntryHorizontalRule = () => {
     return html.join('');
 };
 
-const EntryTwitterEmbed = (block) => {
+const EntryTwitterEmbed = block => {
     const blockHtml = `<figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><a href="${block.link}"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure>`;
 
     return blockHtml;
 };
 
-const EntryTikTokEmbed = (block) => {
+const EntryTikTokEmbed = block => {
     const usernameRegexp = new RegExp('(?<username>@[a-zA-Z0-9-_]+)');
     const usernameMatches = block.link.match(usernameRegexp);
 
@@ -152,7 +152,7 @@ const EntryTikTokEmbed = (block) => {
     }
 };
 
-const EntryFacebookEmbed = (block) => {
+const EntryFacebookEmbed = block => {
     if (block?.html) {
         const blockHtml = `<!--kg-card-begin: html-->${block.html}<!--kg-card-end: html-->`;
         return blockHtml;
@@ -161,7 +161,7 @@ const EntryFacebookEmbed = (block) => {
     }
 };
 
-const EntryVimeoEmbed = (block) => {
+const EntryVimeoEmbed = block => {
     const videoIDRegexp = new RegExp('(?<videoID>[0-9]{3,})');
     const videoIDMatches = block.link.match(videoIDRegexp);
 
@@ -174,7 +174,7 @@ const EntryVimeoEmbed = (block) => {
     }
 };
 
-const EntryYoutubeEmbed = (block) => {
+const EntryYoutubeEmbed = block => {
     const videoID = getYouTubeID(block.link);
 
     const blockHtml = `<iframe width="160" height="90" src="https://www.youtube.com/embed/${videoID}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
@@ -182,32 +182,32 @@ const EntryYoutubeEmbed = (block) => {
     return blockHtml;
 };
 
-const EntryApplePodcastsEmbed = (block) => {
+const EntryApplePodcastsEmbed = block => {
     const iframeSrc = block.link.replace('https://podcasts.apple.com', 'https://embed.podcasts.apple.com');
     const blockHtml = `<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="${iframeSrc}"></iframe>`;
 
     return blockHtml;
 };
 
-const EntryInstagramPostEmbed = (block) => {
+const EntryInstagramPostEmbed = block => {
     const blockHtml = `<iframe src="${block.link}embed/captioned/" class="instagram-media" allowtransparency="true" allowfullscreen="true" frameborder="0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px; min-width: 326px; padding: 0px;"></iframe><script async="" src="//www.instagram.com/embed.js"></script>`;
 
     return blockHtml;
 };
 
-const EntryInstagramReelEmbed = (block) => {
+const EntryInstagramReelEmbed = block => {
     const blockHtml = `<iframe class="instagram-media" src="${block.link}embed/captioned/" allowtransparency="true" allowfullscreen="true" frameborder="0" scrolling="no" style="background: white; max-width: 540px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px; min-width: 326px; padding: 0px; position: relative;"></iframe><script async="" src="//www.instagram.com/embed.js"></script>`;
 
     return blockHtml;
 };
 
-const EntryGoogleDocsEmbed = (block) => {
+const EntryGoogleDocsEmbed = block => {
     const blockHtml = `<iframe class="googledocs-embed" src="${block.link}" allowtransparency="true" allowfullscreen="true" frameborder="0" style="width: 100%; height: 500px;"></iframe>`;
 
     return blockHtml;
 };
 
-const EntrySpotifyEmbed = (block) => {
+const EntrySpotifyEmbed = block => {
     let embedUrl = block.link.replace('https://open.spotify.com/episode/', 'https://open.spotify.com/embed/episode/');
     embedUrl = embedUrl.replace('https://open.spotify.com/show/', 'https://open.spotify.com/embed/show/');
     const blockHtml = `<iframe src="${embedUrl}" width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>`;
@@ -215,14 +215,14 @@ const EntrySpotifyEmbed = (block) => {
     return blockHtml;
 };
 
-const jsonToHtml = (blocks) => {
+const jsonToHtml = blocks => {
     let html = [];
 
     if (typeof blocks === 'string') {
         return blocks;
     }
 
-    blocks.forEach((block) => {
+    blocks.forEach(block => {
         const itemType = block.type ?? null;
         const itemStyle = block.style ?? null;
 
@@ -233,7 +233,14 @@ const jsonToHtml = (blocks) => {
         }
 
         if (itemType === 'text') {
-            if (itemStyle === 'TITLE' || itemStyle === 'SUBTITLE' || itemStyle === 'HEADING_1' || itemStyle === 'HEADING_2' || itemStyle === 'HEADING_3' || itemStyle === 'HEADING_4') {
+            if (
+                itemStyle === 'TITLE' ||
+                itemStyle === 'SUBTITLE' ||
+                itemStyle === 'HEADING_1' ||
+                itemStyle === 'HEADING_2' ||
+                itemStyle === 'HEADING_3' ||
+                itemStyle === 'HEADING_4'
+            ) {
                 html.push(EntryHeading(block));
             } else if (itemStyle === 'NORMAL_TEXT') {
                 html.push(EntryText(block));
@@ -268,7 +275,10 @@ const jsonToHtml = (blocks) => {
                 html.push(EntryYoutubeEmbed(block));
             } else if (embedHost === 'podcasts.apple.com') {
                 html.push(EntryApplePodcastsEmbed(block));
-            } else if (embedHost === 'open.spotify.com' && (embedPath.startsWith('/episode/') || embedPath.startsWith('/show/'))) {
+            } else if (
+                embedHost === 'open.spotify.com' &&
+                (embedPath.startsWith('/episode/') || embedPath.startsWith('/show/'))
+            ) {
                 html.push(EntrySpotifyEmbed(block));
             } else if (embedHost === 'www.instagram.com' && embedPath.startsWith('/p/')) {
                 html.push(EntryInstagramPostEmbed(block));

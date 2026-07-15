@@ -11,7 +11,7 @@ const {serializeChildren, replaceWith, wrap} = domUtils;
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 const imageCard = cardUtils.getCard('image');
 
-const cleanExcerpt = (htmlContent) => {
+const cleanExcerpt = htmlContent => {
     // Convert to text only
     const cleanedContent = sanitizeHtml(htmlContent, {
         allowedTags: ['b', 'i', 'em', 'strong', 'a'],
@@ -23,11 +23,11 @@ const cleanExcerpt = (htmlContent) => {
     return cleanedContent.trim();
 };
 
-const slugFromURL = (url) => {
+const slugFromURL = url => {
     return url.split('/').pop().replace('.html', '');
 };
 
-const increaseImageSize = (src) => {
+const increaseImageSize = src => {
     // Increases the image size and removes special flags
     // https://developers.google.com/photos/library/guides/access-media-items
     let updatedSrc = src.replace(/\/s[0-9]{2,5}(-[a-z0-9#,*]{1,4})?/g, '/s2000');
@@ -37,10 +37,10 @@ const increaseImageSize = (src) => {
     return updatedSrc;
 };
 
-const handleFirstImage = (args) => {
+const handleFirstImage = args => {
     let {postData, html} = args;
 
-    return domUtils.processFragment(html, (parsed) => {
+    return domUtils.processFragment(html, parsed => {
         const firstContentElement = parsed.body.children[0];
 
         if (!firstContentElement) {
@@ -55,9 +55,13 @@ const handleFirstImage = (args) => {
             const img = firstContentElement.querySelector('img');
             const a = firstContentElement.querySelector('a');
             const firstContentElementImgSrc = img?.getAttribute('src') ?? null;
-            const firstContentElementImgBasename = firstContentElementImgSrc ? basename(firstContentElementImgSrc) : null;
+            const firstContentElementImgBasename = firstContentElementImgSrc
+                ? basename(firstContentElementImgSrc)
+                : null;
             const firstContentElementAHref = a?.getAttribute('href') ?? null;
-            const firstContentElementAHrefBasename = firstContentElementAHref ? basename(firstContentElementAHref) : null;
+            const firstContentElementAHrefBasename = firstContentElementAHref
+                ? basename(firstContentElementAHref)
+                : null;
 
             if (firstContentElementImgBasename === firstContentElementAHrefBasename) {
                 firstContentElement.remove();
@@ -66,8 +70,14 @@ const handleFirstImage = (args) => {
                 firstContentElement.remove();
                 postData.feature_image = firstContentElementImgSrc;
             } else {
-                const firstContentElementImgBasenameNoSize = firstContentElementImgBasename.replace(/(.*)((-=|-|=)w[0-9]{2,5}-h[0-9]{2,5}|(-=|-|=)s[0-9]{2,5})/, '$1');
-                const firstContentElementAHrefBasenameNoSize = firstContentElementAHrefBasename.replace(/(.*)((-=|-|=)w[0-9]{2,5}-h[0-9]{2,5}|(-=|-|=)s[0-9]{2,5})/, '$1');
+                const firstContentElementImgBasenameNoSize = firstContentElementImgBasename.replace(
+                    /(.*)((-=|-|=)w[0-9]{2,5}-h[0-9]{2,5}|(-=|-|=)s[0-9]{2,5})/,
+                    '$1'
+                );
+                const firstContentElementAHrefBasenameNoSize = firstContentElementAHrefBasename.replace(
+                    /(.*)((-=|-|=)w[0-9]{2,5}-h[0-9]{2,5}|(-=|-|=)s[0-9]{2,5})/,
+                    '$1'
+                );
 
                 if (firstContentElementImgBasenameNoSize === firstContentElementAHrefBasenameNoSize) {
                     firstContentElement.remove();
@@ -81,17 +91,17 @@ const handleFirstImage = (args) => {
     });
 };
 
-const processHTMLContent = async (args) => {
+const processHTMLContent = async args => {
     let {postData, html, options} = args;
 
     html = autop(html);
 
-    html = domUtils.processFragment(html, (parsed) => {
-        parsed.$('div.separator').forEach((el) => {
+    html = domUtils.processFragment(html, parsed => {
+        parsed.$('div.separator').forEach(el => {
             replaceWith(el, `<hr><div>${serializeChildren(el).trim()}</div>`);
         });
 
-        parsed.$('img').forEach((el) => {
+        parsed.$('img').forEach(el => {
             const imgSrc = el.getAttribute('src');
             const largerSrc = increaseImageSize(imgSrc);
 
@@ -100,7 +110,7 @@ const processHTMLContent = async (args) => {
             el.removeAttribute('height');
         });
 
-        parsed.$('.tr-caption-container').forEach((el) => {
+        parsed.$('.tr-caption-container').forEach(el => {
             const img = el.querySelector('img');
             const imgParentA = img?.closest('a');
             const hasLink = !!imgParentA;
@@ -138,7 +148,7 @@ const processHTMLContent = async (args) => {
             replaceWith(el, newCard);
         });
 
-        parsed.$('a > img').forEach((el) => {
+        parsed.$('a > img').forEach(el => {
             const parentA = el.parentElement;
             if (!parentA || parentA.tagName !== 'A') {
                 return;
@@ -161,7 +171,7 @@ const processHTMLContent = async (args) => {
         });
 
         // Convert weird lists to real lists
-        parsed.$('span[style*="white-space: pre"]').forEach((el) => {
+        parsed.$('span[style*="white-space: pre"]').forEach(el => {
             const parentDiv = el.closest('div');
             if (!parentDiv) {
                 return;
@@ -173,7 +183,7 @@ const processHTMLContent = async (args) => {
                 const newLi = parsed.document.createElement('li');
                 // Copy children, remove the whitespace-pre spans
                 newLi.innerHTML = serializeChildren(parentDiv);
-                newLi.querySelectorAll('span[style*="white-space: pre"]').forEach((span) => {
+                newLi.querySelectorAll('span[style*="white-space: pre"]').forEach(span => {
                     span.remove();
                 });
                 newLi.innerHTML = newLi.innerHTML.replace('&#x2022;', '').trim();
@@ -182,7 +192,7 @@ const processHTMLContent = async (args) => {
         });
 
         // Wrap <li>s in <ul>
-        parsed.$('li').forEach((el) => {
+        parsed.$('li').forEach(el => {
             const prevSibling = el.previousElementSibling;
             if (prevSibling && prevSibling.tagName === 'UL') {
                 prevSibling.appendChild(el);
@@ -191,30 +201,36 @@ const processHTMLContent = async (args) => {
             }
         });
 
-        parsed.$('div[style*="color"][style*="font-family"][style*="font-size"][style*="white-space: pre-line"]').forEach((el) => {
+        parsed
+            .$('div[style*="color"][style*="font-family"][style*="font-size"][style*="white-space: pre-line"]')
+            .forEach(el => {
+                replaceWith(el, `<p>${serializeChildren(el).trim()}</p>`);
+            });
+
+        parsed
+            .$(
+                'span[style*="background-color"][style*="color"][style*="font-family"][style*="font-size"][style*="white-space: pre-line"]'
+            )
+            .forEach(el => {
+                replaceWith(el, `<p>${serializeChildren(el).trim()}</p>`);
+            });
+
+        parsed.$('div[style="text-align: center;"]').forEach(el => {
             replaceWith(el, `<p>${serializeChildren(el).trim()}</p>`);
         });
 
-        parsed.$('span[style*="background-color"][style*="color"][style*="font-family"][style*="font-size"][style*="white-space: pre-line"]').forEach((el) => {
-            replaceWith(el, `<p>${serializeChildren(el).trim()}</p>`);
-        });
-
-        parsed.$('div[style="text-align: center;"]').forEach((el) => {
-            replaceWith(el, `<p>${serializeChildren(el).trim()}</p>`);
-        });
-
-        parsed.$('h1, h2, h3, h4, h5, h6').forEach((el) => {
+        parsed.$('h1, h2, h3, h4, h5, h6').forEach(el => {
             const styleAttr = el.getAttribute('style');
             if (styleAttr === 'text-align: left;') {
                 el.removeAttribute('style');
             }
         });
 
-        parsed.$('h3 b').forEach((el) => {
+        parsed.$('h3 b').forEach(el => {
             replaceWith(el, serializeChildren(el));
         });
 
-        parsed.$('div, p').forEach((el) => {
+        parsed.$('div, p').forEach(el => {
             const attrs = el.attributes;
             const children = el.children;
 
@@ -227,14 +243,14 @@ const processHTMLContent = async (args) => {
             }
         });
 
-        parsed.$('p').forEach((el) => {
+        parsed.$('p').forEach(el => {
             const innerHtml = serializeChildren(el);
             if (innerHtml.trim() === '' || innerHtml === '&#xA0;' || innerHtml.trim() === '&nbsp;') {
                 el.remove();
             }
         });
 
-        parsed.$('div').forEach((el) => {
+        parsed.$('div').forEach(el => {
             const attrs = el.attributes;
             const children = el.children;
 
@@ -243,7 +259,7 @@ const processHTMLContent = async (args) => {
             }
         });
 
-        parsed.$('iframe[src*="youtube.com"]').forEach((el) => {
+        parsed.$('iframe[src*="youtube.com"]').forEach(el => {
             el.setAttribute('width', '160');
             el.setAttribute('height', '90');
         });
@@ -311,7 +327,7 @@ const processPost = async (postData, options) => {
     }
 
     if (postData.labels) {
-        postData.labels.forEach((label) => {
+        postData.labels.forEach(label => {
             const cleanedLabel = label.replace('&amp;', '&');
             const labelSlug = slugify(cleanedLabel);
 
@@ -393,8 +409,4 @@ export default {
     all
 };
 
-export {
-    cleanExcerpt,
-    slugFromURL,
-    increaseImageSize
-};
+export {cleanExcerpt, slugFromURL, increaseImageSize};

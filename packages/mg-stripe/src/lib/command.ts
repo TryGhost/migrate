@@ -6,7 +6,8 @@ import {copy as copyCommand} from './commands/copy.js';
 import {touch as touchCommand} from './commands/touch.js';
 import {resend as resendCommand} from './commands/resend.js';
 
-export default {id: 'stripe',
+export default {
+    id: 'stripe',
     group: 'Sources:',
     flags: 'stripe',
     desc: 'Migrate Stripe products, prices, coupons, invoices and subscriptions to another Stripe account',
@@ -75,4 +76,5 @@ export default {id: 'stripe',
                 await resendCommand(options);
             }
         });
-    }};
+    }
+};

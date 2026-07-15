@@ -4,7 +4,7 @@ type memberStatsOptions = {
     csvPath?: string | string[];
     zipPath?: string;
     includeUnsubscribed?: boolean;
-}
+};
 
 const memberStats = async ({csvPath, zipPath, includeUnsubscribed = false}: memberStatsOptions) => {
     let allMembers: number = 0;
@@ -22,6 +22,4 @@ const memberStats = async ({csvPath, zipPath, includeUnsubscribed = false}: memb
     };
 };
 
-export {
-    memberStats
-};
+export {memberStats};

@@ -23,6 +23,4 @@ const readZipEntries = async (zipPath = null) => {
     return files;
 };
 
-export {
-    readZipEntries
-};
+export {readZipEntries};

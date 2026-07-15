@@ -9,7 +9,7 @@ Receives raw HTML, returns processed HTML
 */
 
 export default (rawHtml, options = {}) => {
-    return domUtils.processFragment(rawHtml, (parsed) => {
+    return domUtils.processFragment(rawHtml, parsed => {
         // Convert relative links and image paths to absolute
         if (options.url) {
             const urlData = new URL(options.url);
@@ -18,7 +18,7 @@ export default (rawHtml, options = {}) => {
             // in sub-directories so that relative and relative-to-root URLs resolve correctly.
             const urlOrigin = urlData.origin;
 
-            parsed.$('a').forEach((anchor) => {
+            parsed.$('a').forEach(anchor => {
                 const thisURL = anchor.getAttribute('href');
 
                 // If it starts with a slash, append the base URL
@@ -28,7 +28,7 @@ export default (rawHtml, options = {}) => {
                 }
             });
 
-            parsed.$('img').forEach((img) => {
+            parsed.$('img').forEach(img => {
                 const thisSrc = img.getAttribute('src');
 
                 // If it starts with a slash, append the base URL
@@ -40,7 +40,7 @@ export default (rawHtml, options = {}) => {
         }
 
         // Unwrap <p> tags that are in <li> tags
-        parsed.$('li').forEach((li) => {
+        parsed.$('li').forEach(li => {
             const p = li.querySelector('p');
 
             if (p) {

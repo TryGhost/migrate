@@ -7,11 +7,15 @@ import {decode} from 'html-entities';
 const audioCard = cardUtils.getCard('audio');
 
 const htmlToTextTrimmed = (html, max) => {
-    let noHtml = html.replace(/<[^>]+>/g, ' ').replace(/\r?\n|\r/g, ' ').replace(/ {2,}/, ' ').trim();
-    return noHtml && noHtml.length > max ? noHtml.slice(0,max).split(' ').slice(0, -1).join(' ') : noHtml;
+    let noHtml = html
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\r?\n|\r/g, ' ')
+        .replace(/ {2,}/, ' ')
+        .trim();
+    return noHtml && noHtml.length > max ? noHtml.slice(0, max).split(' ').slice(0, -1).join(' ') : noHtml;
 };
 
-const processUser = (sqUser) => {
+const processUser = sqUser => {
     const login = sqUser['wp:author_login'] || '';
     const slug = slugify(login);
     const email = sqUser['wp:author_email'] || '';
@@ -23,7 +27,7 @@ const processUser = (sqUser) => {
         data: {
             slug: slug,
             name: name,
-            email: (email.length) ? email : `${slug}@example.com`
+            email: email.length ? email : `${slug}@example.com`
         }
     };
 };
@@ -33,14 +37,14 @@ const processContent = (html, options) => {
         return '';
     }
 
-    return domUtils.processFragment(html, (parsed) => {
+    return domUtils.processFragment(html, parsed => {
         if (options?.removeSelectors) {
-            parsed.$(options.removeSelectors).forEach((el) => {
+            parsed.$(options.removeSelectors).forEach(el => {
                 el.remove();
             });
         }
 
-        parsed.$('.sqs-audio-embed').forEach((el) => {
+        parsed.$('.sqs-audio-embed').forEach(el => {
             let audioSrc = el.getAttribute('data-url');
             let audioTitle = el.getAttribute('data-title');
 
@@ -58,12 +62,12 @@ const processContent = (html, options) => {
             domUtils.replaceWith(el, cardHTML);
         });
 
-        parsed.$('.newsletter-form-wrapper').forEach((el) => {
+        parsed.$('.newsletter-form-wrapper').forEach(el => {
             el.remove();
         });
 
         // squarespace images without src
-        parsed.$('img[data-src]').forEach((img) => {
+        parsed.$('img[data-src]').forEach(img => {
             const src = img.getAttribute('data-src');
             if (img.classList.contains('thumb-image')) {
                 // images with the `thumb-image` class might be a duplicate
@@ -85,7 +89,7 @@ const processContent = (html, options) => {
             }
         });
 
-        parsed.$('figure blockquote').forEach((el) => {
+        parsed.$('figure blockquote').forEach(el => {
             const nextSibling = el.nextElementSibling;
             let captionText = '';
             if (nextSibling && nextSibling.tagName === 'FIGCAPTION') {
@@ -95,7 +99,7 @@ const processContent = (html, options) => {
             el.innerHTML = `<p>${domUtils.serializeChildren(el)}${captionText}</p>`;
         });
 
-        parsed.$('.sqs-video-wrapper').forEach((el) => {
+        parsed.$('.sqs-video-wrapper').forEach(el => {
             const theHtml = decode(el.getAttribute('data-html'));
             const embedWrapper = el.closest('.embed-block-wrapper');
             const parent = embedWrapper ? embedWrapper.parentElement : null;
@@ -107,7 +111,7 @@ const processContent = (html, options) => {
 
         // TODO: this should be a parser plugin
         // Wrap nested lists in HTML card
-        parsed.$('ul li ul, ol li ol, ol li ul, ul li ol').forEach((nestedList) => {
+        parsed.$('ul li ul, ol li ol, ol li ul, ul li ol').forEach(nestedList => {
             // Walk up to the nearest parent ul/ol (equivalent to parentsUntil('ul, ol').parent())
             let topList = nestedList.parentElement?.closest('ul, ol');
             if (topList) {
@@ -143,7 +147,7 @@ const processTags = (sqCategories, fetchTags) => {
     const categories = [];
     const tags = [];
 
-    sqCategories.forEach((taxonomy) => {
+    sqCategories.forEach(taxonomy => {
         if (fetchTags && taxonomy['@_domain'] === 'post_tag') {
             tags.push({
                 url: `/tag/${taxonomy['@_nicename']}`,
@@ -188,7 +192,7 @@ const processPost = (sqPost, index, items, users, options) => {
         // WP XML only provides a published date, we let's use that all dates Ghost expects
         const postDate = new Date(sqPost.pubDate || '');
 
-        const postTitle = (sqPost.title && sqPost.title.length > 0) ? sqPost.title : false;
+        const postTitle = sqPost.title && sqPost.title.length > 0 ? sqPost.title : false;
 
         const post = {
             url: `${url}${sqPost.link || ''}`,
@@ -213,24 +217,27 @@ const processPost = (sqPost, index, items, users, options) => {
 
         if (addTag) {
             post.data.tags.push({
-                url: 'migrator-added-tag', data: {slug: addTag, name: addTag}
+                url: 'migrator-added-tag',
+                data: {slug: addTag, name: addTag}
             });
         }
 
         post.data.tags.push({
-            url: 'migrator-added-tag-sqs', data: {name: '#sqs'}
+            url: 'migrator-added-tag-sqs',
+            data: {name: '#sqs'}
         });
 
         if (!postTitle) {
             post.data.tags.push({
-                url: 'migrator-added-tag-no-title', data: {name: '#no-title'}
+                url: 'migrator-added-tag-no-title',
+                data: {name: '#no-title'}
             });
 
             post.data.title = htmlToTextTrimmed(post.data.html, 50);
         }
 
         if (users) {
-            const foundUser = users.find((user) => {
+            const foundUser = users.find(user => {
                 if (creator === user.login) {
                     return user;
                 } else if (creator === user.data.name) {
@@ -287,7 +294,7 @@ const processPosts = (items, users, options) => {
     return postsOutput;
 };
 
-const processUsers = (authors) => {
+const processUsers = authors => {
     return authors.map(sqUser => processUser(sqUser));
 };
 

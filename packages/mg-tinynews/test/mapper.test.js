@@ -14,21 +14,46 @@ const MockLogger = {
 
 describe('mapPostPageConfig', function () {
     it('Can process posts', function () {
-        const mapped = mapPostPageConfig({
-            postData: articlesFixture[0],
-            authorsData: {},
-            postType: 'post',
-            options: {
-                url: 'https://demo-site.example.com'
-            }
-        }, MockLogger);
+        const mapped = mapPostPageConfig(
+            {
+                postData: articlesFixture[0],
+                authorsData: {},
+                postType: 'post',
+                options: {
+                    url: 'https://demo-site.example.com'
+                }
+            },
+            MockLogger
+        );
 
         assert.ok('url' in mapped);
         assert.ok('data' in mapped);
         assert.equal(mapped.url, 'https://demo-site.example.com/articles/testing/all-embeds-and-formatting');
 
         // The minimum required keys for a successful migration
-        for (const key of ['slug', 'published_at', 'updated_at', 'created_at', 'title', 'type', 'html', 'status', 'og_title', 'og_description', 'twitter_title', 'twitter_description', 'meta_title', 'meta_description', 'custom_excerpt', 'visibility', 'feature_image', 'feature_image_alt', 'feature_image_caption', 'tags', 'author']) {
+        for (const key of [
+            'slug',
+            'published_at',
+            'updated_at',
+            'created_at',
+            'title',
+            'type',
+            'html',
+            'status',
+            'og_title',
+            'og_description',
+            'twitter_title',
+            'twitter_description',
+            'meta_title',
+            'meta_description',
+            'custom_excerpt',
+            'visibility',
+            'feature_image',
+            'feature_image_alt',
+            'feature_image_caption',
+            'tags',
+            'author'
+        ]) {
             assert.ok(key in mapped.data);
         }
 
@@ -43,12 +68,18 @@ describe('mapPostPageConfig', function () {
         assert.equal(mapped.data.og_title, 'FB Title - All Embeds and Formatting');
         assert.equal(mapped.data.og_description, 'FB desc - An article that shows Google Docs integration elements');
         assert.equal(mapped.data.twitter_title, 'TW Title - All Embeds and Formatting');
-        assert.equal(mapped.data.twitter_description, 'TW desc - An article that shows Google Docs integration elements');
+        assert.equal(
+            mapped.data.twitter_description,
+            'TW desc - An article that shows Google Docs integration elements'
+        );
         assert.equal(mapped.data.meta_title, 'All embeds and Formatting');
         assert.equal(mapped.data.meta_description, 'An article that shows Google Docs integration elements');
         assert.equal(mapped.data.custom_excerpt, 'An article that shows Google Docs integration elements');
         assert.equal(mapped.data.visibility, 'public');
-        assert.equal(mapped.data.feature_image, 'https://assets.example.com/demo-site/all-embeds-and-formatting/imagekix.mpef3nc309qu.jpg');
+        assert.equal(
+            mapped.data.feature_image,
+            'https://assets.example.com/demo-site/all-embeds-and-formatting/imagekix.mpef3nc309qu.jpg'
+        );
         assert.equal(mapped.data.feature_image_alt, 'Featured image. Alt text is also the caption');
         assert.equal(mapped.data.feature_image_caption, 'Featured image. Alt text is also the caption');
 
@@ -87,14 +118,17 @@ describe('mapPostPageConfig', function () {
     });
 
     it('Uses author in authors JSON file is only one present & post has no authors array', function () {
-        const mapped = mapPostPageConfig({
-            postData: articlesFixture[1],
-            authorsData: authorSingleFixture,
-            postType: 'post',
-            options: {
-                url: 'https://demo-site.example.com'
-            }
-        }, MockLogger);
+        const mapped = mapPostPageConfig(
+            {
+                postData: articlesFixture[1],
+                authorsData: authorSingleFixture,
+                postType: 'post',
+                options: {
+                    url: 'https://demo-site.example.com'
+                }
+            },
+            MockLogger
+        );
 
         assert.ok('url' in mapped.data.author);
         assert.ok('data' in mapped.data.author);
@@ -107,14 +141,17 @@ describe('mapPostPageConfig', function () {
     });
 
     it('Enriches author data is more is available in authorsData', function () {
-        const mapped = mapPostPageConfig({
-            postData: articlesFixture[2],
-            authorsData: authorMultipleFixture,
-            postType: 'post',
-            options: {
-                url: 'https://demo-site.example.com'
-            }
-        }, MockLogger);
+        const mapped = mapPostPageConfig(
+            {
+                postData: articlesFixture[2],
+                authorsData: authorMultipleFixture,
+                postType: 'post',
+                options: {
+                    url: 'https://demo-site.example.com'
+                }
+            },
+            MockLogger
+        );
 
         assert.ok('url' in mapped.data.author);
         assert.ok('data' in mapped.data.author);
@@ -127,14 +164,17 @@ describe('mapPostPageConfig', function () {
     });
 
     it('Falls back to default author is none supplied', function () {
-        const mapped = mapPostPageConfig({
-            postData: articlesFixture[1],
-            authorsData: {},
-            postType: 'post',
-            options: {
-                url: 'https://demo-site.example.com'
-            }
-        }, MockLogger);
+        const mapped = mapPostPageConfig(
+            {
+                postData: articlesFixture[1],
+                authorsData: {},
+                postType: 'post',
+                options: {
+                    url: 'https://demo-site.example.com'
+                }
+            },
+            MockLogger
+        );
 
         assert.ok('url' in mapped.data.author);
         assert.ok('data' in mapped.data.author);

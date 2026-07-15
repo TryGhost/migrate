@@ -7,12 +7,17 @@ import Importer, {BaseImporter} from './Importer.js';
 import {Reporter} from './Reporter.js';
 import {createNoopImporter} from './NoopImporter.js';
 
-export function createPriceImporter({oldStripe, newStripe, productImporter, reporter}: {
-    dryRun: boolean,
-    oldStripe: StripeAPI,
-    newStripe: StripeAPI,
-    productImporter: BaseImporter<Stripe.Product>,
-    reporter: Reporter
+export function createPriceImporter({
+    oldStripe,
+    newStripe,
+    productImporter,
+    reporter
+}: {
+    dryRun: boolean;
+    oldStripe: StripeAPI;
+    newStripe: StripeAPI;
+    productImporter: BaseImporter<Stripe.Product>;
+    reporter: Reporter;
 }) {
     if (oldStripe.equals(newStripe)) {
         return createNoopImporter();
@@ -40,11 +45,12 @@ export function createPriceImporter({oldStripe, newStripe, productImporter, repo
                     }
                     const _cachedPrices: {[key: string]: Stripe.Price} = {};
 
-                    for await (const price of newStripe.useAsyncIterator(client => client.prices.list({
-                        limit: 100,
-                        active: true
-                    }))
-                    ) {
+                    for await (const price of newStripe.useAsyncIterator(client =>
+                        client.prices.list({
+                            limit: 100,
+                            active: true
+                        })
+                    )) {
                         if (price.metadata.ghost_migrate_id) {
                             _cachedPrices[price.metadata.ghost_migrate_id] = price;
                         }
@@ -61,7 +67,9 @@ export function createPriceImporter({oldStripe, newStripe, productImporter, repo
         },
 
         async recreate(oldPrice: Stripe.Price) {
-            const newProductId = await productImporter.recreateByObjectOrId(oldPrice.product as Stripe.Product | string);
+            const newProductId = await productImporter.recreateByObjectOrId(
+                oldPrice.product as Stripe.Product | string
+            );
 
             return await ifDryRunJustReturnFakeId(async () => {
                 const currency_options: {
@@ -76,28 +84,34 @@ export function createPriceImporter({oldStripe, newStripe, productImporter, repo
                     }
                 }
 
-                const price = await newStripe.use(client => client.prices.create({
-                    product: newProductId,
-                    currency: oldPrice.currency,
-                    unit_amount: oldPrice.unit_amount ?? undefined,
-                    recurring: oldPrice.recurring ? {
-                        interval: oldPrice.recurring.interval,
-                        interval_count: oldPrice.recurring.interval_count ?? undefined,
-                        trial_period_days: oldPrice.recurring.trial_period_days ?? undefined
-                    } : undefined,
-                    metadata: {
-                        ghost_migrate_id: oldPrice.id
-                    },
-                    currency_options
-                }));
+                const price = await newStripe.use(client =>
+                    client.prices.create({
+                        product: newProductId,
+                        currency: oldPrice.currency,
+                        unit_amount: oldPrice.unit_amount ?? undefined,
+                        recurring: oldPrice.recurring
+                            ? {
+                                  interval: oldPrice.recurring.interval,
+                                  interval_count: oldPrice.recurring.interval_count ?? undefined,
+                                  trial_period_days: oldPrice.recurring.trial_period_days ?? undefined
+                              }
+                            : undefined,
+                        metadata: {
+                            ghost_migrate_id: oldPrice.id
+                        },
+                        currency_options
+                    })
+                );
                 return price.id;
             });
         },
 
         async revert(oldPrice: Stripe.Price, newPrice: Stripe.Price) {
-            await newStripe.use(client => client.prices.update(newPrice.id, {
-                active: false
-            }));
+            await newStripe.use(client =>
+                client.prices.update(newPrice.id, {
+                    active: false
+                })
+            );
 
             // Deleting product will also delete price
             await productImporter.revertByObjectOrId(oldPrice.product as Stripe.Product | string);

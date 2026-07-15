@@ -16,14 +16,14 @@ type processDataOptions = {
     csvContent?: string;
     addLabel?: string | null;
     includeUnsubscribed: boolean;
-}
+};
 
 type processOptions = {
     pathToCsv?: string | string[];
     pathToZip?: string;
     addLabel?: string | null;
-    includeUnsubscribed?: boolean
-}
+    includeUnsubscribed?: boolean;
+};
 
 const colMapper = (fieldNames: string[], member: any) => {
     let keys = Object.keys(member);
@@ -45,7 +45,7 @@ const firstNameFields = ['First Name'];
 const lastNameFields = ['Last Name'];
 
 const processData = async ({pathToCsv, csvContent, addLabel, includeUnsubscribed = false}: processDataOptions) => {
-    const csvData = (csvContent) ? await fsUtils.csv.parseString(csvContent) : await fsUtils.csv.parseCSV(pathToCsv);
+    const csvData = csvContent ? await fsUtils.csv.parseString(csvContent) : await fsUtils.csv.parseCSV(pathToCsv);
 
     let theMembers: memberObject[] = [];
 
@@ -144,7 +144,7 @@ const process = async ({pathToCsv, pathToZip, addLabel, includeUnsubscribed = fa
             newObj.push(...pro);
         }
     } else if (pathToCsv) {
-        const paths: string[] = (typeof pathToCsv === 'string') ? [pathToCsv] : pathToCsv;
+        const paths: string[] = typeof pathToCsv === 'string' ? [pathToCsv] : pathToCsv;
 
         for (const list of paths) {
             let processed: any = await processData({
@@ -160,7 +160,4 @@ const process = async ({pathToCsv, pathToZip, addLabel, includeUnsubscribed = fa
     return newObj;
 };
 
-export {
-    process,
-    processData
-};
+export {process, processData};

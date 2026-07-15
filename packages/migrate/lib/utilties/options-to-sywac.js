@@ -1,5 +1,5 @@
 const convertOptionsToSywac = (options = [], sywac) => {
-    options.forEach((option) => {
+    options.forEach(option => {
         sywac.option(option);
     });
 };
@@ -7,12 +7,12 @@ const convertOptionsToSywac = (options = [], sywac) => {
 const convertOptionsToDefaults = (options = []) => {
     let defaults = {};
 
-    options.forEach((option) => {
-        let flags = option.flags.split(/[\s,]+/).map((item) => {
+    options.forEach(option => {
+        let flags = option.flags.split(/[\s,]+/).map(item => {
             return item.trim().replace(/^-+/, '');
         });
 
-        flags.forEach((flag) => {
+        flags.forEach(flag => {
             defaults[flag] = option.defaultValue;
         });
     });
@@ -20,7 +20,4 @@ const convertOptionsToDefaults = (options = []) => {
     return defaults;
 };
 
-export {
-    convertOptionsToSywac,
-    convertOptionsToDefaults
-};
+export {convertOptionsToSywac, convertOptionsToDefaults};

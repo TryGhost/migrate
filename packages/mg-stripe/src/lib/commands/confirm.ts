@@ -12,17 +12,23 @@ import {Reporter, ReportingCategory} from '../importers/Reporter.js';
 export async function confirm(options: Options) {
     const reporter = new Reporter(new ReportingCategory('', {skipTitle: true}));
 
-    Logger.shared.info(`The ${chalk.cyan('confirm')} command will finalise the copy of Stripe subscriptions and invoices in the new Stripe account.`);
+    Logger.shared.info(
+        `The ${chalk.cyan('confirm')} command will finalise the copy of Stripe subscriptions and invoices in the new Stripe account.`
+    );
     Logger.shared.info('------------------------------------------------------------------------------');
     Logger.shared.info('Before proceeding, be sure to have:');
     Logger.shared.info(`1) Executed the ${chalk.cyan('copy')} command`);
-    Logger.shared.info('2) Verified the products, prices, coupons, and subscriptions in the new Stripe account from the Stripe dashboard');
+    Logger.shared.info(
+        '2) Verified the products, prices, coupons, and subscriptions in the new Stripe account from the Stripe dashboard'
+    );
     Logger.shared.info('------------------------------------------------------------------------------');
     Logger.shared.newline();
 
     Logger.shared.startSpinner('');
     if (options.dryRun) {
-        Logger.shared.succeed(`Running ${chalk.green('confirm')} command as ${chalk.green('DRY RUN')}. No Stripe data will be updated.`);
+        Logger.shared.succeed(
+            `Running ${chalk.green('confirm')} command as ${chalk.green('DRY RUN')}. No Stripe data will be updated.`
+        );
     } else {
         Logger.shared.succeed(`Running ${chalk.green('confirm')} command...`);
     }

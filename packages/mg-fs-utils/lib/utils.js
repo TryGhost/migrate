@@ -1,7 +1,7 @@
 import {extname, basename} from 'node:path';
 import {slugify} from '@tryghost/string';
 
-const cacheNameFromPath = (path) => {
+const cacheNameFromPath = path => {
     let ext = extname(path);
     let base = basename(path, ext);
     let slug = slugify(base);
@@ -10,6 +10,4 @@ const cacheNameFromPath = (path) => {
     return noUnderscore;
 };
 
-export {
-    cacheNameFromPath
-};
+export {cacheNameFromPath};

@@ -23,19 +23,17 @@ const mediumToGhost = {
 };
 
 export default ({html}) => {
-    return processFragment(html, (parsed) => {
+    return processFragment(html, parsed => {
         let profile = {
             url: parsed.$('.u-url')[0]?.getAttribute('href'),
             data: {
                 name: parsed.$('.p-name')[0]?.textContent || '',
                 profile_image: parsed.$('.u-photo')[0]?.getAttribute('src'),
-                roles: [
-                    'Contributor'
-                ]
+                roles: ['Contributor']
             }
         };
 
-        parsed.$('ul li').forEach((el) => {
+        parsed.$('ul li').forEach(el => {
             let [item, value] = el.textContent.split(': ');
             let key = mediumToGhost[item.toLowerCase()] || null;
 

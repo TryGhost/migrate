@@ -6,7 +6,7 @@ import {rssToJson} from '../lib/fetch.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
-const readSync = async (name) => {
+const readSync = async name => {
     let fixtureFileName = path.join(__dirname, './', 'fixtures', name);
     return fs.readFile(fixtureFileName, {encoding: 'utf8'});
 };

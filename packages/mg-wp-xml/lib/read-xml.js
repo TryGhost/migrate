@@ -10,7 +10,7 @@ const parserOptions = {
     trimValues: false
 };
 
-const contentStats = async (xmlPath) => {
+const contentStats = async xmlPath => {
     const input = await readFile(xmlPath);
 
     const parser = new XMLParser(parserOptions);
@@ -39,6 +39,4 @@ const contentStats = async (xmlPath) => {
     };
 };
 
-export {
-    contentStats
-};
+export {contentStats};

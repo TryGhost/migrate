@@ -422,7 +422,10 @@ describe('Shortcode processing', function () {
         });
 
         const html = `<p>Hello world</p>[link url="https://another.example.com" open_in="_blank"]<i>My content</i>[/link]`;
-        assert.equal(shortcodes.parse(html), '<p>Hello world</p><a href="https://another.example.com" target="_blank"><i>My content</i></a>');
+        assert.equal(
+            shortcodes.parse(html),
+            '<p>Hello world</p><a href="https://another.example.com" target="_blank"><i>My content</i></a>'
+        );
     });
 
     it('Can handle nested shortcodes', function () {
@@ -532,7 +535,10 @@ describe('Shortcode processing', function () {
 
         let parsed = shortcodes.parse(html);
 
-        assert.equal(parsed, '[block]HELLO<HR> <hr> WORLD[/block] <hr> [Leave this alone] [unhandled]contents[/unhandled] This is just a bit of text');
+        assert.equal(
+            parsed,
+            '[block]HELLO<HR> <hr> WORLD[/block] <hr> [Leave this alone] [unhandled]contents[/unhandled] This is just a bit of text'
+        );
     });
 
     it('Can remove shortcode and content', function () {
@@ -618,7 +624,8 @@ describe('Shortcode processing', function () {
             return content || '';
         });
 
-        const html = '[caption id="" align="alignnone" width="686"]<img src="https://example.com/is/image/product?$sfcc-product$&amp;wid=1146" alt="Shoes" /> Credit: Example[/caption]';
+        const html =
+            '[caption id="" align="alignnone" width="686"]<img src="https://example.com/is/image/product?$sfcc-product$&amp;wid=1146" alt="Shoes" /> Credit: Example[/caption]';
 
         const parsed = shortcodes.parse(html);
 

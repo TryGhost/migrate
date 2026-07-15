@@ -27,6 +27,4 @@ const convertToHTMLCard = (htmlString: string) => {
     return structure;
 };
 
-export {
-    convertToHTMLCard
-};
+export {convertToHTMLCard};

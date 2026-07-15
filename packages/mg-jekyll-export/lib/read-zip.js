@@ -25,7 +25,7 @@ export default (zipPath, options) => {
                 fileContents: zipEntry.getData().toString('utf8')
             });
 
-        // Skip if not matched above, and report skipped files if `--verbose`
+            // Skip if not matched above, and report skipped files if `--verbose`
         } else {
             if (options.verbose) {
                 ui.log.info('Skipped: ' + zipEntry.entryName);

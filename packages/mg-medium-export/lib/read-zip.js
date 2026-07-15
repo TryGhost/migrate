@@ -5,7 +5,7 @@ import {_base as debugFactory} from '@tryghost/debug';
 
 const debug = debugFactory('migrate:medium:lib:read-zip');
 
-const contentStats = async (zipPath) => {
+const contentStats = async zipPath => {
     const entries = await fsUtils.readZipEntries(zipPath);
     const posts = entries.filter(value => /^posts\/.*\.html$/.test(value)).length;
     const users = entries.filter(value => value.startsWith('profile/profile.html')).length;
@@ -24,13 +24,13 @@ const readMediumZip = ({content, zipPath, options, skippedFileCount}) => {
         if (entryName.startsWith('profile/profile.html')) {
             content.profiles.push({data: entryHtml});
 
-        // Catch all HTML files in `posts/`
+            // Catch all HTML files in `posts/`
         } else if (/^posts\/.*\.html$/.test(entryName)) {
             content.posts.push({
                 name: entryName,
                 html: entryHtml
             });
-        // Skip if not matched above, and report skipped files if `--verbose`
+            // Skip if not matched above, and report skipped files if `--verbose`
         } else if (/.html$/.test(entryName)) {
             if (options.verbose) {
                 debug(`Skipped: ${entryName}`);
@@ -63,7 +63,7 @@ export default (zipPath, options) => {
     const ifIsDirectory = lstatSync(zipPath).isDirectory();
 
     if (ifIsDirectory) {
-        readdirSync(zipPath).forEach((file) => {
+        readdirSync(zipPath).forEach(file => {
             const filePath = join(zipPath, file);
             const zipContent = readMediumZip({content, zipPath: filePath, options, skippedFileCount});
             content = zipContent.content;
@@ -80,6 +80,4 @@ export default (zipPath, options) => {
     return content;
 };
 
-export {
-    contentStats
-};
+export {contentStats};

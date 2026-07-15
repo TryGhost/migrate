@@ -52,7 +52,7 @@ export class Queue {
                 if (delayUntilFreeing) {
                     const remainingTime = delayUntilFreeing - (endTime - startTime);
                     if (remainingTime > 0) {
-                        await new Promise((r) => {
+                        await new Promise(r => {
                             setTimeout(r, remainingTime);
                         });
                     }
@@ -69,14 +69,16 @@ export class Queue {
         const task = this.queue.shift();
         if (task) {
             this.runningTasks += 1;
-            task().catch((e) => {
-                this.callListeners(e);
-            }).then(() => {
-                this.runningTasks -= 1;
+            task()
+                .catch(e => {
+                    this.callListeners(e);
+                })
+                .then(() => {
+                    this.runningTasks -= 1;
 
-                // Run next
-                this.runNext();
-            });
+                    // Run next
+                    this.runNext();
+                });
         } else {
             // Call listeners
             this.callListeners();

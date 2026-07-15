@@ -13,7 +13,7 @@ const mapConfig = (data, options) => {
 
     const typeSlug = slugify(data.type);
 
-    const contentType = (typeSlug === 'page') ? 'page' : 'post';
+    const contentType = typeSlug === 'page' ? 'page' : 'post';
 
     const mappedData = {
         url: `${url}/p/${slug}`,
@@ -27,7 +27,7 @@ const mapConfig = (data, options) => {
             updated_at: data.post_date || dateNow,
             created_at: data.post_date || dateNow,
             title: data.title || slug,
-            custom_excerpt: (data.subtitle) ? he.decode(data.subtitle) : null,
+            custom_excerpt: data.subtitle ? he.decode(data.subtitle) : null,
             type: contentType,
             html: data.html || null,
             status: data.is_published.toLowerCase() === `true` ? 'published' : 'draft',
@@ -44,9 +44,7 @@ const mapConfig = (data, options) => {
             data: {
                 email: email,
                 slug: authorSlug,
-                roles: [
-                    'Contributor'
-                ]
+                roles: ['Contributor']
             }
         };
     }
@@ -74,14 +72,16 @@ export default async (input, options) => {
 
     // Drive from HTML files we have, pulling in CSV metadata for each
     const csvMeta = input.meta;
-    input = input.posts.map((htmlPost) => {
-        const postId = htmlPost.name.replace(/\.html$/, '');
-        const meta = csvMeta.find(item => item.post_id === postId);
-        if (meta) {
-            meta.html = htmlPost.html;
-        }
-        return meta;
-    }).filter(Boolean);
+    input = input.posts
+        .map(htmlPost => {
+            const postId = htmlPost.name.replace(/\.html$/, '');
+            const meta = csvMeta.find(item => item.post_id === postId);
+            if (meta) {
+                meta.html = htmlPost.html;
+            }
+            return meta;
+        })
+        .filter(Boolean);
 
     // Preserve consistent ordering (chronological, with numeric ID as tiebreaker)
     input.sort((a, b) => {
@@ -122,8 +122,8 @@ export default async (input, options) => {
         const endDate = new Date(new Date(options.postsBefore).setDate(new Date(options.postsBefore).getDate() + 1));
         debug(`Getting posts between ${startDate} and ${endDate}`);
 
-        await input.forEach((data) => {
-            if ((new Date(data.post_date) > startDate) && (new Date(data.post_date) < endDate)) {
+        await input.forEach(data => {
+            if (new Date(data.post_date) > startDate && new Date(data.post_date) < endDate) {
                 output.posts.push(mapConfig(data, options));
             }
         });
@@ -131,8 +131,8 @@ export default async (input, options) => {
         const startDate = new Date(options.postsAfter);
         debug(`Getting posts after ${startDate}`);
 
-        await input.forEach((data) => {
-            if ((new Date(data.post_date) > startDate)) {
+        await input.forEach(data => {
+            if (new Date(data.post_date) > startDate) {
                 output.posts.push(mapConfig(data, options));
             }
         });
@@ -140,14 +140,14 @@ export default async (input, options) => {
         const endDate = new Date(new Date(options.postsBefore).setDate(new Date(options.postsBefore).getDate() + 1));
         debug(`Getting posts until ${endDate}`);
 
-        await input.forEach((data) => {
+        await input.forEach(data => {
             if (new Date(data.post_date) < endDate) {
                 output.posts.push(mapConfig(data, options));
             }
         });
     } else {
         debug(`Getting all posts`);
-        await input.forEach((data) => {
+        await input.forEach(data => {
             output.posts.push(mapConfig(data, options));
         });
     }

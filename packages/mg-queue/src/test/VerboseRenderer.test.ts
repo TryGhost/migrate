@@ -73,7 +73,14 @@ describe('VerboseRenderer', () => {
         mock.method(console, 'log', (msg: string) => logs.push(msg));
 
         const renderer = new VerboseRenderer();
-        renderer.onQueueEnd({completed: 10, skipped: 0, errors: [{title: 't1', error: new Error('e1')}, {title: 't2', error: new Error('e2')}]});
+        renderer.onQueueEnd({
+            completed: 10,
+            skipped: 0,
+            errors: [
+                {title: 't1', error: new Error('e1')},
+                {title: 't2', error: new Error('e2')}
+            ]
+        });
 
         assert.ok(logs[0].includes('10'));
         assert.ok(logs[0].includes('2'));
@@ -100,7 +107,14 @@ describe('VerboseRenderer', () => {
         mock.method(console, 'log', (msg: string) => logs.push(msg));
 
         const renderer = new VerboseRenderer();
-        renderer.onQueueEnd({completed: 10, skipped: 3, errors: [{title: 't1', error: new Error('e1')}, {title: 't2', error: new Error('e2')}]});
+        renderer.onQueueEnd({
+            completed: 10,
+            skipped: 3,
+            errors: [
+                {title: 't1', error: new Error('e1')},
+                {title: 't2', error: new Error('e2')}
+            ]
+        });
 
         assert.ok(logs[0].includes('10'));
         assert.ok(logs[0].includes('2'));

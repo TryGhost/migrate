@@ -22,13 +22,13 @@ const galleryCard = cardUtils.getCard('gallery');
 const bookmarkCard = cardUtils.getCard('bookmark');
 const fileCard = cardUtils.getCard('file');
 
-const getFiles = async (filePath) => {
+const getFiles = async filePath => {
     let filenames = await fs.readdir(filePath);
 
     return filenames.filter(filename => filename.match(/\.html/));
 };
 
-const readContent = async (filePath) => {
+const readContent = async filePath => {
     return fs.readFile(filePath, 'utf-8');
 };
 
@@ -43,7 +43,7 @@ const readFiles = async (files, postsDir) => {
     return postContent;
 };
 
-const largeImageUrl = (path) => {
+const largeImageUrl = path => {
     const substackCdnUrl = URL.parse(path);
     if (substackCdnUrl?.hostname === 'substackcdn.com' && substackCdnUrl.pathname.startsWith('/image/fetch/')) {
         path = decodeURIComponent(path.split('/').pop());
@@ -51,14 +51,14 @@ const largeImageUrl = (path) => {
 
     const bucketeerUrl = URL.parse(path);
     if (bucketeerUrl?.hostname.startsWith('bucketeer-')) {
-        path = path.replace(/https:\/\/.*\.s3\.amazonaws\.com/gmi, 'https://substack-post-media.s3.amazonaws.com');
+        path = path.replace(/https:\/\/.*\.s3\.amazonaws\.com/gim, 'https://substack-post-media.s3.amazonaws.com');
     }
 
     return path;
 };
 
-const getUnsizedImageName = (str) => {
-    const noSizeRegex = /(.*)(_[0-9]{1,4}x[0-9]{1,4}.[a-z]{2,4})/gmi;
+const getUnsizedImageName = str => {
+    const noSizeRegex = /(.*)(_[0-9]{1,4}x[0-9]{1,4}.[a-z]{2,4})/gim;
     let srcParts = str.split(/\/|%2F/);
     let last = srcParts.slice(-1)[0];
     let matches = noSizeRegex.exec(last);
@@ -70,7 +70,7 @@ const getUnsizedImageName = (str) => {
     }
 };
 
-const getImageDimensions = (str) => {
+const getImageDimensions = str => {
     const imageSizeRegexp = /_([0-9]{2,5})x([0-9]{2,5}).[a-zA-Z]{2,4}/;
     const matches = str.match(imageSizeRegexp);
 
@@ -84,7 +84,7 @@ const getImageDimensions = (str) => {
     }
 };
 
-const largestSrc = (imageElem) => {
+const largestSrc = imageElem => {
     const src = attr(imageElem, 'src');
     const srcset = attr(imageElem, 'srcset');
 
@@ -125,12 +125,12 @@ const processContent = (post, siteUrl, options) => {
     const parsed = parseFragment(`<div class="migrate-substack-wrapper">${html}</div>`);
 
     // Change paywall card to comment
-    parsed.$('.paywall-jump').forEach((el) => {
+    parsed.$('.paywall-jump').forEach(el => {
         replaceWith(el, '<!--members-only-->');
     });
 
     // Empty text elements are commonplace and are not needed
-    parsed.$('p').forEach((el) => {
+    parsed.$('p').forEach(el => {
         let content = serializeChildren(el).trim();
 
         if (content.length === 0) {
@@ -138,26 +138,28 @@ const processContent = (post, siteUrl, options) => {
         }
     });
 
-    parsed.$('h1 strong, h2 strong, h3 strong, h4 strong, h5 strong, h6 strong, h1 b, h2 b, h3 b, h4 b, h5 b, h6 b').forEach((el) => {
-        replaceWith(el, serializeChildren(el));
-    });
+    parsed
+        .$('h1 strong, h2 strong, h3 strong, h4 strong, h5 strong, h6 strong, h1 b, h2 b, h3 b, h4 b, h5 b, h6 b')
+        .forEach(el => {
+            replaceWith(el, serializeChildren(el));
+        });
 
     // Wrap these in a HTML card so they can be handled by publishers as needed
-    parsed.$('div.latex-rendered').forEach((el) => {
+    parsed.$('div.latex-rendered').forEach(el => {
         insertBefore(el, '<!--kg-card-begin: html-->');
         insertAfter(el, '<!--kg-card-end: html-->');
     });
 
     // We don't currently handle these, so remove them to clean up the document
-    parsed.$('div.native-video-embed').forEach((el) => {
+    parsed.$('div.native-video-embed').forEach(el => {
         el.remove();
     });
 
-    parsed.$('div.poll-embed').forEach((el) => {
+    parsed.$('div.poll-embed').forEach(el => {
         el.remove();
     });
 
-    parsed.$('.image3').forEach((el) => {
+    parsed.$('.image3').forEach(el => {
         const attrs = attr(el, 'data-attrs');
         const attrsObj = JSON.parse(attrs);
 
@@ -197,7 +199,9 @@ const processContent = (post, siteUrl, options) => {
 
                     if (unsizedFirstSrc === unsizedOgSrc) {
                         if (parsed.$('figcaption', firstElement).length) {
-                            post.data.feature_image_caption = serializeChildren(parsed.$('figcaption', firstElement)[0]);
+                            post.data.feature_image_caption = serializeChildren(
+                                parsed.$('figcaption', firstElement)[0]
+                            );
                         }
 
                         firstElement.remove();
@@ -225,7 +229,9 @@ const processContent = (post, siteUrl, options) => {
                         post.data.feature_image = unsizedFirstSrc;
 
                         if (parsed.$('figcaption', firstElement).length) {
-                            post.data.feature_image_caption = serializeChildren(parsed.$('figcaption', firstElement)[0]);
+                            post.data.feature_image_caption = serializeChildren(
+                                parsed.$('figcaption', firstElement)[0]
+                            );
                         }
 
                         firstElement.remove();
@@ -265,7 +271,7 @@ const processContent = (post, siteUrl, options) => {
         }
     }
 
-    parsed.$('div.tweet').forEach((el) => {
+    parsed.$('div.tweet').forEach(el => {
         let childAnchors = parsed.$(':scope > a', el);
         let src = attr(childAnchors[0], 'href');
         let parsedUrl = url.parse(src);
@@ -317,20 +323,20 @@ const processContent = (post, siteUrl, options) => {
         replaceWith(el, tweetHtml);
     });
 
-    parsed.$('.image-gallery-embed').forEach((el) => {
+    parsed.$('.image-gallery-embed').forEach(el => {
         const attrs = attr(el, 'data-attrs');
         const attrsObj = JSON.parse(attrs);
 
         let items = [];
 
-        attrsObj.gallery.images.forEach((item) => {
+        attrsObj.gallery.images.forEach(item => {
             const dimensions = getImageDimensions(item.src);
 
             items.push({
                 fileName: basename(item.src),
                 src: largeImageUrl(item.src),
-                width: (dimensions) ? dimensions.width : '100',
-                height: (dimensions) ? dimensions.height : '100'
+                width: dimensions ? dimensions.width : '100',
+                height: dimensions ? dimensions.height : '100'
             });
         });
 
@@ -352,17 +358,17 @@ const processContent = (post, siteUrl, options) => {
         replaceWith(el, serializer.serialize(galleryCard.render(cardOpts)));
     });
 
-    parsed.$('[class*="ImageGallery-module__imageGallery"]').forEach((el) => {
+    parsed.$('[class*="ImageGallery-module__imageGallery"]').forEach(el => {
         const rows = parsed.$('[class*="ImageGallery-module__imageRow"]', el);
         const figcaptionEl = parsed.$('figcaption', el)[0];
         const caption = figcaptionEl ? serializeChildren(figcaptionEl) : null;
 
         let items = [];
 
-        rows.forEach((row) => {
+        rows.forEach(row => {
             const pictures = parsed.$('picture', row);
 
-            pictures.forEach((picture) => {
+            pictures.forEach(picture => {
                 const img = parsed.$('img', picture)[0];
                 const src = largestSrc(img);
                 const dimensions = getImageDimensions(src);
@@ -370,8 +376,8 @@ const processContent = (post, siteUrl, options) => {
                 items.push({
                     fileName: basename(src),
                     src: src,
-                    width: (dimensions) ? dimensions.width : '100',
-                    height: (dimensions) ? dimensions.height : '100'
+                    width: dimensions ? dimensions.width : '100',
+                    height: dimensions ? dimensions.height : '100'
                 });
             });
         });
@@ -394,7 +400,7 @@ const processContent = (post, siteUrl, options) => {
         replaceWith(el, serializer.serialize(galleryCard.render(cardOpts)));
     });
 
-    parsed.$('.captioned-image-container').forEach((div) => {
+    parsed.$('.captioned-image-container').forEach(div => {
         const imgAltEl = parsed.$('img[alt]', div)[0];
         const imgAlt = imgAltEl ? attr(imgAltEl, 'alt') : '';
         const linkEl = parsed.$('a.image-link', div)[0];
@@ -420,7 +426,7 @@ const processContent = (post, siteUrl, options) => {
         replaceWith(div, serializer.serialize(imageCard.render(cardOpts)));
     });
 
-    parsed.$('.image-link').forEach((anchor) => {
+    parsed.$('.image-link').forEach(anchor => {
         const imgAltEl = parsed.$('img[alt]', anchor)[0];
         const imgAlt = imgAltEl ? attr(imgAltEl, 'alt') : '';
         const linkHref = attr(anchor, 'href');
@@ -444,7 +450,7 @@ const processContent = (post, siteUrl, options) => {
         replaceWith(anchor, serializer.serialize(imageCard.render(cardOpts)));
     });
 
-    parsed.$('.file-embed-wrapper').forEach((el) => {
+    parsed.$('.file-embed-wrapper').forEach(el => {
         const fileSrcEl = parsed.$('.file-embed-button', el)[0];
         const fileSrc = attr(fileSrcEl, 'href');
         const fileTitleEl = parsed.$('.file-embed-details-h1', el)[0];
@@ -460,20 +466,20 @@ const processContent = (post, siteUrl, options) => {
             const unit = fileSizeMatch[2].toUpperCase();
 
             switch (unit) {
-            case 'KB':
-                fileSizeBytes = size * 1024;
-                break;
-            case 'MB':
-                fileSizeBytes = size * 1024 * 1024;
-                break;
-            case 'GB':
-                fileSizeBytes = size * 1024 * 1024 * 1024;
-                break;
-            case 'TB':
-                fileSizeBytes = size * 1024 * 1024 * 1024 * 1024;
-                break;
-            default:
-                fileSizeBytes = size;
+                case 'KB':
+                    fileSizeBytes = size * 1024;
+                    break;
+                case 'MB':
+                    fileSizeBytes = size * 1024 * 1024;
+                    break;
+                case 'GB':
+                    fileSizeBytes = size * 1024 * 1024 * 1024;
+                    break;
+                case 'TB':
+                    fileSizeBytes = size * 1024 * 1024 * 1024 * 1024;
+                    break;
+                default:
+                    fileSizeBytes = size;
             }
         }
 
@@ -490,11 +496,11 @@ const processContent = (post, siteUrl, options) => {
         replaceWith(el, serializer.serialize(fileCard.render(cardOpts)));
     });
 
-    parsed.$('.comment').forEach((el) => {
+    parsed.$('.comment').forEach(el => {
         el.remove();
     });
 
-    parsed.$('.mention-wrap').forEach((el) => {
+    parsed.$('.mention-wrap').forEach(el => {
         const attrsRaw = attr(el, 'data-attrs');
 
         let attrs;
@@ -513,7 +519,7 @@ const processContent = (post, siteUrl, options) => {
         }
     });
 
-    parsed.$('.digest-post-embed').forEach((el) => {
+    parsed.$('.digest-post-embed').forEach(el => {
         const attrsRaw = attr(el, 'data-attrs');
 
         let attrs;
@@ -555,11 +561,11 @@ const processContent = (post, siteUrl, options) => {
         replaceWith(el, bookmarkHtml);
     });
 
-    parsed.$('a > style').forEach((style) => {
+    parsed.$('a > style').forEach(style => {
         style.remove();
     });
 
-    parsed.$('ul, ol').forEach((list) => {
+    parsed.$('ul, ol').forEach(list => {
         if (parsed.$('img, div, figure, blockquote, .button-wrapper', list).length) {
             insertBefore(list, '<!--kg-card-begin: html-->');
             insertAfter(list, '<!--kg-card-end: html-->');
@@ -567,7 +573,7 @@ const processContent = (post, siteUrl, options) => {
     });
 
     // Remove Substack share buttons
-    parsed.$('p.button-wrapper').forEach((button) => {
+    parsed.$('p.button-wrapper').forEach(button => {
         let shareLinks = parsed.$(':scope > a.button', button);
         if (shareLinks.length === 1 && siteUrl) {
             let shareLink = shareLinks[0];
@@ -589,10 +595,13 @@ const processContent = (post, siteUrl, options) => {
     });
 
     // Update button elements
-    parsed.$('p.button-wrapper').forEach((button) => {
+    parsed.$('p.button-wrapper').forEach(button => {
         let buttons = parsed.$(':scope > a.button', button);
         if (buttons.length === 1 && siteUrl) {
-            let siteRegex = new RegExp(`^(?:${escapeStringRegexp(siteUrl)}(?:\\/?)(?:p\\/)?)([a-zA-Z-_\\d]*)(?:\\/?)`, 'gi');
+            let siteRegex = new RegExp(
+                `^(?:${escapeStringRegexp(siteUrl)}(?:\\/?)(?:p\\/)?)([a-zA-Z-_\\d]*)(?:\\/?)`,
+                'gi'
+            );
             let buttonLink = buttons[0];
             let buttonHref = attr(buttonLink, 'href');
             let buttonText = buttonLink.textContent;
@@ -624,13 +633,16 @@ const processContent = (post, siteUrl, options) => {
                 }
             }
 
-            replaceWith(button, `<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+            replaceWith(
+                button,
+                `<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`
+            );
         }
     });
 
     // TODO: this should be a parser plugin
     // Wrap nested lists in HTML card
-    parsed.$('ul li ul, ol li ol, ol li ul, ul li ol').forEach((nestedList) => {
+    parsed.$('ul li ul, ol li ol, ol li ul, ul li ol').forEach(nestedList => {
         const parentList = parents(nestedList, 'ul, ol')[0];
         if (parentList) {
             insertBefore(parentList, '<!--kg-card-begin: html-->');
@@ -641,7 +653,7 @@ const processContent = (post, siteUrl, options) => {
     // Handle footnotes
     let footnotesItems = [];
     let footnotesCount = 0;
-    parsed.$('.footnote').forEach((el) => {
+    parsed.$('.footnote').forEach(el => {
         const footnoteAnchor = parsed.$('a', el)[0];
         let footnoteBodyAnchor = attr(footnoteAnchor, 'href');
 
@@ -653,7 +665,10 @@ const processContent = (post, siteUrl, options) => {
         const pElements = parsed.$('p', footnoteContent);
         const lastP = pElements[pElements.length - 1];
         if (lastP) {
-            lastP.insertAdjacentHTML('beforeend', ` <a href="${footnoteBodyAnchor}" title="Jump back to footnote ${footnoteNumber} in the text.">↩</a>`);
+            lastP.insertAdjacentHTML(
+                'beforeend',
+                ` <a href="${footnoteBodyAnchor}" title="Jump back to footnote ${footnoteNumber} in the text.">↩</a>`
+            );
         }
 
         footnotesItems.push(`<li id="${footnoteID}">${serializeChildren(footnoteContent)}</li>`);
@@ -669,7 +684,7 @@ const processContent = (post, siteUrl, options) => {
     }
 
     // Wrap content that has footnote anchors in HTML tags to retain the footnote jump anchor
-    parsed.$('p, ul, ol').forEach((el) => {
+    parsed.$('p, ul, ol').forEach(el => {
         if (parsed.$('a.footnote-anchor', el).length > 0) {
             insertBefore(el, '<!--kg-card-begin: html-->');
             insertAfter(el, '<!--kg-card-end: html-->');
@@ -678,7 +693,7 @@ const processContent = (post, siteUrl, options) => {
 
     // Remove or replace subscribe links on the same domain
     if (options.noSubscribeButtons) {
-        parsed.$('a').forEach((anchor) => {
+        parsed.$('a').forEach(anchor => {
             let href = attr(anchor, 'href');
             let linkRegex = new RegExp(`^(${escapeStringRegexp(siteUrl)})?(/subscribe)(.*)`, 'gi');
 
@@ -693,7 +708,7 @@ const processContent = (post, siteUrl, options) => {
             }
         });
     } else if (options.subscribeLink) {
-        parsed.$('a').forEach((anchor) => {
+        parsed.$('a').forEach(anchor => {
             let href = attr(anchor, 'href');
             let linkRegex = new RegExp(`^(${escapeStringRegexp(siteUrl)})?(/subscribe)(.*)`, 'gi');
 
@@ -711,22 +726,25 @@ const processContent = (post, siteUrl, options) => {
 
     // Remove or replace signup forms with a Portal signup button
     if (options.noSubscribeButtons) {
-        parsed.$('.subscription-widget-wrap, .subscription-widget-wrap-editor').forEach((div) => {
+        parsed.$('.subscription-widget-wrap, .subscription-widget-wrap-editor').forEach(div => {
             div.remove();
         });
     } else if (options.subscribeLink) {
-        parsed.$('.subscription-widget-wrap, .subscription-widget-wrap-editor').forEach((div) => {
+        parsed.$('.subscription-widget-wrap, .subscription-widget-wrap-editor').forEach(div => {
             const hasForm = parsed.$('form', div);
 
             if (hasForm.length) {
                 const submitEl = parsed.$('form input[type="submit"]', div)[0];
                 const buttonText = submitEl ? attr(submitEl, 'value') : '';
-                replaceWith(div, `<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+                replaceWith(
+                    div,
+                    `<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`
+                );
             }
         });
     }
 
-    parsed.$('.embedded-post-wrap').forEach((div) => {
+    parsed.$('.embedded-post-wrap').forEach(div => {
         const attrs = attr(div, 'data-attrs') || false;
 
         if (!attrs) {
@@ -747,7 +765,7 @@ const processContent = (post, siteUrl, options) => {
         replaceWith(div, `<!--kg-card-begin: html-->${embeddedHtml}<!--kg-card-end: html-->`);
     });
 
-    parsed.$('div.instagram').forEach((el) => {
+    parsed.$('div.instagram').forEach(el => {
         const instagramLink = parsed.$('a.instagram-image', el)[0];
         let src = instagramLink ? attr(instagramLink, 'href') : '';
 
@@ -773,7 +791,7 @@ const processContent = (post, siteUrl, options) => {
     });
 
     // For each image and link, alter the path to remove cropping & sizing for image paths
-    parsed.$('img[src], a[href]').forEach((el) => {
+    parsed.$('img[src], a[href]').forEach(el => {
         const src = attr(el, 'src');
         const href = attr(el, 'href');
 
@@ -880,11 +898,12 @@ export default async (input, ctx) => {
             let postFiles = await getFiles(postsDir);
             let postContent = await readFiles(postFiles, postsDir);
 
-            input.posts.map((post) => { // eslint-disable-line array-callback-return
+            input.posts.map(post => {
+                // eslint-disable-line array-callback-return
                 post.data.html = postContent[post.substackId];
             });
         } catch (error) {
-            return new errors.InternalServerError({message: 'Couldn\'t read post files'});
+            return new errors.InternalServerError({message: "Couldn't read post files"});
         }
     }
 
@@ -901,8 +920,4 @@ export default async (input, ctx) => {
     return output;
 };
 
-export {
-    processContent,
-    getImageDimensions,
-    largeImageUrl
-};
+export {processContent, getImageDimensions, largeImageUrl};

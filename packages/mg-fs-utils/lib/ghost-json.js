@@ -10,7 +10,7 @@ import {readJson} from 'fs-extra/esm';
  *
  * @param {String} jsonPath - name of file to read
  */
-const read = async (jsonPath) => {
+const read = async jsonPath => {
     return await readJson(jsonPath);
 };
 

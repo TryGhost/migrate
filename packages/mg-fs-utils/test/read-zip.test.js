@@ -22,13 +22,13 @@ describe('Read Zip', function () {
     });
 
     after(function () {
-        unlink(inputZipPath, (err) => {
+        unlink(inputZipPath, err => {
             if (err) {
                 throw err;
             }
         });
 
-        unlink(doubleInputZipPath, (err) => {
+        unlink(doubleInputZipPath, err => {
             if (err) {
                 throw err;
             }
@@ -52,13 +52,10 @@ describe('Read Zip', function () {
     });
 
     it('Throws when no zip path is provided', async function () {
-        await assert.rejects(
-            readZipEntries(),
-            (err) => {
-                assert.ok(err.message.includes('No zip path provided'));
-                return true;
-            }
-        );
+        await assert.rejects(readZipEntries(), err => {
+            assert.ok(err.message.includes('No zip path provided'));
+            return true;
+        });
     });
 
     it('Can read nested zips', async function () {

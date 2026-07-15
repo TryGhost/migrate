@@ -8,14 +8,19 @@ import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import prettyMilliseconds from 'pretty-ms';
 
-const initialize = (options) => {
+const initialize = options => {
     return {
         title: 'Initializing Workspace',
         task: async (ctx, task) => {
             ctx.options = options;
             ctx.allowScrape = {
                 all: ctx.options.scrape.includes('all'),
-                assets: ctx.options.scrape.includes('all') || ctx.options.scrape.includes('assets') || ctx.options.scrape.includes('img') || ctx.options.scrape.includes('media') || ctx.options.scrape.includes('files'),
+                assets:
+                    ctx.options.scrape.includes('all') ||
+                    ctx.options.scrape.includes('assets') ||
+                    ctx.options.scrape.includes('img') ||
+                    ctx.options.scrape.includes('media') ||
+                    ctx.options.scrape.includes('files'),
                 web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
             };
 
@@ -24,12 +29,13 @@ const initialize = (options) => {
             ctx.fileCache = new fsUtils.FileCache(`beehiiv-api-${ctx.options.cacheName}`, {
                 tmpPath: ctx.options.tmpPath
             });
-            ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
-                domains: [
-                    'http://media.beehiiv.com',
-                    'https://media.beehiiv.com'
-                ]
-            }, ctx);
+            ctx.assetScraper = new MgAssetScraper(
+                ctx.fileCache,
+                {
+                    domains: ['http://media.beehiiv.com', 'https://media.beehiiv.com']
+                },
+                ctx
+            );
             await ctx.assetScraper.init();
             ctx.linkFixer = new MgLinkFixer();
 
@@ -42,12 +48,12 @@ const initialize = (options) => {
     };
 };
 
-const getFullTaskList = (options) => {
+const getFullTaskList = options => {
     return [
         initialize(options),
         {
             title: 'Fetch beehiiv content',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     let tasks = await mgBeehiiv.fetchTasks(options, ctx);
                     // return makeTaskRunner(tasks, options);
@@ -60,7 +66,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Map & process content',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     let tasks = await mgBeehiiv.mapPostsTasks(options, ctx);
                     return makeTaskRunner(tasks, {...options});
@@ -72,7 +78,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Build Link Map',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 4. Create a map of all known links for use later
                 try {
                     ctx.linkFixer.buildMap(ctx);
@@ -84,7 +90,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Format data as Ghost JSON',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 5. Format the data as a valid Ghost JSON file
                 try {
                     ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
@@ -97,7 +103,7 @@ const getFullTaskList = (options) => {
         {
             title: 'Fetch images via AssetScraper',
             skip: ctx => !ctx.allowScrape.assets,
-            task: async (ctx) => {
+            task: async ctx => {
                 // 6. Format the data as a valid Ghost JSON file
                 let tasks = ctx.assetScraper.getTasks();
                 return makeTaskRunner(tasks, {
@@ -117,7 +123,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Convert HTML -> Lexical',
-            task: (ctx) => {
+            task: ctx => {
                 // 8. Convert post HTML -> Lexical
                 try {
                     let tasks = mgHtmlLexical.convert(ctx);
@@ -130,7 +136,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Write Ghost import JSON File',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 9. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
@@ -151,7 +157,11 @@ const getFullTaskList = (options) => {
                     let timer = Date.now();
                     const zipFinalPath = options.outputPath || process.cwd();
                     // zip the file and save it temporarily
-                    ctx.outputFile = await fsUtils.zip.write(zipFinalPath, ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+                    ctx.outputFile = await fsUtils.zip.write(
+                        zipFinalPath,
+                        ctx.fileCache.zipDir,
+                        ctx.fileCache.defaultZipFileName
+                    );
 
                     if (isStorage) {
                         const storage = options.outputStorage;
@@ -160,7 +170,10 @@ const getFullTaskList = (options) => {
                         // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
                         // Upload the file to the storage
-                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-beehiiv-${ctx.options.cacheName}.zip`});
+                        ctx.outputFile.path = await storage.upload({
+                            body: fileBuffer,
+                            fileName: `gh-beehiiv-${ctx.options.cacheName}.zip`
+                        });
                         // now that the file is uploaded to the storage, delete the local zip file
                         await fsUtils.zip.deleteFile(localFilePath);
                     }
@@ -175,7 +188,7 @@ const getFullTaskList = (options) => {
         {
             title: 'Clearing cached files',
             enabled: () => !options.cache && options.zip,
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {
@@ -187,7 +200,7 @@ const getFullTaskList = (options) => {
     ];
 };
 
-const getTaskRunner = (options) => {
+const getTaskRunner = options => {
     let tasks = [];
 
     tasks = getFullTaskList(options);

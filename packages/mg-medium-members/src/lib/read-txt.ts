@@ -23,6 +23,4 @@ const memberStats = async ({txtPath}: {txtPath: string}) => {
     };
 };
 
-export {
-    memberStats
-};
+export {memberStats};

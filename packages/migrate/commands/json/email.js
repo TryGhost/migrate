@@ -9,7 +9,7 @@ const group = 'Utilities:';
 const flags = 'json-email <pathToJSON>';
 
 // Configure all the options
-const setup = (sywac) => {
+const setup = sywac => {
     sywac.boolean('-V --verbose', {
         defaultValue: Boolean(process?.env?.DEBUG),
         desc: 'Show verbose output'
@@ -29,7 +29,7 @@ const desc = 'Add emails to all user resources';
 const paramsDesc = ['Path to a Ghost JSON file to convert'];
 
 // What to do when this command is executed
-const run = async (argv) => {
+const run = async argv => {
     let timer = Date.now();
     let context = {errors: []};
 

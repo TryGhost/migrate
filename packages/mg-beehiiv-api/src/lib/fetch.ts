@@ -26,7 +26,19 @@ const discover = async (key: string, pubId: string) => {
     return data.total_results;
 };
 
-const cachedFetch = async ({fileCache, key, pubId, limit = API_LIMIT, page}: {fileCache: any, key: string, pubId: string, limit?: number, page: number}) => {
+const cachedFetch = async ({
+    fileCache,
+    key,
+    pubId,
+    limit = API_LIMIT,
+    page
+}: {
+    fileCache: any;
+    key: string;
+    pubId: string;
+    limit?: number;
+    page: number;
+}) => {
     let filename = `beehiiv_api_${limit}_${page}.json`;
 
     if (fileCache.hasFile(filename, 'tmp')) {
@@ -63,21 +75,22 @@ export const fetchTasks = async (options: any, ctx: any) => {
             title: `Fetching posts page ${page} of ${totalPages}`,
             task: async (_: any, task: any) => {
                 try {
-                    let response = await cachedFetch({fileCache: ctx.fileCache ,key: options.key, pubId: options.id, page: page});
+                    let response = await cachedFetch({
+                        fileCache: ctx.fileCache,
+                        key: options.key,
+                        pubId: options.id,
+                        page: page
+                    });
 
                     ctx.result.posts = ctx.result.posts.concat(response.data);
 
                     if (options.postsAfter) {
                         const afterTimestamp = new Date(options.postsAfter).getTime() / 1000;
-                        ctx.result.posts = ctx.result.posts.filter(
-                            (post: any) => post.publish_date >= afterTimestamp
-                        );
+                        ctx.result.posts = ctx.result.posts.filter((post: any) => post.publish_date >= afterTimestamp);
                     }
                     if (options.postsBefore) {
                         const beforeTimestamp = new Date(options.postsBefore).getTime() / 1000;
-                        ctx.result.posts = ctx.result.posts.filter(
-                            (post: any) => post.publish_date <= beforeTimestamp
-                        );
+                        ctx.result.posts = ctx.result.posts.filter((post: any) => post.publish_date <= beforeTimestamp);
                     }
                 } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -91,6 +104,4 @@ export const fetchTasks = async (options: any, ctx: any) => {
     return tasks;
 };
 
-export {
-    authedClient
-};
+export {authedClient};

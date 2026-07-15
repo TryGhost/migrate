@@ -66,7 +66,7 @@ const options = [
         type: 'boolean',
         flags: '--firstImageAsFeatured',
         defaultValue: true,
-        desc: 'Use the first image as the post\'s feature_image'
+        desc: "Use the first image as the post's feature_image"
     },
     {
         type: 'boolean',
@@ -90,7 +90,7 @@ const defaults = convertOptionsToDefaults(options);
 const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
-const run = async (argv) => {
+const run = async argv => {
     let context = {
         errors: [],
         warnings: []

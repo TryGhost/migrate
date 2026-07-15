@@ -46,18 +46,18 @@ function getMaxLength(schema: any): number | undefined {
 
 function mapType(defType: string): string {
     switch (defType) {
-    case 'string':
-        return 'string';
-    case 'boolean':
-        return 'boolean';
-    case 'date':
-        return 'dateTime';
-    case 'array':
-        return 'array';
-    case 'enum':
-        return 'string';
-    default:
-        return defType;
+        case 'string':
+            return 'string';
+        case 'boolean':
+            return 'boolean';
+        case 'date':
+            return 'dateTime';
+        case 'array':
+            return 'array';
+        case 'enum':
+            return 'string';
+        default:
+            return defType;
     }
 }
 

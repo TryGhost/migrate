@@ -1,6 +1,6 @@
 import {join} from 'node:path';
 
-const htmlUnescapeMap: Record<string, string> = {'&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': '\''};
+const htmlUnescapeMap: Record<string, string> = {'&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'"};
 const htmlUnescapeRegex = /&(?:amp|lt|gt|quot|#39);/g;
 
 /**
@@ -18,13 +18,21 @@ export const startCase = (str: string): string => str.replace(/[-_]+/g, ' ').rep
  * Convert a string to kebab-case.
  * 'Hello World' → 'hello-world'
  */
-export const kebabCase = (str: string): string => str.replace(/([a-z])([A-Z])/g, '$1-$2').replace(/[\s_]+/g, '-').toLowerCase();
+export const kebabCase = (str: string): string =>
+    str
+        .replace(/([a-z])([A-Z])/g, '$1-$2')
+        .replace(/[\s_]+/g, '-')
+        .toLowerCase();
 
 /**
  * Strip HTML tags and normalize whitespace.
  * '<p>Hello <b>world</b></p>' → 'Hello world'
  */
-export const stripHtml = (html: string): string => html.replace(/<[^>]+>/g, '').replace(/\r?\n|\r/g, ' ').trim();
+export const stripHtml = (html: string): string =>
+    html
+        .replace(/<[^>]+>/g, '')
+        .replace(/\r?\n|\r/g, ' ')
+        .trim();
 
 /**
  * Strip protocol and query parameters from a URL, returning host/path.

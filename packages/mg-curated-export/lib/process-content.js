@@ -8,7 +8,9 @@ const processTextItem = (item, ctx, content) => {
         const imagePath = join('/', ctx.fileCache.imagePath, `${content.number}`, item.image_original_filename);
 
         if (item.url) {
-            itemHtmlChunks.push(`<!--kg-card-begin: html--><a class="kg-card kg-image-card" href="${item.url}"><img class="kg-image" src="${imagePath}" alt="${item.title}" /></a><!--kg-card-end: html-->`);
+            itemHtmlChunks.push(
+                `<!--kg-card-begin: html--><a class="kg-card kg-image-card" href="${item.url}"><img class="kg-image" src="${imagePath}" alt="${item.title}" /></a><!--kg-card-end: html-->`
+            );
         } else {
             itemHtmlChunks.push(`<img src="${imagePath}" alt="${item.title}" />`);
         }
@@ -30,7 +32,9 @@ const processLinkItem = (item, ctx, content) => {
         const imagePath = join('/', ctx.fileCache.imagePath, `${content.number}`, item.image_original_filename);
 
         if (item.url) {
-            itemHtmlChunks.push(`<!--kg-card-begin: html--><a class="kg-card kg-image-card" href="${item.url}"><img class="kg-image" src="${imagePath}" alt="${item.title}" /></a><!--kg-card-end: html-->`);
+            itemHtmlChunks.push(
+                `<!--kg-card-begin: html--><a class="kg-card kg-image-card" href="${item.url}"><img class="kg-image" src="${imagePath}" alt="${item.title}" /></a><!--kg-card-end: html-->`
+            );
         } else {
             itemHtmlChunks.push(`<img src="${imagePath}" alt="${item.title}" />`);
         }
@@ -46,7 +50,7 @@ const processLinkItem = (item, ctx, content) => {
 export default (content, ctx) => {
     let htmlChunks = [];
 
-    content.categories.forEach((element) => {
+    content.categories.forEach(element => {
         htmlChunks.push(`<h2>${element.name}</h2>`);
 
         element.items.forEach((item, i) => {

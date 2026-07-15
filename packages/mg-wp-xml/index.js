@@ -2,7 +2,7 @@ import {readFileOrFolder} from './lib/read-file.js';
 import process from './lib/process.js';
 import {contentStats} from './lib/read-xml.js';
 
-export default async (ctx) => {
+export default async ctx => {
     const input = await readFileOrFolder(ctx.options.pathToFile);
 
     // process xml file (posts, pages, users, tags)
@@ -11,6 +11,4 @@ export default async (ctx) => {
     return processed;
 };
 
-export {
-    contentStats
-};
+export {contentStats};

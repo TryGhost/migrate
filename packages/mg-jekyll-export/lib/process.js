@@ -9,9 +9,7 @@ export default (input, options = {}) => {
             email: `exampleuser@example.com`,
             name: 'Example User',
             slug: 'exampleuser',
-            roles: [
-                'Contributor'
-            ]
+            roles: ['Contributor']
         }
     };
 

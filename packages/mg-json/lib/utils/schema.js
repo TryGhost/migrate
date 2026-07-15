@@ -3,9 +3,7 @@
 // From Ghost core, along with a bunch of utility classes
 
 // @TODO extend this to all importable Ghost resources
-const RESOURCES = [
-    'posts', 'posts_authors', 'posts_meta', 'posts_tags', 'tags', 'users'
-];
+const RESOURCES = ['posts', 'posts_authors', 'posts_meta', 'posts_tags', 'tags', 'users'];
 
 const RESOURCE_SINGULAR_TO_PLURAL = {
     user: 'users',
@@ -14,12 +12,7 @@ const RESOURCE_SINGULAR_TO_PLURAL = {
     tag: 'tags'
 };
 
-const AUTHOR_ALIASES = [
-    'author',
-    'authors',
-    'primary_author',
-    'author_id'
-];
+const AUTHOR_ALIASES = ['author', 'authors', 'primary_author', 'author_id'];
 
 export default {
     RESOURCES,

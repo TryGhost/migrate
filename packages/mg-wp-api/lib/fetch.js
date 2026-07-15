@@ -17,14 +17,17 @@ const discover = async (url, {apiUser, usersJSON, posts, pages, limit, cpt, post
     };
 
     if (cpt) {
-        await Promise.all(cpt.map(async (cptSlug) => {
-            site[cptSlug] = site.registerRoute('wp/v2', `/${cptSlug}/(?P<id>)`);
+        await Promise.all(
+            cpt.map(async cptSlug => {
+                site[cptSlug] = site.registerRoute('wp/v2', `/${cptSlug}/(?P<id>)`);
 
-            let cptInfo = await site[cptSlug]().perPage(limit);
+                let cptInfo = await site[cptSlug]().perPage(limit);
 
-            values.totals[cptSlug] = cptInfo._paging && cptInfo._paging.total ? cptInfo._paging.total : 0;
-            values.batches[cptSlug] = cptInfo._paging && cptInfo._paging.totalPages ? cptInfo._paging.totalPages : 0;
-        }));
+                values.totals[cptSlug] = cptInfo._paging && cptInfo._paging.total ? cptInfo._paging.total : 0;
+                values.batches[cptSlug] =
+                    cptInfo._paging && cptInfo._paging.totalPages ? cptInfo._paging.totalPages : 0;
+            })
+        );
     }
 
     values.site = site;
@@ -73,16 +76,51 @@ const cachedFetch = async (fileCache, api, type, limit, page, isAuthRequest, pos
 
     if (type === 'posts') {
         if (postsBefore && postsAfter) {
-            response = isAuthRequest ? await api.site.posts().param('context', 'edit').before(new Date(postsBefore)).after(new Date(postsAfter)).perPage(limit).page(page).embed() : await api.site.posts().before(new Date(postsBefore)).after(new Date(postsAfter)).perPage(limit).page(page).embed();
+            response = isAuthRequest
+                ? await api.site
+                      .posts()
+                      .param('context', 'edit')
+                      .before(new Date(postsBefore))
+                      .after(new Date(postsAfter))
+                      .perPage(limit)
+                      .page(page)
+                      .embed()
+                : await api.site
+                      .posts()
+                      .before(new Date(postsBefore))
+                      .after(new Date(postsAfter))
+                      .perPage(limit)
+                      .page(page)
+                      .embed();
         } else if (postsAfter) {
-            response = isAuthRequest ? await api.site.posts().param('context', 'edit').after(new Date(postsAfter)).perPage(limit).page(page).embed() : await api.site.posts().after(new Date(postsAfter)).perPage(limit).page(page).embed();
+            response = isAuthRequest
+                ? await api.site
+                      .posts()
+                      .param('context', 'edit')
+                      .after(new Date(postsAfter))
+                      .perPage(limit)
+                      .page(page)
+                      .embed()
+                : await api.site.posts().after(new Date(postsAfter)).perPage(limit).page(page).embed();
         } else if (postsBefore) {
-            response = isAuthRequest ? await api.site.posts().param('context', 'edit').before(new Date(postsBefore)).perPage(limit).page(page).embed() : await api.site.posts().before(new Date(postsBefore)).perPage(limit).page(page).embed();
+            response = isAuthRequest
+                ? await api.site
+                      .posts()
+                      .param('context', 'edit')
+                      .before(new Date(postsBefore))
+                      .perPage(limit)
+                      .page(page)
+                      .embed()
+                : await api.site.posts().before(new Date(postsBefore)).perPage(limit).page(page).embed();
         } else {
-            response = isAuthRequest ? await api.site.posts().param('context', 'edit').perPage(limit).page(page).embed() : await api.site.posts().perPage(limit).page(page).embed();
+            response = isAuthRequest
+                ? await api.site.posts().param('context', 'edit').perPage(limit).page(page).embed()
+                : await api.site.posts().perPage(limit).page(page).embed();
         }
     } else {
-        response = isAuthRequest ? await api.site[type]().param('context', 'edit').perPage(limit).page(page).embed() : await api.site[type]().perPage(limit).page(page).embed();
+        response = isAuthRequest
+            ? await api.site[type]().param('context', 'edit').perPage(limit).page(page).embed()
+            : await api.site[type]().perPage(limit).page(page).embed();
     }
 
     await fileCache.writeTmpFile(response, filename);
@@ -101,13 +139,22 @@ const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest, postsBefo
     for (let page = 1; page <= totalPages; page++) {
         tasks.push({
             title: `Fetching ${type}, page ${page} of ${totalPages}`,
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
-                    let response = await cachedFetch(fileCache, api, type, limit, page, isAuthRequest, postsBefore, postsAfter);
+                    let response = await cachedFetch(
+                        fileCache,
+                        api,
+                        type,
+                        limit,
+                        page,
+                        isAuthRequest,
+                        postsBefore,
+                        postsAfter
+                    );
 
                     // If maxPosts is specified and this is posts, limit the response based on current total
                     if (maxPosts && type === 'posts') {
-                        let resultType = (type !== 'users') ? 'posts' : type;
+                        let resultType = type !== 'users' ? 'posts' : type;
                         let currentTotal = ctx.result[resultType].length;
                         let remainingPosts = maxPosts - currentTotal;
 
@@ -117,7 +164,7 @@ const buildTasks = (fileCache, tasks, api, type, limit, isAuthRequest, postsBefo
                     }
 
                     // Treat all types as posts, except users
-                    let resultType = (type !== 'users') ? 'posts' : type;
+                    let resultType = type !== 'users' ? 'posts' : type;
 
                     ctx.result[resultType].push(...response);
                 } catch (err) {
@@ -165,7 +212,7 @@ const tasks = async (url, ctx) => {
     }
 
     if (cpt) {
-        cpt.forEach((cptSlug) => {
+        cpt.forEach(cptSlug => {
             buildTasks(ctx.fileCache, theTasks, api, `${cptSlug}`, limit, isAuthRequest);
         });
     }

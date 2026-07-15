@@ -9,7 +9,18 @@ import PostContext, {PostConstructorOptions, normalizeContentFormat, type Conten
 import TagContext from './TagContext.js';
 import AuthorContext from './AuthorContext.js';
 import {createDatabase, type DatabaseModels} from './database.js';
-import {withTransaction, findByIds, findByColumn, buildDateWhere, buildFullWhere, countWhere, findPostsWhere, findPostIdColumnsWhere, findAllPostIdsWhere, findPostsByIds} from './db-helpers.js';
+import {
+    withTransaction,
+    findByIds,
+    findByColumn,
+    buildDateWhere,
+    buildFullWhere,
+    countWhere,
+    findPostsWhere,
+    findPostIdColumnsWhere,
+    findAllPostIdsWhere,
+    findPostsByIds
+} from './db-helpers.js';
 
 const require = createRequire(import.meta.url);
 const lexicalConverter = require('@tryghost/kg-html-to-lexical') as typeof import('@tryghost/kg-html-to-lexical');
@@ -80,7 +91,13 @@ export default class MigrateContext extends MigrateBase {
     #duplicateSlugs: DuplicateSlugEntry[] = [];
     #emitter = new EventEmitter();
 
-    constructor({contentFormat = 'lexical', dbPath, ephemeral, emitEvents = true, warnOnLookupKeyDuplicate = false}: MigrateContextOptions = {}) {
+    constructor({
+        contentFormat = 'lexical',
+        dbPath,
+        ephemeral,
+        emitEvents = true,
+        warnOnLookupKeyDuplicate = false
+    }: MigrateContextOptions = {}) {
         super();
 
         this.#contentFormat = normalizeContentFormat(contentFormat);
@@ -105,7 +122,9 @@ export default class MigrateContext extends MigrateBase {
 
     async init() {
         if (this.#db) {
-            throw new errors.InternalServerError({message: 'MigrateContext is already initialized. Call close() before reinitializing.'});
+            throw new errors.InternalServerError({
+                message: 'MigrateContext is already initialized. Call close() before reinitializing.'
+            });
         }
         const storage = this.#ephemeral ? ':memory:' : this.#dbPath;
         this.#db = createDatabase(storage);
@@ -166,11 +185,13 @@ export default class MigrateContext extends MigrateBase {
                     retainedUrl = source.url || data.canonical_url || '';
                 }
 
-                groups.set(entry.oldSlug, [{
-                    oldSlug: entry.oldSlug,
-                    newSlug: entry.oldSlug,
-                    url: retainedUrl
-                }]);
+                groups.set(entry.oldSlug, [
+                    {
+                        oldSlug: entry.oldSlug,
+                        newSlug: entry.oldSlug,
+                        url: retainedUrl
+                    }
+                ]);
             }
             groups.get(entry.oldSlug)!.push(entry);
         }
@@ -219,7 +240,7 @@ export default class MigrateContext extends MigrateBase {
                     }
                 }
                 this.db.db.exec('COMMIT');
-            /* c8 ignore next 4 */
+                /* c8 ignore next 4 */
             } catch (err) {
                 this.db.db.exec('ROLLBACK');
                 throw err;
@@ -232,7 +253,7 @@ export default class MigrateContext extends MigrateBase {
 
             // Yield to the event loop between batches so V8 can garbage-collect
             // the intermediate DOM/lexical trees created by the converter
-            await new Promise((r) => {
+            await new Promise(r => {
                 setImmediate(r);
             });
         }
@@ -252,7 +273,8 @@ export default class MigrateContext extends MigrateBase {
         } catch (err) {
             this.db.db.exec('ROLLBACK');
             throw err;
-        /* c8 ignore next */ } finally {
+            /* c8 ignore next */
+        } finally {
             this.db.inTransaction = false;
         }
     }
@@ -318,7 +340,10 @@ export default class MigrateContext extends MigrateBase {
     }
 
     // eslint-disable-next-line no-unused-vars
-    async forEachPost(callback: (post: PostContext) => Promise<void>, {batchSize = 100, filter}: ForEachPostOptions = {}) {
+    async forEachPost(
+        callback: (post: PostContext) => Promise<void>,
+        {batchSize = 100, filter}: ForEachPostOptions = {}
+    ) {
         const where = this.#buildFilterWhere(filter);
         // Snapshot matching IDs up front so mutations during iteration
         // cannot shift pagination (e.g. changing a date or tag used in the filter).
@@ -349,23 +374,47 @@ export default class MigrateContext extends MigrateBase {
         const where = this.#buildFilterWhere(filter);
         const allIds = findAllPostIdsWhere(this.db, where);
 
-        yield* this.#streamByIds(allIds, batchSize, 'streamPosts', ids => findPostsByIds(this.db, ids), row => PostContext.fromRow(row, this.db));
+        yield* this.#streamByIds(
+            allIds,
+            batchSize,
+            'streamPosts',
+            ids => findPostsByIds(this.db, ids),
+            row => PostContext.fromRow(row, this.db)
+        );
     }
 
     async *streamTags({batchSize = 100}: {batchSize?: number} = {}): AsyncGenerator<TagContext> {
         const allIds = (this.db.stmts.findUsedTagIds.all() as any[]).map((r: any) => r.id as number);
 
-        yield* this.#streamByIds(allIds, batchSize, 'streamTags', ids => findByIds(this.db, 'Tags', ids), row => TagContext.fromRow(row));
+        yield* this.#streamByIds(
+            allIds,
+            batchSize,
+            'streamTags',
+            ids => findByIds(this.db, 'Tags', ids),
+            row => TagContext.fromRow(row)
+        );
     }
 
     async *streamAuthors({batchSize = 100}: {batchSize?: number} = {}): AsyncGenerator<AuthorContext> {
         const allIds = (this.db.stmts.findUsedAuthorIds.all() as any[]).map((r: any) => r.id as number);
 
-        yield* this.#streamByIds(allIds, batchSize, 'streamAuthors', ids => findByIds(this.db, 'Authors', ids), row => AuthorContext.fromRow(row));
+        yield* this.#streamByIds(
+            allIds,
+            batchSize,
+            'streamAuthors',
+            ids => findByIds(this.db, 'Authors', ids),
+            row => AuthorContext.fromRow(row)
+        );
     }
 
     // eslint-disable-next-line no-unused-vars
-    async *#streamByIds<T>(allIds: number[], batchSize: number, eventName: string, fetchBatch: (ids: number[]) => any[], toEntity: (row: any) => T): AsyncGenerator<T> {
+    async *#streamByIds<T>(
+        allIds: number[],
+        batchSize: number,
+        eventName: string,
+        fetchBatch: (ids: number[]) => any[],
+        toEntity: (row: any) => T
+    ): AsyncGenerator<T> {
         const total = allIds.length;
         let processed = 0;
 
@@ -407,7 +456,16 @@ export default class MigrateContext extends MigrateBase {
         return rows.map((row: any) => PostContext.fromRow(row, this.db));
     }
 
-    async findPosts({slug, title, sourceAttr, tagSlug, tagName, authorSlug, authorName, authorEmail}: FindPostsOptions = {}): Promise<PostContext[] | null> {
+    async findPosts({
+        slug,
+        title,
+        sourceAttr,
+        tagSlug,
+        tagName,
+        authorSlug,
+        authorName,
+        authorEmail
+    }: FindPostsOptions = {}): Promise<PostContext[] | null> {
         if (slug) {
             const rows = this.db.stmts.findPostsBySlug.all(slug) as any[];
             return rows.map((row: any) => PostContext.fromRow(row, this.db));
@@ -518,7 +576,7 @@ export default class MigrateContext extends MigrateBase {
 
     findLink(oldUrl: string): string | null {
         const row = this.db.stmts.findLink.get(oldUrl) as any;
-        return row ? row.new_url as string : null;
+        return row ? (row.new_url as string) : null;
     }
 
     async findTags({slug, name}: FindTagsOptions = {}): Promise<TagContext[] | null> {
@@ -557,7 +615,10 @@ export default class MigrateContext extends MigrateBase {
     }
 
     // eslint-disable-next-line no-unused-vars
-    async forEachAuthor(callback: (author: AuthorContext) => Promise<void>, {batchSize = 100}: {batchSize?: number} = {}) {
+    async forEachAuthor(
+        callback: (author: AuthorContext) => Promise<void>,
+        {batchSize = 100}: {batchSize?: number} = {}
+    ) {
         const allIds = (this.db.stmts.findUsedAuthorIds.all() as any[]).map((r: any) => r.id as number);
         const total = allIds.length;
         let processed = 0;
@@ -595,7 +656,10 @@ export default class MigrateContext extends MigrateBase {
     }
 
     // eslint-disable-next-line no-unused-vars
-    async forEachGhostPost(callback: (json: any, post: PostContext) => Promise<void>, {batchSize = 100, filter}: ForEachPostOptions = {}) {
+    async forEachGhostPost(
+        callback: (json: any, post: PostContext) => Promise<void>,
+        {batchSize = 100, filter}: ForEachPostOptions = {}
+    ) {
         const where = this.#buildFilterWhere(filter);
         const total = countWhere(this.db, where);
         let processed = 0;
@@ -620,7 +684,15 @@ export default class MigrateContext extends MigrateBase {
     }
 
     // eslint-disable-next-line no-unused-vars
-    async writeGhostJson(outputDir: string, {batchSize = 5000, filename: rawFilename = 'posts', filter, onWrite}: {batchSize?: number; filename?: string; filter?: PostFilter; onWrite?: (file: WrittenFile) => void} = {}): Promise<WrittenFile[]> {
+    async writeGhostJson(
+        outputDir: string,
+        {
+            batchSize = 5000,
+            filename: rawFilename = 'posts',
+            filter,
+            onWrite
+        }: {batchSize?: number; filename?: string; filter?: PostFilter; onWrite?: (file: WrittenFile) => void} = {}
+    ): Promise<WrittenFile[]> {
         const filename = rawFilename.replace(/\.json$/i, '');
         await mkdir(outputDir, {recursive: true});
         const where = this.#buildFilterWhere(filter);
@@ -641,7 +713,13 @@ export default class MigrateContext extends MigrateBase {
 
             // Load junction + entity data from DB (small — tags/authors are few)
             const postTagRows = findByColumn(this.db, 'PostTags', 'post_id', postIds, 'post_id ASC, sort_order ASC');
-            const postAuthorRows = findByColumn(this.db, 'PostAuthors', 'post_id', postIds, 'post_id ASC, sort_order ASC');
+            const postAuthorRows = findByColumn(
+                this.db,
+                'PostAuthors',
+                'post_id',
+                postIds,
+                'post_id ASC, sort_order ASC'
+            );
 
             const tagDbIds = [...new Set(postTagRows.map((r: any) => r.tag_id as number))];
             const authorDbIds = [...new Set(postAuthorRows.map((r: any) => r.author_id as number))];
@@ -675,9 +753,7 @@ export default class MigrateContext extends MigrateBase {
             }));
 
             // Stream file: posts are loaded and written in sub-batches
-            const fileName = totalBatches === 1
-                ? `${filename}.json`
-                : `${filename}-${batch + 1}.json`;
+            const fileName = totalBatches === 1 ? `${filename}.json` : `${filename}-${batch + 1}.json`;
             const outputPath = join(outputDir, fileName);
             const fh = await open(outputPath, 'w');
             const postsMeta: any[] = [];
@@ -697,7 +773,12 @@ export default class MigrateContext extends MigrateBase {
 
                 // Stream posts in sub-batches
                 for (let sub = 0; sub < batchLimit; sub += subBatchSize) {
-                    const rows = findPostsWhere(this.db, where, Math.min(subBatchSize, batchLimit - sub), batchOffset + sub);
+                    const rows = findPostsWhere(
+                        this.db,
+                        where,
+                        Math.min(subBatchSize, batchLimit - sub),
+                        batchOffset + sub
+                    );
 
                     for (const row of rows) {
                         const {post, meta} = PostContext.toGhostPost(row);
@@ -748,10 +829,14 @@ export default class MigrateContext extends MigrateBase {
         const tags = rows.map((r: any) => ({id: r.ghost_id, ...JSON.parse(r.data)}));
 
         const outputPath = join(outputDir, name);
-        const content = JSON.stringify({
-            meta: {exported_on: Date.now(), version: '2.0.0'},
-            data: {tags}
-        }, null, 2);
+        const content = JSON.stringify(
+            {
+                meta: {exported_on: Date.now(), version: '2.0.0'},
+                data: {tags}
+            },
+            null,
+            2
+        );
 
         await writeFile(outputPath, content);
         const fileStats = await stat(outputPath);
@@ -767,10 +852,14 @@ export default class MigrateContext extends MigrateBase {
         const users = rows.map((r: any) => ({id: r.ghost_id, ...JSON.parse(r.data)}));
 
         const outputPath = join(outputDir, name);
-        const content = JSON.stringify({
-            meta: {exported_on: Date.now(), version: '2.0.0'},
-            data: {users}
-        }, null, 2);
+        const content = JSON.stringify(
+            {
+                meta: {exported_on: Date.now(), version: '2.0.0'},
+                data: {users}
+            },
+            null,
+            2
+        );
 
         await writeFile(outputPath, content);
         const fileStats = await stat(outputPath);

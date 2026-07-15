@@ -28,8 +28,8 @@ type beehiivPostDataObject = {
     content: {
         premium: {
             web: string;
-        }
-    }
+        };
+    };
     // content: { premium: [Object] }
 };
 
@@ -38,7 +38,7 @@ type tagsObject = {
     data: {
         slug: string;
         name: string;
-    }
+    };
 };
 
 type authorsObject = {
@@ -47,7 +47,7 @@ type authorsObject = {
         slug: string;
         name: string;
         email: string;
-    }
+    };
 };
 
 type mappedDataObject = {

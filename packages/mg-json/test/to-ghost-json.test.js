@@ -14,7 +14,7 @@ const singlePostWithBadTagOrderFixture = require('./fixtures/single-post-with-ba
 const singlePostOnlyLongMetaFixture = require('./fixtures/single-post-only-long-meta.json');
 const singlePostOnlyMetaFixture = require('./fixtures/single-post-only-meta.json');
 
-const assertGhostPost = (post) => {
+const assertGhostPost = post => {
     assert.equal(typeof post, 'object');
     assert.ok(post !== null);
     assert.ok(!('url' in post));
@@ -24,7 +24,7 @@ const assertGhostPost = (post) => {
     assert.ok('status' in post);
 };
 
-const assertGhostUser = (user) => {
+const assertGhostUser = user => {
     assert.equal(typeof user, 'object');
     assert.ok(user !== null);
     assert.ok(!('url' in user));
@@ -35,7 +35,7 @@ const assertGhostUser = (user) => {
     assert.ok('roles' in user);
 };
 
-const assertGhostTag = (tag) => {
+const assertGhostTag = tag => {
     assert.equal(typeof tag, 'object');
     assert.ok(tag !== null);
     assert.ok(!('url' in tag));
@@ -44,7 +44,7 @@ const assertGhostTag = (tag) => {
     assert.ok('name' in tag);
 };
 
-const assertGhostJSON = (value) => {
+const assertGhostJSON = value => {
     assert.equal(typeof value, 'object');
     assert.ok(value !== null);
     assert.ok('meta' in value);
@@ -78,7 +78,7 @@ const assertGhostJSON = (value) => {
     // Posts must have a valid relation in the posts_meta object
     assert.ok(Array.isArray(value.data.posts_meta));
     assert.ok(value.data.posts_meta.length >= 1);
-    value.data.posts_meta.forEach((postMeta) => {
+    value.data.posts_meta.forEach(postMeta => {
         assert.equal(typeof postMeta, 'object');
         assert.ok(postMeta !== null);
         assert.ok('post_id' in postMeta);
@@ -87,7 +87,7 @@ const assertGhostJSON = (value) => {
     // Ghost posts must have at least one author, but we still convert to Ghost's expected multiauthor format
     assert.ok(Array.isArray(value.data.posts_authors));
     assert.ok(value.data.posts_authors.length >= 1);
-    value.data.posts_authors.forEach((postAuthor) => {
+    value.data.posts_authors.forEach(postAuthor => {
         assert.equal(typeof postAuthor, 'object');
         assert.ok(postAuthor !== null);
         assert.ok('post_id' in postAuthor);
@@ -97,7 +97,7 @@ const assertGhostJSON = (value) => {
     // there can be multiple tags, but also no tags
     assert.ok(Array.isArray(value.data.posts_tags));
     if (value.data.posts_tags.length > 0) {
-        value.data.posts_tags.forEach((postTag) => {
+        value.data.posts_tags.forEach(postTag => {
             assert.equal(typeof postTag, 'object');
             assert.ok(postTag !== null);
             assert.ok('post_id' in postTag);
@@ -132,22 +132,22 @@ describe('toGhostJSON', function () {
     // Hydrator should be able to cope with absolutely minimal data
     it('Correctly decodes titles', async function () {
         const input = {
-            posts: [{
-                url: 'https://mysite.com',
-                data: {
-                    slug: 'cool-shit',
-                    title: 'This shit&#8217;s cool',
-                    author: {
-                        url: 'https://mysite.com/me',
-                        data: {
-                            name: 'me',
-                            roles: [
-                                'Author'
-                            ]
+            posts: [
+                {
+                    url: 'https://mysite.com',
+                    data: {
+                        slug: 'cool-shit',
+                        title: 'This shit&#8217;s cool',
+                        author: {
+                            url: 'https://mysite.com/me',
+                            data: {
+                                name: 'me',
+                                roles: ['Author']
+                            }
                         }
                     }
                 }
-            }]
+            ]
         };
         const output = await toGhostJSON(input);
 
@@ -173,20 +173,22 @@ describe('toGhostJSON', function () {
     it('Single Co-Author (authors: undefined, author: person) is processed and post is not orphaned', async function () {
         // Simulates wp-xml output for a post with one contributor from category domain="author"
         const input = {
-            posts: [{
-                url: 'https://example.com/post',
-                data: {
-                    title: 'Post by contributor',
-                    slug: 'post-by-contributor',
-                    status: 'published',
-                    published_at: '2024-01-01T00:00:00.000Z',
-                    authors: undefined,
-                    author: {
-                        url: 'contributor-1',
-                        data: {slug: 'contributor-1', name: 'Contributor One'}
+            posts: [
+                {
+                    url: 'https://example.com/post',
+                    data: {
+                        title: 'Post by contributor',
+                        slug: 'post-by-contributor',
+                        status: 'published',
+                        published_at: '2024-01-01T00:00:00.000Z',
+                        authors: undefined,
+                        author: {
+                            url: 'contributor-1',
+                            data: {slug: 'contributor-1', name: 'Contributor One'}
+                        }
                     }
                 }
-            }],
+            ],
             users: []
         };
         const output = await toGhostJSON(input);
@@ -206,19 +208,21 @@ describe('toGhostJSON', function () {
     it('Multiple co-authors are in users and posts_authors and linked correctly', async function () {
         // Use distinct slugs so they don't collide with single co-author test (module-level slug dedup state)
         const input = {
-            posts: [{
-                url: 'https://example.com/post',
-                data: {
-                    title: 'Post by two contributors',
-                    slug: 'post-by-two',
-                    status: 'published',
-                    published_at: '2024-01-01T00:00:00.000Z',
-                    authors: [
-                        {url: 'multi-contributor-1', data: {slug: 'multi-contributor-1', name: 'Contributor One'}},
-                        {url: 'multi-contributor-2', data: {slug: 'multi-contributor-2', name: 'Contributor Two'}}
-                    ]
+            posts: [
+                {
+                    url: 'https://example.com/post',
+                    data: {
+                        title: 'Post by two contributors',
+                        slug: 'post-by-two',
+                        status: 'published',
+                        published_at: '2024-01-01T00:00:00.000Z',
+                        authors: [
+                            {url: 'multi-contributor-1', data: {slug: 'multi-contributor-1', name: 'Contributor One'}},
+                            {url: 'multi-contributor-2', data: {slug: 'multi-contributor-2', name: 'Contributor Two'}}
+                        ]
+                    }
                 }
-            }],
+            ],
             users: []
         };
         const output = await toGhostJSON(input);
@@ -282,7 +286,10 @@ describe('toGhostJSON', function () {
 
         // Data should be in `posts_meta[0]`
         assert.equal(output.data.posts_meta[0].meta_title, 'This is my Blog Post Title');
-        assert.equal(output.data.posts_meta[0].meta_description, 'Morbi lectus purus, blandit eu tristique nec, sollicitudin vel odio.');
+        assert.equal(
+            output.data.posts_meta[0].meta_description,
+            'Morbi lectus purus, blandit eu tristique nec, sollicitudin vel odio.'
+        );
         assert.equal(output.data.posts_meta[0].feature_image_alt, 'Lorem ipsum dolor sit amet');
         assert.equal(output.data.posts_meta[0].feature_image_caption, 'Caption text');
 
@@ -311,18 +318,20 @@ describe('toGhostJSON', function () {
 
     it('Resets slug deduplication state between calls', async function () {
         const makeInput = slug => ({
-            posts: [{
-                url: 'https://example.com/post',
-                data: {
-                    slug,
-                    title: 'Test Post',
-                    status: 'published',
-                    published_at: '2024-01-01T00:00:00.000Z',
-                    html: '<p>Content</p>',
-                    tags: [{url: 'tag', data: {name: 'Shared Tag', slug: 'shared-tag'}}],
-                    author: {url: 'author', data: {name: 'Author', slug: 'shared-author', roles: ['Author']}}
+            posts: [
+                {
+                    url: 'https://example.com/post',
+                    data: {
+                        slug,
+                        title: 'Test Post',
+                        status: 'published',
+                        published_at: '2024-01-01T00:00:00.000Z',
+                        html: '<p>Content</p>',
+                        tags: [{url: 'tag', data: {name: 'Shared Tag', slug: 'shared-tag'}}],
+                        author: {url: 'author', data: {name: 'Author', slug: 'shared-author', roles: ['Author']}}
+                    }
                 }
-            }]
+            ]
         });
 
         const output1 = await toGhostJSON(makeInput('post-1'));

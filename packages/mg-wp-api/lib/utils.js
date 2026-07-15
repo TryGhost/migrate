@@ -13,7 +13,7 @@ const makeInlinerUrls = ({domain}) => {
 
     const withProtocol = [];
 
-    inlineDomains.forEach((item) => {
+    inlineDomains.forEach(item => {
         withProtocol.push(`http://${item}`);
         withProtocol.push(`https://${item}`);
     });
@@ -21,6 +21,4 @@ const makeInlinerUrls = ({domain}) => {
     return withProtocol;
 };
 
-export {
-    makeInlinerUrls
-};
+export {makeInlinerUrls};

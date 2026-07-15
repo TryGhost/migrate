@@ -61,7 +61,20 @@ describe('beehiiv Mapper', () => {
         const parsed = await parsePostsCSV({pathToFile: join(fixturesPath, 'posts.csv')});
 
         // Check that the fields are correct
-        const fields = ['id', 'web_title', 'status', 'audience', 'content_tags', 'url', 'web_subtitle', 'email_subject_line', 'email_preview_text', 'content_html', 'thumbnail_url', 'created_at'];
+        const fields = [
+            'id',
+            'web_title',
+            'status',
+            'audience',
+            'content_tags',
+            'url',
+            'web_subtitle',
+            'email_subject_line',
+            'email_preview_text',
+            'content_html',
+            'thumbnail_url',
+            'created_at'
+        ];
         assert.deepEqual(Object.keys(parsed[0]), fields);
         assert.deepEqual(Object.keys(parsed[1]), fields);
     });
@@ -90,7 +103,20 @@ describe('beehiiv Mapper', () => {
         const fields = ['url', 'data'];
         assert.deepEqual(Object.keys(mapped), fields);
 
-        const dataFields = ['slug', 'published_at', 'updated_at', 'created_at', 'title', 'type', 'html', 'status', 'custom_excerpt', 'visibility', 'tags', 'feature_image'];
+        const dataFields = [
+            'slug',
+            'published_at',
+            'updated_at',
+            'created_at',
+            'title',
+            'type',
+            'html',
+            'status',
+            'custom_excerpt',
+            'visibility',
+            'tags',
+            'feature_image'
+        ];
         assert.deepEqual(Object.keys(mapped.data), dataFields);
 
         // console.log(mapped.data.tags);
@@ -129,16 +155,22 @@ describe('beehiiv Mapper', () => {
 
         const mapped = await mapPost({postData: bhObj});
 
-        assert.equal(mapped.data.feature_image, 'https://media.beehiiv.com/cdn-cgi/image/quality=100/uploads/asset/file/12345678/image.png');
+        assert.equal(
+            mapped.data.feature_image,
+            'https://media.beehiiv.com/cdn-cgi/image/quality=100/uploads/asset/file/12345678/image.png'
+        );
     });
 
     it('Applies default author to draft posts', async () => {
         const bhObj = {...beehiivCsvObj};
         bhObj.status = 'draft';
 
-        const mapped = await mapPost({postData: bhObj, options: {
-            defaultAuthorName: 'Test Author'
-        }});
+        const mapped = await mapPost({
+            postData: bhObj,
+            options: {
+                defaultAuthorName: 'Test Author'
+            }
+        });
 
         assert.equal(mapped.data.status, 'draft');
 
@@ -258,7 +290,7 @@ describe('beehiiv Mapper', () => {
             assert.equal(mapped.data.visibility, 'paid');
         });
 
-        it('Handles an \'All premium subscribers\' post visibility', async () => {
+        it("Handles an 'All premium subscribers' post visibility", async () => {
             const bhObj = {...beehiivCsvObj};
             delete bhObj.audience;
             bhObj.web_audiences = 'All premium subscribers';
@@ -279,9 +311,11 @@ describe('beehiiv Mapper', () => {
     });
 
     it('Map return array of posts', async () => {
-        const mapped = await mapper({options: {
-            posts: join(fixturesPath, 'posts.csv')
-        }});
+        const mapped = await mapper({
+            options: {
+                posts: join(fixturesPath, 'posts.csv')
+            }
+        });
 
         assert.equal(mapped.posts.length, 2);
 

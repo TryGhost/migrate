@@ -1,8 +1,12 @@
 import {slugify} from '@tryghost/string';
 
 const extractName = (customFields: Array<{name: string; value: string}>): string | null => {
-    const firstNameField = customFields.find(f => f.name.toLowerCase() === 'first_name' || f.name.toLowerCase() === 'firstname');
-    const lastNameField = customFields.find(f => f.name.toLowerCase() === 'last_name' || f.name.toLowerCase() === 'lastname');
+    const firstNameField = customFields.find(
+        f => f.name.toLowerCase() === 'first_name' || f.name.toLowerCase() === 'firstname'
+    );
+    const lastNameField = customFields.find(
+        f => f.name.toLowerCase() === 'last_name' || f.name.toLowerCase() === 'lastname'
+    );
 
     const firstName = firstNameField?.value?.trim() || '';
     const lastName = lastNameField?.value?.trim() || '';
@@ -12,7 +16,10 @@ const extractName = (customFields: Array<{name: string; value: string}>): string
     return combinedName.length > 0 ? combinedName : null;
 };
 
-const mapSubscription = (subscription: BeehiivSubscription, options: {includeStripe?: boolean} = {includeStripe: true}): GhostMemberObject => {
+const mapSubscription = (
+    subscription: BeehiivSubscription,
+    options: {includeStripe?: boolean} = {includeStripe: true}
+): GhostMemberObject => {
     const labels: string[] = [];
 
     // Add status label
@@ -49,20 +56,23 @@ const mapSubscription = (subscription: BeehiivSubscription, options: {includeStr
         name: extractName(subscription.custom_fields || []),
         note: null,
         subscribed_to_emails: subscription.status === 'active',
-        stripe_customer_id: options.includeStripe ? (subscription.stripe_customer_id || '') : '',
+        stripe_customer_id: options.includeStripe ? subscription.stripe_customer_id || '' : '',
         complimentary_plan: complimentaryPlan,
         labels,
         created_at: new Date(subscription.created * 1000)
     };
 };
 
-const mapSubscriptions = (subscriptions: BeehiivSubscription[], options: {includeStripe?: boolean} = {includeStripe: true}): MappedMembers => {
+const mapSubscriptions = (
+    subscriptions: BeehiivSubscription[],
+    options: {includeStripe?: boolean} = {includeStripe: true}
+): MappedMembers => {
     const result: MappedMembers = {
         free: [],
         paid: []
     };
 
-    subscriptions.forEach((subscription) => {
+    subscriptions.forEach(subscription => {
         const member = mapSubscription(subscription, options);
 
         if (member.stripe_customer_id) {
@@ -100,8 +110,4 @@ export const mapMembersTasks = (options: any, ctx: any) => {
     return tasks;
 };
 
-export {
-    extractName,
-    mapSubscription,
-    mapSubscriptions
-};
+export {extractName, mapSubscription, mapSubscriptions};

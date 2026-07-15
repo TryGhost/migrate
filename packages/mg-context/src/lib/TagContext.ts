@@ -74,7 +74,7 @@ export default class TagContext extends MigrateBase {
         if (this.dbId) {
             db.stmts.updateTagById.run(tagData, this.data.slug, this.data.name, this.ghostId, this.dbId);
         } else {
-            const existing = this.data.slug ? db.stmts.findTagBySlug.get(this.data.slug) as any : null;
+            const existing = this.data.slug ? (db.stmts.findTagBySlug.get(this.data.slug) as any) : null;
 
             if (existing) {
                 this.dbId = existing.id as number;

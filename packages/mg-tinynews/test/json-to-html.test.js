@@ -69,7 +69,10 @@ describe('JSON to HTML', function () {
 
             const formatted = formatChildStyles(childElement);
 
-            assert.equal(formatted, '<a href="https://ghost.org"><strong><em><u>This link is bold, italic and underlined.</u></em></strong></a>');
+            assert.equal(
+                formatted,
+                '<a href="https://ghost.org"><strong><em><u>This link is bold, italic and underlined.</u></em></strong></a>'
+            );
         });
     });
 
@@ -188,7 +191,10 @@ describe('JSON to HTML', function () {
 
             const formatted = EntryText(block);
 
-            assert.equal(formatted, '<p>This is a sentence in bold. This is a sentence in italics. This sentence is underlined. This sentence is bold, italic and underlined. This is a multi word link. This is a plain sentence. </p>');
+            assert.equal(
+                formatted,
+                '<p>This is a sentence in bold. This is a sentence in italics. This sentence is underlined. This sentence is bold, italic and underlined. This is a multi word link. This is a plain sentence. </p>'
+            );
         });
 
         it('Paragraph with styles & links', function () {
@@ -255,7 +261,10 @@ describe('JSON to HTML', function () {
             };
 
             const formatted = EntryText(block);
-            assert.equal(formatted, '<p><strong>This is a sentence in bold. </strong> <em>This is a sentence in italics. </em>  <u>This sentence is underlined. </u> <strong><em> <u>This sentence is bold, italic and underlined. </u> </em> </strong>  <a href="https://example.com/">This is a multi word link.</a> This is a plain sentence. </p>');
+            assert.equal(
+                formatted,
+                '<p><strong>This is a sentence in bold. </strong> <em>This is a sentence in italics. </em>  <u>This sentence is underlined. </u> <strong><em> <u>This sentence is bold, italic and underlined. </u> </em> </strong>  <a href="https://example.com/">This is a multi word link.</a> This is a plain sentence. </p>'
+            );
         });
 
         it('Handles spaces correctly for page content', function () {
@@ -300,7 +309,10 @@ describe('JSON to HTML', function () {
             };
 
             const formatted = EntryText(block);
-            assert.equal(formatted, '<p>Donate <a href="https://example.com/donate">here</a>. Subscribe <a href="https://example.com/subscribe">here</a>. </p>');
+            assert.equal(
+                formatted,
+                '<p>Donate <a href="https://example.com/donate">here</a>. Subscribe <a href="https://example.com/subscribe">here</a>. </p>'
+            );
         });
     });
 
@@ -333,7 +345,8 @@ describe('JSON to HTML', function () {
                         children: [
                             {
                                 style: {},
-                                content: 'Vivamus congue, odio in placerat consequat, ex lorem venenatis risus, ut pretium felis nunc sit amet erat.'
+                                content:
+                                    'Vivamus congue, odio in placerat consequat, ex lorem venenatis risus, ut pretium felis nunc sit amet erat.'
                             }
                         ],
                         nestingLevel: 0
@@ -343,7 +356,10 @@ describe('JSON to HTML', function () {
             };
 
             const formatted = EntryList(block);
-            assert.equal(formatted, '<ul><li>Pellentesque eu quam eget orci varius vitae dui.</li><li>Maecenas pretium convallis nunc non hendrerit.</li><li>Vivamus congue, odio in placerat consequat, ex lorem venenatis risus, ut pretium felis nunc sit amet erat.</li></ul>');
+            assert.equal(
+                formatted,
+                '<ul><li>Pellentesque eu quam eget orci varius vitae dui.</li><li>Maecenas pretium convallis nunc non hendrerit.</li><li>Vivamus congue, odio in placerat consequat, ex lorem venenatis risus, ut pretium felis nunc sit amet erat.</li></ul>'
+            );
         });
 
         it('Ordered list', function () {
@@ -374,7 +390,8 @@ describe('JSON to HTML', function () {
                         children: [
                             {
                                 style: {},
-                                content: 'Vivamus congue, odio in placerat consequat, ex lorem venenatis risus, ut pretium felis nunc sit amet erat.'
+                                content:
+                                    'Vivamus congue, odio in placerat consequat, ex lorem venenatis risus, ut pretium felis nunc sit amet erat.'
                             }
                         ],
                         nestingLevel: 0
@@ -384,7 +401,10 @@ describe('JSON to HTML', function () {
             };
 
             const formatted = EntryList(block);
-            assert.equal(formatted, '<ol><li>Pellentesque eu quam eget orci varius vitae dui.</li><li>Maecenas pretium convallis nunc non hendrerit.</li><li>Vivamus congue, odio in placerat consequat, ex lorem venenatis risus, ut pretium felis nunc sit amet erat.</li></ol>');
+            assert.equal(
+                formatted,
+                '<ol><li>Pellentesque eu quam eget orci varius vitae dui.</li><li>Maecenas pretium convallis nunc non hendrerit.</li><li>Vivamus congue, odio in placerat consequat, ex lorem venenatis risus, ut pretium felis nunc sit amet erat.</li></ol>'
+            );
         });
     });
 
@@ -406,7 +426,10 @@ describe('JSON to HTML', function () {
             };
 
             const formatted = EntryImage(block);
-            assert.equal(formatted, '<figure class="kg-card kg-image-card"><img src="https://example.com/image.1234.jpg" class="kg-image" alt loading="lazy"></figure>');
+            assert.equal(
+                formatted,
+                '<figure class="kg-card kg-image-card"><img src="https://example.com/image.1234.jpg" class="kg-image" alt loading="lazy"></figure>'
+            );
         });
 
         it('Linked image with caption', function () {
@@ -426,7 +449,10 @@ describe('JSON to HTML', function () {
             };
 
             const formatted = EntryImage(block);
-            assert.equal(formatted, '<figure class="kg-card kg-image-card kg-card-hascaption"><a href="https://ghost.org"><img src="https://example.com/image.1234.jpg" class="kg-image" alt="Lorem ipsum" loading="lazy"></a><figcaption>Lorem ipsum</figcaption></figure>');
+            assert.equal(
+                formatted,
+                '<figure class="kg-card kg-image-card kg-card-hascaption"><a href="https://ghost.org"><img src="https://example.com/image.1234.jpg" class="kg-image" alt="Lorem ipsum" loading="lazy"></a><figcaption>Lorem ipsum</figcaption></figure>'
+            );
         });
     });
 
@@ -473,7 +499,10 @@ describe('Embeds', function () {
         };
 
         const formatted = EntryTwitterEmbed(block);
-        assert.equal(formatted, '<figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><a href="https://twitter.com/Example/status/12345678240918675457?s=20&t=abcd12345jQ3oSayj4TNRQ"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure>');
+        assert.equal(
+            formatted,
+            '<figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><a href="https://twitter.com/Example/status/12345678240918675457?s=20&t=abcd12345jQ3oSayj4TNRQ"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure>'
+        );
     });
 
     it('TikTok', function () {
@@ -485,7 +514,10 @@ describe('Embeds', function () {
         };
 
         const formatted = EntryTikTokEmbed(block);
-        assert.equal(formatted, '<figure class="kg-card kg-embed-card"><blockquote class="tiktok-embed" cite="https://www.tiktok.com/@example/video/1234567857666835739" data-video-id="1234567857666835739" style="max-width: 605px;min-width: 325px;"><section><a target="_blank" title="@example" href="https://www.tiktok.com/@example?refer=embed">@example</a></section></blockquote><script async src="https://www.tiktok.com/embed.js"></script></figure>');
+        assert.equal(
+            formatted,
+            '<figure class="kg-card kg-embed-card"><blockquote class="tiktok-embed" cite="https://www.tiktok.com/@example/video/1234567857666835739" data-video-id="1234567857666835739" style="max-width: 605px;min-width: 325px;"><section><a target="_blank" title="@example" href="https://www.tiktok.com/@example?refer=embed">@example</a></section></blockquote><script async src="https://www.tiktok.com/embed.js"></script></figure>'
+        );
     });
 
     it('Facebook (link)', function () {
@@ -497,7 +529,10 @@ describe('Embeds', function () {
         };
 
         const formatted = EntryFacebookEmbed(block);
-        assert.equal(formatted, '<p><a href="https://www.facebook.com/example/posts/12345678abcdergh">https://www.facebook.com/example/posts/12345678abcdergh</a></p>');
+        assert.equal(
+            formatted,
+            '<p><a href="https://www.facebook.com/example/posts/12345678abcdergh">https://www.facebook.com/example/posts/12345678abcdergh</a></p>'
+        );
     });
 
     it('Facebook (html)', function () {
@@ -509,7 +544,10 @@ describe('Embeds', function () {
         };
 
         const formatted = EntryFacebookEmbed(block);
-        assert.equal(formatted, '<!--kg-card-begin: html--><div class="fb-post" data-href="https://www.facebook.com/example/posts/12345678abcdergh" data-width="552"><blockquote cite="https://graph.facebook.com/123456782492602/posts/9876543278806123/" class="fb-xfbml-parse-ignore">Posted by <a href="https://www.facebook.com/example">Example</a> on&nbsp;<a href="https://graph.facebook.com/123456782492602/posts/9876543278806123/">Saturday, August 20, 2022</a></blockquote></div><!--kg-card-end: html-->');
+        assert.equal(
+            formatted,
+            '<!--kg-card-begin: html--><div class="fb-post" data-href="https://www.facebook.com/example/posts/12345678abcdergh" data-width="552"><blockquote cite="https://graph.facebook.com/123456782492602/posts/9876543278806123/" class="fb-xfbml-parse-ignore">Posted by <a href="https://www.facebook.com/example">Example</a> on&nbsp;<a href="https://graph.facebook.com/123456782492602/posts/9876543278806123/">Saturday, August 20, 2022</a></blockquote></div><!--kg-card-end: html-->'
+        );
     });
 
     it('Vimeo', function () {
@@ -521,7 +559,10 @@ describe('Embeds', function () {
         };
 
         const formatted = EntryVimeoEmbed(block);
-        assert.equal(formatted, '<iframe src="https://player.vimeo.com/video/723429393" width="160" height="90" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>');
+        assert.equal(
+            formatted,
+            '<iframe src="https://player.vimeo.com/video/723429393" width="160" height="90" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>'
+        );
     });
 
     it('YouTube (youtube.com)', function () {
@@ -533,7 +574,10 @@ describe('Embeds', function () {
         };
 
         const formatted = EntryYoutubeEmbed(block);
-        assert.equal(formatted, '<iframe width="160" height="90" src="https://www.youtube.com/embed/n_abcd12345" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>');
+        assert.equal(
+            formatted,
+            '<iframe width="160" height="90" src="https://www.youtube.com/embed/n_abcd12345" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>'
+        );
     });
 
     it('YouTube (youtu.be)', function () {
@@ -545,7 +589,10 @@ describe('Embeds', function () {
         };
 
         const formatted = EntryYoutubeEmbed(block);
-        assert.equal(formatted, '<iframe width="160" height="90" src="https://www.youtube.com/embed/n_abcd12345" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>');
+        assert.equal(
+            formatted,
+            '<iframe width="160" height="90" src="https://www.youtube.com/embed/n_abcd12345" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>'
+        );
     });
 
     it('Apple Podcast', function () {
@@ -557,7 +604,10 @@ describe('Embeds', function () {
         };
 
         const formatted = EntryApplePodcastsEmbed(block);
-        assert.equal(formatted, '<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.podcasts.apple.com/us/podcast/example/id12345678"></iframe>');
+        assert.equal(
+            formatted,
+            '<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.podcasts.apple.com/us/podcast/example/id12345678"></iframe>'
+        );
     });
 
     it('Instagram Post', function () {
@@ -569,7 +619,10 @@ describe('Embeds', function () {
         };
 
         const formatted = EntryInstagramPostEmbed(block);
-        assert.equal(formatted, '<iframe src="https://www.instagram.com/p/abcd1234567/embed/captioned/" class="instagram-media" allowtransparency="true" allowfullscreen="true" frameborder="0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px; min-width: 326px; padding: 0px;"></iframe><script async="" src="//www.instagram.com/embed.js"></script>');
+        assert.equal(
+            formatted,
+            '<iframe src="https://www.instagram.com/p/abcd1234567/embed/captioned/" class="instagram-media" allowtransparency="true" allowfullscreen="true" frameborder="0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px; min-width: 326px; padding: 0px;"></iframe><script async="" src="//www.instagram.com/embed.js"></script>'
+        );
     });
 
     it('Instagram Reel', function () {
@@ -581,7 +634,10 @@ describe('Embeds', function () {
         };
 
         const formatted = EntryInstagramReelEmbed(block);
-        assert.equal(formatted, '<iframe class="instagram-media" src="https://www.instagram.com/reel/CqvvNv1NAFw/embed/captioned/" allowtransparency="true" allowfullscreen="true" frameborder="0" scrolling="no" style="background: white; max-width: 540px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px; min-width: 326px; padding: 0px; position: relative;"></iframe><script async="" src="//www.instagram.com/embed.js"></script>');
+        assert.equal(
+            formatted,
+            '<iframe class="instagram-media" src="https://www.instagram.com/reel/CqvvNv1NAFw/embed/captioned/" allowtransparency="true" allowfullscreen="true" frameborder="0" scrolling="no" style="background: white; max-width: 540px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px; min-width: 326px; padding: 0px; position: relative;"></iframe><script async="" src="//www.instagram.com/embed.js"></script>'
+        );
     });
 
     it('Google Docs', function () {
@@ -593,6 +649,9 @@ describe('Embeds', function () {
         };
 
         const formatted = EntryGoogleDocsEmbed(block);
-        assert.equal(formatted, '<iframe class="googledocs-embed" src="https://docs.google.com/forms/d/e/12345678abcdefghyQHFRldkioVOLrwqofXDjTJFMgH5nnZN93xt0oA/viewform?embedded=true" allowtransparency="true" allowfullscreen="true" frameborder="0" style="width: 100%; height: 500px;"></iframe>');
+        assert.equal(
+            formatted,
+            '<iframe class="googledocs-embed" src="https://docs.google.com/forms/d/e/12345678abcdefghyQHFRldkioVOLrwqofXDjTJFMgH5nnZN93xt0oA/viewform?embedded=true" allowtransparency="true" allowfullscreen="true" frameborder="0" style="width: 100%; height: 500px;"></iframe>'
+        );
     });
 });

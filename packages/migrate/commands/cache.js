@@ -30,7 +30,7 @@ const defaults = convertOptionsToDefaults(options);
 const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
-const run = async (argv) => {
+const run = async argv => {
     try {
         let fsCache = new fsUtils.FileCache('test.dev', 'yolo');
         let cacheDir = fsCache.cacheBaseDir;
@@ -40,7 +40,7 @@ const run = async (argv) => {
         const clear = await fsCache.emptyCacheDir();
 
         if (argv.verbose) {
-            clear.files.forEach((item) => {
+            clear.files.forEach(item => {
                 ui.log.info(`Deleted: ${item}`);
             });
         }

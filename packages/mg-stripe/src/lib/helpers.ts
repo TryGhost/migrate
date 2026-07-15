@@ -38,7 +38,7 @@ export async function ifDryRunJustReturnFakeId(live: () => Promise<string>, logD
     return await live();
 }
 
-export function isWarning(error: any): error is ImportWarning|ErrorGroup {
+export function isWarning(error: any): error is ImportWarning | ErrorGroup {
     if (error instanceof ErrorGroup) {
         return !error.isFatal;
     }

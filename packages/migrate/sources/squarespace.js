@@ -18,7 +18,7 @@ const scrapeConfig = {
         meta_description: {
             selector: 'meta[name="description"]',
             attr: 'content',
-            convert: (x) => {
+            convert: x => {
                 if (!x) {
                     return;
                 }
@@ -36,7 +36,7 @@ const scrapeConfig = {
         og_description: {
             selector: 'meta[property="og:description"]',
             attr: 'content',
-            convert: (x) => {
+            convert: x => {
                 if (!x) {
                     return;
                 }
@@ -54,14 +54,14 @@ const scrapeConfig = {
         twitter_description: {
             selector: 'meta[name="twitter:description"]',
             attr: 'content',
-            convert: (x) => {
+            convert: x => {
                 return x.slice(0, 499);
             }
         }
     }
 };
 
-const skipScrape = (post) => {
+const skipScrape = post => {
     return post.data.status === 'draft';
 };
 
@@ -73,7 +73,7 @@ const skipScrape = (post) => {
  * @param {String} pathToFile
  * @param {Object} options
  */
-const getTaskRunner = (options) => {
+const getTaskRunner = options => {
     let runnerTasks = [
         {
             title: 'Initializing',
@@ -82,7 +82,12 @@ const getTaskRunner = (options) => {
 
                 ctx.allowScrape = {
                     all: ctx.options.scrape.includes('all'),
-                    assets: ctx.options.scrape.includes('all') || ctx.options.scrape.includes('assets') || ctx.options.scrape.includes('img') || ctx.options.scrape.includes('media') || ctx.options.scrape.includes('files'),
+                    assets:
+                        ctx.options.scrape.includes('all') ||
+                        ctx.options.scrape.includes('assets') ||
+                        ctx.options.scrape.includes('img') ||
+                        ctx.options.scrape.includes('media') ||
+                        ctx.options.scrape.includes('files'),
                     web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
                 };
 
@@ -93,9 +98,13 @@ const getTaskRunner = (options) => {
                 });
 
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, null, skipScrape);
-                ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
-                    allowAllDomains: true
-                }, ctx);
+                ctx.assetScraper = new MgAssetScraper(
+                    ctx.fileCache,
+                    {
+                        allowAllDomains: true
+                    },
+                    ctx
+                );
                 await ctx.assetScraper.init();
 
                 ctx.linkFixer = new MgLinkFixer();
@@ -105,7 +114,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Read xml file',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 1. Read the xml file
                 try {
                     ctx.result = await xmlIngest(ctx);
@@ -120,7 +129,7 @@ const getTaskRunner = (options) => {
         {
             title: 'Fetch missing data via WebScraper',
             skip: ctx => !ctx.allowScrape.web,
-            task: (ctx) => {
+            task: ctx => {
                 // 2. Pass the results through the web scraper to get any missing data
                 let tasks = ctx.webScraper.hydrate(ctx); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
@@ -128,7 +137,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Build Link Map',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 3. Create a map of all known links for use later
                 try {
                     ctx.linkFixer.buildMap(ctx);
@@ -140,7 +149,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Format data as Ghost JSON',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 4. Format the data as a valid Ghost JSON file
                 try {
                     ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx, ctx);
@@ -153,7 +162,7 @@ const getTaskRunner = (options) => {
         {
             title: 'Fetch images via AssetScraper',
             skip: ctx => !ctx.allowScrape.assets,
-            task: async (ctx) => {
+            task: async ctx => {
                 // 5. Format the data as a valid Ghost JSON file
                 let tasks = ctx.assetScraper.getTasks();
                 return makeTaskRunner(tasks, {
@@ -174,7 +183,7 @@ const getTaskRunner = (options) => {
         {
             // @TODO don't duplicate this with the utils json file
             title: 'Convert HTML -> Lexical',
-            task: (ctx) => {
+            task: ctx => {
                 // 7. Convert post HTML -> Lexical
                 try {
                     let tasks = mgHtmlLexical.convert(ctx); // eslint-disable-line no-shadow
@@ -187,7 +196,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Write Ghost import JSON File',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 8. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
@@ -208,7 +217,11 @@ const getTaskRunner = (options) => {
                     let timer = Date.now();
                     const zipFinalPath = options.outputPath || process.cwd();
                     // zip the file and save it temporarily
-                    ctx.outputFile = await fsUtils.zip.write(zipFinalPath, ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+                    ctx.outputFile = await fsUtils.zip.write(
+                        zipFinalPath,
+                        ctx.fileCache.zipDir,
+                        ctx.fileCache.defaultZipFileName
+                    );
 
                     if (isStorage) {
                         const storage = options.outputStorage;
@@ -217,7 +230,10 @@ const getTaskRunner = (options) => {
                         // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
                         // Upload the file to the storage
-                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-wordpress-${ctx.options.cacheName}.zip`});
+                        ctx.outputFile.path = await storage.upload({
+                            body: fileBuffer,
+                            fileName: `gh-wordpress-${ctx.options.cacheName}.zip`
+                        });
                         // now that the file is uploaded to the storage, delete the local zip file
                         await fsUtils.zip.deleteFile(localFilePath);
                     }
@@ -232,7 +248,7 @@ const getTaskRunner = (options) => {
         {
             title: 'Clearing cached files',
             enabled: () => !options.cache && options.zip,
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {

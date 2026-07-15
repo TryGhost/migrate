@@ -58,6 +58,4 @@ const convert = (ctx: any, htmlCard: boolean) => {
     return tasks;
 };
 
-export {
-    convert
-};
+export {convert};

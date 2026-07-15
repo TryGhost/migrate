@@ -14,12 +14,19 @@ export class ReportTags {
 }
 
 type LogOptions = {
-    indent?: number,
-    prefix?: string,
-    prefixStyle?: (ModifierName|ColorName)[]
-    style?: (ModifierName|ColorName)[]
+    indent?: number;
+    prefix?: string;
+    prefixStyle?: (ModifierName | ColorName)[];
+    style?: (ModifierName | ColorName)[];
 };
-type ReportingCategoryOptions = {skipTitle?: boolean, skipCount?: boolean, title?: string, logOptions?: LogOptions, titleLogOptions?: LogOptions, indentChildren?: boolean}
+type ReportingCategoryOptions = {
+    skipTitle?: boolean;
+    skipCount?: boolean;
+    title?: string;
+    logOptions?: LogOptions;
+    titleLogOptions?: LogOptions;
+    indentChildren?: boolean;
+};
 
 export class ReportingCategory {
     name: string;
@@ -86,7 +93,7 @@ export class Reporter {
         }
     }
 
-    private style(str: string, style?: (ModifierName|ColorName)[]): string {
+    private style(str: string, style?: (ModifierName | ColorName)[]): string {
         if (!style || style.length === 0) {
             return str;
         }
@@ -100,7 +107,11 @@ export class Reporter {
 
     private logString(str: string, options: LogOptions) {
         // eslint-disable-next-line no-console
-        return ('    '.repeat(options.indent ?? 0) + this.style(options.prefix ?? '', options?.prefixStyle) + this.style(str, options.style));
+        return (
+            '    '.repeat(options.indent ?? 0) +
+            this.style(options.prefix ?? '', options?.prefixStyle) +
+            this.style(str, options.style)
+        );
     }
 
     addListener(listener: () => void) {
@@ -129,10 +140,13 @@ export class Reporter {
                     });
                 } else {
                     if (!category.options.skipCount) {
-                        this.log(`${reporter.totalCount === this.totalCount ? 'All' : reporter.totalCount} ${category.options.title ?? category.name}${reporter.totalCount === this.totalCount ? ' (' + reporter.totalCount + ')' : ''}`, {
-                            ...category.options.titleLogOptions,
-                            ...options
-                        });
+                        this.log(
+                            `${reporter.totalCount === this.totalCount ? 'All' : reporter.totalCount} ${category.options.title ?? category.name}${reporter.totalCount === this.totalCount ? ' (' + reporter.totalCount + ')' : ''}`,
+                            {
+                                ...category.options.titleLogOptions,
+                                ...options
+                            }
+                        );
                     } else {
                         this.log(`${category.options.title ?? category.name}`, {
                             ...category.options.titleLogOptions,
@@ -205,13 +219,23 @@ export class Reporter {
                 return strs.join(', ');
             }
 
-            return this.logString(`${this.category.options.skipCount ? '' : this.totalCount + ' '}${this.category.options.title ?? this.category.name}`, this.category.options.titleLogOptions ?? {}) + '\n' + strs.join(', ');
+            return (
+                this.logString(
+                    `${this.category.options.skipCount ? '' : this.totalCount + ' '}${this.category.options.title ?? this.category.name}`,
+                    this.category.options.titleLogOptions ?? {}
+                ) +
+                '\n' +
+                strs.join(', ')
+            );
         }
 
         if (this.category.options.skipTitle) {
             return '';
         }
 
-        return this.logString(`${this.totalCount} ${this.category.options.title ?? this.category.name}`, this.category.options.titleLogOptions ?? {});
+        return this.logString(
+            `${this.totalCount} ${this.category.options.title ?? this.category.name}`,
+            this.category.options.titleLogOptions ?? {}
+        );
     }
 }

@@ -5,5 +5,5 @@ declare module '@tryghost/pretty-cli' {
 }
 
 declare module 'sywac' {
-    export = '' as any
+    export = '' as any;
 }

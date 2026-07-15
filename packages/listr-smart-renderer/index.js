@@ -3,6 +3,4 @@ import makeTaskRunner from './lib/task-runner.js';
 
 export default SmartRenderer;
 
-export {
-    makeTaskRunner
-};
+export {makeTaskRunner};

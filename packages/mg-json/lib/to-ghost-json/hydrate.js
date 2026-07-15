@@ -63,7 +63,7 @@ const users = hydrateUser;
  * - a name
  */
 
-const hydrateTag = (input) => {
+const hydrateTag = input => {
     if (!input.slug) {
         input.slug = slugify(input.name);
     }

@@ -46,12 +46,14 @@ export class StripeConnector {
         const account = await select<'enter' | 'open' | 'same'>({
             message,
             choices: [
-                ...(same ? [
-                    {
-                        name: 'Within the same account (' + same.name! + ' / ' + same.id! + ')',
-                        value: 'same' as const
-                    }
-                ] : []),
+                ...(same
+                    ? [
+                          {
+                              name: 'Within the same account (' + same.name! + ' / ' + same.id! + ')',
+                              value: 'same' as const
+                          }
+                      ]
+                    : []),
                 {
                     name: 'Enter Stripe API secret key',
                     value: 'enter'

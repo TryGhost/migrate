@@ -75,7 +75,7 @@ export class Options {
 
     constructor(argv: any) {
         this.dryRun = argv['dry-run'];
-        this.verboseLevel = argv['very-verbose'] ? 2 : (argv.verbose ? 1 : 0);
+        this.verboseLevel = argv['very-verbose'] ? 2 : argv.verbose ? 1 : 0;
         this.oldApiKey = argv.from ?? undefined;
         this.newApiKey = argv.to ?? undefined;
         this.debug = argv.debug ?? false;

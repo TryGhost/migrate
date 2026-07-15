@@ -1,6 +1,9 @@
 const processCompGift = (member, {thresholdYearOrDate, beforeThreshold}) => {
     const sType = member.type;
-    const thresholdDate = (typeof thresholdYearOrDate?.getMonth === 'function') ? thresholdYearOrDate : new Date().setFullYear(new Date().getFullYear() + thresholdYearOrDate);
+    const thresholdDate =
+        typeof thresholdYearOrDate?.getMonth === 'function'
+            ? thresholdYearOrDate
+            : new Date().setFullYear(new Date().getFullYear() + thresholdYearOrDate);
 
     if (new Date(member.expiry) > thresholdDate) {
         member.type = 'comp';
@@ -77,7 +80,7 @@ const processMember = (sMember, options) => {
         member.info = `possible group membership: ${member.email}`;
     }
 
-    if (member?.email?.match(/@deletion-request\.substack\.com$/ig)) {
+    if (member?.email?.match(/@deletion-request\.substack\.com$/gi)) {
         member.type = 'skip';
         member.info = `deletion request - skipping: ${member.email}`;
     }
@@ -85,7 +88,7 @@ const processMember = (sMember, options) => {
     return processOptions(member, options);
 };
 
-export const parseCompGift = (val) => {
+export const parseCompGift = val => {
     if (typeof val !== 'string') {
         return val;
     }
@@ -99,7 +102,10 @@ export const parseCompGift = (val) => {
             yearsOrDate = parseInt(yearsOrDate);
         }
     } catch (error) {
-        console.log('Failed to parse passed in date/years for threshold, falling back to 10. Ensure the correct format'); // eslint-disable-line no-console
+        // eslint-disable-next-line no-console
+        console.log(
+            'Failed to parse passed in date/years for threshold, falling back to 10. Ensure the correct format'
+        );
         yearsOrDate = 10;
     }
     return {

@@ -67,6 +67,4 @@ const listPublications = async (apiKey: string) => {
     return sites;
 };
 
-export {
-    listPublications
-};
+export {listPublications};

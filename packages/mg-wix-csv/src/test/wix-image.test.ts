@@ -1,15 +1,11 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {
-    buildWixStaticUrl,
-    parseWixImageUri,
-    wixImageUriToUrl,
-    wixMediaIdToUrl
-} from '../lib/wix-image.js';
+import {buildWixStaticUrl, parseWixImageUri, wixImageUriToUrl, wixMediaIdToUrl} from '../lib/wix-image.js';
 
 describe('Wix image URL helpers', () => {
     it('transforms Wix image URIs into static media URLs', () => {
-        const input = 'wix:image://v1/example_media_image~mv2.jpg/example_media_image~mv2.jpg#originWidth=6016&originHeight=4016';
+        const input =
+            'wix:image://v1/example_media_image~mv2.jpg/example_media_image~mv2.jpg#originWidth=6016&originHeight=4016';
         const output = wixImageUriToUrl(input);
 
         assert.equal(output, 'https://static.wixstatic.com/media/example_media_image~mv2.jpg');
@@ -36,8 +32,14 @@ describe('Wix image URL helpers', () => {
     });
 
     it('builds URLs from rich-content media IDs', () => {
-        assert.equal(wixMediaIdToUrl({id: 'image one.jpg', width: 500, height: 250}), 'https://static.wixstatic.com/media/image%20one.jpg');
+        assert.equal(
+            wixMediaIdToUrl({id: 'image one.jpg', width: 500, height: 250}),
+            'https://static.wixstatic.com/media/image%20one.jpg'
+        );
         assert.equal(wixMediaIdToUrl({}), null);
-        assert.equal(buildWixStaticUrl({id: 'id.jpg', filename: 'file.jpg'}), 'https://static.wixstatic.com/media/id.jpg');
+        assert.equal(
+            buildWixStaticUrl({id: 'id.jpg', filename: 'file.jpg'}),
+            'https://static.wixstatic.com/media/id.jpg'
+        );
     });
 });

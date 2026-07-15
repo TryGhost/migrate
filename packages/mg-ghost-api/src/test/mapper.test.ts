@@ -29,7 +29,7 @@ describe('mapPost', function () {
         assert.equal(post.get('slug'), 'welcome-short');
         assert.equal(post.get('status'), 'published');
         assert.equal(post.get('feature_image'), 'https://casper.ghost.org/v2.0.0/images/welcome-to-ghost.jpg');
-        assert.equal(post.get('custom_excerpt'), 'Welcome, it\'s great to have you here.');
+        assert.equal(post.get('custom_excerpt'), "Welcome, it's great to have you here.");
 
         const lexical = post.get('lexical');
         assert.ok(lexical, 'lexical was preserved from the Ghost API response');
@@ -55,12 +55,14 @@ describe('mapPost', function () {
     it('upgrades gravatar URLs on author profile_image', async function () {
         const ghPost: GhostApiPost = {
             ...fixture.posts[0],
-            authors: [{
-                slug: 'gravatar-user',
-                name: 'Gravatar User',
-                email: 'gravatar@example.com',
-                profile_image: '//www.gravatar.com/avatar/abc123?s=250'
-            }]
+            authors: [
+                {
+                    slug: 'gravatar-user',
+                    name: 'Gravatar User',
+                    email: 'gravatar@example.com',
+                    profile_image: '//www.gravatar.com/avatar/abc123?s=250'
+                }
+            ]
         };
 
         const post = await mapPost(ghPost, ctx);

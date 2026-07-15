@@ -1,6 +1,6 @@
 class NoErrorThrownError extends Error {}
 
-const getError = async (call) => {
+const getError = async call => {
     try {
         await call();
 
@@ -10,7 +10,4 @@ const getError = async (call) => {
     }
 };
 
-export {
-    NoErrorThrownError,
-    getError
-};
+export {NoErrorThrownError, getError};

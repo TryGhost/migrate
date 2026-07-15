@@ -71,7 +71,12 @@ const summaryRenderer = (tasks, options, level = 0) => {
             if (!task.output && task.hasSubtasks()) {
                 task.output = `${chalk.red.dim(`Subtask failed ${arrowDown}`)}`;
             }
-            output.push(indentString(`${getSymbol(task, options)} ${taskNumber(index, tasks)}: ${task.title} - ${task.output}`, level));
+            output.push(
+                indentString(
+                    `${getSymbol(task, options)} ${taskNumber(index, tasks)}: ${task.title} - ${task.output}`,
+                    level
+                )
+            );
         } else {
             // Handle any task data that needs to be output
             if (isDefined(task.output)) {
@@ -102,7 +107,12 @@ const summaryRenderer = (tasks, options, level = 0) => {
         }
     });
 
-    output.push(indentString(`Total: ${tasks.length}. Complete: ${states.complete.length}, Failed: ${(states.failed.length) ? chalk.red(states.failed.length) : 0}, Skipped: ${states.skipped.length}, Disabled: ${states.disabled.length}`, level));
+    output.push(
+        indentString(
+            `Total: ${tasks.length}. Complete: ${states.complete.length}, Failed: ${states.failed.length ? chalk.red(states.failed.length) : 0}, Skipped: ${states.skipped.length}, Disabled: ${states.disabled.length}`,
+            level
+        )
+    );
 
     return output.join('\n');
 };
@@ -121,10 +131,13 @@ class SmartRenderer {
     constructor(tasks, options) {
         this._tasks = tasks;
         this._mode = 'full';
-        this._options = Object.assign({
-            maxFullTasks: 30,
-            clearOutput: false
-        }, options);
+        this._options = Object.assign(
+            {
+                maxFullTasks: 30,
+                clearOutput: false
+            },
+            options
+        );
     }
 
     render() {

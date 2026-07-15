@@ -20,7 +20,7 @@ function findResourceRoot(ctx) {
 }
 
 const jsonTasks = {
-    html: (options) => {
+    html: options => {
         let title = 'Convert HTML -> Lexical';
 
         if (options.htmlCard) {
@@ -30,7 +30,7 @@ const jsonTasks = {
         return {
             // @TODO don't duplicate this with medium
             title: title,
-            task: (ctx) => {
+            task: ctx => {
                 try {
                     let tasks = mgHtmlLexical.convert(ctx, options.htmlCard);
                     return makeTaskRunner(tasks, options);
@@ -41,11 +41,11 @@ const jsonTasks = {
             }
         };
     },
-    slugify: (options) => {
+    slugify: options => {
         return {
             // @TODO don't duplicate this!
             title: 'Add valid slugs',
-            task: (ctx) => {
+            task: ctx => {
                 try {
                     // @TODO: clean this up!
                     let root = findResourceRoot(ctx);
@@ -64,7 +64,7 @@ const jsonTasks = {
                         resources = resources.concat(users);
                     }
 
-                    let tasks = resources.map((resource) => {
+                    let tasks = resources.map(resource => {
                         return {
                             title: resource.title || resource.name,
                             task: () => {
@@ -87,16 +87,16 @@ const jsonTasks = {
             }
         };
     },
-    email: (options) => {
+    email: options => {
         return {
             title: 'Add fake email addresses, where they are missing',
-            task: (ctx) => {
+            task: ctx => {
                 try {
                     // @TODO: clean this up!
                     let root = findResourceRoot(ctx);
                     let users = root.users;
 
-                    let tasks = users.map((user) => {
+                    let tasks = users.map(user => {
                         return {
                             title: user.name || user.slug,
                             task: () => {
@@ -119,14 +119,14 @@ const getTaskRunner = (type, pathToJSON, options) => {
     let tasks = [
         {
             title: 'Initializing',
-            task: (ctx) => {
+            task: ctx => {
                 ctx.options = options;
                 ctx.fileCache = new fsUtils.FileCache(pathToJSON);
             }
         },
         {
             title: 'Read Ghost JSON file',
-            task: async (ctx) => {
+            task: async ctx => {
                 ctx.result = await fsUtils.ghostJSON.read(pathToJSON);
             }
         }
@@ -136,7 +136,7 @@ const getTaskRunner = (type, pathToJSON, options) => {
 
     tasks.push({
         title: 'Write Ghost JSON File',
-        task: async (ctx) => {
+        task: async ctx => {
             ctx.outputFile = await ctx.fileCache.writeGhostImportFile(ctx.result, {path: pathToJSON});
         }
     });

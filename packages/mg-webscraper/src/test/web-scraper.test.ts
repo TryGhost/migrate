@@ -25,7 +25,9 @@ const mockResponse = {
     }
 };
 
-function makeMockFileCache(overrides: Partial<{hasFile: any; writeTmpFile: any; readTmpJSONFile: any}> = {}): FileCache & {hasFile: any; writeTmpFile: any; readTmpJSONFile: any} {
+function makeMockFileCache(
+    overrides: Partial<{hasFile: any; writeTmpFile: any; readTmpJSONFile: any}> = {}
+): FileCache & {hasFile: any; writeTmpFile: any; readTmpJSONFile: any} {
     return {
         hasFile: overrides.hasFile || mock.fn(() => false),
         writeTmpFile: overrides.writeTmpFile || mock.fn(() => true),
@@ -340,7 +342,9 @@ describe('mergeResource', function () {
     it('Strips query params when matching URLs', function () {
         const webScraper = new WebScraper(makeMockFileCache(), mockConfig);
         const existing = [{url: 'https://example.com/tag/news/', data: {name: 'News'}}];
-        const result = webScraper.mergeRelations(existing, [{url: 'https://example.com/tag/other/?ref=1', name: 'Other'}]);
+        const result = webScraper.mergeRelations(existing, [
+            {url: 'https://example.com/tag/other/?ref=1', name: 'Other'}
+        ]);
         assert.equal(result.length, 2);
         assert.equal(result[1].url, 'https://example.com/tag/other/');
     });
@@ -364,7 +368,10 @@ describe('scrape', function () {
     it('Scrapes a URL and returns parsed data', async function () {
         nock('https://example.com')
             .get('/test-page/')
-            .reply(200, '<html><head><title>Test Title</title><meta name="description" content="Test Desc"></head><body></body></html>');
+            .reply(
+                200,
+                '<html><head><title>Test Title</title><meta name="description" content="Test Desc"></head><body></body></html>'
+            );
 
         const webScraper = new WebScraper(makeMockFileCache(), mockConfig);
         const result = await webScraper.scrape('https://example.com/test-page/', mockConfig.posts!);
@@ -375,9 +382,7 @@ describe('scrape', function () {
     });
 
     it('Wraps network errors as ScrapeError', async function () {
-        nock('https://example.com')
-            .get('/fail/')
-            .replyWithError('ECONNRESET');
+        nock('https://example.com').get('/fail/').replyWithError('ECONNRESET');
 
         const webScraper = new WebScraper(makeMockFileCache(), mockConfig);
 
@@ -425,10 +430,12 @@ describe('hydrate', function () {
 
         const ctx = {
             result: {
-                posts: [{
-                    url: longUrl,
-                    data: {}
-                }]
+                posts: [
+                    {
+                        url: longUrl,
+                        data: {}
+                    }
+                ]
             },
             options: {},
             errors: [] as any[]

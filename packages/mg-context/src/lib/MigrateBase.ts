@@ -104,7 +104,7 @@ export default class MigrateBase {
 
     set(prop: string, value: any) {
         if (Array.isArray(prop)) {
-            prop.forEach((item) => {
+            prop.forEach(item => {
                 this.#setProp(item, value);
             });
         } else {
@@ -135,12 +135,12 @@ export default class MigrateBase {
 
     checkRequired(working: any) {
         // Check required fields
-        const required = Object.keys(this.schema.shape).filter((key) => {
+        const required = Object.keys(this.schema.shape).filter(key => {
             const info = getFieldInfo(this.schema.shape[key]);
             return info.required;
         });
 
-        required.forEach((key) => {
+        required.forEach(key => {
             if (working[key] === null || working[key] === undefined) {
                 throw new errors.InternalServerError({message: `(${this.#context}) Missing required field: "${key}"`});
             }

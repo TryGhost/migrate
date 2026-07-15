@@ -19,6 +19,4 @@ const client = async (apiKey: string) => {
     return data.data;
 };
 
-export {
-    client
-};
+export {client};

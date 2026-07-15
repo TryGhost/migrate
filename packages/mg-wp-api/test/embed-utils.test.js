@@ -138,7 +138,9 @@ describe('matchEmbedUrl', function () {
         });
 
         it('Matches w.soundcloud.com/player URL', function () {
-            const result = matchEmbedUrl('https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/123');
+            const result = matchEmbedUrl(
+                'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/123'
+            );
             assert.equal(result.service, 'soundcloud');
         });
     });

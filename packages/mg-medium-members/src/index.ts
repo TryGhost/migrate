@@ -6,6 +6,4 @@ export default async (args: any) => {
     return result;
 };
 
-export {
-    memberStats
-};
+export {memberStats};

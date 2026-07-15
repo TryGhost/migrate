@@ -10,7 +10,4 @@ const getError = async (call: any) => {
     }
 };
 
-export {
-    NoErrorThrownError,
-    getError
-};
+export {NoErrorThrownError, getError};

@@ -10,7 +10,9 @@ export default (zipPath, options) => {
 
     fsUtils.zip.read(zipPath, (entryName, zipEntry) => {
         const jsonFileRegex = new RegExp('^data-export/issues/published/[0-9]{1,10}/[0-9]{1,10}.json');
-        const imageFileRegex = new RegExp('^data-export/issues/published/[0-9]{1,10}/.*(.jpg|.png|.jpeg|.gif|.svg|.svgz)');
+        const imageFileRegex = new RegExp(
+            '^data-export/issues/published/[0-9]{1,10}/.*(.jpg|.png|.jpeg|.gif|.svg|.svgz)'
+        );
 
         // Catch all JSON files inside `data-export/issues/published/[issue]/`
         if (jsonFileRegex.test(entryName)) {
@@ -19,10 +21,14 @@ export default (zipPath, options) => {
                 json: JSON.parse(zipEntry.getData().toString('utf8'))
             });
 
-        // Catch all issue image files in `data-export/issues/published/[issue]/`
+            // Catch all issue image files in `data-export/issues/published/[issue]/`
         } else if (imageFileRegex.test(entryName)) {
             // Skip already-processed images
-            if (entryName.includes('square_thumb') || entryName.includes('original_ratio_extra_large') || entryName.includes('original_ratio_medium')) {
+            if (
+                entryName.includes('square_thumb') ||
+                entryName.includes('original_ratio_extra_large') ||
+                entryName.includes('original_ratio_medium')
+            ) {
                 return;
             }
 
@@ -38,7 +44,7 @@ export default (zipPath, options) => {
             // Write the file
             options.fileCache.writeContentFile(zipEntry.getData(), imageOptions);
 
-        // Skip if not matched above, and report skipped files if `--verbose`
+            // Skip if not matched above, and report skipped files if `--verbose`
         } else {
             if (options.verbose) {
                 ui.log.info('Skipped: ' + entryName);

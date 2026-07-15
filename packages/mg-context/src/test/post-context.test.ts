@@ -532,7 +532,12 @@ describe('PostContext', function () {
             const instance: any = new PostContext();
             instance.addAuthor({name: 'First Author', slug: 'first-author', email: 'first@example.com'});
             instance.addAuthor({name: 'Third Author', slug: 'third-author', email: 'third@example.com'});
-            instance.addAuthor({name: 'Second Author', slug: 'second-author', email: 'second@example.com', sortOrder: 1});
+            instance.addAuthor({
+                name: 'Second Author',
+                slug: 'second-author',
+                email: 'second@example.com',
+                sortOrder: 1
+            });
 
             assert.equal(instance.data.authors.length, 3);
             assert.equal(instance.data.authors[0].data.slug, 'first-author');
@@ -552,7 +557,12 @@ describe('PostContext', function () {
         it('Appends author when sort order exceeds array length', function () {
             const instance: any = new PostContext();
             instance.addAuthor({name: 'First Author', slug: 'first-author', email: 'first@example.com'});
-            instance.addAuthor({name: 'Second Author', slug: 'second-author', email: 'second@example.com', sortOrder: 99});
+            instance.addAuthor({
+                name: 'Second Author',
+                slug: 'second-author',
+                email: 'second@example.com',
+                sortOrder: 99
+            });
 
             assert.equal(instance.data.authors.length, 2);
             assert.equal(instance.data.authors[1].data.slug, 'second-author');
@@ -795,7 +805,12 @@ describe('PostContext', function () {
         function mockRow(overrides: any = {}) {
             return {
                 id: 1,
-                data: JSON.stringify({title: 'Test', slug: 'test', html: '<p>Hello</p>', created_at: '2023-01-01T00:00:00.000Z'}),
+                data: JSON.stringify({
+                    title: 'Test',
+                    slug: 'test',
+                    html: '<p>Hello</p>',
+                    created_at: '2023-01-01T00:00:00.000Z'
+                }),
                 content_format: 'lexical',
                 ghost_id: 'abc123',
                 ...overrides
@@ -804,7 +819,14 @@ describe('PostContext', function () {
 
         it('Nulls html and strips tags/authors for lexical format', () => {
             const row = mockRow({
-                data: JSON.stringify({title: 'Test', slug: 'test', html: '<p>Hi</p>', lexical: null, tags: [{slug: 'a'}], authors: [{slug: 'b'}]})
+                data: JSON.stringify({
+                    title: 'Test',
+                    slug: 'test',
+                    html: '<p>Hi</p>',
+                    lexical: null,
+                    tags: [{slug: 'a'}],
+                    authors: [{slug: 'b'}]
+                })
             });
             const {post, meta} = PostContext.toGhostPost(row);
 
@@ -855,8 +877,10 @@ describe('PostContext', function () {
         it('Extracts meta fields into posts_meta', () => {
             const row = mockRow({
                 data: JSON.stringify({
-                    title: 'Test', slug: 'test',
-                    og_title: 'OG Title', meta_description: 'Meta desc',
+                    title: 'Test',
+                    slug: 'test',
+                    og_title: 'OG Title',
+                    meta_description: 'Meta desc',
                     created_at: '2023-01-01T00:00:00.000Z'
                 })
             });
@@ -873,7 +897,8 @@ describe('PostContext', function () {
         it('Uses pre-converted lexical and skips conversion', () => {
             const row = mockRow({
                 data: JSON.stringify({
-                    title: 'Test', slug: 'test',
+                    title: 'Test',
+                    slug: 'test',
                     html: '<p>Hello</p>',
                     lexical: '{"root":{"children":[],"type":"root"}}',
                     created_at: '2023-01-01T00:00:00.000Z'

@@ -18,10 +18,10 @@ const processContent = (html, postUrl, options) => {
     html = html.replace(/<p><br><\/p>/g, '');
     html = html.replace(/<li><br><\/li>/g, '');
 
-    html = domUtils.processFragment(html, (parsed) => {
+    html = domUtils.processFragment(html, parsed => {
         // Letterdrop supplies internal links in post content with `.com/c/`, but post URLs in JSON are `.com/p/`.
         // Lets normalise that
-        parsed.$('a').forEach((el) => {
+        parsed.$('a').forEach(el => {
             let href = el.getAttribute('href');
             let linkRegEpx = new RegExp(`${escapeStringRegexp(options.url)}/c/`);
             let newHref = href.replace(linkRegEpx, `${options.url}/p/`);
@@ -29,7 +29,7 @@ const processContent = (html, postUrl, options) => {
         });
 
         // Wrap nested lists in HTML card
-        parsed.$('ul li ul, ol li ol, ol li ul, ul li ol').forEach((nestedList) => {
+        parsed.$('ul li ul, ol li ol, ol li ul, ul li ol').forEach(nestedList => {
             const outermost = domUtils.lastParent(nestedList, 'ul, ol') ?? nestedList;
 
             // Don't double-wrap
@@ -42,7 +42,7 @@ const processContent = (html, postUrl, options) => {
             insertAfter(outermost, '<!--kg-card-end: html-->');
         });
 
-        parsed.$('.quill-upload-image').forEach((el) => {
+        parsed.$('.quill-upload-image').forEach(el => {
             const figure = el.querySelector('figure');
 
             if (figure) {
@@ -55,7 +55,7 @@ const processContent = (html, postUrl, options) => {
             }
         });
 
-        parsed.$('.letterdrop-custom-button').forEach((el) => {
+        parsed.$('.letterdrop-custom-button').forEach(el => {
             const a = el.querySelector('a');
             const aHref = a?.getAttribute('href') ?? '';
             const referralsRegExp = new RegExp(`${escapeStringRegexp(options.url)}/referrals/[a-zA-Z0-9]{24}`);
@@ -64,26 +64,36 @@ const processContent = (html, postUrl, options) => {
                 el.remove();
             } else {
                 const buttonText = a ? serializeChildren(a) : '';
-                replaceWith(el, `<div class="kg-card kg-button-card kg-align-center"><a href="${aHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+                replaceWith(
+                    el,
+                    `<div class="kg-card kg-button-card kg-align-center"><a href="${aHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`
+                );
             }
         });
 
-        parsed.$('iframe[name="letterdrop-subscribe-input"]').forEach((el) => {
-            replaceWith(el, `<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${options.subscribeText}</a></div>`);
+        parsed.$('iframe[name="letterdrop-subscribe-input"]').forEach(el => {
+            replaceWith(
+                el,
+                `<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${options.subscribeText}</a></div>`
+            );
         });
 
-        parsed.$('blockquote').forEach((el) => {
+        parsed.$('blockquote').forEach(el => {
             const classes = el.getAttribute('class') ?? null;
             if (!classes) {
                 replaceWith(el, `<blockquote><p>${serializeChildren(el)}</p></blockquote>`);
             }
         });
 
-        parsed.$('a').forEach((el) => {
+        parsed.$('a').forEach(el => {
             const href = el.getAttribute('href');
             const theDomain = options.url.replace(/(https?:\/\/)(www\.)?/, '');
 
-            if (href.includes(`${theDomain}/plans`) || href.includes(`${theDomain}/subscribe`) || href.includes(`${theDomain}/promo`)) {
+            if (
+                href.includes(`${theDomain}/plans`) ||
+                href.includes(`${theDomain}/subscribe`) ||
+                href.includes(`${theDomain}/promo`)
+            ) {
                 el.setAttribute('href', options.subscribeLink);
             }
         });
@@ -134,7 +144,7 @@ const processPost = (data, options) => {
         debug(`Adding supplied primary tag to ${data.slug} post object`, tagObject);
     }
 
-    data.tags.forEach((tag) => {
+    data.tags.forEach(tag => {
         let tagSlug = slugify(tag);
         let tagObject = {
             url: `migrator-added-tag-${tagSlug}`,

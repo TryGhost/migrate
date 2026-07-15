@@ -178,7 +178,7 @@ export class Queue {
         concurrency: number,
         timeout?: number
     ): Promise<TaskResult> {
-        const subtaskEntries = subtasks.map((task) => {
+        const subtaskEntries = subtasks.map(task => {
             const taskId = this.#allocateTaskId();
             if (this.#showPendingTasks) {
                 this.#renderer.onTaskPending?.({title: task.title, depth, parentTitle, taskId});
@@ -196,9 +196,20 @@ export class Queue {
             for (const subtaskEntry of subtaskEntries) {
                 if (await this.#shouldSkip(subtaskEntry.task)) {
                     skipped += 1;
-                    this.#renderer.onTaskSkip({title: subtaskEntry.task.title, depth, parentTitle, taskId: subtaskEntry.taskId});
+                    this.#renderer.onTaskSkip({
+                        title: subtaskEntry.task.title,
+                        depth,
+                        parentTitle,
+                        taskId: subtaskEntry.taskId
+                    });
                 } else {
-                    const result = await this.#executeTask(subtaskEntry.task, depth, parentTitle, timeout, subtaskEntry.taskId);
+                    const result = await this.#executeTask(
+                        subtaskEntry.task,
+                        depth,
+                        parentTitle,
+                        timeout,
+                        subtaskEntry.taskId
+                    );
                     completed += result.completed;
                     skipped += result.skipped;
                     errors.push(...result.errors);
@@ -237,7 +248,7 @@ export class Queue {
 
         while (index < subtaskEntries.length) {
             while (running >= concurrency && index < subtaskEntries.length) {
-                await new Promise<void>((resolve) => {
+                await new Promise<void>(resolve => {
                     resolveSlotAvailable = resolve;
                 });
             }
@@ -263,7 +274,7 @@ export class Queue {
         allStarted = true;
 
         if (running > 0) {
-            await new Promise<void>((resolve) => {
+            await new Promise<void>(resolve => {
                 resolveAllDone = resolve;
             });
         }
@@ -271,7 +282,13 @@ export class Queue {
         return {completed, skipped, errors};
     }
 
-    async #executeTask(task: Task, depth: number, parentTitle?: string, timeout?: number, taskId?: number): Promise<TaskResult> {
+    async #executeTask(
+        task: Task,
+        depth: number,
+        parentTitle?: string,
+        timeout?: number,
+        taskId?: number
+    ): Promise<TaskResult> {
         /* c8 ignore next -- taskId is always provided by callers */
         const info: TaskInfo = {title: task.title, depth, parentTitle, taskId: taskId ?? this.#allocateTaskId()};
         this.#renderer.onTaskStart(info);
@@ -291,9 +308,7 @@ export class Queue {
         let timedOut = false;
         const taskPromise = task.task(ctx);
         try {
-            const result = timeoutHandle
-                ? await Promise.race([taskPromise, timeoutHandle.promise])
-                : await taskPromise;
+            const result = timeoutHandle ? await Promise.race([taskPromise, timeoutHandle.promise]) : await taskPromise;
 
             timeoutHandle?.clear();
 
@@ -362,7 +377,7 @@ export class Queue {
         }
 
         this.#yieldCounter = 0;
-        await new Promise<void>((resolve) => {
+        await new Promise<void>(resolve => {
             setImmediate(resolve);
         });
     }
@@ -396,7 +411,7 @@ export class Queue {
         try {
             if (Array.isArray(source)) {
                 this.#showPendingTasks = true;
-                const sourceEntries: TaskEntry[] = source.map((task) => {
+                const sourceEntries: TaskEntry[] = source.map(task => {
                     const taskId = this.#allocateTaskId();
                     this.#renderer.onTaskPending?.({title: task.title, depth: 0, taskId});
 
@@ -408,7 +423,7 @@ export class Queue {
                 let done = false;
                 while (!done) {
                     while (running >= this.#concurrency) {
-                        await new Promise<void>((resolve) => {
+                        await new Promise<void>(resolve => {
                             resolveSlotAvailable = resolve;
                         });
                     }
@@ -421,7 +436,11 @@ export class Queue {
                         const taskEntry = result.value;
                         if (await this.#shouldSkip(taskEntry.task)) {
                             skipped += 1;
-                            this.#renderer.onTaskSkip({title: taskEntry.task.title, depth: 0, taskId: taskEntry.taskId});
+                            this.#renderer.onTaskSkip({
+                                title: taskEntry.task.title,
+                                depth: 0,
+                                taskId: taskEntry.taskId
+                            });
                         } else {
                             running += 1;
                             runTask(taskEntry);
@@ -436,7 +455,7 @@ export class Queue {
                 let done = false;
                 while (!done) {
                     while (running >= this.#concurrency) {
-                        await new Promise<void>((resolve) => {
+                        await new Promise<void>(resolve => {
                             resolveSlotAvailable = resolve;
                         });
                     }
@@ -450,7 +469,11 @@ export class Queue {
 
                         if (await this.#shouldSkip(taskEntry.task)) {
                             skipped += 1;
-                            this.#renderer.onTaskSkip({title: taskEntry.task.title, depth: 0, taskId: taskEntry.taskId});
+                            this.#renderer.onTaskSkip({
+                                title: taskEntry.task.title,
+                                depth: 0,
+                                taskId: taskEntry.taskId
+                            });
                         } else {
                             running += 1;
                             runTask(taskEntry);
@@ -461,7 +484,7 @@ export class Queue {
 
             // Wait for remaining tasks
             if (running > 0) {
-                await new Promise<void>((resolve) => {
+                await new Promise<void>(resolve => {
                     resolveAllDone = resolve;
                 });
             }

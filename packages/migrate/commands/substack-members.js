@@ -137,7 +137,7 @@ const defaults = convertOptionsToDefaults(options);
 const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
-const run = async (argv) => {
+const run = async argv => {
     let context = {
         errors: [],
         warnings: []
@@ -175,14 +175,14 @@ const run = async (argv) => {
         if (context.logs) {
             ui.log.info(`Adjusted members due to passed in options:`);
 
-            context.logs.forEach((log) => {
+            context.logs.forEach(log => {
                 ui.log.info(log.info);
             });
         }
     }
 
     if (context.result.skip) {
-        context.result.skip.forEach((skipped) => {
+        context.result.skip.forEach(skipped => {
             ui.log.warn(`Skipped import: ${skipped.info}`);
         });
     }
@@ -198,6 +198,4 @@ export default {
     defaults
 };
 
-export {
-    parseCompGift
-};
+export {parseCompGift};

@@ -3,8 +3,20 @@ import {parseHTML} from 'linkedom';
 
 // HTML5 void elements that should be self-closing
 const VOID_ELEMENTS = new Set([
-    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
-    'link', 'meta', 'param', 'source', 'track', 'wbr'
+    'area',
+    'base',
+    'br',
+    'col',
+    'embed',
+    'hr',
+    'img',
+    'input',
+    'link',
+    'meta',
+    'param',
+    'source',
+    'track',
+    'wbr'
 ]);
 
 export interface ParsedFragment {
@@ -20,7 +32,9 @@ export interface ParsedFragment {
  * Parse HTML fragment without document wrapper
  */
 export function parseFragment(html: string | null): ParsedFragment {
-    const {document} = parseHTML(`<!DOCTYPE html><html><body>${html || ''}</body></html>`) as unknown as {document: Document};
+    const {document} = parseHTML(`<!DOCTYPE html><html><body>${html || ''}</body></html>`) as unknown as {
+        document: Document;
+    };
     const body = document.body as HTMLElement;
 
     return {
@@ -57,7 +71,10 @@ export function processFragment<T>(html: string | null, fn: (parsed: ParsedFragm
 /**
  * Async version of processFragment for callbacks that need to await.
  */
-export async function processFragmentAsync<T>(html: string | null, fn: (parsed: ParsedFragment) => Promise<T>): Promise<T> {
+export async function processFragmentAsync<T>(
+    html: string | null,
+    fn: (parsed: ParsedFragment) => Promise<T>
+): Promise<T> {
     const parsed = parseFragment(html);
     try {
         return await fn(parsed);
@@ -70,11 +87,7 @@ export async function processFragmentAsync<T>(html: string | null, fn: (parsed: 
  * Escape HTML attribute value
  */
 function escapeAttr(value: string): string {
-    return value
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+    return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 /**

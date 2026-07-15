@@ -4,17 +4,17 @@ const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 const galleryCard = cardUtils.getCard('gallery');
 const bookmarkCard = cardUtils.getCard('bookmark');
 
-const doReplace = (str) => {
+const doReplace = str => {
     const replaceParts = [
         [/[\s\n]/g, ''], // Remove spaces
         [/\.$/, ''], // Trim trailing full stop
-        [/\u2018/, '\''], // Convert single opening curly quote to straight quote
-        [/\u2019/, '\''], // Convert single closing curly quote to straight quote
+        [/\u2018/, "'"], // Convert single opening curly quote to straight quote
+        [/\u2019/, "'"], // Convert single closing curly quote to straight quote
         [/\u201c/, '"'], // Convert double opening curly quote to straight quote
         [/\u201d/, '"'] // Convert double closing curly quote to straight quote
     ];
 
-    replaceParts.forEach((re) => {
+    replaceParts.forEach(re => {
         str = str.replace(re[0], re[1]);
     });
 
@@ -66,14 +66,14 @@ export default ({html, post}) => {
     }
 
     // Remove the subtitle if it's the same as the excerpt
-    parsed.$('.graf--subtitle').forEach((el) => {
+    parsed.$('.graf--subtitle').forEach(el => {
         if (equivalentTitles(el.textContent, post.data.custom_excerpt)) {
             el.remove();
         }
     });
 
     // Convert galleries
-    parsed.$('.section-inner.sectionLayout--outsetRow').forEach((el) => {
+    parsed.$('.section-inner.sectionLayout--outsetRow').forEach(el => {
         // Check we're only working with a group of <figure> elements
         const children = Array.from(el.children);
         const allFigures = children.every(child => child.tagName.toLowerCase() === 'figure');
@@ -91,7 +91,8 @@ export default ({html, post}) => {
                 }
             };
 
-            el.querySelectorAll('figure').forEach((figure) => { // eslint-disable-line no-shadow
+            el.querySelectorAll('figure').forEach(figure => {
+                // eslint-disable-line no-shadow
                 let img = figure.querySelector('img');
                 cardOpts.payload.images.push({
                     row: 0,
@@ -109,7 +110,7 @@ export default ({html, post}) => {
     });
 
     // Convert Medium bookmarks
-    parsed.$('.graf--mixtapeEmbed').forEach((el) => {
+    parsed.$('.graf--mixtapeEmbed').forEach(el => {
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
             payload: {}
@@ -137,12 +138,12 @@ export default ({html, post}) => {
     });
 
     // Handle blockquotes made of 2 elements
-    parsed.$('blockquote.graf--pullquote, blockquote.graf--blockquote').forEach((bq) => {
+    parsed.$('blockquote.graf--pullquote, blockquote.graf--blockquote').forEach(bq => {
         bq.removeAttribute('name');
         bq.removeAttribute('id');
         bq.removeAttribute('class');
 
-        bq.querySelectorAll('a').forEach((a) => {
+        bq.querySelectorAll('a').forEach(a => {
             a.removeAttribute('data-href');
             a.removeAttribute('class');
         });
@@ -162,7 +163,7 @@ export default ({html, post}) => {
         domUtils.replaceWith(bq, `<blockquote><p>${textElements.join('<br><br>')}</p></blockquote>`);
     });
 
-    parsed.$('pre.graf--pre').forEach((pre) => {
+    parsed.$('pre.graf--pre').forEach(pre => {
         pre.removeAttribute('name');
         pre.removeAttribute('id');
         pre.removeAttribute('class');
@@ -173,13 +174,13 @@ export default ({html, post}) => {
         const lang = pre.getAttribute('data-code-block-lang');
         pre.removeAttribute('data-code-block-lang');
 
-        pre.querySelectorAll('span.pre--content').forEach((span) => {
+        pre.querySelectorAll('span.pre--content').forEach(span => {
             const code = parsed.document.createElement('code');
             code.innerHTML = span.innerHTML;
             span.parentNode.replaceChild(code, span);
         });
 
-        pre.querySelectorAll('code').forEach((code) => {
+        pre.querySelectorAll('code').forEach(code => {
             code.removeAttribute('name');
             code.removeAttribute('id');
             code.removeAttribute('class');

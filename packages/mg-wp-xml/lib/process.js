@@ -12,7 +12,7 @@ import {isSerialized, unserialize} from 'php-serialize';
  * by XML parsing (e.g. \r\n → \n normalization changes actual byte length
  * but the declared s:N: count still reflects the original).
  */
-const fixSerializedLengths = (value) => {
+const fixSerializedLengths = value => {
     return value.replace(/s:\d+:"([\s\S]*?)";/g, (match, content) => {
         const byteLength = Buffer.byteLength(content, 'utf8');
         return `s:${byteLength}:"${content}";`;
@@ -33,7 +33,7 @@ const parserOptions = {
 };
 
 // Helper to ensure value is always an array
-const ensureArray = (value) => {
+const ensureArray = value => {
     if (!value) {
         return [];
     }
@@ -41,7 +41,7 @@ const ensureArray = (value) => {
 };
 
 // Helper to get text content from a node (handles both string and object with #text)
-const getText = (node) => {
+const getText = node => {
     if (node === undefined || node === null) {
         return '';
     }
@@ -54,7 +54,7 @@ const getText = (node) => {
     return String(node);
 };
 
-const processUser = (user) => {
+const processUser = user => {
     const authorSlug = slugify(getText(user['wp:author_login']));
     const bio = getText(user['wp:author_description']) || '';
     const avatar = getText(user['wp:author_avatar']) || '';
@@ -71,7 +71,7 @@ const processUser = (user) => {
     };
 };
 
-const processWPMeta = async (post) => {
+const processWPMeta = async post => {
     let metaData = {};
 
     const postMetas = ensureArray(post['wp:postmeta']);
@@ -108,7 +108,7 @@ const processWPMeta = async (post) => {
     return metaData;
 };
 
-const processEnclosureAudio = (metaData) => {
+const processEnclosureAudio = metaData => {
     const enclosure = metaData?.enclosure;
     if (!enclosure || typeof enclosure !== 'string') {
         return null;
@@ -163,14 +163,7 @@ const processTags = (categories, options = {}) => {
     // If options.tags is false, skip post_tag (only import categories)
     const includeTags = options.tags !== false;
 
-    let allowedTerms = [
-        'post_tag',
-        'organization',
-        'policy',
-        'treaty',
-        'region',
-        'legal_regulatory'
-    ];
+    let allowedTerms = ['post_tag', 'organization', 'policy', 'treaty', 'region', 'legal_regulatory'];
 
     if (options.customTaxonomies && Array.isArray(options.customTaxonomies)) {
         allowedTerms = allowedTerms.concat(options.customTaxonomies);
@@ -208,7 +201,8 @@ const processTags = (categories, options = {}) => {
 
 const {stripHtml} = stringUtils;
 
-const preProcessContent = async ({html, options}) => { // eslint-disable-line no-shadow
+const preProcessContent = async ({html, options}) => {
+    // eslint-disable-line no-shadow
     // Drafts can have empty post bodies
     if (!html) {
         return html;
@@ -218,7 +212,9 @@ const preProcessContent = async ({html, options}) => { // eslint-disable-line no
     const splitIt = html.split(/\r?\n/);
 
     // Regexp to find lines that only contain a YouTube link
-    const youTubeLine = new RegExp('^((?:https?:)?\\/\\/)?((?:www|m)\\.)?((?:youtube(?:-nocookie)?\\.com|youtu\\.be))(\\/(?:[\\w\\-]+\\?v=|embed\\/|live\\/|v\\/)?)([\\w\\-]+)(\\S+)?$');
+    const youTubeLine = new RegExp(
+        '^((?:https?:)?\\/\\/)?((?:www|m)\\.)?((?:youtube(?:-nocookie)?\\.com|youtu\\.be))(\\/(?:[\\w\\-]+\\?v=|embed\\/|live\\/|v\\/)?)([\\w\\-]+)(\\S+)?$'
+    );
 
     // For each line, test against the regexp above
     splitIt.forEach((line, index, theArray) => {
@@ -227,16 +223,16 @@ const preProcessContent = async ({html, options}) => { // eslint-disable-line no
 
             const replaceWith = `<iframe loading="lazy" title="" width="160" height="9" src="https://www.youtube.com/embed/${theId}?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>`;
 
-            return theArray[index] = replaceWith;
+            return (theArray[index] = replaceWith);
         }
 
-        return theArray[index] = line;
+        return (theArray[index] = line);
     });
 
     // Join the separated lines
     html = splitIt.join('\n');
 
-    html = processFragment(html, (parsed) => {
+    html = processFragment(html, parsed => {
         // Remove empty link elements, typically HTML anchors
         for (const el of parsed.$('a')) {
             if (el.innerHTML.length === 0) {
@@ -253,7 +249,7 @@ const preProcessContent = async ({html, options}) => { // eslint-disable-line no
     return html;
 };
 
-const processHTMLContent = async (args) => {
+const processHTMLContent = async args => {
     // If rawHtml is set, don't process the HTML and wrap content in a HTML card
     if (args?.options?.rawHtml) {
         return `<!--kg-card-begin: html-->${args.html}<!--kg-card-end: html-->`;
@@ -272,7 +268,7 @@ const processHTMLContent = async (args) => {
 const processPost = async (post, users, options, fileCache) => {
     const {addTag, url, excerpt, excerptSelector, featureImageCaption} = options;
     const postTypeVal = getText(post['wp:post_type']);
-    const postType = (postTypeVal === 'page') ? 'page' : 'post';
+    const postType = postTypeVal === 'page' ? 'page' : 'post';
     const featureImage = processFeatureImage(post, options.attachments);
     const dcCreatorSlug = slugify(getText(post['dc:creator']));
 
@@ -334,12 +330,20 @@ const processPost = async (post, users, options, fileCache) => {
             updated_at: postDate,
             feature_image: featureImage?.url ?? null,
             feature_image_alt: featureImage?.alt ?? null,
-            feature_image_caption: (featureImageCaption !== false) ? (featureImage?.description ?? featureImage?.title ?? null) : null,
+            feature_image_caption:
+                featureImageCaption !== false ? (featureImage?.description ?? featureImage?.title ?? null) : null,
             type: postType,
             // Use authors array only for multiple authors (Co-Authors Plus with 2+ authors)
             // Use single author field for backwards compatibility with single-author posts
             authors: authors.length > 0 ? authors : undefined,
-            author: authors.length === 0 ? (coAuthors.length === 1 ? coAuthors[0] : (users ? users.find(user => user.data.slug === dcCreatorSlug) : null)) : undefined,
+            author:
+                authors.length === 0
+                    ? coAuthors.length === 1
+                        ? coAuthors[0]
+                        : users
+                          ? users.find(user => user.data.slug === dcCreatorSlug)
+                          : null
+                    : undefined,
             tags: []
         }
     };
@@ -368,7 +372,7 @@ const processPost = async (post, users, options, fileCache) => {
 
     postObj.data.html = await processHTMLContent({
         html: postObj.data.html,
-        excerptSelector: (!excerpt && excerptSelector) ? excerptSelector : false,
+        excerptSelector: !excerpt && excerptSelector ? excerptSelector : false,
         postUrl: postObj.url,
         featureImageSrc: featureImage?.url ?? null,
         options: {...options, skipShortcodes: true},
@@ -478,7 +482,7 @@ const processPosts = async (xml, users, options, fileCache) => {
     return postsOutput;
 };
 
-const processAttachment = async (post) => {
+const processAttachment = async post => {
     let attachmentKey = getText(post['wp:post_id']);
     let attachmentUrl = getText(post['wp:attachment_url']) || null;
     let attachmentDesc = getText(post['content:encoded']) || null;
@@ -508,7 +512,7 @@ const processAttachment = async (post) => {
     };
 };
 
-const processAttachments = async (xml) => {
+const processAttachments = async xml => {
     let attachmentsOutput = [];
 
     const items = ensureArray(xml?.rss?.channel?.item);
@@ -524,7 +528,7 @@ const processAttachments = async (xml) => {
     return attachmentsOutput;
 };
 
-const processUsers = (xml) => {
+const processUsers = xml => {
     const usersOutput = [];
 
     const authors = ensureArray(xml?.rss?.channel?.['wp:author']);
@@ -567,7 +571,7 @@ const all = async (input, {options, fileCache}) => {
         const startDate = new Date(options.postsAfter);
         const endDate = new Date(options.postsBefore).setDate(new Date(options.postsBefore).getDate() + 1);
 
-        output.posts = output.posts.filter((post) => {
+        output.posts = output.posts.filter(post => {
             if (new Date(post.data.published_at) > startDate && new Date(post.data.published_at) < endDate) {
                 return post;
             } else {
@@ -577,7 +581,7 @@ const all = async (input, {options, fileCache}) => {
     } else if (options.postsAfter) {
         const startDate = new Date(options.postsAfter);
 
-        output.posts = output.posts.filter((post) => {
+        output.posts = output.posts.filter(post => {
             if (new Date(post.data.published_at) > startDate) {
                 return post;
             } else {
@@ -587,7 +591,7 @@ const all = async (input, {options, fileCache}) => {
     } else if (options.postsBefore) {
         const endDate = new Date(options.postsBefore).setDate(new Date(options.postsBefore).getDate() + 1);
 
-        output.posts = output.posts.filter((post) => {
+        output.posts = output.posts.filter(post => {
             if (new Date(post.data.published_at) < endDate) {
                 return post;
             } else {
@@ -628,6 +632,4 @@ export default {
     all
 };
 
-export {
-    processWPMeta
-};
+export {processWPMeta};

@@ -19,7 +19,7 @@ describe('Mailchimp member stats', () => {
     });
 
     after(function () {
-        unlink(inputZipPath, (err) => {
+        unlink(inputZipPath, err => {
             if (err) {
                 throw err;
             }

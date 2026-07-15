@@ -15,7 +15,8 @@ export function withTransaction<T>(db: DatabaseModels, callback: () => T): T {
     } catch (err) {
         db.db.exec('ROLLBACK');
         throw err;
-    /* c8 ignore next */ } finally {
+        /* c8 ignore next */
+    } finally {
         db.inTransaction = false;
     }
 }
@@ -28,7 +29,13 @@ export function findByIds(db: DatabaseModels, table: string, ids: number[]): any
     return db.db.prepare(`SELECT * FROM ${table} WHERE id IN (${placeholders})`).all(...ids);
 }
 
-export function findByColumn(db: DatabaseModels, table: string, column: string, ids: number[], orderBy?: string): any[] {
+export function findByColumn(
+    db: DatabaseModels,
+    table: string,
+    column: string,
+    ids: number[],
+    orderBy?: string
+): any[] {
     if (ids.length === 0) {
         return [];
     }
@@ -50,7 +57,12 @@ interface DateRange {
     onOrAfter?: Date;
 }
 
-function pushDateConditions(conditions: string[], params: (string | number | null)[], column: string, range: DateRange) {
+function pushDateConditions(
+    conditions: string[],
+    params: (string | number | null)[],
+    column: string,
+    range: DateRange
+) {
     if (range.after) {
         conditions.push(`${column} > ?`);
         params.push(range.after.toISOString());
@@ -118,11 +130,15 @@ export function countWhere(db: DatabaseModels, where: WhereClause): number {
 }
 
 export function findPostsWhere(db: DatabaseModels, where: WhereClause, limit: number, offset: number): any[] {
-    return db.db.prepare(`SELECT * FROM Posts ${where.sql} ORDER BY id ASC LIMIT ? OFFSET ?`).all(...where.params, limit, offset);
+    return db.db
+        .prepare(`SELECT * FROM Posts ${where.sql} ORDER BY id ASC LIMIT ? OFFSET ?`)
+        .all(...where.params, limit, offset);
 }
 
 export function findPostIdColumnsWhere(db: DatabaseModels, where: WhereClause, limit: number, offset: number): any[] {
-    return db.db.prepare(`SELECT id, ghost_id FROM Posts ${where.sql} ORDER BY id ASC LIMIT ? OFFSET ?`).all(...where.params, limit, offset);
+    return db.db
+        .prepare(`SELECT id, ghost_id FROM Posts ${where.sql} ORDER BY id ASC LIMIT ? OFFSET ?`)
+        .all(...where.params, limit, offset);
 }
 
 export function findAllPostIdsWhere(db: DatabaseModels, where: WhereClause): number[] {

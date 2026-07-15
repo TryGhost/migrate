@@ -9,7 +9,7 @@ const parsePostsCSV = async ({pathToFile}: {pathToFile: string}) => {
     return parsed;
 };
 
-const createSlug = ({url, title}: {url: string, title?: string}) => {
+const createSlug = ({url, title}: {url: string; title?: string}) => {
     if (url && url.length > 0) {
         let splitIt = url.split('/p/');
 
@@ -28,7 +28,7 @@ const fullImageURL = (path: string) => {
     }
 };
 
-const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?: any}) => {
+const mapPost = ({postData, options}: {postData: beehiivPostDataObject; options?: any}) => {
     const domain = options?.url ?? false;
     const postSlug = createSlug({url: postData.url, title: postData.web_title});
 
@@ -44,14 +44,18 @@ const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?
             title: postData.web_title,
             type: 'post',
             html: postData.content_html,
-            status: (postData.status === 'confirmed') ? 'published' : 'draft',
+            status: postData.status === 'confirmed' ? 'published' : 'draft',
             custom_excerpt: postData.web_subtitle ?? null,
             visibility: 'public',
             tags: []
         }
     };
 
-    if (theAudience === 'premium' || theAudience === 'All premium subscribers' || theAudience === 'All paid subscribers') {
+    if (
+        theAudience === 'premium' ||
+        theAudience === 'All premium subscribers' ||
+        theAudience === 'All paid subscribers'
+    ) {
         mappedData.data.visibility = 'paid';
     } else if (theAudience === 'both') {
         mappedData.data.visibility = 'members';
@@ -111,13 +115,16 @@ const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?
     mappedData.data.html = processHTML({html: mappedData.data.html, postData: mappedData, allData: postData, options});
 
     if (mappedData.data.feature_image) {
-        mappedData.data.html = removeDuplicateFeatureImage({html: mappedData.data.html, featureSrc: mappedData.data.feature_image});
+        mappedData.data.html = removeDuplicateFeatureImage({
+            html: mappedData.data.html,
+            featureSrc: mappedData.data.feature_image
+        });
     }
 
     return mappedData;
 };
 
-const mapPosts = async ({pathToFile, options}: {pathToFile: string, options: any}) => {
+const mapPosts = async ({pathToFile, options}: {pathToFile: string; options: any}) => {
     let parsed = await parsePostsCSV({pathToFile});
 
     const mappedPosts = parsed.map((postData: beehiivPostDataObject) => {
@@ -139,10 +146,4 @@ const mapContent = async (args: {options: any}) => {
     return output;
 };
 
-export {
-    createSlug,
-    fullImageURL,
-    parsePostsCSV,
-    mapPost,
-    mapContent
-};
+export {createSlug, fullImageURL, parsePostsCSV, mapPost, mapContent};

@@ -48,7 +48,17 @@ describe('MigrateBase', () => {
 
     it('TestContext has all keys from schema', () => {
         const instance: any = new TestContext();
-        assert.deepEqual(Object.keys(instance.data), ['name', 'slug', 'html', 'mobiledoc', 'lexical', 'created_at', 'role', 'list', 'featured']);
+        assert.deepEqual(Object.keys(instance.data), [
+            'name',
+            'slug',
+            'html',
+            'mobiledoc',
+            'lexical',
+            'created_at',
+            'role',
+            'list',
+            'featured'
+        ]);
     });
 
     it('Can set individual key', () => {

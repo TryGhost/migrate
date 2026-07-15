@@ -18,13 +18,15 @@ describe('MigrateContext as tasks', () => {
 
         tasks.push({
             title: 'Make posts',
-            task: async (ctx: any) => { // eslint-disable-line no-unused-vars
+            task: async (ctx: any) => {
+                // eslint-disable-line no-unused-vars
                 let subTasks = [];
 
                 for (let i = 0; i < 2; i++) {
                     subTasks.push({
                         title: `Task ${i + 1}`,
-                        task: async (ctx: any) => { // eslint-disable-line no-shadow
+                        task: async (ctx: any) => {
+                            // eslint-disable-line no-shadow
                             await new Promise(r => setTimeout(r, 50)); // eslint-disable-line no-promise-executor-return
 
                             const post = await ctx.MGContext.addPost();

@@ -9,7 +9,7 @@ const colMapper = (opts, obj) => {
 
     let useThis;
 
-    opts.forEach((opt) => {
+    opts.forEach(opt => {
         if (keys.includes(opt)) {
             useThis = obj[opt];
         }
@@ -18,7 +18,7 @@ const colMapper = (opts, obj) => {
     return useThis;
 };
 
-const processMember = (tMember) => {
+const processMember = tMember => {
     const email = colMapper(emailFields, tMember);
     const firstName = colMapper(firstNameFields, tMember);
     const lastName = colMapper(lastNameFields, tMember);
@@ -27,7 +27,10 @@ const processMember = (tMember) => {
 
     let member = {
         email: email,
-        name: [firstName, lastName].map(e => e.trim()).join(' ').trim(),
+        name: [firstName, lastName]
+            .map(e => e.trim())
+            .join(' ')
+            .trim(),
         complimentary_plan: false,
         created_at: new Date(createdAt).toISOString(), // Given values are UTC
         labels: ['tinynews'],
@@ -35,7 +38,12 @@ const processMember = (tMember) => {
     };
 
     if (tMember?.Tags) {
-        member.labels = member.labels.concat(tMember.Tags.replace(/\|/gm, ',').split(',').filter(e => e).map(e => e.trim()));
+        member.labels = member.labels.concat(
+            tMember.Tags.replace(/\|/gm, ',')
+                .split(',')
+                .filter(e => e)
+                .map(e => e.trim())
+        );
     }
 
     if (status === 'Subscribed' || status === '1' || status === 1 || status === '2' || status === 2) {

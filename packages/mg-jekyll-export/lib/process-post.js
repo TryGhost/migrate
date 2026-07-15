@@ -14,12 +14,12 @@ function _parseFrontMatterDate(fmDate) {
     // The date was unquoted in the frontmatter, it gets parsed into a data object
     if (typeof fmDate === 'object') {
         postDate = fmDate;
-    // Otherwise the date gets parsed as a string
+        // Otherwise the date gets parsed as a string
     } else {
         const frontMaterDateRegex = new RegExp('([0-9]{4})[-:/\\ ]([0-9]{2})[-:/\\ ]([0-9]{2})');
 
         const dateParts = fmDate.match(frontMaterDateRegex);
-        postDate = new Date(Date.UTC(dateParts[1], (dateParts[2] - 1), dateParts[3])); // Months are zero-index, so 11 equals December
+        postDate = new Date(Date.UTC(dateParts[1], dateParts[2] - 1, dateParts[3])); // Months are zero-index, so 11 equals December
     }
 
     return postDate;
@@ -63,7 +63,7 @@ const processMeta = (fileName, fileContents, options) => {
             slugParts = fileName.match(slugRegex);
             postSlug = slugParts[2];
         }
-    // If it's a post with no `date` frontmatter
+        // If it's a post with no `date` frontmatter
     } else {
         const datedSlugRegex = new RegExp('([0-9a-zA-Z-_]+)/([0-9]{4}-[0-9]{1,2}-[0-9]{1,2})-(.*).(md|markdown|html)');
         slugParts = fileName.match(datedSlugRegex);
@@ -77,20 +77,23 @@ const processMeta = (fileName, fileContents, options) => {
         const dateYear = slugParts[2].split(/[-/]/)[0];
         const dateMonth = ('0' + slugParts[2].split(/[-/]/)[1]).slice(-2);
         const dateDay = ('0' + slugParts[2].split(/[-/]/)[2]).slice(-2);
-        postDate = new Date(Date.UTC(dateYear, (dateMonth - 1), dateDay)); // Months are zero-index, so 11 equals December
+        postDate = new Date(Date.UTC(dateYear, dateMonth - 1, dateDay)); // Months are zero-index, so 11 equals December
         if (!postSlug) {
             postSlug = slugParts[3];
         }
     }
 
     const post = {
-        url: (options && options.url) ? `${options.url.replace(/^\/|\/$/g, '')}/${postSlug.replace(/^\/|\/$/g, '')}` : postSlug, // Combine URL & slug, and replace extra slashes
+        url:
+            options && options.url
+                ? `${options.url.replace(/^\/|\/$/g, '')}/${postSlug.replace(/^\/|\/$/g, '')}`
+                : postSlug, // Combine URL & slug, and replace extra slashes
         data: {
             slug: postSlug
         }
     };
 
-    const isDraft = (inDraftsDir || frontmatterAttributes.published === false);
+    const isDraft = inDraftsDir || frontmatterAttributes.published === false;
 
     // This will be processed more later and deleted
     post._body = frontmatter.body;
@@ -101,7 +104,7 @@ const processMeta = (fileName, fileContents, options) => {
     post.data.updated_at = postDate || dateNow;
 
     post.data.type = 'post';
-    post.data.status = (isDraft) ? 'draft' : 'published';
+    post.data.status = isDraft ? 'draft' : 'published';
 
     post.data.email_only = false;
 
@@ -111,12 +114,10 @@ const processMeta = (fileName, fileContents, options) => {
         post.data.author = {
             url: string.slugify(frontmatterAttributes.author),
             data: {
-                email: `${string.slugify(frontmatterAttributes.author)}@${(options.email) ? options.email : 'example.com'}`,
+                email: `${string.slugify(frontmatterAttributes.author)}@${options.email ? options.email : 'example.com'}`,
                 name: frontmatterAttributes.author,
                 slug: string.slugify(frontmatterAttributes.author),
-                roles: [
-                    'Contributor'
-                ]
+                roles: ['Contributor']
             }
         };
     }
@@ -146,7 +147,7 @@ const processMeta = (fileName, fileContents, options) => {
             normalizedCats = frontmatterAttributes.categories.split(' ');
         }
 
-        normalizedCats.forEach((tag) => {
+        normalizedCats.forEach(tag => {
             post.data.tags.push({
                 url: `migrator-added-tag-category-${string.slugify(tag)}`,
                 data: {
@@ -176,7 +177,7 @@ const processMeta = (fileName, fileContents, options) => {
             normalizedTags = frontmatterAttributes.tags.split(' ');
         }
 
-        normalizedTags.forEach((tag) => {
+        normalizedTags.forEach(tag => {
             post.data.tags.push({
                 url: `migrator-added-tag-${string.slugify(tag)}`,
                 data: {
@@ -233,7 +234,8 @@ export default (fileName, fileContents, globalUser = false, options = {}) => {
 
     // Add extra tags
     post.data.tags.push({
-        url: 'migrator-added-tag', data: {
+        url: 'migrator-added-tag',
+        data: {
             name: '#jekyll',
             slug: 'hash-jekyll'
         }
@@ -242,7 +244,7 @@ export default (fileName, fileContents, globalUser = false, options = {}) => {
     if (options.addTags) {
         let theTags = options.addTags.split(',').map(item => item.trim());
 
-        theTags.forEach((tag) => {
+        theTags.forEach(tag => {
             let tagSlug = string.slugify(tag.replace('#', 'hash-'));
 
             post.data.tags.push({

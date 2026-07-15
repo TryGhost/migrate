@@ -4,7 +4,7 @@ import jsonToHtml from './json-to-html.js';
 
 const debug = debugFactory('migrate:chorus:processor');
 
-const processContent = (groups) => {
+const processContent = groups => {
     if (!groups) {
         debug(`Post has no content`);
         return '';
@@ -63,7 +63,7 @@ const processPost = (data, options) => {
     }
 
     if (data?.source?.contributors) {
-        data?.source?.contributors.forEach((contributor) => {
+        data?.source?.contributors.forEach(contributor => {
             let authorSlug = slugify(contributor.fullOrUserName);
             let authorObject = {
                 url: `/author/${authorSlug}`,
@@ -91,7 +91,7 @@ const processPost = (data, options) => {
     }
 
     if (data?.source?.communityGroups) {
-        data.source.communityGroups.forEach((tag) => {
+        data.source.communityGroups.forEach(tag => {
             let tagSlug = slugify(tag.name);
             let tagObject = {
                 url: `migrator-added-tag-${tagSlug}`,

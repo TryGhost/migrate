@@ -68,7 +68,7 @@ const createTag = (value: string) => {
     };
 };
 
-const createAuthor = ({name, defaultAuthorName}: {name?: string, defaultAuthorName?: string}) => {
+const createAuthor = ({name, defaultAuthorName}: {name?: string; defaultAuthorName?: string}) => {
     const authorName = name?.trim() || defaultAuthorName?.trim() || 'Author';
     const authorSlug = slugify(authorName);
 
@@ -82,7 +82,7 @@ const createAuthor = ({name, defaultAuthorName}: {name?: string, defaultAuthorNa
     };
 };
 
-const buildPostUrl = ({url, path}: {url?: string, path?: string}) => {
+const buildPostUrl = ({url, path}: {url?: string; path?: string}) => {
     if (!url || !path) {
         return path || '';
     }
@@ -94,7 +94,7 @@ const buildPostUrl = ({url, path}: {url?: string, path?: string}) => {
     return `${url}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 
-const createSlug = ({slug, title}: {slug?: string, title?: string}) => {
+const createSlug = ({slug, title}: {slug?: string; title?: string}) => {
     if (slug && slug.trim().length > 0) {
         return slugify(slug);
     }
@@ -113,7 +113,8 @@ const mapTags = (postData: wixCSVPostDataObject, options?: any) => {
     const includeMainCategory = shouldInclude(options?.includeMainCategory);
     const includeCategories = shouldInclude(options?.includeCategories);
     const includeTags = shouldInclude(options?.includeTags);
-    const shouldDropLegacyMainCategoryId = mainCategory && !looksLikeWixId(mainCategory) && categories[0] && looksLikeWixId(categories[0]);
+    const shouldDropLegacyMainCategoryId =
+        mainCategory && !looksLikeWixId(mainCategory) && categories[0] && looksLikeWixId(categories[0]);
     const secondaryCategories = shouldDropLegacyMainCategoryId ? categories.slice(1) : categories;
     const orderedCategories = uniqueIds([
         ...(includeMainCategory && mainCategory ? [mainCategory] : []),
@@ -121,10 +122,7 @@ const mapTags = (postData: wixCSVPostDataObject, options?: any) => {
     ]);
 
     return [
-        ...uniqueIds([
-            ...orderedCategories,
-            ...(includeTags ? tags : [])
-        ]).map(createTag),
+        ...uniqueIds([...orderedCategories, ...(includeTags ? tags : [])]).map(createTag),
         {
             url: 'migrator-added-tag-hash-wix',
             data: {
@@ -135,7 +133,7 @@ const mapTags = (postData: wixCSVPostDataObject, options?: any) => {
     ];
 };
 
-const mapPost = ({postData, options}: {postData: wixCSVPostDataObject, options?: any}) => {
+const mapPost = ({postData, options}: {postData: wixCSVPostDataObject; options?: any}) => {
     const publishedAt = parseDate(postData['Published Date']);
     const updatedAt = parseDate(postData['Last Published Date']) || publishedAt;
     const createdAt = publishedAt || updatedAt || new Date();
@@ -176,7 +174,7 @@ const mapPost = ({postData, options}: {postData: wixCSVPostDataObject, options?:
     return mappedData;
 };
 
-const mapPosts = async ({pathToFile, options}: {pathToFile: string, options: any}) => {
+const mapPosts = async ({pathToFile, options}: {pathToFile: string; options: any}) => {
     const parsed = await parsePostsCSV({pathToFile});
 
     return parsed.map((postData: wixCSVPostDataObject) => {

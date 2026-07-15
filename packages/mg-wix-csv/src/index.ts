@@ -5,6 +5,4 @@ export default async (args: {options: any}) => {
     return result;
 };
 
-export {
-    mapContent
-};
+export {mapContent};

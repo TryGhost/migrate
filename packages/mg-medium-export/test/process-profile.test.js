@@ -6,7 +6,7 @@ import processProfile from '../lib/process-profile.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
-const readSync = (name) => {
+const readSync = name => {
     let fixtureFileName = join(__dirname, './', 'fixtures', 'export', 'profile', name);
     return readFileSync(fixtureFileName, {encoding: 'utf8'});
 };

@@ -118,9 +118,7 @@ describe('SqliteReader', () => {
                 }
 
                 if (lastSeenId === 2) {
-                    return [
-                        {id: 3, title: 'Post 3', body: 'Body three'}
-                    ];
+                    return [{id: 3, title: 'Post 3', body: 'Body three'}];
                 }
 
                 return [];
@@ -132,11 +130,13 @@ describe('SqliteReader', () => {
             database: mock.database
         });
 
-        const rows = await collectRows(reader.streamRowsById({
-            table: 'posts',
-            columns: ['id', 'title', 'body'],
-            batchSize: 2
-        }));
+        const rows = await collectRows(
+            reader.streamRowsById({
+                table: 'posts',
+                columns: ['id', 'title', 'body'],
+                batchSize: 2
+            })
+        );
 
         assert.equal(rows.length, 3);
         assert.equal(rows[0].id, '1');
@@ -159,7 +159,7 @@ describe('SqliteReader', () => {
             table: 'posts',
             id: 42,
             values: {
-                title: 'Ghost\'s migration',
+                title: "Ghost's migration",
                 published: true,
                 body: null
             }
@@ -171,7 +171,7 @@ describe('SqliteReader', () => {
         assert.match(mock.runCalls[0].sql, /"published" = \?/);
         assert.match(mock.runCalls[0].sql, /"body" = \?/);
         assert.match(mock.runCalls[0].sql, /WHERE "id" = \?/);
-        assert.deepEqual(mock.runCalls[0].parameters, [null, 1, 'Ghost\'s migration', 42]);
+        assert.deepEqual(mock.runCalls[0].parameters, [null, 1, "Ghost's migration", 42]);
     });
 
     it('reuses prepared update statements with the same shape', async () => {
@@ -218,11 +218,13 @@ describe('SqliteReader', () => {
             database: mock.database
         });
 
-        const rows = await collectRows(reader.streamRowsById({
-            table: 'posts',
-            columns: ['title'],
-            batchSize: 5
-        }));
+        const rows = await collectRows(
+            reader.streamRowsById({
+                table: 'posts',
+                columns: ['title'],
+                batchSize: 5
+            })
+        );
 
         assert.equal(rows.length, 1);
         assert.equal(rows[0].id, '7');
@@ -287,33 +289,41 @@ describe('SqliteReader', () => {
         });
 
         await assert.rejects(async () => {
-            await collectRows(reader.streamRowsById({
-                table: 'posts',
-                columns: []
-            }));
+            await collectRows(
+                reader.streamRowsById({
+                    table: 'posts',
+                    columns: []
+                })
+            );
         }, /requires at least one selected column/);
 
         await assert.rejects(async () => {
-            await collectRows(reader.streamRowsById({
-                table: 'posts',
-                columns: ['id'],
-                batchSize: 0
-            }));
+            await collectRows(
+                reader.streamRowsById({
+                    table: 'posts',
+                    columns: ['id'],
+                    batchSize: 0
+                })
+            );
         }, /batchSize must be an integer greater than 0/);
 
         await assert.rejects(async () => {
-            await collectRows(reader.streamRowsById({
-                table: 'posts',
-                columns: ['id'],
-                startAfterId: -1
-            }));
+            await collectRows(
+                reader.streamRowsById({
+                    table: 'posts',
+                    columns: ['id'],
+                    startAfterId: -1
+                })
+            );
         }, /startAfterId must be an integer greater than or equal to 0/);
 
         await assert.rejects(async () => {
-            await collectRows(reader.streamRowsById({
-                table: 'posts;DROP TABLE posts',
-                columns: ['id']
-            }));
+            await collectRows(
+                reader.streamRowsById({
+                    table: 'posts;DROP TABLE posts',
+                    columns: ['id']
+                })
+            );
         }, /identifier .* is invalid/);
 
         await assert.rejects(async () => {
@@ -345,10 +355,12 @@ describe('SqliteReader', () => {
         });
 
         await assert.rejects(async () => {
-            await collectRows(reader.streamRowsById({
-                table: 'posts',
-                columns: ['id', 'title']
-            }));
+            await collectRows(
+                reader.streamRowsById({
+                    table: 'posts',
+                    columns: ['id', 'title']
+                })
+            );
         }, /expected increasing integer IDs/);
     });
 
@@ -465,11 +477,13 @@ describe('SqliteReader', () => {
             database: mock.database
         });
 
-        const rows = await collectRows(reader.streamRowsById({
-            table: 'posts',
-            columns: ['id', 'title', 'body'],
-            batchSize: 10
-        }));
+        const rows = await collectRows(
+            reader.streamRowsById({
+                table: 'posts',
+                columns: ['id', 'title', 'body'],
+                batchSize: 10
+            })
+        );
 
         assert.equal(rows.length, 1);
         assert.equal(rows[0].title, '');

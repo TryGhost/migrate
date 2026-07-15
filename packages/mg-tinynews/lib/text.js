@@ -8,13 +8,13 @@ const TextNode = ({node}) => {
         // If the next node/child starts with one of the punctuation marks above, don't add a space
         if (
             (nextChild &&
-            nextChild.content &&
-            nextChild.content[0] &&
-            supportedPunctuation.includes(nextChild.content[0])) ||
+                nextChild.content &&
+                nextChild.content[0] &&
+                supportedPunctuation.includes(nextChild.content[0])) ||
             (child &&
-            child.content &&
-            child.content.slice(-1) &&
-            supportedTrailingPunctuation.includes(child.content.slice(-1)))
+                child.content &&
+                child.content.slice(-1) &&
+                supportedTrailingPunctuation.includes(child.content.slice(-1)))
         ) {
             delimiterSpaceChar = '';
         }
@@ -27,7 +27,8 @@ const TextNode = ({node}) => {
             child.content.trim().length === 0 &&
             nextChild &&
             nextChild.content &&
-            nextChild.content.trim().length !== 0) {
+            nextChild.content.trim().length !== 0
+        ) {
             text = '<br />';
         }
 
@@ -91,6 +92,4 @@ const TextNode = ({node}) => {
     return wrapper;
 };
 
-export {
-    TextNode
-};
+export {TextNode};

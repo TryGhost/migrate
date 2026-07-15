@@ -45,10 +45,10 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
         return html;
     }
 
-    return domUtils.processFragment(html, (parsed) => {
+    return domUtils.processFragment(html, parsed => {
         // Remove left, center & right text alignment
         if (opinionated) {
-            parsed.$('p[style*="text-align"], li[style*="text-align"]').forEach((el) => {
+            parsed.$('p[style*="text-align"], li[style*="text-align"]').forEach(el => {
                 if (!isAllowed(el)) {
                     return;
                 }
@@ -61,7 +61,7 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
 
         // Change inline font-weight to <b> tag or remove altogether
         if (opinionated) {
-            parsed.$('span[style*="font-weight"]').forEach((el) => {
+            parsed.$('span[style*="font-weight"]').forEach(el => {
                 if (!isAllowed(el)) {
                     return;
                 }
@@ -81,7 +81,7 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
         }
 
         if (opinionated) {
-            parsed.$('a[style*="font-weight"], p[style*="font-weight"], li[style*="font-weight"]').forEach((el) => {
+            parsed.$('a[style*="font-weight"], p[style*="font-weight"], li[style*="font-weight"]').forEach(el => {
                 if (!isAllowed(el)) {
                     return;
                 }
@@ -101,7 +101,7 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
 
         // Change inline font-style to <i> tag or remove altogether
         if (opinionated) {
-            parsed.$('span[style*="font-style"]').forEach((el) => {
+            parsed.$('span[style*="font-style"]').forEach(el => {
                 if (!isAllowed(el)) {
                     return;
                 }
@@ -121,7 +121,7 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
         }
 
         if (opinionated) {
-            parsed.$('a[style*="font-style"], p[style*="font-style"], li[style*="font-style"]').forEach((el) => {
+            parsed.$('a[style*="font-style"], p[style*="font-style"], li[style*="font-style"]').forEach(el => {
                 if (!isAllowed(el)) {
                     return;
                 }
@@ -141,7 +141,7 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
 
         // Remove text color declarations
         if (opinionated) {
-            parsed.$('[style*="color"]').forEach((el) => {
+            parsed.$('[style*="color"]').forEach(el => {
                 if (!isAllowed(el)) {
                     return;
                 }
@@ -163,7 +163,7 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
 
         // Remove background declarations
         if (opinionated) {
-            parsed.$('[style*="background"]').forEach((el) => {
+            parsed.$('[style*="background"]').forEach(el => {
                 if (!isAllowed(el)) {
                     return;
                 }
@@ -172,15 +172,24 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
                 const styles = styleToObject(styleAttr);
 
                 const bgProps = [
-                    'background', 'background-attachment', 'background-clip',
-                    'background-color', 'background-image', 'background-origin',
-                    'background-position', 'background-repeat', 'background-size'
+                    'background',
+                    'background-attachment',
+                    'background-clip',
+                    'background-color',
+                    'background-image',
+                    'background-origin',
+                    'background-position',
+                    'background-repeat',
+                    'background-size'
                 ];
 
                 for (const prop of bgProps) {
                     const val = styles?.[prop] ?? false;
                     if (val) {
-                        styleAttr = styleAttr.replace(new RegExp(`${escapeStringRegexp(prop)}: ?${escapeStringRegexp(val)};?`), '');
+                        styleAttr = styleAttr.replace(
+                            new RegExp(`${escapeStringRegexp(prop)}: ?${escapeStringRegexp(val)};?`),
+                            ''
+                        );
                     }
                 }
 
@@ -190,12 +199,12 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
 
         // Remove empty `style=""` tags
         if (opinionated) {
-            parsed.$('[style]').forEach((el) => {
+            parsed.$('[style]').forEach(el => {
                 if (!isAllowed(el)) {
                     return;
                 }
 
-                const styleAttr = (el.getAttribute('style')!).trim();
+                const styleAttr = el.getAttribute('style')!.trim();
 
                 if (styleAttr.length === 0) {
                     el.removeAttribute('style');
@@ -205,12 +214,12 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
 
         // Remove formatting tags from headers
         if (opinionated) {
-            parsed.$('h1, h2, h3, h4, h5, h6').forEach((el) => {
+            parsed.$('h1, h2, h3, h4, h5, h6').forEach(el => {
                 if (!isAllowed(el)) {
                     return;
                 }
 
-                el.querySelectorAll('*').forEach((ell) => {
+                el.querySelectorAll('*').forEach(ell => {
                     if (['B', 'STRONG', 'I', 'EM', 'SPAN'].includes(ell.tagName)) {
                         replaceWith(ell, serializeChildren(ell));
                     }
@@ -225,7 +234,7 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
 
         // Remove <p> & <li> tags, and remove leading or trailing <br>'s
         if (opinionated) {
-            parsed.$('p, li').forEach((el) => {
+            parsed.$('p, li').forEach(el => {
                 if (!isAllowed(el)) {
                     return;
                 }
@@ -243,7 +252,7 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
 
         // Wrap some lists in a HTML card
         if (cards) {
-            parsed.$('ol, ul').forEach((ul) => {
+            parsed.$('ol, ul').forEach(ul => {
                 const outermost = domUtils.lastParent(ul, 'ul, ol') ?? ul;
 
                 const hasStyle = !!outermost.getAttribute('style');
@@ -274,6 +283,4 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
     });
 };
 
-export {
-    cleanHTML
-};
+export {cleanHTML};

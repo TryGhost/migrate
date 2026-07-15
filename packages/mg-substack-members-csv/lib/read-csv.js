@@ -40,6 +40,4 @@ const memberStats = async (args = {}) => {
     };
 };
 
-export {
-    memberStats
-};
+export {memberStats};

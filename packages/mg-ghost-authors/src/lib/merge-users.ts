@@ -37,7 +37,7 @@ function cleanBioText(bioHtml: string | undefined | null): string | undefined {
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, '\'')
+        .replace(/&#39;/g, "'")
         .replace(/&nbsp;/g, ' ')
         .replace(/&amp;/g, '&');
 
@@ -66,12 +66,14 @@ export function mergeUsersWithGhost(
         return sourceUsers;
     }
 
-    return sourceUsers.map((sourceUser) => {
+    return sourceUsers.map(sourceUser => {
         // Try to find a matching Ghost user by email (case-insensitive)
-        const matchedGhostUser = ghostUsers.find((ghostUser) => {
-            return ghostUser.email &&
-                   sourceUser.data.email &&
-                   ghostUser.email.toLowerCase() === sourceUser.data.email.toLowerCase();
+        const matchedGhostUser = ghostUsers.find(ghostUser => {
+            return (
+                ghostUser.email &&
+                sourceUser.data.email &&
+                ghostUser.email.toLowerCase() === sourceUser.data.email.toLowerCase()
+            );
         });
 
         if (!matchedGhostUser) {
@@ -94,7 +96,7 @@ export function mergeUsersWithGhost(
             // Ghost API returns roles as objects with name property
             const firstRole = matchedGhostUser.roles[0];
             if (typeof firstRole === 'object' && firstRole.name) {
-                roles = matchedGhostUser.roles.map((r) => {
+                roles = matchedGhostUser.roles.map(r => {
                     if (typeof r === 'object' && r.name) {
                         return r.name;
                     }

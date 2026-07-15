@@ -7,7 +7,7 @@ import {jsonToHtml} from './json-to-html.js';
 
 const debug = debugFactory('migrate:tinynews:lib:mapper');
 
-const textOnly = (htmlContent) => {
+const textOnly = htmlContent => {
     const cleanedContent = sanitizeHtml(htmlContent, {
         allowedTags: [],
         allowedAttributes: {}
@@ -18,7 +18,7 @@ const textOnly = (htmlContent) => {
 const processAuthor = (author, authorsData) => {
     const name = [author.first_names, author.last_name].join(' ').trim();
     const slug = slugify(name);
-    const email = (author?.email && author.email.length > 0) ? author.email : `${slug}@example.com`;
+    const email = author?.email && author.email.length > 0 ? author.email : `${slug}@example.com`;
 
     let authorObject = {
         url: `/author/${slug}`,
@@ -40,7 +40,7 @@ const processAuthor = (author, authorsData) => {
     // If we have a global authorsData object
     if (authorsData?.data) {
         // Find th author by first & last name
-        const thisAuthorInfo = authorsData.data.authors.find((filterAuthor) => {
+        const thisAuthorInfo = authorsData.data.authors.find(filterAuthor => {
             return filterAuthor.first_names === author.first_names && filterAuthor.last_name === author.last_name;
         });
 
@@ -55,7 +55,7 @@ const processAuthor = (author, authorsData) => {
     return authorObject;
 };
 
-const mapPostPageConfig = (args) => {
+const mapPostPageConfig = args => {
     const {postData, authorsData, postType} = args;
 
     debug(`Mapping data for ${postData.slug}`);
@@ -70,7 +70,7 @@ const mapPostPageConfig = (args) => {
             updated_at: postData.translations[0].last_published_at ?? dateNow,
             created_at: postData.translations[0].first_published_at ?? dateNow,
             title: postData.translations[0].headline,
-            type: (postType === 'page') ? 'page' : 'post',
+            type: postType === 'page' ? 'page' : 'post',
             html: null,
             status: postData.translations[0].published ? 'published' : 'draft',
             og_title: postData.translations[0].facebook_title ?? null,
@@ -90,7 +90,8 @@ const mapPostPageConfig = (args) => {
     }
 
     if (mappedData.data.html.includes('class="fb-post')) {
-        mappedData.data.codeinjection_head = '<div id="fb-root"></div><script async defer src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v3.2"></script>';
+        mappedData.data.codeinjection_head =
+            '<div id="fb-root"></div><script async defer src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v3.2"></script>';
     }
 
     if (postData?.translations[0].main_image?.children && postData?.translations[0].main_image?.children[0]?.imageUrl) {
@@ -101,7 +102,7 @@ const mapPostPageConfig = (args) => {
 
     // Handle mainImage from pages (its in the content object)
     if (postType === 'page' && typeof postData.translations[0].content === 'object') {
-        const hasMainImageInContent = postData.translations[0].content.find((block) => {
+        const hasMainImageInContent = postData.translations[0].content.find(block => {
             return block.type === 'mainImage';
         });
         if (hasMainImageInContent?.children[0]?.imageUrl) {
@@ -154,7 +155,7 @@ const mapPostPageConfig = (args) => {
     }
 
     if (postData.tags) {
-        postData.tags.forEach((tag) => {
+        postData.tags.forEach(tag => {
             const tagData = tag.tag;
             const tagPublished = tagData.published;
             let tagName = tagData.tag_translations[0].title;
@@ -186,11 +187,30 @@ const mapPostPageConfig = (args) => {
     return mappedData;
 };
 
-const processNewsletterContent = (html, options) => { // eslint-disable-line no-unused-vars
+const processNewsletterContent = (html, options) => {
+    // eslint-disable-line no-unused-vars
     const cleanedContent = sanitizeHtml(html, {
         allowedTags: [
-            'b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'blockquote',
-            'figure', 'figcaption', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+            'b',
+            'i',
+            'em',
+            'strong',
+            'a',
+            'p',
+            'br',
+            'ul',
+            'ol',
+            'li',
+            'blockquote',
+            'figure',
+            'figcaption',
+            'img',
+            'h1',
+            'h2',
+            'h3',
+            'h4',
+            'h5',
+            'h6',
             'div'
         ],
         allowedAttributes: {
@@ -198,12 +218,12 @@ const processNewsletterContent = (html, options) => { // eslint-disable-line no-
             img: ['src', 'alt', 'title']
         },
         transformTags: {
-            'div': 'p' // eslint-disable-line quote-props
+            div: 'p' // eslint-disable-line quote-props
         }
     });
 
-    const cleanedHTML = domUtils.processFragment(cleanedContent, (parsed) => {
-        parsed.$('p').forEach((el) => {
+    const cleanedHTML = domUtils.processFragment(cleanedContent, parsed => {
+        parsed.$('p').forEach(el => {
             const innerHtml = domUtils.serializeChildren(el).trim();
             if (!innerHtml.length || innerHtml === '<br>' || innerHtml === '<br/>') {
                 el.remove();
@@ -211,7 +231,7 @@ const processNewsletterContent = (html, options) => { // eslint-disable-line no-
         });
 
         // :contains is a jQuery-specific selector, so filter manually
-        parsed.$('a').forEach((el) => {
+        parsed.$('a').forEach(el => {
             if ((el.textContent || '').includes('Made with Letterhead')) {
                 el.remove();
             }
@@ -223,7 +243,8 @@ const processNewsletterContent = (html, options) => { // eslint-disable-line no-
     return `<!--kg-card-begin: html-->${cleanedHTML}<!--kg-card-end: html-->`;
 };
 
-const mapNewsletterConfig = (args) => { // eslint-disable-line no-unused-vars
+const mapNewsletterConfig = args => {
+    // eslint-disable-line no-unused-vars
     const {postData, options} = args;
 
     debug(`Mapping data for ${postData.slug}`);
@@ -277,7 +298,7 @@ const mapNewsletterConfig = (args) => { // eslint-disable-line no-unused-vars
     return mappedData;
 };
 
-const mapContent = async (args) => {
+const mapContent = async args => {
     const {options} = args;
     const {articles, pages, newsletters, authors} = options;
 
@@ -297,13 +318,15 @@ const mapContent = async (args) => {
         const articlesJSONString = await readFile(articles, 'utf8');
         const articlesJSON = JSON.parse(articlesJSONString);
 
-        await articlesJSON.forEach((data) => {
-            output.posts.push(mapPostPageConfig({
-                postData: data,
-                authorsData: authorDataJSON,
-                postType: 'post',
-                options
-            }));
+        await articlesJSON.forEach(data => {
+            output.posts.push(
+                mapPostPageConfig({
+                    postData: data,
+                    authorsData: authorDataJSON,
+                    postType: 'post',
+                    options
+                })
+            );
         });
     }
 
@@ -312,13 +335,15 @@ const mapContent = async (args) => {
         const pagesJSONString = await readFile(pages, 'utf8');
         const pagesJSON = JSON.parse(pagesJSONString);
 
-        await pagesJSON.forEach((data) => {
-            output.posts.push(mapPostPageConfig({
-                postData: data,
-                authorsData: authorDataJSON,
-                postType: 'page',
-                options
-            }));
+        await pagesJSON.forEach(data => {
+            output.posts.push(
+                mapPostPageConfig({
+                    postData: data,
+                    authorsData: authorDataJSON,
+                    postType: 'page',
+                    options
+                })
+            );
         });
     }
 
@@ -327,18 +352,17 @@ const mapContent = async (args) => {
         const newslettersJSONString = await readFile(newsletters, 'utf8');
         const newslettersJSON = JSON.parse(newslettersJSONString);
 
-        await newslettersJSON.data.newsletter_editions.forEach((data) => {
-            output.posts.push(mapNewsletterConfig({
-                postData: data,
-                options
-            }));
+        await newslettersJSON.data.newsletter_editions.forEach(data => {
+            output.posts.push(
+                mapNewsletterConfig({
+                    postData: data,
+                    options
+                })
+            );
         });
     }
 
     return output;
 };
 
-export {
-    mapPostPageConfig,
-    mapContent
-};
+export {mapPostPageConfig, mapContent};

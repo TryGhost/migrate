@@ -57,10 +57,11 @@ const tasks = async ({apiKey, blogID}, ctx) => {
         posts: []
     };
 
-    blogID.forEach((singleblogID) => {
+    blogID.forEach(singleblogID => {
         tasks.push({
             title: `Fetching posts for ${singleblogID}`,
-            task: async (ctx) => { // eslint-disable-line no-shadow
+            task: async ctx => {
+                // eslint-disable-line no-shadow
                 try {
                     let response = await cachedFetch(ctx.fileCache, apiKey, singleblogID, 'posts');
 

@@ -6,12 +6,6 @@ import AuthorContext from './lib/AuthorContext.js';
 
 export default MigrateContext;
 
-export {
-    MigrateBase,
-    MigrateContext,
-    PostContext,
-    TagContext,
-    AuthorContext
-};
+export {MigrateBase, MigrateContext, PostContext, TagContext, AuthorContext};
 
 export type {WrittenFile, ForEachPostOptions, PostFilter, DuplicateSlugEntry} from './lib/MigrateContext.js';

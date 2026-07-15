@@ -67,7 +67,7 @@ const ScrapeError = ({url, code, originalError}: {url: string; code?: string; or
 };
 
 const sleep = async (ms: number): Promise<void> => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         setTimeout(resolve, ms);
     });
 };
@@ -88,7 +88,7 @@ export default class WebScraper {
     mergeRelations(existing: any[] | null, scraped: any[]): any[] {
         const result = existing || [];
 
-        scraped.forEach((item) => {
+        scraped.forEach(item => {
             const newItem = makeMetaObject(item);
             const matchedItem = findMatchIn(result, newItem);
 
@@ -156,7 +156,12 @@ export default class WebScraper {
         }
     }
 
-    async scrapeUrl(url: string, config: Record<string, any>, filename: string, scrapeWait: number | false = false): Promise<ScrapeResponse> {
+    async scrapeUrl(
+        url: string,
+        config: Record<string, any>,
+        filename: string,
+        scrapeWait: number | false = false
+    ): Promise<ScrapeResponse> {
         if (this.fileCache.hasFile(`${filename}.json`, 'tmp')) {
             return await this.fileCache.readTmpJSONFile(filename);
         }
@@ -195,8 +200,7 @@ export default class WebScraper {
         }
 
         const filename = slugify(url).slice(0, 250);
-        const {responseData} = await this.scrapeUrl(url, this.config.posts, filename,
-            options.wait_after_scrape || 100);
+        const {responseData} = await this.scrapeUrl(url, this.config.posts, filename, options.wait_after_scrape || 100);
 
         if (!responseData) {
             return;
@@ -237,7 +241,12 @@ export default class WebScraper {
                 },
                 task: async (taskCtx: any) => {
                     try {
-                        const {responseData} = await this.scrapeUrl(url, this.config.posts!, filename, taskCtx?.options?.wait_after_scrape || 100);
+                        const {responseData} = await this.scrapeUrl(
+                            url,
+                            this.config.posts!,
+                            filename,
+                            taskCtx?.options?.wait_after_scrape || 100
+                        );
                         this.processScrapedData(responseData, data, taskCtx.options);
                     } catch (err) {
                         taskCtx.errors.push({message: `Error hydrating metadata for ${url}`, err});

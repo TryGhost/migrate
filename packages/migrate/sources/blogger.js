@@ -53,11 +53,11 @@ const postProcessor = (scrapedData, data, options) => {
     return scrapedData;
 };
 
-const skipScrape = (post) => {
+const skipScrape = post => {
     return post.data.status === 'draft';
 };
 
-const getTaskRunner = (options) => {
+const getTaskRunner = options => {
     let runnerTasks = [
         {
             title: 'Initializing',
@@ -66,7 +66,12 @@ const getTaskRunner = (options) => {
 
                 ctx.allowScrape = {
                     all: ctx.options.scrape.includes('all'),
-                    assets: ctx.options.scrape.includes('all') || ctx.options.scrape.includes('assets') || ctx.options.scrape.includes('img') || ctx.options.scrape.includes('media') || ctx.options.scrape.includes('files'),
+                    assets:
+                        ctx.options.scrape.includes('all') ||
+                        ctx.options.scrape.includes('assets') ||
+                        ctx.options.scrape.includes('img') ||
+                        ctx.options.scrape.includes('media') ||
+                        ctx.options.scrape.includes('files'),
                     web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
                 };
 
@@ -76,9 +81,13 @@ const getTaskRunner = (options) => {
                     tmpPath: ctx.options.tmpPath
                 });
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor, skipScrape);
-                ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
-                    allowAllDomains: true
-                }, ctx);
+                ctx.assetScraper = new MgAssetScraper(
+                    ctx.fileCache,
+                    {
+                        allowAllDomains: true
+                    },
+                    ctx
+                );
                 await ctx.assetScraper.init();
                 ctx.linkFixer = new MgLinkFixer();
 
@@ -87,7 +96,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Get content from API',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     let tasks = await bloggerIngest.fetch.tasks(options, ctx);
 
@@ -100,7 +109,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Process Blogger API JSON',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     ctx.result = await bloggerIngest.process.all(ctx.result, ctx);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'blogger-processed-data.json');
@@ -114,7 +123,7 @@ const getTaskRunner = (options) => {
         {
             title: 'Fetch missing data via WebScraper',
             skip: ctx => !ctx.allowScrape.web,
-            task: (ctx) => {
+            task: ctx => {
                 let tasks = ctx.webScraper.hydrate(ctx); // eslint-disable-line no-shadow
 
                 return makeTaskRunner(tasks, options);
@@ -122,7 +131,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Build Link Map',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     ctx.linkFixer.buildMap(ctx);
                 } catch (error) {
@@ -133,7 +142,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Format data as Ghost JSON',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
                 } catch (error) {
@@ -145,7 +154,7 @@ const getTaskRunner = (options) => {
         {
             title: 'Fetch images via AssetScraper',
             skip: ctx => !ctx.allowScrape.assets,
-            task: async (ctx) => {
+            task: async ctx => {
                 let tasks = ctx.assetScraper.getTasks();
 
                 return makeTaskRunner(tasks, {
@@ -166,7 +175,7 @@ const getTaskRunner = (options) => {
         {
             // @TODO don't duplicate this with the utils json file
             title: 'Convert HTML -> Lexical',
-            task: (ctx) => {
+            task: ctx => {
                 try {
                     let tasks = mgHtmlLexical.convert(ctx); // eslint-disable-line no-shadow
                     return makeTaskRunner(tasks, options);
@@ -178,7 +187,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Write Ghost import JSON File',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
                     await ctx.fileCache.writeErrorJSONFile(ctx.errors);
@@ -194,7 +203,11 @@ const getTaskRunner = (options) => {
             task: async (ctx, task) => {
                 try {
                     let timer = Date.now();
-                    ctx.outputFile = await fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+                    ctx.outputFile = await fsUtils.zip.write(
+                        process.cwd(),
+                        ctx.fileCache.zipDir,
+                        ctx.fileCache.defaultZipFileName
+                    );
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
                     ctx.errors.push(error);
@@ -205,7 +218,7 @@ const getTaskRunner = (options) => {
         {
             title: 'Clearing cached files',
             enabled: () => !options.cache && options.zip,
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {

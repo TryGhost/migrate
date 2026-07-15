@@ -10,7 +10,4 @@ export default async (args: any) => {
     return result;
 };
 
-export {
-    contentStats,
-    readZip
-};
+export {contentStats, readZip};

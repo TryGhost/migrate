@@ -17,7 +17,9 @@ export async function resend(options: Options) {
 
     Logger.shared.startSpinner('');
     if (options.dryRun) {
-        Logger.shared.succeed(`Running ${chalk.green('resend')} command as ${chalk.green('DRY RUN')}. No Stripe data will be updated.`);
+        Logger.shared.succeed(
+            `Running ${chalk.green('resend')} command as ${chalk.green('DRY RUN')}. No Stripe data will be updated.`
+        );
     } else {
         Logger.shared.succeed(`Running ${chalk.green('resend')} command...`);
     }
@@ -47,13 +49,13 @@ export async function resend(options: Options) {
             Logger.shared.processSpinner(reporter.toString());
         });
 
-        const endpoints = await fromAccount.use((client) => {
+        const endpoints = await fromAccount.use(client => {
             return client.webhookEndpoints.list({
                 limit: 100
             });
         });
 
-        let endpoint: Stripe.WebhookEndpoint|null = null;
+        let endpoint: Stripe.WebhookEndpoint | null = null;
 
         for (const e of endpoints.data) {
             if (e.url.endsWith('/members/webhooks/stripe/') && e.enabled_events && e.livemode === (mode === 'live')) {
@@ -80,7 +82,7 @@ export async function resend(options: Options) {
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            const events = await fromAccount.use((client) => {
+            const events = await fromAccount.use(client => {
                 return client.events.list({
                     delivery_success: false,
                     limit: 100
@@ -101,7 +103,7 @@ export async function resend(options: Options) {
                     await exec(command);
 
                     // Wait 1s
-                    await new Promise((r) => {
+                    await new Promise(r => {
                         setTimeout(r, 1000);
                     });
                 }

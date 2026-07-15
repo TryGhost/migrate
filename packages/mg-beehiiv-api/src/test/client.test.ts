@@ -16,10 +16,12 @@ describe('beehiiv API Client', () => {
     describe('client', () => {
         it('makes authenticated request to publications endpoint', async () => {
             const mockData = {data: [{id: 'pub-1', name: 'Test Publication'}]};
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve(mockData)
-            }));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve(mockData)
+                })
+            );
 
             await client('test-api-key');
 
@@ -32,10 +34,12 @@ describe('beehiiv API Client', () => {
 
         it('returns publications data', async () => {
             const publications = [{id: 'pub-1', name: 'Test Pub'}];
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({data: publications})
-            }));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve({data: publications})
+                })
+            );
 
             const result = await client('test-api-key');
 
@@ -43,11 +47,13 @@ describe('beehiiv API Client', () => {
         });
 
         it('throws error on failed request', async () => {
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: false,
-                status: 401,
-                statusText: 'Unauthorized'
-            }));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: false,
+                    status: 401,
+                    statusText: 'Unauthorized'
+                })
+            );
 
             await assert.rejects(async () => {
                 await client('invalid-key');

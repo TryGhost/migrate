@@ -16,7 +16,7 @@ import hydrate from './hydrate.js';
  * We also need to ensure that each object has at least the bare minimum properties required for an import
  *
  */
-const removeMeta = (resource) => {
+const removeMeta = resource => {
     return resource.data || resource;
 };
 
@@ -39,9 +39,7 @@ const deduplicateSlugs = (obj, type) => {
         // @TODO: log some sort of warning for things like this?
         const objectID = new ObjectID();
         const maxBaseLength = GHOST_SLUG_MAX - DEDUP_SUFFIX_LENGTH;
-        const baseSlug = obj.slug.length > maxBaseLength
-            ? obj.slug.substring(0, maxBaseLength).trim()
-            : obj.slug;
+        const baseSlug = obj.slug.length > maxBaseLength ? obj.slug.substring(0, maxBaseLength).trim() : obj.slug;
         obj.slug = `${baseSlug}-${objectID}`;
     }
 
@@ -64,7 +62,7 @@ const ensureValid = (resource, type, options) => {
     return obj;
 };
 
-const normalizeKey = (key) => {
+const normalizeKey = key => {
     let outputKey = null;
 
     if (schema.RESOURCES.includes(key)) {
@@ -77,7 +75,7 @@ const normalizeKey = (key) => {
     return outputKey;
 };
 
-const normalizeValue = (value) => {
+const normalizeValue = value => {
     if (!Array.isArray(value)) {
         value = [value];
     }
