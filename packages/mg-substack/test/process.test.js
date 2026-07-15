@@ -3,7 +3,7 @@ import {describe, it, before, after, beforeEach} from 'node:test';
 import {URL} from 'node:url';
 import {unlink, readdirSync, readFileSync} from 'node:fs';
 import {resolve, join} from 'node:path';
-import {execSync} from 'node:child_process';
+import {execFileSync} from 'node:child_process';
 import csv from '@tryghost/mg-fs-utils/lib/csv.js';
 import processZip from '../index.js';
 import map from '../lib/mapper.js';
@@ -18,7 +18,11 @@ const inputPostsPath = join(__dirname, '/fixtures/posts');
 
 describe('Process Substack ZIP file', function () {
     before(function () {
-        execSync(`zip -r ${inputZipPath} *`, {
+        // Zip the fixture files without a shell: list entries explicitly (excluding
+        // dotfiles, to match shell `*`) and pass them as an argv array so no path is
+        // interpolated into a command (js/shell-command-injection-from-environment).
+        const filesToZip = readdirSync(inputPath).filter(name => !name.startsWith('.'));
+        execFileSync('zip', ['-r', inputZipPath, ...filesToZip], {
             cwd: inputPath
         });
     });
