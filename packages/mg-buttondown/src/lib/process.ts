@@ -15,8 +15,13 @@ const processHTML = ({postData}: {postData?: mappedDataObject}) => {
 
     let html = postData.data.html;
 
-    // Strip HTML comments
-    html = html.replace(/<!--(.*?)-->/gm, '');
+    // Strip HTML comments. `.` doesn't match newlines and a single pass can
+    // leave `<!--` behind on nested comments, so match across lines and loop.
+    let previousHtml;
+    do {
+        previousHtml = html;
+        html = html.replace(/<!--[\s\S]*?-->/g, '');
+    } while (html !== previousHtml);
 
     let renderedHtml = md.render(html);
 
