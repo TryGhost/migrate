@@ -28,6 +28,34 @@ const equivalentTitles = (title1, title2) => {
     return title1 === title2;
 };
 
+// Trim leading and trailing whitespace from an element's edge text nodes using
+// DOM operations. This reproduces the output of the previous
+// `serializeChildren(el).trim()` round-trip without reinterpreting serialized
+// DOM text as HTML via innerHTML. U+00A0 (non-breaking space) is excluded so the
+// result matches the old String.trim(): serializeChildren escaped a nbsp to
+// `&nbsp;`, which trim() never stripped.
+const trimEdgeWhitespace = el => {
+    let node = el.firstChild;
+    while (node && node.nodeType === 3) {
+        const trimmed = node.nodeValue.replace(/^[^\S\u00a0]+/, '');
+        node.nodeValue = trimmed;
+        if (trimmed !== '') {
+            break;
+        }
+        node = node.nextSibling;
+    }
+
+    node = el.lastChild;
+    while (node && node.nodeType === 3) {
+        const trimmed = node.nodeValue.replace(/[^\S\u00a0]+$/, '');
+        node.nodeValue = trimmed;
+        if (trimmed !== '') {
+            break;
+        }
+        node = node.previousSibling;
+    }
+};
+
 export default ({html, post}) => {
     const parsed = domUtils.parseFragment(html);
 
@@ -169,7 +197,7 @@ export default ({html, post}) => {
         pre.removeAttribute('class');
         pre.removeAttribute('data-code-block-mode');
         pre.removeAttribute('spellcheck');
-        pre.innerHTML = domUtils.serializeChildren(pre).trim();
+        trimEdgeWhitespace(pre);
 
         const lang = pre.getAttribute('data-code-block-lang');
         pre.removeAttribute('data-code-block-lang');
@@ -189,7 +217,8 @@ export default ({html, post}) => {
                 code.classList.add(`language-${lang}`);
             }
 
-            code.innerHTML = domUtils.serializeChildren(code).replace(/<br>/g, ' \n').trim();
+            code.querySelectorAll('br').forEach(br => br.replaceWith(' \n'));
+            trimEdgeWhitespace(code);
         });
     });
 
