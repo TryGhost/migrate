@@ -40,9 +40,16 @@ pnpm test:only                 # Run tests only (no lint)
 cd packages/<name> && pnpm test
 ```
 
-### Linting
+### Linting & Formatting
+
+Linting (oxlint) and formatting (oxfmt) are configured once at the repo root
+(`.oxlintrc.json`, `.oxfmtrc.json`) and run over the whole repo — individual
+packages do not have their own lint config or scripts.
+
 ```bash
-pnpm lint                      # Lint all packages
+pnpm lint                      # Lint (oxlint) + check formatting (oxfmt)
+pnpm lint:fix                  # Auto-fix lint issues and reformat
+pnpm format                    # Reformat all files (oxfmt)
 ```
 
 ## Project Structure
@@ -195,7 +202,6 @@ Place test fixtures in `test/fixtures/` (JS) or `src/test/fixtures/` (TS).
    packages/mg-newsource/
    ├── package.json
    ├── tsconfig.json
-   ├── .eslintrc.cjs
    └── src/
        ├── index.ts
        ├── lib/
@@ -219,15 +225,9 @@ Place test fixtures in `test/fixtures/` (JS) or `src/test/fixtures/` (TS).
      "files": ["build"],
      "scripts": {
        "build": "tsc --build",
-       "test": "pnpm build && node --test build/test",
-       "posttest": "pnpm lint",
-       "lint": "eslint src/ --ext .ts --cache"
+       "test": "pnpm build && node --test build/test"
      },
      "devDependencies": {
-       "@typescript-eslint/eslint-plugin": "catalog:",
-       "@typescript-eslint/parser": "catalog:",
-       "eslint": "catalog:",
-       "eslint-plugin-ghost": "catalog:",
        "typescript": "catalog:"
      },
      "dependencies": {
@@ -290,7 +290,7 @@ throw new errors.InternalServerError({
 ## Code Style
 
 - **Do not use lodash.** Use native JS instead: `Array.find`, `Array.includes`, `Object.entries`, `Array.isArray`, `for...of`, etc. Lodash is being actively removed from this codebase.
-- ESLint with `eslint-plugin-ghost` is enforced
+- Linting with `oxlint` and formatting with `oxfmt`, configured at the repo root and run over the whole repo
 - No console.log in production (use `// eslint-disable-next-line no-console` if needed)
 - Use async/await, not promise chains
 - TypeScript: use private fields (`#fieldName`) for encapsulation

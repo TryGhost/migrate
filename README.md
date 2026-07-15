@@ -82,8 +82,9 @@ pnpm dev [source]
 
 ## Test
 
-- `pnpm lint` run just eslint
-- `pnpm test` run lint and tests
+- `pnpm lint` runs oxlint and checks formatting with oxfmt
+- `pnpm format` reformats all files with oxfmt
+- `pnpm test` runs lint and tests
 
 
 ## Dependency management

@@ -9,9 +9,6 @@
   "engines": {
     "node": ">=22.21.1"
   },
-  "eslintIgnore": [
-    "**/node_modules/**"
-  ],
   "scripts": {
     "dev": "NODE_ENV=development NODE_OPTIONS='--import tsx --conditions=source' ./packages/migrate/bin/cli.js",
     "dev:lessmemory": "NODE_OPTIONS=\"--max-old-space-size=2024 --import tsx --conditions=source\" NODE_ENV=development ./packages/migrate/bin/cli.js",
@@ -21,9 +18,11 @@
     "presetup": "pnpm install",
     "setup": "pnpm install",
     "test:only": "nx run-many -t test --parallel=10 --outputStyle=dynamic-legacy",
-    "test": "nx run-many -t test lint --parallel=10 --outputStyle=dynamic-legacy",
-    "test:ci": "nx run-many -t test lint --outputStyle=dynamic",
-    "lint": "nx run-many -t lint --parallel=10 --outputStyle=dynamic-legacy",
+    "test": "pnpm lint && nx run-many -t test --parallel=10 --outputStyle=dynamic-legacy",
+    "test:ci": "nx run-many -t test --outputStyle=dynamic",
+    "lint": "oxlint --quiet && oxfmt --check .",
+    "lint:fix": "oxlint --fix && oxfmt .",
+    "format": "oxfmt .",
     "build": "nx run-many -t build --parallel=10 --outputStyle=dynamic-legacy",
     "build:watch": "nx run-many -t build:watch --parallel=10 --outputStyle=dynamic-legacy",
     "ship": "pnpm test && nx release version --git-push --git-remote ${GHOST_UPSTREAM:-origin}",
@@ -34,10 +33,10 @@
   "devDependencies": {
     "@nx/js": "23.0.2",
     "@types/node": "catalog:",
-    "eslint": "catalog:",
-    "eslint-plugin-ghost": "catalog:",
     "knip": "6.25.0",
     "nx": "23.0.2",
+    "oxfmt": "0.59.0",
+    "oxlint": "1.74.0",
     "tsx": "4.23.0",
     "typescript": "catalog:"
   }

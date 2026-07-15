@@ -15,9 +15,7 @@
   "scripts": {
     "dev": "migrate",
     "migrate": "migrate",
-    "test": "node --test 'test/**/*.test.js'",
-    "posttest": "pnpm lint",
-    "lint": "eslint . --ext .js --cache"
+    "test": "node --test 'test/**/*.test.js'"
   },
   "files": [
     "bin",
@@ -30,7 +28,6 @@
     "access": "public"
   },
   "devDependencies": {
-    "eslint": "catalog:",
     "nock": "catalog:"
   },
   "dependencies": {

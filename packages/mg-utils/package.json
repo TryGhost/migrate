@@ -21,18 +21,12 @@
   "scripts": {
     "build": "tsc --build",
     "test": "c8 --100 node --test 'build/test/**/*.test.js'",
-    "test:local": "pnpm build && pnpm test",
-    "posttest": "pnpm lint",
-    "lint": "eslint src/ --ext .ts --cache"
+    "test:local": "pnpm build && pnpm test"
   },
   "devDependencies": {
     "@tryghost/errors": "catalog:",
     "@types/node": "catalog:",
-    "@typescript-eslint/eslint-plugin": "catalog:",
-    "@typescript-eslint/parser": "catalog:",
     "c8": "catalog:",
-    "eslint": "catalog:",
-    "eslint-plugin-ghost": "catalog:",
     "typescript": "catalog:"
   },
   "dependencies": {

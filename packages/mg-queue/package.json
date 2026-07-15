@@ -16,8 +16,6 @@
   "scripts": {
     "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",
     "build": "rm -rf build && rm -rf tsconfig.tsbuildinfo && tsc --build --sourceMap",
-    "lint": "eslint src/ --ext .ts --cache",
-    "posttest": "pnpm lint",
     "test": "c8 --src src --all --exclude '**/Renderer.ts' --exclude '**/test/**' --check-coverage --100 --reporter text --reporter cobertura node --test 'build/test/*.test.js'",
     "test:local": "pnpm build && pnpm test"
   },
@@ -30,9 +28,7 @@
   "devDependencies": {
     "@tryghost/mg-context": "workspace:*",
     "@types/node": "catalog:",
-    "@typescript-eslint/parser": "catalog:",
     "c8": "catalog:",
-    "eslint": "catalog:",
     "typescript": "catalog:"
   },
   "dependencies": {

@@ -3,7 +3,7 @@ const processCompGift = (member, {thresholdYearOrDate, beforeThreshold}) => {
     const thresholdDate = (typeof thresholdYearOrDate?.getMonth === 'function') ? thresholdYearOrDate : new Date().setFullYear(new Date().getFullYear() + thresholdYearOrDate);
 
     if (new Date(member.expiry) > thresholdDate) {
-        member.type = 'comp',
+        member.type = 'comp';
         member.complimentary_plan = true;
         member.stripe_customer_id = null;
         member.note = `Substack expiry date: ${member.expiry.toISOString()}`;
@@ -58,7 +58,7 @@ const processMember = (sMember, options) => {
         subscribed_to_emails: sMember.email_disabled === 'true' ? false : true,
         complimentary_plan: false,
         stripe_customer_id: sMember.stripe_customer_id ? sMember.stripe_customer_id : null,
-        created_at: new Date(sMember.created_at) || new Date(),
+        created_at: new Date(sMember.created_at),
         expiry: sMember.expiry ? new Date(sMember.expiry) : null,
         type: sMember.type,
         labels: []

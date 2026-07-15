@@ -104,8 +104,8 @@ pnpm dev letterdrop <API token>
 
 ## Test
 
-- `pnpm lint` run just eslint
-- `pnpm test` run lint and tests
+- `pnpm test` runs the package tests
+- Linting and formatting are run from the repo root (`pnpm lint`, `pnpm format`)
 
 
 # Copyright & License

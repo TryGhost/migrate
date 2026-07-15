@@ -21,10 +21,8 @@
     "dev": "./cli.js stripe",
     "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",
     "build": "rm -rf build && rm -rf tsconfig.tsbuildinfo && tsc --build --sourceMap",
-    "lint": "eslint src/ --ext .ts --cache",
     "test:e2e": "pnpm build && node --test --test-concurrency=1 'build/test/e2e/**/*.test.js'",
-    "test": "pnpm build && c8 --check-coverage --lines 90 --functions 80 --branches 80 --statements 90 node --test 'build/test/unit/**/*.test.js'",
-    "posttest": "pnpm lint"
+    "test": "pnpm build && c8 --check-coverage --lines 90 --functions 80 --branches 80 --statements 90 node --test 'build/test/unit/**/*.test.js'"
   },
   "files": [
     "build"
@@ -35,10 +33,8 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/sinon": "22.0.0",
-    "@typescript-eslint/parser": "catalog:",
     "c8": "catalog:",
     "dotenv": "catalog:",
-    "eslint": "catalog:",
     "sinon": "22.0.0",
     "typescript": "catalog:"
   },

@@ -127,7 +127,7 @@ const process = async ({pathToCsv, pathToZip, addLabel, includeUnsubscribed = fa
         const zipEntries: any = [];
 
         fsUtils.zip.read(pathToZip, (entryName: any, zipEntry: any) => {
-            if (/\.csv$/.test(entryName)) {
+            if (entryName.endsWith('.csv')) {
                 zipEntries.push({
                     name: entryName,
                     data: zipEntry.getData().toString('utf8')

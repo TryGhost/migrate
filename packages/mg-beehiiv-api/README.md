@@ -172,8 +172,8 @@ pnpm dev beehiiv-api --key 1234abcd --id pub_abcd1234
 
 ## Test
 
-- `pnpm lint` run just eslint
-- `pnpm test` run lint and tests
+- `pnpm test` runs the package tests
+- Linting and formatting are run from the repo root (`pnpm lint`, `pnpm format`)
 - `pnpm test:local` build and run tests (for single-package development)
 
 

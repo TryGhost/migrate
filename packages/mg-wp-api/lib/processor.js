@@ -83,10 +83,10 @@ const processAuthor = (wpAuthor) => {
     let authorObject = {
         url: wpAuthor.link,
         data: {
-            id: wpAuthor.id && wpAuthor.id,
+            id: wpAuthor.id,
             slug: wpAuthor.slug,
             name: wpAuthor.name,
-            email: wpAuthor.email && wpAuthor.email
+            email: wpAuthor.email
         }
     };
 
