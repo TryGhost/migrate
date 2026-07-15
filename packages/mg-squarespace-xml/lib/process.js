@@ -6,6 +6,10 @@ import errors from '@tryghost/errors';
 import {decode} from 'html-entities';
 const audioCard = cardUtils.getCard('audio');
 
+// Reject dangerous URL schemes before re-applying a DOM-sourced value to an
+// attribute sink (e.g. an image `src`), guarding against DOM-based XSS.
+const isSafeUrl = value => !/^\s*(javascript|vbscript|data:text\/html)/i.test(value);
+
 const htmlToTextTrimmed = (html, max) => {
     let noHtml = html
         .replace(/<[^>]+>/g, ' ')
@@ -84,19 +88,27 @@ const processContent = (html, options) => {
                     }
                     sibling = sibling.previousElementSibling;
                 }
-            } else {
-                img.setAttribute('src', img.getAttribute('data-src'));
+            } else if (isSafeUrl(src)) {
+                img.setAttribute('src', src);
             }
         });
 
         parsed.$('figure blockquote').forEach(el => {
             const nextSibling = el.nextElementSibling;
-            let captionText = '';
+            // Rebuild as `<blockquote><p>…original…<br><br>…caption…</p></blockquote>`
+            // using DOM node moves rather than assigning a serialized string to
+            // innerHTML, so DOM-sourced text is never reparsed as HTML.
+            const p = parsed.document.createElement('p');
+            p.append(...el.childNodes);
             if (nextSibling && nextSibling.tagName === 'FIGCAPTION') {
-                captionText = `<br><br>${domUtils.serializeChildren(nextSibling)}`;
+                p.append(
+                    parsed.document.createElement('br'),
+                    parsed.document.createElement('br'),
+                    ...nextSibling.childNodes
+                );
                 nextSibling.remove();
             }
-            el.innerHTML = `<p>${domUtils.serializeChildren(el)}${captionText}</p>`;
+            el.append(p);
         });
 
         parsed.$('.sqs-video-wrapper').forEach(el => {
