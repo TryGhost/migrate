@@ -1,7 +1,5 @@
 import {domUtils} from '@tryghost/mg-utils';
 
-const {serializeChildren} = domUtils;
-
 /*
 Process the HTML of a single Jekyll Post.
 
@@ -44,7 +42,7 @@ export default (rawHtml, options = {}) => {
             const p = li.querySelector('p');
 
             if (p) {
-                li.innerHTML = serializeChildren(p);
+                li.replaceChildren(...p.childNodes);
             }
         });
 
