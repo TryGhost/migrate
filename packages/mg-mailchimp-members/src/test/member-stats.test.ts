@@ -1,6 +1,6 @@
 import {URL} from 'node:url';
-import {unlink} from 'node:fs';
-import {execSync} from 'node:child_process';
+import {readdirSync, unlink} from 'node:fs';
+import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {describe, it, before, after} from 'node:test';
 import {join} from 'node:path';
@@ -13,7 +13,11 @@ const inputZipPath = join(fixturesPath, 'stats.zip');
 
 describe('Mailchimp member stats', () => {
     before(function () {
-        execSync(`zip -r ${inputZipPath} *`, {
+        // Zip the fixture files without going through a shell: list the entries
+        // explicitly (excluding dotfiles, to match shell `*` glob behaviour) and
+        // pass them as an arguments array so no path is interpolated into a command.
+        const filesToZip = readdirSync(inputPath).filter(name => !name.startsWith('.'));
+        execFileSync('zip', ['-r', inputZipPath, ...filesToZip], {
             cwd: inputPath
         });
     });
