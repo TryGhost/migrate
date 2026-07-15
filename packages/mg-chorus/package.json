@@ -12,9 +12,7 @@
   "type": "module",
   "scripts": {
     "dev": "echo \"Implement me!\"",
-    "test": "node --test 'test/**/*.test.js'",
-    "posttest": "pnpm lint",
-    "lint": "eslint . --ext .js --cache"
+    "test": "node --test 'test/**/*.test.js'"
   },
   "files": [
     "index.js",
@@ -23,9 +21,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "devDependencies": {
-    "eslint": "catalog:"
-  },
+  "devDependencies": {},
   "dependencies": {
     "@tryghost/debug": "catalog:",
     "@tryghost/mg-fs-utils": "workspace:*",

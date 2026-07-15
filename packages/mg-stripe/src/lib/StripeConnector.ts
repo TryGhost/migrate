@@ -49,7 +49,7 @@ export class StripeConnector {
                 ...(same ? [
                     {
                         name: 'Within the same account (' + same.name! + ' / ' + same.id! + ')',
-                        value: 'same' as 'same'
+                        value: 'same' as const
                     }
                 ] : []),
                 {

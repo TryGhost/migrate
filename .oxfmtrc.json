@@ -1,0 +1,29 @@
+{
+    "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "singleQuote": true,
+    "tabWidth": 4,
+    "printWidth": 120,
+    "bracketSpacing": false,
+    "trailingComma": "none",
+    "arrowParens": "avoid",
+    "sortPackageJson": false,
+    "ignorePatterns": [
+        "**/node_modules/**",
+        "**/build/**",
+        "**/dist/**",
+        "**/out/**",
+        "**/coverage/**",
+        "**/examples/**",
+        "**/fixtures/**",
+        "packages/mg-electron-ui/**",
+        "pnpm-lock.yaml",
+        "**/*.json",
+        "**/*.jsonc",
+        "**/*.yml",
+        "**/*.yaml",
+        "**/*.md",
+        "**/*.markdown",
+        "**/*.html",
+        "**/*.hbs"
+    ]
+}

@@ -21,10 +21,8 @@
     "dev": "echo \"Implement me!\"",
     "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",
     "build": "tsc --build --sourceMap",
-    "lint": "eslint src/ --ext .ts --cache",
     "test": "c8 --src src --all --reporter text --reporter cobertura node --test 'build/test/**/*.test.js'",
-    "test:local": "pnpm build && pnpm test",
-    "posttest": "pnpm lint"
+    "test:local": "pnpm build && pnpm test"
   },
   "files": [
     "build"
@@ -34,10 +32,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@typescript-eslint/parser": "catalog:",
     "c8": "catalog:",
-    "eslint": "catalog:",
-    "eslint-plugin-ghost": "catalog:",
     "typescript": "catalog:"
   },
   "dependencies": {

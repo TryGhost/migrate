@@ -1,0 +1,39 @@
+{
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "categories": {
+        "correctness": "error",
+        "suspicious": "warn"
+    },
+    "env": {
+        "node": true,
+        "es2024": true
+    },
+    "ignorePatterns": [
+        "**/build/**",
+        "**/dist/**",
+        "**/out/**",
+        "**/coverage/**",
+        "**/examples/**",
+        "packages/mg-electron-ui/**"
+    ],
+    "rules": {
+        "no-console": "error",
+        "no-unused-vars": [
+            "error",
+            {
+                "args": "none",
+                "caughtErrors": "none",
+                "varsIgnorePattern": "^_",
+                "ignoreRestSiblings": true
+            }
+        ]
+    },
+    "overrides": [
+        {
+            "files": ["**/*.ts", "**/*.mts", "**/*.cts"],
+            "rules": {
+                "no-unused-vars": "off"
+            }
+        }
+    ]
+}

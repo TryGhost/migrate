@@ -12,9 +12,7 @@
   "type": "module",
   "scripts": {
     "dev": "echo \"Implement me!\"",
-    "test": "node --test 'test/**/*.test.js'",
-    "posttest": "pnpm lint",
-    "lint": "eslint . --ext .js --cache"
+    "test": "node --test 'test/**/*.test.js'"
   },
   "files": [
     "index.js",
@@ -25,8 +23,7 @@
   },
   "devDependencies": {
     "@tryghost/listr-smart-renderer": "workspace:*",
-    "@tryghost/mg-json": "workspace:*",
-    "eslint": "catalog:"
+    "@tryghost/mg-json": "workspace:*"
   },
   "dependencies": {
     "@tryghost/mg-utils": "workspace:*",

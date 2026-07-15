@@ -52,7 +52,9 @@ export default class AssetScraper {
     #findOnlyMode: boolean;
     #baseUrl: string | false;
     #defaultOptions: Required<Pick<AssetScraperOptions, 'optimize'>>;
+    // eslint-disable-next-line no-unused-private-class-members -- assigned but not yet read
     #warnings: string[];
+    // eslint-disable-next-line no-unused-private-class-members -- assigned but not yet read
     #logger: Logger | undefined;
     #allowedDomains: string[];
     #allowAllDomains: boolean;

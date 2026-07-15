@@ -28,6 +28,7 @@ export type TagDataObject = {
 };
 
 export default class TagContext extends MigrateBase {
+    // eslint-disable-next-line no-unused-private-class-members -- assigned but not yet read
     #context;
     data: any = {};
 

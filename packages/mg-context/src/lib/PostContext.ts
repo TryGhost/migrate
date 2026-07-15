@@ -51,8 +51,8 @@ const postZodSchema = z.object({
 });
 
 export type PostConstructorOptions = {
-    source?: Object;
-    meta?: Object;
+    source?: object;
+    meta?: object;
     contentFormat?: ContentFormat;
     lookupKey?: string;
 };

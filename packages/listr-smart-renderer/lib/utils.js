@@ -40,7 +40,7 @@ const indentString = (string, level) => IndentString(string, level, '  ');
 const taskNumber = (index, tasks) => {
     // Quick and dirty left pad
     let padSize = String(tasks.length).length;
-    let padding = new Array(padSize).join(0);
+    let padding = Array.from({length: padSize}).join(0);
     let taskNum = `${padding}${index + 1}`.slice(-padSize);
 
     return `${taskNum}/${tasks.length}`;

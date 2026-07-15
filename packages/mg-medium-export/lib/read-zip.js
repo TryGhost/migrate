@@ -8,7 +8,7 @@ const debug = debugFactory('migrate:medium:lib:read-zip');
 const contentStats = async (zipPath) => {
     const entries = await fsUtils.readZipEntries(zipPath);
     const posts = entries.filter(value => /^posts\/.*\.html$/.test(value)).length;
-    const users = entries.filter(value => /^profile\/profile\.html/.test(value)).length;
+    const users = entries.filter(value => value.startsWith('profile/profile.html')).length;
 
     return {
         posts: posts,
@@ -21,7 +21,7 @@ const readMediumZip = ({content, zipPath, options, skippedFileCount}) => {
         const entryHtml = zipEntry.getData().toString('utf8');
 
         // Catch all HTML files inside `profile/`
-        if (/^profile\/profile\.html/.test(entryName)) {
+        if (entryName.startsWith('profile/profile.html')) {
             content.profiles.push({data: entryHtml});
 
         // Catch all HTML files in `posts/`

@@ -23,19 +23,14 @@
     "build": "tsc --build --sourceMap",
     "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",
     "test": "c8 --src src --all --check-coverage --100 --reporter text --reporter cobertura node --test 'build/test/**/*.test.js'",
-    "test:local": "pnpm build && pnpm test",
-    "posttest": "pnpm lint",
-    "lint": "eslint src/ --ext .ts --cache"
+    "test:local": "pnpm build && pnpm test"
   },
   "publishConfig": {
     "access": "public"
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@typescript-eslint/parser": "catalog:",
     "c8": "catalog:",
-    "eslint": "catalog:",
-    "eslint-plugin-ghost": "catalog:",
     "typescript": "catalog:"
   },
   "dependencies": {
