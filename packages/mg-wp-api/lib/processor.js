@@ -43,6 +43,11 @@ const chunkArray = (arr, size) => {
     return chunks;
 };
 
+// Guard against DOM-sourced values that resolve to a dangerous URL scheme
+// (e.g. `javascript:`, `vbscript:`, `data:text/html`) being copied into a `src`
+// sink. Normal absolute/relative/protocol-relative image URLs are considered safe.
+const isSafeUrl = value => !/^\s*(javascript|vbscript|data:text\/html)/i.test(value ?? '');
+
 const wpCDNToLocal = imgUrl => {
     if (!imgUrl) {
         return imgUrl;
@@ -489,7 +494,7 @@ const processShortcodes = async ({html, options}) => {
     return result;
 };
 
-const SHORTCODE_REGEX = /\[([a-zA-Z_][\w-]*)(?<attrs>\s[\s\S]*?)?\](?:(?<content>[\s\S]*?)\[\/\1\])?/g;
+const SHORTCODE_REGEX = /\[([a-zA-Z_][\w-]*)(?<attrs>\s[^\]]*)?\](?:(?<content>[\s\S]*?)\[\/\1\])?/g;
 const SINGLE_URL_REGEX = /^https?:\/\/\S+$/;
 
 const processUnknownEmbedShortcodes = html => {
@@ -743,14 +748,18 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     for (const gif of parsed.$('img[data-gif]')) {
         let gifSrc = gif.getAttribute('data-gif');
         gif.removeAttribute('data-gif');
-        gif.setAttribute('src', gifSrc);
+        if (isSafeUrl(gifSrc)) {
+            gif.setAttribute('src', gifSrc);
+        }
     }
 
     // Likewise some images are lazy-loaded using JavaScript & `data-src` attributes
     for (const img of parsed.$('img[data-src]')) {
         let dataSrc = img.getAttribute('data-src');
         img.removeAttribute('data-src');
-        img.setAttribute('src', dataSrc);
+        if (isSafeUrl(dataSrc)) {
+            img.setAttribute('src', dataSrc);
+        }
     }
 
     if (options?.convertLibsynEmbed) {
