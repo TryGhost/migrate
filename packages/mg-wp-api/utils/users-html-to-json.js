@@ -21,7 +21,7 @@ const destPath = join(desitnationDir, 'users.json');
 
 const html = readFileSync(process.argv[2], 'utf8');
 
-const users = processFragment(html, (parsed) => {
+const users = processFragment(html, parsed => {
     let result = [];
 
     for (const el of parsed.$('tr[id^="user-"]')) {

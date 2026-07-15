@@ -15,13 +15,27 @@ describe('beehiiv API List Publications', () => {
 
     describe('listPublications', () => {
         it('makes authenticated request to publications endpoint', async () => {
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({
-                    data: [{id: 'pub-1', name: 'Test', created: 1700078400, stats: {active_subscriptions: 100, active_premium_subscriptions: 10, active_free_subscriptions: 90}}],
-                    total_results: 1
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: true,
+                    json: () =>
+                        Promise.resolve({
+                            data: [
+                                {
+                                    id: 'pub-1',
+                                    name: 'Test',
+                                    created: 1700078400,
+                                    stats: {
+                                        active_subscriptions: 100,
+                                        active_premium_subscriptions: 10,
+                                        active_free_subscriptions: 90
+                                    }
+                                }
+                            ],
+                            total_results: 1
+                        })
                 })
-            }));
+            );
 
             await listPublications('test-api-key');
 
@@ -49,10 +63,11 @@ describe('beehiiv API List Publications', () => {
                 if (url.pathname.endsWith('/posts')) {
                     return Promise.resolve({
                         ok: true,
-                        json: () => Promise.resolve({
-                            total_results: 100,
-                            data: [{web_url: 'https://example.beehiiv.com/p/first-post'}]
-                        })
+                        json: () =>
+                            Promise.resolve({
+                                total_results: 100,
+                                data: [{web_url: 'https://example.beehiiv.com/p/first-post'}]
+                            })
                     });
                 }
                 return Promise.resolve({
@@ -128,29 +143,36 @@ describe('beehiiv API List Publications', () => {
         });
 
         it('throws error on failed request with context', async () => {
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: false,
-                status: 403,
-                statusText: 'Forbidden',
-                url: 'https://api.beehiiv.com/v2/publications?expand%5B%5D=stats'
-            }));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: false,
+                    status: 403,
+                    statusText: 'Forbidden',
+                    url: 'https://api.beehiiv.com/v2/publications?expand%5B%5D=stats'
+                })
+            );
 
-            await assert.rejects(async () => {
-                await listPublications('invalid-key');
-            }, (err: any) => {
-                assert.equal(err.message, 'Request failed: 403 Forbidden');
-                assert.equal(err.context, 'GET /v2/publications');
-                return true;
-            });
+            await assert.rejects(
+                async () => {
+                    await listPublications('invalid-key');
+                },
+                (err: any) => {
+                    assert.equal(err.message, 'Request failed: 403 Forbidden');
+                    assert.equal(err.context, 'GET /v2/publications');
+                    return true;
+                }
+            );
         });
 
         it('throws error on server error', async () => {
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: false,
-                status: 500,
-                statusText: 'Internal Server Error',
-                url: 'https://api.beehiiv.com/v2/publications?expand%5B%5D=stats'
-            }));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: false,
+                    status: 500,
+                    statusText: 'Internal Server Error',
+                    url: 'https://api.beehiiv.com/v2/publications?expand%5B%5D=stats'
+                })
+            );
 
             await assert.rejects(async () => {
                 await listPublications('test-key');

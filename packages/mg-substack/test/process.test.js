@@ -24,7 +24,7 @@ describe('Process Substack ZIP file', function () {
     });
 
     after(function () {
-        unlink(inputZipPath, (err) => {
+        unlink(inputZipPath, err => {
             if (err) {
                 throw err;
             }
@@ -84,7 +84,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
             posts: []
         };
 
-        readdirSync(inputPostsPath).forEach((file) => {
+        readdirSync(inputPostsPath).forEach(file => {
             let theHtml = readFileSync(resolve(inputPostsPath, file), {encoding: 'utf8'});
 
             input.posts.push({
@@ -593,7 +593,7 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
             posts: []
         };
 
-        readdirSync(inputPostsPath).forEach((file) => {
+        readdirSync(inputPostsPath).forEach(file => {
             let theHtml = readFileSync(resolve(inputPostsPath, file), {encoding: 'utf8'});
             input.posts.push({name: file, html: theHtml});
         });
@@ -678,7 +678,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, `<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div><p><a href="#/portal/signup">Subscribe</a></p>`);
+        assert.equal(
+            processed.data.html,
+            `<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div><p><a href="#/portal/signup">Subscribe</a></p>`
+        );
     });
 
     it('Removes subscribe buttons and links when noSubscribeButtons is true', async function () {
@@ -731,7 +734,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, `<div class="kg-card kg-button-card kg-align-center"><a href="#post-comments" class="kg-btn kg-btn-accent">Leave a comment</a></div>`);
+        assert.equal(
+            processed.data.html,
+            `<div class="kg-card kg-button-card kg-align-center"><a href="#post-comments" class="kg-btn kg-btn-accent">Leave a comment</a></div>`
+        );
     });
 
     it('Can remove transform comment buttons', async function () {
@@ -763,7 +769,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, `<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div><p>Lorem ipsum dolor sit.</p><div class="kg-card kg-button-card kg-align-center"><a href="https://ghost.org/" class="kg-btn kg-btn-accent">Try Ghost</a></div>`);
+        assert.equal(
+            processed.data.html,
+            `<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div><p>Lorem ipsum dolor sit.</p><div class="kg-card kg-button-card kg-align-center"><a href="https://ghost.org/" class="kg-btn kg-btn-accent">Try Ghost</a></div>`
+        );
     });
 
     it('Will remove share buttons', async function () {
@@ -779,7 +788,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, `<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div>`);
+        assert.equal(
+            processed.data.html,
+            `<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Sign up now</a></div>`
+        );
     });
 
     it('Can convert signup forms to signup buttons', async function () {
@@ -795,7 +807,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, `<p>Lorem ipsum</p><div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>`);
+        assert.equal(
+            processed.data.html,
+            `<p>Lorem ipsum</p><div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>`
+        );
     });
 
     it('Removes bold tags from headings', async function () {
@@ -819,17 +834,20 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, '<h1>Heading 1</h1>\n' +
-        '                <h2>Heading 2</h2>\n' +
-        '                <h3>Heading <em>3</em></h3>\n' +
-        '                <h4>Heading 4</h4>\n' +
-        '                <h5>Heading 5</h5>\n' +
-        '                <h6>Heading 6</h6>\n' +
-        '                <h2><a href="https://example.com">Linked Heading</a></h2>\n' +
-        '                <h3>Plain Heading</h3>\n' +
-        '                <h4><a href="https://example.com">Bold Linked Heading</a></h4>\n' +
-        '                <h5>Linked <a href="https://example.com">Bold</a> Heading</h5>\n' +
-        '                <p><strong>Paragraph stays bold</strong></p>');
+        assert.equal(
+            processed.data.html,
+            '<h1>Heading 1</h1>\n' +
+                '                <h2>Heading 2</h2>\n' +
+                '                <h3>Heading <em>3</em></h3>\n' +
+                '                <h4>Heading 4</h4>\n' +
+                '                <h5>Heading 5</h5>\n' +
+                '                <h6>Heading 6</h6>\n' +
+                '                <h2><a href="https://example.com">Linked Heading</a></h2>\n' +
+                '                <h3>Plain Heading</h3>\n' +
+                '                <h4><a href="https://example.com">Bold Linked Heading</a></h4>\n' +
+                '                <h5>Linked <a href="https://example.com">Bold</a> Heading</h5>\n' +
+                '                <p><strong>Paragraph stays bold</strong></p>'
+        );
     });
 
     it('Can convert an image wrapped with a link', async function () {
@@ -863,8 +881,11 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, '<figure class="kg-card kg-image-card kg-card-hascaption"><a href="https://example.com"><img src="https://example.com/photo_1200x800.jpeg" class="kg-image" alt="A nice photo" loading="lazy"></a><figcaption>This is a <a href="https://example.com/page">really</a> nice photo</figcaption></figure>\n' +
-        '                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>');
+        assert.equal(
+            processed.data.html,
+            '<figure class="kg-card kg-image-card kg-card-hascaption"><a href="https://example.com"><img src="https://example.com/photo_1200x800.jpeg" class="kg-image" alt="A nice photo" loading="lazy"></a><figcaption>This is a <a href="https://example.com/page">really</a> nice photo</figcaption></figure>\n' +
+                '                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>'
+        );
     });
 
     it('Can wrap lists with images in HTML comments', async function () {
@@ -886,15 +907,18 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, '<!--kg-card-begin: html--><ul>\n' +
-        '                    <li>Proin nunc purus, sollicitudin vitae dui id, condimentum efficitur mauris</li>\n' +
-        '                    <li><img src="https://example.com/photo.jpg" alt="A nice photo"></li>\n' +
-        '                    <li>Vivamus <a href="https://example.com">congue</a> nisl in gravida blandit</li>\n' +
-        '                </ul><!--kg-card-end: html-->\n' +
-        '                <ul>\n' +
-        '                    <li>Proin nunc purus, sollicitudin vitae dui id, condimentum efficitur mauris</li>\n' +
-        '                    <li>Vivamus <a href="https://example.com">congue</a> nisl in gravida blandit</li>\n' +
-        '                </ul>');
+        assert.equal(
+            processed.data.html,
+            '<!--kg-card-begin: html--><ul>\n' +
+                '                    <li>Proin nunc purus, sollicitudin vitae dui id, condimentum efficitur mauris</li>\n' +
+                '                    <li><img src="https://example.com/photo.jpg" alt="A nice photo"></li>\n' +
+                '                    <li>Vivamus <a href="https://example.com">congue</a> nisl in gravida blandit</li>\n' +
+                '                </ul><!--kg-card-end: html-->\n' +
+                '                <ul>\n' +
+                '                    <li>Proin nunc purus, sollicitudin vitae dui id, condimentum efficitur mauris</li>\n' +
+                '                    <li>Vivamus <a href="https://example.com">congue</a> nisl in gravida blandit</li>\n' +
+                '                </ul>'
+        );
     });
 
     it('Can process footnotes in text content in old style', async function () {
@@ -936,26 +960,29 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, '<p>Lorem ipsum</p>\n' +
-        '                <!--kg-card-begin: html--><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.<a class="footnote-anchor" id="footnote-anchor-1" href="#footnote-1">1</a></p><!--kg-card-end: html-->\n' +
-        '                <!--kg-card-begin: html--><ol>\n' +
-        '                    <li>Lorem</li>\n' +
-        '                    <li>Phasellus scelerisque metus id elit elementum venenatis.<a class="footnote-anchor" id="footnote-anchor-2" href="#footnote-2">2</a></li>\n' +
-        '                </ol><!--kg-card-end: html-->\n' +
-        '                <!--kg-card-begin: html--><ul>\n' +
-        '                    <li>Ipsum</li>\n' +
-        '                    <li>Quisque consectetur laoreet felis, sit amet rutrum mi blandit eu.<a class="footnote-anchor" id="footnote-anchor-3" href="#footnote-3">3</a></li>\n' +
-        '                </ul><!--kg-card-end: html-->\n' +
-        '                \n' +
-        '                \n' +
-        '                <!--kg-card-begin: html--><div class="footnotes"><hr><ol><li id="footnote-1">\n' +
-        '                        <p>Lorem ipsum</p>\n' +
-        '                        <p>Dolor simet <a href="#footnote-anchor-1" title="Jump back to footnote 1 in the text.">↩</a></p>\n' +
-        '                    </li><li id="footnote-2">\n' +
-        '                        <p>Consectetur adipiscing <a href="#footnote-anchor-2" title="Jump back to footnote 2 in the text.">↩</a></p>\n' +
-        '                    </li><li id="footnote-3">\n' +
-        '                        <p>Elit elementum venenatis <a href="#footnote-anchor-3" title="Jump back to footnote 3 in the text.">↩</a></p>\n' +
-        '                    </li></ol></div><!--kg-card-end: html-->');
+        assert.equal(
+            processed.data.html,
+            '<p>Lorem ipsum</p>\n' +
+                '                <!--kg-card-begin: html--><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.<a class="footnote-anchor" id="footnote-anchor-1" href="#footnote-1">1</a></p><!--kg-card-end: html-->\n' +
+                '                <!--kg-card-begin: html--><ol>\n' +
+                '                    <li>Lorem</li>\n' +
+                '                    <li>Phasellus scelerisque metus id elit elementum venenatis.<a class="footnote-anchor" id="footnote-anchor-2" href="#footnote-2">2</a></li>\n' +
+                '                </ol><!--kg-card-end: html-->\n' +
+                '                <!--kg-card-begin: html--><ul>\n' +
+                '                    <li>Ipsum</li>\n' +
+                '                    <li>Quisque consectetur laoreet felis, sit amet rutrum mi blandit eu.<a class="footnote-anchor" id="footnote-anchor-3" href="#footnote-3">3</a></li>\n' +
+                '                </ul><!--kg-card-end: html-->\n' +
+                '                \n' +
+                '                \n' +
+                '                <!--kg-card-begin: html--><div class="footnotes"><hr><ol><li id="footnote-1">\n' +
+                '                        <p>Lorem ipsum</p>\n' +
+                '                        <p>Dolor simet <a href="#footnote-anchor-1" title="Jump back to footnote 1 in the text.">↩</a></p>\n' +
+                '                    </li><li id="footnote-2">\n' +
+                '                        <p>Consectetur adipiscing <a href="#footnote-anchor-2" title="Jump back to footnote 2 in the text.">↩</a></p>\n' +
+                '                    </li><li id="footnote-3">\n' +
+                '                        <p>Elit elementum venenatis <a href="#footnote-anchor-3" title="Jump back to footnote 3 in the text.">↩</a></p>\n' +
+                '                    </li></ol></div><!--kg-card-end: html-->'
+        );
     });
 
     it('Can process footnotes in text content in new style', async function () {
@@ -990,22 +1017,25 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, '<p>Lorem ipsum</p>\n' +
-        '                <!--kg-card-begin: html--><p>Lorem ipsum<a class="footnote-anchor" id="footnote-anchor-1" href="#footnote-1">1</a>.</p><!--kg-card-end: html-->\n' +
-        '                    <p>Dolor simet</p>\n' +
-        '                    <!--kg-card-begin: html--><p>Dolor simet <a class="footnote-anchor" id="footnote-anchor-2" href="#footnote-2">2</a>.</p><!--kg-card-end: html-->\n' +
-        '                    <p>Hello world</p>\n' +
-        '                    <!--kg-card-begin: html--><p>Hello world. This<a class="footnote-anchor" id="footnote-anchor-3" href="#footnote-3">3</a> is new</p><!--kg-card-end: html-->\n' +
-        '            \n' +
-        '            \n' +
-        '            <!--kg-card-begin: html--><div class="footnotes"><hr><ol><li id="footnote-1">\n' +
-        '                    <p>Note content</p>\n' +
-        '                    <p>Two lines <a href="#footnote-anchor-1" title="Jump back to footnote 1 in the text.">↩</a></p>\n' +
-        '                </li><li id="footnote-2">\n' +
-        '                    <p>More notes <a href="#footnote-anchor-2" title="Jump back to footnote 2 in the text.">↩</a></p>\n' +
-        '                </li><li id="footnote-3">\n' +
-        '                    <p><a href="https://ghost.org">Link</a> in this one <a href="#footnote-anchor-3" title="Jump back to footnote 3 in the text.">↩</a></p>\n' +
-        '                </li></ol></div><!--kg-card-end: html-->');
+        assert.equal(
+            processed.data.html,
+            '<p>Lorem ipsum</p>\n' +
+                '                <!--kg-card-begin: html--><p>Lorem ipsum<a class="footnote-anchor" id="footnote-anchor-1" href="#footnote-1">1</a>.</p><!--kg-card-end: html-->\n' +
+                '                    <p>Dolor simet</p>\n' +
+                '                    <!--kg-card-begin: html--><p>Dolor simet <a class="footnote-anchor" id="footnote-anchor-2" href="#footnote-2">2</a>.</p><!--kg-card-end: html-->\n' +
+                '                    <p>Hello world</p>\n' +
+                '                    <!--kg-card-begin: html--><p>Hello world. This<a class="footnote-anchor" id="footnote-anchor-3" href="#footnote-3">3</a> is new</p><!--kg-card-end: html-->\n' +
+                '            \n' +
+                '            \n' +
+                '            <!--kg-card-begin: html--><div class="footnotes"><hr><ol><li id="footnote-1">\n' +
+                '                    <p>Note content</p>\n' +
+                '                    <p>Two lines <a href="#footnote-anchor-1" title="Jump back to footnote 1 in the text.">↩</a></p>\n' +
+                '                </li><li id="footnote-2">\n' +
+                '                    <p>More notes <a href="#footnote-anchor-2" title="Jump back to footnote 2 in the text.">↩</a></p>\n' +
+                '                </li><li id="footnote-3">\n' +
+                '                    <p><a href="https://ghost.org">Link</a> in this one <a href="#footnote-anchor-3" title="Jump back to footnote 3 in the text.">↩</a></p>\n' +
+                '                </li></ol></div><!--kg-card-end: html-->'
+        );
     });
 
     it('Can process embedded posts', async function () {
@@ -1037,11 +1067,14 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, '<p>Lorem ipsum</p>\n' +
-        '\n' +
-        '                <!--kg-card-begin: html--><figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.substack.com/p/example-post"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Lorem ipsum, This is the Title I’m Showing You</div><div class="kg-bookmark-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad it’s veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat …</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://substack-post-media.s3.amazonaws.com/public/images/5678_680x680.png"><span class="kg-bookmark-author">Example Site</span></div></div></a></figure><!--kg-card-end: html-->\n' +
-        '\n' +
-        '                <p>Dolor Simet</p>');
+        assert.equal(
+            processed.data.html,
+            '<p>Lorem ipsum</p>\n' +
+                '\n' +
+                '                <!--kg-card-begin: html--><figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.substack.com/p/example-post"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Lorem ipsum, This is the Title I’m Showing You</div><div class="kg-bookmark-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad it’s veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat …</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://substack-post-media.s3.amazonaws.com/public/images/5678_680x680.png"><span class="kg-bookmark-author">Example Site</span></div></div></a></figure><!--kg-card-end: html-->\n' +
+                '\n' +
+                '                <p>Dolor Simet</p>'
+        );
     });
 
     it('Can add an audio card for podcast posts', async function () {
@@ -1059,7 +1092,9 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         assert.ok(processed.data.html.startsWith('<div class="kg-card kg-audio-card">'));
         assert.ok(processed.data.html.includes('<div class="kg-audio-player-container">'));
-        assert.ok(processed.data.html.includes('<audio src="https://example.com/files/audio.mp3" preload="metadata"></audio>'));
+        assert.ok(
+            processed.data.html.includes('<audio src="https://example.com/files/audio.mp3" preload="metadata"></audio>')
+        );
         assert.ok(processed.data.html.includes('<div class="kg-audio-title">My Podcast Episode #1</div>'));
         assert.ok(processed.data.html.includes('<p>Hello</p>'));
     });
@@ -1069,7 +1104,8 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
             data: {
                 html: `<p>My content</p>`,
                 title: 'My Podcast Post',
-                podcast_audio_src: 'https://api.substack.com/api/v1/audio/upload/1234abcd-1234-abcd-5678-123456abcdef/src'
+                podcast_audio_src:
+                    'https://api.substack.com/api/v1/audio/upload/1234abcd-1234-abcd-5678-123456abcdef/src'
             }
         };
         const url = 'https://example.com';
@@ -1078,7 +1114,11 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const processed = await processContent(post, url, options);
 
         assert.ok(processed.data.html.startsWith('<div class="kg-card kg-audio-card">'));
-        assert.ok(processed.data.html.includes('<audio src="https://api.substack.com/api/v1/audio/upload/1234abcd-1234-abcd-5678-123456abcdef/src"'));
+        assert.ok(
+            processed.data.html.includes(
+                '<audio src="https://api.substack.com/api/v1/audio/upload/1234abcd-1234-abcd-5678-123456abcdef/src"'
+            )
+        );
         assert.ok(processed.data.html.includes('<p>My content</p>'));
     });
 
@@ -1114,7 +1154,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, '<figure><img src="https://example.com/content/first-image.jpg"><figcaption>My image</figcaption></figure><p>My content</p>');
+        assert.equal(
+            processed.data.html,
+            '<figure><img src="https://example.com/content/first-image.jpg"><figcaption>My image</figcaption></figure><p>My content</p>'
+        );
         assert.equal(processed.data.feature_image, 'https://example.com/content/file_1024x768.jpg');
     });
 
@@ -1151,7 +1194,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, '<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://substack-post-media.s3.amazonaws.com/public/images/efgh5678-fad6-49df-b659-b16976e1ce59_1024x683.jpeg" class="kg-image" alt loading="lazy"><figcaption>My image</figcaption></figure><p>Hello</p>');
+        assert.equal(
+            processed.data.html,
+            '<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://substack-post-media.s3.amazonaws.com/public/images/efgh5678-fad6-49df-b659-b16976e1ce59_1024x683.jpeg" class="kg-image" alt loading="lazy"><figcaption>My image</figcaption></figure><p>Hello</p>'
+        );
     });
 
     it('Converts galleries', async function () {
@@ -1242,8 +1288,16 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.ok(!processed.data.html.includes('<figure class="frontend-components-ImageGallery-module__imageGallery--shoTe">'));
-        assert.ok(processed.data.html.includes('<figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-2021-4a0e-b815-90b9ae74d5a0_7008x4672.jpeg" width="7008" height="4672" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abc1235-6563-4aa8-bde7-e5b3ddcd2729_4000x6000.jpeg" width="4000" height="6000" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1236-c233-4e0d-87c0-6a0d128bc07d_3600x2025.jpeg" width="3600" height="2025" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1237-2469-4db8-874b-36ad8733bd97_8048x5368.jpeg" width="8048" height="5368" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1238-2236-442c-9d9a-b0387c946a18_4032x3024.jpeg" width="4032" height="3024" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1239-e31d-401c-b94f-ceae393d95f6_9504x6336.jpeg" width="9504" height="6336" loading="lazy" alt></div></div></div><figcaption>My caption</figcaption></figure>'));
+        assert.ok(
+            !processed.data.html.includes(
+                '<figure class="frontend-components-ImageGallery-module__imageGallery--shoTe">'
+            )
+        );
+        assert.ok(
+            processed.data.html.includes(
+                '<figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-2021-4a0e-b815-90b9ae74d5a0_7008x4672.jpeg" width="7008" height="4672" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abc1235-6563-4aa8-bde7-e5b3ddcd2729_4000x6000.jpeg" width="4000" height="6000" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1236-c233-4e0d-87c0-6a0d128bc07d_3600x2025.jpeg" width="3600" height="2025" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1237-2469-4db8-874b-36ad8733bd97_8048x5368.jpeg" width="8048" height="5368" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1238-2236-442c-9d9a-b0387c946a18_4032x3024.jpeg" width="4032" height="3024" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1239-e31d-401c-b94f-ceae393d95f6_9504x6336.jpeg" width="9504" height="6336" loading="lazy" alt></div></div></div><figcaption>My caption</figcaption></figure>'
+            )
+        );
     });
 
     it('Converts embeded galleries', async function () {
@@ -1260,7 +1314,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, '<p>Before</p><figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-2021-4a0e-b815-90b9ae74d5a0_7008x4672.jpeg" width="7008" height="4672" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abc1235-6563-4aa8-bde7-e5b3ddcd2729_4000x6000.jpeg" width="4000" height="6000" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1236-c233-4e0d-87c0-6a0d128bc07d_3600x2025.jpeg" width="3600" height="2025" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1237-2469-4db8-874b-36ad8733bd97_8048x5368.jpeg" width="8048" height="5368" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1238-2236-442c-9d9a-b0387c946a18_4032x3024.jpeg" width="4032" height="3024" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1239-e31d-401c-b94f-ceae393d95f6_9504x6336.jpeg" width="9504" height="6336" loading="lazy" alt></div></div></div><figcaption>My caption</figcaption></figure><p>After</p>');
+        assert.equal(
+            processed.data.html,
+            '<p>Before</p><figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-2021-4a0e-b815-90b9ae74d5a0_7008x4672.jpeg" width="7008" height="4672" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abc1235-6563-4aa8-bde7-e5b3ddcd2729_4000x6000.jpeg" width="4000" height="6000" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1236-c233-4e0d-87c0-6a0d128bc07d_3600x2025.jpeg" width="3600" height="2025" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1237-2469-4db8-874b-36ad8733bd97_8048x5368.jpeg" width="8048" height="5368" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1238-2236-442c-9d9a-b0387c946a18_4032x3024.jpeg" width="4032" height="3024" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1239-e31d-401c-b94f-ceae393d95f6_9504x6336.jpeg" width="9504" height="6336" loading="lazy" alt></div></div></div><figcaption>My caption</figcaption></figure><p>After</p>'
+        );
     });
 
     it('Includes supplied content in tweet blockquote', async function () {
@@ -1304,7 +1361,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, '<p>Hello</p><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><p lang="en" dir="ltr">This is the tweet text</p> — example (@example) <a href="https://twitter.com/example/status/123456?s=21&amp;t=abcd7890"> 1:26 AM ∙ Apr 28, 2022 </a><a href="https://twitter.com/example/status/123456"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure><p>World</p>');
+        assert.equal(
+            processed.data.html,
+            '<p>Hello</p><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><p lang="en" dir="ltr">This is the tweet text</p> — example (@example) <a href="https://twitter.com/example/status/123456?s=21&amp;t=abcd7890"> 1:26 AM ∙ Apr 28, 2022 </a><a href="https://twitter.com/example/status/123456"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure><p>World</p>'
+        );
     });
 
     it('Includes supplied content in tweet blockquote derp', async function () {
@@ -1347,7 +1407,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, '<p>Hello</p><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet">— example <a href="https://twitter.com/example/status/123456?s=21&amp;t=abcd7890"> 1:26 AM ∙ Apr 28, 2022 </a><a href="https://twitter.com/example/status/123456"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure><p>World</p>');
+        assert.equal(
+            processed.data.html,
+            '<p>Hello</p><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet">— example <a href="https://twitter.com/example/status/123456?s=21&amp;t=abcd7890"> 1:26 AM ∙ Apr 28, 2022 </a><a href="https://twitter.com/example/status/123456"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure><p>World</p>'
+        );
     });
 
     it('Handle post embeds', async function () {
@@ -1368,7 +1431,11 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const processed = await processContent(post, url, options);
 
         assert.ok(!processed.data.html.includes('<div class="digest-post-embed"'));
-        assert.ok(processed.data.html.includes('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://www.exampe.com/p/the-link"><div class="kg-bookmark-content"><div class="kg-bookmark-title">The Title</div><div class="kg-bookmark-description">The caption</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-9772-40c8-bc77-0ae3e6ec4774_205x205.png" alt><span class="kg-bookmark-author">Pub Name</span><span class="kg-bookmark-publisher">Author Name</span></div></div><div class="kg-bookmark-thumbnail"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-1a48-4dd3-ac53-06900dc9a92d_1200x800.jpeg" alt></div></a></figure>'));
+        assert.ok(
+            processed.data.html.includes(
+                '<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://www.exampe.com/p/the-link"><div class="kg-bookmark-content"><div class="kg-bookmark-title">The Title</div><div class="kg-bookmark-description">The caption</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-9772-40c8-bc77-0ae3e6ec4774_205x205.png" alt><span class="kg-bookmark-author">Pub Name</span><span class="kg-bookmark-publisher">Author Name</span></div></div><div class="kg-bookmark-thumbnail"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-1a48-4dd3-ac53-06900dc9a92d_1200x800.jpeg" alt></div></a></figure>'
+            )
+        );
     });
 
     it('Skips post embed if JSON is invalid', async function () {
@@ -1385,7 +1452,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, '<p>Lorem ipsum.</p><div class="digest-post-embed" data-attrs="{&quot;no"></div><p>Dolore magna.</p>');
+        assert.equal(
+            processed.data.html,
+            '<p>Lorem ipsum.</p><div class="digest-post-embed" data-attrs="{&quot;no"></div><p>Dolore magna.</p>'
+        );
     });
 
     it('Handle files cards', async function () {
@@ -1412,8 +1482,16 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.ok(processed.data.html.includes('<a class="kg-file-card-container" href="https://example.com/api/v1/file/1234-abcd.pdf" title="Download" download>'));
-        assert.ok(!processed.data.html.includes('<a class="file-embed-button wide" href="https://example.com/api/v1/file/1234-abcd.pdf"><span class="file-embed-button-text">Download</span></a>'));
+        assert.ok(
+            processed.data.html.includes(
+                '<a class="kg-file-card-container" href="https://example.com/api/v1/file/1234-abcd.pdf" title="Download" download>'
+            )
+        );
+        assert.ok(
+            !processed.data.html.includes(
+                '<a class="file-embed-button wide" href="https://example.com/api/v1/file/1234-abcd.pdf"><span class="file-embed-button-text">Download</span></a>'
+            )
+        );
     });
 
     it('Handle latex cards', async function () {
@@ -1430,7 +1508,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, '<p>Lorem ipsum.</p><!--kg-card-begin: html--><div class="latex-rendered" data-attrs="{&quot;persistentExpression&quot;:&quot;ABC_{\\text{Terminal}}ABCTerminal&quot;,&quot;id&quot;:&quot;ACASDWEARE&quot;}" data-component-name="LatexBlockToDOM"></div><!--kg-card-end: html--><p>Dolore magna.</p>');
+        assert.equal(
+            processed.data.html,
+            '<p>Lorem ipsum.</p><!--kg-card-begin: html--><div class="latex-rendered" data-attrs="{&quot;persistentExpression&quot;:&quot;ABC_{\\text{Terminal}}ABCTerminal&quot;,&quot;id&quot;:&quot;ACASDWEARE&quot;}" data-component-name="LatexBlockToDOM"></div><!--kg-card-end: html--><p>Dolore magna.</p>'
+        );
     });
 
     it('Can convert mention spans to links', async function () {
@@ -1446,7 +1527,10 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.equal(processed.data.html, '<p>Thanks <a href="https://open.substack.com/users/12345678">Test User</a> for the tip!</p>');
+        assert.equal(
+            processed.data.html,
+            '<p>Thanks <a href="https://open.substack.com/users/12345678">Test User</a> for the tip!</p>'
+        );
     });
 });
 
@@ -1463,7 +1547,10 @@ describe('Image handling', function () {
 
         const processed = await processContent(post, 'https://example.com', {});
 
-        assert.equal(processed.data.html, '<figure class="kg-card kg-image-card"><img src="https://substack-post-media.s3.amazonaws.com/public/images/12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png" class="kg-image" alt loading="lazy"></figure>');
+        assert.equal(
+            processed.data.html,
+            '<figure class="kg-card kg-image-card"><img src="https://substack-post-media.s3.amazonaws.com/public/images/12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png" class="kg-image" alt loading="lazy"></figure>'
+        );
     });
 
     it('Handle images that link to themselves with no srcset', async function () {
@@ -1478,7 +1565,10 @@ describe('Image handling', function () {
 
         const processed = await processContent(post, 'https://example.com', {});
 
-        assert.equal(processed.data.html, '<figure class="kg-card kg-image-card"><img src="https://substack-post-media.s3.amazonaws.com/public/images/12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png" class="kg-image" alt loading="lazy"></figure>');
+        assert.equal(
+            processed.data.html,
+            '<figure class="kg-card kg-image-card"><img src="https://substack-post-media.s3.amazonaws.com/public/images/12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png" class="kg-image" alt loading="lazy"></figure>'
+        );
     });
 
     it('Handle images with external links', async function () {
@@ -1493,7 +1583,10 @@ describe('Image handling', function () {
 
         const processed = await processContent(post, 'https://example.com', {});
 
-        assert.equal(processed.data.html, '<figure class="kg-card kg-image-card"><a href="https://ghost.org"><img src="https://substack-post-media.s3.amazonaws.com/public/images/12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png" class="kg-image" alt loading="lazy"></a></figure>');
+        assert.equal(
+            processed.data.html,
+            '<figure class="kg-card kg-image-card"><a href="https://ghost.org"><img src="https://substack-post-media.s3.amazonaws.com/public/images/12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png" class="kg-image" alt loading="lazy"></a></figure>'
+        );
     });
 
     it('Handles images with no src attribute', async function () {
@@ -1523,13 +1616,19 @@ describe('Image handling', function () {
 
         const processed = await processContent(post, 'https://example.com', {});
 
-        assert.equal(processed.data.html, '<figure class="instagram"><iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;" src="https://instagram.com/p/QWERTYNgZO8/embed/captioned/"></iframe><script async src="//www.instagram.com/embed.js"></script></figure>');
+        assert.equal(
+            processed.data.html,
+            '<figure class="instagram"><iframe class="instagram-media instagram-media-rendered" id="instagram-embed-0" allowtransparency="true" allowfullscreen="true" frameborder="0" height="968" data-instgrm-payload-id="instagram-media-payload-0" scrolling="no" style="background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;" src="https://instagram.com/p/QWERTYNgZO8/embed/captioned/"></iframe><script async src="//www.instagram.com/embed.js"></script></figure>'
+        );
     });
 
     it('Can get dimensions from images', () => {
-        const url1 = 'https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png';
-        const url2 = 'https://bucketeer-abcdabcd-baa3-437e-9518-adb32be77984.s3.amazonaws.com/public/images/12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png';
-        const url3 = 'https://bucketeer-abcdabcd-baa3-437e-9518-adb32be77984.s3.amazonaws.com/public/images/12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png?lorem=ipsum&dolor-simet12345.fake';
+        const url1 =
+            'https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png';
+        const url2 =
+            'https://bucketeer-abcdabcd-baa3-437e-9518-adb32be77984.s3.amazonaws.com/public/images/12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png';
+        const url3 =
+            'https://bucketeer-abcdabcd-baa3-437e-9518-adb32be77984.s3.amazonaws.com/public/images/12345678-2415-4bdd-8878-bb841f9ca9d4_968x813.png?lorem=ipsum&dolor-simet12345.fake';
 
         const d1 = getImageDimensions(url1);
         assert.deepEqual(d1, {width: 968, height: 813});
@@ -1540,18 +1639,26 @@ describe('Image handling', function () {
     });
 
     it('Can upscale images and remove crop', async () => {
-        let originalSrc = 'https://substackcdn.com/image/fetch/w_1200,h_600,c_fill,f_jpg,q_auto:good,fl_progressive:steep,g_auto/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F3c4b3aa9-abcd-efgh-1234-1234567891234_4368x2151.png';
+        let originalSrc =
+            'https://substackcdn.com/image/fetch/w_1200,h_600,c_fill,f_jpg,q_auto:good,fl_progressive:steep,g_auto/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F3c4b3aa9-abcd-efgh-1234-1234567891234_4368x2151.png';
 
         let larger = largeImageUrl(originalSrc);
 
-        assert.equal(larger, 'https://substack-post-media.s3.amazonaws.com/public/images/3c4b3aa9-abcd-efgh-1234-1234567891234_4368x2151.png');
+        assert.equal(
+            larger,
+            'https://substack-post-media.s3.amazonaws.com/public/images/3c4b3aa9-abcd-efgh-1234-1234567891234_4368x2151.png'
+        );
     });
 
-    it('Skips upscale images and remove crop if image doesn\'t need it', async () => {
-        let originalSrc = 'https://substack-post-media.s3.amazonaws.com/public/images/db9ef48f-933f-48f0-a6c4-1234567891234_4368x2151.png';
+    it("Skips upscale images and remove crop if image doesn't need it", async () => {
+        let originalSrc =
+            'https://substack-post-media.s3.amazonaws.com/public/images/db9ef48f-933f-48f0-a6c4-1234567891234_4368x2151.png';
 
         let larger = largeImageUrl(originalSrc);
 
-        assert.equal(larger, 'https://substack-post-media.s3.amazonaws.com/public/images/db9ef48f-933f-48f0-a6c4-1234567891234_4368x2151.png');
+        assert.equal(
+            larger,
+            'https://substack-post-media.s3.amazonaws.com/public/images/db9ef48f-933f-48f0-a6c4-1234567891234_4368x2151.png'
+        );
     });
 });

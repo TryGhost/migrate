@@ -36,10 +36,10 @@ describe('parseXml', function () {
     });
 
     it('allows overriding parser options', async function () {
-        const result = await parseXml(
-            '<root><item id="1">text</item></root>',
-            {attributeNamePrefix: '', ignoreAttributes: false}
-        );
+        const result = await parseXml('<root><item id="1">text</item></root>', {
+            attributeNamePrefix: '',
+            ignoreAttributes: false
+        });
         assert.deepEqual(result, {root: {item: {id: '1', '#text': 'text'}}});
     });
 

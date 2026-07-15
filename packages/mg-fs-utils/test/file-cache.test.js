@@ -587,9 +587,12 @@ describe('hasFile', function () {
 
     it('Throws NotFoundError for invalid type', function () {
         fileCache.cacheDir; // eslint-disable-line no-unused-expressions
-        assert.throws(() => {
-            fileCache.hasFile('test.txt', 'invalid');
-        }, {message: 'Unknown file type'});
+        assert.throws(
+            () => {
+                fileCache.hasFile('test.txt', 'invalid');
+            },
+            {message: 'Unknown file type'}
+        );
     });
 
     it('Checks raw path when no type is provided', function () {
@@ -631,22 +634,43 @@ describe('emptyCacheDir', function () {
 describe('resolveFileName character handling', function () {
     it('Will not shortern the storage path is too long', async function () {
         let fileCache = new FileCache('test');
-        let fileName = await fileCache.resolveFileName('/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+        let fileName = await fileCache.resolveFileName(
+            '/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg'
+        );
 
         assert.equal(fileName.filename, '/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
-        assert.ok(fileName.storagePath.includes('/content/images/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg'));
-        assert.equal(fileName.outputPath, '/content/images/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+        assert.ok(
+            fileName.storagePath.includes(
+                '/content/images/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg'
+            )
+        );
+        assert.equal(
+            fileName.outputPath,
+            '/content/images/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg'
+        );
 
         await fileCache.emptyCurrentCacheDir();
     });
 
     it('Will shortern the storage path is too long', async function () {
         let fileCache = new FileCache('test');
-        let fileName = await fileCache.resolveFileName('/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+        let fileName = await fileCache.resolveFileName(
+            '/AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg'
+        );
 
-        assert.equal(fileName.filename, '/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
-        assert.ok(fileName.storagePath.includes('/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg'));
-        assert.equal(fileName.outputPath, '/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg');
+        assert.equal(
+            fileName.filename,
+            '/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg'
+        );
+        assert.ok(
+            fileName.storagePath.includes(
+                '/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg'
+            )
+        );
+        assert.equal(
+            fileName.outputPath,
+            '/content/images/yZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890/blah.jpg'
+        );
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -654,9 +678,14 @@ describe('resolveFileName character handling', function () {
     it('Will convert entities to dashes', async function () {
         let fileCache = new FileCache('test');
 
-        let fileName = await fileCache.resolveFileName('/image/fetch/w_600%2Ch_400,c_fill,f_auto,q_auto:good,fl_progressive:steep,g_center/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fad8015f6-a9.0c-46f8-89f2-b6d7db866c6e_3866x2298.jpeg');
+        let fileName = await fileCache.resolveFileName(
+            '/image/fetch/w_600%2Ch_400,c_fill,f_auto,q_auto:good,fl_progressive:steep,g_center/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fad8015f6-a9.0c-46f8-89f2-b6d7db866c6e_3866x2298.jpeg'
+        );
 
-        assert.equal(fileName.filename, '/image/fetch/w_600-h_400-c_fill-f_auto-q_auto:good-fl_progressive:steep-g_center/https_3a_2f_2fsubstack-post-media-s3-amazonaws-com_2fpublic_2fimages_2fad8015f6-a9-0c-46f8-89f2-b6d7db866c6e_3866x2298.jpg');
+        assert.equal(
+            fileName.filename,
+            '/image/fetch/w_600-h_400-c_fill-f_auto-q_auto:good-fl_progressive:steep-g_center/https_3a_2f_2fsubstack-post-media-s3-amazonaws-com_2fpublic_2fimages_2fad8015f6-a9-0c-46f8-89f2-b6d7db866c6e_3866x2298.jpg'
+        );
 
         await fileCache.emptyCurrentCacheDir();
     });
@@ -712,14 +741,23 @@ describe('resolveFileName character handling', function () {
     it('Handles spaces in the middle of the path', async function () {
         let fileCache = new FileCache('test');
 
-        let fileNameEncodedSpaces = await fileCache.resolveFileName('/assets/Lorem%20Ipsum/Dolor%20Sit%20Amet/document.pdf');
+        let fileNameEncodedSpaces = await fileCache.resolveFileName(
+            '/assets/Lorem%20Ipsum/Dolor%20Sit%20Amet/document.pdf'
+        );
         assert.equal(fileNameEncodedSpaces.filename, '/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
-        assert.ok(fileNameEncodedSpaces.storagePath.includes('/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf'));
-        assert.equal(fileNameEncodedSpaces.outputPath, '/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
+        assert.ok(
+            fileNameEncodedSpaces.storagePath.includes('/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf')
+        );
+        assert.equal(
+            fileNameEncodedSpaces.outputPath,
+            '/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf'
+        );
 
         let fileNameRawSpaces = await fileCache.resolveFileName('/assets/Lorem Ipsum/Dolor Sit Amet/document.pdf');
         assert.equal(fileNameRawSpaces.filename, '/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
-        assert.ok(fileNameRawSpaces.storagePath.includes('/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf'));
+        assert.ok(
+            fileNameRawSpaces.storagePath.includes('/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf')
+        );
         assert.equal(fileNameRawSpaces.outputPath, '/content/images/assets/Lorem-Ipsum/Dolor-Sit-Amet/document.pdf');
 
         await fileCache.emptyCurrentCacheDir();

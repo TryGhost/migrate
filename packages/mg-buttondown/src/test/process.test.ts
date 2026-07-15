@@ -66,25 +66,31 @@ describe('Buttondown Processor', () => {
         assert.ok(renderedHtml.includes('<h2>Lorem ipsum dolor sit amet.</h2>'));
         assert.ok(!renderedHtml.includes('## Lorem ipsum dolor sit amet.'));
 
-        assert.ok(!renderedHtml.includes('```css\n' +
-            'p {\n' +
-            '    color: #bada55;\n' +
-            '}'));
-        assert.ok(renderedHtml.includes('<pre><code class="language-css">p {\n' +
-            '    color: #bada55;\n' +
-            '}\n' +
-            '</code></pre>'));
+        assert.ok(!renderedHtml.includes('```css\n' + 'p {\n' + '    color: #bada55;\n' + '}'));
+        assert.ok(
+            renderedHtml.includes(
+                '<pre><code class="language-css">p {\n' + '    color: #bada55;\n' + '}\n' + '</code></pre>'
+            )
+        );
 
-        assert.ok(!renderedHtml.includes('1. Excepteur sint occaecat\n' +
-          '2. cupidatat non proident\n' +
-          '    3. Sunt in culpa qui officia\n' +
-          '4. deserunt mollit anim id est laborum.\n'));
-        assert.ok(renderedHtml.includes('<ol>\n' +
-            '<li>Excepteur sint occaecat</li>\n' +
-            '<li>cupidatat non proident\n' +
-            '3. Sunt in culpa qui officia</li>\n' +
-            '<li>deserunt mollit anim id est laborum.</li>\n' +
-            '</ol>'));
+        assert.ok(
+            !renderedHtml.includes(
+                '1. Excepteur sint occaecat\n' +
+                    '2. cupidatat non proident\n' +
+                    '    3. Sunt in culpa qui officia\n' +
+                    '4. deserunt mollit anim id est laborum.\n'
+            )
+        );
+        assert.ok(
+            renderedHtml.includes(
+                '<ol>\n' +
+                    '<li>Excepteur sint occaecat</li>\n' +
+                    '<li>cupidatat non proident\n' +
+                    '3. Sunt in culpa qui officia</li>\n' +
+                    '<li>deserunt mollit anim id est laborum.</li>\n' +
+                    '</ol>'
+            )
+        );
     });
 
     it('Processes HTML', async function () {

@@ -19,7 +19,7 @@ const scrapeConfig = {
                     selector: 'a[href*="/@"]',
                     attr: 'href',
                     eq: 1,
-                    convert: (x) => {
+                    convert: x => {
                         if (x.match(/(\/@.*?)\?/)) {
                             return `https://medium.com${x.match(/(\/@.*?)\?/)[1]}`;
                         }
@@ -69,12 +69,12 @@ const scrapeConfig = {
             data: {
                 scriptTag: {
                     how: 'html',
-                    convert: (x) => {
+                    convert: x => {
                         if (x && x.includes('window.__APOLLO_STATE__')) {
                             const theTags = [];
                             const parsed = JSON.parse(x.replace('window.__APOLLO_STATE__ =', ''));
 
-                            Object.values(parsed).forEach((value) => {
+                            Object.values(parsed).forEach(value => {
                                 if (value.__typename === 'Tag') {
                                     theTags.push({
                                         url: `https://medium.com/tag/${value.normalizedTagSlug}`,
@@ -97,26 +97,24 @@ const scrapeConfig = {
     }
 };
 
-const postProcessor = (scrapedData) => {
+const postProcessor = scrapedData => {
     if (!scrapedData.tags) {
         scrapedData.tags = [];
     }
 
     if (scrapedData.status === 'Unlisted') {
         scrapedData.status = 'draft';
-        scrapedData.tags.push(
-            {
-                url: 'migrator-added-tag',
-                name: '#Unlisted',
-                slug: 'hash-unlisted'
-            }
-        );
+        scrapedData.tags.push({
+            url: 'migrator-added-tag',
+            name: '#Unlisted',
+            slug: 'hash-unlisted'
+        });
     }
 
     if (scrapedData.scrapedTags) {
-        Object.values(scrapedData.scrapedTags).forEach((value) => {
+        Object.values(scrapedData.scrapedTags).forEach(value => {
             if (value && value.scriptTag) {
-                Object.values(value.scriptTag).forEach((value2) => {
+                Object.values(value.scriptTag).forEach(value2 => {
                     scrapedData.tags.push({
                         url: value2.url,
                         name: value2.data.name,
@@ -139,7 +137,7 @@ const postProcessor = (scrapedData) => {
  *
  * @param {Object} options
  */
-const getTaskRunner = (options) => {
+const getTaskRunner = options => {
     let runnerTasks = [
         {
             title: 'Initializing Workspace',
@@ -148,7 +146,12 @@ const getTaskRunner = (options) => {
 
                 ctx.allowScrape = {
                     all: ctx.options.scrape.includes('all'),
-                    assets: ctx.options.scrape.includes('all') || ctx.options.scrape.includes('assets') || ctx.options.scrape.includes('img') || ctx.options.scrape.includes('media') || ctx.options.scrape.includes('files'),
+                    assets:
+                        ctx.options.scrape.includes('all') ||
+                        ctx.options.scrape.includes('assets') ||
+                        ctx.options.scrape.includes('img') ||
+                        ctx.options.scrape.includes('media') ||
+                        ctx.options.scrape.includes('files'),
                     web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
                 };
 
@@ -159,9 +162,13 @@ const getTaskRunner = (options) => {
                 });
 
                 ctx.mediumScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
-                ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
-                    allowAllDomains: true
-                }, ctx);
+                ctx.assetScraper = new MgAssetScraper(
+                    ctx.fileCache,
+                    {
+                        allowAllDomains: true
+                    },
+                    ctx
+                );
                 await ctx.assetScraper.init();
                 ctx.linkFixer = new MgLinkFixer();
 
@@ -170,7 +177,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Read Medium export zip',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     ctx.result = mediumIngest(options.pathToZip, options);
                     await ctx.fileCache.writeTmpFile(ctx.result, 'medium-export-data.json');
@@ -184,7 +191,7 @@ const getTaskRunner = (options) => {
         {
             title: 'Fetch missing data via WebScraper',
             skip: ctx => !ctx.allowScrape.web,
-            task: (ctx) => {
+            task: ctx => {
                 // 2. Pass the results through the web scraper to get any missing data
                 let tasks = ctx.mediumScraper.hydrate(ctx); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
@@ -192,7 +199,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Build Link Map',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 3. Create a map of all known links for use later
                 try {
                     ctx.linkFixer.buildMap(ctx);
@@ -204,7 +211,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Format data as Ghost JSON',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 4. Format the data as a valid Ghost JSON file
                 try {
                     ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
@@ -217,7 +224,7 @@ const getTaskRunner = (options) => {
         {
             title: 'Fetch images via AssetScraper',
             skip: ctx => !ctx.allowScrape.assets,
-            task: async (ctx) => {
+            task: async ctx => {
                 // 5. Format the data as a valid Ghost JSON file
                 let tasks = ctx.assetScraper.getTasks();
                 return makeTaskRunner(tasks, {
@@ -238,7 +245,7 @@ const getTaskRunner = (options) => {
         {
             // @TODO don't duplicate this with the utils json file
             title: 'Convert HTML -> Lexical',
-            task: (ctx) => {
+            task: ctx => {
                 // 7. Convert post HTML -> Lexical
                 try {
                     let tasks = mgHtmlLexical.convert(ctx); // eslint-disable-line no-shadow
@@ -251,7 +258,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Write Ghost import JSON File',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 8. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
@@ -273,7 +280,11 @@ const getTaskRunner = (options) => {
                     let timer = Date.now();
                     const zipFinalPath = options.outputPath || process.cwd();
                     // zip the file and save it temporarily
-                    ctx.outputFile = await fsUtils.zip.write(zipFinalPath, ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+                    ctx.outputFile = await fsUtils.zip.write(
+                        zipFinalPath,
+                        ctx.fileCache.zipDir,
+                        ctx.fileCache.defaultZipFileName
+                    );
 
                     if (isStorage) {
                         const storage = options.outputStorage;
@@ -282,7 +293,10 @@ const getTaskRunner = (options) => {
                         // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
                         // Upload the file to the storage
-                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-medium-${ctx.options.cacheName}.zip`});
+                        ctx.outputFile.path = await storage.upload({
+                            body: fileBuffer,
+                            fileName: `gh-medium-${ctx.options.cacheName}.zip`
+                        });
                         // now that the file is uploaded to the storage, delete the local zip file
                         await fsUtils.zip.deleteFile(localFilePath);
                     }
@@ -297,7 +311,7 @@ const getTaskRunner = (options) => {
         {
             title: 'Clearing cached files',
             enabled: () => !options.cache && options.zip,
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {

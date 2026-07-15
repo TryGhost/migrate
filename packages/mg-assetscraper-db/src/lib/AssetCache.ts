@@ -43,17 +43,17 @@ export default class AssetCache {
 
     update(id: number, key: keyof AssetAttributes, value: string | number): void {
         switch (key) {
-        case 'status':
-            this.#database.stmts.updateStatus.run(value, id);
-            break;
-        case 'localPath':
-            this.#database.stmts.updateLocalPath.run(value, id);
-            break;
-        case 'skip':
-            this.#database.stmts.updateSkip.run(value, id);
-            break;
-        default:
-            throw new Error(`Cannot update field: ${key}`);
+            case 'status':
+                this.#database.stmts.updateStatus.run(value, id);
+                break;
+            case 'localPath':
+                this.#database.stmts.updateLocalPath.run(value, id);
+                break;
+            case 'skip':
+                this.#database.stmts.updateSkip.run(value, id);
+                break;
+            default:
+                throw new Error(`Cannot update field: ${key}`);
         }
     }
 

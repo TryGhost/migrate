@@ -5,7 +5,7 @@ import type {postOptions} from '../lib/convert-post.js';
 
 // Extend the postOptions interface to allow for testing with a wrong key
 interface postOptionsTest extends postOptions {
-    wrong_key?: any // Used to test for catching errors
+    wrong_key?: any; // Used to test for catching errors
 }
 
 describe('Convert Tasks', function () {
@@ -120,14 +120,16 @@ describe('HTML handling', function () {
 
         assert.deepEqual(lexical, {
             root: {
-                children: [{
-                    children: [],
-                    direction: null,
-                    format: '',
-                    indent: 0,
-                    type: 'paragraph',
-                    version: 1
-                }],
+                children: [
+                    {
+                        children: [],
+                        direction: null,
+                        format: '',
+                        indent: 0,
+                        type: 'paragraph',
+                        version: 1
+                    }
+                ],
                 direction: null,
                 format: '',
                 indent: 0,
@@ -150,14 +152,16 @@ describe('HTML handling', function () {
 
         assert.deepEqual(lexical, {
             root: {
-                children: [{
-                    children: [],
-                    direction: null,
-                    format: '',
-                    indent: 0,
-                    type: 'paragraph',
-                    version: 1
-                }],
+                children: [
+                    {
+                        children: [],
+                        direction: null,
+                        format: '',
+                        indent: 0,
+                        type: 'paragraph',
+                        version: 1
+                    }
+                ],
                 direction: null,
                 format: '',
                 indent: 0,

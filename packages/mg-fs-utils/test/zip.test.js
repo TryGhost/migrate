@@ -101,7 +101,7 @@ describe('Zip read error handling', function () {
     it('Throws InternalServerError when zip file is invalid', function () {
         assert.throws(
             () => zip.read('/nonexistent/bad.zip', () => {}),
-            (err) => {
+            err => {
                 assert.ok(err.message.includes('Unable to read zip file'));
                 return true;
             }

@@ -8,8 +8,12 @@ export class DelayPrompt {
             return delayOpt;
         }
 
-        Logger.shared.info(`We recommend ${chalk.cyan('delaying payment collection')} from Stripe until the copy is finished, to avoid duplicate charges.`);
-        Logger.shared.info(`As a rule of thumb, copying 10,000 subscriptions takes roughly an hour. We suggest adding an hour of buffer time to be safe.`);
+        Logger.shared.info(
+            `We recommend ${chalk.cyan('delaying payment collection')} from Stripe until the copy is finished, to avoid duplicate charges.`
+        );
+        Logger.shared.info(
+            `As a rule of thumb, copying 10,000 subscriptions takes roughly an hour. We suggest adding an hour of buffer time to be safe.`
+        );
 
         const delayInput = await input({
             message: 'For how many hours would you like to pause payment collection?'

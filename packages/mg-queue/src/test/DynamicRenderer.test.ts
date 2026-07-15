@@ -83,7 +83,7 @@ describe('DynamicRenderer', () => {
         renderer.onTaskStart(info('task-2'));
 
         // Wait for render cycle to cover the failed branch in #render()
-        await new Promise((resolve) => {
+        await new Promise(resolve => {
             setTimeout(resolve, 120);
         });
 
@@ -115,7 +115,7 @@ describe('DynamicRenderer', () => {
         renderer.onTaskStart(info('task-1'));
 
         // Wait for interval to fire at least once (interval is 100ms)
-        await new Promise((resolve) => {
+        await new Promise(resolve => {
             setTimeout(resolve, 120);
         });
 
@@ -136,7 +136,7 @@ describe('DynamicRenderer', () => {
         renderer.onTaskStart(info('task-3'));
 
         // Wait for at least one render cycle
-        await new Promise((resolve) => {
+        await new Promise(resolve => {
             setTimeout(resolve, 120);
         });
 
@@ -190,7 +190,7 @@ describe('DynamicRenderer', () => {
         renderer.onTaskStart(info('running-task'));
 
         // Wait for render cycle to cover the skipped branch in #render()
-        await new Promise((resolve) => {
+        await new Promise(resolve => {
             setTimeout(resolve, 120);
         });
 
@@ -255,7 +255,7 @@ describe('DynamicRenderer', () => {
         renderer.onTaskStart(info('child-2', 1, 'parent'));
 
         // Wait for render cycle
-        await new Promise((resolve) => {
+        await new Promise(resolve => {
             setTimeout(resolve, 120);
         });
 
@@ -281,7 +281,7 @@ describe('DynamicRenderer', () => {
         renderer.onTaskComplete(info('parent', 0));
 
         // Wait for render cycle - children should still render as orphans
-        await new Promise((resolve) => {
+        await new Promise(resolve => {
             setTimeout(resolve, 120);
         });
 
@@ -315,7 +315,7 @@ describe('DynamicRenderer', () => {
         renderer.onTaskPending(info('parent', 0, undefined, 1));
         renderer.onTaskPending(info('child', 1, 'parent', 2));
 
-        await new Promise((resolve) => {
+        await new Promise(resolve => {
             setTimeout(resolve, 120);
         });
 
@@ -352,7 +352,7 @@ describe('DynamicRenderer', () => {
         renderer.onTaskComplete(info('Uppercasing titles'));
         renderer.onTaskStart(info('Adding content'));
 
-        await new Promise((resolve) => {
+        await new Promise(resolve => {
             setTimeout(resolve, 120);
         });
 
@@ -408,7 +408,7 @@ describe('DynamicRenderer', () => {
         renderer.onTaskStart(info('task-5', 0, undefined, 5));
 
         // Wait for render cycle to cover skipped/failed root task rendering (line 210)
-        await new Promise((resolve) => {
+        await new Promise(resolve => {
             setTimeout(resolve, 120);
         });
 
@@ -430,7 +430,7 @@ describe('DynamicRenderer', () => {
 
         // Wait for render cycle — parent is still running, children are in #running map
         // This covers lines 220 (completed child), 222 (pending child), 224 (skipped child)
-        await new Promise((resolve) => {
+        await new Promise(resolve => {
             setTimeout(resolve, 120);
         });
 
@@ -456,7 +456,7 @@ describe('DynamicRenderer', () => {
 
         // Wait for render cycle with orphans still in the map
         // Covers lines 237 (completed orphan), 239 (pending orphan), 241 (skipped orphan)
-        await new Promise((resolve) => {
+        await new Promise(resolve => {
             setTimeout(resolve, 120);
         });
 

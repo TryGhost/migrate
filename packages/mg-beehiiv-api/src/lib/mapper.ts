@@ -2,7 +2,7 @@
 import {slugify} from '@tryghost/string';
 import {processHTML, removeDuplicateFeatureImage} from './process.js';
 
-const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?: any}) => {
+const mapPost = ({postData, options}: {postData: beehiivPostDataObject; options?: any}) => {
     const mappedData: mappedDataObject = {
         url: postData.web_url,
         data: {
@@ -14,9 +14,9 @@ const mapPost = ({postData, options}: {postData: beehiivPostDataObject, options?
             title: postData.title,
             type: 'post',
             html: postData.content.premium.web,
-            status: (postData.status === 'confirmed') ? 'published' : 'draft',
+            status: postData.status === 'confirmed' ? 'published' : 'draft',
             custom_excerpt: postData.subtitle ?? null,
-            visibility: (postData.audience === 'premium') ? 'paid' : 'public',
+            visibility: postData.audience === 'premium' ? 'paid' : 'public',
             authors: [],
             tags: []
         }
@@ -115,7 +115,4 @@ const mapPostsTasks = async (options: any, ctx: any) => {
     return tasks;
 };
 
-export {
-    mapPost,
-    mapPostsTasks
-};
+export {mapPost, mapPostsTasks};

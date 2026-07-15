@@ -10,9 +10,9 @@ import substackSource from '../sources/substack.js';
 // Smallest valid JPEG: a 1x1 red pixel
 const JPEG_BUFFER = Buffer.from(
     '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMCwsKCwsM' +
-    'DhEQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQU' +
-    'FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf' +
-    '/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AKwA//9k=',
+        'DhEQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQU' +
+        'FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf' +
+        '/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AKwA//9k=',
     'base64'
 );
 
@@ -44,16 +44,10 @@ describe('Substack E2E Migration', function () {
 
     before(async function () {
         // Load the scrape fixture HTML
-        const scrapeFixtureHTML = await readFile(
-            new URL('./fixtures/substack-e2e-scrape.html', import.meta.url)
-        );
+        const scrapeFixtureHTML = await readFile(new URL('./fixtures/substack-e2e-scrape.html', import.meta.url));
 
         // Create temp directory with Substack export structure
-        fixtureDir = join(
-            new URL('.', import.meta.url).pathname,
-            'fixtures',
-            'substack-e2e-tmp'
-        );
+        fixtureDir = join(new URL('.', import.meta.url).pathname, 'fixtures', 'substack-e2e-tmp');
         const postsDir = join(fixtureDir, 'posts');
         mkdirSync(postsDir, {recursive: true});
 
@@ -75,11 +69,9 @@ describe('Substack E2E Migration', function () {
         nock.disableNetConnect();
 
         // Mock web scraper request for published post
-        nock('https://example.substack.com')
-            .get('/p/plain-text')
-            .reply(200, scrapeFixtureHTML, {
-                'Content-Type': 'text/html'
-            });
+        nock('https://example.substack.com').get('/p/plain-text').reply(200, scrapeFixtureHTML, {
+            'Content-Type': 'text/html'
+        });
 
         // Mock asset scraper requests for images
         nockAssetImage = nock('https://substack-post-media.s3.amazonaws.com')
@@ -188,10 +180,16 @@ describe('Substack E2E Migration', function () {
         assert.ok(postMeta, 'published post should have posts_meta entry');
         assert.equal(postMeta.meta_title, 'Plain Text - Test Author');
         assert.equal(postMeta.meta_description, 'A test meta description');
-        assert.equal(postMeta.og_image, '__GHOST_URL__/content/images/substack-post-media-s3-amazonaws-com/public/images/og-image.jpg');
+        assert.equal(
+            postMeta.og_image,
+            '__GHOST_URL__/content/images/substack-post-media-s3-amazonaws-com/public/images/og-image.jpg'
+        );
         assert.equal(postMeta.og_title, 'Plain Text OG Title');
         assert.equal(postMeta.og_description, 'OG description for the post');
-        assert.equal(postMeta.twitter_image, '__GHOST_URL__/content/images/substack-post-media-s3-amazonaws-com/public/images/og-image.jpg');
+        assert.equal(
+            postMeta.twitter_image,
+            '__GHOST_URL__/content/images/substack-post-media-s3-amazonaws-com/public/images/og-image.jpg'
+        );
         assert.equal(postMeta.twitter_title, 'Plain Text Twitter Title');
         assert.equal(postMeta.twitter_description, 'Twitter description for the post');
 
@@ -244,28 +242,85 @@ describe('Substack E2E Migration', function () {
             root: {
                 children: [
                     {
-                        children: [{detail: 0, format: 0, mode: 'normal', style: '', text: 'Hello World', type: 'extended-text', version: 1}],
-                        direction: null, format: '', indent: 0, type: 'extended-heading', version: 1, tag: 'h2'
+                        children: [
+                            {
+                                detail: 0,
+                                format: 0,
+                                mode: 'normal',
+                                style: '',
+                                text: 'Hello World',
+                                type: 'extended-text',
+                                version: 1
+                            }
+                        ],
+                        direction: null,
+                        format: '',
+                        indent: 0,
+                        type: 'extended-heading',
+                        version: 1,
+                        tag: 'h2'
                     },
                     {
-                        children: [{detail: 0, format: 0, mode: 'normal', style: '', text: 'This is a test post with an image.', type: 'extended-text', version: 1}],
-                        direction: null, format: '', indent: 0, type: 'paragraph', version: 1
+                        children: [
+                            {
+                                detail: 0,
+                                format: 0,
+                                mode: 'normal',
+                                style: '',
+                                text: 'This is a test post with an image.',
+                                type: 'extended-text',
+                                version: 1
+                            }
+                        ],
+                        direction: null,
+                        format: '',
+                        indent: 0,
+                        type: 'paragraph',
+                        version: 1
                     },
                     {
-                        type: 'image', version: 1,
+                        type: 'image',
+                        version: 1,
                         src: '__GHOST_URL__/content/images/substack-post-media-s3-amazonaws-com/public/images/test-image.jpg',
-                        width: null, height: null, title: '', alt: 'Test image', caption: '', cardWidth: 'regular', href: ''
+                        width: null,
+                        height: null,
+                        title: '',
+                        alt: 'Test image',
+                        caption: '',
+                        cardWidth: 'regular',
+                        href: ''
                     },
                     {
-                        type: 'button', version: 1,
-                        buttonText: 'Subscribe', alignment: 'center', buttonUrl: '#/portal/signup'
+                        type: 'button',
+                        version: 1,
+                        buttonText: 'Subscribe',
+                        alignment: 'center',
+                        buttonUrl: '#/portal/signup'
                     },
                     {
-                        children: [{detail: 0, format: 0, mode: 'normal', style: '', text: 'End of post.', type: 'extended-text', version: 1}],
-                        direction: null, format: '', indent: 0, type: 'paragraph', version: 1
+                        children: [
+                            {
+                                detail: 0,
+                                format: 0,
+                                mode: 'normal',
+                                style: '',
+                                text: 'End of post.',
+                                type: 'extended-text',
+                                version: 1
+                            }
+                        ],
+                        direction: null,
+                        format: '',
+                        indent: 0,
+                        type: 'paragraph',
+                        version: 1
                     }
                 ],
-                direction: null, format: '', indent: 0, type: 'root', version: 1
+                direction: null,
+                format: '',
+                indent: 0,
+                type: 'root',
+                version: 1
             }
         });
     });
@@ -277,8 +332,24 @@ describe('Substack E2E Migration', function () {
 
         // Check that image files exist in the unzipped output
         const unzipDir = join(outputDir, 'unzipped');
-        const imagePath = join(unzipDir, 'content', 'images', 'substack-post-media-s3-amazonaws-com', 'public', 'images', 'test-image.jpg');
-        const ogImagePath = join(unzipDir, 'content', 'images', 'substack-post-media-s3-amazonaws-com', 'public', 'images', 'og-image.jpg');
+        const imagePath = join(
+            unzipDir,
+            'content',
+            'images',
+            'substack-post-media-s3-amazonaws-com',
+            'public',
+            'images',
+            'test-image.jpg'
+        );
+        const ogImagePath = join(
+            unzipDir,
+            'content',
+            'images',
+            'substack-post-media-s3-amazonaws-com',
+            'public',
+            'images',
+            'og-image.jpg'
+        );
 
         assert.ok(existsSync(imagePath), `test-image.jpg should exist in unzipped output at ${imagePath}`);
         assert.ok(existsSync(ogImagePath), `og-image.jpg should exist in unzipped output at ${ogImagePath}`);

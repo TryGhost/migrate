@@ -9,14 +9,19 @@ import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {createGhostUserTasks} from '@tryghost/mg-ghost-authors';
 import prettyMilliseconds from 'pretty-ms';
 
-const initialize = (options) => {
+const initialize = options => {
     return {
         title: 'Initializing Workspace',
         task: async (ctx, task) => {
             ctx.options = options;
             ctx.allowScrape = {
                 all: ctx.options.scrape.includes('all'),
-                assets: ctx.options.scrape.includes('all') || ctx.options.scrape.includes('assets') || ctx.options.scrape.includes('img') || ctx.options.scrape.includes('media') || ctx.options.scrape.includes('files'),
+                assets:
+                    ctx.options.scrape.includes('all') ||
+                    ctx.options.scrape.includes('assets') ||
+                    ctx.options.scrape.includes('img') ||
+                    ctx.options.scrape.includes('media') ||
+                    ctx.options.scrape.includes('files'),
                 web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
             };
 
@@ -24,12 +29,13 @@ const initialize = (options) => {
             ctx.fileCache = new fsUtils.FileCache(`buttondown-${ctx.options.cacheName}`, {
                 tmpPath: ctx.options.tmpPath
             });
-            ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
-                domains: [
-                    'https://assets.buttondown.email',
-                    'https://buttondown-attachments.s3.amazonaws.com'
-                ]
-            }, ctx);
+            ctx.assetScraper = new MgAssetScraper(
+                ctx.fileCache,
+                {
+                    domains: ['https://assets.buttondown.email', 'https://buttondown-attachments.s3.amazonaws.com']
+                },
+                ctx
+            );
             await ctx.assetScraper.init();
             ctx.linkFixer = new MgLinkFixer();
 
@@ -38,12 +44,12 @@ const initialize = (options) => {
     };
 };
 
-const getFullTaskList = (options) => {
+const getFullTaskList = options => {
     return [
         initialize(options),
         {
             title: 'Read Buttondown content',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     ctx.result = await buttondownIngest({
                         options
@@ -58,7 +64,7 @@ const getFullTaskList = (options) => {
         ...createGhostUserTasks(options),
         {
             title: 'Build Link Map',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     ctx.linkFixer.buildMap(ctx);
                 } catch (error) {
@@ -69,7 +75,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Format data as Ghost JSON',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
                 } catch (error) {
@@ -81,7 +87,7 @@ const getFullTaskList = (options) => {
         {
             title: 'Fetch images via AssetScraper',
             skip: ctx => !ctx.allowScrape.assets,
-            task: async (ctx) => {
+            task: async ctx => {
                 let tasks = ctx.assetScraper.getTasks();
                 return makeTaskRunner(tasks, {
                     verbose: options.verbose,
@@ -99,7 +105,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Convert HTML -> Lexical',
-            task: (ctx) => {
+            task: ctx => {
                 try {
                     let tasks = mgHtmlLexical.convert(ctx);
                     return makeTaskRunner(tasks, options);
@@ -111,7 +117,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Write Ghost import JSON File',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
                 } catch (error) {
@@ -130,7 +136,11 @@ const getFullTaskList = (options) => {
                     let timer = Date.now();
                     const zipFinalPath = options.outputPath || process.cwd();
                     // zip the file and save it temporarily
-                    ctx.outputFile = await fsUtils.zip.write(zipFinalPath, ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+                    ctx.outputFile = await fsUtils.zip.write(
+                        zipFinalPath,
+                        ctx.fileCache.zipDir,
+                        ctx.fileCache.defaultZipFileName
+                    );
 
                     if (isStorage) {
                         const storage = options.outputStorage;
@@ -139,7 +149,10 @@ const getFullTaskList = (options) => {
                         // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
                         // Upload the file to the storage
-                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-buttondown-${ctx.options.cacheName}.zip`});
+                        ctx.outputFile.path = await storage.upload({
+                            body: fileBuffer,
+                            fileName: `gh-buttondown-${ctx.options.cacheName}.zip`
+                        });
                         // now that the file is uploaded to the storage, delete the local zip file
                         await fsUtils.zip.deleteFile(localFilePath);
                     }
@@ -154,7 +167,7 @@ const getFullTaskList = (options) => {
         {
             title: 'Clearing cached files',
             enabled: () => !options.cache && options.zip,
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {
@@ -166,7 +179,7 @@ const getFullTaskList = (options) => {
     ];
 };
 
-const getTaskRunner = (options) => {
+const getTaskRunner = options => {
     let tasks = [];
 
     tasks = getFullTaskList(options);

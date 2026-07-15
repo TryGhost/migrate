@@ -27,7 +27,13 @@ const discover = async (key: string, pubId: string) => {
     return data.data.stats?.active_subscriptions;
 };
 
-const cachedFetch = async ({fileCache, key, pubId, cursor, cursorIndex}: {
+const cachedFetch = async ({
+    fileCache,
+    key,
+    pubId,
+    cursor,
+    cursorIndex
+}: {
     fileCache: any;
     key: string;
     pubId: string;
@@ -63,7 +69,7 @@ const cachedFetch = async ({fileCache, key, pubId, cursor, cursorIndex}: {
 };
 
 export const fetchTasks = async (options: any, ctx: any) => {
-    const totalSubscriptions = await discover(options.key, options.id) ?? 0;
+    const totalSubscriptions = (await discover(options.key, options.id)) ?? 0;
     const estimatedPages = totalSubscriptions > 0 ? Math.ceil(totalSubscriptions / API_LIMIT) : 0;
 
     const tasks = [
@@ -107,8 +113,4 @@ export const fetchTasks = async (options: any, ctx: any) => {
     return tasks;
 };
 
-export {
-    authedClient,
-    discover,
-    cachedFetch
-};
+export {authedClient, discover, cachedFetch};

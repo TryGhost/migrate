@@ -81,11 +81,11 @@ describe('Mailchimp Members CSV', () => {
             ]
         });
 
-        const isSubscribed = cleanedProcessed.filter((member) => {
+        const isSubscribed = cleanedProcessed.filter(member => {
             return member.subscribed_to_emails === true;
         });
 
-        const notSubscribed = cleanedProcessed.filter((member) => {
+        const notSubscribed = cleanedProcessed.filter(member => {
             return member.subscribed_to_emails === false;
         });
 
@@ -99,7 +99,7 @@ describe('Mailchimp Members CSV', () => {
             addLabel: 'Migrated Member, Old Site'
         });
 
-        cleanedProcessed.forEach((member) => {
+        cleanedProcessed.forEach(member => {
             assert.equal(member.labels[0], 'Migrated Member');
             assert.equal(member.labels[1], 'Old Site');
         });
@@ -115,7 +115,7 @@ describe('Mailchimp Members CSV', () => {
             includeUnsubscribed: false
         });
 
-        cleanedProcessed.forEach((member) => {
+        cleanedProcessed.forEach(member => {
             assert.equal(member.subscribed_to_emails, true);
         });
     });
@@ -183,7 +183,7 @@ describe('Mailchimp Members ZIP', () => {
     });
 
     after(function () {
-        unlink(inputZipPath, (err) => {
+        unlink(inputZipPath, err => {
             if (err) {
                 throw err;
             }

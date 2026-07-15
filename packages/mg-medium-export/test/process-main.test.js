@@ -6,7 +6,7 @@ import process from '../lib/process.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
-const readFixture = (path) => {
+const readFixture = path => {
     return readFileSync(join(__dirname, 'fixtures', 'export', path), {encoding: 'utf8'});
 };
 
@@ -14,9 +14,7 @@ describe('Process Main', function () {
     it('Can process input with profile and posts', function () {
         const input = {
             profile: readFixture('profile/profile.html'),
-            posts: [
-                {name: '2018-08-11_blog-post-title-efefef121212.html', html: readFixture('posts/basic-post.html')}
-            ]
+            posts: [{name: '2018-08-11_blog-post-title-efefef121212.html', html: readFixture('posts/basic-post.html')}]
         };
 
         const output = process(input, {addPlatformTag: true});
@@ -33,9 +31,7 @@ describe('Process Main', function () {
     it('Can process input with profiles key instead of profile', function () {
         const input = {
             profiles: readFixture('profile/profile.html'),
-            posts: [
-                {name: '2018-08-11_blog-post-title-efefef121212.html', html: readFixture('posts/basic-post.html')}
-            ]
+            posts: [{name: '2018-08-11_blog-post-title-efefef121212.html', html: readFixture('posts/basic-post.html')}]
         };
 
         const output = process(input, {});
@@ -46,9 +42,7 @@ describe('Process Main', function () {
 
     it('Can process input without profile', function () {
         const input = {
-            posts: [
-                {name: '2018-08-11_blog-post-title-efefef121212.html', html: readFixture('posts/basic-post.html')}
-            ]
+            posts: [{name: '2018-08-11_blog-post-title-efefef121212.html', html: readFixture('posts/basic-post.html')}]
         };
 
         const output = process(input, {});
@@ -82,9 +76,7 @@ describe('Process Main', function () {
     it('Passes globalUser to posts when single user', function () {
         const input = {
             profile: readFixture('profile/profile.html'),
-            posts: [
-                {name: 'draft_blog-post-title-ababab121212.html', html: readFixture('posts/draft-post.html')}
-            ]
+            posts: [{name: 'draft_blog-post-title-ababab121212.html', html: readFixture('posts/draft-post.html')}]
         };
 
         const output = process(input, {});

@@ -115,7 +115,11 @@ describe('beehiiv API Members Mapper', () => {
         });
 
         it('excludes stripe_customer_id and sets complimentary_plan when includeStripe is false', () => {
-            const subscription = {...baseSubscription, subscription_tier: 'premium' as const, stripe_customer_id: 'cus_abc123'};
+            const subscription = {
+                ...baseSubscription,
+                subscription_tier: 'premium' as const,
+                stripe_customer_id: 'cus_abc123'
+            };
             const result = mapSubscription(subscription, {includeStripe: false});
             assert.equal(result.stripe_customer_id, '');
             assert.equal(result.complimentary_plan, true);

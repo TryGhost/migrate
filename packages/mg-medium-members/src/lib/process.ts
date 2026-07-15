@@ -35,6 +35,4 @@ const processTxt = async ({txtPath}: {txtPath: string}) => {
     return newObj;
 };
 
-export {
-    processTxt
-};
+export {processTxt};

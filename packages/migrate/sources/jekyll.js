@@ -68,7 +68,7 @@ const postProcessor = (scrapedData, data, options) => {
  *
  * @param {Object} options
  */
-const getTaskRunner = (options) => {
+const getTaskRunner = options => {
     let runnerTasks = [
         {
             title: 'Initialising Workspace',
@@ -76,16 +76,25 @@ const getTaskRunner = (options) => {
                 ctx.options = options;
                 ctx.allowScrape = {
                     all: ctx.options.scrape.includes('all'),
-                    assets: ctx.options.scrape.includes('all') || ctx.options.scrape.includes('assets') || ctx.options.scrape.includes('img') || ctx.options.scrape.includes('media') || ctx.options.scrape.includes('files'),
+                    assets:
+                        ctx.options.scrape.includes('all') ||
+                        ctx.options.scrape.includes('assets') ||
+                        ctx.options.scrape.includes('img') ||
+                        ctx.options.scrape.includes('media') ||
+                        ctx.options.scrape.includes('files'),
                     web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
                 };
 
                 // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
                 ctx.fileCache = new fsUtils.FileCache(options.pathToZip);
                 ctx.jekyllScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
-                ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
-                    allowAllDomains: true
-                }, ctx);
+                ctx.assetScraper = new MgAssetScraper(
+                    ctx.fileCache,
+                    {
+                        allowAllDomains: true
+                    },
+                    ctx
+                );
                 await ctx.assetScraper.init();
 
                 ctx.linkFixer = new MgLinkFixer();
@@ -95,7 +104,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Read Jekyll export zip',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 1. Read the zip file
                 try {
                     ctx.result = jekyllIngest(options.pathToZip, options);
@@ -110,7 +119,7 @@ const getTaskRunner = (options) => {
         {
             title: 'Fetch missing data via WebScraper',
             skip: ctx => !ctx.allowScrape.web,
-            task: (ctx) => {
+            task: ctx => {
                 // 2. Pass the results through the web scraper to get any missing data
                 let tasks = ctx.jekyllScraper.hydrate(ctx); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
@@ -118,7 +127,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Build Link Map',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 3. Create a map of all known links for use later
                 try {
                     ctx.linkFixer.buildMap(ctx);
@@ -130,7 +139,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Format data as Ghost JSON',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 4. Format the data as a valid Ghost JSON file
                 try {
                     ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
@@ -143,7 +152,7 @@ const getTaskRunner = (options) => {
         {
             title: 'Fetch images via AssetScraper',
             skip: ctx => !ctx.allowScrape.assets,
-            task: async (ctx) => {
+            task: async ctx => {
                 // 5. Format the data as a valid Ghost JSON file
                 let tasks = ctx.assetScraper.getTasks();
                 return makeTaskRunner(tasks, {
@@ -164,7 +173,7 @@ const getTaskRunner = (options) => {
         {
             // @TODO don't duplicate this with the utils json file
             title: 'Convert HTML -> Lexical',
-            task: (ctx) => {
+            task: ctx => {
                 // 7. Convert post HTML -> Lexical
                 try {
                     let tasks = mgHtmlLexical.convert(ctx); // eslint-disable-line no-shadow
@@ -177,7 +186,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Write Ghost import JSON File',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 8. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
@@ -195,7 +204,11 @@ const getTaskRunner = (options) => {
                 // 9. Write a valid Ghost import zip
                 try {
                     let timer = Date.now();
-                    ctx.outputFile = await fsUtils.zip.write(process.cwd(), ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+                    ctx.outputFile = await fsUtils.zip.write(
+                        process.cwd(),
+                        ctx.fileCache.zipDir,
+                        ctx.fileCache.defaultZipFileName
+                    );
                     task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
                     ctx.errors.push(error);
@@ -206,7 +219,7 @@ const getTaskRunner = (options) => {
         {
             title: 'Clearing cached files',
             enabled: () => !options.cache && options.zip,
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {

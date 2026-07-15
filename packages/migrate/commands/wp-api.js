@@ -111,7 +111,7 @@ const options = [
         type: 'boolean',
         flags: '--rawHtml',
         defaultValue: false,
-        desc: 'Don\'t process HTML and wrap in a HTML card'
+        desc: "Don't process HTML and wrap in a HTML card"
     },
     {
         type: 'boolean',
@@ -123,7 +123,7 @@ const options = [
         type: 'boolean',
         flags: '--tags',
         defaultValue: true,
-        desc: 'Set to false if you don\'t want to import WordPress tags, only categories'
+        desc: "Set to false if you don't want to import WordPress tags, only categories"
     },
     {
         type: 'string',
@@ -149,13 +149,13 @@ const options = [
         type: 'string',
         flags: '--postsBefore',
         defaultValue: null,
-        desc: 'Only migrate posts before and including a given date e.g. \'March 20 2018\''
+        desc: "Only migrate posts before and including a given date e.g. 'March 20 2018'"
     },
     {
         type: 'string',
         flags: '--postsAfter',
         defaultValue: null,
-        desc: 'Only migrate posts after and including a given date e.g. \'August 16 2021\''
+        desc: "Only migrate posts after and including a given date e.g. 'August 16 2021'"
     },
     {
         type: 'array',
@@ -227,7 +227,7 @@ const defaults = convertOptionsToDefaults(options);
 const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
-const run = async (argv) => {
+const run = async argv => {
     let context = {
         errors: [],
         warnings: []
@@ -246,7 +246,9 @@ const run = async (argv) => {
         let auth = argv.auth.split(':');
 
         if (auth.length < 2 || auth.length >= 3) {
-            ui.log.info('Not running in authenticated mode. Please provide the credentials in this format: <user>:<password>');
+            ui.log.info(
+                'Not running in authenticated mode. Please provide the credentials in this format: <user>:<password>'
+            );
             context.apiUser = {};
         } else {
             ui.log.info('Using authentication for WordPress API');
@@ -265,14 +267,14 @@ const run = async (argv) => {
 
             let usersObjects = [];
 
-            [].concat(userXMLJSON.root.row || []).forEach((user) => {
+            [].concat(userXMLJSON.root.row || []).forEach(user => {
                 usersObjects.push({
-                    id: (user.source_user_id.length) ? parseInt(user.source_user_id) : null,
-                    slug: (user.user_nicename.length) ? user.user_nicename : null,
-                    name: (user.display_name.length) ? user.display_name : null,
-                    description: (user.description.length) ? user.description : null,
-                    email: (user.user_email.length) ? user.user_email : null,
-                    url: (user.user_url.length) ? user.user_url : null
+                    id: user.source_user_id.length ? parseInt(user.source_user_id) : null,
+                    slug: user.user_nicename.length ? user.user_nicename : null,
+                    name: user.display_name.length ? user.display_name : null,
+                    description: user.description.length ? user.description : null,
+                    email: user.user_email.length ? user.user_email : null,
+                    url: user.user_url.length ? user.user_url : null
                 });
             });
 
@@ -299,7 +301,9 @@ const run = async (argv) => {
 
         if (argv.info && context.info) {
             let batches = context.info.batches.posts + context.info.batches.pages;
-            ui.log.info(`Batch info: ${context.info.totals.posts} posts, ${context.info.totals.pages} pages, ${batches} batches.`);
+            ui.log.info(
+                `Batch info: ${context.info.totals.posts} posts, ${context.info.totals.pages} pages, ${batches} batches.`
+            );
         }
 
         if (argv.verbose && context.result) {

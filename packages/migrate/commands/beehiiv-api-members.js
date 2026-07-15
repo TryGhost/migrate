@@ -93,7 +93,7 @@ const defaults = convertOptionsToDefaults(options);
 const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
-const run = async (argv) => {
+const run = async argv => {
     let context = {
         errors: [],
         warnings: []
@@ -109,12 +109,15 @@ const run = async (argv) => {
                 return;
             }
 
-            console.table(getPubs.map(pub => ({ // eslint-disable-line no-console
-                name: pub.name,
-                id: pub.id,
-                created: new Date(pub.created * 1000),
-                subscribers: pub.stats?.active_subscriptions || '-'
-            })));
+            // eslint-disable-next-line no-console
+            console.table(
+                getPubs.map(pub => ({
+                    name: pub.name,
+                    id: pub.id,
+                    created: new Date(pub.created * 1000),
+                    subscribers: pub.stats?.active_subscriptions || '-'
+                }))
+            );
 
             ui.log.warn('No publication ID provided. Please provide an ID using the --id flag to run the migration.');
 

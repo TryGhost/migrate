@@ -44,7 +44,4 @@ const readZip = (zipPath: string) => {
     return content;
 };
 
-export {
-    contentStats,
-    readZip
-};
+export {contentStats, readZip};

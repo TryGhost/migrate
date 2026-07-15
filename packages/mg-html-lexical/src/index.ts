@@ -6,7 +6,4 @@ export default {
     convert
 };
 
-export {
-    convert,
-    convertPost
-};
+export {convert, convertPost};

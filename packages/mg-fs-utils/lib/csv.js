@@ -10,21 +10,26 @@ import errors from '@tryghost/errors';
  * @param {String} filePath - name of file to write
  * @param {Object} options - optional options to pass to `csv-parse`
  */
-const parseCSV = (filePath, options = {skip_lines_with_error: true, columns: true, skip_empty_lines: true, trim: true}) => {
+const parseCSV = (
+    filePath,
+    options = {skip_lines_with_error: true, columns: true, skip_empty_lines: true, trim: true}
+) => {
     const parser = parse(options);
     const data = [];
     return new Promise((resolve, reject) => {
         const fileStream = createReadStream(filePath);
-        fileStream.on('error', (error) => {
+        fileStream.on('error', error => {
             return reject(error);
         });
         fileStream
             .pipe(parser)
-            .on('data', async (row) => {
+            .on('data', async row => {
                 data.push(row);
-            }).on('end', () => {
+            })
+            .on('end', () => {
                 return resolve(data);
-            }).on('error', (error) => {
+            })
+            .on('error', error => {
                 return reject(error);
             });
     });
@@ -35,7 +40,10 @@ const parseCSV = (filePath, options = {skip_lines_with_error: true, columns: tru
  * @param {String} csvString - CSV as a string
  * @param {Object} options - optional options to pass to `csv-parse`
  */
-const parseString = (csvString, options = {skip_lines_with_error: true, columns: true, skip_empty_lines: true, trim: true}) => {
+const parseString = (
+    csvString,
+    options = {skip_lines_with_error: true, columns: true, skip_empty_lines: true, trim: true}
+) => {
     const data = parseSync(csvString, options);
 
     return data;
@@ -46,7 +54,7 @@ const parseString = (csvString, options = {skip_lines_with_error: true, columns:
  * @param {Array} data - the data to format
  * @param {Array} fields - the fields to pick and use as column header
  */
-const jsonToCSV = (data, fields = (data && data[0] && typeof data[0] === 'object') ? Object.keys(data[0]) : []) => {
+const jsonToCSV = (data, fields = data && data[0] && typeof data[0] === 'object' ? Object.keys(data[0]) : []) => {
     if (!data || !Array.isArray(data) || data.length === 0) {
         return fields.length > 0 ? `${fields.join(',')}\r\n` : '';
     }
@@ -67,7 +75,8 @@ const jsonToCSV = (data, fields = (data && data[0] && typeof data[0] === 'object
             if (entry[field] !== null) {
                 if (entry[field] instanceof Date) {
                     fieldToAdd = entry[field].toISOString();
-                } else if (entry[field] && entry[field].toString().indexOf(',') !== -1) { // If the field contains a comma, wrap it in quotes
+                } else if (entry[field] && entry[field].toString().indexOf(',') !== -1) {
+                    // If the field contains a comma, wrap it in quotes
                     fieldToAdd = `"${entry[field]}"`;
                 } else {
                     fieldToAdd = entry[field];

@@ -192,7 +192,12 @@ export class SqliteReader {
         }
     }
 
-    #executeUpdateById(tableName: string, idColumnName: string, id: string | number, values: Record<string, SqliteValue>): void {
+    #executeUpdateById(
+        tableName: string,
+        idColumnName: string,
+        id: string | number,
+        values: Record<string, SqliteValue>
+    ): void {
         const table = SqliteReader.#quoteIdentifier(tableName);
         const idColumn = SqliteReader.#quoteIdentifier(idColumnName);
         const updates = Object.entries(values).sort(([a], [b]) => a.localeCompare(b));

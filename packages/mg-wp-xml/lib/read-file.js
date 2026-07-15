@@ -2,12 +2,12 @@ import {lstatSync} from 'node:fs';
 import {promises as fs} from 'node:fs';
 import fg from 'fast-glob';
 
-const readFile = async (path) => {
+const readFile = async path => {
     const input = await fs.readFile(path, 'utf-8');
     return input;
 };
 
-const readFolder = async (path) => {
+const readFolder = async path => {
     const entries = await fg(['**/*.xml'], {
         cwd: path,
         absolute: true,
@@ -26,11 +26,11 @@ const readFolder = async (path) => {
     return out.join('');
 };
 
-const detectType = async (path) => {
+const detectType = async path => {
     return lstatSync(path).isDirectory() ? 'folder' : 'file';
 };
 
-const readFileOrFolder = async (path) => {
+const readFileOrFolder = async path => {
     const type = await detectType(path);
     let output;
 
@@ -43,9 +43,4 @@ const readFileOrFolder = async (path) => {
     return output;
 };
 
-export {
-    readFile,
-    readFolder,
-    detectType,
-    readFileOrFolder
-};
+export {readFile, readFolder, detectType, readFileOrFolder};

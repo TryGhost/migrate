@@ -70,7 +70,11 @@ export default class AssetScraper {
     #foundItems: string[];
     #failedDownloads: FailedDownload[];
 
-    constructor(fileCache: FileCache, options: AssetScraperOptions = {}, ctxOrJsonPath: AssetScraperContext | string = {}) {
+    constructor(
+        fileCache: FileCache,
+        options: AssetScraperOptions = {},
+        ctxOrJsonPath: AssetScraperContext | string = {}
+    ) {
         this.#fileCache = fileCache;
 
         this.#defaultOptions = {
@@ -98,17 +102,10 @@ export default class AssetScraper {
             this.#warnings = [];
         } else {
             this.#ctx = ctxOrJsonPath;
-            this.#warnings = (ctxOrJsonPath.warnings) ? ctxOrJsonPath.warnings : [];
+            this.#warnings = ctxOrJsonPath.warnings ? ctxOrJsonPath.warnings : [];
             this.#logger = ctxOrJsonPath.logger;
         }
-        this.#settingsKeys = [
-            'logo',
-            'cover_image',
-            'icon',
-            'og_image',
-            'twitter_image',
-            'portal_button_icon'
-        ];
+        this.#settingsKeys = ['logo', 'cover_image', 'icon', 'og_image', 'twitter_image', 'portal_button_icon'];
         this.#keys = [
             'src',
             'feature_image',
@@ -261,7 +258,10 @@ export default class AssetScraper {
                 fileMime = contentType.split(';')[0].trim();
             }
 
-            const extensionFromPath = extname(new URL(requestURL).pathname).replace(/^\./, '').split(/[^a-z0-9]/i).filter(Boolean)[0];
+            const extensionFromPath = extname(new URL(requestURL).pathname)
+                .replace(/^\./, '')
+                .split(/[^a-z0-9]/i)
+                .filter(Boolean)[0];
             if (extensionFromPath) {
                 extension = extensionFromPath;
             }
@@ -288,7 +288,9 @@ export default class AssetScraper {
         // 248 is on the lower end of limits from various OSes and file systems
         const newFileName = slugify(parse(fileNameNoExt).base, {
             requiredChangesOnly: true
-        }).slice(-248).replace(/^-|-$/, '');
+        })
+            .slice(-248)
+            .replace(/^-|-$/, '');
 
         return {
             fileBuffer: body,
@@ -328,9 +330,7 @@ export default class AssetScraper {
         const fileNameNoExt = detectedExtension ? rawFileSegment.slice(0, -detectedExtension.length) : rawFileSegment;
 
         // Build normalized directory path from hostname + pathname segments.
-        const dirSegments = [assetUrl.host, ...pathnameSegments]
-            .map(normalizePathSegment)
-            .filter(Boolean);
+        const dirSegments = [assetUrl.host, ...pathnameSegments].map(normalizePathSegment).filter(Boolean);
 
         // Start filename with the normalized basename from the URL pathname.
         let normalizedFileNameBase = normalizePathSegment(fileNameNoExt);
@@ -460,7 +460,7 @@ export default class AssetScraper {
 
     async downloadExtractSave(src: string, content: string): Promise<DownloadResult> {
         // Create a cache item, or find a existing item
-        const cacheEntry = await this.#assetCache.add(src) as AssetCacheEntry;
+        const cacheEntry = (await this.#assetCache.add(src)) as AssetCacheEntry;
         const {id: cacheId, localPath, skip} = cacheEntry;
 
         // Check the cache to see if we have a local src. If we do, use that to replace the found src
@@ -539,7 +539,7 @@ export default class AssetScraper {
         const cacheKey = `base64-${hash}`;
 
         // Create a cache item, or find an existing item
-        const cacheEntry = await this.#assetCache.add(cacheKey) as AssetCacheEntry;
+        const cacheEntry = (await this.#assetCache.add(cacheKey)) as AssetCacheEntry;
         const {id: cacheId, localPath} = cacheEntry;
 
         // Check the cache to see if we have a local src. If we do, use that to replace the found src
@@ -604,7 +604,7 @@ export default class AssetScraper {
             let matchesArray = Array.from(matches, (m: any) => m[1]);
 
             // Trim trailing commas from each match
-            matchesArray = matchesArray.map((item) => {
+            matchesArray = matchesArray.map(item => {
                 return item.replace(/,$/, '');
             });
 
@@ -623,7 +623,7 @@ export default class AssetScraper {
         let matchesArray = Array.from(matches, (m: any) => m[1]);
 
         // Trim trailing commas from each match
-        matchesArray = matchesArray.map((item) => {
+        matchesArray = matchesArray.map(item => {
             return item.replace(/,$/, '');
         });
 
@@ -631,7 +631,7 @@ export default class AssetScraper {
         const noCustomBlockedDomains = this.#blockedDomains.length === DEFAULT_BLOCKED_DOMAINS.length;
         const requireFileExtension = noAllowedDomains && noCustomBlockedDomains;
 
-        return matchesArray.filter((url) => {
+        return matchesArray.filter(url => {
             if (this.isBlockedDomain(url)) {
                 return false;
             }
@@ -984,7 +984,10 @@ export default class AssetScraper {
                     try {
                         await this.inlinePostTagUserObject(item);
                     } catch (err) {
-                        throw new errors.InternalServerError({message: 'Failed to inline object', err: err instanceof Error ? err : undefined});
+                        throw new errors.InternalServerError({
+                            message: 'Failed to inline object',
+                            err: err instanceof Error ? err : undefined
+                        });
                     }
                 }
             }));
@@ -1036,7 +1039,8 @@ export default class AssetScraper {
         });
 
         // Custom theme settings
-        const customThemeSettings = this.#ctx?.custom_theme_settings ?? this.#ctx?.result?.data?.custom_theme_settings ?? [];
+        const customThemeSettings =
+            this.#ctx?.custom_theme_settings ?? this.#ctx?.result?.data?.custom_theme_settings ?? [];
         tasks.push({
             title: `Custom theme settings`,
             task: async () => {

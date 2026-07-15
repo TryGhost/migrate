@@ -219,6 +219,9 @@ describe('Convert', function () {
         await taskRunner.run();
 
         assert.deepEqual(Object.keys(ctx.result.posts[0]), ['title', 'slug', 'lexical']);
-        assert.equal(ctx.result.posts[0].lexical, '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}');
+        assert.equal(
+            ctx.result.posts[0].lexical,
+            '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
+        );
     });
 });

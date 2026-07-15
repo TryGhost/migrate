@@ -75,13 +75,29 @@ export interface GhostApiPost {
 }
 
 const POST_OBJECT_FIELDS = [
-    'title', 'slug', 'status', 'visibility', 'featured', 'type',
-    'feature_image', 'feature_image_alt', 'feature_image_caption',
-    'custom_excerpt', 'comment_id', 'canonical_url', 'custom_template',
-    'codeinjection_head', 'codeinjection_foot',
-    'og_image', 'og_title', 'og_description',
-    'twitter_image', 'twitter_title', 'twitter_description',
-    'meta_title', 'meta_description'
+    'title',
+    'slug',
+    'status',
+    'visibility',
+    'featured',
+    'type',
+    'feature_image',
+    'feature_image_alt',
+    'feature_image_caption',
+    'custom_excerpt',
+    'comment_id',
+    'canonical_url',
+    'custom_template',
+    'codeinjection_head',
+    'codeinjection_foot',
+    'og_image',
+    'og_title',
+    'og_description',
+    'twitter_image',
+    'twitter_title',
+    'twitter_description',
+    'meta_title',
+    'meta_description'
 ] as const;
 
 const DATE_FIELDS = ['created_at', 'updated_at', 'published_at'] as const;
@@ -195,4 +211,3 @@ export async function mapPost(ghPost: GhostApiPost, migrateContext: MigrateConte
 
     return post;
 }
-

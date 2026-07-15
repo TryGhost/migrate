@@ -22,9 +22,11 @@ const discover = async ({apiToken}) => {
     let results = [];
 
     do {
-        debug(`Fetch posts ${requestOptions.form.offset}:${(requestOptions.form.limit + requestOptions.form.offset)} posts from Letterdrop API`);
+        debug(
+            `Fetch posts ${requestOptions.form.offset}:${requestOptions.form.limit + requestOptions.form.offset} posts from Letterdrop API`
+        );
         response = await got('posts', requestOptions);
-        requestOptions.form.offset = (requestOptions.form.offset + 20);
+        requestOptions.form.offset = requestOptions.form.offset + 20;
         results = results.concat(response.body.data);
     } while (response.body.meta.hasNextPage);
 
@@ -49,18 +51,22 @@ const cachedFetch = async (fileCache, options) => {
     return response;
 };
 
-const tasks = async (options) => {
-    const tasks = [{ // eslint-disable-line no-shadow
-        title: `Fetching posts from Letterdrop`,
-        task: async (ctx) => { // eslint-disable-line no-shadow
-            try {
-                ctx.result = await cachedFetch(ctx.fileCache, options);
-            } catch (error) {
-                ctx.errors.push(error);
-                throw error;
+const tasks = async options => {
+    const tasks = [
+        {
+            // eslint-disable-line no-shadow
+            title: `Fetching posts from Letterdrop`,
+            task: async ctx => {
+                // eslint-disable-line no-shadow
+                try {
+                    ctx.result = await cachedFetch(ctx.fileCache, options);
+                } catch (error) {
+                    ctx.errors.push(error);
+                    throw error;
+                }
             }
         }
-    }];
+    ];
 
     return tasks;
 };

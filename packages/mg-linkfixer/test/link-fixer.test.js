@@ -65,7 +65,9 @@ describe('LinkFixer', function () {
     it('Fixes links to posts in HTML', async function () {
         assert.equal(datelessPosts.length, 7);
 
-        assert.ok(!datelessPosts[3].html.includes('<a href="https://example.com/2020/06/27/lorem-ipsum/">Consectetur</a>'));
+        assert.ok(
+            !datelessPosts[3].html.includes('<a href="https://example.com/2020/06/27/lorem-ipsum/">Consectetur</a>')
+        );
         assert.ok(datelessPosts[3].html.includes('<a href="/lorem-ipsum/">Consectetur</a>'));
     });
 
@@ -81,7 +83,9 @@ describe('LinkFixer', function () {
         assert.ok(!datelessLexicalPosts[0].lexical.includes(`"url":"https://example.com/est-vitae/"`));
         assert.ok(datelessLexicalPosts[0].lexical.includes(`"url":"/est-vitae/"`));
 
-        assert.ok(!datelessLexicalPosts[0].lexical.includes(`"url":"https://example.com/sample-page/child-sample-page/"`));
+        assert.ok(
+            !datelessLexicalPosts[0].lexical.includes(`"url":"https://example.com/sample-page/child-sample-page/"`)
+        );
         assert.ok(datelessLexicalPosts[0].lexical.includes(`"url":"/child-sample-page/"`));
 
         assert.ok(!datelessLexicalPosts[0].lexical.includes(`"url":"https://example.com/sample-page/"`));
@@ -102,14 +106,20 @@ describe('LinkFixer', function () {
     it('Fixes yyyy-mm-dd dated links to posts', async function () {
         assert.equal(dailyPosts.length, 5);
 
-        assert.ok(!dailyPosts[3].html.includes('<a href="https://example.com/2020/06/27/lorem-ipsum/">Consectetur</a>'));
+        assert.ok(
+            !dailyPosts[3].html.includes('<a href="https://example.com/2020/06/27/lorem-ipsum/">Consectetur</a>')
+        );
         assert.ok(dailyPosts[3].html.includes('<a href="/2020/06/27/lorem-ipsum/">Consectetur</a>'));
     });
 
     it('Fixes slug-yyyy-mm-dd dated links to posts', async function () {
         assert.equal(slugDailyPosts.length, 5);
 
-        assert.ok(!slugDailyPosts[3].html.includes('<a href="https://example.com/articles/2020/06/27/lorem-ipsum/">Consectetur</a>'));
+        assert.ok(
+            !slugDailyPosts[3].html.includes(
+                '<a href="https://example.com/articles/2020/06/27/lorem-ipsum/">Consectetur</a>'
+            )
+        );
         assert.ok(slugDailyPosts[3].html.includes('<a href="/2020/06/27/lorem-ipsum/">Consectetur</a>'));
     });
 
@@ -123,7 +133,11 @@ describe('LinkFixer', function () {
     it('Fixes slug-yyyy-mm dated links to posts', async function () {
         assert.equal(slugMonthlyPosts.length, 5);
 
-        assert.ok(!slugMonthlyPosts[3].html.includes('<a href="https://example.com/articles/2020/06/lorem-ipsum/">Consectetur</a>'));
+        assert.ok(
+            !slugMonthlyPosts[3].html.includes(
+                '<a href="https://example.com/articles/2020/06/lorem-ipsum/">Consectetur</a>'
+            )
+        );
         assert.ok(slugMonthlyPosts[3].html.includes('<a href="/2020/06/lorem-ipsum/">Consectetur</a>'));
     });
 
@@ -131,13 +145,23 @@ describe('LinkFixer', function () {
         assert.ok(!datelessPosts[0].html.includes('<a href="https://example.com/sample-page/">aspernatur</a>'));
         assert.ok(datelessPosts[0].html.includes('<a href="/sample-page/">aspernatur</a>'));
 
-        assert.ok(!datelessPosts[2].html.includes('<a href="https://example.com/sample-page/child-sample-page/">quis</a>'));
+        assert.ok(
+            !datelessPosts[2].html.includes('<a href="https://example.com/sample-page/child-sample-page/">quis</a>')
+        );
         assert.ok(datelessPosts[2].html.includes('<a href="/child-sample-page/">quis</a>'));
     });
 
     it('Does not replace external links', async function () {
-        assert.ok(datelessPosts[0].html.includes('<a href="https://exampleurl.com/eos-quia-quos-voluptas-aliquam-et-et-omnis.html">Sunt tempore nisi similique</a>'));
-        assert.ok(!datelessPosts[0].html.includes('<a href="/eos-quia-quos-voluptas-aliquam-et-et-omnis.html">Sunt tempore nisi similique</a>'));
+        assert.ok(
+            datelessPosts[0].html.includes(
+                '<a href="https://exampleurl.com/eos-quia-quos-voluptas-aliquam-et-et-omnis.html">Sunt tempore nisi similique</a>'
+            )
+        );
+        assert.ok(
+            !datelessPosts[0].html.includes(
+                '<a href="/eos-quia-quos-voluptas-aliquam-et-et-omnis.html">Sunt tempore nisi similique</a>'
+            )
+        );
     });
 
     it('Does not replace external links in Lexical', async function () {
@@ -173,19 +197,45 @@ describe('LinkFixer', function () {
 
     it('Fixes links internal that contain query parameters', async function () {
         assert.ok(datelessPosts[5].html.includes('<a href="/sample-page/">Sample page with query params</a>'));
-        assert.ok(!datelessPosts[5].html.includes('<a href="https://example.com/sample-page/?hello=world">Sample page with query params</a>'));
+        assert.ok(
+            !datelessPosts[5].html.includes(
+                '<a href="https://example.com/sample-page/?hello=world">Sample page with query params</a>'
+            )
+        );
 
-        assert.ok(datelessPosts[5].html.includes('<a href="/child-sample-page/">Child sample page with query params</a>'));
-        assert.ok(!datelessPosts[5].html.includes('<a href="https://example.com/sample-page/child-sample-page/?lorem=ipsum">Child sample page with query params</a>'));
+        assert.ok(
+            datelessPosts[5].html.includes('<a href="/child-sample-page/">Child sample page with query params</a>')
+        );
+        assert.ok(
+            !datelessPosts[5].html.includes(
+                '<a href="https://example.com/sample-page/child-sample-page/?lorem=ipsum">Child sample page with query params</a>'
+            )
+        );
 
-        assert.ok(datelessPosts[5].html.includes('<a href="https://exampleurl.com/sample-page/?let=amos">External sample page with query params</a>'));
-        assert.ok(!datelessPosts[5].html.includes('<a href="/sample-page/">External sample page with query params</a>'));
+        assert.ok(
+            datelessPosts[5].html.includes(
+                '<a href="https://exampleurl.com/sample-page/?let=amos">External sample page with query params</a>'
+            )
+        );
+        assert.ok(
+            !datelessPosts[5].html.includes('<a href="/sample-page/">External sample page with query params</a>')
+        );
 
-        assert.ok(datelessPosts[5].html.includes('<a href="https://exampleurl.com/sample-page/child-sample-page/?dolor=simet">External child sample page with query params</a>'));
-        assert.ok(!datelessPosts[5].html.includes('<a href="/child-sample-page/">External child sample page with query params</a>'));
+        assert.ok(
+            datelessPosts[5].html.includes(
+                '<a href="https://exampleurl.com/sample-page/child-sample-page/?dolor=simet">External child sample page with query params</a>'
+            )
+        );
+        assert.ok(
+            !datelessPosts[5].html.includes(
+                '<a href="/child-sample-page/">External child sample page with query params</a>'
+            )
+        );
 
         assert.ok(datelessPosts[5].html.includes('<a href="/substack-url/">Substack-like URL</a>'));
-        assert.ok(!datelessPosts[5].html.includes('<a href="https://example.com/p/substack-url/?s=w">Substack-like URL</a>'));
+        assert.ok(
+            !datelessPosts[5].html.includes('<a href="https://example.com/p/substack-url/?s=w">Substack-like URL</a>')
+        );
     });
 });
 
@@ -291,10 +341,12 @@ describe('expandForDomains', function () {
 
         const lexical = JSON.stringify({
             root: {
-                children: [{
-                    type: 'link',
-                    url: 'https://olddomain.com/target-post/'
-                }]
+                children: [
+                    {
+                        type: 'link',
+                        url: 'https://olddomain.com/target-post/'
+                    }
+                ]
             }
         });
         const result = await fixer.processLexical(lexical);
@@ -351,7 +403,7 @@ describe('fixPost', function () {
 
     it('Fixes HTML links using a lookup function', async function () {
         const fixer = new linkFixer();
-        const lookup = (url) => {
+        const lookup = url => {
             const map = {
                 'example.com/target-post/': '/target-post/',
                 'example.com/about/': '/about/'
@@ -371,7 +423,7 @@ describe('fixPost', function () {
 
     it('Fixes Lexical links using a lookup function', async function () {
         const fixer = new linkFixer();
-        const lookup = (url) => {
+        const lookup = url => {
             if (url === 'example.com/target-post/') {
                 return '/target-post/';
             }
@@ -408,7 +460,7 @@ describe('fixPost', function () {
 
     it('Strips query params before lookup', async function () {
         const fixer = new linkFixer();
-        const lookup = (url) => {
+        const lookup = url => {
             if (url === 'example.com/my-post/') {
                 return '/my-post/';
             }

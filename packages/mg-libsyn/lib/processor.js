@@ -5,17 +5,18 @@ import SimpleDom from 'simple-dom';
 const {serializeChildren, replaceWith, insertBefore, insertAfter, isComment, getCommentData} = domUtils;
 const audioCard = cardUtils.getCard('audio');
 
-const durationToSeconds = (duration) => {
+const durationToSeconds = duration => {
     if (duration.includes(':')) {
         const durationParts = duration.split(':');
-        const durationTotalSeconds = (parseInt(durationParts[0]) * 60) + parseInt(durationParts[1]);
+        const durationTotalSeconds = parseInt(durationParts[0]) * 60 + parseInt(durationParts[1]);
         return durationTotalSeconds;
     } else {
-        return (parseInt(duration) * 60);
+        return parseInt(duration) * 60;
     }
 };
 
-const processContent = (libsynPost, options) => { // eslint-disable-line no-shadow
+const processContent = (libsynPost, options) => {
+    // eslint-disable-line no-shadow
     const {useEmbed} = options;
 
     let html = libsynPost.description;
@@ -48,8 +49,8 @@ const processContent = (libsynPost, options) => { // eslint-disable-line no-shad
         return '';
     }
 
-    html = domUtils.processFragment(html, (parsed) => {
-        parsed.$('p').forEach((el) => {
+    html = domUtils.processFragment(html, parsed => {
+        parsed.$('p').forEach(el => {
             const content = serializeChildren(el).trim();
             const noInvisibleChars = stripInvisibleChars(content);
             const noInvisibleCharsLength = noInvisibleChars.length;
@@ -59,12 +60,12 @@ const processContent = (libsynPost, options) => { // eslint-disable-line no-shad
             }
         });
 
-        parsed.$('span[style="font-weight: 400;"]').forEach((el) => {
+        parsed.$('span[style="font-weight: 400;"]').forEach(el => {
             replaceWith(el, serializeChildren(el).trim());
         });
 
         // Wrap nested lists in HTML card
-        parsed.$('ul li ul, ol li ol, ol li ul, ul li ol').forEach((nestedList) => {
+        parsed.$('ul li ul, ol li ol, ol li ul, ul li ol').forEach(nestedList => {
             const outermost = domUtils.lastParent(nestedList, 'ul, ol') ?? nestedList;
 
             // Don't double-wrap
@@ -90,7 +91,8 @@ const processContent = (libsynPost, options) => { // eslint-disable-line no-shad
     return html;
 };
 
-const processPost = (libsynPost, author, tags, options, errors) => { // eslint-disable-line no-shadow
+const processPost = (libsynPost, author, tags, options, errors) => {
+    // eslint-disable-line no-shadow
     const {url, addTag, useFeedCategories, useItemKeywords} = options;
 
     const dateNow = new Date().toISOString();
@@ -131,7 +133,7 @@ const processPost = (libsynPost, author, tags, options, errors) => { // eslint-d
     }
 
     if (useFeedCategories && tags && tags.length) {
-        tags.forEach((tag) => {
+        tags.forEach(tag => {
             const tagSlug = slugify(tag);
 
             post.data.tags.push({
@@ -145,7 +147,7 @@ const processPost = (libsynPost, author, tags, options, errors) => { // eslint-d
     }
 
     if (useItemKeywords) {
-        libsynPost['itunes:keywords'].split(',').forEach((tag) => {
+        libsynPost['itunes:keywords'].split(',').forEach(tag => {
             const tagSlug = slugify(tag);
             const tagName = tag;
 
@@ -169,7 +171,8 @@ const processPost = (libsynPost, author, tags, options, errors) => { // eslint-d
 
     return post;
 };
-const processPosts = (posts, author, tags, options, errors) => { // eslint-disable-line no-shadow
+const processPosts = (posts, author, tags, options, errors) => {
+    // eslint-disable-line no-shadow
     const results = [];
     for (let i = 0; i < posts.length; i++) {
         const post = posts[i];
@@ -180,7 +183,8 @@ const processPosts = (posts, author, tags, options, errors) => { // eslint-disab
     return results;
 };
 
-const all = ({result, errors, options}) => { // eslint-disable-line no-shadow
+const all = ({result, errors, options}) => {
+    // eslint-disable-line no-shadow
     const output = {
         posts: processPosts(result.posts, result.author, result.tags, options, errors)
     };

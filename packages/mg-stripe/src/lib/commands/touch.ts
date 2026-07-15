@@ -8,12 +8,16 @@ import {Reporter, ReportingCategory} from '../importers/Reporter.js';
 export async function touch(options: Options) {
     const reporter = new Reporter(new ReportingCategory('', {skipTitle: true}));
 
-    Logger.shared.info(`The ${chalk.cyan('touch')} command will make small metadata changes to subscriptions in Stripe to force Ghost to recheck subscription statuses.`);
+    Logger.shared.info(
+        `The ${chalk.cyan('touch')} command will make small metadata changes to subscriptions in Stripe to force Ghost to recheck subscription statuses.`
+    );
     Logger.shared.newline();
 
     Logger.shared.startSpinner('');
     if (options.dryRun) {
-        Logger.shared.succeed(`Running ${chalk.green('touch')} command as ${chalk.green('DRY RUN')}. No Stripe data will be updated.`);
+        Logger.shared.succeed(
+            `Running ${chalk.green('touch')} command as ${chalk.green('DRY RUN')}. No Stripe data will be updated.`
+        );
     } else {
         Logger.shared.succeed(`Running ${chalk.green('touch')} command...`);
     }
@@ -43,12 +47,12 @@ export async function touch(options: Options) {
             Logger.shared.processSpinner('Updating subscriptions metadata...\n\n' + reporter.toString());
         });
 
-        let lastSubscriptionId: string|null = null;
+        let lastSubscriptionId: string | null = null;
         let totalSubscriptions = 0;
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            const subscriptions = await fromAccount.use((client) => {
+            const subscriptions = await fromAccount.use(client => {
                 return client.subscriptions.list({
                     limit: 100,
                     status: 'all',
@@ -58,7 +62,7 @@ export async function touch(options: Options) {
 
             for (const subscription of subscriptions.data) {
                 if (!options.dryRun) {
-                    await fromAccount.use((client) => {
+                    await fromAccount.use(client => {
                         if (subscription.status === 'canceled') {
                             // Can only update cancellation_details
                             return client.subscriptions.update(subscription.id, {
@@ -77,13 +81,15 @@ export async function touch(options: Options) {
                     });
 
                     // Wait 1s
-                    await new Promise((r) => {
+                    await new Promise(r => {
                         setTimeout(r, 1000);
                     });
                 }
 
                 totalSubscriptions += 1;
-                Logger.shared.processSpinner(`Updating subscriptions metadata... ${totalSubscriptions} subscriptions touched`);
+                Logger.shared.processSpinner(
+                    `Updating subscriptions metadata... ${totalSubscriptions} subscriptions touched`
+                );
             }
 
             if (subscriptions.data.length === 0) {

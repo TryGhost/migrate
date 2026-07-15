@@ -62,7 +62,10 @@ describe('Process WordPress REST API JSON', function () {
         assert.equal(data.slug, 'example');
         assert.equal(data.name, 'Example User');
         assert.equal(data.bio, 'Lorem ipsum small bio. And emoji 🤓 on the second line.');
-        assert.equal(data.profile_image, 'https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=500&d=blank&r=g');
+        assert.equal(
+            data.profile_image,
+            'https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=500&d=blank&r=g'
+        );
         assert.equal(data.website, 'https://example.com');
     });
 
@@ -90,7 +93,10 @@ describe('Process WordPress REST API JSON', function () {
             }
         });
 
-        assert.equal(user.data.profile_image, 'https://secure.gravatar.com/avatar/cb8419c1d471d55fbca0d63d1fb2b6ac?s=500&d=blank&r=g');
+        assert.equal(
+            user.data.profile_image,
+            'https://secure.gravatar.com/avatar/cb8419c1d471d55fbca0d63d1fb2b6ac?s=500&d=blank&r=g'
+        );
     });
 
     it('Can convert a multiple users', function () {
@@ -115,7 +121,10 @@ describe('Process WordPress REST API JSON', function () {
         assert.equal(data.slug, 'another-user');
         assert.equal(data.name, 'Another User');
         assert.equal(data.bio, 'A different user bio');
-        assert.equal(data.profile_image, 'https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=500&d=blank&r=g');
+        assert.equal(
+            data.profile_image,
+            'https://secure.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=500&d=blank&r=g'
+        );
         assert.equal(data.website, 'https://anothersite.com');
     });
 
@@ -146,7 +155,13 @@ describe('Process WordPress REST API JSON', function () {
 
     it('Can convert a custom post type', async function () {
         const users = [];
-        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: ['mycpt']};
+        const options = {
+            tags: true,
+            addTag: null,
+            featureImage: 'featuredmedia',
+            url: 'https://mysite.com',
+            cpt: ['mycpt']
+        };
         const post = await processor.processPost(singleCptPostfixture, users, options);
 
         const data = post.data;
@@ -162,7 +177,13 @@ describe('Process WordPress REST API JSON', function () {
 
     it('Can add a #wp-post tag when also converting a custom post type', async function () {
         const users = [];
-        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: ['mycpt']};
+        const options = {
+            tags: true,
+            addTag: null,
+            featureImage: 'featuredmedia',
+            url: 'https://mysite.com',
+            cpt: ['mycpt']
+        };
         const post = await processor.processPost(singlePostFixture, users, options);
 
         const data = post.data;
@@ -197,7 +218,13 @@ describe('Process WordPress REST API JSON', function () {
     it('Can include custom taxonomy terms as tags', async function () {
         const fixture = structuredClone(singlePostFixture);
         fixture._embedded['wp:term'].push([
-            {id: 350, link: 'https://mysite.com/country/czech-republic', name: 'Czech Republic', slug: 'czech-republic', taxonomy: 'country'},
+            {
+                id: 350,
+                link: 'https://mysite.com/country/czech-republic',
+                name: 'Czech Republic',
+                slug: 'czech-republic',
+                taxonomy: 'country'
+            },
             {id: 12, link: 'https://mysite.com/country/romania', name: 'Romania', slug: 'romania', taxonomy: 'country'}
         ]);
         fixture._embedded['wp:term'].push([
@@ -205,7 +232,13 @@ describe('Process WordPress REST API JSON', function () {
         ]);
 
         const users = [];
-        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', customTaxonomies: ['country']};
+        const options = {
+            tags: true,
+            addTag: null,
+            featureImage: 'featuredmedia',
+            url: 'https://mysite.com',
+            customTaxonomies: ['country']
+        };
         const post = await processor.processPost(fixture, users, options);
 
         const tagSlugs = post.data.tags.map(t => t.data.slug);
@@ -217,7 +250,13 @@ describe('Process WordPress REST API JSON', function () {
     it('Does not include custom taxonomy terms when customTaxonomies is not set', async function () {
         const fixture = structuredClone(singlePostFixture);
         fixture._embedded['wp:term'].push([
-            {id: 350, link: 'https://mysite.com/country/czech-republic', name: 'Czech Republic', slug: 'czech-republic', taxonomy: 'country'}
+            {
+                id: 350,
+                link: 'https://mysite.com/country/czech-republic',
+                name: 'Czech Republic',
+                slug: 'czech-republic',
+                taxonomy: 'country'
+            }
         ]);
 
         const users = [];
@@ -225,14 +264,25 @@ describe('Process WordPress REST API JSON', function () {
         const post = await processor.processPost(fixture, users, options);
 
         const tagSlugs = post.data.tags.map(t => t.data.slug);
-        assert.ok(!tagSlugs.includes('czech-republic'), 'should not include country term when customTaxonomies is not set');
+        assert.ok(
+            !tagSlugs.includes('czech-republic'),
+            'should not include country term when customTaxonomies is not set'
+        );
     });
 
     it('processTerms handles custom taxonomies directly', function () {
         const wpTerms = [
             [{id: 1, link: 'https://mysite.com/category/news', name: 'News', slug: 'news', taxonomy: 'category'}],
             [{id: 2, link: 'https://mysite.com/tag/tech', name: 'Tech', slug: 'tech', taxonomy: 'post_tag'}],
-            [{id: 350, link: 'https://mysite.com/country/romania', name: 'Romania', slug: 'romania', taxonomy: 'country'}]
+            [
+                {
+                    id: 350,
+                    link: 'https://mysite.com/country/romania',
+                    name: 'Romania',
+                    slug: 'romania',
+                    taxonomy: 'country'
+                }
+            ]
         ];
 
         const result = processor.processTerms(wpTerms, true, ['country']);
@@ -245,8 +295,24 @@ describe('Process WordPress REST API JSON', function () {
     it('processTerms handles multiple custom taxonomies', function () {
         const wpTerms = [
             [{id: 1, link: 'https://mysite.com/category/news', name: 'News', slug: 'news', taxonomy: 'category'}],
-            [{id: 350, link: 'https://mysite.com/country/romania', name: 'Romania', slug: 'romania', taxonomy: 'country'}],
-            [{id: 500, link: 'https://mysite.com/city/bucharest', name: 'Bucharest', slug: 'bucharest', taxonomy: 'city'}]
+            [
+                {
+                    id: 350,
+                    link: 'https://mysite.com/country/romania',
+                    name: 'Romania',
+                    slug: 'romania',
+                    taxonomy: 'country'
+                }
+            ],
+            [
+                {
+                    id: 500,
+                    link: 'https://mysite.com/city/bucharest',
+                    name: 'Bucharest',
+                    slug: 'bucharest',
+                    taxonomy: 'city'
+                }
+            ]
         ];
 
         const result = processor.processTerms(wpTerms, false, ['country', 'city']);
@@ -258,12 +324,21 @@ describe('Process WordPress REST API JSON', function () {
 
     it('Can remove first image in post if same as feature image', async function () {
         const users = [];
-        const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com', cpt: 'mycpt'};
+        const options = {
+            tags: true,
+            addTag: null,
+            featureImage: 'featuredmedia',
+            url: 'https://mysite.com',
+            cpt: 'mycpt'
+        };
         const post = await processor.processPost(singlePostWithDuplicateImagesfixture, users, options);
 
         const data = post.data;
 
-        assert.equal(data.html, '\n<h2>This is my strong headline thing.</h2>\n\n\n\n<p><em>Note: this article contains awesomeness</em></p>');
+        assert.equal(
+            data.html,
+            '\n<h2>This is my strong headline thing.</h2>\n\n\n\n<p><em>Note: this article contains awesomeness</em></p>'
+        );
     });
 
     it('Can use the first available author is none is set ', async function () {
@@ -309,7 +384,10 @@ describe('Process WordPress REST API JSON', function () {
 
         const data = post.data;
 
-        assert.equal(data.title, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua');
+        assert.equal(
+            data.title,
+            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua'
+        );
     });
 
     it('Can use excerpt selector & remove from content', async function () {
@@ -374,7 +452,9 @@ describe('Process excerpt text handling', function () {
     });
 
     it('Text with formatting tags', function () {
-        let processed = processor.processExcerpt('<p><p>Hello <b>world</b><br>\n\n\t\t\r\r <u>this</u>\r\n is my <span><em>excerpt</em></span></p></p>');
+        let processed = processor.processExcerpt(
+            '<p><p>Hello <b>world</b><br>\n\n\t\t\r\r <u>this</u>\r\n is my <span><em>excerpt</em></span></p></p>'
+        );
         assert.equal(processed, 'Hello world this is my excerpt');
     });
 
@@ -384,7 +464,8 @@ describe('Process excerpt text handling', function () {
     });
 
     it('Does not trim very long string', function () {
-        let theString = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum tempus ut massa at cursus. Donec at sapien felis. Pellentesque rutrum arcu velit, eu pulvinar lorem consectetur porta. Nulla elementum dapibus ornare. Fusce in imperdiet nisl. Nulla viverra dapibus sapien id consectetur. Duis pharetra tempor ante, vel bibendum felis blandit non. Duis ut sem ac ligula finibus mattis vitae eget turpis. Praesent a dictum diam, ut pretium arcu. Aenean venenatis, sapien et euismod tincidunt, ex massa venenatis ex, non pellentesque nibh augue ac dolor. In at commodo orci, ut viverra purus. Maecenas at leo rhoncus tellus aliquet porta eu ac libero. Maecenas sagittis quis enim sed bibendum. Praesent mi nunc, mattis eu mattis ut, porta rhoncus felis. Phasellus elit est, vehicula non elit sed, tempor elementum felis. Nullam imperdiet porttitor enim non ultrices. Pellentesque dignissim sem sed tempus lacinia. Proin gravida mollis justo sed convallis. Morbi mattis est tincidunt est pharetra pulvinar. Vivamus scelerisque gravida cursus. Pellentesque non lorem ultrices, eleifend enim sed, gravida erat. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque faucibus eget magna at facilisis. Praesent feugiat lacinia sem, eu blandit ipsum fermentum eu.';
+        let theString =
+            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum tempus ut massa at cursus. Donec at sapien felis. Pellentesque rutrum arcu velit, eu pulvinar lorem consectetur porta. Nulla elementum dapibus ornare. Fusce in imperdiet nisl. Nulla viverra dapibus sapien id consectetur. Duis pharetra tempor ante, vel bibendum felis blandit non. Duis ut sem ac ligula finibus mattis vitae eget turpis. Praesent a dictum diam, ut pretium arcu. Aenean venenatis, sapien et euismod tincidunt, ex massa venenatis ex, non pellentesque nibh augue ac dolor. In at commodo orci, ut viverra purus. Maecenas at leo rhoncus tellus aliquet porta eu ac libero. Maecenas sagittis quis enim sed bibendum. Praesent mi nunc, mattis eu mattis ut, porta rhoncus felis. Phasellus elit est, vehicula non elit sed, tempor elementum felis. Nullam imperdiet porttitor enim non ultrices. Pellentesque dignissim sem sed tempus lacinia. Proin gravida mollis justo sed convallis. Morbi mattis est tincidunt est pharetra pulvinar. Vivamus scelerisque gravida cursus. Pellentesque non lorem ultrices, eleifend enim sed, gravida erat. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque faucibus eget magna at facilisis. Praesent feugiat lacinia sem, eu blandit ipsum fermentum eu.';
         let processed = processor.processExcerpt(`<p><p>${theString}</p></p>`);
         assert.equal(processed, theString);
     });
@@ -397,7 +478,10 @@ describe('Process WordPress HTML', function () {
         const processed = await processor.processContent({html});
 
         // jsdom decodes HTML entities to their actual characters (&#8217; -> ')
-        assert.equal(processed, `<p>This is an example page. It\u2019s different from a blog post.</p><ul><li>Lorem</li><li>Ipsum</li></ul><p><strong>Dolor</strong> <a href="https://ghost.org" title="Try Ghost">sit</a> <em>amet</em>.</p>`);
+        assert.equal(
+            processed,
+            `<p>This is an example page. It\u2019s different from a blog post.</p><ul><li>Lorem</li><li>Ipsum</li></ul><p><strong>Dolor</strong> <a href="https://ghost.org" title="Try Ghost">sit</a> <em>amet</em>.</p>`
+        );
     });
 
     describe('Instagram embeds', function () {
@@ -445,7 +529,11 @@ describe('Process WordPress HTML', function () {
             const processed = await processor.processContent({html});
 
             // An iframe is still built (valid host), but the meta-characters are percent-encoded
-            assert.ok(processed.includes('<iframe src="https://www.instagram.com/p/abc%22%3E%3Cscript%3Ealert(1)%3C/script%3E/embed/captioned/"'));
+            assert.ok(
+                processed.includes(
+                    '<iframe src="https://www.instagram.com/p/abc%22%3E%3Cscript%3Ealert(1)%3C/script%3E/embed/captioned/"'
+                )
+            );
             // No raw HTML injection survives
             assert.ok(!processed.includes('"><script>'));
             assert.ok(!processed.includes('<script>alert(1)'));
@@ -457,7 +545,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: html--><ul><li>Lorem</li><li>Ipsum<ul><li>Sit Amet</li></ul></li></ul><!--kg-card-end: html-->');
+        assert.equal(
+            processed,
+            '<!--kg-card-begin: html--><ul><li>Lorem</li><li>Ipsum<ul><li>Sit Amet</li></ul></li></ul><!--kg-card-end: html-->'
+        );
     });
 
     it('Can wrap a nested ordered list in a HTML card', async function () {
@@ -465,7 +556,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: html--><ol><li>Lorem</li><li>Ipsum<ol><li>Sit Amet</li></ol></li></ol><!--kg-card-end: html-->');
+        assert.equal(
+            processed,
+            '<!--kg-card-begin: html--><ol><li>Lorem</li><li>Ipsum<ol><li>Sit Amet</li></ol></li></ol><!--kg-card-end: html-->'
+        );
     });
 
     it('Can wrap an ordered list with `type` attr in a HTML card', async function () {
@@ -473,7 +567,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: html--><ol type="a"><li>Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html-->');
+        assert.equal(
+            processed,
+            '<!--kg-card-begin: html--><ol type="a"><li>Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html-->'
+        );
     });
 
     it('Can wrap an ordered list with `start` attr in a HTML card', async function () {
@@ -481,7 +578,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: html--><ol start="2"><li>Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html-->');
+        assert.equal(
+            processed,
+            '<!--kg-card-begin: html--><ol start="2"><li>Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html-->'
+        );
     });
 
     it('Can wrap an list that contains a list item with a `value` attribute n a HTML card', async function () {
@@ -489,7 +589,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: html--><ul><li value="10">Lorem</li><li>Ipsum</li></ul><!--kg-card-end: html--><!--kg-card-begin: html--><ol><li value="10">Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html-->');
+        assert.equal(
+            processed,
+            '<!--kg-card-begin: html--><ul><li value="10">Lorem</li><li>Ipsum</li></ul><!--kg-card-end: html--><!--kg-card-begin: html--><ol><li value="10">Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html-->'
+        );
     });
 
     it('Can wrap an list in a div that contains a list item with a `value` attribute n a HTML card', async function () {
@@ -497,7 +600,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<div><!--kg-card-begin: html--><ul><li value="10">Lorem</li><li>Ipsum</li></ul><!--kg-card-end: html--><!--kg-card-begin: html--><ol><li value="10">Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html--></div>');
+        assert.equal(
+            processed,
+            '<div><!--kg-card-begin: html--><ul><li value="10">Lorem</li><li>Ipsum</li></ul><!--kg-card-end: html--><!--kg-card-begin: html--><ol><li value="10">Lorem</li><li>Ipsum</li></ol><!--kg-card-end: html--></div>'
+        );
     });
 
     it('Can leave image divs alone', async function () {
@@ -505,7 +611,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<div style="padding: 20px; background: #ff6600;"><img src="https://example.com/images/photo.jpg"></div>');
+        assert.equal(
+            processed,
+            '<div style="padding: 20px; background: #ff6600;"><img src="https://example.com/images/photo.jpg"></div>'
+        );
     });
 
     it('Can wrap styled elements in a HTML card', async function () {
@@ -513,7 +622,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: html--><div style="padding: 20px; background: #ff6600;"><p>Hello</p></div><!--kg-card-end: html-->');
+        assert.equal(
+            processed,
+            '<!--kg-card-begin: html--><div style="padding: 20px; background: #ff6600;"><p>Hello</p></div><!--kg-card-end: html-->'
+        );
     });
 
     it('Can find & update smaller images', async function () {
@@ -521,7 +633,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/another-image.png">');
+        assert.equal(
+            processed,
+            '<img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/another-image.png">'
+        );
     });
 
     it('Can handle images in .wp-caption div', async function () {
@@ -529,7 +644,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<figure class="kg-card kg-image-card kg-card-hascaption"><img src="http:/example.com/wp-content/uploads/2015/04/photo.jpg" class="kg-image" alt="My photo alt" loading="lazy"><figcaption>My photo caption</figcaption></figure>');
+        assert.equal(
+            processed,
+            '<figure class="kg-card kg-image-card kg-card-hascaption"><img src="http:/example.com/wp-content/uploads/2015/04/photo.jpg" class="kg-image" alt="My photo alt" loading="lazy"><figcaption>My photo caption</figcaption></figure>'
+        );
     });
 
     it('Can find & remove links around images that link to the same image', async function () {
@@ -537,7 +655,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><a href="https://mysite.com"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png"></a><a href="https://mysite.com/wp-content/uploads/2020/06/another-image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png"></a>');
+        assert.equal(
+            processed,
+            '<img src="https://mysite.com/wp-content/uploads/2020/06/image.png"><a href="https://mysite.com"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png"></a><a href="https://mysite.com/wp-content/uploads/2020/06/another-image.png"><img src="https://mysite.com/wp-content/uploads/2020/06/image.png"></a>'
+        );
     });
 
     it('Can handle a single button element', async function () {
@@ -546,42 +667,60 @@ describe('Process WordPress HTML', function () {
         </div>`;
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<div class="kg-card kg-button-card kg-align-center"><a href="https://ghost.org" class="kg-btn kg-btn-accent">Ghost</a></div>');
+        assert.equal(
+            processed,
+            '<div class="kg-card kg-button-card kg-align-center"><a href="https://ghost.org" class="kg-btn kg-btn-accent">Ghost</a></div>'
+        );
     });
 
     it('Can handle a multiple button element', async function () {
         const html = `<div class="wp-container-2 wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="Ghost.org">Hello</a></div><div class="wp-block-button"><a class="wp-block-button__link" href="apple.com">World</a></div></div>`;
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<div class="kg-card kg-button-card kg-align-left"><a href="Ghost.org" class="kg-btn kg-btn-accent">Hello</a></div><div class="kg-card kg-button-card kg-align-left"><a href="apple.com" class="kg-btn kg-btn-accent">World</a></div>');
+        assert.equal(
+            processed,
+            '<div class="kg-card kg-button-card kg-align-left"><a href="Ghost.org" class="kg-btn kg-btn-accent">Hello</a></div><div class="kg-card kg-button-card kg-align-left"><a href="apple.com" class="kg-btn kg-btn-accent">World</a></div>'
+        );
     });
 
     it('Can process audio files', async function () {
         const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3"></audio><figcaption>My audio file</figcaption></figure>`;
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio style="width:100%" controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3"></audio><figcaption>My audio file</figcaption></figure><!--kg-card-end: html-->');
+        assert.equal(
+            processed,
+            '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio style="width:100%" controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3"></audio><figcaption>My audio file</figcaption></figure><!--kg-card-end: html-->'
+        );
     });
 
     it('Can process autoplay audio files', async function () {
         const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay=""></audio><figcaption>My autoplay audio file</figcaption></figure>`;
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio style="width:100%" controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay></audio><figcaption>My autoplay audio file</figcaption></figure><!--kg-card-end: html-->');
+        assert.equal(
+            processed,
+            '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio style="width:100%" controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay></audio><figcaption>My autoplay audio file</figcaption></figure><!--kg-card-end: html-->'
+        );
     });
 
     it('Can process looped audio files', async function () {
         const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3" loop=""></audio><figcaption>My looped audio file</figcaption></figure>`;
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio style="width:100%" controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" loop></audio><figcaption>My looped audio file</figcaption></figure><!--kg-card-end: html-->');
+        assert.equal(
+            processed,
+            '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio style="width:100%" controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" loop></audio><figcaption>My looped audio file</figcaption></figure><!--kg-card-end: html-->'
+        );
     });
 
     it('Can process looped autoplay audio files', async function () {
         const html = `<figure class="wp-block-audio"><audio controls="" src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay="" loop=""></audio><figcaption>My looped autoplay audio file</figcaption></figure>`;
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio style="width:100%" controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay loop></audio><figcaption>My looped autoplay audio file</figcaption></figure><!--kg-card-end: html-->');
+        assert.equal(
+            processed,
+            '<!--kg-card-begin: html--><figure class="wp-block-audio"><audio style="width:100%" controls src="http://example.com/wp-content/uploads/2021/12/audio.mp3" autoplay loop></audio><figcaption>My looped autoplay audio file</figcaption></figure><!--kg-card-end: html-->'
+        );
     });
 
     it('Can remove elements by CSS selector', async function () {
@@ -591,11 +730,15 @@ describe('Process WordPress HTML', function () {
         };
         const processed = await processor.processContent({html, options});
 
-        assert.equal(processed, '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sagittis vel purus sed placerat.</p><p>Proin est justo, mollis non turpis et, suscipit consequat orci.</p>');
+        assert.equal(
+            processed,
+            '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sagittis vel purus sed placerat.</p><p>Proin est justo, mollis non turpis et, suscipit consequat orci.</p>'
+        );
     });
 
     it('Can change image data-gif to src', async function () {
-        const html = '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-gif="https://example.com/wp-content/uploads/2022/08/3.gif" />';
+        const html =
+            '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-gif="https://example.com/wp-content/uploads/2022/08/3.gif" />';
 
         const processed = await processor.processContent({html});
 
@@ -603,7 +746,8 @@ describe('Process WordPress HTML', function () {
     });
 
     it('Can change image data-src to src', async function () {
-        const html = '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="https://example.com/wp-content/uploads/2022/08/3.jpg" />';
+        const html =
+            '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="https://example.com/wp-content/uploads/2022/08/3.jpg" />';
 
         const processed = await processor.processContent({html});
 
@@ -615,7 +759,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<div class="elementor-image"><img width="700" height="624" src="https://www.example.com.com/wp-content/uploads/2023/02/sample.png" class="attachment-medium_large size-medium_large wp-image-1234 lazyload" alt data-srcset="https://www.example.com.com/wp-content/uploads/2023/02/sample.png 700w, https://www.restlesscommunications.com/wp-content/uploads/2023/02/sample-300x267.png 300w"></div>');
+        assert.equal(
+            processed,
+            '<div class="elementor-image"><img width="700" height="624" src="https://www.example.com.com/wp-content/uploads/2023/02/sample.png" class="attachment-medium_large size-medium_large wp-image-1234 lazyload" alt data-srcset="https://www.example.com.com/wp-content/uploads/2023/02/sample.png 700w, https://www.restlesscommunications.com/wp-content/uploads/2023/02/sample-300x267.png 300w"></div>'
+        );
     });
 
     it('Can remove duplicate <noscript> images with data-src (type 1)', async function () {
@@ -623,7 +770,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<div class="elementor-image"><img width="700" height="624" src="https://www.example.com.com/wp-content/uploads/2023/02/sample.png" class="attachment-medium_large size-medium_large wp-image-1234 lazyload" alt data-srcset="https://www.example.com.com/wp-content/uploads/2023/02/sample.png 700w, https://www.restlesscommunications.com/wp-content/uploads/2023/02/sample-300x267.png 300w"></div>');
+        assert.equal(
+            processed,
+            '<div class="elementor-image"><img width="700" height="624" src="https://www.example.com.com/wp-content/uploads/2023/02/sample.png" class="attachment-medium_large size-medium_large wp-image-1234 lazyload" alt data-srcset="https://www.example.com.com/wp-content/uploads/2023/02/sample.png 700w, https://www.restlesscommunications.com/wp-content/uploads/2023/02/sample-300x267.png 300w"></div>'
+        );
     });
 
     it('Can remove duplicate <noscript> images with data-src (type 2)', async function () {
@@ -631,7 +781,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<img class="alignnone wp-image-1234 size-full lazyload" src="https://example.com/wp-content/uploads/2021/photo.jpg" alt="Photo description" width="1000" height="1500" data-srcset="https://i0.wp.com/example.com/wp-content/uploads/2021/photo.jpg?w=1000&amp;ssl=1 1000w, https://i0.wp.com/example.com/wp-content/uploads/2021/photo.jpg?resize=200%2C300&amp;ssl=1 200w, https://i0.wp.com/example.com/wp-content/uploads/2021/photo.jpg?resize=768%2C1152&amp;ssl=1 768w, https://i0.wp.com/example.com/wp-content/uploads/2021/photo.jpg?resize=600%2C900&amp;ssl=1 600w">');
+        assert.equal(
+            processed,
+            '<img class="alignnone wp-image-1234 size-full lazyload" src="https://example.com/wp-content/uploads/2021/photo.jpg" alt="Photo description" width="1000" height="1500" data-srcset="https://i0.wp.com/example.com/wp-content/uploads/2021/photo.jpg?w=1000&amp;ssl=1 1000w, https://i0.wp.com/example.com/wp-content/uploads/2021/photo.jpg?resize=200%2C300&amp;ssl=1 200w, https://i0.wp.com/example.com/wp-content/uploads/2021/photo.jpg?resize=768%2C1152&amp;ssl=1 768w, https://i0.wp.com/example.com/wp-content/uploads/2021/photo.jpg?resize=600%2C900&amp;ssl=1 600w">'
+        );
     });
 
     it('Can remove duplicate <noscript> images with data-src (type 3)', async function () {
@@ -639,7 +792,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<img class="alignnone size-large wp-image-22700 lazyload" src="https://example.com/wp-content/uploads/2020/05/photo.jpg" alt="My photo" width="1000" height="1497" data-srcset="https://i0.wp.com/example.com/wp-content/uploads/2020/05/photo.jpg?resize=1000%2C1497&amp;ssl=1 1000w, https://i0.wp.com/example.com/wp-content/uploads/2020/05/photo.jpg?resize=200%2C300&amp;ssl=1 200w, https://i0.wp.com/example.com/wp-content/uploads/2020/05/photo.jpg?resize=768%2C1150&amp;ssl=1 768w, https://i0.wp.com/example.com/wp-content/uploads/2020/05/photo.jpg?resize=600%2C898&amp;ssl=1 600w, https://i0.wp.com/example.com/wp-content/uploads/2020/05/photo.jpg?w=1002&amp;ssl=1 1002w">');
+        assert.equal(
+            processed,
+            '<img class="alignnone size-large wp-image-22700 lazyload" src="https://example.com/wp-content/uploads/2020/05/photo.jpg" alt="My photo" width="1000" height="1497" data-srcset="https://i0.wp.com/example.com/wp-content/uploads/2020/05/photo.jpg?resize=1000%2C1497&amp;ssl=1 1000w, https://i0.wp.com/example.com/wp-content/uploads/2020/05/photo.jpg?resize=200%2C300&amp;ssl=1 200w, https://i0.wp.com/example.com/wp-content/uploads/2020/05/photo.jpg?resize=768%2C1150&amp;ssl=1 768w, https://i0.wp.com/example.com/wp-content/uploads/2020/05/photo.jpg?resize=600%2C898&amp;ssl=1 600w, https://i0.wp.com/example.com/wp-content/uploads/2020/05/photo.jpg?w=1002&amp;ssl=1 1002w">'
+        );
     });
 
     it('Can conbine <p> tags in <blockquote>s', async function () {
@@ -655,7 +811,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<blockquote><p><em>Lorem ipsum,<br>dolor simet.<br>Lorem Ipsum.<br>Dolor Simet.</em><br><br>Person Name, Role. <em>Company</em>. Country.</p></blockquote>');
+        assert.equal(
+            processed,
+            '<blockquote><p><em>Lorem ipsum,<br>dolor simet.<br>Lorem Ipsum.<br>Dolor Simet.</em><br><br>Person Name, Role. <em>Company</em>. Country.</p></blockquote>'
+        );
     });
 
     it('Can convert YouTube embeds from text', async function () {
@@ -665,7 +824,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<figure class="kg-card kg-embed-card"><iframe width="160" height="90" src="https://www.youtube.com/embed/1234abcd123?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></figure>');
+        assert.equal(
+            processed,
+            '<figure class="kg-card kg-embed-card"><iframe width="160" height="90" src="https://www.youtube.com/embed/1234abcd123?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></figure>'
+        );
     });
 
     it('Can convert YouTube embeds from text with figcaption', async function () {
@@ -673,7 +835,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<figure class="kg-card kg-embed-card"><iframe width="160" height="90" src="https://www.youtube.com/embed/abcd1234?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe><figcaption>Lorem ipsum video figcapion.</figcaption></figure>');
+        assert.equal(
+            processed,
+            '<figure class="kg-card kg-embed-card"><iframe width="160" height="90" src="https://www.youtube.com/embed/abcd1234?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe><figcaption>Lorem ipsum video figcapion.</figcaption></figure>'
+        );
     });
 
     it('Can convert YouTube embeds from iframe src', async function () {
@@ -681,7 +846,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<figure class="kg-card kg-embed-card"><iframe width="160" height="90" src="https://www.youtube.com/embed/1234abcd123?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></figure>');
+        assert.equal(
+            processed,
+            '<figure class="kg-card kg-embed-card"><iframe width="160" height="90" src="https://www.youtube.com/embed/1234abcd123?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></figure>'
+        );
     });
 
     it('Can convert Twitter embed', async function () {
@@ -689,12 +857,15 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><a href="https://twitter.com/example/status/12345678"></a></blockquote><script charset="utf-8" src="https://platform.twitter.com/widgets.js" async></script></figure><!--kg-card-end: embed-->');
+        assert.equal(
+            processed,
+            '<!--kg-card-begin: embed--><figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><a href="https://twitter.com/example/status/12345678"></a></blockquote><script charset="utf-8" src="https://platform.twitter.com/widgets.js" async></script></figure><!--kg-card-end: embed-->'
+        );
     });
 
     it('Can convert WP post embed', async function () {
         const mockFileCache = {
-            hasFile: (filename) => {
+            hasFile: filename => {
                 // Filename is derived from bookmarkHref: https://www.example.org/2025/04/03/lorem-ipsum/
                 return filename === 'https___www_example_org_2025_04_03_lorem_ipsum_.json';
             },
@@ -711,11 +882,18 @@ describe('Process WordPress HTML', function () {
 
         const html = `<figure class="wp-block-embed is-type-wp-embed is-provider-the-example wp-block-embed-the-example"><div class="wp-block-embed__wrapper"><blockquote class="wp-embedded-content" data-secret="qwertyTVih"><a href="https://www.example.org/2025/04/03/lorem-ipsum/">Lorem Ipsum</a></blockquote><iframe loading="lazy" class="wp-embedded-content" sandbox="allow-scripts" security="restricted" style="position: absolute; visibility: hidden;" title="&#8220;Lorem Ipsum&#8221; &#8212; The Urbanist" src="https://www.example.org/2025/04/03/lorem-ipsum/embed/#?secret=abcd#?secret=qwertyTVih" data-secret="qwertyTVih" width="600" height="338" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe></div></figure>`;
 
-        const processed = await processor.processContent({html, fileCache: mockFileCache, options: {
-            scrape: ['all']
-        }});
+        const processed = await processor.processContent({
+            html,
+            fileCache: mockFileCache,
+            options: {
+                scrape: ['all']
+            }
+        });
 
-        assert.equal(processed, '<!--kg-card-begin: html--><figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://www.example.org/2025/04/03/lorem-ipsum/"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Lorem Ipsum</div><div class="kg-bookmark-description">A sample description</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://www.example.org/favicon.ico" alt><span class="kg-bookmark-author">Example Publisher</span></div></div><div class="kg-bookmark-thumbnail"><img src="https://www.example.org/images/featured.jpg" alt></div></a></figure><!--kg-card-end: html-->');
+        assert.equal(
+            processed,
+            '<!--kg-card-begin: html--><figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://www.example.org/2025/04/03/lorem-ipsum/"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Lorem Ipsum</div><div class="kg-bookmark-description">A sample description</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://www.example.org/favicon.ico" alt><span class="kg-bookmark-author">Example Publisher</span></div></div><div class="kg-bookmark-thumbnail"><img src="https://www.example.org/images/featured.jpg" alt></div></a></figure><!--kg-card-end: html-->'
+        );
     });
 
     it('Can convert WP post embed to link when scrape fails', async function () {
@@ -728,9 +906,13 @@ describe('Process WordPress HTML', function () {
 
         const html = `<figure class="wp-block-embed is-type-wp-embed is-provider-the-example wp-block-embed-the-example"><div class="wp-block-embed__wrapper"><blockquote class="wp-embedded-content" data-secret="qwertyTVih"><a href="https://www.example.org/2025/04/03/lorem-ipsum/">Lorem Ipsum</a></blockquote><iframe loading="lazy" class="wp-embedded-content" sandbox="allow-scripts" security="restricted" style="position: absolute; visibility: hidden;" title="&#8220;Lorem Ipsum&#8221; &#8212; The Urbanist" src="https://www.example.org/2025/04/03/lorem-ipsum/embed/#?secret=abcd#?secret=qwertyTVih" data-secret="qwertyTVih" width="600" height="338" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe></div></figure>`;
 
-        const processed = await processor.processContent({html, fileCache: mockFileCache, options: {
-            scrape: ['all']
-        }});
+        const processed = await processor.processContent({
+            html,
+            fileCache: mockFileCache,
+            options: {
+                scrape: ['all']
+            }
+        });
 
         assert.equal(processed, '<p><a href="https://www.example.org/2025/04/03/lorem-ipsum/">Lorem Ipsum</a></p>');
     });
@@ -777,7 +959,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo1.jpg" width="500" height="375" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo2.jpg" width="500" height="375" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo4.jpg" width="500" height="375" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo3.jpg" width="500" height="375" loading="lazy" alt></div></div></div></figure>');
+        assert.equal(
+            processed,
+            '<figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo1.jpg" width="500" height="375" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo2.jpg" width="500" height="375" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo4.jpg" width="500" height="375" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com/wp-content/uploads/2024/07/photo3.jpg" width="500" height="375" loading="lazy" alt></div></div></div></figure>'
+        );
     });
 
     it('Can convert a figure-based gallery', async function () {
@@ -796,7 +981,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.org/wp-content/uploads/2021/01/landscape.jpg" width="1000" height="667" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.org/wp-content/uploads/2020/12/portrait.jpg" width="1000" height="750" loading="lazy" alt></div></div></div></figure>');
+        assert.equal(
+            processed,
+            '<figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.org/wp-content/uploads/2021/01/landscape.jpg" width="1000" height="667" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.org/wp-content/uploads/2020/12/portrait.jpg" width="1000" height="750" loading="lazy" alt></div></div></div></figure>'
+        );
     });
 
     it('Outputs unchanged HTML is `rawHtml` option is set', async function () {
@@ -804,7 +992,10 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html, options: {rawHtml: true}});
 
-        assert.equal(processed, '<!--kg-card-begin: html--><p style="font-weight: 400;">Hello</p><img data-src="https://example.com/image.jpg" /><!--kg-card-end: html-->');
+        assert.equal(
+            processed,
+            '<!--kg-card-begin: html--><p style="font-weight: 400;">Hello</p><img data-src="https://example.com/image.jpg" /><!--kg-card-end: html-->'
+        );
     });
 
     it('Adds a <code> tag to syntax highlighted code', async function () {
@@ -815,10 +1006,13 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<pre class="wp-block-syntaxhighlighter-code"><code>config:\n' +
-        '  color:\n' +
-        '    green:\n' +
-        '      sage: true</code></pre>');
+        assert.equal(
+            processed,
+            '<pre class="wp-block-syntaxhighlighter-code"><code>config:\n' +
+                '  color:\n' +
+                '    green:\n' +
+                '      sage: true</code></pre>'
+        );
     });
 
     it('Does not add a <code> tag to syntax highlighted code', async function () {
@@ -829,14 +1023,18 @@ describe('Process WordPress HTML', function () {
 
         const processed = await processor.processContent({html});
 
-        assert.equal(processed, '<pre class="wp-block-syntaxhighlighter-code"><code>config:\n' +
-        '  color:\n' +
-        '    green:\n' +
-        '      sage: true</code></pre>');
+        assert.equal(
+            processed,
+            '<pre class="wp-block-syntaxhighlighter-code"><code>config:\n' +
+                '  color:\n' +
+                '    green:\n' +
+                '      sage: true</code></pre>'
+        );
     });
 
     it('Can remove bold and italic tags from headings', async function () {
-        const html = '<h1><strong>Bold Heading</strong></h1><h2><b>Also Bold</b></h2><h3><em>Italic Heading</em></h3><h4><i>Also Italic</i></h4>';
+        const html =
+            '<h1><strong>Bold Heading</strong></h1><h2><b>Also Bold</b></h2><h3><em>Italic Heading</em></h3><h4><i>Also Italic</i></h4>';
 
         const processed = await processor.processContent({html});
 
@@ -846,19 +1044,27 @@ describe('Process WordPress HTML', function () {
 
 describe('Process shortcodes', function () {
     it('Convert convert a caption shortcode to a WP image figure', async function () {
-        let html = 'Hello [caption id="attachment_6" align="alignright" width="300"]<img src="http://example.com/wp-content/uploads/2010/07/image.jpg" alt="Image of a thing" title="The Great Image" width="300" height="205" class="size-medium wp-image-6" />[/caption] World';
+        let html =
+            'Hello [caption id="attachment_6" align="alignright" width="300"]<img src="http://example.com/wp-content/uploads/2010/07/image.jpg" alt="Image of a thing" title="The Great Image" width="300" height="205" class="size-medium wp-image-6" />[/caption] World';
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        assert.equal(convertedHtml, 'Hello <figure class="kg-card kg-image-card"><img src="http://example.com/wp-content/uploads/2010/07/image.jpg" class="kg-image" alt="Image of a thing" loading="lazy" title="The Great Image" width="300" height="205"></figure> World');
+        assert.equal(
+            convertedHtml,
+            'Hello <figure class="kg-card kg-image-card"><img src="http://example.com/wp-content/uploads/2010/07/image.jpg" class="kg-image" alt="Image of a thing" loading="lazy" title="The Great Image" width="300" height="205"></figure> World'
+        );
     });
 
     it('Convert convert a caption shortcode with text to a WP image figure', async function () {
-        let html = 'Hello [caption id="attachment_6" align="alignright" width="300"]<img src="http://example.com/wp-content/uploads/2010/07/image.jpg" alt="Image of a thing" title="The Great Image" width="300" height="205" class="size-medium wp-image-6" /> The Great Image[/caption] World';
+        let html =
+            'Hello [caption id="attachment_6" align="alignright" width="300"]<img src="http://example.com/wp-content/uploads/2010/07/image.jpg" alt="Image of a thing" title="The Great Image" width="300" height="205" class="size-medium wp-image-6" /> The Great Image[/caption] World';
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        assert.equal(convertedHtml, 'Hello <figure class="kg-card kg-image-card kg-card-hascaption"><img src="http://example.com/wp-content/uploads/2010/07/image.jpg" class="kg-image" alt="Image of a thing" loading="lazy" title="The Great Image" width="300" height="205"><figcaption>The Great Image</figcaption></figure> World');
+        assert.equal(
+            convertedHtml,
+            'Hello <figure class="kg-card kg-image-card kg-card-hascaption"><img src="http://example.com/wp-content/uploads/2010/07/image.jpg" class="kg-image" alt="Image of a thing" loading="lazy" title="The Great Image" width="300" height="205"><figcaption>The Great Image</figcaption></figure> World'
+        );
     });
 
     it('Will convert $ to entity in caption shortcode', async function () {
@@ -870,7 +1076,10 @@ describe('Process shortcodes', function () {
 
         let convertedHtml = await processor.processShortcodes({html, options});
 
-        assert.equal(convertedHtml, '<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://example.com/image.jpg" class="kg-image" alt="Lorem ipsum &quot;dolor &amp;#36;&amp;#36;&amp;#36;&quot;" loading="lazy" width="680" height="355"><figcaption>Person Name</figcaption></figure>');
+        assert.equal(
+            convertedHtml,
+            '<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://example.com/image.jpg" class="kg-image" alt="Lorem ipsum &quot;dolor &amp;#36;&amp;#36;&amp;#36;&quot;" loading="lazy" width="680" height="355"><figcaption>Person Name</figcaption></figure>'
+        );
     });
 
     it('Can convert vc_separator to <hr>', async function () {
@@ -882,17 +1091,31 @@ describe('Process shortcodes', function () {
     });
 
     it('Can convert vc_btn to WP button element', async function () {
-        let html = '[vc_btn title="Read more 1" shape="square" color="black" align="center" link="https%3A%2F%2Fexample.com"] [vc_btn title="Read more 2" shape="square" color="black" align="center" link="https://example.com"] [vc_btn title="Read more 3" shape="square" color="black" align="center" link="url:https%3A%2F%2Fexample.com"]';
+        let html =
+            '[vc_btn title="Read more 1" shape="square" color="black" align="center" link="https%3A%2F%2Fexample.com"] [vc_btn title="Read more 2" shape="square" color="black" align="center" link="https://example.com"] [vc_btn title="Read more 3" shape="square" color="black" align="center" link="url:https%3A%2F%2Fexample.com"]';
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        assert.ok(convertedHtml.includes('<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="https://example.com">Read more 1</a></div></div>'));
-        assert.ok(convertedHtml.includes('<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="https://example.com">Read more 2</a></div></div>'));
-        assert.ok(convertedHtml.includes('<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="https://example.com">Read more 3</a></div></div>'));
+        assert.ok(
+            convertedHtml.includes(
+                '<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="https://example.com">Read more 1</a></div></div>'
+            )
+        );
+        assert.ok(
+            convertedHtml.includes(
+                '<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="https://example.com">Read more 2</a></div></div>'
+            )
+        );
+        assert.ok(
+            convertedHtml.includes(
+                '<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="https://example.com">Read more 3</a></div></div>'
+            )
+        );
     });
 
     it('Can unwrap common layout shortcodes', async function () {
-        let html = 'Hello [vc_row][vc_column][vc_column_text]Lorem[/vc_column_text][/vc_column][vc_column][vc_column_text]Ipsum[/vc_column_text][/vc_column][/vc_row] World';
+        let html =
+            'Hello [vc_row][vc_column][vc_column_text]Lorem[/vc_column_text][/vc_column][vc_column][vc_column_text]Ipsum[/vc_column_text][/vc_column][/vc_row] World';
 
         let convertedHtml = await processor.processShortcodes({html});
 
@@ -900,7 +1123,8 @@ describe('Process shortcodes', function () {
     });
 
     it('Can remove gravityform shortcodes', async function () {
-        let html = 'Hello [gravityform id="1" title="false" description="false" ajax="true" tabindex="49" field_values="check=First Choice,Second Choice"] World [gravityform id="1" title="false" description="false" ajax="true" tabindex="49" field_values="check=First Choice,Second Choice"/]';
+        let html =
+            'Hello [gravityform id="1" title="false" description="false" ajax="true" tabindex="49" field_values="check=First Choice,Second Choice"] World [gravityform id="1" title="false" description="false" ajax="true" tabindex="49" field_values="check=First Choice,Second Choice"/]';
 
         let convertedHtml = await processor.processShortcodes({html});
 
@@ -916,7 +1140,8 @@ describe('Process shortcodes', function () {
     });
 
     it('Can remove tested Divi shortcodes', async function () {
-        let html = '<p>[et_pb_section][et_pb_column][et_pb_row]Row 1[/et_pb_row][et_pb_row]Row 2[/et_pb_row][/et_pb_column][/et_pb_section]</p>';
+        let html =
+            '<p>[et_pb_section][et_pb_column][et_pb_row]Row 1[/et_pb_row][et_pb_row]Row 2[/et_pb_row][/et_pb_column][/et_pb_section]</p>';
 
         let convertedHtml = await processor.processShortcodes({html});
 
@@ -936,7 +1161,10 @@ describe('Process shortcodes', function () {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        assert.equal(convertedHtml, '<iframe src="https://example.com?e=123456" height="200" style="border:0; width: 100%;" loading="lazy"></iframe>');
+        assert.equal(
+            convertedHtml,
+            '<iframe src="https://example.com?e=123456" height="200" style="border:0; width: 100%;" loading="lazy"></iframe>'
+        );
     });
 
     it('Can handle code shortcodes', async function () {
@@ -950,9 +1178,12 @@ const hello () => {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        assert.equal(convertedHtml, '<figure><pre class=""><code>const hello () => {\n' +
-        '  return new MyClass();\n' +
-        '}</code></pre></figure>');
+        assert.equal(
+            convertedHtml,
+            '<figure><pre class=""><code>const hello () => {\n' +
+                '  return new MyClass();\n' +
+                '}</code></pre></figure>'
+        );
     });
 
     it('Can handle sourcecode shortcodes', async function () {
@@ -966,9 +1197,12 @@ const hello () => {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        assert.equal(convertedHtml, '<figure><pre class=""><code>const hello () => {\n' +
-        '  return new MyClass();\n' +
-        '}</code></pre></figure>');
+        assert.equal(
+            convertedHtml,
+            '<figure><pre class=""><code>const hello () => {\n' +
+                '  return new MyClass();\n' +
+                '}</code></pre></figure>'
+        );
     });
 
     it('Can handle sourcecode shortcodes with language & title', async function () {
@@ -982,9 +1216,12 @@ const hello () => {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        assert.equal(convertedHtml, '<figure><pre class="language-js"><code>const hello () => {\n' +
-        '  return new MyClass();\n' +
-        '}</code></pre><figcaption>My method</figcaption></figure>');
+        assert.equal(
+            convertedHtml,
+            '<figure><pre class="language-js"><code>const hello () => {\n' +
+                '  return new MyClass();\n' +
+                '}</code></pre><figcaption>My method</figcaption></figure>'
+        );
     });
 
     it('Can handle audio shortcodes', async function () {
@@ -992,7 +1229,10 @@ const hello () => {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        assert.equal(convertedHtml, '<!--kg-card-begin: html--><audio controls src="/path/to/file.mp3" preload="metadata"></audio><!--kg-card-end: html--> <!--kg-card-begin: html--><audio controls src="/path/to/file.ogg" preload="metadata"></audio><!--kg-card-end: html-->');
+        assert.equal(
+            convertedHtml,
+            '<!--kg-card-begin: html--><audio controls src="/path/to/file.mp3" preload="metadata"></audio><!--kg-card-end: html--> <!--kg-card-begin: html--><audio controls src="/path/to/file.ogg" preload="metadata"></audio><!--kg-card-end: html-->'
+        );
     });
 
     it('Can handle gallery shortcodes', async function () {
@@ -1101,7 +1341,10 @@ const hello () => {
 
         let convertedHtml = await processor.processShortcodes({html, options});
 
-        assert.equal(convertedHtml, '<figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/1.jpg" width="1200" height="800" loading="lazy" alt="Image 123 alt text"></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/2.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/3.jpg" width="1200" height="800" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/4.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/5.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/6.jpg" width="1200" height="800" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/7.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/8.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/9.jpg" width="1200" height="800" loading="lazy" alt></div></div></div></figure><figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/10.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/11.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/12.jpg" width="1200" height="800" loading="lazy" alt></div></div></div></figure>');
+        assert.equal(
+            convertedHtml,
+            '<figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/1.jpg" width="1200" height="800" loading="lazy" alt="Image 123 alt text"></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/2.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/3.jpg" width="1200" height="800" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/4.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/5.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/6.jpg" width="1200" height="800" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/7.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/8.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/9.jpg" width="1200" height="800" loading="lazy" alt></div></div></div></figure><figure class="kg-card kg-gallery-card kg-width-wide"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/10.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/11.jpg" width="1200" height="800" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://example.com.com/wp-content/uploads/2025/02/24/12.jpg" width="1200" height="800" loading="lazy" alt></div></div></div></figure>'
+        );
     });
 
     it('Will skip gallery shortcodes if no attachments avaliable', async function () {
@@ -1121,15 +1364,22 @@ const hello () => {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        assert.equal(convertedHtml, 'Hello <iframe loading="lazy" title="" width="160" height="90" src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe> World');
+        assert.equal(
+            convertedHtml,
+            'Hello <iframe loading="lazy" title="" width="160" height="90" src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe> World'
+        );
     });
 
     it('Can convert button shortcode to Ghost button', async function () {
-        let html = '[button href="https://example.com/story" primary="true" centered="true" newwindow="true"]<em><strong>Read the full story on Studio Notes</strong></em>[/button]';
+        let html =
+            '[button href="https://example.com/story" primary="true" centered="true" newwindow="true"]<em><strong>Read the full story on Studio Notes</strong></em>[/button]';
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        assert.equal(convertedHtml, '<div class="kg-card kg-button-card kg-align-center"><a href="https://example.com/story" class="kg-btn kg-btn-accent"><em><strong>Read the full story on Studio Notes</strong></em></a></div>');
+        assert.equal(
+            convertedHtml,
+            '<div class="kg-card kg-button-card kg-align-center"><a href="https://example.com/story" class="kg-btn kg-btn-accent"><em><strong>Read the full story on Studio Notes</strong></em></a></div>'
+        );
     });
 
     it('Can convert button shortcode without centered', async function () {
@@ -1137,7 +1387,10 @@ const hello () => {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        assert.equal(convertedHtml, '<div class="kg-card kg-button-card kg-align-left"><a href="https://example.com/story" class="kg-btn kg-btn-accent">Click here</a></div>');
+        assert.equal(
+            convertedHtml,
+            '<div class="kg-card kg-button-card kg-align-left"><a href="https://example.com/story" class="kg-btn kg-btn-accent">Click here</a></div>'
+        );
     });
 
     it('Can handle button shortcode with no href', async function () {
@@ -1161,7 +1414,10 @@ const hello () => {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        assert.equal(convertedHtml, '<figure class="kg-card kg-embed-card"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" width="160" height="90" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></figure>');
+        assert.equal(
+            convertedHtml,
+            '<figure class="kg-card kg-embed-card"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" width="160" height="90" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></figure>'
+        );
     });
 
     it('Can convert embed shortcode with youtube.com URL to iframe', async function () {
@@ -1169,7 +1425,10 @@ const hello () => {
 
         let convertedHtml = await processor.processShortcodes({html});
 
-        assert.equal(convertedHtml, '<figure class="kg-card kg-embed-card"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" width="160" height="90" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></figure>');
+        assert.equal(
+            convertedHtml,
+            '<figure class="kg-card kg-embed-card"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" width="160" height="90" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></figure>'
+        );
     });
 
     it('Leaves embed shortcode content as-is for non-YouTube URLs', async function () {
@@ -1326,7 +1585,8 @@ describe('processUnknownEmbedShortcodes (catch-all)', function () {
     });
 
     it('Handles multiple unknown embed shortcodes in one HTML string', async function () {
-        let html = '<p>Video 1:</p>[vid1]https://youtu.be/abc123[/vid1]<p>Video 2:</p>[vid2]https://vimeo.com/456789[/vid2]';
+        let html =
+            '<p>Video 1:</p>[vid1]https://youtu.be/abc123[/vid1]<p>Video 2:</p>[vid2]https://vimeo.com/456789[/vid2]';
 
         let convertedHtml = await processor.processShortcodes({html});
 
@@ -1369,8 +1629,14 @@ describe('processUnknownEmbedShortcodes (catch-all)', function () {
         // The known handler produces a bare iframe with loading="lazy" and referrerpolicy attrs
         // The catch-all would produce a <figure class="kg-card kg-embed-card"> wrapper
         assert.ok(convertedHtml.includes('loading="lazy"'), 'Should have loading="lazy" from known handler');
-        assert.ok(convertedHtml.includes('referrerpolicy="strict-origin-when-cross-origin"'), 'Should have referrerpolicy from known handler');
-        assert.ok(!convertedHtml.includes('<figure class="kg-card kg-embed-card">'), 'Should NOT have kg-embed-card wrapper from catch-all');
+        assert.ok(
+            convertedHtml.includes('referrerpolicy="strict-origin-when-cross-origin"'),
+            'Should have referrerpolicy from known handler'
+        );
+        assert.ok(
+            !convertedHtml.includes('<figure class="kg-card kg-embed-card">'),
+            'Should NOT have kg-embed-card wrapper from catch-all'
+        );
     });
 
     it('Known [embed] shortcode is handled by its own handler, not the catch-all', async function () {
@@ -1405,12 +1671,16 @@ describe('wpCDNToLocal', function () {
     });
 
     it('Updated simple CDN URL', function () {
-        const updated = processor.wpCDNToLocal('https://i0.wp.com/example.com/wp-content/uploads/2021/02photo.jpg?resize=200%2C300&amp;ssl=1');
+        const updated = processor.wpCDNToLocal(
+            'https://i0.wp.com/example.com/wp-content/uploads/2021/02photo.jpg?resize=200%2C300&amp;ssl=1'
+        );
         assert.equal(updated, 'https://example.com/wp-content/uploads/2021/02photo.jpg');
     });
 
     it('Updated long & subdirectory CDN URL', function () {
-        const updated = processor.wpCDNToLocal('https://i0.wp.com/this-is-a-long-one.com/subdir/wp-content/uploads/2021/02photo.jpg?resize=200%2C300&amp;ssl=1');
+        const updated = processor.wpCDNToLocal(
+            'https://i0.wp.com/this-is-a-long-one.com/subdir/wp-content/uploads/2021/02photo.jpg?resize=200%2C300&amp;ssl=1'
+        );
         assert.equal(updated, 'https://this-is-a-long-one.com/subdir/wp-content/uploads/2021/02photo.jpg');
     });
 });
@@ -1420,8 +1690,20 @@ describe('Co-Authors Plus multi-author support', function () {
         const wpTerms = [
             [{id: 1, name: 'Category', slug: 'category', taxonomy: 'category'}],
             [
-                {id: 100, name: 'Alice Smith', slug: 'alice-smith', taxonomy: 'author', link: 'https://example.com/author/alice-smith'},
-                {id: 101, name: 'Bob Jones', slug: 'bob-jones', taxonomy: 'author', link: 'https://example.com/author/bob-jones'}
+                {
+                    id: 100,
+                    name: 'Alice Smith',
+                    slug: 'alice-smith',
+                    taxonomy: 'author',
+                    link: 'https://example.com/author/alice-smith'
+                },
+                {
+                    id: 101,
+                    name: 'Bob Jones',
+                    slug: 'bob-jones',
+                    taxonomy: 'author',
+                    link: 'https://example.com/author/bob-jones'
+                }
             ]
         ];
 
@@ -1448,9 +1730,27 @@ describe('Co-Authors Plus multi-author support', function () {
     it('processCoAuthors deduplicates authors by slug', function () {
         const wpTerms = [
             [
-                {id: 100, name: 'Alice Smith', slug: 'alice-smith', taxonomy: 'author', link: 'https://example.com/author/alice-smith'},
-                {id: 100, name: 'Alice Smith', slug: 'alice-smith', taxonomy: 'author', link: 'https://example.com/author/alice-smith'},
-                {id: 101, name: 'Bob Jones', slug: 'bob-jones', taxonomy: 'author', link: 'https://example.com/author/bob-jones'}
+                {
+                    id: 100,
+                    name: 'Alice Smith',
+                    slug: 'alice-smith',
+                    taxonomy: 'author',
+                    link: 'https://example.com/author/alice-smith'
+                },
+                {
+                    id: 100,
+                    name: 'Alice Smith',
+                    slug: 'alice-smith',
+                    taxonomy: 'author',
+                    link: 'https://example.com/author/alice-smith'
+                },
+                {
+                    id: 101,
+                    name: 'Bob Jones',
+                    slug: 'bob-jones',
+                    taxonomy: 'author',
+                    link: 'https://example.com/author/bob-jones'
+                }
             ]
         ];
 
@@ -1462,7 +1762,13 @@ describe('Co-Authors Plus multi-author support', function () {
     it('processCoAuthors uses user data when available', function () {
         const wpTerms = [
             [
-                {id: 100, name: 'Alice Smith', slug: 'alice-smith', taxonomy: 'author', link: 'https://example.com/author/alice-smith'}
+                {
+                    id: 100,
+                    name: 'Alice Smith',
+                    slug: 'alice-smith',
+                    taxonomy: 'author',
+                    link: 'https://example.com/author/alice-smith'
+                }
             ]
         ];
 

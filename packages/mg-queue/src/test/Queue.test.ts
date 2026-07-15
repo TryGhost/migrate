@@ -4,7 +4,7 @@ import {describe, it} from 'node:test';
 import {Queue, Task, TaskError, SkipError, TimeoutError, Renderer, QueueStats, TaskInfo, Subtasks} from '../index.js';
 
 function delay(ms: number): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         setTimeout(resolve, ms);
     });
 }
@@ -476,12 +476,14 @@ describe('Queue', () => {
                 renderer
             });
 
-            await queue.run([{
-                title: 'order-test',
-                task: async () => {
-                    events.push('running:order-test');
+            await queue.run([
+                {
+                    title: 'order-test',
+                    task: async () => {
+                        events.push('running:order-test');
+                    }
                 }
-            }]);
+            ]);
 
             assert.deepEqual(events, ['start:order-test', 'running:order-test']);
         });
@@ -496,12 +498,14 @@ describe('Queue', () => {
                 renderer
             });
 
-            await queue.run([{
-                title: 'order-test',
-                task: async () => {
-                    events.push('running:order-test');
+            await queue.run([
+                {
+                    title: 'order-test',
+                    task: async () => {
+                        events.push('running:order-test');
+                    }
                 }
-            }]);
+            ]);
 
             assert.deepEqual(events, ['running:order-test', 'complete:order-test']);
         });
@@ -742,7 +746,7 @@ describe('Queue', () => {
                 const tasks: Task[] = [
                     {
                         title: 'skip-mid',
-                        task: async (ctx) => {
+                        task: async ctx => {
                             executed.push('before-skip');
                             ctx.skip();
                             executed.push('after-skip');
@@ -773,7 +777,7 @@ describe('Queue', () => {
                 await queue.run([
                     {
                         title: 'started-then-skipped',
-                        task: async (ctx) => {
+                        task: async ctx => {
                             ctx.skip();
                         }
                     }
@@ -801,7 +805,7 @@ describe('Queue', () => {
                     {title: 'pre-skip', skip: true, task: async () => {}},
                     {
                         title: 'in-skip',
-                        task: async (ctx) => {
+                        task: async ctx => {
                             ctx.skip();
                         }
                     },
@@ -993,7 +997,7 @@ describe('Queue', () => {
                 const tasks: Task[] = [
                     {
                         title: 'task',
-                        task: async (ctx) => {
+                        task: async ctx => {
                             receivedSignal = ctx.signal;
                         }
                     }
@@ -1012,7 +1016,7 @@ describe('Queue', () => {
                 const tasks: Task[] = [
                     {
                         title: 'slow-task',
-                        task: async (ctx) => {
+                        task: async ctx => {
                             ctx.signal.addEventListener('abort', () => {
                                 signalAborted = true;
                             });
@@ -1034,7 +1038,7 @@ describe('Queue', () => {
                 const tasks: Task[] = [
                     {
                         title: 'fast-task',
-                        task: async (ctx) => {
+                        task: async ctx => {
                             ctx.signal.addEventListener('abort', () => {
                                 signalAborted = true;
                             });
@@ -1055,7 +1059,7 @@ describe('Queue', () => {
                 const tasks: Task[] = [
                     {
                         title: 'fetch-task',
-                        task: async (ctx) => {
+                        task: async ctx => {
                             // Simulate a fetch that respects AbortSignal
                             await new Promise((resolve, reject) => {
                                 const timeout = setTimeout(resolve, 200);
@@ -1091,7 +1095,10 @@ describe('Queue', () => {
 
             const stats = await queue.run(tasks);
             assert.equal(stats.errors.length, 1);
-            assert.match(stats.errors[0].error.message, /Subtasks\.concurrency for "parent" must be an integer greater than 0/);
+            assert.match(
+                stats.errors[0].error.message,
+                /Subtasks\.concurrency for "parent" must be an integer greater than 0/
+            );
         });
 
         describe('basic subtask execution', () => {
@@ -1249,15 +1256,17 @@ describe('Queue', () => {
                     {
                         title: 'parent',
                         task: async () => {
-                            return new Subtasks(Array.from({length: 5}, (_, i) => ({
-                                title: `child-${i}`,
-                                task: async () => {
-                                    currentRunning += 1;
-                                    maxRunning = Math.max(maxRunning, currentRunning);
-                                    await delay(20);
-                                    currentRunning -= 1;
-                                }
-                            })));
+                            return new Subtasks(
+                                Array.from({length: 5}, (_, i) => ({
+                                    title: `child-${i}`,
+                                    task: async () => {
+                                        currentRunning += 1;
+                                        maxRunning = Math.max(maxRunning, currentRunning);
+                                        await delay(20);
+                                        currentRunning -= 1;
+                                    }
+                                }))
+                            );
                         }
                     }
                 ];
@@ -1278,36 +1287,34 @@ describe('Queue', () => {
                     {
                         title: 'parent',
                         task: async () => {
-                            return new Subtasks([
-                                {
-                                    title: 'child-1',
-                                    task: async () => {
-                                        order.push('child-1-start');
-                                        await delay(30);
-                                        order.push('child-1-end');
+                            return new Subtasks(
+                                [
+                                    {
+                                        title: 'child-1',
+                                        task: async () => {
+                                            order.push('child-1-start');
+                                            await delay(30);
+                                            order.push('child-1-end');
+                                        }
+                                    },
+                                    {
+                                        title: 'child-2',
+                                        task: async () => {
+                                            order.push('child-2-start');
+                                            await delay(30);
+                                            order.push('child-2-end');
+                                        }
                                     }
-                                },
-                                {
-                                    title: 'child-2',
-                                    task: async () => {
-                                        order.push('child-2-start');
-                                        await delay(30);
-                                        order.push('child-2-end');
-                                    }
-                                }
-                            ], {sequential: true});
+                                ],
+                                {sequential: true}
+                            );
                         }
                     }
                 ];
 
                 await queue.run(tasks);
 
-                assert.deepEqual(order, [
-                    'child-1-start',
-                    'child-1-end',
-                    'child-2-start',
-                    'child-2-end'
-                ]);
+                assert.deepEqual(order, ['child-1-start', 'child-1-end', 'child-2-start', 'child-2-end']);
             });
 
             it('runs subtasks in parallel when using Subtasks class without sequential', async () => {
@@ -1384,20 +1391,23 @@ describe('Queue', () => {
                     {
                         title: 'parent',
                         task: async () => {
-                            return new Subtasks([
-                                {
-                                    title: 'fast-child',
-                                    task: async () => {
-                                        await delay(10);
+                            return new Subtasks(
+                                [
+                                    {
+                                        title: 'fast-child',
+                                        task: async () => {
+                                            await delay(10);
+                                        }
+                                    },
+                                    {
+                                        title: 'slow-child',
+                                        task: async () => {
+                                            await delay(200);
+                                        }
                                     }
-                                },
-                                {
-                                    title: 'slow-child',
-                                    task: async () => {
-                                        await delay(200);
-                                    }
-                                }
-                            ], {timeout: 50});
+                                ],
+                                {timeout: 50}
+                            );
                         }
                     }
                 ];
@@ -1611,21 +1621,24 @@ describe('Queue', () => {
                     {
                         title: 'parent',
                         task: async () => {
-                            return new Subtasks([
-                                {
-                                    title: 'skip-child',
-                                    skip: true,
-                                    task: async () => {
-                                        executed.push('skip-child');
+                            return new Subtasks(
+                                [
+                                    {
+                                        title: 'skip-child',
+                                        skip: true,
+                                        task: async () => {
+                                            executed.push('skip-child');
+                                        }
+                                    },
+                                    {
+                                        title: 'run-child',
+                                        task: async () => {
+                                            executed.push('run-child');
+                                        }
                                     }
-                                },
-                                {
-                                    title: 'run-child',
-                                    task: async () => {
-                                        executed.push('run-child');
-                                    }
-                                }
-                            ], {sequential: true});
+                                ],
+                                {sequential: true}
+                            );
                         }
                     }
                 ];
@@ -1653,9 +1666,7 @@ describe('Queue', () => {
                     renderer: 'dynamic'
                 });
 
-                const stats = await queue.run([
-                    {title: 'task', task: async () => {}}
-                ]);
+                const stats = await queue.run([{title: 'task', task: async () => {}}]);
 
                 assert.equal(stats.completed, 1);
             } finally {
@@ -1669,9 +1680,7 @@ describe('Queue', () => {
                 renderer: 'verbose'
             });
 
-            const stats = await queue.run([
-                {title: 'task', task: async () => {}}
-            ]);
+            const stats = await queue.run([{title: 'task', task: async () => {}}]);
 
             assert.equal(stats.completed, 1);
         });
@@ -1684,9 +1693,7 @@ describe('Queue', () => {
                 yieldEvery: 50
             });
 
-            const stats = await queue.run([
-                {title: 'task', task: async () => {}}
-            ]);
+            const stats = await queue.run([{title: 'task', task: async () => {}}]);
 
             assert.equal(stats.completed, 1);
         });

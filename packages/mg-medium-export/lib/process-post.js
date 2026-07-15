@@ -62,15 +62,13 @@ const processAuthor = ({pAuthor}) => {
         data: {
             name: pAuthor.textContent,
             slug: href.replace(/.*?@(.*?)$/, (m, p) => p.toLowerCase()),
-            roles: [
-                'Contributor'
-            ]
+            roles: ['Contributor']
         }
     };
 };
 
 const processTags = ({tagLinks}) => {
-    return tagLinks.map((tag) => {
+    return tagLinks.map(tag => {
         const href = tag.getAttribute('href');
         return {
             url: href,
@@ -83,7 +81,7 @@ const processTags = ({tagLinks}) => {
 };
 
 const processFeatureImage = ({html, post, options}) => {
-    return domUtils.processFragment(html, (parsed) => {
+    return domUtils.processFragment(html, parsed => {
         // Look for data-is-featured
         let featured = parsed.$('[data-is-featured]')[0] || null;
 
@@ -92,7 +90,7 @@ const processFeatureImage = ({html, post, options}) => {
         let foundImg = false;
         let preImageTags = [];
 
-        allSections.forEach((el) => {
+        allSections.forEach(el => {
             if (!foundImg) {
                 preImageTags.push(el.tagName.toLowerCase());
             }
@@ -133,7 +131,7 @@ const processFeatureImage = ({html, post, options}) => {
 };
 
 export default ({name, html, globalUser, options}) => {
-    return domUtils.processFragment(html, (parsed) => {
+    return domUtils.processFragment(html, parsed => {
         let post = processMeta({name, parsed, options});
 
         // Process author

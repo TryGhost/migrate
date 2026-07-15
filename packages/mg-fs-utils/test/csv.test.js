@@ -37,7 +37,11 @@ describe('Parse CSV', function () {
     it('Reads a simple comma separated file list with options', async function () {
         const pathToFile = path.join(__dirname, '/fixtures/example.csv');
 
-        const result = await csv.parseCSV(pathToFile, {skip_lines_with_error: true, columns: false, skip_empty_lines: true});
+        const result = await csv.parseCSV(pathToFile, {
+            skip_lines_with_error: true,
+            columns: false,
+            skip_empty_lines: true
+        });
 
         assert.ok(Array.isArray(result));
         assert.equal(result.length, 6);
@@ -47,25 +51,19 @@ describe('Parse CSV', function () {
     });
 
     it('Rejects when file does not exist', async function () {
-        await assert.rejects(
-            csv.parseCSV('/nonexistent/path/file.csv'),
-            (err) => {
-                assert.equal(err.code, 'ENOENT');
-                return true;
-            }
-        );
+        await assert.rejects(csv.parseCSV('/nonexistent/path/file.csv'), err => {
+            assert.equal(err.code, 'ENOENT');
+            return true;
+        });
     });
 
     it('Rejects when CSV has parse errors and skip_lines_with_error is false', async function () {
         const pathToFile = path.join(__dirname, '/fixtures/malformed.csv');
 
-        await assert.rejects(
-            csv.parseCSV(pathToFile, {columns: true, skip_lines_with_error: false}),
-            (err) => {
-                assert.ok(err.message);
-                return true;
-            }
-        );
+        await assert.rejects(csv.parseCSV(pathToFile, {columns: true, skip_lines_with_error: false}), err => {
+            assert.ok(err.message);
+            return true;
+        });
     });
 });
 
@@ -147,12 +145,22 @@ describe('Format JSON to CSV', function () {
                 labels: 'substack-comp, 2023-02'
             }
         ];
-        const fields = ['email', 'subscribed_to_emails', 'complimentary_plan', 'stripe_customer_id', 'created_at', 'labels', 'note'];
+        const fields = [
+            'email',
+            'subscribed_to_emails',
+            'complimentary_plan',
+            'stripe_customer_id',
+            'created_at',
+            'labels',
+            'note'
+        ];
 
         const result = await csv.jsonToCSV(jsonInput, fields);
 
         assert.equal(typeof result, 'string');
-        assert.ok(result.includes('email,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,labels,note'));
+        assert.ok(
+            result.includes('email,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,labels,note')
+        );
         assert.ok(result.includes('patrickstarfish@gmail.com,true,false,,2018-12-25T20:43:22.178Z,substack-free,'));
         assert.ok(result.includes('elpaper@gmail.com,true,false,,2019-08-18T13:36:31.230Z,substack-free,'));
         assert.ok(result.includes('example@gmail.com,true,false,,2022-03-13T13:36:31.230Z,"substack-comp, 2023-02'));
@@ -184,9 +192,7 @@ describe('Format JSON to CSV', function () {
     });
 
     it('handles fields with undefined values', function () {
-        const jsonInput = [
-            {email: 'test@example.com', name: undefined}
-        ];
+        const jsonInput = [{email: 'test@example.com', name: undefined}];
 
         const result = csv.jsonToCSV(jsonInput, ['email', 'name']);
 
@@ -195,9 +201,7 @@ describe('Format JSON to CSV', function () {
     });
 
     it('handles field not present on entry', function () {
-        const jsonInput = [
-            {email: 'test@example.com'}
-        ];
+        const jsonInput = [{email: 'test@example.com'}];
 
         const result = csv.jsonToCSV(jsonInput, ['email', 'name']);
 
@@ -232,8 +236,14 @@ describe('Format JSON to CSV', function () {
         const result = await csv.jsonToCSV(jsonInput);
 
         assert.equal(typeof result, 'string');
-        assert.ok(result.includes('email,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,expiry,type,labels'));
-        assert.ok(result.includes('patrickstarfish@gmail.com,true,false,,2018-12-25T20:43:22.178Z,,free,substack-free'));
+        assert.ok(
+            result.includes(
+                'email,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,expiry,type,labels'
+            )
+        );
+        assert.ok(
+            result.includes('patrickstarfish@gmail.com,true,false,,2018-12-25T20:43:22.178Z,,free,substack-free')
+        );
         assert.ok(result.includes('elpaper@gmail.com,true,false,,2019-08-18T13:36:31.230Z,,free,substack-free'));
 
         const resultArray = result.split(',');
@@ -290,13 +300,10 @@ describe('writeCSV', function () {
         const conflictDir = path.join(tmpDir, 'output.csv');
         fs.mkdirSync(conflictDir);
 
-        await assert.rejects(
-            csv.writeCSV('data', tmpDir, 'output.csv'),
-            (err) => {
-                assert.ok(err.message.includes('Could not create CSV file'));
-                return true;
-            }
-        );
+        await assert.rejects(csv.writeCSV('data', tmpDir, 'output.csv'), err => {
+            assert.ok(err.message.includes('Could not create CSV file'));
+            return true;
+        });
     });
 });
 
@@ -305,7 +312,16 @@ describe('hasKeys', function () {
         const pathToFile = path.join(__dirname, '/fixtures/example.csv');
         const csvIsValid = await csv.hasKeys({
             filePath: pathToFile,
-            required: ['Username', 'Identifier', 'One-time password', 'Recovery code', 'First name', 'Last name', 'Department', 'Location']
+            required: [
+                'Username',
+                'Identifier',
+                'One-time password',
+                'Recovery code',
+                'First name',
+                'Last name',
+                'Department',
+                'Location'
+            ]
         });
 
         assert.equal(csvIsValid, true);

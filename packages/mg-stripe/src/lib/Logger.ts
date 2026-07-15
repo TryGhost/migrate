@@ -26,7 +26,7 @@ export class Logger {
         this.verboseLevel = verboseLevel ?? 0;
     }
 
-    static init({verboseLevel, debug}: {verboseLevel: 0 | 1 | 2, debug: boolean}) {
+    static init({verboseLevel, debug}: {verboseLevel: 0 | 1 | 2; debug: boolean}) {
         const logger = new Logger({verboseLevel});
         Logger.shared = logger;
         Logger.v = verboseLevel >= 1 ? logger : null;

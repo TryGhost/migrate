@@ -12,7 +12,9 @@ import {Reporter, ReportingCategory} from '../importers/Reporter.js';
 export async function revert(options: Options) {
     const reporter = new Reporter(new ReportingCategory('', {skipTitle: true}));
 
-    Logger.shared.info(`The ${chalk.cyan('revert')} command will delete the copy of Stripe products, prices, coupons, subscriptions and invoices from the new Stripe account. It will also resume the subscriptions in the old Stripe account.`);
+    Logger.shared.info(
+        `The ${chalk.cyan('revert')} command will delete the copy of Stripe products, prices, coupons, subscriptions and invoices from the new Stripe account. It will also resume the subscriptions in the old Stripe account.`
+    );
     Logger.shared.info('------------------------------------------------------------------------------');
     Logger.shared.info('Before proceeding, be sure to have:');
     Logger.shared.info(`1) Executed the ${chalk.cyan('copy')} command`);
@@ -22,7 +24,9 @@ export async function revert(options: Options) {
 
     Logger.shared.startSpinner('');
     if (options.dryRun) {
-        Logger.shared.succeed(`Running ${chalk.green('revert')} command as ${chalk.green('DRY RUN')}. No Stripe data will be updated or deleted.`);
+        Logger.shared.succeed(
+            `Running ${chalk.green('revert')} command as ${chalk.green('DRY RUN')}. No Stripe data will be updated or deleted.`
+        );
     } else {
         Logger.shared.succeed(`Running ${chalk.green('revert')} command...`);
     }

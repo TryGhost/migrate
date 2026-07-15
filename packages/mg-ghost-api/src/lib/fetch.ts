@@ -77,8 +77,12 @@ const discover = async (options: DiscoverOptions): Promise<DiscoverResult> => {
         key: options.apikey
     });
 
-    const posts = options.posts ? await site.posts.browse({limit: options.limit, filter: options.postFilter ?? null}) : null;
-    const pages = options.pages ? await site.pages.browse({limit: options.limit, filter: options.postFilter ?? null}) : null;
+    const posts = options.posts
+        ? await site.posts.browse({limit: options.limit, filter: options.postFilter ?? null})
+        : null;
+    const pages = options.pages
+        ? await site.pages.browse({limit: options.limit, filter: options.postFilter ?? null})
+        : null;
     const users = await site.users.browse({limit: options.limit});
 
     return {
@@ -108,28 +112,24 @@ const fetchPage = async (
         filter: (type === 'posts' ? options.postFilter : options.pageFilter) || null
     };
 
-    const response = type === 'posts'
-        ? await api.site.posts.browse(params, {source: 'html'})
-        : await api.site.pages.browse(params, {source: 'html'});
+    const response =
+        type === 'posts'
+            ? await api.site.posts.browse(params, {source: 'html'})
+            : await api.site.pages.browse(params, {source: 'html'});
 
     const ghostType = type === 'posts' ? 'post' : 'page';
-    response.forEach((item) => {
+    response.forEach(item => {
         item.type = ghostType;
     });
 
     return response;
 };
 
-const buildTasks = (
-    tasks: ListrTask[],
-    api: DiscoverResult,
-    type: FetchType,
-    options: FetchOptions
-): void => {
+const buildTasks = (tasks: ListrTask[], api: DiscoverResult, type: FetchType, options: FetchOptions): void => {
     for (let page = 1; page <= api.batches[type]; page++) {
         tasks.push({
             title: `Fetching ${type}, page ${page} of ${api.batches[type]}`,
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     const response = await fetchPage(api, type, options, page);
                     await ctx.migrateContext.transaction(async () => {

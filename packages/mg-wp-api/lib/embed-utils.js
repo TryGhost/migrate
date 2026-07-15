@@ -1,12 +1,8 @@
-const escapeHtmlAttr = (str) => {
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+const escapeHtmlAttr = str => {
+    return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 };
 
-const sanitizeUrl = (url) => {
+const sanitizeUrl = url => {
     try {
         const parsed = new URL(url);
         if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
@@ -44,10 +40,7 @@ const EMBED_SERVICES = [
     },
     {
         name: 'vimeo',
-        patterns: [
-            /(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(\d+)/i,
-            /(?:https?:\/\/)?player\.vimeo\.com\/video\/(\d+)/i
-        ],
+        patterns: [/(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(\d+)/i, /(?:https?:\/\/)?player\.vimeo\.com\/video\/(\d+)/i],
         buildEmbedHtml(id) {
             return `<figure class="kg-card kg-embed-card"><iframe src="https://player.vimeo.com/video/${id}" width="160" height="90" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></figure>`;
         }
@@ -137,9 +130,7 @@ const EMBED_SERVICES = [
     },
     {
         name: 'bluesky',
-        patterns: [
-            /(?:https?:\/\/)?bsky\.app\/profile\/[\w.:-]+\/post\/([\w]+)/i
-        ],
+        patterns: [/(?:https?:\/\/)?bsky\.app\/profile\/[\w.:-]+\/post\/([\w]+)/i],
         buildEmbedHtml(_id, _groups, originalUrl) {
             const safe = sanitizeUrl(originalUrl);
             if (!safe) {
@@ -150,9 +141,7 @@ const EMBED_SERVICES = [
     },
     {
         name: 'tiktok',
-        patterns: [
-            /(?:https?:\/\/)?(?:www\.)?tiktok\.com\/@[\w.-]+\/video\/(\d+)/i
-        ],
+        patterns: [/(?:https?:\/\/)?(?:www\.)?tiktok\.com\/@[\w.-]+\/video\/(\d+)/i],
         buildEmbedHtml(_id, _groups, originalUrl) {
             const safe = sanitizeUrl(originalUrl);
             if (!safe) {
@@ -167,7 +156,7 @@ const EMBED_SERVICES = [
  * Test a URL string against all known embed service patterns.
  * Returns {service, id, groups, url} on match, or null.
  */
-const matchEmbedUrl = (url) => {
+const matchEmbedUrl = url => {
     if (!url || typeof url !== 'string') {
         return null;
     }
@@ -184,14 +173,26 @@ const matchEmbedUrl = (url) => {
                 const id = typeof result === 'string' ? result : result.id;
                 const groups = typeof result === 'string' ? [result] : result.groups;
                 if (id) {
-                    return {service: service.name, id, groups, url: trimmed, buildEmbedHtml: service.buildEmbedHtml.bind(service)};
+                    return {
+                        service: service.name,
+                        id,
+                        groups,
+                        url: trimmed,
+                        buildEmbedHtml: service.buildEmbedHtml.bind(service)
+                    };
                 }
             }
         } else {
             for (const pattern of service.patterns) {
                 const match = trimmed.match(pattern);
                 if (match && match[1]) {
-                    return {service: service.name, id: match[1], groups: match.slice(1), url: trimmed, buildEmbedHtml: service.buildEmbedHtml.bind(service)};
+                    return {
+                        service: service.name,
+                        id: match[1],
+                        groups: match.slice(1),
+                        url: trimmed,
+                        buildEmbedHtml: service.buildEmbedHtml.bind(service)
+                    };
                 }
             }
         }
@@ -203,7 +204,7 @@ const matchEmbedUrl = (url) => {
 /**
  * Given a match result from matchEmbedUrl, produce the Ghost embed HTML.
  */
-const buildEmbedHtml = (match) => {
+const buildEmbedHtml = match => {
     if (!match) {
         return null;
     }

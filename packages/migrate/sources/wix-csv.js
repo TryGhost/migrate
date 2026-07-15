@@ -16,25 +16,30 @@ const dependencies = {
     LinkFixer: MgLinkFixer
 };
 
-const initialize = (options) => {
+const initialize = options => {
     return {
         title: 'Initializing Workspace',
         task: async (ctx, task) => {
             ctx.options = options;
             ctx.allowScrape = {
-                assets: ctx.options.scrape.includes('assets') || ctx.options.scrape.includes('img') || ctx.options.scrape.includes('media') || ctx.options.scrape.includes('files')
+                assets:
+                    ctx.options.scrape.includes('assets') ||
+                    ctx.options.scrape.includes('img') ||
+                    ctx.options.scrape.includes('media') ||
+                    ctx.options.scrape.includes('files')
             };
 
             ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(ctx.options.url);
             ctx.fileCache = new dependencies.FileCache(`wix-csv-${ctx.options.cacheName}`, {
                 tmpPath: ctx.options.tmpPath
             });
-            ctx.assetScraper = new dependencies.AssetScraper(ctx.fileCache, {
-                domains: [
-                    'http://static\\.wixstatic\\.com',
-                    'https://static\\.wixstatic\\.com'
-                ]
-            }, ctx);
+            ctx.assetScraper = new dependencies.AssetScraper(
+                ctx.fileCache,
+                {
+                    domains: ['http://static\\.wixstatic\\.com', 'https://static\\.wixstatic\\.com']
+                },
+                ctx
+            );
             await ctx.assetScraper.init();
             ctx.linkFixer = new dependencies.LinkFixer();
 
@@ -43,12 +48,12 @@ const initialize = (options) => {
     };
 };
 
-const getFullTaskList = (options) => {
+const getFullTaskList = options => {
     return [
         initialize(options),
         {
             title: 'Read Wix CSV content',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     ctx.result = await wixCSVIngest({
                         options
@@ -63,7 +68,7 @@ const getFullTaskList = (options) => {
         ...createGhostUserTasks(options),
         {
             title: 'Build Link Map',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     ctx.linkFixer.buildMap(ctx);
                 } catch (error) {
@@ -74,7 +79,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Format data as Ghost JSON',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
                 } catch (error) {
@@ -86,7 +91,7 @@ const getFullTaskList = (options) => {
         {
             title: 'Fetch images via AssetScraper',
             skip: ctx => !ctx.allowScrape.assets,
-            task: async (ctx) => {
+            task: async ctx => {
                 const tasks = ctx.assetScraper.getTasks();
                 return makeTaskRunner(tasks, {
                     verbose: options.verbose,
@@ -104,7 +109,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Convert HTML -> Lexical',
-            task: (ctx) => {
+            task: ctx => {
                 try {
                     const tasks = mgHtmlLexical.convert(ctx);
                     return makeTaskRunner(tasks, options);
@@ -116,7 +121,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Write Ghost import JSON File',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
                 } catch (error) {
@@ -134,13 +139,20 @@ const getFullTaskList = (options) => {
                 try {
                     const timer = Date.now();
                     const zipFinalPath = options.outputPath || process.cwd();
-                    ctx.outputFile = await fsUtils.zip.write(zipFinalPath, ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+                    ctx.outputFile = await fsUtils.zip.write(
+                        zipFinalPath,
+                        ctx.fileCache.zipDir,
+                        ctx.fileCache.defaultZipFileName
+                    );
 
                     if (isStorage) {
                         const storage = options.outputStorage;
                         const localFilePath = ctx.outputFile.path;
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
-                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-wix-csv-${ctx.options.cacheName}.zip`});
+                        ctx.outputFile.path = await storage.upload({
+                            body: fileBuffer,
+                            fileName: `gh-wix-csv-${ctx.options.cacheName}.zip`
+                        });
                         await fsUtils.zip.deleteFile(localFilePath);
                     }
 
@@ -154,7 +166,7 @@ const getFullTaskList = (options) => {
         {
             title: 'Clearing cached files',
             enabled: () => !options.cache && options.zip,
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {
@@ -166,7 +178,7 @@ const getFullTaskList = (options) => {
     ];
 };
 
-const getTaskRunner = (options) => {
+const getTaskRunner = options => {
     const tasks = getFullTaskList(options);
     return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
 };

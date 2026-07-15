@@ -14,8 +14,7 @@ const isLexicalField = field => lexicalFields.includes(field);
 function mapObject(obj, fn) {
     return Object.fromEntries(
         Object.entries(obj).map(([key, value]) => {
-            if (typeof value === 'object' &&
-                value !== null) {
+            if (typeof value === 'object' && value !== null) {
                 return [key, mapObject(value, fn)];
             }
             return [key, fn(key, value)];
@@ -65,13 +64,19 @@ export default class LinkFixer {
 
             const siteURLBothProtocols = `(?:${siteURLHttp}|${siteURLHttps})`;
 
-            const RegexSlugYYYYMMDD = new RegExp(`^${siteURLBothProtocols}/[a-zA-Z0-9-]+/([0-9]{4}/[0-9]{2}/[0-9]{2})/([a-zA-Z0-9-_]*)(/)?`);
+            const RegexSlugYYYYMMDD = new RegExp(
+                `^${siteURLBothProtocols}/[a-zA-Z0-9-]+/([0-9]{4}/[0-9]{2}/[0-9]{2})/([a-zA-Z0-9-_]*)(/)?`
+            );
             const isSlugYYYYMMDDDatedPermalink = url.match(RegexSlugYYYYMMDD);
 
-            const RegexYYYYMMDD = new RegExp(`^${siteURLBothProtocols}/([0-9]{4}/[0-9]{2}/[0-9]{2})/([a-zA-Z0-9-_]*)(/)?`);
+            const RegexYYYYMMDD = new RegExp(
+                `^${siteURLBothProtocols}/([0-9]{4}/[0-9]{2}/[0-9]{2})/([a-zA-Z0-9-_]*)(/)?`
+            );
             const isYYYYMMDDDatedPermalink = url.match(RegexYYYYMMDD);
 
-            const RegexSlugYYYYMM = new RegExp(`^${siteURLBothProtocols}/[a-zA-Z0-9-]+/([0-9]{4}/[0-9]{2})/([a-zA-Z0-9-_]*)(/)?`);
+            const RegexSlugYYYYMM = new RegExp(
+                `^${siteURLBothProtocols}/[a-zA-Z0-9-]+/([0-9]{4}/[0-9]{2})/([a-zA-Z0-9-_]*)(/)?`
+            );
             const isSlugYYYYMMDatedPermalink = url.match(RegexSlugYYYYMM);
 
             const RegexYYYYMM = new RegExp(`^${siteURLBothProtocols}/([0-9]{4}/[0-9]{2})/([a-zA-Z0-9-_]*)(/)?`);
@@ -96,7 +101,7 @@ export default class LinkFixer {
             }
 
             if (data.authors) {
-                data.authors.forEach((author) => {
+                data.authors.forEach(author => {
                     this.linkMap[author.url] = `/author/${author.data.slug}/`;
                 });
             }
@@ -107,7 +112,7 @@ export default class LinkFixer {
         });
 
         // Remove the protocol, ensuring we treat `http` and `https` sites in the same way
-        Object.keys(this.linkMap).forEach((key) => {
+        Object.keys(this.linkMap).forEach(key => {
             let updatedURL = LinkFixer.cleanURL(key);
             this.linkMap[updatedURL] = this.linkMap[key];
         });
@@ -141,7 +146,7 @@ export default class LinkFixer {
     }
 
     async processHTML(html) {
-        return processFragment(html, (parsed) => {
+        return processFragment(html, parsed => {
             for (const el of parsed.$('a')) {
                 let href = el.getAttribute('href');
 
@@ -193,7 +198,7 @@ export default class LinkFixer {
                 continue;
             }
 
-            const fixed = await processFragment(value, (parsed) => {
+            const fixed = await processFragment(value, parsed => {
                 for (const el of parsed.$('a')) {
                     const href = el.getAttribute('href');
                     if (!href) {

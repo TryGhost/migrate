@@ -46,9 +46,4 @@ const taskNumber = (index, tasks) => {
     return `${taskNum}/${tasks.length}`;
 };
 
-export {
-    isDefined,
-    getSymbol,
-    indentString,
-    taskNumber
-};
+export {isDefined, getSymbol, indentString, taskNumber};

@@ -16,11 +16,17 @@ export async function copy(options: Options) {
     const reporter = new Reporter(new ReportingCategory('', {skipTitle: true}));
 
     Logger.shared.info(`The ${chalk.cyan('copy')} command will:`);
-    Logger.shared.info(`- Migrate Stripe products, prices, coupons, invoices and subscriptions from an old to a new Stripe account.`);
+    Logger.shared.info(
+        `- Migrate Stripe products, prices, coupons, invoices and subscriptions from an old to a new Stripe account.`
+    );
     Logger.shared.info(`- Recreate subscriptions without Platform fees within the same Stripe account.`);
     Logger.shared.info('');
-    Logger.shared.info('Created subscriptions will be delayed by 1 hour by default (change with --delay option) - their renew date will only change if they would normally renew within that delay period');
-    Logger.shared.info('This makes sure you can still undo the migration (using the revert command) if something goes wrong within that time frame and avoid charging customers.');
+    Logger.shared.info(
+        'Created subscriptions will be delayed by 1 hour by default (change with --delay option) - their renew date will only change if they would normally renew within that delay period'
+    );
+    Logger.shared.info(
+        'This makes sure you can still undo the migration (using the revert command) if something goes wrong within that time frame and avoid charging customers.'
+    );
     Logger.shared.info('------------------------------------------------------------------------------');
     Logger.shared.info('Before proceeding, be sure to have:');
     Logger.shared.info('1) Disabled new subscriptions on the old site');
@@ -28,24 +34,28 @@ export async function copy(options: Options) {
     Logger.shared.info('https://stripe.com/docs/payments/account/data-migrations/pan-copy-self-serve');
     Logger.shared.info('------------------------------------------------------------------------------');
     Logger.shared.info(`We recommend running a dry run first, by passing the ${chalk.cyan('--dry-run')} option.`);
-    Logger.shared.info('The dry run will not create any data object in the new account, nor update anything in the old account.');
+    Logger.shared.info(
+        'The dry run will not create any data object in the new account, nor update anything in the old account.'
+    );
     Logger.shared.info('------------------------------------------------------------------------------');
     Logger.shared.newline();
 
     Logger.shared.startSpinner('');
     if (options.dryRun) {
-        Logger.shared.succeed(`Running ${chalk.green('copy')} command as ${chalk.green('DRY RUN')}. No Stripe data will be created or updated.`);
+        Logger.shared.succeed(
+            `Running ${chalk.green('copy')} command as ${chalk.green('DRY RUN')}. No Stripe data will be created or updated.`
+        );
     } else {
         Logger.shared.succeed(`Running ${chalk.green('copy')} command...`);
     }
 
     let subscriptionIds: string[] | null = null;
-    
+
     if (options.subscription && options.subscriptionsCsv) {
         Logger.shared.fail('Cannot use both --subscription and --subscriptions-csv options at the same time');
         process.exit(1);
     }
-    
+
     if (options.subscription) {
         subscriptionIds = [options.subscription];
         Logger.shared.newline();
@@ -60,7 +70,7 @@ export async function copy(options: Options) {
 
     try {
         // Get delay
-        const delay = (options.dryRun) ? 1 : (await new DelayPrompt().ask(options.delay));
+        const delay = options.dryRun ? 1 : await new DelayPrompt().ask(options.delay);
 
         if (!options.dryRun) {
             Logger.shared.startSpinner('');
@@ -152,7 +162,9 @@ export async function copy(options: Options) {
         reporter.print({});
 
         Logger.shared.newline();
-        Logger.shared.info(`You can either fix the issue and retry the ${chalk.cyan('copy')} command (will continue where it left off), or run ${chalk.cyan('revert')} command to revert the migration`);
+        Logger.shared.info(
+            `You can either fix the issue and retry the ${chalk.cyan('copy')} command (will continue where it left off), or run ${chalk.cyan('revert')} command to revert the migration`
+        );
         process.exit(1);
     }
 }

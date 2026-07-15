@@ -23,7 +23,7 @@ const isURL = (urlString: string | undefined) => {
     }
 };
 
-const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) => {
+const processHTML = ({post, options}: {post?: mappedDataObject; options?: any}) => {
     // First, clean up the email HTML to remove bits we don't want or change up
 
     let html = post?.data.html ?? '';
@@ -40,7 +40,7 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
     const parsed = parseFragment(contentBlocksHtml);
 
     // Convert divs with no content but a border-top to a HR
-    parsed.$('div').forEach((el) => {
+    parsed.$('div').forEach(el => {
         const styleAttr = attr(el, 'style') || '';
         const hasBorderTop = styleAttr.includes('border-top');
         const hasContent = serializeChildren(el).trim().length > 0;
@@ -51,13 +51,13 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
     });
 
     // Convert sponsored content tables to Ghost HTML cards
-    parsed.$('table').forEach((el) => {
+    parsed.$('table').forEach(el => {
         const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
         if (/sponsored content/i.test(text)) {
             const tdEl = parsed.$('td', el)[0] || el;
 
             // Convert text-only inner divs to <p> tags; skip divs containing images
-            parsed.$('div', tdEl).forEach((div) => {
+            parsed.$('div', tdEl).forEach(div => {
                 const inner = serializeChildren(div);
                 if (parsed.$('img', div).length > 0) {
                     return;
@@ -70,7 +70,7 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
             });
 
             // Remove bare <br> elements that are direct children of td
-            parsed.$('br', tdEl).forEach((br) => {
+            parsed.$('br', tdEl).forEach(br => {
                 if (br.parentElement === tdEl) {
                     br.remove();
                 }
@@ -79,12 +79,15 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
             const content = serializeChildren(tdEl);
             const wrapper = el.parentElement;
             const target = wrapper && wrapper.tagName === 'DIV' ? wrapper : el;
-            replaceWith(target, `<!--kg-card-begin: html--><div class="mg-sponsored" data-mg-skip="image-card">${content}</div><!--kg-card-end: html-->`);
+            replaceWith(
+                target,
+                `<!--kg-card-begin: html--><div class="mg-sponsored" data-mg-skip="image-card">${content}</div><!--kg-card-end: html-->`
+            );
         }
     });
 
     // Convert images to Ghost image cards
-    parsed.$('img').forEach((el) => {
+    parsed.$('img').forEach(el => {
         // Skip images inside generic embeds (handled separately as bookmark cards)
         if (parents(el, '.generic-embed--root').length > 0) {
             return;
@@ -109,7 +112,12 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
         };
 
         if (parent.tagName === 'DIV') {
-            const caption = parsed.$('small', parent).map(s => s.textContent!.trim()).filter(Boolean).join('') || null;
+            const caption =
+                parsed
+                    .$('small', parent)
+                    .map(s => s.textContent!.trim())
+                    .filter(Boolean)
+                    .join('') || null;
             cardOpts.payload.caption = caption;
             const outerDiv = parent.parentElement;
             const target = outerDiv && outerDiv.tagName === 'DIV' ? outerDiv : parent;
@@ -123,32 +131,39 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
     });
 
     // Convert nested padding-left divs to blockquotes
-    parsed.$('div[style*="padding-left"] > div[style*="padding-left"]').forEach((el) => {
+    parsed.$('div[style*="padding-left"] > div[style*="padding-left"]').forEach(el => {
         const outerDiv = el.parentElement!;
         const paragraphs = parsed.$('p', outerDiv);
 
         if (paragraphs.length > 0) {
             const content = paragraphs.map(p => serializeNode(p)).join('');
-            const citation = parsed.$('small', outerDiv).map(s => s.textContent!.trim()).filter(Boolean).join('');
+            const citation = parsed
+                .$('small', outerDiv)
+                .map(s => s.textContent!.trim())
+                .filter(Boolean)
+                .join('');
             const cite = citation ? `<cite>${citation}</cite>` : '';
             replaceWith(outerDiv, `<blockquote>${content}${cite}</blockquote>`);
         }
     });
 
     // Convert buttons to Ghost buttons
-    parsed.$('a > button').forEach((el) => {
+    parsed.$('a > button').forEach(el => {
         const link = el.parentElement!; // guaranteed by 'a > button' selector
         const wrapper = link.parentElement;
         const buttonText = el.textContent!.trim();
         const buttonHref = attr(link, 'href');
         const target = wrapper && wrapper.tagName === 'DIV' ? wrapper : link;
 
-        replaceWith(target, `<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+        replaceWith(
+            target,
+            `<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`
+        );
     });
 
     // Rewrite subscribe links to Portal signup
     if (options?.subscribeLink) {
-        parsed.$('a[href*="/subscribe"]').forEach((el) => {
+        parsed.$('a[href*="/subscribe"]').forEach(el => {
             attr(el, 'href', options.subscribeLink);
         });
     }
@@ -158,7 +173,7 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
         const postOrigin = new URL(post.url).origin;
 
         if (options?.comments && options?.commentLink) {
-            parsed.$('a[href*="comments=true"]').forEach((el) => {
+            parsed.$('a[href*="comments=true"]').forEach(el => {
                 if ((attr(el, 'href') as string).includes(postOrigin)) {
                     attr(el, 'href', options.commentLink);
                     el.removeAttribute('target');
@@ -166,7 +181,7 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
                 }
             });
         } else if (options?.comments === false) {
-            parsed.$('a[href*="comments=true"]').forEach((el) => {
+            parsed.$('a[href*="comments=true"]').forEach(el => {
                 if ((attr(el, 'href') as string).includes(postOrigin)) {
                     el.remove();
                 }
@@ -175,7 +190,7 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
     }
 
     // Handle link embeds
-    parsed.$('.generic-embed--root').forEach((el) => {
+    parsed.$('.generic-embed--root').forEach(el => {
         const anchorEl = parsed.$('a', el)[0] as Element | undefined;
         const titleEl = parsed.$('.generic-embed--title p', el)[0] as Element | undefined;
         const descEl = parsed.$('.generic-embed--description p', el)[0] as Element | undefined;
@@ -206,7 +221,7 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
     });
 
     // Unwrap audio iframes from tables
-    parsed.$('table iframe[src^="https://audio.beehiiv.com"]').forEach((el) => {
+    parsed.$('table iframe[src^="https://audio.beehiiv.com"]').forEach(el => {
         const tableParent = parents(el, 'table')[0];
         if (tableParent) {
             const iframeHtml = serializeNode(el);
@@ -215,7 +230,7 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
     });
 
     // Convert YouTube iframes to embeds
-    parsed.$('iframe[src*="youtube.com/embed"], iframe[src*="youtu.be"]').forEach((el) => {
+    parsed.$('iframe[src*="youtube.com/embed"], iframe[src*="youtu.be"]').forEach(el => {
         const videoID = getYouTubeID(attr(el, 'src') as string);
 
         let cardOpts = {
@@ -230,7 +245,7 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
     });
 
     // Remove empty paragraphs
-    parsed.$('p').forEach((el) => {
+    parsed.$('p').forEach(el => {
         const text = (el.textContent || '').trim();
 
         if (text.length === 0) {
@@ -239,22 +254,22 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
     });
 
     // Remove style tags
-    parsed.$('style').forEach((el) => {
+    parsed.$('style').forEach(el => {
         el.remove();
     });
 
     // Remove mobile ads
-    parsed.$('#pad-mobile').forEach((el) => {
+    parsed.$('#pad-mobile').forEach(el => {
         el.remove();
     });
 
     // Remove style attributes
-    parsed.$('[style]').forEach((el) => {
+    parsed.$('[style]').forEach(el => {
         el.removeAttribute('style');
     });
 
     // Unwrap divs, but preserve Ghost card and data-mg-skip divs
-    parsed.$('div:not([class*="kg-"]):not([data-mg-skip])').forEach((el) => {
+    parsed.$('div:not([class*="kg-"]):not([data-mg-skip])').forEach(el => {
         if (parents(el, '[data-mg-skip]').length > 0) {
             return;
         }
@@ -262,8 +277,8 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
     });
 
     // Remove b, strong, i, em tags from headings but allow links inside them
-    parsed.$('h1, h2, h3, h4, h5, h6').forEach((el) => {
-        parsed.$('b, strong, i, em', el).forEach((ell) => {
+    parsed.$('h1, h2, h3, h4, h5, h6').forEach(el => {
+        parsed.$('b, strong, i, em', el).forEach(ell => {
             replaceWith(ell, serializeChildren(ell));
         });
     });
@@ -274,7 +289,7 @@ const processHTML = ({post, options}: {post?: mappedDataObject, options?: any}) 
     return bodyHtml;
 };
 
-const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string, featureSrc: string}) => {
+const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string; featureSrc: string}) => {
     const parsed = parseFragment(html);
 
     let firstElement = parsed.$('*')[0];
@@ -292,12 +307,19 @@ const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string, featureS
             const firstImageSplit = firstImgSrc.split('/uploads/asset/');
             const featureImageSplit = featureSrc.split('/uploads/asset/');
 
-            if (firstImageSplit[1] !== undefined && featureImageSplit[1] !== undefined && firstImageSplit[1] === featureImageSplit[1]) {
+            if (
+                firstImageSplit[1] !== undefined &&
+                featureImageSplit[1] !== undefined &&
+                firstImageSplit[1] === featureImageSplit[1]
+            ) {
                 removeTarget.remove();
             }
 
             if (featureSrc.length > 0 && firstImgSrc) {
-                let normalizedFirstSrc = firstImgSrc.replace('fit=scale-down,format=auto,onerror=redirect,quality=80', 'quality=100');
+                let normalizedFirstSrc = firstImgSrc.replace(
+                    'fit=scale-down,format=auto,onerror=redirect,quality=80',
+                    'quality=100'
+                );
 
                 if (featureSrc === normalizedFirstSrc) {
                     removeTarget.remove();
@@ -309,9 +331,4 @@ const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string, featureS
     return parsed.html();
 };
 
-export {
-    getYouTubeID,
-    isURL,
-    processHTML,
-    removeDuplicateFeatureImage
-};
+export {getYouTubeID, isURL, processHTML, removeDuplicateFeatureImage};

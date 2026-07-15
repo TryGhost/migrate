@@ -8,18 +8,18 @@ import processContent from '../lib/process-content.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
-const readSync = (name) => {
+const readSync = name => {
     let fixtureFileName = join(__dirname, './', 'fixtures', 'export', 'posts', name);
     return readFileSync(fixtureFileName, {encoding: 'utf8'});
 };
 
-const extractEContent = (html) => {
+const extractEContent = html => {
     const parsed = domUtils.parseFragment(html);
     const eContent = parsed.$('.e-content')[0];
     return eContent ? domUtils.serializeChildren(eContent) : '';
 };
 
-const assertMediumMetaObject = (value) => {
+const assertMediumMetaObject = value => {
     assert.equal(typeof value, 'object');
     assert.ok(value !== null);
     assert.ok('url' in value);
@@ -35,9 +35,13 @@ describe('Process', function () {
     it('Can process a basic medium post', function () {
         const fixture = readSync('basic-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
-        const post = processPost({name: fakeName, html: fixture, options: {
-            addPlatformTag: true
-        }});
+        const post = processPost({
+            name: fakeName,
+            html: fixture,
+            options: {
+                addPlatformTag: true
+            }
+        });
 
         assertMediumMetaObject(post);
 
@@ -79,9 +83,13 @@ describe('Process', function () {
     it('Can process a draft medium post', function () {
         const fixture = readSync('draft-post.html');
         const fakeName = 'draft_blog-post-title-ababab121212.html';
-        const post = processPost({name: fakeName, html: fixture, options: {
-            addPlatformTag: true
-        }});
+        const post = processPost({
+            name: fakeName,
+            html: fixture,
+            options: {
+                addPlatformTag: true
+            }
+        });
 
         assertMediumMetaObject(post);
 
@@ -105,14 +113,19 @@ describe('Process', function () {
     it('Can do advanced content processing on medium posts', function () {
         const fixture = readSync('advanced-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
-        const post = processPost({name: fakeName, html: fixture, options: {
-            addPlatformTag: true
-        }});
+        const post = processPost({
+            name: fakeName,
+            html: fixture,
+            options: {
+                addPlatformTag: true
+            }
+        });
 
         assertMediumMetaObject(post);
 
         const html = post.data.html;
-        const firstDivRegex = /^<section name="007" class="section section--body section--first">[^\w<>]+<div class="(.*?)"/;
+        const firstDivRegex =
+            /^<section name="007" class="section section--body section--first">[^\w<>]+<div class="(.*?)"/;
 
         // should start with a section followed by a div
         assert.match(html, firstDivRegex);
@@ -140,9 +153,13 @@ describe('Process', function () {
     it('Can detect comment', function () {
         const fixture = readSync('comment.html');
         const fakeName = '2018-08-11_blog-comment-efefef121212.html';
-        const post = processPost({name: fakeName, html: fixture, options: {
-            addPlatformTag: true
-        }});
+        const post = processPost({
+            name: fakeName,
+            html: fixture,
+            options: {
+                addPlatformTag: true
+            }
+        });
 
         assert.equal(post.data.status, 'draft');
         assert.equal(post.data.tags[1].data.name, '#Medium Possible Comment');
@@ -151,9 +168,13 @@ describe('Process', function () {
     it('Can detect comment 2', function () {
         const fixture = readSync('short-post.html');
         const fakeName = '2018-08-11_blog-short-post-efefef121212.html';
-        const post = processPost({name: fakeName, html: fixture, options: {
-            addPlatformTag: true
-        }});
+        const post = processPost({
+            name: fakeName,
+            html: fixture,
+            options: {
+                addPlatformTag: true
+            }
+        });
 
         assert.equal(post.data.status, 'published');
     });
@@ -171,10 +192,14 @@ describe('Process', function () {
     it('Can add a custom tag at the start', function () {
         const fixture = readSync('advanced-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
-        const post = processPost({name: fakeName, html: fixture, options: {
-            addTag: 'This is my custom tag',
-            addPlatformTag: true
-        }});
+        const post = processPost({
+            name: fakeName,
+            html: fixture,
+            options: {
+                addTag: 'This is my custom tag',
+                addPlatformTag: true
+            }
+        });
 
         assert.equal(post.data.tags.length, 5);
         assert.equal(post.data.tags[0].data.name, 'This is my custom tag');
@@ -193,16 +218,24 @@ describe('Process', function () {
 
         const html = post.data.html;
 
-        assert.ok(html.includes('<blockquote><p>“Lorem Ipsum”&nbsp;<a href="https://example/com" rel="noopener" target="_blank">Example</a></p></blockquote>'));
+        assert.ok(
+            html.includes(
+                '<blockquote><p>“Lorem Ipsum”&nbsp;<a href="https://example/com" rel="noopener" target="_blank">Example</a></p></blockquote>'
+            )
+        );
         assert.ok(html.includes('<blockquote><p>Lorem Ipsum</p></blockquote>'));
     });
 
     it('Can use Medium as canonical link', function () {
         const fixture = readSync('basic-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
-        const post = processPost({name: fakeName, html: fixture, options: {
-            mediumAsCanonical: true
-        }});
+        const post = processPost({
+            name: fakeName,
+            html: fixture,
+            options: {
+                mediumAsCanonical: true
+            }
+        });
 
         assert.equal(post.data.canonical_url, 'https://medium.com/@JoeBloggs/testpost-efefef12121212');
     });
@@ -210,13 +243,21 @@ describe('Process', function () {
     it('does remove the subtitle if used as excerpt', function () {
         const fixture = readSync('advanced-post.html');
         const fakeName = '2018-08-11_blog-post-title-efefef121212.html';
-        const post = processPost({name: fakeName, html: fixture, options: {
-            addTag: 'This is my custom tag',
-            addPlatformTag: true
-        }});
+        const post = processPost({
+            name: fakeName,
+            html: fixture,
+            options: {
+                addTag: 'This is my custom tag',
+                addPlatformTag: true
+            }
+        });
 
         // "This is a subtitle of some sort" is already used as excerpt, so don't include it in the content
-        assert.ok(!post.data.html.includes('<h4 name="456" id="456" class="graf graf--h4 graf-after--h3 graf--subtitle">This is a subtitle of some sort</h4>'));
+        assert.ok(
+            !post.data.html.includes(
+                '<h4 name="456" id="456" class="graf graf--h4 graf-after--h3 graf--subtitle">This is a subtitle of some sort</h4>'
+            )
+        );
     });
 
     it('Can fall back to filename for slug when canonical URL has no slug', function () {
@@ -328,7 +369,10 @@ describe('Process Content', function () {
             }
         });
 
-        assert.equal(post.data.html, `<pre><code>&lt;div class="image-block"&gt;\n    &lt;a href="https://example.com"&gt;\n        &lt;img src="/images/photo.jpg" alt="My alt text"&gt;\n    &lt;/a&gt;\n&lt;/div&gt;</code></pre>`);
+        assert.equal(
+            post.data.html,
+            `<pre><code>&lt;div class="image-block"&gt;\n    &lt;a href="https://example.com"&gt;\n        &lt;img src="/images/photo.jpg" alt="My alt text"&gt;\n    &lt;/a&gt;\n&lt;/div&gt;</code></pre>`
+        );
     });
 
     it('Can process code blocks with slashes', function () {
@@ -345,15 +389,19 @@ describe('Process Content', function () {
         });
 
         assert.ok(!post.data.html.includes('<pre name="4a0a" id="4a0a" class="graf graf--pre graf-after--p">'));
-        assert.ok(post.data.html.includes('<pre><code>sudo apt-get update \n' +
-        'sudo apt-get install \\ \n' +
-        '    apt-transport-https \\ \n' +
-        '    ca-certificates \\ \n' +
-        '    curl \\ \n' +
-        '    gnupg-agent \\ \n' +
-        '    software-properties-common \\ \n' +
-        '    example \\ \n' +
-        '    python3-example-lorem</code></pre>'));
+        assert.ok(
+            post.data.html.includes(
+                '<pre><code>sudo apt-get update \n' +
+                    'sudo apt-get install \\ \n' +
+                    '    apt-transport-https \\ \n' +
+                    '    ca-certificates \\ \n' +
+                    '    curl \\ \n' +
+                    '    gnupg-agent \\ \n' +
+                    '    software-properties-common \\ \n' +
+                    '    example \\ \n' +
+                    '    python3-example-lorem</code></pre>'
+            )
+        );
     });
 
     it('Can process consecutive code blocks', function () {
@@ -370,10 +418,14 @@ describe('Process Content', function () {
         });
 
         assert.ok(!post.data.html.includes('<pre name="9a1f" id="9a1f" class="graf graf--pre graf-after--pre">'));
-        assert.ok(post.data.html.includes('<pre><code>echo "deb https://sub.example.com/ce/dolor lorem ipsum" |\\  \n' +
-        'sudo tee /etc/apt/sources.list.d/example.list \n' +
-        'sudo apt-get update \n' +
-        'sudo apt-get install example</code></pre>'));
+        assert.ok(
+            post.data.html.includes(
+                '<pre><code>echo "deb https://sub.example.com/ce/dolor lorem ipsum" |\\  \n' +
+                    'sudo tee /etc/apt/sources.list.d/example.list \n' +
+                    'sudo apt-get update \n' +
+                    'sudo apt-get install example</code></pre>'
+            )
+        );
     });
 
     it('Can process code blocks with language', function () {
@@ -391,10 +443,18 @@ describe('Process Content', function () {
             }
         });
 
-        assert.ok(!post.data.html.includes('<pre data-code-block-mode="2" spellcheck="false" data-code-block-lang="bash" name="2296" id="2296" class="graf graf--pre graf-after--p graf--preV2">\n' +
-            '<span class="pre--content">wget https://example.com/package.zip</span>\n' +
-            '</pre>'));
-        assert.ok(post.data.html.includes('<pre><code class="language-bash">wget https://example.com/package.zip</code></pre>'));
+        assert.ok(
+            !post.data.html.includes(
+                '<pre data-code-block-mode="2" spellcheck="false" data-code-block-lang="bash" name="2296" id="2296" class="graf graf--pre graf-after--p graf--preV2">\n' +
+                    '<span class="pre--content">wget https://example.com/package.zip</span>\n' +
+                    '</pre>'
+            )
+        );
+        assert.ok(
+            post.data.html.includes(
+                '<pre><code class="language-bash">wget https://example.com/package.zip</code></pre>'
+            )
+        );
     });
 
     it('Can process galleries', function () {
@@ -420,9 +480,15 @@ describe('Process Content', function () {
             }
         });
 
-        assert.ok(!post.data.html.includes('<div class="section-inner sectionLayout--outsetRow" data-paragraph-count="3">'));
+        assert.ok(
+            !post.data.html.includes('<div class="section-inner sectionLayout--outsetRow" data-paragraph-count="3">')
+        );
 
-        assert.ok(post.data.html.includes('<figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*1234.jpeg" width="768" height="933" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/400/1*5678.jpeg" width="768" height="1024" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*-abcd.jpeg" width="768" height="965" loading="lazy" alt></div></div></div><figcaption>Photos by the author</figcaption></figure>'));
+        assert.ok(
+            post.data.html.includes(
+                '<figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*1234.jpeg" width="768" height="933" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/400/1*5678.jpeg" width="768" height="1024" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://cdn-images-1.medium.com/max/600/1*-abcd.jpeg" width="768" height="965" loading="lazy" alt></div></div></div><figcaption>Photos by the author</figcaption></figure>'
+            )
+        );
     });
 
     it('Can process embeds with images', function () {
@@ -449,9 +515,17 @@ describe('Process Content', function () {
             }
         });
 
-        assert.ok(!post.data.html.includes('<div name="d38c" id="d38c" class="graf graf--mixtapeEmbed graf-after--p graf--trailing">'));
+        assert.ok(
+            !post.data.html.includes(
+                '<div name="d38c" id="d38c" class="graf graf--mixtapeEmbed graf-after--p graf--trailing">'
+            )
+        );
 
-        assert.ok(post.data.html.includes('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.medium.com/list/1234"><div class="kg-bookmark-content"><div class="kg-bookmark-title">My best Articles</div><div class="kg-bookmark-description">A description</div><div class="kg-bookmark-metadata"></div></div><div class="kg-bookmark-thumbnail"><img src="https://cdn-images-1.medium.com/fit/c/304/160/0*5678.jpeg" alt></div></a></figure>'));
+        assert.ok(
+            post.data.html.includes(
+                '<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.medium.com/list/1234"><div class="kg-bookmark-content"><div class="kg-bookmark-title">My best Articles</div><div class="kg-bookmark-description">A description</div><div class="kg-bookmark-metadata"></div></div><div class="kg-bookmark-thumbnail"><img src="https://cdn-images-1.medium.com/fit/c/304/160/0*5678.jpeg" alt></div></a></figure>'
+            )
+        );
     });
 
     it('Can process embeds without images', function () {
@@ -474,9 +548,15 @@ describe('Process Content', function () {
             }
         });
 
-        assert.ok(!post.data.html.includes('<div name="c123" id="c123" class="graf graf--mixtapeEmbed graf-after--p">'));
+        assert.ok(
+            !post.data.html.includes('<div name="c123" id="c123" class="graf graf--mixtapeEmbed graf-after--p">')
+        );
 
-        assert.ok(post.data.html.includes('<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.com/lorem/ipsum"><div class="kg-bookmark-content"><div class="kg-bookmark-title">lorem/ipsum</div><div class="kg-bookmark-description">Dolor Simet.</div><div class="kg-bookmark-metadata"></div></div></a></figure>'));
+        assert.ok(
+            post.data.html.includes(
+                '<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.com/lorem/ipsum"><div class="kg-bookmark-content"><div class="kg-bookmark-title">lorem/ipsum</div><div class="kg-bookmark-description">Dolor Simet.</div><div class="kg-bookmark-metadata"></div></div></a></figure>'
+            )
+        );
     });
 
     it('Can process embed with minimal markup', function () {
@@ -513,10 +593,22 @@ describe('Process Content', function () {
             }
         });
 
-        assert.ok(!post.data.html.includes('<blockquote name="68bf" id="68bf" class="graf graf--pullquote graf-after--p graf--trailing">Standalone quote</blockquote>'));
-        assert.ok(!post.data.html.includes('<blockquote name="3755" id="3755" class="graf graf--pullquote graf--startsWithDoubleQuote graf-after--li">"Main quote."</blockquote>'));
+        assert.ok(
+            !post.data.html.includes(
+                '<blockquote name="68bf" id="68bf" class="graf graf--pullquote graf-after--p graf--trailing">Standalone quote</blockquote>'
+            )
+        );
+        assert.ok(
+            !post.data.html.includes(
+                '<blockquote name="3755" id="3755" class="graf graf--pullquote graf--startsWithDoubleQuote graf-after--li">"Main quote."</blockquote>'
+            )
+        );
 
         assert.ok(post.data.html.includes('<blockquote><p>Standalone quote</p></blockquote>'));
-        assert.ok(post.data.html.includes('<blockquote><p>"Main quote."<br><br>\u2014 <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></p></blockquote>'));
+        assert.ok(
+            post.data.html.includes(
+                '<blockquote><p>"Main quote."<br><br>\u2014 <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></p></blockquote>'
+            )
+        );
     });
 });

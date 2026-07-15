@@ -16,7 +16,7 @@ const parserOptions = {
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
-const readSync = async (name) => {
+const readSync = async name => {
     let fixtureFileName = path.join(__dirname, './', 'fixtures', name);
     return fs.readFile(fixtureFileName, {encoding: 'utf8'});
 };
@@ -58,7 +58,10 @@ describe('Process', function () {
         assert.deepEqual(data.published_at, new Date('2013-06-07T03:00:44.000Z'));
         assert.deepEqual(data.created_at, new Date('2013-06-07T03:00:44.000Z'));
         assert.deepEqual(data.updated_at, new Date('2013-06-07T03:00:44.000Z'));
-        assert.deepEqual(data.feature_image, 'https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1268&q=80');
+        assert.deepEqual(
+            data.feature_image,
+            'https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1268&q=80'
+        );
         assert.deepEqual(data.type, 'post');
         // We're not testing `data.html` output here. That happens in @tryghost/mg-wp-api
 
@@ -305,7 +308,10 @@ describe('Process', function () {
         assert.deepEqual(data.title, 'Post with Featured Image Alt Text');
         assert.deepEqual(data.feature_image, 'https://example.com/wp-content/uploads/2013/06/featured-image.jpg');
         assert.deepEqual(data.feature_image_alt, 'Sunset over mountains with orange and pink sky');
-        assert.deepEqual(data.feature_image_caption, 'A gorgeous sunset over the mountains with vibrant orange and pink colors.');
+        assert.deepEqual(
+            data.feature_image_caption,
+            'A gorgeous sunset over the mountains with vibrant orange and pink colors.'
+        );
     });
 
     it('Can handle empty post slugs', async function () {
@@ -367,7 +373,10 @@ describe('Process', function () {
         assert.ok(typeof post === 'object' && post !== null);
 
         assert.ok(typeof post.data === 'object' && post.data !== null);
-        assert.deepEqual(post.data.custom_excerpt, 'We\'re not testing HTML output here. That happens in @tryghost/mg-wp-api');
+        assert.deepEqual(
+            post.data.custom_excerpt,
+            "We're not testing HTML output here. That happens in @tryghost/mg-wp-api"
+        );
     });
 
     it('Does not filter posts by date of options not present', async function () {
@@ -525,8 +534,12 @@ describe('Process', function () {
             lorem1234: '433',
             ab_view_count: '394',
             amazonS3_cache: {
-                '//example1234com.s3.ca-central-1.amazonaws.com/wp-content/uploads/2019/05/26182814/abcdefg-12345-logo.png': {id: '7050', source_type: 'media-library'},
-                '//abcdefg1234.com/wp-content/uploads/2019/05/abcdefg-12345-logo.png': {id: '7050', source_type: 'media-library'}
+                '//example1234com.s3.ca-central-1.amazonaws.com/wp-content/uploads/2019/05/26182814/abcdefg-12345-logo.png':
+                    {id: '7050', source_type: 'media-library'},
+                '//abcdefg1234.com/wp-content/uploads/2019/05/abcdefg-12345-logo.png': {
+                    id: '7050',
+                    source_type: 'media-library'
+                }
             },
             _wp_attachment_metadata: {
                 width: 3510,
@@ -578,7 +591,8 @@ describe('Process', function () {
             'wp:postmeta': {
                 'wp:meta_key': 'td_post_theme_settings',
                 // s:69 simulates the original \r\n byte count; actual content is 68 bytes after XML normalization
-                'wp:meta_value': 'a:1:{s:11:"td_subtitle";s:69:"Lorem ipsum dolor sit amet, préservé à travers la même façon. \n";}'
+                'wp:meta_value':
+                    'a:1:{s:11:"td_subtitle";s:69:"Lorem ipsum dolor sit amet, préservé à travers la même façon. \n";}'
             }
         };
 
@@ -597,7 +611,8 @@ describe('Process', function () {
         const post = {
             'wp:postmeta': {
                 'wp:meta_key': 'img_optimize_data',
-                'wp:meta_value': 'a:2:{s:5:"stats";a:3:{s:4:"time";d:0.16999999999999998;s:5:"bytes";i:6031;s:7:"percent";d:1.47;}s:5:"sizes";a:2:{s:6:"medium";O:8:"stdClass":3:{s:5:"bytes";i:288;s:7:"percent";d:1.8799999999999999;s:10:"size_before";i:15304;}s:9:"thumbnail";O:8:"stdClass":3:{s:5:"bytes";i:67;s:7:"percent";d:0.91000000000000003;s:10:"size_before";i:7354;}}}'
+                'wp:meta_value':
+                    'a:2:{s:5:"stats";a:3:{s:4:"time";d:0.16999999999999998;s:5:"bytes";i:6031;s:7:"percent";d:1.47;}s:5:"sizes";a:2:{s:6:"medium";O:8:"stdClass":3:{s:5:"bytes";i:288;s:7:"percent";d:1.8799999999999999;s:10:"size_before";i:15304;}s:9:"thumbnail";O:8:"stdClass":3:{s:5:"bytes";i:67;s:7:"percent";d:0.91000000000000003;s:10:"size_before";i:7354;}}}'
             }
         };
 
@@ -625,7 +640,10 @@ describe('Process', function () {
         // Post with Yoast metadata
         const yoastPost = processed.posts.find(p => p.data.slug === 'my-sample-post');
         assert.equal(yoastPost.data.meta_title, 'My Custom SEO Title for Search Engines');
-        assert.equal(yoastPost.data.meta_description, 'A short description of the post for search engine results pages');
+        assert.equal(
+            yoastPost.data.meta_description,
+            'A short description of the post for search engine results pages'
+        );
 
         // Post without Yoast metadata should not have meta_title or meta_description
         const noYoastPost = processed.posts.find(p => p.data.slug === 'no-yoast');
@@ -733,7 +751,12 @@ describe('Process', function () {
         const processed = await process.all(input, ctx);
         const post = processed.posts[0];
 
-        assert.ok(post.data.html.includes('<!--kg-card-begin: html--><audio controls style="width: 100%"><source src="http://media.libsyn.com/media/example/podcast.mp3" type="audio/mpeg"><p>Download <a href="http://media.libsyn.com/media/example/podcast.mp3" download="podcast.mp3">podcast.mp3</a></p></audio><!--kg-card-end: html-->'), 'Should contain an HTML audio element with source and download link');
+        assert.ok(
+            post.data.html.includes(
+                '<!--kg-card-begin: html--><audio controls style="width: 100%"><source src="http://media.libsyn.com/media/example/podcast.mp3" type="audio/mpeg"><p>Download <a href="http://media.libsyn.com/media/example/podcast.mp3" download="podcast.mp3">podcast.mp3</a></p></audio><!--kg-card-end: html-->'
+            ),
+            'Should contain an HTML audio element with source and download link'
+        );
         assert.ok(post.data.html.includes('This is the episode description'), 'Should still contain the post content');
     });
 
@@ -752,7 +775,10 @@ describe('Process', function () {
         const post = processed.posts[0];
 
         assert.ok(!post.data.html.includes('<audio'), 'Should not contain an audio element');
-        assert.ok(post.data.html.includes('<iframe') && post.data.html.includes('libsyn.com'), 'Should still contain the libsyn iframe');
+        assert.ok(
+            post.data.html.includes('<iframe') && post.data.html.includes('libsyn.com'),
+            'Should still contain the libsyn iframe'
+        );
         assert.ok(post.data.html.includes('This is the episode description'), 'Should still contain the post content');
     });
 });
@@ -763,7 +789,10 @@ describe('HTML Processing', function () {
 
         const processed = await process.processHTMLContent({html, options: {rawHtml: true}});
 
-        assert.deepEqual(processed, '<!--kg-card-begin: html--><p style="font-weight: 400;">Hello</p><img data-src="https://example.com/image.jpg" /><!--kg-card-end: html-->');
+        assert.deepEqual(
+            processed,
+            '<!--kg-card-begin: html--><p style="font-weight: 400;">Hello</p><img data-src="https://example.com/image.jpg" /><!--kg-card-end: html-->'
+        );
     });
 
     it('Converts YouTube line to embed', async function () {
@@ -773,9 +802,12 @@ Lorem Ipsum`;
 
         const processed = await process.preProcessContent({html});
 
-        assert.deepEqual(processed, 'Hello world\n' +
-        '<iframe loading="lazy" title width="160" height="9" src="https://www.youtube.com/embed/ABCD1234xYz?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>\n' +
-        'Lorem Ipsum');
+        assert.deepEqual(
+            processed,
+            'Hello world\n' +
+                '<iframe loading="lazy" title width="160" height="9" src="https://www.youtube.com/embed/ABCD1234xYz?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>\n' +
+                'Lorem Ipsum'
+        );
     });
 
     it('Converts YouTube line with spaces to embed', async function () {
@@ -785,9 +817,12 @@ Lorem Ipsum`;
 
         const processed = await process.preProcessContent({html});
 
-        assert.deepEqual(processed, 'Hello world\n' +
-        '<iframe loading="lazy" title width="160" height="9" src="https://www.youtube.com/embed/ABCD1234xYz?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>\n' +
-        'Lorem Ipsum');
+        assert.deepEqual(
+            processed,
+            'Hello world\n' +
+                '<iframe loading="lazy" title width="160" height="9" src="https://www.youtube.com/embed/ABCD1234xYz?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>\n' +
+                'Lorem Ipsum'
+        );
     });
 
     it('Does not convert YouTube line to embed if line has other text', async function () {
@@ -797,9 +832,10 @@ Lorem Ipsum`;
 
         const processed = await process.preProcessContent({html});
 
-        assert.deepEqual(processed, 'Hello world\n' +
-        'Watch https://www.youtube.com/watch?v=ABCD1234xYz this\n' +
-        'Lorem Ipsum');
+        assert.deepEqual(
+            processed,
+            'Hello world\n' + 'Watch https://www.youtube.com/watch?v=ABCD1234xYz this\n' + 'Lorem Ipsum'
+        );
     });
 
     it('Removes first image in post when it matches the featured image', async function () {

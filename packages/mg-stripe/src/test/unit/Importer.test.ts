@@ -28,10 +28,7 @@ const baseProvider = {
     },
 
     getAll() {
-        return createAsyncIterator([
-            new TestObject('1', 'name1'),
-            new TestObject('2', 'name2')
-        ]);
+        return createAsyncIterator([new TestObject('1', 'name1'), new TestObject('2', 'name2')]);
     },
 
     /**
@@ -70,9 +67,7 @@ const baseProviderWithExisting = {
      * Find the newID for a given oldID, in case the oldID was already imported previously in another run.
      */
     findExisting(oldItem: TestObject) {
-        return Promise.resolve(
-            new TestObject('newid' + oldItem.id, oldItem.name)
-        );
+        return Promise.resolve(new TestObject('newid' + oldItem.id, oldItem.name));
     }
 };
 

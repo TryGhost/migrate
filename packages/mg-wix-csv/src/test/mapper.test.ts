@@ -50,12 +50,15 @@ describe('Wix CSV mapper', () => {
         assert.equal(result.posts[0].data.featured, true);
         assert.match(result.posts[0].data.feature_image || '', /static\.wixstatic\.com/);
         assert.equal(result.posts[0].data.author.data.email, 'jane-writer@example.com');
-        assert.deepEqual(result.posts[0].data.tags.map((tag: tagsObject) => tag.data), [
-            {slug: 'market-news', name: 'Market News'},
-            {slug: 'tax-planning', name: 'Tax Planning'},
-            {slug: 'tag-id', name: 'tag-id'},
-            {slug: 'hash-wix', name: '#wix'}
-        ]);
+        assert.deepEqual(
+            result.posts[0].data.tags.map((tag: tagsObject) => tag.data),
+            [
+                {slug: 'market-news', name: 'Market News'},
+                {slug: 'tax-planning', name: 'Tax Planning'},
+                {slug: 'tag-id', name: 'tag-id'},
+                {slug: 'hash-wix', name: '#wix'}
+            ]
+        );
         assert.equal(result.posts[0].data.html, '<p>Hello <strong>world</strong></p>');
 
         assert.equal(result.posts[1].url, 'https://example.com/post/draft-wix');
@@ -88,47 +91,85 @@ describe('Wix CSV mapper', () => {
         assert.deepEqual(uniqueIds(['a', 'a', '', 'b']), ['a', 'b']);
         assert.equal(buildPostUrl({path: '/post/one'}), '/post/one');
         assert.equal(buildPostUrl({url: 'https://example.com', path: 'post/one'}), 'https://example.com/post/one');
-        assert.equal(buildPostUrl({url: 'https://example.com', path: 'https://other.com/post'}), 'https://other.com/post');
+        assert.equal(
+            buildPostUrl({url: 'https://example.com', path: 'https://other.com/post'}),
+            'https://other.com/post'
+        );
         assert.equal(createSlug({title: 'Hello World'}), 'hello-world');
         assert.equal(createSlug({slug: 'Custom Slug'}), 'custom-slug');
         assert.equal(createAuthor({defaultAuthorName: 'Default Person'}).data.email, 'default-person@example.com');
-        assert.deepEqual(mapTags({'Main Category': 'Tax Planning', Categories: '["68504d7f15587afbbe9179de","id"]', Tags: '["id"]'}).map((tag: tagsObject) => tag.data), [
-            {slug: 'tax-planning', name: 'Tax Planning'},
-            {slug: 'id', name: 'id'},
-            {slug: 'hash-wix', name: '#wix'}
-        ]);
-        assert.deepEqual(mapTags({'Main Category': 'Tax Planning', Categories: 'Another Category', Tags: 'Tag Name'}).map((tag: tagsObject) => tag.data), [
-            {slug: 'tax-planning', name: 'Tax Planning'},
-            {slug: 'another-category', name: 'Another Category'},
-            {slug: 'tag-name', name: 'Tag Name'},
-            {slug: 'hash-wix', name: '#wix'}
-        ]);
-        assert.deepEqual(mapTags({'Main Category': '68504d7f15587afbbe9179de', Categories: '["68504d7f15587afbbe9179de","id"]', Tags: '[]'}).map((tag: tagsObject) => tag.data), [
-            {slug: '68504d7f15587afbbe9179de', name: '68504d7f15587afbbe9179de'},
-            {slug: 'id', name: 'id'},
-            {slug: 'hash-wix', name: '#wix'}
-        ]);
-        assert.deepEqual(mapTags({'Main Category': 'Tax Planning', Categories: 'Category Name', Tags: 'Tag Name'}, {
-            includeMainCategory: false
-        }).map((tag: tagsObject) => tag.data), [
-            {slug: 'category-name', name: 'Category Name'},
-            {slug: 'tag-name', name: 'Tag Name'},
-            {slug: 'hash-wix', name: '#wix'}
-        ]);
-        assert.deepEqual(mapTags({'Main Category': 'Tax Planning', Categories: 'Category Name', Tags: 'Tag Name'}, {
-            includeCategories: false,
-            includeTags: false
-        }).map((tag: tagsObject) => tag.data), [
-            {slug: 'tax-planning', name: 'Tax Planning'},
-            {slug: 'hash-wix', name: '#wix'}
-        ]);
-        assert.deepEqual(mapTags({'Main Category': 'Tax Planning', Categories: 'Category Name', Tags: 'Tag Name'}, {
-            includeMainCategory: false,
-            includeCategories: false,
-            includeTags: false
-        }).map((tag: tagsObject) => tag.data), [
-            {slug: 'hash-wix', name: '#wix'}
-        ]);
+        assert.deepEqual(
+            mapTags({
+                'Main Category': 'Tax Planning',
+                Categories: '["68504d7f15587afbbe9179de","id"]',
+                Tags: '["id"]'
+            }).map((tag: tagsObject) => tag.data),
+            [
+                {slug: 'tax-planning', name: 'Tax Planning'},
+                {slug: 'id', name: 'id'},
+                {slug: 'hash-wix', name: '#wix'}
+            ]
+        );
+        assert.deepEqual(
+            mapTags({'Main Category': 'Tax Planning', Categories: 'Another Category', Tags: 'Tag Name'}).map(
+                (tag: tagsObject) => tag.data
+            ),
+            [
+                {slug: 'tax-planning', name: 'Tax Planning'},
+                {slug: 'another-category', name: 'Another Category'},
+                {slug: 'tag-name', name: 'Tag Name'},
+                {slug: 'hash-wix', name: '#wix'}
+            ]
+        );
+        assert.deepEqual(
+            mapTags({
+                'Main Category': '68504d7f15587afbbe9179de',
+                Categories: '["68504d7f15587afbbe9179de","id"]',
+                Tags: '[]'
+            }).map((tag: tagsObject) => tag.data),
+            [
+                {slug: '68504d7f15587afbbe9179de', name: '68504d7f15587afbbe9179de'},
+                {slug: 'id', name: 'id'},
+                {slug: 'hash-wix', name: '#wix'}
+            ]
+        );
+        assert.deepEqual(
+            mapTags(
+                {'Main Category': 'Tax Planning', Categories: 'Category Name', Tags: 'Tag Name'},
+                {
+                    includeMainCategory: false
+                }
+            ).map((tag: tagsObject) => tag.data),
+            [
+                {slug: 'category-name', name: 'Category Name'},
+                {slug: 'tag-name', name: 'Tag Name'},
+                {slug: 'hash-wix', name: '#wix'}
+            ]
+        );
+        assert.deepEqual(
+            mapTags(
+                {'Main Category': 'Tax Planning', Categories: 'Category Name', Tags: 'Tag Name'},
+                {
+                    includeCategories: false,
+                    includeTags: false
+                }
+            ).map((tag: tagsObject) => tag.data),
+            [
+                {slug: 'tax-planning', name: 'Tax Planning'},
+                {slug: 'hash-wix', name: '#wix'}
+            ]
+        );
+        assert.deepEqual(
+            mapTags(
+                {'Main Category': 'Tax Planning', Categories: 'Category Name', Tags: 'Tag Name'},
+                {
+                    includeMainCategory: false,
+                    includeCategories: false,
+                    includeTags: false
+                }
+            ).map((tag: tagsObject) => tag.data),
+            [{slug: 'hash-wix', name: '#wix'}]
+        );
     });
 
     it('maps a minimal draft post', () => {
@@ -158,12 +199,15 @@ describe('Wix CSV mapper', () => {
     });
 
     it('throws a NoContentError for empty CSV files', async () => {
-        await assert.rejects(mapContent({
-            options: {
-                posts: join(fixturesPath, 'empty.csv')
+        await assert.rejects(
+            mapContent({
+                options: {
+                    posts: join(fixturesPath, 'empty.csv')
+                }
+            }),
+            {
+                message: 'Input file is empty'
             }
-        }), {
-            message: 'Input file is empty'
-        });
+        );
     });
 });

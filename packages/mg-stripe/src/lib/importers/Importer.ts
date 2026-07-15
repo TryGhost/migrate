@@ -11,28 +11,28 @@ type ImportProvider<T> = {
     /**
      *
      */
-    getByID(oldId: string): Promise<T>
-    getAll(): {[Symbol.asyncIterator](): AsyncIterator<T>}
+    getByID(oldId: string): Promise<T>;
+    getAll(): {[Symbol.asyncIterator](): AsyncIterator<T>};
 
     /**
      * Find the newID for a given oldID, in case the oldID was already imported previously in another run.
      */
-    findExisting(oldItem: T): Promise<T|undefined>
+    findExisting(oldItem: T): Promise<T | undefined>;
 
     /**
      * Recreate an existing item in the new account.
      */
-    recreate(oldItem: T, tags: ReportTags): Promise<string>
-    revert?(oldItem: T, newItem: T, tags: ReportTags): Promise<void>
-    confirm?(oldItem: T, newItem: T, tags: ReportTags): Promise<void>
-}
+    recreate(oldItem: T, tags: ReportTags): Promise<string>;
+    revert?(oldItem: T, newItem: T, tags: ReportTags): Promise<void>;
+    confirm?(oldItem: T, newItem: T, tags: ReportTags): Promise<void>;
+};
 
 export type BaseImporter<T extends {id: string}> = {
-    recreate(item: T): Promise<string>
-    recreateByObjectOrId(idOrItem: string | T): Promise<string>
-    revert(item: T): Promise<void>
-    revertByObjectOrId(idOrItem: string | T): Promise<void>
-}
+    recreate(item: T): Promise<string>;
+    recreateByObjectOrId(idOrItem: string | T): Promise<string>;
+    revert(item: T): Promise<void>;
+    revertByObjectOrId(idOrItem: string | T): Promise<void>;
+};
 
 const COPIED_CATEGORY = new ReportingCategory('copying', {skipTitle: true});
 const CONFIRM_CATEGORY = new ReportingCategory('confirmed', {skipTitle: true});
@@ -44,8 +44,7 @@ const SUCCEEDED_CATEGORY = new ReportingCategory('succeeded', {
         prefixStyle: ['green', 'bold'],
         style: ['bold']
     },
-    logOptions: {
-    }
+    logOptions: {}
 });
 const FAILED_CATEGORY = new ReportingCategory('failed', {
     titleLogOptions: {
@@ -74,21 +73,23 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
     runningRevertJobs = new ReuseLastCall<void>();
     runningConfirmJobs = new ReuseLastCall<void>();
 
-    constructor(options: {objectName: string, provider: ImportProvider<T>, reporter: Reporter}) {
+    constructor(options: {objectName: string; provider: ImportProvider<T>; reporter: Reporter}) {
         this.objectName = options.objectName;
         this.provider = options.provider;
-        this.reporter = new Reporter(new ReportingCategory(this.objectName, {
-            skipCount: true,
-            indentChildren: false,
-            title: `${this.objectName}s:`,
-            titleLogOptions: {
-                style: ['yellow','bold', 'dim']
-            }
-        }));
+        this.reporter = new Reporter(
+            new ReportingCategory(this.objectName, {
+                skipCount: true,
+                indentChildren: false,
+                title: `${this.objectName}s:`,
+                titleLogOptions: {
+                    style: ['yellow', 'bold', 'dim']
+                }
+            })
+        );
         options.reporter.addChildReporter(this.reporter);
     }
 
-    private async runInQueue(method: 'recreate' | 'revert' | 'confirm'): Promise<ErrorGroup|undefined> {
+    private async runInQueue(method: 'recreate' | 'revert' | 'confirm'): Promise<ErrorGroup | undefined> {
         // Loop through all items in the provider and import them
         const queue = new Queue();
         const errorGroup = new ErrorGroup();
@@ -117,7 +118,7 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
      * Loop through all the available items in the old account, and recreate them in the new account.
      * @returns An ErrorGroup if there were only warnings
      */
-    async recreateAll(): Promise<ErrorGroup|undefined> {
+    async recreateAll(): Promise<ErrorGroup | undefined> {
         return this.runInQueue('recreate');
     }
 
@@ -141,7 +142,9 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
         // Check if already imported
         const alreadyRecreatedId = this.recreatedMap.get(id);
         if (alreadyRecreatedId) {
-            Logger.vv?.info(`Skipped ${this.objectName} ${id}, because already recreated as ${alreadyRecreatedId} in this run`);
+            Logger.vv?.info(
+                `Skipped ${this.objectName} ${id}, because already recreated as ${alreadyRecreatedId} in this run`
+            );
             return alreadyRecreatedId;
         }
 
@@ -183,7 +186,9 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
             // We need to repeat this because sometimes the item is passed directly to this method, without going through recreateByID()
             const alreadyRecreatedId = this.recreatedMap.get(item.id);
             if (alreadyRecreatedId) {
-                Logger.vv?.info(`Skipped ${this.objectName} ${item.id}, because already recreated as ${alreadyRecreatedId} in this run`);
+                Logger.vv?.info(
+                    `Skipped ${this.objectName} ${item.id}, because already recreated as ${alreadyRecreatedId} in this run`
+                );
 
                 // no need to report
                 return alreadyRecreatedId;
@@ -192,7 +197,9 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
             // To make sure the operation is idempotent, we first check if the item was already recreated in a previous run.
             const reuse = await this.provider.findExisting(item);
             if (reuse) {
-                Logger.v?.info(`Skipped ${this.objectName} ${item.id} because already recreated as ${reuse.id} in a previous run`);
+                Logger.v?.info(
+                    `Skipped ${this.objectName} ${item.id} because already recreated as ${reuse.id} in a previous run`
+                );
 
                 // Mark id, so we don't need to look it up again
                 this.recreatedMap.set(item.id, reuse.id);
@@ -242,14 +249,18 @@ export default class Importer<T extends {id: string}> implements BaseImporter<T>
             // Check if already reverted
             const alreadyReverted = this.revertedSet.has(item.id);
             if (alreadyReverted) {
-                Logger.vv?.info(`Skipped reverting ${this.objectName} ${item.id}, because already reverted in this run`);
+                Logger.vv?.info(
+                    `Skipped reverting ${this.objectName} ${item.id}, because already reverted in this run`
+                );
                 return;
             }
 
             const newItem = await this.provider.findExisting(item);
             if (!newItem) {
                 // Not yet created
-                Logger.vv?.info(`Skipped reverting ${this.objectName} ${item.id} because not yet recreated in new account`);
+                Logger.vv?.info(
+                    `Skipped reverting ${this.objectName} ${item.id} because not yet recreated in new account`
+                );
 
                 tags.addTag('reason', 'Was not copied');
                 this.reporter.report([REVERT_CATEGORY, SKIPPED_CATEGORY], tags);

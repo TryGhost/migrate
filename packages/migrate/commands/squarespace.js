@@ -71,7 +71,7 @@ const options = [
         type: 'boolean',
         flags: '--tags',
         defaultValue: true,
-        desc: 'Set to false if you don\'t want to import WordPress tags, only categories'
+        desc: "Set to false if you don't want to import WordPress tags, only categories"
     },
     {
         type: 'string',
@@ -119,7 +119,7 @@ const defaults = convertOptionsToDefaults(options);
 const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
-const run = async (argv) => {
+const run = async argv => {
     let context = {
         errors: [],
         warnings: []

@@ -145,13 +145,15 @@ const renderText = (node: WixNode, options: {stripBold?: boolean} = {}) => {
 };
 
 const renderHeadingChildren = (node: WixNode): string => {
-    return (node.nodes || []).map((child) => {
-        if (child.type === 'TEXT') {
-            return renderText(child, {stripBold: true});
-        }
+    return (node.nodes || [])
+        .map(child => {
+            if (child.type === 'TEXT') {
+                return renderText(child, {stripBold: true});
+            }
 
-        return renderNode(child);
-    }).join('');
+            return renderNode(child);
+        })
+        .join('');
 };
 
 const renderImage = (node: WixNode) => {
@@ -181,7 +183,9 @@ const renderButton = (node: WixNode) => {
     const text = escapeHtml(node.buttonData?.text || '');
     const url = sanitizeHref(node.buttonData?.link?.url);
     const alignment = (node.buttonData?.containerData?.alignment || 'CENTER').toLowerCase();
-    const alignmentClass = ['left', 'center', 'right'].includes(alignment) ? `kg-align-${alignment}` : 'kg-align-center';
+    const alignmentClass = ['left', 'center', 'right'].includes(alignment)
+        ? `kg-align-${alignment}`
+        : 'kg-align-center';
 
     if (!text) {
         return '';
@@ -220,45 +224,45 @@ const renderUnknownNode = (node: WixNode) => {
 
 const renderNode = (node: WixNode): string => {
     switch (node.type) {
-    case 'TEXT':
-        return renderText(node);
-    case 'PARAGRAPH': {
-        const children = renderChildren(node);
+        case 'TEXT':
+            return renderText(node);
+        case 'PARAGRAPH': {
+            const children = renderChildren(node);
 
-        if (children.trim().length === 0) {
-            return '';
+            if (children.trim().length === 0) {
+                return '';
+            }
+
+            return `<p>${children}</p>`;
         }
-
-        return `<p>${children}</p>`;
-    }
-    case 'HEADING': {
-        const level = Math.min(Math.max(node.headingData?.level || 2, 1), 6);
-        return `<h${level}>${renderHeadingChildren(node)}</h${level}>`;
-    }
-    case 'BULLETED_LIST':
-        return `<ul>${renderChildren(node)}</ul>`;
-    case 'ORDERED_LIST':
-        return `<ol>${renderChildren(node)}</ol>`;
-    case 'LIST_ITEM':
-        return renderListItem(node);
-    case 'DIVIDER':
-        return '<hr>';
-    case 'IMAGE':
-        return renderImage(node);
-    case 'BUTTON':
-        return renderButton(node);
-    case 'TABLE':
-        return renderTable(node);
-    case 'TABLE_ROW':
-        return renderTableRow(node);
-    case 'TABLE_CELL':
-        return renderTableCell(node);
-    default:
-        return renderUnknownNode(node);
+        case 'HEADING': {
+            const level = Math.min(Math.max(node.headingData?.level || 2, 1), 6);
+            return `<h${level}>${renderHeadingChildren(node)}</h${level}>`;
+        }
+        case 'BULLETED_LIST':
+            return `<ul>${renderChildren(node)}</ul>`;
+        case 'ORDERED_LIST':
+            return `<ol>${renderChildren(node)}</ol>`;
+        case 'LIST_ITEM':
+            return renderListItem(node);
+        case 'DIVIDER':
+            return '<hr>';
+        case 'IMAGE':
+            return renderImage(node);
+        case 'BUTTON':
+            return renderButton(node);
+        case 'TABLE':
+            return renderTable(node);
+        case 'TABLE_ROW':
+            return renderTableRow(node);
+        case 'TABLE_CELL':
+            return renderTableCell(node);
+        default:
+            return renderUnknownNode(node);
     }
 };
 
-const richContentToHtml = ({richContent, plainContent}: {richContent?: string, plainContent?: string}) => {
+const richContentToHtml = ({richContent, plainContent}: {richContent?: string; plainContent?: string}) => {
     if (!richContent || richContent.trim().length === 0) {
         return htmlCard(paragraphsFromPlainText(plainContent));
     }
@@ -277,11 +281,4 @@ const richContentToHtml = ({richContent, plainContent}: {richContent?: string, p
     }
 };
 
-export {
-    escapeHtml,
-    htmlCard,
-    paragraphsFromPlainText,
-    renderNode,
-    richContentToHtml,
-    sanitizeHref
-};
+export {escapeHtml, htmlCard, paragraphsFromPlainText, renderNode, richContentToHtml, sanitizeHref};

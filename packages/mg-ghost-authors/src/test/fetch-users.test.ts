@@ -53,9 +53,7 @@ describe('fetchGhostUsers', function () {
     });
 
     it('returns cached users when available', async function () {
-        const cachedUsers = [
-            {id: 'cached-1', slug: 'john', name: 'John', email: 'john@example.com'}
-        ];
+        const cachedUsers = [{id: 'cached-1', slug: 'john', name: 'John', email: 'john@example.com'}];
 
         const mockFileCache = {
             hasFile: () => true,

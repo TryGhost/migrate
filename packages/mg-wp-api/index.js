@@ -10,6 +10,4 @@ export default {
     process
 };
 
-export {
-    makeInlinerUrls
-};
+export {makeInlinerUrls};

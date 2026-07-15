@@ -15,7 +15,9 @@ describe('beehiiv API Fetch', () => {
 
     describe('authedClient', () => {
         it('makes authenticated GET request', async () => {
-            fetchMock.mock.mockImplementation(() => Promise.resolve({ok: true, json: () => Promise.resolve({data: []})}));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({ok: true, json: () => Promise.resolve({data: []})})
+            );
 
             const url = new URL('https://api.beehiiv.com/v2/publications');
             await authedClient('test-api-key', url);
@@ -31,10 +33,14 @@ describe('beehiiv API Fetch', () => {
     describe('fetchTasks', () => {
         it('creates correct number of tasks based on total posts', async () => {
             // Mock the discover call (limit=1)
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({total_results: 25, data: []})
-            }), 0);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 25, data: []})
+                    }),
+                0
+            );
 
             const options = {key: 'test-key', id: 'pub-123'};
             const ctx = {
@@ -57,18 +63,27 @@ describe('beehiiv API Fetch', () => {
 
         it('task fetches posts and adds to context', async () => {
             // Mock the discover call
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({total_results: 5, data: []})
-            }), 0);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 5, data: []})
+                    }),
+                0
+            );
 
             // Mock the actual fetch call
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({
-                    data: [{id: 'post-1', title: 'Test Post'}]
-                })
-            }), 1);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () =>
+                            Promise.resolve({
+                                data: [{id: 'post-1', title: 'Test Post'}]
+                            })
+                    }),
+                1
+            );
 
             const options = {key: 'test-key', id: 'pub-123'};
             const ctx = {
@@ -90,10 +105,14 @@ describe('beehiiv API Fetch', () => {
 
         it('task uses cached data when available', async () => {
             // Mock the discover call
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({total_results: 5, data: []})
-            }), 0);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 5, data: []})
+                    }),
+                0
+            );
 
             const cachedData = {data: [{id: 'cached-post', title: 'Cached Post'}]};
             const options = {key: 'test-key', id: 'pub-123'};
@@ -117,17 +136,25 @@ describe('beehiiv API Fetch', () => {
 
         it('task throws and sets output on fetch error', async () => {
             // Mock the discover call
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({total_results: 5, data: []})
-            }), 0);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 5, data: []})
+                    }),
+                0
+            );
 
             // Mock a failed fetch
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: false,
-                status: 500,
-                statusText: 'Internal Server Error'
-            }), 1);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: false,
+                        status: 500,
+                        statusText: 'Internal Server Error'
+                    }),
+                1
+            );
 
             const options = {key: 'test-key', id: 'pub-123'};
             const ctx = {
@@ -150,10 +177,14 @@ describe('beehiiv API Fetch', () => {
 
         it('task handles non-Error thrown objects', async () => {
             // Mock the discover call
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({total_results: 5, data: []})
-            }), 0);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 5, data: []})
+                    }),
+                0
+            );
 
             // Mock fetch that throws a non-Error value (string)
             fetchMock.mock.mockImplementationOnce(() => {
@@ -186,21 +217,30 @@ describe('beehiiv API Fetch', () => {
             const feb1 = new Date('2024-02-01').getTime() / 1000;
             const mar1 = new Date('2024-03-01').getTime() / 1000;
 
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({total_results: 3, data: []})
-            }), 0);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 3, data: []})
+                    }),
+                0
+            );
 
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({
-                    data: [
-                        {id: 'post-jan', publish_date: jan1},
-                        {id: 'post-feb', publish_date: feb1},
-                        {id: 'post-mar', publish_date: mar1}
-                    ]
-                })
-            }), 1);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () =>
+                            Promise.resolve({
+                                data: [
+                                    {id: 'post-jan', publish_date: jan1},
+                                    {id: 'post-feb', publish_date: feb1},
+                                    {id: 'post-mar', publish_date: mar1}
+                                ]
+                            })
+                    }),
+                1
+            );
 
             const options = {key: 'test-key', id: 'pub-123', postsAfter: '2024-02-01'};
             const ctx = {
@@ -224,21 +264,30 @@ describe('beehiiv API Fetch', () => {
             const feb1 = new Date('2024-02-01').getTime() / 1000;
             const mar1 = new Date('2024-03-01').getTime() / 1000;
 
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({total_results: 3, data: []})
-            }), 0);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 3, data: []})
+                    }),
+                0
+            );
 
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({
-                    data: [
-                        {id: 'post-jan', publish_date: jan1},
-                        {id: 'post-feb', publish_date: feb1},
-                        {id: 'post-mar', publish_date: mar1}
-                    ]
-                })
-            }), 1);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () =>
+                            Promise.resolve({
+                                data: [
+                                    {id: 'post-jan', publish_date: jan1},
+                                    {id: 'post-feb', publish_date: feb1},
+                                    {id: 'post-mar', publish_date: mar1}
+                                ]
+                            })
+                    }),
+                1
+            );
 
             const options = {key: 'test-key', id: 'pub-123', postsBefore: '2024-02-01'};
             const ctx = {
@@ -263,22 +312,31 @@ describe('beehiiv API Fetch', () => {
             const mar1 = new Date('2024-03-01').getTime() / 1000;
             const apr1 = new Date('2024-04-01').getTime() / 1000;
 
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({total_results: 4, data: []})
-            }), 0);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 4, data: []})
+                    }),
+                0
+            );
 
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({
-                    data: [
-                        {id: 'post-jan', publish_date: jan1},
-                        {id: 'post-feb', publish_date: feb1},
-                        {id: 'post-mar', publish_date: mar1},
-                        {id: 'post-apr', publish_date: apr1}
-                    ]
-                })
-            }), 1);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () =>
+                            Promise.resolve({
+                                data: [
+                                    {id: 'post-jan', publish_date: jan1},
+                                    {id: 'post-feb', publish_date: feb1},
+                                    {id: 'post-mar', publish_date: mar1},
+                                    {id: 'post-apr', publish_date: apr1}
+                                ]
+                            })
+                    }),
+                1
+            );
 
             const options = {key: 'test-key', id: 'pub-123', postsAfter: '2024-02-01', postsBefore: '2024-03-01'};
             const ctx = {
@@ -298,20 +356,29 @@ describe('beehiiv API Fetch', () => {
         });
 
         it('does not filter when neither postsAfter nor postsBefore is set', async () => {
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({total_results: 2, data: []})
-            }), 0);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 2, data: []})
+                    }),
+                0
+            );
 
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({
-                    data: [
-                        {id: 'post-1', publish_date: 1704067200},
-                        {id: 'post-2', publish_date: 1706745600}
-                    ]
-                })
-            }), 1);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () =>
+                            Promise.resolve({
+                                data: [
+                                    {id: 'post-1', publish_date: 1704067200},
+                                    {id: 'post-2', publish_date: 1706745600}
+                                ]
+                            })
+                    }),
+                1
+            );
 
             const options = {key: 'test-key', id: 'pub-123'};
             const ctx = {
@@ -329,11 +396,13 @@ describe('beehiiv API Fetch', () => {
         });
 
         it('handles discover error', async () => {
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: false,
-                status: 401,
-                statusText: 'Unauthorized'
-            }));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: false,
+                    status: 401,
+                    statusText: 'Unauthorized'
+                })
+            );
 
             const options = {key: 'invalid-key', id: 'pub-123'};
             const ctx = {

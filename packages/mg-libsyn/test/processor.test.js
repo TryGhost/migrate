@@ -85,7 +85,18 @@ describe('Process posts', function () {
         for (const key of ['url', 'data']) {
             assert.ok(key in post);
         }
-        for (const key of ['slug', 'title', 'created_at', 'published_at', 'updated_at', 'type', 'status', 'tags', 'author', 'html']) {
+        for (const key of [
+            'slug',
+            'title',
+            'created_at',
+            'published_at',
+            'updated_at',
+            'type',
+            'status',
+            'tags',
+            'author',
+            'html'
+        ]) {
             assert.ok(key in post.data);
         }
 
@@ -266,7 +277,10 @@ describe('Process content', function () {
 
         const post = result.posts[0];
 
-        assert.equal(post.data.html, '<!--kg-card-begin: html--><iframe id="embed_12345678" title="Lorem Ipsum" style="border: none" src="//html5-player.libsyn.com/embed/episode/id/12345678/custom-color/000000/" height="90" width="100%" scrolling="no" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe><!--kg-card-end: html--><p>Description</p>');
+        assert.equal(
+            post.data.html,
+            '<!--kg-card-begin: html--><iframe id="embed_12345678" title="Lorem Ipsum" style="border: none" src="//html5-player.libsyn.com/embed/episode/id/12345678/custom-color/000000/" height="90" width="100%" scrolling="no" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe><!--kg-card-end: html--><p>Description</p>'
+        );
     });
 
     it('Use Libsyn embeds', function () {
@@ -289,7 +303,11 @@ describe('Process content', function () {
 
         const post = result.posts[0];
 
-        assert.ok(post.data.html.includes('<!--kg-card-begin: html--><iframe id="embed_12345678" title="Lorem Ipsum" style="border: none" src="//html5-player.libsyn.com/embed/episode/id/12345678/custom-color/000000/" height="90" width="100%" scrolling="no" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe><!--kg-card-end: html--><p>Description</p>'));
+        assert.ok(
+            post.data.html.includes(
+                '<!--kg-card-begin: html--><iframe id="embed_12345678" title="Lorem Ipsum" style="border: none" src="//html5-player.libsyn.com/embed/episode/id/12345678/custom-color/000000/" height="90" width="100%" scrolling="no" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe><!--kg-card-end: html--><p>Description</p>'
+            )
+        );
 
         assert.ok(!post.data.html.includes('<div class="kg-card kg-audio-card">'));
     });
@@ -315,11 +333,21 @@ describe('Process content', function () {
         const post = result.posts[0];
 
         assert.ok(post.data.html.includes('<div class="kg-card kg-audio-card">'));
-        assert.ok(post.data.html.includes('<img src="https://ssl-static.libsyn.com/p/assets/1/9/0/c/abcd123434a5734c/cover.jpg"'));
+        assert.ok(
+            post.data.html.includes(
+                '<img src="https://ssl-static.libsyn.com/p/assets/1/9/0/c/abcd123434a5734c/cover.jpg"'
+            )
+        );
         assert.ok(post.data.html.includes('<div class="kg-audio-player-container"'));
-        assert.ok(post.data.html.includes('<audio src="https://traffic.libsyn.com/secure/exampleshow/lorem-ipsum.mp3"'));
+        assert.ok(
+            post.data.html.includes('<audio src="https://traffic.libsyn.com/secure/exampleshow/lorem-ipsum.mp3"')
+        );
         assert.ok(post.data.html.includes('<span class="kg-audio-duration">24:51</span>'));
 
-        assert.ok(!post.data.html.includes('<!--kg-card-begin: html--><iframe id="embed_12345678" title="Lorem Ipsum" style="border: none" src="//html5-player.libsyn.com/embed/episode/id/12345678/custom-color/000000/" height="90" width="100%" scrolling="no" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe><!--kg-card-end: html--><p>Description</p>'));
+        assert.ok(
+            !post.data.html.includes(
+                '<!--kg-card-begin: html--><iframe id="embed_12345678" title="Lorem Ipsum" style="border: none" src="//html5-player.libsyn.com/embed/episode/id/12345678/custom-color/000000/" height="90" width="100%" scrolling="no" allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe><!--kg-card-end: html--><p>Description</p>'
+            )
+        );
     });
 });

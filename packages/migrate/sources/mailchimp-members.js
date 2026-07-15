@@ -5,7 +5,7 @@ import csvIngest from '@tryghost/mg-mailchimp-members';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import prettyMilliseconds from 'pretty-ms';
 
-const getTaskRunner = (options) => {
+const getTaskRunner = options => {
     let tasks = [
         {
             title: 'Initializing',
@@ -13,7 +13,8 @@ const getTaskRunner = (options) => {
                 ctx.options = options;
 
                 // 0. Prep a file cache for the work we are about to do.
-                ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(options.pathToZip || options.pathToCsv[0]);
+                ctx.options.cacheName =
+                    options.cacheName || fsUtils.utils.cacheNameFromPath(options.pathToZip || options.pathToCsv[0]);
                 ctx.fileCache = new fsUtils.FileCache(`mailchimp-members-${ctx.options.cacheName}`, {
                     tmpPath: ctx.options.tmpPath,
                     contentDir: false
@@ -24,7 +25,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Read csv file and process with given options',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 1. Read the csv file
                 try {
                     ctx.result = await csvIngest({
@@ -66,7 +67,10 @@ const getTaskRunner = (options) => {
                         // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
                         // Upload the file to the storage
-                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-mailchimp-members-${ctx.options.cacheName}.csv`});
+                        ctx.outputFile.path = await storage.upload({
+                            body: fileBuffer,
+                            fileName: `gh-mailchimp-members-${ctx.options.cacheName}.csv`
+                        });
                         // now that the file is uploaded to the storage, delete the local zip file
                         await ctx.fileCache.deleteFileOrDir(localFilePath);
                     }
@@ -81,7 +85,7 @@ const getTaskRunner = (options) => {
         {
             title: 'Clearing cached files',
             enabled: () => !options.cache && options.zip,
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {

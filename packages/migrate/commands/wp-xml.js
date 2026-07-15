@@ -90,19 +90,19 @@ const options = [
         type: 'string',
         flags: '--postsBefore',
         defaultValue: null,
-        desc: 'Only migrate posts before and including a given date e.g. \'March 20 2018\''
+        desc: "Only migrate posts before and including a given date e.g. 'March 20 2018'"
     },
     {
         type: 'string',
         flags: '--postsAfter',
         defaultValue: null,
-        desc: 'Only migrate posts after and including a given date e.g. \'August 16 2021\''
+        desc: "Only migrate posts after and including a given date e.g. 'August 16 2021'"
     },
     {
         type: 'boolean',
         flags: '--rawHtml',
         defaultValue: false,
-        desc: 'Don\'t process HTML and wrap in a HTML card'
+        desc: "Don't process HTML and wrap in a HTML card"
     },
     {
         type: 'boolean',
@@ -186,7 +186,7 @@ const defaults = convertOptionsToDefaults(options);
 const setup = sywac => convertOptionsToSywac(options, sywac);
 
 // What to do when this command is executed
-const run = async (argv) => {
+const run = async argv => {
     let context = {
         errors: [],
         warnings: []

@@ -7,7 +7,7 @@ import process from '../lib/process.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
-const readSync = (name) => {
+const readSync = name => {
     let fixtureFileName = join(__dirname, './', 'fixtures', name);
     return readFileSync(fixtureFileName, {encoding: 'utf8'});
 };
@@ -48,51 +48,57 @@ describe('Process', function () {
         assert.deepEqual(data.published_at, new Date('2013-06-07T03:00:44.000Z'));
         assert.deepEqual(data.created_at, new Date('2013-06-07T03:00:44.000Z'));
         assert.deepEqual(data.updated_at, new Date('2013-06-07T03:00:44.000Z'));
-        assert.equal(data.feature_image, 'https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1268&q=80');
+        assert.equal(
+            data.feature_image,
+            'https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1268&q=80'
+        );
         assert.equal(data.type, 'post');
-        assert.equal(data.html, '<div class="image-block-outer-wrapper layout-caption-below design-layout-inline" data-test="image-block-inline-outer-wrapper">\n' +
-        '        <figure class="sqs-block-image-figure intrinsic" style="max-width:409.0px;">\n' +
-        '          <a class="sqs-block-image-link" href="https://anothersite.co.uk" target="_blank">\n' +
-        '            <div style="padding-bottom:37.4083137512207%;" lass="image-block-wrapper" data-animation-role="image" data-animation-override>\n' +
-        '                <noscript><img src="https://images.unsplash.com/photo-1601275225755-f6a6c1730cb1?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=crop&amp;w=2765&amp;q=80"></noscript>\n' +
-        '                \n' +
-        '            </div>\n' +
-        '          </a>\n' +
-        '        </figure>\n' +
-        '        </div>\n' +
-        '        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris pellentesque nisi sed neque vestibulum pulvinar.</p>\n' +
-        '        <p>Integer iaculis ac elit a bibendum. Suspendisse rhoncus vitae dui vitae ultrices.</p>\n' +
-        '        <table>\n' +
-        '            <thead>\n' +
-        '                <tr>\n' +
-        '                    <th>Width</th>\n' +
-        '                    <th>Height</th>\n' +
-        '                </tr>\n' +
-        '            </thead>\n' +
-        '            <tbody>\n' +
-        '                <tr>\n' +
-        '                    <td>20</td>\n' +
-        '                    <td>15</td>\n' +
-        '                </tr>\n' +
-        '                <tr>\n' +
-        '                    <td>40</td>\n' +
-        '                    <td>30</td>\n' +
-        '                </tr>\n' +
-        '            </tbody>\n' +
-        '        </table>\n' +
-        '        <p>Aenean velit mi, <a href="https://anothersite.co.uk" target="_blank">dapibus</a> eget ex sed, viverra ultrices mi. Nunc at odio bibendum, gravida lectus sit amet, congue dui. Mauris id justo ante. Cras viverra suscipit bibendum.</p>\n' +
-        '        <p><strong>Sed vulputate consectetur tortor:</strong></p>\n' +
-        '        <ul>\n' +
-        '            <li>Lobortis mauris dapibus in</li>\n' +
-        '            <li>Donec pharetra, orci sit amet fermentum</li>\n' +
-        '            <li>Pretium, nisi arcu molestie mi, nec</li>\n' +
-        '            <li>Consequat turpis tortor vulputate quam, mauris vel quam turpis</li>\n' +
-        '        </ul>\n' +
-        '        <p></p>\n' +
-        '        <p>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nulla aliquet neque eu lectus sollicitudin, sit amet vestibulum diam commodo.</p>\n' +
-        '        <p>&nbsp;</p>\n' +
-        '        <p>&nbsp;</p>\n' +
-        '        <p>&nbsp;</p>');
+        assert.equal(
+            data.html,
+            '<div class="image-block-outer-wrapper layout-caption-below design-layout-inline" data-test="image-block-inline-outer-wrapper">\n' +
+                '        <figure class="sqs-block-image-figure intrinsic" style="max-width:409.0px;">\n' +
+                '          <a class="sqs-block-image-link" href="https://anothersite.co.uk" target="_blank">\n' +
+                '            <div style="padding-bottom:37.4083137512207%;" lass="image-block-wrapper" data-animation-role="image" data-animation-override>\n' +
+                '                <noscript><img src="https://images.unsplash.com/photo-1601275225755-f6a6c1730cb1?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=crop&amp;w=2765&amp;q=80"></noscript>\n' +
+                '                \n' +
+                '            </div>\n' +
+                '          </a>\n' +
+                '        </figure>\n' +
+                '        </div>\n' +
+                '        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris pellentesque nisi sed neque vestibulum pulvinar.</p>\n' +
+                '        <p>Integer iaculis ac elit a bibendum. Suspendisse rhoncus vitae dui vitae ultrices.</p>\n' +
+                '        <table>\n' +
+                '            <thead>\n' +
+                '                <tr>\n' +
+                '                    <th>Width</th>\n' +
+                '                    <th>Height</th>\n' +
+                '                </tr>\n' +
+                '            </thead>\n' +
+                '            <tbody>\n' +
+                '                <tr>\n' +
+                '                    <td>20</td>\n' +
+                '                    <td>15</td>\n' +
+                '                </tr>\n' +
+                '                <tr>\n' +
+                '                    <td>40</td>\n' +
+                '                    <td>30</td>\n' +
+                '                </tr>\n' +
+                '            </tbody>\n' +
+                '        </table>\n' +
+                '        <p>Aenean velit mi, <a href="https://anothersite.co.uk" target="_blank">dapibus</a> eget ex sed, viverra ultrices mi. Nunc at odio bibendum, gravida lectus sit amet, congue dui. Mauris id justo ante. Cras viverra suscipit bibendum.</p>\n' +
+                '        <p><strong>Sed vulputate consectetur tortor:</strong></p>\n' +
+                '        <ul>\n' +
+                '            <li>Lobortis mauris dapibus in</li>\n' +
+                '            <li>Donec pharetra, orci sit amet fermentum</li>\n' +
+                '            <li>Pretium, nisi arcu molestie mi, nec</li>\n' +
+                '            <li>Consequat turpis tortor vulputate quam, mauris vel quam turpis</li>\n' +
+                '        </ul>\n' +
+                '        <p></p>\n' +
+                '        <p>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nulla aliquet neque eu lectus sollicitudin, sit amet vestibulum diam commodo.</p>\n' +
+                '        <p>&nbsp;</p>\n' +
+                '        <p>&nbsp;</p>\n' +
+                '        <p>&nbsp;</p>'
+        );
 
         const tags = data.tags;
 
@@ -139,7 +145,10 @@ describe('Process', function () {
         assert.deepEqual(data.updated_at, new Date('2013-11-02T23:02:32.000Z'));
         assert.equal(data.feature_image, undefined);
         assert.equal(data.type, 'post');
-        assert.equal(data.html, '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. </p>');
+        assert.equal(
+            data.html,
+            '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. </p>'
+        );
 
         const tags = data.tags;
 
@@ -184,7 +193,10 @@ describe('Process', function () {
         assert.deepEqual(data.published_at, new Date('2017-05-27T11:33:38.000Z'));
         assert.equal(data.feature_image, undefined);
         assert.equal(data.type, 'page');
-        assert.equal(data.html, '<h2>Our Services</h2><p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>');
+        assert.equal(
+            data.html,
+            '<h2>Our Services</h2><p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>'
+        );
 
         const tags = data.tags;
 
@@ -262,14 +274,17 @@ describe('Process', function () {
 
         let processed = process.processContent(blockquote);
 
-        assert.equal(processed, '<p>Hello</p>\n' +
-        '<figure class="block-animation-none">\n' +
-        '  <blockquote data-animation-role="quote"><p>\n' +
-        '    <span>“</span>Lorem ipsum<br><br>dolor simet.<span>”</span>\n' +
-        '  <br><br>— Lipsum</p></blockquote>\n' +
-        '  \n' +
-        '</figure>\n' +
-        '<p>World</p>');
+        assert.equal(
+            processed,
+            '<p>Hello</p>\n' +
+                '<figure class="block-animation-none">\n' +
+                '  <blockquote data-animation-role="quote"><p>\n' +
+                '    <span>“</span>Lorem ipsum<br><br>dolor simet.<span>”</span>\n' +
+                '  <br><br>— Lipsum</p></blockquote>\n' +
+                '  \n' +
+                '</figure>\n' +
+                '<p>World</p>'
+        );
     });
 
     it('Can remove elements', async function () {
@@ -295,8 +310,11 @@ describe('Process', function () {
             removeSelectors: '.custom-subscribe-form'
         });
 
-        assert.equal(processed, '<div class="sqs-html-content" data-sqsp-text-block-content><p>Hello world</p></div>\n' +
-        '            <figure class="kg-card kg-embed-card"><iframe width="200" height="113" src="https://www.youtube.com/embed/lqCmETMKzA8?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen title="The Video Title"></iframe></figure>');
+        assert.equal(
+            processed,
+            '<div class="sqs-html-content" data-sqsp-text-block-content><p>Hello world</p></div>\n' +
+                '            <figure class="kg-card kg-embed-card"><iframe width="200" height="113" src="https://www.youtube.com/embed/lqCmETMKzA8?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen title="The Video Title"></iframe></figure>'
+        );
     });
 
     it('Can handle posts with no title', async function () {
@@ -421,9 +439,7 @@ describe('Process', function () {
     });
 
     it('Can match author by display name', function () {
-        const users = [
-            {login: 'jdoe', data: {name: 'Jane Doe', slug: 'jdoe', email: 'jane@example.com'}}
-        ];
+        const users = [{login: 'jdoe', data: {name: 'Jane Doe', slug: 'jdoe', email: 'jane@example.com'}}];
         const sqPost = {
             'wp:post_type': 'post',
             'dc:creator': 'Jane Doe',
@@ -441,9 +457,7 @@ describe('Process', function () {
     });
 
     it('Can match author by email', function () {
-        const users = [
-            {login: 'jdoe', data: {name: 'Jane Doe', slug: 'jdoe', email: 'jane@example.com'}}
-        ];
+        const users = [{login: 'jdoe', data: {name: 'Jane Doe', slug: 'jdoe', email: 'jane@example.com'}}];
         const sqPost = {
             'wp:post_type': 'post',
             'dc:creator': 'jane@example.com',
@@ -495,7 +509,8 @@ describe('Process', function () {
     });
 
     it('Can handle thumb-image with non-adjacent noscript', function () {
-        const html = '<div><noscript><img src="https://example.com/photo.jpg"></noscript><span>spacer</span><img class="thumb-image" data-src="https://example.com/photo.jpg"></div>';
+        const html =
+            '<div><noscript><img src="https://example.com/photo.jpg"></noscript><span>spacer</span><img class="thumb-image" data-src="https://example.com/photo.jpg"></div>';
 
         const processed = process.processContent(html);
 
@@ -542,7 +557,8 @@ describe('Process', function () {
     });
 
     it('Can handle XML with no authors or items', async function () {
-        const xml = '<?xml version="1.0" encoding="UTF-8"?><rss><channel><link>http://example.com</link></channel></rss>';
+        const xml =
+            '<?xml version="1.0" encoding="UTF-8"?><rss><channel><link>http://example.com</link></channel></rss>';
         let ctx = {
             options: {
                 drafts: true,
@@ -559,7 +575,8 @@ describe('Process', function () {
     });
 
     it('Can handle video wrapper without expected parent structure', function () {
-        const html = '<div class="sqs-video-wrapper" data-html="&lt;iframe src=&quot;https://example.com&quot;&gt;&lt;/iframe&gt;"></div>';
+        const html =
+            '<div class="sqs-video-wrapper" data-html="&lt;iframe src=&quot;https://example.com&quot;&gt;&lt;/iframe&gt;"></div>';
 
         const processed = process.processContent(html);
 
@@ -570,10 +587,7 @@ describe('Process', function () {
 
 describe('processFeatureImage', function () {
     it('Ignores an attachment_url that is not a valid URL', function () {
-        const items = [
-            {},
-            {'wp:attachment_url': 'not-a-valid-url'}
-        ];
+        const items = [{}, {'wp:attachment_url': 'not-a-valid-url'}];
 
         assert.equal(process.processFeatureImage(items, 0), undefined);
     });

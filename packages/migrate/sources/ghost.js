@@ -7,7 +7,7 @@ import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import prettyMilliseconds from 'pretty-ms';
 
-const initialize = (options) => {
+const initialize = options => {
     return {
         title: 'Initializing Workspace',
         task: async (ctx, task) => {
@@ -15,7 +15,12 @@ const initialize = (options) => {
 
             ctx.allowScrape = {
                 all: ctx.options.scrape.includes('all'),
-                assets: ctx.options.scrape.includes('all') || ctx.options.scrape.includes('assets') || ctx.options.scrape.includes('img') || ctx.options.scrape.includes('media') || ctx.options.scrape.includes('files')
+                assets:
+                    ctx.options.scrape.includes('all') ||
+                    ctx.options.scrape.includes('assets') ||
+                    ctx.options.scrape.includes('img') ||
+                    ctx.options.scrape.includes('media') ||
+                    ctx.options.scrape.includes('files')
             };
 
             ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(ctx.options.url);
@@ -30,9 +35,13 @@ const initialize = (options) => {
             });
             await ctx.migrateContext.init();
 
-            ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
-                allowAllDomains: true
-            }, ctx);
+            ctx.assetScraper = new MgAssetScraper(
+                ctx.fileCache,
+                {
+                    allowAllDomains: true
+                },
+                ctx
+            );
             await ctx.assetScraper.init();
 
             task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
@@ -44,12 +53,12 @@ const initialize = (options) => {
     };
 };
 
-const getInfoTaskList = (options) => {
+const getInfoTaskList = options => {
     return [
         initialize(options),
         {
             title: 'Fetch Content Info from Ghost API',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     ctx.info = await ghostAPI.fetch.discover(options, ctx);
                 } catch (error) {
@@ -68,12 +77,12 @@ const getInfoTaskList = (options) => {
  * @param {String} pathToZip
  * @param {Object} options
  */
-const getFullTaskList = (options) => {
+const getFullTaskList = options => {
     return [
         initialize(options),
         {
             title: 'Fetch Content from Ghost API',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     let tasks = await ghostAPI.fetch.tasks(options, ctx);
 
@@ -92,15 +101,15 @@ const getFullTaskList = (options) => {
         {
             title: 'Fetch images via AssetScraper',
             skip: ctx => !ctx.allowScrape.assets,
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
-                    await ctx.migrateContext.forEachPost(async (post) => {
+                    await ctx.migrateContext.forEachPost(async post => {
                         await ctx.assetScraper.processAssets(post);
                     });
-                    await ctx.migrateContext.forEachTag(async (tag) => {
+                    await ctx.migrateContext.forEachTag(async tag => {
                         await ctx.assetScraper.processAssets(tag);
                     });
-                    await ctx.migrateContext.forEachAuthor(async (author) => {
+                    await ctx.migrateContext.forEachAuthor(async author => {
                         await ctx.assetScraper.processAssets(author);
                     });
                 } catch (error) {
@@ -111,7 +120,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Prepare data for export',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.migrateContext.prepareForExport();
                 } catch (error) {
@@ -122,7 +131,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Write Ghost import JSON file(s)',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.migrateContext.writeGhostJson(ctx.fileCache.zipDir, {
                         batchSize: options.postsPerFile
@@ -143,14 +152,21 @@ const getFullTaskList = (options) => {
                 try {
                     let timer = Date.now();
                     const zipFinalPath = options.outputPath || process.cwd();
-                    ctx.outputFile = await fsUtils.zip.write(zipFinalPath, ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+                    ctx.outputFile = await fsUtils.zip.write(
+                        zipFinalPath,
+                        ctx.fileCache.zipDir,
+                        ctx.fileCache.defaultZipFileName
+                    );
 
                     if (isStorage) {
                         const storage = options.outputStorage;
                         const localFilePath = ctx.outputFile.path;
 
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
-                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-ghost-${ctx.options.cacheName}.zip`});
+                        ctx.outputFile.path = await storage.upload({
+                            body: fileBuffer,
+                            fileName: `gh-ghost-${ctx.options.cacheName}.zip`
+                        });
                         await fsUtils.zip.deleteFile(localFilePath);
                     }
 
@@ -163,7 +179,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Close MigrateContext',
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.migrateContext.close();
                 } catch (error) {
@@ -174,7 +190,7 @@ const getFullTaskList = (options) => {
         {
             title: 'Clearing cached files',
             enabled: () => !options.cache && options.zip,
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {
@@ -186,7 +202,7 @@ const getFullTaskList = (options) => {
     ];
 };
 
-const getTaskRunner = (options) => {
+const getTaskRunner = options => {
     let tasks = [];
 
     if (options.info) {

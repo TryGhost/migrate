@@ -16,7 +16,9 @@ describe('beehiiv API Members Fetch', () => {
 
     describe('authedClient', () => {
         it('makes authenticated GET request', async () => {
-            fetchMock.mock.mockImplementation(() => Promise.resolve({ok: true, json: () => Promise.resolve({data: []})}));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({ok: true, json: () => Promise.resolve({data: []})})
+            );
 
             const url = new URL('https://api.beehiiv.com/v2/publications');
             await authedClient('test-api-key', url);
@@ -32,10 +34,12 @@ describe('beehiiv API Members Fetch', () => {
     describe('listPublications', () => {
         it('fetches and returns publications', async () => {
             const mockPubs = [{id: 'pub-1', name: 'Test Pub'}];
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({data: mockPubs})
-            }));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve({data: mockPubs})
+                })
+            );
 
             const result = await listPublications('test-key');
 
@@ -43,29 +47,36 @@ describe('beehiiv API Members Fetch', () => {
         });
 
         it('throws on API error with context', async () => {
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: false,
-                status: 401,
-                statusText: 'Unauthorized',
-                url: 'https://api.beehiiv.com/v2/publications?expand%5B%5D=stats'
-            }));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: false,
+                    status: 401,
+                    statusText: 'Unauthorized',
+                    url: 'https://api.beehiiv.com/v2/publications?expand%5B%5D=stats'
+                })
+            );
 
-            await assert.rejects(async () => {
-                await listPublications('invalid-key');
-            }, (err: any) => {
-                assert.equal(err.message, 'Request failed: 401 Unauthorized');
-                assert.equal(err.context, 'GET /v2/publications');
-                return true;
-            });
+            await assert.rejects(
+                async () => {
+                    await listPublications('invalid-key');
+                },
+                (err: any) => {
+                    assert.equal(err.message, 'Request failed: 401 Unauthorized');
+                    assert.equal(err.context, 'GET /v2/publications');
+                    return true;
+                }
+            );
         });
     });
 
     describe('discover', () => {
         it('returns total subscription count', async () => {
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({data: {stats: {active_subscriptions: 1500}}})
-            }));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve({data: {stats: {active_subscriptions: 1500}}})
+                })
+            );
 
             const result = await discover('test-key', 'pub-123');
 
@@ -73,10 +84,12 @@ describe('beehiiv API Members Fetch', () => {
         });
 
         it('returns undefined when stats are missing', async () => {
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({data: {}})
-            }));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve({data: {}})
+                })
+            );
 
             const result = await discover('test-key', 'pub-123');
 
@@ -84,11 +97,13 @@ describe('beehiiv API Members Fetch', () => {
         });
 
         it('throws on API error', async () => {
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: false,
-                status: 403,
-                statusText: 'Forbidden'
-            }));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: false,
+                    status: 403,
+                    statusText: 'Forbidden'
+                })
+            );
 
             await assert.rejects(async () => {
                 await discover('test-key', 'pub-123');
@@ -118,10 +133,12 @@ describe('beehiiv API Members Fetch', () => {
 
         it('fetches from API when not cached', async () => {
             const apiData = {data: [{id: 'sub-1', email: 'test@example.com'}], has_more: false, next_cursor: null};
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve(apiData)
-            }));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve(apiData)
+                })
+            );
 
             const writeTmpFileMock = mock.fn(() => Promise.resolve());
             const fileCache = {
@@ -143,10 +160,12 @@ describe('beehiiv API Members Fetch', () => {
 
         it('includes cursor when provided', async () => {
             const apiData = {data: [], has_more: false, next_cursor: null};
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve(apiData)
-            }));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve(apiData)
+                })
+            );
 
             const fileCache = {
                 hasFile: () => false,
@@ -166,11 +185,13 @@ describe('beehiiv API Members Fetch', () => {
         });
 
         it('throws on API error', async () => {
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: false,
-                status: 500,
-                statusText: 'Internal Server Error'
-            }));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: false,
+                    status: 500,
+                    statusText: 'Internal Server Error'
+                })
+            );
 
             const fileCache = {
                 hasFile: () => false,
@@ -192,10 +213,14 @@ describe('beehiiv API Members Fetch', () => {
     describe('fetchTasks', () => {
         it('creates a single task that fetches all subscriptions', async () => {
             // Mock the discover call
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({data: {stats: {active_subscriptions: 150}}})
-            }), 0);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({data: {stats: {active_subscriptions: 150}}})
+                    }),
+                0
+            );
 
             const options = {key: 'test-key', id: 'pub-123'};
             const ctx = {
@@ -214,30 +239,44 @@ describe('beehiiv API Members Fetch', () => {
 
         it('task fetches all pages using cursor pagination', async () => {
             // Mock the discover call
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({total_results: 3, data: [], has_more: true})
-            }), 0);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 3, data: [], has_more: true})
+                    }),
+                0
+            );
 
             // Mock first page
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({
-                    data: [{id: 'sub-1', email: 'a@test.com'}],
-                    has_more: true,
-                    next_cursor: 'cursor-1'
-                })
-            }), 1);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () =>
+                            Promise.resolve({
+                                data: [{id: 'sub-1', email: 'a@test.com'}],
+                                has_more: true,
+                                next_cursor: 'cursor-1'
+                            })
+                    }),
+                1
+            );
 
             // Mock second page
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({
-                    data: [{id: 'sub-2', email: 'b@test.com'}],
-                    has_more: false,
-                    next_cursor: null
-                })
-            }), 2);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () =>
+                            Promise.resolve({
+                                data: [{id: 'sub-2', email: 'b@test.com'}],
+                                has_more: false,
+                                next_cursor: null
+                            })
+                    }),
+                2
+            );
 
             const options = {key: 'test-key', id: 'pub-123'};
             const ctx: any = {
@@ -258,10 +297,14 @@ describe('beehiiv API Members Fetch', () => {
 
         it('task uses cached data when available', async () => {
             // Mock the discover call
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({total_results: 1, data: [], has_more: false})
-            }), 0);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 1, data: [], has_more: false})
+                    }),
+                0
+            );
 
             const cachedData = {
                 data: [{id: 'cached-sub', email: 'cached@test.com'}],
@@ -289,17 +332,25 @@ describe('beehiiv API Members Fetch', () => {
 
         it('task throws and sets output on fetch error', async () => {
             // Mock the discover call
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({total_results: 5, data: [], has_more: true})
-            }), 0);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 5, data: [], has_more: true})
+                    }),
+                0
+            );
 
             // Mock a failed fetch
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: false,
-                status: 500,
-                statusText: 'Internal Server Error'
-            }), 1);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: false,
+                        status: 500,
+                        statusText: 'Internal Server Error'
+                    }),
+                1
+            );
 
             const options = {key: 'test-key', id: 'pub-123'};
             const ctx = {
@@ -322,10 +373,14 @@ describe('beehiiv API Members Fetch', () => {
 
         it('task handles non-Error thrown objects', async () => {
             // Mock the discover call
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({total_results: 5, data: [], has_more: true})
-            }), 0);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({total_results: 5, data: [], has_more: true})
+                    }),
+                0
+            );
 
             // Mock fetch that throws a non-Error value
             fetchMock.mock.mockImplementationOnce(() => {
@@ -354,20 +409,29 @@ describe('beehiiv API Members Fetch', () => {
 
         it('handles discover returning undefined stats', async () => {
             // discover returns undefined when stats are missing
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({data: {}})
-            }), 0);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({data: {}})
+                    }),
+                0
+            );
 
             // Mock a single page of results
-            fetchMock.mock.mockImplementationOnce(() => Promise.resolve({
-                ok: true,
-                json: () => Promise.resolve({
-                    data: [{id: 'sub-1', email: 'a@test.com'}],
-                    has_more: false,
-                    next_cursor: null
-                })
-            }), 1);
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () =>
+                            Promise.resolve({
+                                data: [{id: 'sub-1', email: 'a@test.com'}],
+                                has_more: false,
+                                next_cursor: null
+                            })
+                    }),
+                1
+            );
 
             const options = {key: 'test-key', id: 'pub-123'};
             const ctx: any = {
@@ -388,11 +452,13 @@ describe('beehiiv API Members Fetch', () => {
         });
 
         it('handles discover error', async () => {
-            fetchMock.mock.mockImplementation(() => Promise.resolve({
-                ok: false,
-                status: 401,
-                statusText: 'Unauthorized'
-            }));
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: false,
+                    status: 401,
+                    statusText: 'Unauthorized'
+                })
+            );
 
             const options = {key: 'invalid-key', id: 'pub-123'};
             const ctx = {

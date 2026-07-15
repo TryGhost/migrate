@@ -24,19 +24,22 @@ describe('Wix CSV command', function () {
             cache: true
         });
 
-        assert.deepEqual(tasks.map(task => task.title), [
-            'Initializing Workspace',
-            'Read Wix CSV content',
-            'Fetch existing Ghost users',
-            'Build Link Map',
-            'Format data as Ghost JSON',
-            'Fetch images via AssetScraper',
-            'Update links in content via LinkFixer',
-            'Convert HTML -> Lexical',
-            'Write Ghost import JSON File',
-            'Write Ghost import zip',
-            'Clearing cached files'
-        ]);
+        assert.deepEqual(
+            tasks.map(task => task.title),
+            [
+                'Initializing Workspace',
+                'Read Wix CSV content',
+                'Fetch existing Ghost users',
+                'Build Link Map',
+                'Format data as Ghost JSON',
+                'Fetch images via AssetScraper',
+                'Update links in content via LinkFixer',
+                'Convert HTML -> Lexical',
+                'Write Ghost import JSON File',
+                'Write Ghost import zip',
+                'Clearing cached files'
+            ]
+        );
     });
 
     it('uses escaped Wix static media domains for asset matching', async function () {

@@ -620,7 +620,9 @@ describe('parents', function () {
 
 describe('lastParent', function () {
     it('returns furthest parent matching selector', function () {
-        const parsed = parseFragment('<ul class="outer"><li><ul class="inner"><li><span>Text</span></li></ul></li></ul>');
+        const parsed = parseFragment(
+            '<ul class="outer"><li><ul class="inner"><li><span>Text</span></li></ul></li></ul>'
+        );
         const span = parsed.$('span')[0];
 
         const result = lastParent(span, 'ul');
@@ -759,14 +761,14 @@ describe('close', function () {
 
 describe('processFragment', function () {
     it('parses HTML, runs callback, and returns result', function () {
-        const result = processFragment('<p>Hello</p><p>World</p>', (parsed) => {
+        const result = processFragment('<p>Hello</p><p>World</p>', parsed => {
             return parsed.$('p').length;
         });
         assert.equal(result, 2);
     });
 
     it('manipulates DOM and returns serialized HTML', function () {
-        const result = processFragment('<p>Keep</p><p class="remove">Drop</p>', (parsed) => {
+        const result = processFragment('<p>Keep</p><p class="remove">Drop</p>', parsed => {
             for (const el of parsed.$('.remove')) {
                 el.remove();
             }
@@ -776,17 +778,20 @@ describe('processFragment', function () {
     });
 
     it('closes fragment even if callback throws', function () {
-        assert.throws(() => {
-            processFragment('<p>Hello</p>', () => {
-                throw new errors.InternalServerError({message: 'test error'});
-            });
-        }, {message: 'test error'});
+        assert.throws(
+            () => {
+                processFragment('<p>Hello</p>', () => {
+                    throw new errors.InternalServerError({message: 'test error'});
+                });
+            },
+            {message: 'test error'}
+        );
     });
 });
 
 describe('processFragmentAsync', function () {
     it('parses HTML, runs async callback, and returns result', async function () {
-        const result = await processFragmentAsync('<p>Hello</p><p>World</p>', async (parsed) => {
+        const result = await processFragmentAsync('<p>Hello</p><p>World</p>', async parsed => {
             await Promise.resolve();
             return parsed.$('p').length;
         });
@@ -794,7 +799,7 @@ describe('processFragmentAsync', function () {
     });
 
     it('manipulates DOM and returns serialized HTML', async function () {
-        const result = await processFragmentAsync('<p>Keep</p><p class="remove">Drop</p>', async (parsed) => {
+        const result = await processFragmentAsync('<p>Keep</p><p class="remove">Drop</p>', async parsed => {
             for (const el of parsed.$('.remove')) {
                 el.remove();
             }
@@ -804,10 +809,13 @@ describe('processFragmentAsync', function () {
     });
 
     it('closes fragment even if async callback throws', async function () {
-        await assert.rejects(async () => {
-            await processFragmentAsync('<p>Hello</p>', async () => {
-                throw new errors.InternalServerError({message: 'async test error'});
-            });
-        }, {message: 'async test error'});
+        await assert.rejects(
+            async () => {
+                await processFragmentAsync('<p>Hello</p>', async () => {
+                    throw new errors.InternalServerError({message: 'async test error'});
+                });
+            },
+            {message: 'async test error'}
+        );
     });
 });

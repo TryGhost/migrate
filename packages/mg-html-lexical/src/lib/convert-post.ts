@@ -7,7 +7,7 @@ export type postOptions = {
     slug: string;
     lexical?: string;
     html?: string;
-}
+};
 
 // Ghost requires at least one child in the root. This empty paragraph is used
 // when the HTML conversion produces no children (e.g., empty divs, br tags, etc.)
@@ -22,7 +22,7 @@ const emptyParagraph = {
 
 const require = createRequire(import.meta.url);
 const {htmlToLexical} = require('@tryghost/kg-html-to-lexical') as {
-    htmlToLexical: typeof import('@tryghost/kg-html-to-lexical')['htmlToLexical'];
+    htmlToLexical: (typeof import('@tryghost/kg-html-to-lexical'))['htmlToLexical'];
 };
 
 const convertPost = (post: postOptions, htmlCard = false) => {
@@ -52,6 +52,4 @@ const convertPost = (post: postOptions, htmlCard = false) => {
     delete post.html;
 };
 
-export {
-    convertPost
-};
+export {convertPost};

@@ -43,7 +43,7 @@ const chunkArray = (arr, size) => {
     return chunks;
 };
 
-const wpCDNToLocal = (imgUrl) => {
+const wpCDNToLocal = imgUrl => {
     if (!imgUrl) {
         return imgUrl;
     }
@@ -62,7 +62,7 @@ const wpCDNToLocal = (imgUrl) => {
     return updatedUrl;
 };
 
-const largerSrc = (imageSrc) => {
+const largerSrc = imageSrc => {
     if (!imageSrc) {
         return imageSrc;
     }
@@ -79,7 +79,7 @@ const largerSrc = (imageSrc) => {
     return newSrc;
 };
 
-const processAuthor = (wpAuthor) => {
+const processAuthor = wpAuthor => {
     let authorObject = {
         url: wpAuthor.link,
         data: {
@@ -120,7 +120,7 @@ const processAuthor = (wpAuthor) => {
     return authorObject;
 };
 
-const processTerm = (wpTerm) => {
+const processTerm = wpTerm => {
     return {
         url: wpTerm.link,
         data: {
@@ -137,8 +137,8 @@ const processTerms = (wpTerms, fetchTags, customTaxonomies) => {
 
     const allowedCustomTaxonomies = customTaxonomies || [];
 
-    wpTerms.forEach((taxonomy) => {
-        taxonomy.forEach((term) => {
+    wpTerms.forEach(taxonomy => {
+        taxonomy.forEach(term => {
             if (term.taxonomy === 'category') {
                 categories.push(processTerm(term));
             }
@@ -166,12 +166,12 @@ const processCoAuthors = (wpTerms, users) => {
         return coAuthors;
     }
 
-    wpTerms.forEach((taxonomy) => {
+    wpTerms.forEach(taxonomy => {
         if (!Array.isArray(taxonomy)) {
             return;
         }
 
-        taxonomy.forEach((term) => {
+        taxonomy.forEach(term => {
             // Co-Authors Plus and PublishPress Authors use 'author' taxonomy
             if (term.taxonomy === 'author' && term.slug && !seenSlugs.has(term.slug)) {
                 seenSlugs.add(term.slug);
@@ -213,7 +213,7 @@ const processExcerpt = (html, excerptSelector = false) => {
     // Set the text to convert to either be the supplied string or found text in the supplied HTML chunk
     if (excerptSelector) {
         // TODO: this should be possible by using a pseudo selector as a passed `excerptSelector`, e. g. `h2.excerpt:first-of-type`,
-        excerptText = processFragment(html, (parsed) => {
+        excerptText = processFragment(html, parsed => {
             const excerptEls = parsed.$(excerptSelector);
             return excerptEls.length > 0 ? excerptEls[0].innerHTML : '';
         });
@@ -278,15 +278,15 @@ const processShortcodes = async ({html, options}) => {
             return '';
         }
 
-        return processFragment(content, (parsed) => {
+        return processFragment(content, parsed => {
             const imgEls = parsed.$('img');
             const img = imgEls[0];
 
-            let theImageSrc = img ? (img.getAttribute('src') || '') : '';
-            let theImageWidth = img ? (img.getAttribute('width') || '') : '';
-            let theImageHeight = img ? (img.getAttribute('height') || '') : '';
-            let theImageAlt = img ? (img.getAttribute('alt') || '') : '';
-            let theImageTitle = img ? (img.getAttribute('title') || '') : '';
+            let theImageSrc = img ? img.getAttribute('src') || '' : '';
+            let theImageWidth = img ? img.getAttribute('width') || '' : '';
+            let theImageHeight = img ? img.getAttribute('height') || '' : '';
+            let theImageAlt = img ? img.getAttribute('alt') || '' : '';
+            let theImageTitle = img ? img.getAttribute('title') || '' : '';
 
             // Convert $ to entity
             theImageAlt = theImageAlt.replace(/\$/gm, '&#36;');
@@ -346,14 +346,14 @@ const processShortcodes = async ({html, options}) => {
                     attrs.ids = attrs.ids.toString();
                 }
 
-                images = attrs.ids.split(',').map((i) => {
+                images = attrs.ids.split(',').map(i => {
                     let idInt = parseInt(i.trim());
                     let foundAttachment = attachments.find(item => parseInt(item.id) === idInt);
                     return foundAttachment;
                 });
 
                 // Filter out any undefined values
-                images = images.filter((item) => {
+                images = images.filter(item => {
                     return item !== undefined;
                 });
             }
@@ -362,10 +362,10 @@ const processShortcodes = async ({html, options}) => {
 
             let galleryHtmlChunks = [];
 
-            imageChunks.forEach((chunk) => {
+            imageChunks.forEach(chunk => {
                 let items = [];
 
-                chunk.forEach((item) => {
+                chunk.forEach(item => {
                     items.push({
                         fileName: basename(item.url),
                         src: item.url,
@@ -397,8 +397,8 @@ const processShortcodes = async ({html, options}) => {
     }
 
     shortcodes.add('sourcecode', ({attrs, content}) => {
-        let captionString = (attrs?.title) ? `<figcaption>${attrs.title}</figcaption>` : '';
-        let classString = (attrs?.language) ? `language-${attrs.language}` : '';
+        let captionString = attrs?.title ? `<figcaption>${attrs.title}</figcaption>` : '';
+        let classString = attrs?.language ? `language-${attrs.language}` : '';
         let theContent = content.trim();
         return `<figure><pre class="${classString}"><code>${theContent}</code></pre>${captionString}</figure>`;
     });
@@ -419,8 +419,8 @@ const processShortcodes = async ({html, options}) => {
     });
 
     shortcodes.add('code', ({attrs, content}) => {
-        let captionString = (attrs?.title) ? `<figcaption>${attrs.title}</figcaption>` : '';
-        let classString = (attrs?.language) ? `language-${attrs.language}` : '';
+        let captionString = attrs?.title ? `<figcaption>${attrs.title}</figcaption>` : '';
+        let classString = attrs?.language ? `language-${attrs.language}` : '';
         let theContent = content?.trim();
         return `<figure><pre class="${classString}"><code>${theContent}</code></pre>${captionString}</figure>`;
     });
@@ -492,7 +492,7 @@ const processShortcodes = async ({html, options}) => {
 const SHORTCODE_REGEX = /\[([a-zA-Z_][\w-]*)(?<attrs>\s[\s\S]*?)?\](?:(?<content>[\s\S]*?)\[\/\1\])?/g;
 const SINGLE_URL_REGEX = /^https?:\/\/\S+$/;
 
-const processUnknownEmbedShortcodes = (html) => {
+const processUnknownEmbedShortcodes = html => {
     if (!html) {
         return html;
     }
@@ -524,7 +524,7 @@ const processUnknownEmbedShortcodes = (html) => {
     });
 };
 
-const extractAttrValues = (attrsString) => {
+const extractAttrValues = attrsString => {
     const values = [];
     // Match quoted values: key="value" or key='value'
     const quotedRegex = /[\w-]+\s*=\s*"([^"]*?)"|[\w-]+\s*=\s*'([^']*?)'/g;
@@ -561,7 +561,8 @@ const extractAttrValues = (attrsString) => {
  * In some cases, transformation isn't needed as the parser handles it correctly.
  * In other cases, we need to *do* change the HTML structure, and this is where that happens.
  */
-const processContent = async ({html, excerptSelector, featureImageSrc = false, fileCache = false, options = {}}) => { // eslint-disable-line no-shadow
+const processContent = async ({html, excerptSelector, featureImageSrc = false, fileCache = false, options = {}}) => {
+    // eslint-disable-line no-shadow
     let webScraper = new MgWebScraper(fileCache);
 
     let allowRemoteScraping = !options?.scrape?.includes('none');
@@ -596,8 +597,12 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
                 if (imgSrc) {
                     // Match largerSrc: strip WordPress size suffix (e.g. -100x100 or -10000x5000) and normalise protocol
-                    let imgSrcNoSize = imgSrc.replace('http://', 'https://').replace(/(?:-\d{2,}x\d{2,})(\.\w+)$/gi, '$1');
-                    let featureImageSrcNoSize = featureImageSrc.replace('http://', 'https://').replace(/(?:-\d{2,}x\d{2,})(\.\w+)$/gi, '$1');
+                    let imgSrcNoSize = imgSrc
+                        .replace('http://', 'https://')
+                        .replace(/(?:-\d{2,}x\d{2,})(\.\w+)$/gi, '$1');
+                    let featureImageSrcNoSize = featureImageSrc
+                        .replace('http://', 'https://')
+                        .replace(/(?:-\d{2,}x\d{2,})(\.\w+)$/gi, '$1');
 
                     if (featureImageSrcNoSize === imgSrcNoSize) {
                         firstElement.remove();
@@ -636,7 +641,9 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     // Basic text cleanup
     // @TODO: Expand on this
-    for (const el of parsed.$('[style="font-weight: 400;"], [style="font-weight:400;"], [style="font-weight: 400"], [style="font-weight:400"]')) {
+    for (const el of parsed.$(
+        '[style="font-weight: 400;"], [style="font-weight:400;"], [style="font-weight: 400"], [style="font-weight:400"]'
+    )) {
         el.removeAttribute('style');
     }
 
@@ -747,7 +754,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     }
 
     if (options?.convertLibsynEmbed) {
-        let libsynPodcasts = parsed.$('iframe[src*="libsyn.com/embed/"]').map(async (el) => {
+        let libsynPodcasts = parsed.$('iframe[src*="libsyn.com/embed/"]').map(async el => {
             if (!allowRemoteScraping) {
                 return;
             }
@@ -771,7 +778,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
                 duration: {
                     selector: 'meta[property="music:duration"]',
                     attr: 'content',
-                    convert: (data) => {
+                    convert: data => {
                         return (data - (data %= 60)) / 60 + (9 < data ? ':' : ':0') + data;
                     }
                 },
@@ -820,7 +827,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         replaceWith(el, embedHTML);
     }
 
-    let wpEmbeds = parsed.$('.wp-block-embed.is-type-wp-embed').map(async (el) => {
+    let wpEmbeds = parsed.$('.wp-block-embed.is-type-wp-embed').map(async el => {
         const blockquoteLink = el.querySelector('blockquote a');
         const bookmarkHref = blockquoteLink ? blockquoteLink.getAttribute('href') : null;
         const bookmarkTitle = blockquoteLink ? blockquoteLink.textContent : '';
@@ -1012,7 +1019,10 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         iframe.setAttribute('height', '968');
         iframe.setAttribute('data-instgrm-payload-id', 'instagram-media-payload-0');
         iframe.setAttribute('scrolling', 'no');
-        iframe.setAttribute('style', 'background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;');
+        iframe.setAttribute(
+            'style',
+            'background: white; max-width: 658px; width: calc(100% - 2px); border-radius: 3px; border: 1px solid rgb(219, 219, 219); box-shadow: none; display: block; margin: 0px 0px 12px; min-width: 326px; padding: 0px;'
+        );
         iframe.setAttribute('src', `${src}/embed/captioned/`);
 
         const script = parsed.document.createElement('script');
@@ -1030,9 +1040,11 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         const textElements = el.querySelectorAll('p, cite');
 
         if (textElements.length >= 2) {
-            const combinedText = Array.from(textElements).map((element) => {
-                return element.innerHTML.trim();
-            }).join('<br><br>');
+            const combinedText = Array.from(textElements)
+                .map(element => {
+                    return element.innerHTML.trim();
+                })
+                .join('<br><br>');
             replaceWith(el, `<blockquote><p>${combinedText}</p></blockquote>`);
         }
     }
@@ -1064,13 +1076,15 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     for (const el of parsed.$('.wp-block-buttons')) {
         let buttons = [];
         let isCentered = el.classList.contains('is-content-justification-center');
-        let positionClass = (isCentered) ? 'kg-align-center' : 'kg-align-left';
+        let positionClass = isCentered ? 'kg-align-center' : 'kg-align-left';
 
         for (const button of el.querySelectorAll('.wp-block-button__link')) {
             let buttonHref = button.getAttribute('href');
             let buttonText = button.textContent;
 
-            buttons.push(`<div class="kg-card kg-button-card ${positionClass}"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`);
+            buttons.push(
+                `<div class="kg-card kg-button-card ${positionClass}"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`
+            );
         }
 
         replaceWith(el, buttons.join(''));
@@ -1090,10 +1104,13 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         const videoCaption = figcaptionEl ? figcaptionEl.textContent.trim() : false;
 
         if (videoUrl && videoID && videoID.length) {
-            replaceWith(el, `<figure class="kg-card kg-embed-card"><iframe width="160" height="90"
+            replaceWith(
+                el,
+                `<figure class="kg-card kg-embed-card"><iframe width="160" height="90"
             src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen=""></iframe>${videoCaption ? `<figcaption>${videoCaption}</figcaption>` : ''}</figure>`);
+            allowfullscreen=""></iframe>${videoCaption ? `<figcaption>${videoCaption}</figcaption>` : ''}</figure>`
+            );
         }
     }
 
@@ -1134,7 +1151,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     // Wrap inline styled tags in HTML card
     for (const styled of parsed.$('div[style], p[style], a[style], span[style]')) {
         // Get direct img children (not nested) that don't have data-gif
-        let imgChildren = Array.from(styled.children).filter((child) => {
+        let imgChildren = Array.from(styled.children).filter(child => {
             return child.tagName && child.tagName.toLowerCase() === 'img' && !child.hasAttribute('data-gif');
         });
 
@@ -1163,12 +1180,16 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     }
 
     // Remove bold/italic/emphasis/strong tags from headings — they're redundant
-    for (const el of parsed.$('h1 b, h1 strong, h1 i, h1 em, h2 b, h2 strong, h2 i, h2 em, h3 b, h3 strong, h3 i, h3 em, h4 b, h4 strong, h4 i, h4 em, h5 b, h5 strong, h5 i, h5 em, h6 b, h6 strong, h6 i, h6 em')) {
+    for (const el of parsed.$(
+        'h1 b, h1 strong, h1 i, h1 em, h2 b, h2 strong, h2 i, h2 em, h3 b, h3 strong, h3 i, h3 em, h4 b, h4 strong, h4 i, h4 em, h5 b, h5 strong, h5 i, h5 em, h6 b, h6 strong, h6 i, h6 em'
+    )) {
         replaceWith(el, el.innerHTML);
     }
 
     // Some header elements contain span children to use custom inline styling. Wrap 'em in HTML cards.
-    for (const styledSpan of parsed.$('h1 > span[style], h2 > span[style], h3 > span[style], h4 > span[style], h5 > span[style], h6 > span[style]')) {
+    for (const styledSpan of parsed.$(
+        'h1 > span[style], h2 > span[style], h3 > span[style], h4 > span[style], h5 > span[style], h6 > span[style]'
+    )) {
         let heading = styledSpan.parentElement;
         if (heading && heading.matches('h1, h2, h3, h4, h5, h6')) {
             insertBefore(heading, '<!--kg-card-begin: html-->');
@@ -1249,13 +1270,14 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
  *          url: 'http://something',
  *          data: {
  *             title: 'blah',
-*              ...
+ *              ...
  *          }
  *      }
  *   ]
  * }
  */
-const processPost = async (wpPost, users, options = {}, errors, fileCache) => { // eslint-disable-line no-shadow
+const processPost = async (wpPost, users, options = {}, errors, fileCache) => {
+    // eslint-disable-line no-shadow
     let {tags: fetchTags, addTag, excerptSelector, excerpt, featureImageCaption, customTaxonomies} = options;
 
     let slug = wpPost.slug;
@@ -1278,12 +1300,18 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
         }
     };
 
-    if (options.featureImage === 'featuredmedia' && wpPost.featured_media && wpPost._embedded['wp:featuredmedia'] && !post.data.feature_image) {
+    if (
+        options.featureImage === 'featuredmedia' &&
+        wpPost.featured_media &&
+        wpPost._embedded['wp:featuredmedia'] &&
+        !post.data.feature_image
+    ) {
         const wpImage = wpPost._embedded['wp:featuredmedia'][0];
         try {
             post.data.feature_image = wpCDNToLocal(wpImage.source_url);
             post.data.feature_image_alt = wpImage.alt_text || null;
-            post.data.feature_image_caption = (featureImageCaption !== false && wpImage.caption) ? stripHtml(wpImage.caption.rendered) : null;
+            post.data.feature_image_caption =
+                featureImageCaption !== false && wpImage.caption ? stripHtml(wpImage.caption.rendered) : null;
         } catch (error) {
             console.log(error, wpPost); // eslint-disable-line no-console
         }
@@ -1291,13 +1319,12 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
 
     // Check for co-authors from Co-Authors Plus or PublishPress Authors plugins
     // These store authors as terms in wp:term with taxonomy === 'author'
-    const coAuthors = wpPost._embedded && wpPost._embedded['wp:term']
-        ? processCoAuthors(wpPost._embedded['wp:term'], users)
-        : [];
+    const coAuthors =
+        wpPost._embedded && wpPost._embedded['wp:term'] ? processCoAuthors(wpPost._embedded['wp:term'], users) : [];
 
     // Handle author assignment based on co-authors
     if (wpPost?.parsely?.meta?.author && wpPost.parsely.meta.author.length > 0) {
-        wpPost.parsely.meta.author.forEach((author) => {
+        wpPost.parsely.meta.author.forEach(author => {
             post.data.author = processAuthor({name: author.name});
         });
     } else if (coAuthors.length > 1) {
@@ -1308,9 +1335,11 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
         post.data.author = coAuthors[0];
     } else {
         // No co-authors found, fall back to standard WordPress author
-        post.data.author = users ? users.find((user) => {
-            return user.data.id === wpPost.author;
-        }) : null;
+        post.data.author = users
+            ? users.find(user => {
+                  return user.data.id === wpPost.author;
+              })
+            : null;
 
         // If no author was found from users list…
         if (!post.data.author) {
@@ -1318,7 +1347,7 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
             if (wpPost._embedded && wpPost._embedded.author) {
                 const wpAuthor = wpPost._embedded.author[0];
                 post.data.author = processAuthor(wpAuthor);
-            // … else, use the first user in the `users` object
+                // … else, use the first user in the `users` object
             } else if (users && users.length > 0) {
                 post.data.author = processAuthor(users[0].data);
             }
@@ -1379,7 +1408,7 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
     // Some HTML content needs to be modified so that our parser plugins can interpret it
     post.data.html = await processContent({
         html: post.data.html,
-        excerptSelector: (!excerpt && excerptSelector) ? excerptSelector : false,
+        excerptSelector: !excerpt && excerptSelector ? excerptSelector : false,
         featureImageSrc: post.data.feature_image,
         fileCache,
         options
@@ -1388,14 +1417,15 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => { 
     return post;
 };
 
-const processPosts = async (posts, users, options, errors, fileCache) => { // eslint-disable-line no-shadow
+const processPosts = async (posts, users, options, errors, fileCache) => {
+    // eslint-disable-line no-shadow
     if (options.onlyURLs) {
         const onlyURLsContent = readFileSync(options.onlyURLs, {encoding: 'utf8'});
         const onlyURLsObj = MgFsUtils.csv.parseString(onlyURLsContent);
 
         // Filter…
         let foundPosts = [];
-        onlyURLsObj.forEach((urlObj) => {
+        onlyURLsObj.forEach(urlObj => {
             let foundPost = posts.find(post => post.link === urlObj.url);
 
             if (foundPost) {
@@ -1420,11 +1450,11 @@ const processPosts = async (posts, users, options, errors, fileCache) => { // es
     return results;
 };
 
-const processAuthors = (authors) => {
+const processAuthors = authors => {
     return authors.map(author => processAuthor(author));
 };
 
-const all = async (ctx) => {
+const all = async ctx => {
     let {result: input, usersJSON, options, errors, fileCache} = ctx; // eslint-disable-line no-shadow
 
     if (usersJSON) {
@@ -1432,11 +1462,14 @@ const all = async (ctx) => {
         try {
             let passedUsers = usersJSON;
             console.log(`Passed a users file with ${passedUsers.length} entries, processing now!`); // eslint-disable-line no-console
-            await passedUsers.map((passedUser) => { // eslint-disable-line array-callback-return
-                const matchedUser = input.users.find((fetchedUser) => {
-                    return (fetchedUser.id && passedUser.id && fetchedUser.id === passedUser.id)
-                        || (fetchedUser.slug && passedUser.slug && fetchedUser.slug === passedUser.slug)
-                        || (fetchedUser.name && passedUser.name && fetchedUser.name === passedUser.name);
+            await passedUsers.map(passedUser => {
+                // eslint-disable-line array-callback-return
+                const matchedUser = input.users.find(fetchedUser => {
+                    return (
+                        (fetchedUser.id && passedUser.id && fetchedUser.id === passedUser.id) ||
+                        (fetchedUser.slug && passedUser.slug && fetchedUser.slug === passedUser.slug) ||
+                        (fetchedUser.name && passedUser.name && fetchedUser.name === passedUser.name)
+                    );
                 });
                 mergedUsers.push(Object.assign({}, passedUser, matchedUser));
             });

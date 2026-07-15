@@ -67,7 +67,9 @@ export class StripeAPI {
         }, 1000);
     }
 
-    useAsyncIterator<T>(task: (client: Stripe) => {[Symbol.asyncIterator](): AsyncIterator<T>}): {[Symbol.asyncIterator](): AsyncIterator<T>} {
+    useAsyncIterator<T>(task: (client: Stripe) => {[Symbol.asyncIterator](): AsyncIterator<T>}): {
+        [Symbol.asyncIterator](): AsyncIterator<T>;
+    } {
         const iterator = task(this.#client)[Symbol.asyncIterator]();
         let i = 0;
         return {
@@ -78,7 +80,7 @@ export class StripeAPI {
 
                         if (i % 100 === 0) {
                             // Sleep one second
-                            await new Promise((resolve) => {
+                            await new Promise(resolve => {
                                 setTimeout(resolve, 1000);
                             });
                         }

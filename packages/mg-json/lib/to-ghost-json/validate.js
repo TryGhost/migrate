@@ -1,7 +1,7 @@
 import {slugify} from '@tryghost/string';
 import emailValidator from 'node-email-verifier';
 
-export default async (json) => {
+export default async json => {
     if (!json.posts) {
         return json;
     }
@@ -34,7 +34,9 @@ export default async (json) => {
                 let truncated = input[propKey].substring(0, propValue).trim();
 
                 // eslint-disable-next-line no-console
-                console.warn(`${propKey} for post slug "${item.data.slug}" is too long.\nOriginal: "${input[propKey]}"\nTruncated to: "${truncated}"`);
+                console.warn(
+                    `${propKey} for post slug "${item.data.slug}" is too long.\nOriginal: "${input[propKey]}"\nTruncated to: "${truncated}"`
+                );
 
                 input[propKey] = truncated;
             }
@@ -44,10 +46,12 @@ export default async (json) => {
             for (const [propKey, propValue] of Object.entries(tagProperties)) {
                 if (tag.data[propKey] && tag.data[propKey].length > propValue) {
                     let truncated = tag.data[propKey].substring(0, propValue).trim();
-    
+
                     // eslint-disable-next-line no-console
-                    console.warn(`${propKey} for tag slug "${input.tags[iindex].data.slug}" is too long.\nOriginal: "${input.tags[iindex].data[propKey]}"\nTruncated to: "${truncated}"`);
-    
+                    console.warn(
+                        `${propKey} for tag slug "${input.tags[iindex].data.slug}" is too long.\nOriginal: "${input.tags[iindex].data[propKey]}"\nTruncated to: "${truncated}"`
+                    );
+
                     input.tags[iindex].data[propKey] = truncated;
                 }
             }
@@ -69,7 +73,9 @@ export default async (json) => {
 
             if (!isEmailValid) {
                 // The local part (before the @) must be 50 chars or fewer to pass Ghost's email validation
-                item.data.email = `${slugify(item?.data?.slug || item?.data?.name || 'author').slice(0, 50).replace(/-+$/, '')}@example.com`;
+                item.data.email = `${slugify(item?.data?.slug || item?.data?.name || 'author')
+                    .slice(0, 50)
+                    .replace(/-+$/, '')}@example.com`;
             }
 
             json.users[index] = item;

@@ -158,14 +158,20 @@ describe('MigrateContext', () => {
             progressCalls.push([processed, total]);
         });
 
-        await instance.forEachPost(async (post: PostContext) => {
-            post.set('status', 'published');
-        }, {batchSize: 1});
+        await instance.forEachPost(
+            async (post: PostContext) => {
+                post.set('status', 'published');
+            },
+            {batchSize: 1}
+        );
 
         const allPosts = await instance.getAllPosts();
         assert.equal(allPosts[0].data.status, 'published');
         assert.equal(allPosts[1].data.status, 'published');
-        assert.deepEqual(progressCalls, [[1, 2], [2, 2]]);
+        assert.deepEqual(progressCalls, [
+            [1, 2],
+            [2, 2]
+        ]);
 
         await instance.close();
     });
@@ -604,7 +610,10 @@ describe('MigrateContext', () => {
 
             await instance.forEachGhostPost(async () => {}, {batchSize: 2});
 
-            assert.deepEqual(progressCalls, [[2, 3], [3, 3]]);
+            assert.deepEqual(progressCalls, [
+                [2, 3],
+                [3, 3]
+            ]);
 
             await instance.close();
         });
@@ -668,7 +677,14 @@ describe('MigrateContext', () => {
         const ghostJSON = JSON.parse(await readFile(writtenFiles[0].path, 'utf-8'));
 
         assert.deepEqual(Object.keys(ghostJSON), ['meta', 'data']);
-        assert.deepEqual(Object.keys(ghostJSON.data), ['posts', 'users', 'tags', 'posts_authors', 'posts_tags', 'posts_meta']);
+        assert.deepEqual(Object.keys(ghostJSON.data), [
+            'posts',
+            'users',
+            'tags',
+            'posts_authors',
+            'posts_tags',
+            'posts_meta'
+        ]);
         assert.deepEqual(ghostJSON.data.posts.length, 2);
         assert.equal(ghostJSON.data.posts_meta.length, 1);
         assert.equal(ghostJSON.data.posts_meta[0].meta_title, 'SEO Title');
@@ -1220,16 +1236,19 @@ describe('MigrateContext', () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
-            await assert.rejects(async () => {
-                await instance.transaction(async () => {
-                    const post = await instance.addPost();
-                    post.set('title', 'Will Rollback');
-                    post.set('slug', 'will-rollback');
-                    post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
-                    await post.save(instance.db);
-                    throw new errors.InternalServerError({message: 'forced rollback'});
-                });
-            }, {message: 'forced rollback', name: 'InternalServerError'});
+            await assert.rejects(
+                async () => {
+                    await instance.transaction(async () => {
+                        const post = await instance.addPost();
+                        post.set('title', 'Will Rollback');
+                        post.set('slug', 'will-rollback');
+                        post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+                        await post.save(instance.db);
+                        throw new errors.InternalServerError({message: 'forced rollback'});
+                    });
+                },
+                {message: 'forced rollback', name: 'InternalServerError'}
+            );
 
             const allPosts = await instance.getAllPosts();
             assert.equal(allPosts.length, 0);
@@ -1247,17 +1266,28 @@ describe('MigrateContext', () => {
             post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
             await post.save(instance.db);
 
-            assert.throws(() => {
-                withTransaction(instance.db, () => {
-                    instance.db.stmts.updatePost.run(
-                        JSON.stringify({title: 'Rolled Back', slug: 'before-rollback'}),
-                        '{}', '{}', 'lexical', null, post.ghostId,
-                        '2023-11-23T00:00:00.000Z', null, null,
-                        'before-rollback', null, post.dbId
-                    );
-                    throw new errors.InternalServerError({message: 'sync rollback'});
-                });
-            }, {message: 'sync rollback'});
+            assert.throws(
+                () => {
+                    withTransaction(instance.db, () => {
+                        instance.db.stmts.updatePost.run(
+                            JSON.stringify({title: 'Rolled Back', slug: 'before-rollback'}),
+                            '{}',
+                            '{}',
+                            'lexical',
+                            null,
+                            post.ghostId,
+                            '2023-11-23T00:00:00.000Z',
+                            null,
+                            null,
+                            'before-rollback',
+                            null,
+                            post.dbId
+                        );
+                        throw new errors.InternalServerError({message: 'sync rollback'});
+                    });
+                },
+                {message: 'sync rollback'}
+            );
 
             const allPosts = await instance.getAllPosts();
             assert.equal(allPosts[0].data.title, 'Before Rollback');
@@ -1280,9 +1310,17 @@ describe('MigrateContext', () => {
                 withTransaction(instance.db, () => {
                     instance.db.stmts.updatePost.run(
                         JSON.stringify({title: 'Updated In Nested', slug: 'nested-tx'}),
-                        '{}', '{}', 'lexical', null, post.ghostId,
-                        '2023-11-23T00:00:00.000Z', null, null,
-                        'nested-tx', null, post.dbId
+                        '{}',
+                        '{}',
+                        'lexical',
+                        null,
+                        post.ghostId,
+                        '2023-11-23T00:00:00.000Z',
+                        null,
+                        null,
+                        'nested-tx',
+                        null,
+                        post.dbId
                     );
                 });
             });
@@ -1336,10 +1374,9 @@ describe('MigrateContext', () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
-            await assert.rejects(
-                () => instance.init(),
-                {message: 'MigrateContext is already initialized. Call close() before reinitializing.'}
-            );
+            await assert.rejects(() => instance.init(), {
+                message: 'MigrateContext is already initialized. Call close() before reinitializing.'
+            });
 
             await instance.close();
         });
@@ -1353,7 +1390,9 @@ describe('MigrateContext', () => {
             // Insert tag directly into DB, bypassing the cache
             instance.db.stmts.insertTag.run(
                 JSON.stringify({name: 'Pre-existing', slug: 'pre-tag'}),
-                'pre-tag', 'Pre-existing', null
+                'pre-tag',
+                'Pre-existing',
+                null
             );
 
             // Save a TagContext with the same slug — should hit the existing.update branch
@@ -1375,11 +1414,18 @@ describe('MigrateContext', () => {
             // Insert author directly into DB, bypassing the cache
             instance.db.stmts.insertAuthor.run(
                 JSON.stringify({name: 'Pre-existing', slug: 'pre-author', email: 'pre@example.com'}),
-                'pre-author', 'Pre-existing', 'pre@example.com', null
+                'pre-author',
+                'Pre-existing',
+                'pre@example.com',
+                null
             );
 
             // Save an AuthorContext with the same slug — should hit the existing.update branch
-            const author = new AuthorContext({name: 'Updated Pre-existing', slug: 'pre-author', email: 'pre@example.com'});
+            const author = new AuthorContext({
+                name: 'Updated Pre-existing',
+                slug: 'pre-author',
+                email: 'pre@example.com'
+            });
             await author.save(instance.db);
 
             assert.ok(author.dbId);
@@ -1471,7 +1517,10 @@ describe('MigrateContext', () => {
 
             const loaded = await instance.getAllPosts();
             assert.equal(loaded.length, 1);
-            assert.deepEqual(loaded[0].webscrapeData, {meta_title: 'Scraped Title', og_image: 'https://example.com/img.jpg'});
+            assert.deepEqual(loaded[0].webscrapeData, {
+                meta_title: 'Scraped Title',
+                og_image: 'https://example.com/img.jpg'
+            });
 
             await instance.close();
         });
@@ -1920,9 +1969,12 @@ describe('MigrateContext', () => {
 
         async function collectTitles(filter: PostFilter): Promise<string[]> {
             const titles: string[] = [];
-            await ctx.forEachPost(async (post: PostContext) => {
-                titles.push(post.data.title);
-            }, {filter});
+            await ctx.forEachPost(
+                async (post: PostContext) => {
+                    titles.push(post.data.title);
+                },
+                {filter}
+            );
             return titles;
         }
 
@@ -2082,7 +2134,8 @@ describe('MigrateContext', () => {
                 const empty: any = new MigrateContext();
                 await empty.init();
                 let count = 0;
-                for await (const _post of empty.streamPosts()) { // eslint-disable-line no-unused-vars
+                for await (const _post of empty.streamPosts()) {
+                    // eslint-disable-line no-unused-vars
                     count += 1;
                 }
                 assert.equal(count, 0);
@@ -2116,9 +2169,12 @@ describe('MigrateContext', () => {
             it('Tag filter works read-only', async () => {
                 const titles: string[] = [];
                 // eslint-disable-next-line no-unused-vars
-                await ctx.forEachGhostPost(async (json: any, _post: PostContext) => {
-                    titles.push(json.title);
-                }, {filter: {tag: {slug: 'tech'}}});
+                await ctx.forEachGhostPost(
+                    async (json: any, _post: PostContext) => {
+                        titles.push(json.title);
+                    },
+                    {filter: {tag: {slug: 'tech'}}}
+                );
                 assert.deepEqual(titles, ['Post C', 'Post D']);
             });
 
@@ -2140,18 +2196,24 @@ describe('MigrateContext', () => {
             it('Date-only filter works without tag/author', async () => {
                 const titles: string[] = [];
                 // eslint-disable-next-line no-unused-vars
-                await ctx.forEachGhostPost(async (json: any, _post: PostContext) => {
-                    titles.push(json.title);
-                }, {filter: {createdAt: {after: new Date('2023-09-01T00:00:00.000Z')}}});
+                await ctx.forEachGhostPost(
+                    async (json: any, _post: PostContext) => {
+                        titles.push(json.title);
+                    },
+                    {filter: {createdAt: {after: new Date('2023-09-01T00:00:00.000Z')}}}
+                );
                 assert.deepEqual(titles, ['Post D', 'Post E']);
             });
 
             it('Tag + date filter skips date-excluded posts', async () => {
                 const titles: string[] = [];
                 // eslint-disable-next-line no-unused-vars
-                await ctx.forEachGhostPost(async (json: any, _post: PostContext) => {
-                    titles.push(json.title);
-                }, {filter: {tag: {slug: 'tech'}, createdAt: {after: new Date('2023-08-01T00:00:00.000Z')}}});
+                await ctx.forEachGhostPost(
+                    async (json: any, _post: PostContext) => {
+                        titles.push(json.title);
+                    },
+                    {filter: {tag: {slug: 'tech'}, createdAt: {after: new Date('2023-08-01T00:00:00.000Z')}}}
+                );
                 assert.deepEqual(titles, ['Post D']);
             });
         });
@@ -2280,7 +2342,12 @@ describe('MigrateContext', () => {
                 const dir = join(tmpdir(), `mg-filter-single-date-${Date.now()}`);
                 const files = await ctx.writeGhostJson(dir, {
                     batchSize: 1,
-                    filter: {createdAt: {after: new Date('2023-12-14T00:00:00.000Z'), before: new Date('2023-12-16T00:00:00.000Z')}}
+                    filter: {
+                        createdAt: {
+                            after: new Date('2023-12-14T00:00:00.000Z'),
+                            before: new Date('2023-12-16T00:00:00.000Z')
+                        }
+                    }
                 });
                 assert.equal(files.length, 1);
                 assert.equal(files[0].posts, 1);

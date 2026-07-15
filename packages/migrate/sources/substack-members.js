@@ -24,7 +24,7 @@ const MEMBERS_IMPORT_FIELDS = [
  *
  * @param {Object} options
  */
-const getTaskRunner = (options) => {
+const getTaskRunner = options => {
     let tasks = [
         {
             title: 'Initializing',
@@ -45,7 +45,7 @@ const getTaskRunner = (options) => {
         },
         {
             title: 'Read csv file(s) and process with given options',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 1. Read the csv file
                 try {
                     ctx.result = await csvIngest(ctx);
@@ -59,19 +59,24 @@ const getTaskRunner = (options) => {
         {
             title: 'Create batches and write CSV files',
             enabled: () => !options.outputSingleCSV,
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     // TODO: we can/should probably move this to the package
                     const types = Object.keys(ctx.result);
                     const files = [];
 
-                    types.forEach(async (type) => {
-                        const batchSize = (type === 'comp' && ctx.options.limit > MAX_COMP_BATCH_SIZE) ? MAX_COMP_BATCH_SIZE : ctx.options.limit;
+                    types.forEach(async type => {
+                        const batchSize =
+                            type === 'comp' && ctx.options.limit > MAX_COMP_BATCH_SIZE
+                                ? MAX_COMP_BATCH_SIZE
+                                : ctx.options.limit;
                         const batchesTotal = Math.ceil(ctx.result[type].length / batchSize);
                         let currentBatch = 1;
 
                         if (type === 'skip') {
-                            await ctx.fileCache.writeErrorJSONFile(ctx.result.skip, {filename: `gh-members-skipped-${Date.now()}.logs.json`});
+                            await ctx.fileCache.writeErrorJSONFile(ctx.result.skip, {
+                                filename: `gh-members-skipped-${Date.now()}.logs.json`
+                            });
                         } else {
                             while (currentBatch <= batchesTotal) {
                                 const toParse = ctx.result[type].splice(0, batchSize);
@@ -85,15 +90,23 @@ const getTaskRunner = (options) => {
                         }
                     });
 
-                    await Promise.all(files.map(async ({data, fileName, tmpFilename}) => {
-                        data = await fsUtils.csv.jsonToCSV(data, MEMBERS_IMPORT_FIELDS);
+                    await Promise.all(
+                        files.map(async ({data, fileName, tmpFilename}) => {
+                            data = await fsUtils.csv.jsonToCSV(data, MEMBERS_IMPORT_FIELDS);
 
-                        // write the members import file for each batch
-                        await ctx.fileCache.writeGhostImportFile(data, {isJSON: false, filename: fileName, tmpFilename: tmpFilename});
-                    }));
+                            // write the members import file for each batch
+                            await ctx.fileCache.writeGhostImportFile(data, {
+                                isJSON: false,
+                                filename: fileName,
+                                tmpFilename: tmpFilename
+                            });
+                        })
+                    );
 
                     if (ctx.logs) {
-                        await ctx.fileCache.writeErrorJSONFile(ctx.logs, {filename: `gh-members-updated-${Date.now()}.logs.json`});
+                        await ctx.fileCache.writeErrorJSONFile(ctx.logs, {
+                            filename: `gh-members-updated-${Date.now()}.logs.json`
+                        });
                     }
                 } catch (error) {
                     ctx.errors.push({message: 'Failed to batch files', error});
@@ -104,8 +117,8 @@ const getTaskRunner = (options) => {
         {
             title: 'Create singular members list',
             enabled: () => options.outputSingleCSV,
-            task: async (ctx) => {
-                Object.keys(ctx.result).forEach((type) => {
+            task: async ctx => {
+                Object.keys(ctx.result).forEach(type => {
                     ctx.allMembers.push(...ctx.result[type]);
                 });
 
@@ -127,7 +140,11 @@ const getTaskRunner = (options) => {
                     const zipFinalPath = options.outputPath || process.cwd();
 
                     // zip the file and save it temporarily
-                    ctx.outputFile = await fsUtils.zip.write(zipFinalPath, ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+                    ctx.outputFile = await fsUtils.zip.write(
+                        zipFinalPath,
+                        ctx.fileCache.zipDir,
+                        ctx.fileCache.defaultZipFileName
+                    );
 
                     if (isStorage) {
                         const storage = options.outputStorage;
@@ -136,7 +153,10 @@ const getTaskRunner = (options) => {
                         // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
                         // Upload the file to the storage
-                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-substack-members-${ctx.options.cacheName}.zip`});
+                        ctx.outputFile.path = await storage.upload({
+                            body: fileBuffer,
+                            fileName: `gh-substack-members-${ctx.options.cacheName}.zip`
+                        });
                         // now that the file is uploaded to the storage, delete the local zip file
                         await fsUtils.zip.deleteFile(localFilePath);
                     }
@@ -158,10 +178,9 @@ const getTaskRunner = (options) => {
                     const entries = await readdir(ctx.fileCache.zipDir);
                     const csvFiles = entries.filter(f => f.endsWith('.csv'));
 
-                    await Promise.all(csvFiles.map(f => copyFile(
-                        join(ctx.fileCache.zipDir, f),
-                        join(csvFinalPath, f)
-                    )));
+                    await Promise.all(
+                        csvFiles.map(f => copyFile(join(ctx.fileCache.zipDir, f), join(csvFinalPath, f)))
+                    );
 
                     ctx.outputFiles = csvFiles.map(f => join(csvFinalPath, f));
                     task.output = `Successfully wrote ${csvFiles.length} CSV file(s) to ${csvFinalPath} in ${prettyMilliseconds(Date.now() - timer)}`;
@@ -198,7 +217,10 @@ const getTaskRunner = (options) => {
                         // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
                         // Upload the file to the storage
-                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-substack-members-${ctx.options.cacheName}.csv`});
+                        ctx.outputFile.path = await storage.upload({
+                            body: fileBuffer,
+                            fileName: `gh-substack-members-${ctx.options.cacheName}.csv`
+                        });
                         // now that the file is uploaded to the storage, delete the local zip file
                         await ctx.fileCache.deleteFileOrDir(localFilePath);
                     }
@@ -213,7 +235,7 @@ const getTaskRunner = (options) => {
         {
             title: 'Clearing cached files',
             enabled: () => !options.cache && options.zip,
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {

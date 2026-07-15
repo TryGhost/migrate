@@ -122,9 +122,12 @@ describe('AssetCache from scratch', () => {
     it('Throws when updating an invalid field', async () => {
         const item = await assetCache.add('/wp-content/2024/11/01/lorem.jpg');
 
-        assert.throws(() => {
-            assetCache.update(item.id, 'invalid' as any, 'value');
-        }, {message: 'Cannot update field: invalid'});
+        assert.throws(
+            () => {
+                assetCache.update(item.id, 'invalid' as any, 'value');
+            },
+            {message: 'Cannot update field: invalid'}
+        );
     });
 
     it('Re-adds a row that was deleted from a previous migration run', async () => {

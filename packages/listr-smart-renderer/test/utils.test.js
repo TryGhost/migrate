@@ -6,7 +6,7 @@ describe('Task Number', function () {
     let index;
     let tasks;
 
-    const taskNumberShouldEql = (result) => {
+    const taskNumberShouldEql = result => {
         return assert.equal(taskNumber(index, tasks), result);
     };
 

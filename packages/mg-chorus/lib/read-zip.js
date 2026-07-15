@@ -19,7 +19,7 @@ const readChorusFile = ({content, entries, options, skippedFileCount}) => {
                     console.log(entries, entryName, error); // eslint-disable-line no-console
                 }
 
-            // Skip if not matched above, and report skipped files if `--verbose`
+                // Skip if not matched above, and report skipped files if `--verbose`
             } else {
                 if (options.verbose) {
                     debug(`Skipped: ${entryName}`);
@@ -28,7 +28,7 @@ const readChorusFile = ({content, entries, options, skippedFileCount}) => {
             }
         });
     } else {
-        fs.readdirSync(entries).forEach((entryName) => {
+        fs.readdirSync(entries).forEach(entryName => {
             if (/^Entry:.*\.json$/.test(entryName)) {
                 try {
                     content.posts.push({
@@ -39,7 +39,7 @@ const readChorusFile = ({content, entries, options, skippedFileCount}) => {
                     console.log(entries, entryName, error); // eslint-disable-line no-console
                 }
 
-            // Skip if not matched above, and report skipped files if `--verbose`
+                // Skip if not matched above, and report skipped files if `--verbose`
             } else {
                 if (options.verbose) {
                     debug(`Skipped: ${entryName}`);
@@ -70,7 +70,7 @@ export default (entries, options) => {
     const ifIsArray = Array.isArray(entries);
 
     if (ifIsArray && entries.length > 1) {
-        entries.forEach((file) => {
+        entries.forEach(file => {
             const fileContent = readChorusFile({content, entries: file, options, skippedFileCount});
             content = fileContent.content;
             skippedFileCount = fileContent.skippedFileCount;

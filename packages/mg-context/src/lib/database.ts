@@ -147,15 +147,21 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_links_old_url ON Links(old_url);
 function prepareStatements(db: DatabaseSync): PreparedStatements {
     return {
         // Posts
-        insertPost: db.prepare('INSERT INTO Posts (data, source, meta, content_format, lookup_key, ghost_id, created_at, updated_at, published_at, original_slug, slug, webscrape_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'),
-        updatePost: db.prepare('UPDATE Posts SET data = ?, source = ?, meta = ?, content_format = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, slug = ?, webscrape_data = ? WHERE id = ?'),
+        insertPost: db.prepare(
+            'INSERT INTO Posts (data, source, meta, content_format, lookup_key, ghost_id, created_at, updated_at, published_at, original_slug, slug, webscrape_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ),
+        updatePost: db.prepare(
+            'UPDATE Posts SET data = ?, source = ?, meta = ?, content_format = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, slug = ?, webscrape_data = ? WHERE id = ?'
+        ),
         updatePostData: db.prepare('UPDATE Posts SET data = ? WHERE id = ?'),
         updatePostSlug: db.prepare('UPDATE Posts SET slug = ?, data = ? WHERE id = ?'),
         findPostById: db.prepare('SELECT * FROM Posts WHERE id = ?'),
         findPostByLookupKey: db.prepare('SELECT * FROM Posts WHERE lookup_key = ?'),
         findPostsBySlug: db.prepare('SELECT * FROM Posts WHERE slug = ? ORDER BY id ASC'),
         slugExists: db.prepare('SELECT 1 FROM Posts WHERE slug = ? LIMIT 1'),
-        findPostsForConversion: db.prepare('SELECT id, data, content_format FROM Posts ORDER BY id ASC LIMIT ? OFFSET ?'),
+        findPostsForConversion: db.prepare(
+            'SELECT id, data, content_format FROM Posts ORDER BY id ASC LIMIT ? OFFSET ?'
+        ),
         countPosts: db.prepare('SELECT COUNT(*) as count FROM Posts'),
         findAllPostsOrdered: db.prepare('SELECT * FROM Posts ORDER BY id ASC'),
         findPostsPaginated: db.prepare('SELECT * FROM Posts ORDER BY id ASC LIMIT ? OFFSET ?'),
@@ -169,12 +175,18 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         findTagsBySlug: db.prepare('SELECT * FROM Tags WHERE slug = ?'),
         findTagsByName: db.prepare('SELECT * FROM Tags WHERE name = ?'),
         findAllTags: db.prepare('SELECT * FROM Tags'),
-        findUsedTags: db.prepare('SELECT DISTINCT t.* FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id ORDER BY t.id ASC'),
-        findUsedTagIds: db.prepare('SELECT DISTINCT t.id FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id ORDER BY t.id ASC'),
+        findUsedTags: db.prepare(
+            'SELECT DISTINCT t.* FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id ORDER BY t.id ASC'
+        ),
+        findUsedTagIds: db.prepare(
+            'SELECT DISTINCT t.id FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id ORDER BY t.id ASC'
+        ),
 
         // Authors
         insertAuthor: db.prepare('INSERT INTO Authors (data, slug, name, email, ghost_id) VALUES (?, ?, ?, ?, ?)'),
-        updateAuthorById: db.prepare('UPDATE Authors SET data = ?, slug = ?, name = ?, email = ?, ghost_id = ? WHERE id = ?'),
+        updateAuthorById: db.prepare(
+            'UPDATE Authors SET data = ?, slug = ?, name = ?, email = ?, ghost_id = ? WHERE id = ?'
+        ),
         findAuthorById: db.prepare('SELECT * FROM Authors WHERE id = ?'),
         findAuthorBySlug: db.prepare('SELECT * FROM Authors WHERE slug = ? LIMIT 1'),
         findAuthorByName: db.prepare('SELECT * FROM Authors WHERE name = ? LIMIT 1'),
@@ -183,8 +195,12 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         findAuthorsByName: db.prepare('SELECT * FROM Authors WHERE name = ?'),
         findAuthorsByEmail: db.prepare('SELECT * FROM Authors WHERE email = ?'),
         findAllAuthors: db.prepare('SELECT * FROM Authors'),
-        findUsedAuthors: db.prepare('SELECT DISTINCT a.* FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id ORDER BY a.id ASC'),
-        findUsedAuthorIds: db.prepare('SELECT DISTINCT a.id FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id ORDER BY a.id ASC'),
+        findUsedAuthors: db.prepare(
+            'SELECT DISTINCT a.* FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id ORDER BY a.id ASC'
+        ),
+        findUsedAuthorIds: db.prepare(
+            'SELECT DISTINCT a.id FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id ORDER BY a.id ASC'
+        ),
 
         // PostTag junction
         insertPostTag: db.prepare('INSERT INTO PostTags (post_id, tag_id, sort_order) VALUES (?, ?, ?)'),

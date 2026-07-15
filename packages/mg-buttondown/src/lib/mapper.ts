@@ -1,7 +1,7 @@
 import errors from '@tryghost/errors';
 import {processHTML} from './process.js';
 
-const mapPost = ({postData, options}: {postData: buttondownPostDataObject, options?: any}) => {
+const mapPost = ({postData, options}: {postData: buttondownPostDataObject; options?: any}) => {
     const postDate = new Date(postData.publish_date);
 
     const mappedData: mappedDataObject = {
@@ -34,15 +34,15 @@ const mapPost = ({postData, options}: {postData: buttondownPostDataObject, optio
     return mappedData;
 };
 
-const mapPosts = async ({posts, options}: {posts: buttondownPostDataObject[], options: any}) => {
-    const mappedPosts = posts.map((postData) => {
+const mapPosts = async ({posts, options}: {posts: buttondownPostDataObject[]; options: any}) => {
+    const mappedPosts = posts.map(postData => {
         return mapPost({postData, options});
     });
 
     return mappedPosts;
 };
 
-const mapContent = async (args: {options: any, posts?: object[], json: buttondownPostDataObject[]}) => {
+const mapContent = async (args: {options: any; posts?: object[]; json: buttondownPostDataObject[]}) => {
     const output = {
         posts: [] as mappedDataObject[]
     };
@@ -68,7 +68,4 @@ const mapContent = async (args: {options: any, posts?: object[], json: buttondow
     return output;
 };
 
-export {
-    
-    mapContent
-};
+export {mapContent};

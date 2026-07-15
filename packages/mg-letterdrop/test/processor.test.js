@@ -40,7 +40,10 @@ describe('Process', function () {
         assert.equal(data.meta_description, 'Meta description lorem ipsum dolor sit amet consectetur adipiscing elit');
         assert.equal(data.status, 'published');
         assert.equal(data.published_at, '2023-02-03T09:49:30.272Z');
-        assert.equal(data.html, '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eu risus metus. Etiam aliquet leo eget urna gravida, ac accumsan diam rutrum. Curabitur facilisis, nulla non lacinia dictum, urna sapien tincidunt diam, non elementum ante elit quis justo.</p><ul><li>Praesent vehicula libero nunc, in scelerisque nisl mattis facilisis</li><li>Praesent ornare velit vitae arcu tincidunt vulputate</li><li>Phasellus a nibh a tellus accumsan varius</li></ul><h2>Praesent felis augue, auctor aliquet dui ut</h2><p>Sollicitudin varius est. <a href="https://example.com/p/dolor-simet">Aenean</a> tincidunt eu tellus sit amet hendrerit.</p>');
+        assert.equal(
+            data.html,
+            '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eu risus metus. Etiam aliquet leo eget urna gravida, ac accumsan diam rutrum. Curabitur facilisis, nulla non lacinia dictum, urna sapien tincidunt diam, non elementum ante elit quis justo.</p><ul><li>Praesent vehicula libero nunc, in scelerisque nisl mattis facilisis</li><li>Praesent ornare velit vitae arcu tincidunt vulputate</li><li>Phasellus a nibh a tellus accumsan varius</li></ul><h2>Praesent felis augue, auctor aliquet dui ut</h2><p>Sollicitudin varius est. <a href="https://example.com/p/dolor-simet">Aenean</a> tincidunt eu tellus sit amet hendrerit.</p>'
+        );
         assert.equal(data.custom_excerpt, 'Lorem ipsum dolor sit amet consectetur adipiscing elit');
         assert.equal(data.feature_image, 'https://example.com/lorem-ipsum-cover.webp');
 
@@ -86,6 +89,9 @@ describe('Process', function () {
 
         const post = posts[1];
 
-        assert.equal(post.data.html, '<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div><div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>');
+        assert.equal(
+            post.data.html,
+            '<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div><div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>'
+        );
     });
 });

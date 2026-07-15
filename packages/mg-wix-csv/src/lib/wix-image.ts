@@ -35,7 +35,7 @@ const parseWixImageUri = (value: string) => {
     };
 };
 
-const wixMediaIdToUrl = ({id}: {id?: string, width?: number, height?: number}) => {
+const wixMediaIdToUrl = ({id}: {id?: string; width?: number; height?: number}) => {
     if (!id) {
         return null;
     }
@@ -64,9 +64,4 @@ const wixImageUriToUrl = (value?: string) => {
     return buildWixStaticUrl(parts);
 };
 
-export {
-    buildWixStaticUrl,
-    parseWixImageUri,
-    wixImageUriToUrl,
-    wixMediaIdToUrl
-};
+export {buildWixStaticUrl, parseWixImageUri, wixImageUriToUrl, wixMediaIdToUrl};

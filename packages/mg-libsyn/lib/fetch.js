@@ -3,7 +3,7 @@ import {xmlUtils} from '@tryghost/mg-utils';
 import errors from '@tryghost/errors';
 import {slugify} from '@tryghost/string';
 
-const rssToJson = async (rss) => {
+const rssToJson = async rss => {
     return await xmlUtils.parseXml(rss);
 };
 
@@ -38,7 +38,8 @@ const tasks = async ({url}, ctx) => {
 
     subTasks.push({
         title: `Get RSS feed`,
-        task: async (ctx) => { // eslint-disable-line no-shadow
+        task: async ctx => {
+            // eslint-disable-line no-shadow
             const rssURL = `${url}/rss/?include-libsyn-metadata=true`;
 
             try {
@@ -50,7 +51,7 @@ const tasks = async ({url}, ctx) => {
                     email: response.rss.channel['itunes:owner']['itunes:email']
                 };
 
-                response.rss.channel['itunes:category'].forEach((item) => {
+                response.rss.channel['itunes:category'].forEach(item => {
                     ctx.result.tags.push(item['@_text']);
                     ctx.result.tags.push(item['itunes:category']['@_text']);
                 });
@@ -70,6 +71,4 @@ export default {
     tasks
 };
 
-export {
-    rssToJson
-};
+export {rssToJson};

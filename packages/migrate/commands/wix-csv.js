@@ -103,7 +103,7 @@ const options = [
 const defaults = convertOptionsToDefaults(options);
 const setup = sywac => convertOptionsToSywac(options, sywac);
 
-const run = async (argv) => {
+const run = async argv => {
     const context = {
         errors: [],
         warnings: []

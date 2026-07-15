@@ -13,9 +13,12 @@ export default class Shortcodes {
     }
 
     unwrap(name) {
-        this.shortcodes.push({name, callback: ({content}) => {
-            return `${content} `;
-        }});
+        this.shortcodes.push({
+            name,
+            callback: ({content}) => {
+                return `${content} `;
+            }
+        });
     }
 
     unwrapFromQuotes(string = '') {
@@ -25,13 +28,16 @@ export default class Shortcodes {
     }
 
     parseAttributes(attributesString) {
-        const tagAttrRegExp = new RegExp(`([\\w-]+)\\s*=\\s*"([^"]*)"(?:\\s|$)|([\\w-]+)\\s*=\\s*'([^']*)'(?:\\s|$)|([\\w-]+)\\s*=\\s*([^\\s'"]+)(?:\\s|$)|"([^"]*)"(?:\\s|$)|'([^']*)'(?:\\s|$)|(\\S+)(?:\\s|$)`, 'gmi');
+        const tagAttrRegExp = new RegExp(
+            `([\\w-]+)\\s*=\\s*"([^"]*)"(?:\\s|$)|([\\w-]+)\\s*=\\s*'([^']*)'(?:\\s|$)|([\\w-]+)\\s*=\\s*([^\\s'"]+)(?:\\s|$)|"([^"]*)"(?:\\s|$)|'([^']*)'(?:\\s|$)|(\\S+)(?:\\s|$)`,
+            'gmi'
+        );
 
         const tagAttrMatches = [...RegExp.prototype[Symbol.matchAll].call(tagAttrRegExp, attributesString)];
 
         let attributes = {};
 
-        tagAttrMatches.forEach((item) => {
+        tagAttrMatches.forEach(item => {
             let theKey;
             let theValue;
             if (item[1] && item[2] !== 'undefined') {
@@ -118,14 +124,17 @@ export default class Shortcodes {
 
         let result = false;
 
-        this.shortcodes.forEach((shortcode) => {
+        this.shortcodes.forEach(shortcode => {
             if (result && result.length) {
                 return result;
             }
 
             let shortcodeName = shortcode.name;
 
-            let shortcodeRegExp = new RegExp(`\\[${shortcodeName}(?<attrs>\\s[\\s\\S]*?)?\\](?:(?<content>(?!\\\\s*?(?:\\[${shortcodeName}|\\[\\/(?!${shortcodeName})))[\\s\\S]*?)(\\[\\/${shortcodeName}\\]))?`, 'm');
+            let shortcodeRegExp = new RegExp(
+                `\\[${shortcodeName}(?<attrs>\\s[\\s\\S]*?)?\\](?:(?<content>(?!\\\\s*?(?:\\[${shortcodeName}|\\[\\/(?!${shortcodeName})))[\\s\\S]*?)(\\[\\/${shortcodeName}\\]))?`,
+                'm'
+            );
 
             let match = text.match(shortcodeRegExp);
 
@@ -146,7 +155,7 @@ export default class Shortcodes {
             }
         });
 
-        return (result) ? result : false;
+        return result ? result : false;
     }
 
     getShortcode(name) {

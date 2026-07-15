@@ -5,7 +5,7 @@ import process from './lib/process.js';
 
 const parseString = fsUtils.csv.parseString;
 
-const ingest = async (ctx) => {
+const ingest = async ctx => {
     // Extract the ZIP file
     let zipContent = readZip(ctx.options.pathToZip);
 
@@ -26,6 +26,4 @@ export default {
     process
 };
 
-export {
-    contentStats
-};
+export {contentStats};

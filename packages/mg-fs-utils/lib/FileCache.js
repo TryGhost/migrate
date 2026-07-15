@@ -16,10 +16,7 @@ const __dirname = new URL('.', import.meta.url).pathname;
 
 // Define the .end path for this project, as well as parent env files
 dotenv.config({
-    path: [
-        join(__dirname, '../', '.env'),
-        '.env'
-    ]
+    path: [join(__dirname, '../', '.env'), '.env']
 });
 
 const basePath = 'mg';
@@ -149,7 +146,7 @@ export default class FileCache {
     }
 
     convertMbToBytes(mb) {
-        return (mb * 1048576);
+        return mb * 1048576;
     }
 
     sanitizeFileName(src) {
@@ -166,7 +163,7 @@ export default class FileCache {
     }
 
     ensureJsonExtension({filename, isJSON = true}) {
-        return (isJSON && !filename.endsWith('.json')) ? `${filename}.json` : filename; // Ensure the `.json` extension is only added if needed
+        return isJSON && !filename.endsWith('.json') ? `${filename}.json` : filename; // Ensure the `.json` extension is only added if needed
     }
 
     resolveImageFileName(filename) {
@@ -292,7 +289,7 @@ export default class FileCache {
      * @param {String} filename - name of file to read
      */
     async readTmpJSONFile(filename) {
-        let fileNameWithExt = (filename.endsWith('.json')) ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
+        let fileNameWithExt = filename.endsWith('.json') ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
         let filepath = join(this.tmpDir, fileNameWithExt);
 
         return await readJson(filepath);
@@ -304,7 +301,7 @@ export default class FileCache {
      * @param {String} filename - name of file to read
      */
     hasTmpJSONFile(filename) {
-        let fileNameWithExt = (filename.endsWith('.json')) ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
+        let fileNameWithExt = filename.endsWith('.json') ? filename : `${filename}.json`; // Ensure the `.json` extension is only added if needed
         let filepath = join(this.tmpDir, fileNameWithExt);
 
         return existsSync(filepath);
@@ -321,8 +318,7 @@ export default class FileCache {
         const {isJSON} = options;
 
         // Create a temporary version first
-        let filename = options.tmpFilename
-            || (isJSON ? this.defaultTmpJSONFileName : this.defaultTmpCSVFileName);
+        let filename = options.tmpFilename || (isJSON ? this.defaultTmpJSONFileName : this.defaultTmpCSVFileName);
 
         await this.writeTmpFile(data, filename, isJSON);
 
@@ -363,7 +359,7 @@ export default class FileCache {
         const filePath = join(this.cacheDir, `report-${fileName}.csv`);
 
         const seen = new Set();
-        const dedupedData = report.data.filter((e) => {
+        const dedupedData = report.data.filter(e => {
             if (seen.has(e.src)) {
                 return false;
             }
@@ -434,11 +430,11 @@ export default class FileCache {
     }
 
     /**
-    * Check if we've got this file already
-    *
-    * @param {String} filename
-    * @param {String} type - one of tmp, json, image
-    */
+     * Check if we've got this file already
+     *
+     * @param {String} filename
+     * @param {String} type - one of tmp, json, image
+     */
     hasFile(filename, type) {
         let pathToCheck = filename;
 
@@ -464,17 +460,17 @@ export default class FileCache {
         const directory = this.cacheBaseDir + '/';
 
         let itemsToDelete = [];
-        const dirContents = readdirSync(directory).map((fileName) => {
+        const dirContents = readdirSync(directory).map(fileName => {
             return join(directory, fileName);
         });
 
-        dirContents.forEach((item) => {
+        dirContents.forEach(item => {
             if (lstatSync(item).isDirectory()) {
                 itemsToDelete.push(item);
             }
         });
 
-        itemsToDelete.forEach((item) => {
+        itemsToDelete.forEach(item => {
             rmSync(item, {recursive: true});
         });
 
@@ -484,4 +480,3 @@ export default class FileCache {
         };
     }
 }
-

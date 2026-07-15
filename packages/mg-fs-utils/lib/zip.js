@@ -6,7 +6,7 @@ import errors from '@tryghost/errors';
 
 const _private = {};
 
-_private.openZipForRead = (zipPath) => {
+_private.openZipForRead = zipPath => {
     return AdmZip(zipPath);
 };
 
@@ -23,7 +23,7 @@ const read = (zipPath, callback) => {
     }
 
     // If the zip has one entry and its another zip, unzip & read that instead
-    const preCheckEntries = zip.getEntries().filter((entry) => {
+    const preCheckEntries = zip.getEntries().filter(entry => {
         return !(entry.entryName.match(/^__MACOSX/) || entry.entryName.match(/\.DS_Store$/));
     });
 
@@ -35,7 +35,7 @@ const read = (zipPath, callback) => {
     }
 
     // Entries is cleaned first
-    let entries = zip.getEntries().filter((entry) => {
+    let entries = zip.getEntries().filter(entry => {
         return !(entry.entryName.match(/^__MACOSX/) || entry.entryName.match(/\.DS_Store$/));
     });
     // If the first entry is a directory, and every entry starts with the same directory, we have a top level directory
@@ -47,7 +47,7 @@ const read = (zipPath, callback) => {
         entries.shift();
     }
 
-    entries.forEach((zipEntry) => {
+    entries.forEach(zipEntry => {
         // If we have a topLevelDirectory, remove reference to it from the entry name
         let entryName = hasTopLevelDir ? zipEntry.entryName.replace(firstEntry.entryName, '') : zipEntry.entryName;
         callback(entryName, zipEntry);
@@ -63,7 +63,7 @@ const write = async (zipPath, contentFolder, fileName) => {
     return await zip.compress(contentFolder, outputPath);
 };
 
-const deleteFile = async (fileToDelete) => {
+const deleteFile = async fileToDelete => {
     ensureFileSync(fileToDelete);
 
     return await remove(fileToDelete);

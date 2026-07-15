@@ -5,9 +5,14 @@ declare module 'sanitize-html';
 type beehiivPostDataObject = {
     id: string;
     web_title: string;
-    status: 'archived' | 'confirmed' | 'draft'
-    audience?: 'both' | 'free' | 'premium'
-    web_audiences?: 'All free subscribers, All premium subscribers' | 'All free subscribers, All paid subscribers' | 'All free subscribers' | 'All premium subscribers' | 'All paid subscribers'
+    status: 'archived' | 'confirmed' | 'draft';
+    audience?: 'both' | 'free' | 'premium';
+    web_audiences?:
+        | 'All free subscribers, All premium subscribers'
+        | 'All free subscribers, All paid subscribers'
+        | 'All free subscribers'
+        | 'All premium subscribers'
+        | 'All paid subscribers';
     content_tags: string;
     url: string;
     web_subtitle?: string;
@@ -23,7 +28,7 @@ type tagsObject = {
     data: {
         slug: string;
         name: string;
-    }
+    };
 };
 
 type authorsObject = {
@@ -32,7 +37,7 @@ type authorsObject = {
         slug: string;
         name: string;
         email: string;
-    }
+    };
 };
 
 type mappedDataObject = {

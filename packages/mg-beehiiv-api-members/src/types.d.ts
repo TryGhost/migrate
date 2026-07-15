@@ -17,9 +17,9 @@ type BeehiivPublicationResponse = {
     data: {
         stats: {
             active_subscriptions: number;
-        }
-    }
-}
+        };
+    };
+};
 
 type BeehiivSubscriptionsResponse = {
     data: BeehiivSubscription[];

@@ -1,7 +1,7 @@
 import ObjectID from 'bson-objectid';
 import schema from '../utils/schema.js';
 
-export default (json) => {
+export default json => {
     json.users = json.users || [];
     json.tags = json.tags || []; // expected to be empty
 
@@ -33,7 +33,8 @@ export default (json) => {
             return;
         }
         const matchData = match.data || match;
-        return json[location].find((item) => { // eslint-disable-line array-callback-return
+        return json[location].find(item => {
+            // eslint-disable-line array-callback-return
             const itemData = item.data || item;
             // @TODO: need to scrape, or post-process scrape for user and tag slugs
             if (itemData.id && matchData.id && itemData.id === matchData.id) {
@@ -42,14 +43,15 @@ export default (json) => {
                 return item;
             } else if (itemData.name && matchData.name && itemData.name === matchData.name) {
                 return item;
-            } else if ((item.url ?? match.url) != null && item.url === match.url) { // eslint-disable-line eqeqeq
+            } else if ((item.url ?? match.url) != null && item.url === match.url) {
+                // eslint-disable-line eqeqeq
                 return item;
             }
         });
     };
 
     // Normalise author to { url, data } shape so matching and IDs work
-    const normaliseAuthor = (author) => {
+    const normaliseAuthor = author => {
         if (!author) {
             return author;
         }
@@ -62,10 +64,10 @@ export default (json) => {
         };
     };
 
-    const processPostAuthors = (postData) => {
+    const processPostAuthors = postData => {
         let postAuthors = findPostRelations(postData, 'author');
 
-        postAuthors.forEach((author) => {
+        postAuthors.forEach(author => {
             author = normaliseAuthor(author);
             if (!author || !(author.data || author)) {
                 return;
@@ -94,15 +96,15 @@ export default (json) => {
         });
 
         // Ensure no author-like keys remain on the post (Ghost expects users + posts_authors only)
-        schema.AUTHOR_ALIASES.forEach((key) => {
+        schema.AUTHOR_ALIASES.forEach(key => {
             delete postData[key];
         });
     };
 
-    const processPostTags = (postData) => {
+    const processPostTags = postData => {
         let postTags = findPostRelations(postData, 'tag');
 
-        postTags.forEach((postTag) => {
+        postTags.forEach(postTag => {
             let tag = findMatchingItem(postTag, 'tags');
 
             if (!tag) {
@@ -122,7 +124,7 @@ export default (json) => {
         });
     };
 
-    const processPostMeta = (postData) => {
+    const processPostMeta = postData => {
         let postMeta = {
             post_id: postData.id
         };
@@ -144,7 +146,7 @@ export default (json) => {
             'email_only'
         ];
 
-        metaKeys.forEach((item) => {
+        metaKeys.forEach(item => {
             if (postData[item]) {
                 postMeta[item] = postData[item];
                 delete postData[item];
@@ -156,7 +158,7 @@ export default (json) => {
         return postData;
     };
 
-    const processPostRelations = (post) => {
+    const processPostRelations = post => {
         try {
             // Support both wrapped ({ url, data: { ... } }) and flat post shapes
             const postData = post.data !== undefined ? post.data : post;

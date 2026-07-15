@@ -7,7 +7,10 @@ import type {DatabaseModels} from './database.js';
 const authorZodSchema = z.object({
     name: z.string().max(191),
     slug: z.string().max(191),
-    email: z.string().max(191).refine(val => ghValidate.isEmail(val), {message: 'Invalid email address'}),
+    email: z
+        .string()
+        .max(191)
+        .refine(val => ghValidate.isEmail(val), {message: 'Invalid email address'}),
     profile_image: z.string().max(2000).nullable(),
     cover_image: z.string().max(2000).nullable(),
     bio: z.string().max(250).nullable(),
@@ -66,16 +69,36 @@ export default class AuthorContext extends MigrateBase {
         }
 
         if (this.dbId) {
-            db.stmts.updateAuthorById.run(authorData, this.data.slug, this.data.name, this.data.email, this.ghostId, this.dbId);
+            db.stmts.updateAuthorById.run(
+                authorData,
+                this.data.slug,
+                this.data.name,
+                this.data.email,
+                this.ghostId,
+                this.dbId
+            );
         } else {
-            const existing = this.data.slug ? db.stmts.findAuthorBySlug.get(this.data.slug) as any : null;
+            const existing = this.data.slug ? (db.stmts.findAuthorBySlug.get(this.data.slug) as any) : null;
 
             if (existing) {
                 this.dbId = existing.id as number;
                 this.ghostId = (existing.ghost_id as string) || this.ghostId;
-                db.stmts.updateAuthorById.run(authorData, this.data.slug, this.data.name, this.data.email, this.ghostId, this.dbId);
+                db.stmts.updateAuthorById.run(
+                    authorData,
+                    this.data.slug,
+                    this.data.name,
+                    this.data.email,
+                    this.ghostId,
+                    this.dbId
+                );
             } else {
-                const result = db.stmts.insertAuthor.run(authorData, this.data.slug, this.data.name, this.data.email, this.ghostId);
+                const result = db.stmts.insertAuthor.run(
+                    authorData,
+                    this.data.slug,
+                    this.data.name,
+                    this.data.email,
+                    this.ghostId
+                );
                 this.dbId = Number(result.lastInsertRowid);
             }
         }

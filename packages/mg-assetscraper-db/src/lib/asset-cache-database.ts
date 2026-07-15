@@ -31,13 +31,15 @@ CREATE INDEX IF NOT EXISTS idx_assets_src ON Assets(src);
 
 function prepareStatements(db: DatabaseSync): AssetCacheStatements {
     return {
-        insertAsset: db.prepare('INSERT INTO Assets (src, createdAt, updatedAt) VALUES (?, datetime(\'now\'), datetime(\'now\'))'),
+        insertAsset: db.prepare(
+            "INSERT INTO Assets (src, createdAt, updatedAt) VALUES (?, datetime('now'), datetime('now'))"
+        ),
         findBySrc: db.prepare('SELECT * FROM Assets WHERE src = ? LIMIT 1'),
         findById: db.prepare('SELECT * FROM Assets WHERE id = ?'),
         findAll: db.prepare('SELECT * FROM Assets'),
-        updateStatus: db.prepare('UPDATE Assets SET status = ?, updatedAt = datetime(\'now\') WHERE id = ?'),
-        updateLocalPath: db.prepare('UPDATE Assets SET localPath = ?, updatedAt = datetime(\'now\') WHERE id = ?'),
-        updateSkip: db.prepare('UPDATE Assets SET skip = ?, updatedAt = datetime(\'now\') WHERE id = ?')
+        updateStatus: db.prepare("UPDATE Assets SET status = ?, updatedAt = datetime('now') WHERE id = ?"),
+        updateLocalPath: db.prepare("UPDATE Assets SET localPath = ?, updatedAt = datetime('now') WHERE id = ?"),
+        updateSkip: db.prepare("UPDATE Assets SET skip = ?, updatedAt = datetime('now') WHERE id = ?")
     };
 }
 
@@ -46,17 +48,17 @@ function prepareStatements(db: DatabaseSync): AssetCacheStatements {
  * Handles DBs created before timestamps were added to the schema.
  */
 function migrateSchema(db: DatabaseSync): void {
-    const tableExists = db.prepare(
-        'SELECT COUNT(*) as count FROM sqlite_master WHERE type=\'table\' AND name=\'Assets\''
-    ).get() as any;
+    const tableExists = db
+        .prepare("SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='Assets'")
+        .get() as any;
 
     if (!tableExists || tableExists.count === 0) {
         return;
     }
 
-    const hasCreatedAt = db.prepare(
-        'SELECT COUNT(*) as count FROM pragma_table_info(\'Assets\') WHERE name=\'createdAt\''
-    ).get() as any;
+    const hasCreatedAt = db
+        .prepare("SELECT COUNT(*) as count FROM pragma_table_info('Assets') WHERE name='createdAt'")
+        .get() as any;
 
     if (!hasCreatedAt || hasCreatedAt.count === 0) {
         db.exec('ALTER TABLE Assets ADD COLUMN createdAt TEXT');

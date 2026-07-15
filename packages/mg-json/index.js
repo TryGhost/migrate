@@ -24,7 +24,4 @@ import hydrate from './lib/to-ghost-json/hydrate.js';
 // @TODO: validator
 // import validate from './lib/validator.js';
 
-export {
-    toGhostJSON,
-    hydrate
-};
+export {toGhostJSON, hydrate};

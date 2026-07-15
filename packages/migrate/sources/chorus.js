@@ -34,7 +34,7 @@ const scrapeConfig = {
     }
 };
 
-const initialize = (options) => {
+const initialize = options => {
     return {
         title: 'Initializing Workspace',
         task: (ctx, task) => {
@@ -59,12 +59,12 @@ const initialize = (options) => {
     };
 };
 
-const getFullTaskList = (options) => {
+const getFullTaskList = options => {
     return [
         initialize(options),
         {
             title: 'Read Chorus export zip',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 1. Read the zip file
                 try {
                     ctx.result = chorusIngest(options.entries, options);
@@ -79,7 +79,7 @@ const getFullTaskList = (options) => {
         {
             title: 'Fetch missing data via WebScraper',
             skip: ctx => !ctx.allowScrape.web,
-            task: (ctx) => {
+            task: ctx => {
                 // 2. Pass the results through the web scraper to get any missing data
                 let tasks = ctx.webScraper.hydrate(ctx); // eslint-disable-line no-shadow
                 return makeTaskRunner(tasks, options);
@@ -87,7 +87,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Build Link Map',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 4. Create a map of all known links for use later
                 try {
                     ctx.linkFixer.buildMap(ctx);
@@ -99,7 +99,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Format data as Ghost JSON',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 5. Format the data as a valid Ghost JSON file
                 try {
                     ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
@@ -119,7 +119,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Convert HTML -> Lexical',
-            task: (ctx) => {
+            task: ctx => {
                 // 8. Convert post HTML -> Lexical
                 try {
                     let tasks = mgHtmlLexical.convert(ctx);
@@ -132,7 +132,7 @@ const getFullTaskList = (options) => {
         },
         {
             title: 'Write Ghost import JSON File',
-            task: async (ctx) => {
+            task: async ctx => {
                 // 9. Write a valid Ghost import zip
                 try {
                     await ctx.fileCache.writeGhostImportFile(ctx.result);
@@ -153,7 +153,11 @@ const getFullTaskList = (options) => {
                     let timer = Date.now();
                     const zipFinalPath = options.outputPath || process.cwd();
                     // zip the file and save it temporarily
-                    ctx.outputFile = await fsUtils.zip.write(zipFinalPath, ctx.fileCache.zipDir, ctx.fileCache.defaultZipFileName);
+                    ctx.outputFile = await fsUtils.zip.write(
+                        zipFinalPath,
+                        ctx.fileCache.zipDir,
+                        ctx.fileCache.defaultZipFileName
+                    );
 
                     if (isStorage) {
                         const storage = options.outputStorage;
@@ -162,7 +166,10 @@ const getFullTaskList = (options) => {
                         // read the file buffer
                         const fileBuffer = await readFileSync(ctx.outputFile.path);
                         // Upload the file to the storage
-                        ctx.outputFile.path = await storage.upload({body: fileBuffer, fileName: `gh-chorus-${ctx.options.cacheName}.zip`});
+                        ctx.outputFile.path = await storage.upload({
+                            body: fileBuffer,
+                            fileName: `gh-chorus-${ctx.options.cacheName}.zip`
+                        });
                         // now that the file is uploaded to the storage, delete the local zip file
                         await fsUtils.zip.deleteFile(localFilePath);
                     }
@@ -177,7 +184,7 @@ const getFullTaskList = (options) => {
         {
             title: 'Clearing cached files',
             enabled: () => !options.cache && options.zip,
-            task: async (ctx) => {
+            task: async ctx => {
                 try {
                     await ctx.fileCache.emptyCurrentCacheDir();
                 } catch (error) {
@@ -189,7 +196,7 @@ const getFullTaskList = (options) => {
     ];
 };
 
-const getTaskRunner = (options) => {
+const getTaskRunner = options => {
     let tasks = [];
 
     tasks = getFullTaskList(options);

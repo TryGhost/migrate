@@ -10,7 +10,7 @@ describe('Reporter', () => {
 
     beforeEach(() => {
         Logger.init({verboseLevel: 0, debug: false});
-        sinon.stub(Logger.shared, 'plain').callsFake((str) => {
+        sinon.stub(Logger.shared, 'plain').callsFake(str => {
             logStack.push(str);
         });
     });
@@ -248,7 +248,10 @@ describe('Reporter', () => {
             assert.equal(logStack[0], 'By size:');
             assert.equal(logStack[1], '    ' + chalk.dim('- small: 1'));
             assert.equal(logStack[2], '    ' + chalk.dim('- medium: 1'));
-            assert.equal(logStack[3], '    ' + chalk.dim('- (too many tracked - this is not good and needs fixing): 1'));
+            assert.equal(
+                logStack[3],
+                '    ' + chalk.dim('- (too many tracked - this is not good and needs fixing): 1')
+            );
         });
 
         it('All the same tag', async () => {

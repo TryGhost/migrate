@@ -143,9 +143,7 @@ export default class PostContext extends MigrateBase {
         }
 
         if (this.#contentFormat === 'lexical') {
-            this.data.lexical = this.data.html
-                ? JSON.stringify(lexicalConverter.htmlToLexical(this.data.html))
-                : null;
+            this.data.lexical = this.data.html ? JSON.stringify(lexicalConverter.htmlToLexical(this.data.html)) : null;
             this.data.mobiledoc = null;
         }
 
@@ -240,7 +238,8 @@ export default class PostContext extends MigrateBase {
         });
     }
 
-    setTagOrder(callback: {(tags: TagContext[]): TagContext[]}) { // eslint-disable-line no-unused-vars
+    setTagOrder(callback: {(tags: TagContext[]): TagContext[]}) {
+        // eslint-disable-line no-unused-vars
         this.data.tags = callback(this.data.tags);
     }
 
@@ -303,7 +302,8 @@ export default class PostContext extends MigrateBase {
         this.data.authors = this.data.authors.filter((author: AuthorDataObject) => author.data.slug !== authorSlug);
     }
 
-    setAuthorOrder(callback: {(authors: AuthorContext[]): AuthorContext[]}) { // eslint-disable-line no-unused-vars
+    setAuthorOrder(callback: {(authors: AuthorContext[]): AuthorContext[]}) {
+        // eslint-disable-line no-unused-vars
         this.data.authors = callback(this.data.authors);
     }
 
@@ -335,9 +335,12 @@ export default class PostContext extends MigrateBase {
         const serializedMeta = JSON.stringify(this.#meta);
         const serializedWebscrapeData = this.#webscrapeData ? JSON.stringify(this.#webscrapeData) : null;
         /* c8 ignore next 3 -- dates are always Date instances from set()/fromRow(); ternary is defensive */
-        const createdAt = this.data.created_at instanceof Date ? this.data.created_at.toISOString() : this.data.created_at;
-        const updatedAt = this.data.updated_at instanceof Date ? this.data.updated_at.toISOString() : this.data.updated_at;
-        const publishedAt = this.data.published_at instanceof Date ? this.data.published_at.toISOString() : this.data.published_at;
+        const createdAt =
+            this.data.created_at instanceof Date ? this.data.created_at.toISOString() : this.data.created_at;
+        const updatedAt =
+            this.data.updated_at instanceof Date ? this.data.updated_at.toISOString() : this.data.updated_at;
+        const publishedAt =
+            this.data.published_at instanceof Date ? this.data.published_at.toISOString() : this.data.published_at;
 
         if (!this.ghostId) {
             this.ghostId = randomBytes(12).toString('hex');
@@ -375,10 +378,18 @@ export default class PostContext extends MigrateBase {
 
         if (this.dbId) {
             db.stmts.updatePost.run(
-                serializedData, serializedSource, serializedMeta,
-                this.#contentFormat, this.#lookupKey, this.ghostId,
-                createdAt, updatedAt, publishedAt,
-                slug, serializedWebscrapeData, this.dbId
+                serializedData,
+                serializedSource,
+                serializedMeta,
+                this.#contentFormat,
+                this.#lookupKey,
+                this.ghostId,
+                createdAt,
+                updatedAt,
+                publishedAt,
+                slug,
+                serializedWebscrapeData,
+                this.dbId
             );
         } else {
             // Check for existing post by lookup_key
@@ -397,10 +408,18 @@ export default class PostContext extends MigrateBase {
             }
 
             const result = db.stmts.insertPost.run(
-                serializedData, serializedSource, serializedMeta,
-                this.#contentFormat, this.#lookupKey, this.ghostId,
-                createdAt, updatedAt, publishedAt,
-                slug, slug, serializedWebscrapeData
+                serializedData,
+                serializedSource,
+                serializedMeta,
+                this.#contentFormat,
+                this.#lookupKey,
+                this.ghostId,
+                createdAt,
+                updatedAt,
+                publishedAt,
+                slug,
+                slug,
+                serializedWebscrapeData
             );
             this.dbId = Number(result.lastInsertRowid);
         }

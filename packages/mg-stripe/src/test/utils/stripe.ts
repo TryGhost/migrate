@@ -4,7 +4,9 @@ import DryRunIdGenerator from '../../lib/DryRunIdGenerator.js';
 
 export function getStripeTestAPIKey() {
     if (!process.env.STRIPE_API_KEY) {
-        throw new Error('Missing env variable STRIPE_API_KEY. Please create .env file in the root of the project and add STRIPE_API_KEY=xxx');
+        throw new Error(
+            'Missing env variable STRIPE_API_KEY. Please create .env file in the root of the project and add STRIPE_API_KEY=xxx'
+        );
     }
 
     return process.env.STRIPE_API_KEY;
@@ -21,7 +23,7 @@ export async function cleanup(stripe: Stripe) {
     }
 }
 
-export async function advanceClock({clock, stripe, time}: {clock: string, stripe: Stripe, time: number}) {
+export async function advanceClock({clock, stripe, time}: {clock: string; stripe: Stripe; time: number}) {
     // Advance time until current period end
     let c = await stripe.testHelpers.testClocks.advance(clock!, {
         frozen_time: time
@@ -29,14 +31,17 @@ export async function advanceClock({clock, stripe, time}: {clock: string, stripe
 
     // Poll clock until testClock is settled
     while (c.status === 'advancing') {
-        await new Promise((resolve) => {
+        await new Promise(resolve => {
             setTimeout(resolve, 200);
         });
         c = await stripe.testHelpers.testClocks.retrieve(clock!);
     }
 }
 
-export async function createPaymentMethod(stripe: Stripe, options: {card: string, customerId: string}): Promise<Stripe.PaymentMethod> {
+export async function createPaymentMethod(
+    stripe: Stripe,
+    options: {card: string; customerId: string}
+): Promise<Stripe.PaymentMethod> {
     const paymentMethod = await stripe.paymentMethods.retrieve(options.card);
 
     await stripe.paymentMethods.attach(paymentMethod.id, {
@@ -46,7 +51,10 @@ export async function createPaymentMethod(stripe: Stripe, options: {card: string
     return paymentMethod;
 }
 
-export async function createSource(stripe: Stripe, options: {token: string, customerId: string, currency?: string}): Promise<{source: Stripe.Source, card?: Stripe.Card}> {
+export async function createSource(
+    stripe: Stripe,
+    options: {token: string; customerId: string; currency?: string}
+): Promise<{source: Stripe.Source; card?: Stripe.Card}> {
     const source = await stripe.sources.create({
         type: 'card',
         token: options.token,
@@ -63,7 +71,17 @@ export async function createSource(stripe: Stripe, options: {token: string, cust
     return {source, card: token.card};
 }
 
-export async function createValidCustomer<T extends boolean>(stripe: Stripe, options: {method?: 'source' | 'payment_method' | 'none', paymentMethod?: string, token?: string, name?: string, currency?: string, testClock?: T} = {}): Promise<{customer: Stripe.Customer, clock: T extends true ? string : undefined}> {
+export async function createValidCustomer<T extends boolean>(
+    stripe: Stripe,
+    options: {
+        method?: 'source' | 'payment_method' | 'none';
+        paymentMethod?: string;
+        token?: string;
+        name?: string;
+        currency?: string;
+        testClock?: T;
+    } = {}
+): Promise<{customer: Stripe.Customer; clock: T extends true ? string : undefined}> {
     let clockId: string | null = null;
     if (options.testClock) {
         const clock = await stripe.testHelpers.testClocks.create({
@@ -109,7 +127,10 @@ export async function createValidCustomer<T extends boolean>(stripe: Stripe, opt
     return {customer, clock: clockId as any};
 }
 
-export async function createDeclinedCustomer<T extends boolean>(stripe: Stripe, options: {testClock?: T} = {}): Promise<{customer: Stripe.Customer, clock: T extends true ? string : undefined}> {
+export async function createDeclinedCustomer<T extends boolean>(
+    stripe: Stripe,
+    options: {testClock?: T} = {}
+): Promise<{customer: Stripe.Customer; clock: T extends true ? string : undefined}> {
     return createValidCustomer(stripe, {
         paymentMethod: 'pm_card_chargeCustomerFail',
         name: 'Declined Customer',
@@ -117,7 +138,9 @@ export async function createDeclinedCustomer<T extends boolean>(stripe: Stripe, 
     });
 }
 
-export function buildDiscount(overrides: Partial<Omit<Stripe.Discount, 'source'>> & {coupon: Stripe.Coupon}): Stripe.Discount {
+export function buildDiscount(
+    overrides: Partial<Omit<Stripe.Discount, 'source'>> & {coupon: Stripe.Coupon}
+): Stripe.Discount {
     const {coupon, ...rest} = overrides;
     return {
         id: DryRunIdGenerator.getNext('di_'),
@@ -186,7 +209,11 @@ export function buildProduct(overrides: Partial<Stripe.Product>): Stripe.Product
     };
 }
 
-export function buildPrice(overrides: Partial<Omit<Stripe.Price, 'recurring'>> & {recurring: Partial<Stripe.Price.Recurring>} & {product: Stripe.Product | string}): Stripe.Price {
+export function buildPrice(
+    overrides: Partial<Omit<Stripe.Price, 'recurring'>> & {recurring: Partial<Stripe.Price.Recurring>} & {
+        product: Stripe.Product | string;
+    }
+): Stripe.Price {
     return {
         id: DryRunIdGenerator.getNext('price_'),
         active: true,
@@ -218,12 +245,19 @@ export function buildPrice(overrides: Partial<Omit<Stripe.Price, 'recurring'>> &
 }
 
 const DAY = 24 * 60 * 60;
-export function buildSubscription(overrides: Partial<Omit<Stripe.Subscription, 'items' | 'customer'>> & {items: {price: Stripe.Price}[], customer: string, current_period_start?: number, current_period_end?: number}): Stripe.Subscription {
+export function buildSubscription(
+    overrides: Partial<Omit<Stripe.Subscription, 'items' | 'customer'>> & {
+        items: {price: Stripe.Price}[];
+        customer: string;
+        current_period_start?: number;
+        current_period_end?: number;
+    }
+): Stripe.Subscription {
     const id = DryRunIdGenerator.getNext('sub_');
     const now = Math.floor(new Date().getTime() / 1000);
     const currentPeriodStart = overrides.current_period_start ?? now - DAY * 15;
     const currentPeriodEnd = overrides.current_period_end ?? now + DAY * 15;
-    const items: Stripe.SubscriptionItem[] = overrides.items.map((item) => {
+    const items: Stripe.SubscriptionItem[] = overrides.items.map(item => {
         return {
             id: DryRunIdGenerator.getNext('si_'),
             object: 'subscription_item',
@@ -240,7 +274,12 @@ export function buildSubscription(overrides: Partial<Omit<Stripe.Subscription, '
             quantity: 1
         };
     });
-    const {current_period_start: _cps, current_period_end: _cpe, managed_payments: managedPayments, ...restOverrides} = overrides;
+    const {
+        current_period_start: _cps,
+        current_period_end: _cpe,
+        managed_payments: managedPayments,
+        ...restOverrides
+    } = overrides;
     return {
         id,
         object: 'subscription',
@@ -296,7 +335,10 @@ export function buildSubscription(overrides: Partial<Omit<Stripe.Subscription, '
     };
 }
 
-export function buildInvoiceItem(data: {price: Stripe.Price, period: Stripe.InvoiceLineItem.Period}): Stripe.InvoiceLineItem {
+export function buildInvoiceItem(data: {
+    price: Stripe.Price;
+    period: Stripe.InvoiceLineItem.Period;
+}): Stripe.InvoiceLineItem {
     const product = typeof data.price.product === 'string' ? data.price.product : data.price.product.id;
     const invoiceItem: Stripe.InvoiceLineItem = {
         id: DryRunIdGenerator.getNext('ii_'),
@@ -330,7 +372,13 @@ export function buildInvoiceItem(data: {price: Stripe.Price, period: Stripe.Invo
     return invoiceItem;
 }
 
-export function buildInvoice(overrides: Partial<Omit<Stripe.Invoice, 'lines' | 'customer'>> & {lines: {price: Stripe.Price, period: Stripe.InvoiceLineItem.Period}[], customer: string, subscription: string}): Stripe.Invoice {
+export function buildInvoice(
+    overrides: Partial<Omit<Stripe.Invoice, 'lines' | 'customer'>> & {
+        lines: {price: Stripe.Price; period: Stripe.InvoiceLineItem.Period}[];
+        customer: string;
+        subscription: string;
+    }
+): Stripe.Invoice {
     const id = DryRunIdGenerator.getNext('in_');
     return {
         id,

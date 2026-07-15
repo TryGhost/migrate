@@ -105,7 +105,7 @@ export class DynamicRenderer implements Renderer {
         if (this.#persistentMode && info.depth === 0) {
             if (runningTask) {
                 runningTask.status = 'completed';
-            /* c8 ignore next 8 -- task is always pending/started before completing; guard for safety */
+                /* c8 ignore next 8 -- task is always pending/started before completing; guard for safety */
             } else {
                 this.#running.set(key, {
                     title: info.title,
