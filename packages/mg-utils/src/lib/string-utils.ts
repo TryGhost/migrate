@@ -28,11 +28,18 @@ export const kebabCase = (str: string): string =>
  * Strip HTML tags and normalize whitespace.
  * '<p>Hello <b>world</b></p>' → 'Hello world'
  */
-export const stripHtml = (html: string): string =>
-    html
-        .replace(/<[^>]+>/g, '')
-        .replace(/\r?\n|\r/g, ' ')
-        .trim();
+export const stripHtml = (html: string): string => {
+    // Strip tags repeatedly: a single pass can leave a valid tag behind when
+    // markup is nested (e.g. `<scr<script>ipt>`), so loop until stable.
+    let text = html;
+    let previous;
+    do {
+        previous = text;
+        text = text.replace(/<[^>]+>/g, '');
+    } while (text !== previous);
+
+    return text.replace(/\r?\n|\r/g, ' ').trim();
+};
 
 /**
  * Strip protocol and query parameters from a URL, returning host/path.
