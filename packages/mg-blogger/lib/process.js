@@ -181,12 +181,34 @@ const processHTMLContent = async args => {
             if (parentHTML.includes('•') || parentHTML.includes('&#x2022;')) {
                 // Change div to li by replacing with a new li element
                 const newLi = parsed.document.createElement('li');
-                // Copy children, remove the whitespace-pre spans
-                newLi.innerHTML = serializeChildren(parentDiv);
+                // Move the div's child nodes into the li. The div is replaced
+                // below, so moving (rather than serializing back into innerHTML)
+                // is safe and avoids reinterpreting DOM text as HTML.
+                newLi.replaceChildren(...parentDiv.childNodes);
+                // Remove the whitespace-pre spans
                 newLi.querySelectorAll('span[style*="white-space: pre"]').forEach(span => {
                     span.remove();
                 });
-                newLi.innerHTML = newLi.innerHTML.replace('&#x2022;', '').trim();
+                // Trim leading/trailing whitespace from the list item. Merge
+                // adjacent text nodes first, then strip whitespace directly from
+                // the boundary text nodes so no serialized markup is re-parsed.
+                // Only ASCII whitespace is trimmed (matching String.trim over the
+                // serialized HTML); non-breaking spaces are left untouched.
+                newLi.normalize();
+                const firstChild = newLi.firstChild;
+                if (firstChild && firstChild.nodeType === 3) {
+                    firstChild.data = firstChild.data.replace(/^[ \t\n\r\f\v]+/, '');
+                    if (firstChild.data === '') {
+                        firstChild.remove();
+                    }
+                }
+                const lastChild = newLi.lastChild;
+                if (lastChild && lastChild.nodeType === 3) {
+                    lastChild.data = lastChild.data.replace(/[ \t\n\r\f\v]+$/, '');
+                    if (lastChild.data === '') {
+                        lastChild.remove();
+                    }
+                }
                 replaceWith(parentDiv, newLi);
             }
         });
