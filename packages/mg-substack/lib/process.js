@@ -138,6 +138,10 @@ const processContent = (post, siteUrl, options) => {
         }
     });
 
+    parsed.$('h1 strong, h2 strong, h3 strong, h4 strong, h5 strong, h6 strong, h1 b, h2 b, h3 b, h4 b, h5 b, h6 b').forEach((el) => {
+        replaceWith(el, serializeChildren(el));
+    });
+
     // Wrap these in a HTML card so they can be handled by publishers as needed
     parsed.$('div.latex-rendered').forEach((el) => {
         insertBefore(el, '<!--kg-card-begin: html-->');

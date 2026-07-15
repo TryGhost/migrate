@@ -798,6 +798,40 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         assert.equal(processed.data.html, `<p>Lorem ipsum</p><div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>`);
     });
 
+    it('Removes bold tags from headings', async function () {
+        const post = {
+            data: {
+                html: `<h1><strong>Heading 1</strong></h1>
+                <h2>Heading <b>2</b></h2>
+                <h3><strong>Heading <em>3</em></strong></h3>
+                <h4><b>Heading 4</b></h4>
+                <h5><strong>Heading 5</strong></h5>
+                <h6><b>Heading 6</b></h6>
+                <h2><a href="https://example.com">Linked Heading</a></h2>
+                <h3>Plain Heading</h3>
+                <h4><a href="https://example.com"><b>Bold Linked Heading</b></a></h4>
+                <h5><strong>Linked <a href="https://example.com">Bold</a> Heading</strong></h5>
+                <p><strong>Paragraph stays bold</strong></p>`
+            }
+        };
+        const url = 'https://example.com';
+        const options = {};
+
+        const processed = await processContent(post, url, options);
+
+        assert.equal(processed.data.html, '<h1>Heading 1</h1>\n' +
+        '                <h2>Heading 2</h2>\n' +
+        '                <h3>Heading <em>3</em></h3>\n' +
+        '                <h4>Heading 4</h4>\n' +
+        '                <h5>Heading 5</h5>\n' +
+        '                <h6>Heading 6</h6>\n' +
+        '                <h2><a href="https://example.com">Linked Heading</a></h2>\n' +
+        '                <h3>Plain Heading</h3>\n' +
+        '                <h4><a href="https://example.com">Bold Linked Heading</a></h4>\n' +
+        '                <h5>Linked <a href="https://example.com">Bold</a> Heading</h5>\n' +
+        '                <p><strong>Paragraph stays bold</strong></p>');
+    });
+
     it('Can convert an image wrapped with a link', async function () {
         const post = {
             data: {
