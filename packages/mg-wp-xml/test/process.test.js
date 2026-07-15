@@ -775,8 +775,14 @@ describe('Process', function () {
         const post = processed.posts[0];
 
         assert.ok(!post.data.html.includes('<audio'), 'Should not contain an audio element');
+        // Assert the libsyn iframe survived by parsing its src and checking the real
+        // host, rather than a substring match that any host containing "libsyn.com"
+        // (e.g. libsyn.com.evil.com) could satisfy.
+        const iframeMatch = post.data.html.match(/<iframe[^>]*?\bsrc\s*=\s*["']([^"']+)["'][^>]*>/i);
+        assert.ok(iframeMatch, 'Should still contain the libsyn iframe');
+        const iframeHost = new URL(iframeMatch[1]).hostname;
         assert.ok(
-            post.data.html.includes('<iframe') && post.data.html.includes('libsyn.com'),
+            iframeHost === 'libsyn.com' || iframeHost.endsWith('.libsyn.com'),
             'Should still contain the libsyn iframe'
         );
         assert.ok(post.data.html.includes('This is the episode description'), 'Should still contain the post content');
