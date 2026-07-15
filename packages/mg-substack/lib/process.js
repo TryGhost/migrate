@@ -640,10 +640,14 @@ const processContent = (post, siteUrl, options) => {
                 }
             }
 
-            replaceWith(
-                button,
-                `<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`
-            );
+            const card = parsed.document.createElement('div');
+            card.className = 'kg-card kg-button-card kg-align-center';
+            const link = parsed.document.createElement('a');
+            link.className = 'kg-btn kg-btn-accent';
+            link.setAttribute('href', buttonHref);
+            link.textContent = buttonText;
+            card.appendChild(link);
+            replaceWith(button, card);
         }
     });
 
@@ -743,10 +747,14 @@ const processContent = (post, siteUrl, options) => {
             if (hasForm.length) {
                 const submitEl = parsed.$('form input[type="submit"]', div)[0];
                 const buttonText = submitEl ? attr(submitEl, 'value') : '';
-                replaceWith(
-                    div,
-                    `<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`
-                );
+                const card = parsed.document.createElement('div');
+                card.className = 'kg-card kg-button-card kg-align-center';
+                const link = parsed.document.createElement('a');
+                link.className = 'kg-btn kg-btn-accent';
+                link.setAttribute('href', options.subscribeLink);
+                link.textContent = buttonText;
+                card.appendChild(link);
+                replaceWith(div, card);
             }
         });
     }
