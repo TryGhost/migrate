@@ -72,10 +72,17 @@ const processContent = (html, postUrl, options) => {
         });
 
         parsed.$('iframe[name="letterdrop-subscribe-input"]').forEach(el => {
-            replaceWith(
-                el,
-                `<div class="kg-card kg-button-card kg-align-center"><a href="${options.subscribeLink}" class="kg-btn kg-btn-accent">${options.subscribeText}</a></div>`
-            );
+            // Build the card from a static, input-free skeleton, then inject the
+            // caller-supplied link and text via setAttribute/textContent so they are
+            // escaped as an attribute value and text node rather than raw HTML.
+            const tpl = parsed.document.createElement('template');
+            tpl.innerHTML =
+                '<div class="kg-card kg-button-card kg-align-center"><a href="" class="kg-btn kg-btn-accent"></a></div>';
+            const card = tpl.content.firstElementChild;
+            const link = card.querySelector('a');
+            link.setAttribute('href', options.subscribeLink);
+            link.textContent = options.subscribeText;
+            replaceWith(el, card);
         });
 
         parsed.$('blockquote').forEach(el => {

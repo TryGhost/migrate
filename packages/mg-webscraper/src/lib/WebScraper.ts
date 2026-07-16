@@ -34,7 +34,7 @@ const makeMetaObject = (item: any): any => {
     }
 
     // Always strip any query params (maybe need to only do this for medium in future?)
-    const newItem: any = {url: item.url.replace(/\?.*$/, '')};
+    const newItem: any = {url: item.url.split('?')[0]};
     delete item.url;
 
     // If item already has a data property, use that directly to avoid double nesting

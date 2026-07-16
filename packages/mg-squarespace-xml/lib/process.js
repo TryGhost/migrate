@@ -91,12 +91,20 @@ const processContent = (html, options) => {
 
         parsed.$('figure blockquote').forEach(el => {
             const nextSibling = el.nextElementSibling;
-            let captionText = '';
+            // Rebuild as `<blockquote><p>…original…<br><br>…caption…</p></blockquote>`
+            // using DOM node moves rather than assigning a serialized string to
+            // innerHTML, so DOM-sourced text is never reparsed as HTML.
+            const p = parsed.document.createElement('p');
+            p.append(...el.childNodes);
             if (nextSibling && nextSibling.tagName === 'FIGCAPTION') {
-                captionText = `<br><br>${domUtils.serializeChildren(nextSibling)}`;
+                p.append(
+                    parsed.document.createElement('br'),
+                    parsed.document.createElement('br'),
+                    ...nextSibling.childNodes
+                );
                 nextSibling.remove();
             }
-            el.innerHTML = `<p>${domUtils.serializeChildren(el)}${captionText}</p>`;
+            el.append(p);
         });
 
         parsed.$('.sqs-video-wrapper').forEach(el => {

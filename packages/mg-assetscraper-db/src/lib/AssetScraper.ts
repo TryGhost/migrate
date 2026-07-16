@@ -679,7 +679,7 @@ export default class AssetScraper {
 
         // Match data URI scheme for images: data:image/[mime-type];base64,[base64-data]
         // Termination symbols similar to URL matching
-        const base64Regex = /data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/gi;
+        const base64Regex = /data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+/gi;
         const matches = content.matchAll(base64Regex);
 
         // Extract the full data URI from each match

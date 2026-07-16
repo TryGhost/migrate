@@ -27,8 +27,14 @@ function cleanBioText(bioHtml: string | undefined | null): string | undefined {
         return undefined;
     }
 
-    // Strip HTML tags
-    let bioText = bioHtml.replace(/<[^>]+>/g, '');
+    // Strip HTML tags repeatedly: a single pass can leave a valid tag behind
+    // when markup is nested (e.g. `<scr<script>ipt>`), so loop until stable.
+    let bioText = bioHtml;
+    let previousBio;
+    do {
+        previousBio = bioText;
+        bioText = bioText.replace(/<[^>]+>/g, '');
+    } while (bioText !== previousBio);
 
     // Decode common HTML entities. `&amp;` must be decoded last: doing it first
     // double-unescapes already-escaped entities (e.g. `&amp;lt;`, the literal text

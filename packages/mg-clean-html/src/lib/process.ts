@@ -94,7 +94,11 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
                 el.setAttribute('style', weightlessStyleAttr);
 
                 if (['bold', 'bolder'].includes(fontWeight) || parseInt(fontWeight) >= 600) {
-                    el.innerHTML = `<b>${serializeChildren(el)}</b>`;
+                    // Wrap the element's existing children in a <b> using DOM nodes, so no
+                    // serialized string is reparsed as HTML.
+                    const bold = parsed.document.createElement('b');
+                    bold.replaceChildren(...Array.from(el.childNodes));
+                    el.replaceChildren(bold);
                 }
             });
         }
@@ -134,7 +138,11 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
                 el.setAttribute('style', stylelessStyleAttr);
 
                 if (['italic', 'oblique'].includes(fontStyle)) {
-                    el.innerHTML = `<i>${serializeChildren(el)}</i>`;
+                    // Wrap the element's existing children in an <i> using DOM nodes, so no
+                    // serialized string is reparsed as HTML.
+                    const italic = parsed.document.createElement('i');
+                    italic.replaceChildren(...Array.from(el.childNodes));
+                    el.replaceChildren(italic);
                 }
             });
         }
@@ -225,10 +233,47 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
                     }
                 });
 
-                // This could introduce extra spaces, so trim them
-                let headerHTML = serializeChildren(el);
-                let headerHTMLTrimmed = headerHTML.replace(/ {2,}/, '').trim();
-                el.innerHTML = headerHTMLTrimmed;
+                // This could introduce extra spaces, so trim them. This replicates
+                // `serializeChildren(el).replace(/ {2,}/, '').trim()` using DOM nodes, so no
+                // serialized string is reparsed as HTML. Merge adjacent text nodes, remove the
+                // first run of 2+ spaces from the first descendant text node that contains one,
+                // then trim the leading/trailing text node. The trim matches only ASCII
+                // whitespace: on the original serialized string linkedom emits NBSP as `&nbsp;`,
+                // so `String.trim()` never strips a leading/trailing NBSP, and neither must we.
+                el.normalize();
+
+                const headerTextNodes: Text[] = [];
+                const collectHeaderText = (node: Node): void => {
+                    for (const child of node.childNodes) {
+                        if (child.nodeType === 3) {
+                            headerTextNodes.push(child as Text);
+                        } else {
+                            collectHeaderText(child);
+                        }
+                    }
+                };
+                collectHeaderText(el);
+
+                for (const textNode of headerTextNodes) {
+                    if (/ {2,}/.test(textNode.data)) {
+                        textNode.data = textNode.data.replace(/ {2,}/, '');
+                        break;
+                    }
+                }
+
+                const headerChildren = el.childNodes;
+                for (let i = 0; i < headerChildren.length; i++) {
+                    const child = headerChildren[i];
+                    if (child.nodeType === 3) {
+                        const textChild = child as Text;
+                        if (i === 0) {
+                            textChild.data = textChild.data.replace(/^[ \t\n\v\f\r]+/, '');
+                        }
+                        if (i === headerChildren.length - 1) {
+                            textChild.data = textChild.data.replace(/[ \t\n\v\f\r]+$/, '');
+                        }
+                    }
+                }
             });
         }
 
