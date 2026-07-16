@@ -494,39 +494,78 @@ const processShortcodes = async ({html, options}) => {
     return result;
 };
 
-const SHORTCODE_REGEX = /\[([a-zA-Z_][\w-]*)(?<attrs>\s[^\]]*)?\](?:(?<content>[\s\S]*?)\[\/\1\])?/g;
+// Match only a shortcode opening tag (`[name]` or `[name attrs]`). Attributes
+// never contain `]` and are capped in length, so the tag scan is linear; the
+// closing tag and content are then located by index below, avoiding a single
+// backtracking-prone regex (ReDoS).
+const SHORTCODE_OPEN_REGEX = /\[([a-zA-Z_][\w-]*)(\s[^\]]{0,2000})?\]/g;
 const SINGLE_URL_REGEX = /^https?:\/\/\S+$/;
+
+const buildShortcodeReplacement = (fullMatch, attrsString, content) => {
+    // Check content first — must be a single URL (no surrounding text)
+    if (content) {
+        const trimmed = content.trim();
+        if (SINGLE_URL_REGEX.test(trimmed)) {
+            const match = matchEmbedUrl(trimmed);
+            if (match) {
+                return buildEmbedHtml(match);
+            }
+        }
+    }
+
+    // Check attribute values for recognisable embed URLs
+    if (attrsString) {
+        const attrValues = extractAttrValues(attrsString);
+        for (const value of attrValues) {
+            const match = matchEmbedUrl(value);
+            if (match) {
+                return buildEmbedHtml(match);
+            }
+        }
+    }
+
+    return fullMatch;
+};
 
 const processUnknownEmbedShortcodes = html => {
     if (!html) {
         return html;
     }
 
-    return html.replace(SHORTCODE_REGEX, (fullMatch, _name, attrsString, content) => {
-        // Check content first — must be a single URL (no surrounding text)
-        if (content) {
-            const trimmed = content.trim();
-            if (SINGLE_URL_REGEX.test(trimmed)) {
-                const match = matchEmbedUrl(trimmed);
-                if (match) {
-                    return buildEmbedHtml(match);
-                }
-            }
+    let result = '';
+    let lastIndex = 0;
+    let open;
+    SHORTCODE_OPEN_REGEX.lastIndex = 0;
+
+    while ((open = SHORTCODE_OPEN_REGEX.exec(html)) !== null) {
+        const name = open[1];
+        const attrsString = open[2];
+        const openStart = open.index;
+        const openEnd = SHORTCODE_OPEN_REGEX.lastIndex;
+
+        // Content runs to the first matching `[/name]` (as the previous lazy
+        // regex did); with no closing tag the shortcode is self-closing.
+        const closeTag = `[/${name}]`;
+        const closeIndex = html.indexOf(closeTag, openEnd);
+
+        let content;
+        let matchEnd;
+        if (closeIndex === -1) {
+            content = undefined;
+            matchEnd = openEnd;
+        } else {
+            content = html.slice(openEnd, closeIndex);
+            matchEnd = closeIndex + closeTag.length;
         }
 
-        // Check attribute values for recognisable embed URLs
-        if (attrsString) {
-            const attrValues = extractAttrValues(attrsString);
-            for (const value of attrValues) {
-                const match = matchEmbedUrl(value);
-                if (match) {
-                    return buildEmbedHtml(match);
-                }
-            }
-        }
+        const fullMatch = html.slice(openStart, matchEnd);
+        result += html.slice(lastIndex, openStart) + buildShortcodeReplacement(fullMatch, attrsString, content);
+        lastIndex = matchEnd;
+        SHORTCODE_OPEN_REGEX.lastIndex = matchEnd;
+    }
 
-        return fullMatch;
-    });
+    result += html.slice(lastIndex);
+    return result;
 };
 
 const extractAttrValues = attrsString => {
