@@ -6,10 +6,6 @@ import errors from '@tryghost/errors';
 import {decode} from 'html-entities';
 const audioCard = cardUtils.getCard('audio');
 
-// Reject dangerous URL schemes before re-applying a DOM-sourced value to an
-// attribute sink (e.g. an image `src`), guarding against DOM-based XSS.
-const isSafeUrl = value => !/^\s*(javascript|vbscript|data:text\/html)/i.test(value);
-
 const htmlToTextTrimmed = (html, max) => {
     let noHtml = html
         .replace(/<[^>]+>/g, ' ')
@@ -88,8 +84,8 @@ const processContent = (html, options) => {
                     }
                     sibling = sibling.previousElementSibling;
                 }
-            } else if (isSafeUrl(src)) {
-                img.setAttribute('src', src);
+            } else {
+                img.setAttribute('src', img.getAttribute('data-src'));
             }
         });
 
