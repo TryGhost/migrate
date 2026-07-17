@@ -138,6 +138,39 @@ describe('Web Scrap Config & Post Processor', function () {
         assert.equal(scrapedData.authors[0].data.profile_image, organizationProfileImage);
     });
 
+    it('Processes scraped ld+json with a single author object', function () {
+        const scrapedData = {
+            scripts: [
+                {
+                    content: JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'NewsArticle',
+                        author: {
+                            '@type': 'Person',
+                            name: 'Solo Author',
+                            url: 'https://substack.com/@solo',
+                            identifier: 'user:654321',
+                            image: {
+                                contentUrl: 'https://example.com/solo.jpg'
+                            }
+                        }
+                    })
+                }
+            ]
+        };
+
+        const processed = postProcessor(scrapedData, null, {
+            useMetaAuthor: true
+        });
+
+        assert.equal(processed.authors.length, 1);
+        assert.equal(processed.authors[0].url, 'https://substack.com/@solo');
+        assert.equal(processed.authors[0].data.name, 'Solo Author');
+        assert.equal(processed.authors[0].data.slug, 'solo');
+        assert.equal(processed.authors[0].data.email, 'solo@example.com');
+        assert.equal(processed.authors[0].data.profile_image, 'https://example.com/solo.jpg');
+    });
+
     it('Scrapes a podcast', async function () {
         const podcastHTML = await readFile(new URL('./fixtures/substack-podcast.html', import.meta.url));
 

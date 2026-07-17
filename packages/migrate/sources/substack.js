@@ -129,6 +129,11 @@ const postProcessor = (scrapedData, data, options) => {
                     if (theContent?.author) {
                         const usersArray = [];
 
+                        // Ensure ldJSON.author is an array
+                        if (theContent.author && !Array.isArray(theContent.author)) {
+                            theContent.author = [theContent.author];
+                        }
+
                         theContent.author.forEach(user => {
                             const userId = user.identifier.replace('user:', '').trim();
                             const userSlug = slugify(
