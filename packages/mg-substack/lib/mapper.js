@@ -72,7 +72,8 @@ export default async (input, options) => {
 
     // Drive from HTML files we have, pulling in CSV metadata for each
     const csvMeta = input.meta;
-    input = input.posts
+    const htmlPosts = input.posts;
+    input = htmlPosts
         .map(htmlPost => {
             const postId = htmlPost.name.replace(/\.html$/, '');
             const meta = csvMeta.find(item => item.post_id === postId);
@@ -82,6 +83,18 @@ export default async (input, options) => {
             return meta;
         })
         .filter(Boolean);
+
+    // The migration is driven from the HTML files in the export, so any post listed
+    // in the CSV without a matching HTML file is skipped - often the most recent
+    // posts, whose HTML can be missing from a Substack export. Warn (without stopping
+    // the migration) so these dropped posts aren't a silent surprise.
+    const skippedPostCount = csvMeta.length - input.length;
+    if (skippedPostCount > 0) {
+        // eslint-disable-next-line no-console
+        console.warn(
+            `Warning: ${skippedPostCount} of ${csvMeta.length} posts in the CSV have no matching HTML file in the export and will be skipped (${htmlPosts.length} HTML files found).`
+        );
+    }
 
     // Preserve consistent ordering (chronological, with numeric ID as tiebreaker)
     input.sort((a, b) => {

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {describe, it, before, after, beforeEach} from 'node:test';
+import {describe, it, before, after, beforeEach, mock} from 'node:test';
 import {URL} from 'node:url';
 import {unlink, readdirSync, readFileSync} from 'node:fs';
 import {resolve, join} from 'node:path';
@@ -614,7 +614,13 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
             }
         };
 
-        const mapped = await map(input, ctx.options);
+        const warnSpy = mock.method(console, 'warn', () => {});
+        let mapped;
+        try {
+            mapped = await map(input, ctx.options);
+        } finally {
+            warnSpy.mock.restore();
+        }
 
         // Only the 5 posts with HTML files should be included, not the 2 extras
         assert.equal(mapped.posts.length, 5);
@@ -622,6 +628,35 @@ describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () 
         const ids = mapped.posts.map(p => p.substackId);
         assert.ok(!ids.includes('999901.no-html-post'));
         assert.ok(!ids.includes('999902.also-no-html'));
+
+        // The 2 skipped posts should be surfaced as a warning, without stopping the migration
+        assert.equal(warnSpy.mock.callCount(), 1);
+        const warning = warnSpy.mock.calls[0].arguments[0];
+        assert.match(warning, /2 of 7 posts in the CSV have no matching HTML file/);
+        assert.match(warning, /will be skipped/);
+    });
+
+    it('Does not warn when every CSV row has a matching HTML file', async function () {
+        const ctx = {
+            options: {
+                posts: true,
+                podcasts: true,
+                drafts: true,
+                pages: true,
+                threads: true,
+                url: 'https://example.substack.com',
+                email: 'exampleuser@email.com'
+            }
+        };
+
+        const warnSpy = mock.method(console, 'warn', () => {});
+        try {
+            await map(postDataFromFixtures, ctx.options);
+        } finally {
+            warnSpy.mock.restore();
+        }
+
+        assert.equal(warnSpy.mock.callCount(), 0);
     });
 
     it('Can migrate only podcast', async function () {
