@@ -5,7 +5,7 @@
   "author": "Ghost Foundation",
   "license": "MIT",
   "type": "module",
-  "packageManager": "pnpm@11.13.1",
+  "packageManager": "pnpm@11.14.0",
   "engines": {
     "node": ">=22.21.1"
   },
