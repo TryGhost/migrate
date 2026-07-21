@@ -24,7 +24,7 @@ catalog:
   "dotenv": "17.4.2"
   "escape-string-regexp": "5.0.0"
   "fast-xml-parser": "5.8.0"
-  "fs-extra": "11.3.5"
+  "fs-extra": "11.3.6"
   "html-entities": "2.6.0"
   "listr2": "10.2.2"
   "log-update": "8.0.0"
