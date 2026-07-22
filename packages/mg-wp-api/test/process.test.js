@@ -458,6 +458,13 @@ describe('Process excerpt text handling', function () {
         assert.equal(processed, 'Hello world this is my excerpt');
     });
 
+    it('Excludes more-link elements', function () {
+        let processed = processor.processExcerpt(
+            '<p>Hello world <a class="more-link" href="https://example.com/post">Continue reading</a></p>'
+        );
+        assert.equal(processed, 'Hello world');
+    });
+
     it('Removes excess spaces', function () {
         let processed = processor.processExcerpt('<p> Hello     world</p>');
         assert.equal(processed, 'Hello world');

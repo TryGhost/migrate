@@ -222,7 +222,14 @@ const processExcerpt = (html, excerptSelector = false) => {
     }
 
     // Clean up the given text to contain no HTML
-    let excerpt = htmlToText(excerptText);
+    let excerpt = htmlToText(excerptText, {
+        selectors: [
+            {
+                selector: '.more-link',
+                format: 'skip'
+            }
+        ]
+    });
 
     // Combine lines & trim excess white space
     excerpt = excerpt.split('\n').join(' ').trim();
