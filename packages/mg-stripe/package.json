@@ -45,6 +45,6 @@
     "@tryghost/pretty-cli": "catalog:",
     "chalk": "catalog:",
     "ora": "9.4.1",
-    "stripe": "22.2.3"
+    "stripe": "22.3.2"
   }
 }
