@@ -35,7 +35,7 @@
     "@types/sinon": "22.0.0",
     "c8": "catalog:",
     "dotenv": "catalog:",
-    "sinon": "22.0.0",
+    "sinon": "22.1.0",
     "typescript": "catalog:"
   },
   "dependencies": {
