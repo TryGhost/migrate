@@ -37,7 +37,7 @@
     "@tryghost/errors": "catalog:",
     "@tryghost/kg-html-to-lexical": "catalog:",
     "@tryghost/listr-smart-renderer": "workspace:*",
-    "@tryghost/validator": "3.1.4",
+    "@tryghost/validator": "3.2.6",
     "c8": "catalog:",
     "typescript": "catalog:",
     "zod": "4.4.3"
