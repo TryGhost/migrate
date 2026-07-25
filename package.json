@@ -33,7 +33,7 @@
   "devDependencies": {
     "@nx/js": "23.1.0",
     "@types/node": "catalog:",
-    "knip": "6.27.0",
+    "knip": "6.29.0",
     "nx": "23.1.0",
     "oxfmt": "0.60.0",
     "oxlint": "1.75.0",
