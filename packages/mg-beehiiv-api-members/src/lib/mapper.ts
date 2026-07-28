@@ -18,7 +18,8 @@ const extractName = (customFields: Array<{name: string; value: string}>): string
 
 const mapSubscription = (
     subscription: BeehiivSubscription,
-    options: {includeStripe?: boolean} = {includeStripe: true}
+    options: {includeStripe?: boolean} = {includeStripe: true},
+    segmentNames: string[] = []
 ): GhostMemberObject => {
     const labels: string[] = [];
 
@@ -44,6 +45,16 @@ const mapSubscription = (
         });
     }
 
+    // Add segment names as labels
+    const segmentLabels = new Set<string>();
+    segmentNames.forEach((segmentName: string) => {
+        const slugifiedSegment = slugify(segmentName);
+        if (slugifiedSegment) {
+            segmentLabels.add(`beehiiv-segment-${slugifiedSegment}`);
+        }
+    });
+    labels.push(...segmentLabels);
+
     // Determine if this is a complimentary plan
     // A member is on a complimentary plan if they have premium access but no Stripe customer ID,
     // or if they had a Stripe ID but includeStripe is false
@@ -65,7 +76,8 @@ const mapSubscription = (
 
 const mapSubscriptions = (
     subscriptions: BeehiivSubscription[],
-    options: {includeStripe?: boolean} = {includeStripe: true}
+    options: {includeStripe?: boolean} = {includeStripe: true},
+    segmentMemberships: BeehiivSegmentMemberships = {}
 ): MappedMembers => {
     const result: MappedMembers = {
         free: [],
@@ -73,7 +85,7 @@ const mapSubscriptions = (
     };
 
     subscriptions.forEach(subscription => {
-        const member = mapSubscription(subscription, options);
+        const member = mapSubscription(subscription, options, segmentMemberships[subscription.id] ?? []);
 
         if (member.stripe_customer_id) {
             result.paid.push(member);
@@ -92,7 +104,8 @@ export const mapMembersTasks = (options: any, ctx: any) => {
             task: async (_: any, task: any) => {
                 try {
                     const subscriptions: BeehiivSubscription[] = ctx.result.subscriptions || [];
-                    ctx.result.members = mapSubscriptions(subscriptions, options);
+                    const segmentMemberships: BeehiivSegmentMemberships = ctx.result.segmentMemberships || {};
+                    ctx.result.members = mapSubscriptions(subscriptions, options, segmentMemberships);
 
                     const freeCount = ctx.result.members.free.length;
                     const paidCount = ctx.result.members.paid.length;

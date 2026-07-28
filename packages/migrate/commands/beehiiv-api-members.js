@@ -83,6 +83,12 @@ const options = [
         flags: '--includeStripe',
         defaultValue: true,
         desc: 'Include Stripe customer IDs for paid members. When set to false, paid members will be imported as complimentary members instead.'
+    },
+    {
+        type: 'boolean',
+        flags: '--segments',
+        defaultValue: false,
+        desc: 'Include beehiiv segment memberships as Ghost member labels'
     }
 ];
 

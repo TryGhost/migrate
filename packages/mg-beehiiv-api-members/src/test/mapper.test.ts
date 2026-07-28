@@ -194,6 +194,20 @@ describe('beehiiv API Members Mapper', () => {
             assert.ok(result.labels.includes('beehiiv-tag-tech-updates'));
         });
 
+        it('adds unique slugified segment labels', () => {
+            const result = mapSubscription(baseSubscription, {includeStripe: true}, [
+                'Weekly Readers',
+                'VIP Readers',
+                'Weekly Readers',
+                '   '
+            ]);
+
+            assert.ok(result.labels.includes('beehiiv-segment-weekly-readers'));
+            assert.ok(result.labels.includes('beehiiv-segment-vip-readers'));
+            assert.equal(result.labels.filter(label => label === 'beehiiv-segment-weekly-readers').length, 1);
+            assert.equal(result.labels.filter(label => label.startsWith('beehiiv-segment-')).length, 2);
+        });
+
         it('handles empty premium tier names array', () => {
             const subscription = {
                 ...baseSubscription,
@@ -330,6 +344,45 @@ describe('beehiiv API Members Mapper', () => {
             assert.equal(result.paid.length, 0);
             assert.equal(result.free[0].complimentary_plan, true);
         });
+
+        it('adds memberships only to subscriptions included in the export', () => {
+            const subscriptions: BeehiivSubscription[] = [
+                {
+                    id: 'sub-1',
+                    email: 'included@test.com',
+                    status: 'active',
+                    created: 1704067200,
+                    subscription_tier: 'free',
+                    subscription_premium_tier_names: [],
+                    stripe_customer_id: null,
+                    custom_fields: [],
+                    tags: []
+                },
+                {
+                    id: 'sub-2',
+                    email: 'no-segments@test.com',
+                    status: 'active',
+                    created: 1704067200,
+                    subscription_tier: 'free',
+                    subscription_premium_tier_names: [],
+                    stripe_customer_id: null,
+                    custom_fields: [],
+                    tags: []
+                }
+            ];
+            const segmentMemberships = {
+                'sub-1': ['Weekly Readers', 'VIP Readers'],
+                'segment-only-subscription': ['Weekly Readers']
+            };
+
+            const result = mapSubscriptions(subscriptions, {includeStripe: true}, segmentMemberships);
+
+            assert.equal(result.free.length, 2);
+            assert.ok(result.free[0].labels.includes('beehiiv-segment-weekly-readers'));
+            assert.ok(result.free[0].labels.includes('beehiiv-segment-vip-readers'));
+            assert.ok(!result.free[1].labels.some(label => label.startsWith('beehiiv-segment-')));
+            assert.ok(!result.free.some(member => member.email === 'segment-only@test.com'));
+        });
     });
 
     describe('mapMembersTasks', () => {
@@ -356,7 +409,10 @@ describe('beehiiv API Members Mapper', () => {
                             custom_fields: [],
                             tags: []
                         }
-                    ]
+                    ],
+                    segmentMemberships: {
+                        'sub-1': ['Weekly Readers']
+                    }
                 }
             };
 
@@ -367,6 +423,7 @@ describe('beehiiv API Members Mapper', () => {
             assert.ok(ctx.result.members);
             assert.equal(ctx.result.members.free.length, 1);
             assert.equal(ctx.result.members.paid.length, 0);
+            assert.ok(ctx.result.members.free[0].labels.includes('beehiiv-segment-weekly-readers'));
             assert.ok(mockTask.output.includes('1 free'));
             assert.ok(mockTask.output.includes('0 paid'));
         });

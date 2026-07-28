@@ -11,6 +11,8 @@ const authedClient = async (apiKey: string, theUrl: URL) => {
     });
 };
 
+const getErrorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
+
 const discover = async (key: string, pubId: string) => {
     const url = new URL(`https://api.beehiiv.com/v2/publications/${pubId}`);
     url.searchParams.append('limit', '1');
@@ -68,6 +70,144 @@ const cachedFetch = async ({
     return data;
 };
 
+const cachedFetchSegments = async ({
+    fileCache,
+    key,
+    pubId,
+    page
+}: {
+    fileCache: any;
+    key: string;
+    pubId: string;
+    page: number;
+}) => {
+    const filename = `beehiiv_api_members_segments_${page}.json`;
+
+    if (fileCache.hasFile(filename, 'tmp')) {
+        return await fileCache.readTmpJSONFile(filename);
+    }
+
+    const url = new URL(`https://api.beehiiv.com/v2/publications/${pubId}/segments`);
+    url.searchParams.append('limit', API_LIMIT.toString());
+    url.searchParams.append('page', page.toString());
+
+    const response = await authedClient(key, url);
+
+    if (!response.ok) {
+        throw new errors.InternalServerError({message: `Request failed: ${response.status} ${response.statusText}`});
+    }
+
+    const data: BeehiivSegmentsResponse = await response.json();
+
+    await fileCache.writeTmpFile(data, filename);
+
+    return data;
+};
+
+const cachedFetchSegmentMembers = async ({
+    fileCache,
+    key,
+    pubId,
+    segmentId,
+    page
+}: {
+    fileCache: any;
+    key: string;
+    pubId: string;
+    segmentId: string;
+    page: number;
+}) => {
+    const filename = `beehiiv_api_members_segment_${segmentId}_${page}.json`;
+
+    if (fileCache.hasFile(filename, 'tmp')) {
+        return await fileCache.readTmpJSONFile(filename);
+    }
+
+    const url = new URL(`https://api.beehiiv.com/v2/publications/${pubId}/segments/${segmentId}/members`);
+    url.searchParams.append('limit', API_LIMIT.toString());
+    url.searchParams.append('page', page.toString());
+
+    const response = await authedClient(key, url);
+
+    if (!response.ok) {
+        throw new errors.InternalServerError({message: `Request failed: ${response.status} ${response.statusText}`});
+    }
+
+    const data: BeehiivSegmentMembersResponse = await response.json();
+
+    await fileCache.writeTmpFile(data, filename);
+
+    return data;
+};
+
+const fetchSegments = async ({
+    fileCache,
+    key,
+    pubId
+}: {
+    fileCache: any;
+    key: string;
+    pubId: string;
+}): Promise<BeehiivSegment[]> => {
+    const segments: BeehiivSegment[] = [];
+    let page = 1;
+    let totalPages = 1;
+
+    while (page <= totalPages) {
+        const response: BeehiivSegmentsResponse = await cachedFetchSegments({
+            fileCache,
+            key,
+            pubId,
+            page
+        });
+
+        segments.push(...response.data);
+        totalPages = response.total_pages;
+        page += 1;
+    }
+
+    return segments;
+};
+
+const fetchSegmentMemberships = async ({
+    fileCache,
+    key,
+    pubId,
+    segments
+}: {
+    fileCache: any;
+    key: string;
+    pubId: string;
+    segments: BeehiivSegment[];
+}): Promise<BeehiivSegmentMemberships> => {
+    const memberships: BeehiivSegmentMemberships = {};
+
+    for (const segment of segments) {
+        let page = 1;
+        let totalPages = 1;
+
+        while (page <= totalPages) {
+            const response: BeehiivSegmentMembersResponse = await cachedFetchSegmentMembers({
+                fileCache,
+                key,
+                pubId,
+                segmentId: segment.id,
+                page
+            });
+
+            for (const member of response.data) {
+                const segmentNames = memberships[member.id] ?? [];
+                memberships[member.id] = [...new Set([...segmentNames, segment.name])];
+            }
+
+            totalPages = response.total_pages;
+            page += 1;
+        }
+    }
+
+    return memberships;
+};
+
 export const fetchTasks = async (options: any, ctx: any) => {
     const totalSubscriptions = (await discover(options.key, options.id)) ?? 0;
     const estimatedPages = totalSubscriptions > 0 ? Math.ceil(totalSubscriptions / API_LIMIT) : 0;
@@ -99,8 +239,7 @@ export const fetchTasks = async (options: any, ctx: any) => {
 
                         task.output = `Fetched ${ctx.result.subscriptions.length} of ${totalSubscriptions} subscriptions`;
                     } catch (error) {
-                        const errorMessage = error instanceof Error ? error.message : String(error);
-                        task.output = errorMessage;
+                        task.output = getErrorMessage(error);
                         throw error;
                     }
                 }
@@ -110,7 +249,47 @@ export const fetchTasks = async (options: any, ctx: any) => {
         }
     ];
 
+    if (options.segments) {
+        tasks.push({
+            title: 'Fetching segments and segment memberships',
+            task: async (_: any, task: any) => {
+                try {
+                    const segments = await fetchSegments({
+                        fileCache: ctx.fileCache,
+                        key: options.key,
+                        pubId: options.id
+                    });
+
+                    const segmentMemberships = await fetchSegmentMemberships({
+                        fileCache: ctx.fileCache,
+                        key: options.key,
+                        pubId: options.id,
+                        segments
+                    });
+                    ctx.result.segmentMemberships = segmentMemberships;
+
+                    const membershipCount = Object.values(segmentMemberships).reduce(
+                        (total, segmentNames) => total + segmentNames.length,
+                        0
+                    );
+                    task.output = `Fetched ${segments.length} segments and ${membershipCount} segment memberships`;
+                } catch (error) {
+                    task.output = getErrorMessage(error);
+                    throw error;
+                }
+            }
+        });
+    }
+
     return tasks;
 };
 
-export {authedClient, discover, cachedFetch};
+export {
+    authedClient,
+    discover,
+    cachedFetch,
+    cachedFetchSegments,
+    cachedFetchSegmentMembers,
+    fetchSegments,
+    fetchSegmentMemberships
+};

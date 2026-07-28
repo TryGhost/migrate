@@ -28,6 +28,33 @@ type BeehiivSubscriptionsResponse = {
     next_cursor: string | null;
 };
 
+type BeehiivSegment = {
+    id: string;
+    name: string;
+};
+
+type BeehiivSegmentsResponse = {
+    data: BeehiivSegment[];
+    limit: number;
+    page: number;
+    total_results: number;
+    total_pages: number;
+};
+
+type BeehiivSegmentMember = {
+    id: string;
+};
+
+type BeehiivSegmentMembersResponse = {
+    data: BeehiivSegmentMember[];
+    limit: number;
+    page: number;
+    total_results: number;
+    total_pages: number;
+};
+
+type BeehiivSegmentMemberships = Record<string, string[]>;
+
 type GhostMemberObject = {
     email: string;
     name: string | null;

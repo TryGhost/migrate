@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 import {describe, it, beforeEach, afterEach, mock} from 'node:test';
 import {listPublications} from '../lib/list-pubs.js';
-import {fetchTasks, authedClient, discover, cachedFetch} from '../lib/fetch.js';
+import {
+    fetchTasks,
+    authedClient,
+    discover,
+    cachedFetch,
+    cachedFetchSegments,
+    cachedFetchSegmentMembers
+} from '../lib/fetch.js';
 
 describe('beehiiv API Members Fetch', () => {
     let fetchMock: any;
@@ -210,8 +217,176 @@ describe('beehiiv API Members Fetch', () => {
         });
     });
 
+    describe('cachedFetchSegments', () => {
+        it('returns cached segment data when available', async () => {
+            const cachedData = {
+                data: [{id: 'seg-1', name: 'Weekly Readers'}],
+                total_pages: 1
+            };
+            const fileCache = {
+                hasFile: () => true,
+                readTmpJSONFile: () => Promise.resolve(cachedData)
+            };
+
+            const result = await cachedFetchSegments({
+                fileCache,
+                key: 'test-key',
+                pubId: 'pub-123',
+                page: 2
+            });
+
+            assert.deepEqual(result, cachedData);
+            assert.equal(fetchMock.mock.callCount(), 0);
+        });
+
+        it('fetches and caches a segment page', async () => {
+            const apiData = {
+                data: [{id: 'seg-1', name: 'Weekly Readers'}],
+                total_pages: 1
+            };
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve(apiData)
+                })
+            );
+
+            const writeTmpFile = mock.fn(() => Promise.resolve());
+            const fileCache = {
+                hasFile: () => false,
+                writeTmpFile
+            };
+
+            const result = await cachedFetchSegments({
+                fileCache,
+                key: 'test-key',
+                pubId: 'pub-123',
+                page: 2
+            });
+
+            assert.deepEqual(result, apiData);
+            const [calledUrl] = fetchMock.mock.calls[0].arguments;
+            assert.equal(
+                calledUrl.toString(),
+                'https://api.beehiiv.com/v2/publications/pub-123/segments?limit=100&page=2'
+            );
+            assert.deepEqual(writeTmpFile.mock.calls[0].arguments, [apiData, 'beehiiv_api_members_segments_2.json']);
+        });
+
+        it('throws on a segment API error', async () => {
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: false,
+                    status: 429,
+                    statusText: 'Too Many Requests'
+                })
+            );
+
+            const fileCache = {
+                hasFile: () => false
+            };
+
+            await assert.rejects(
+                cachedFetchSegments({
+                    fileCache,
+                    key: 'test-key',
+                    pubId: 'pub-123',
+                    page: 1
+                }),
+                /Request failed: 429 Too Many Requests/
+            );
+        });
+    });
+
+    describe('cachedFetchSegmentMembers', () => {
+        it('returns cached segment-member data when available', async () => {
+            const cachedData = {
+                data: [{id: 'sub-1'}],
+                total_pages: 1
+            };
+            const fileCache = {
+                hasFile: () => true,
+                readTmpJSONFile: () => Promise.resolve(cachedData)
+            };
+
+            const result = await cachedFetchSegmentMembers({
+                fileCache,
+                key: 'test-key',
+                pubId: 'pub-123',
+                segmentId: 'seg-1',
+                page: 3
+            });
+
+            assert.deepEqual(result, cachedData);
+            assert.equal(fetchMock.mock.callCount(), 0);
+        });
+
+        it('fetches and caches a segment-member page', async () => {
+            const apiData = {
+                data: [{id: 'sub-1'}],
+                total_pages: 1
+            };
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve(apiData)
+                })
+            );
+
+            const writeTmpFile = mock.fn(() => Promise.resolve());
+            const fileCache = {
+                hasFile: () => false,
+                writeTmpFile
+            };
+
+            const result = await cachedFetchSegmentMembers({
+                fileCache,
+                key: 'test-key',
+                pubId: 'pub-123',
+                segmentId: 'seg-1',
+                page: 3
+            });
+
+            assert.deepEqual(result, apiData);
+            const [calledUrl] = fetchMock.mock.calls[0].arguments;
+            assert.equal(
+                calledUrl.toString(),
+                'https://api.beehiiv.com/v2/publications/pub-123/segments/seg-1/members?limit=100&page=3'
+            );
+            assert.deepEqual(writeTmpFile.mock.calls[0].arguments, [
+                apiData,
+                'beehiiv_api_members_segment_seg-1_3.json'
+            ]);
+        });
+
+        it('throws on a segment-member API error', async () => {
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: false,
+                    status: 500,
+                    statusText: 'Internal Server Error'
+                })
+            );
+
+            const fileCache = {
+                hasFile: () => false
+            };
+
+            await assert.rejects(
+                cachedFetchSegmentMembers({
+                    fileCache,
+                    key: 'test-key',
+                    pubId: 'pub-123',
+                    segmentId: 'seg-1',
+                    page: 1
+                }),
+                /Request failed: 500 Internal Server Error/
+            );
+        });
+    });
+
     describe('fetchTasks', () => {
-        it('creates a single task that fetches all subscriptions', async () => {
+        it('creates only the subscription task by default', async () => {
             // Mock the discover call
             fetchMock.mock.mockImplementationOnce(
                 () =>
@@ -235,6 +410,26 @@ describe('beehiiv API Members Fetch', () => {
 
             assert.equal(tasks.length, 1);
             assert.ok(tasks[0].title.includes('Fetching subscriptions'));
+        });
+
+        it('creates the segment task when segments are enabled', async () => {
+            fetchMock.mock.mockImplementation(() =>
+                Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve({data: {stats: {active_subscriptions: 150}}})
+                })
+            );
+
+            const tasks = await fetchTasks(
+                {key: 'test-key', id: 'pub-123', segments: true},
+                {
+                    fileCache: {},
+                    result: {}
+                }
+            );
+
+            assert.equal(tasks.length, 2);
+            assert.equal(tasks[1].title, 'Fetching segments and segment memberships');
         });
 
         it('task fetches all pages using cursor pagination', async () => {
@@ -449,6 +644,152 @@ describe('beehiiv API Members Fetch', () => {
 
             await tasks[0].task({}, {output: ''});
             assert.equal(ctx.result.subscriptions.length, 1);
+        });
+
+        it('fetches every segment and member page and accumulates memberships', async () => {
+            fetchMock.mock.mockImplementation((url: URL) => {
+                if (url.pathname === '/v2/publications/pub-123') {
+                    return Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({data: {stats: {active_subscriptions: 2}}})
+                    });
+                }
+
+                const page = Number(url.searchParams.get('page'));
+
+                if (url.pathname === '/v2/publications/pub-123/segments') {
+                    return Promise.resolve({
+                        ok: true,
+                        json: () =>
+                            Promise.resolve({
+                                data:
+                                    page === 1
+                                        ? [{id: 'seg-1', name: 'Weekly Readers'}]
+                                        : [{id: 'seg-2', name: 'VIP Readers'}],
+                                total_pages: 2
+                            })
+                    });
+                }
+
+                if (url.pathname.endsWith('/segments/seg-1/members')) {
+                    return Promise.resolve({
+                        ok: true,
+                        json: () =>
+                            Promise.resolve({
+                                data: page === 1 ? [{id: 'sub-1'}, {id: 'sub-1'}] : [{id: 'sub-2'}],
+                                total_pages: 2
+                            })
+                    });
+                }
+
+                return Promise.resolve({
+                    ok: true,
+                    json: () =>
+                        Promise.resolve({
+                            data: [{id: 'sub-1'}],
+                            total_pages: 1
+                        })
+                });
+            });
+
+            const ctx: any = {
+                fileCache: {
+                    hasFile: () => false,
+                    writeTmpFile: () => Promise.resolve()
+                },
+                result: {}
+            };
+            const tasks = await fetchTasks({key: 'test-key', id: 'pub-123', segments: true}, ctx);
+            const mockTask = {output: ''};
+
+            await tasks[1].task({}, mockTask);
+
+            assert.deepEqual(ctx.result.segmentMemberships, {
+                'sub-1': ['Weekly Readers', 'VIP Readers'],
+                'sub-2': ['Weekly Readers']
+            });
+            assert.equal(mockTask.output, 'Fetched 2 segments and 3 segment memberships');
+
+            const segmentCalls = fetchMock.mock.calls
+                .map((call: any) => call.arguments[0] as URL)
+                .filter((url: URL) => url.pathname === '/v2/publications/pub-123/segments');
+            const memberCalls = fetchMock.mock.calls
+                .map((call: any) => call.arguments[0] as URL)
+                .filter((url: URL) => url.pathname.endsWith('/members'));
+
+            assert.deepEqual(
+                segmentCalls.map((url: URL) => url.searchParams.get('page')),
+                ['1', '2']
+            );
+            assert.equal(memberCalls.length, 3);
+            assert.ok(memberCalls.every((url: URL) => url.searchParams.get('limit') === '100'));
+        });
+
+        it('handles a publication without segments', async () => {
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({data: {stats: {active_subscriptions: 1}}})
+                    }),
+                0
+            );
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({data: [], total_pages: 0})
+                    }),
+                1
+            );
+
+            const ctx: any = {
+                fileCache: {
+                    hasFile: () => false,
+                    writeTmpFile: () => Promise.resolve()
+                },
+                result: {}
+            };
+            const tasks = await fetchTasks({key: 'test-key', id: 'pub-123', segments: true}, ctx);
+            const mockTask = {output: ''};
+
+            await tasks[1].task({}, mockTask);
+
+            assert.deepEqual(ctx.result.segmentMemberships, {});
+            assert.equal(mockTask.output, 'Fetched 0 segments and 0 segment memberships');
+            assert.equal(fetchMock.mock.callCount(), 2);
+        });
+
+        it('stops and sets task output when segment fetching fails', async () => {
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({data: {stats: {active_subscriptions: 1}}})
+                    }),
+                0
+            );
+            fetchMock.mock.mockImplementationOnce(
+                () =>
+                    Promise.resolve({
+                        ok: false,
+                        status: 500,
+                        statusText: 'Internal Server Error'
+                    }),
+                1
+            );
+
+            const ctx = {
+                fileCache: {
+                    hasFile: () => false
+                },
+                result: {}
+            };
+            const tasks = await fetchTasks({key: 'test-key', id: 'pub-123', segments: true}, ctx);
+            const mockTask = {output: ''};
+
+            await assert.rejects(tasks[1].task({}, mockTask), /Request failed: 500 Internal Server Error/);
+            assert.equal(mockTask.output, 'Request failed: 500 Internal Server Error');
         });
 
         it('handles discover error', async () => {

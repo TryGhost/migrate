@@ -5,6 +5,8 @@
 
 Migrate members from beehiiv to Ghost using the beehiiv API, and generate CSV files you can import into a Ghost installation.
 
+When `--segments` is supplied, the migration fetches every beehiiv segment and adds each member's segment memberships as Ghost labels. For example, a segment named `Weekly Readers` becomes the label `beehiiv-segment-weekly-readers`. The API key must have permission to read segments (`segments:read` when using OAuth). Segment fetching is disabled by default.
+
 
 ## Install
 
@@ -72,6 +74,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--includeStripe`**
     - Include Stripe customer IDs for paid members. When set to false, paid members will be imported as complimentary members instead.
     - bool - default: `true`
+- **`--segments`**
+    - Include beehiiv segment memberships as Ghost member labels
+    - bool - default: `false`
 
 A more complex migration command could look like this:
 
