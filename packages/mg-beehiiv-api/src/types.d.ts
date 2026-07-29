@@ -25,6 +25,12 @@ type beehiivPostDataObject = {
     hidden_from_feed: boolean;
     enforce_gated_content: boolean;
     email_capture_popup: boolean;
+    web_targets: {
+        action: 'include';
+        receiver_type: string;
+        receiver_id: string;
+        tier: 'free' | 'premium';
+    }[];
     content: {
         premium: {
             web: string;

@@ -3,6 +3,13 @@ import {describe, it} from 'node:test';
 import {mapPost, mapPostsTasks} from '../lib/mapper.js';
 
 describe('beehiiv API Mapper', () => {
+    const createWebTarget = (tier: 'free' | 'premium') => ({
+        action: 'include',
+        receiver_type: 'Publication',
+        receiver_id: 'publication-123',
+        tier
+    });
+
     describe('mapPost', () => {
         const createMockPostData = (overrides = {}): any => ({
             id: 'post-123',
@@ -19,6 +26,7 @@ describe('beehiiv API Mapper', () => {
             meta_default_description: 'OG Description',
             authors: ['John Doe', 'Jane Smith'],
             content_tags: ['Tech', 'News'],
+            web_targets: [createWebTarget('free')],
             content: {
                 premium: {
                     web: '<div id="content-blocks"><p>Test content</p></div>'
@@ -64,16 +72,31 @@ describe('beehiiv API Mapper', () => {
             assert.equal(result.data.status, 'draft');
         });
 
-        it('sets visibility to paid for premium audience', () => {
-            const postData = createMockPostData({audience: 'premium'});
+        it('sets visibility to public when web targets include only the free tier', () => {
+            const postData = createMockPostData({
+                audience: 'premium',
+                web_targets: [createWebTarget('free')]
+            });
+            const result = mapPost({postData});
+            assert.equal(result.data.visibility, 'public');
+        });
+
+        it('sets visibility to paid when web targets include only the premium tier', () => {
+            const postData = createMockPostData({
+                audience: 'free',
+                web_targets: [createWebTarget('premium')]
+            });
             const result = mapPost({postData});
             assert.equal(result.data.visibility, 'paid');
         });
 
-        it('sets visibility to public for free audience', () => {
-            const postData = createMockPostData({audience: 'free'});
+        it('sets visibility to members when web targets include both tiers', () => {
+            const postData = createMockPostData({
+                audience: 'free',
+                web_targets: [createWebTarget('free'), createWebTarget('premium')]
+            });
             const result = mapPost({postData});
-            assert.equal(result.data.visibility, 'public');
+            assert.equal(result.data.visibility, 'members');
         });
 
         it('sets feature_image when thumbnail_url exists', () => {
@@ -207,6 +230,7 @@ describe('beehiiv API Mapper', () => {
                             meta_default_description: null,
                             authors: ['Author'],
                             content_tags: [],
+                            web_targets: [createWebTarget('free')],
                             content: {premium: {web: '<div id="content-blocks"><p>Content 1</p></div>'}}
                         },
                         {
@@ -224,6 +248,7 @@ describe('beehiiv API Mapper', () => {
                             meta_default_description: null,
                             authors: ['Author'],
                             content_tags: [],
+                            web_targets: [createWebTarget('free')],
                             content: {premium: {web: '<div id="content-blocks"><p>Content 2</p></div>'}}
                         }
                     ]
@@ -256,6 +281,7 @@ describe('beehiiv API Mapper', () => {
                             meta_default_description: null,
                             authors: ['Author'],
                             content_tags: ['Tag1'],
+                            web_targets: [createWebTarget('free')],
                             content: {premium: {web: '<div id="content-blocks"><p>Content</p></div>'}}
                         }
                     ]

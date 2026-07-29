@@ -2,6 +2,18 @@
 import {slugify} from '@tryghost/string';
 import {processHTML, removeDuplicateFeatureImage} from './process.js';
 
+const getVisibility = (webTargets: beehiivPostDataObject['web_targets']): mappedDataObject['data']['visibility'] => {
+    const tiers = new Set(webTargets.map(target => target.tier));
+    const targetsFreeTier = tiers.has('free');
+    const targetsPremiumTier = tiers.has('premium');
+
+    if (targetsFreeTier && targetsPremiumTier) {
+        return 'members';
+    }
+
+    return targetsPremiumTier ? 'paid' : 'public';
+};
+
 const mapPost = ({postData, options}: {postData: beehiivPostDataObject; options?: any}) => {
     const mappedData: mappedDataObject = {
         url: postData.web_url,
@@ -16,7 +28,7 @@ const mapPost = ({postData, options}: {postData: beehiivPostDataObject; options?
             html: postData.content.premium.web,
             status: postData.status === 'confirmed' ? 'published' : 'draft',
             custom_excerpt: postData.subtitle ?? null,
-            visibility: postData.audience === 'premium' ? 'paid' : 'public',
+            visibility: getVisibility(postData.web_targets),
             authors: [],
             tags: []
         }
