@@ -163,6 +163,15 @@ describe('beehiiv API Members Fetch', () => {
 
             assert.deepEqual(result, apiData);
             assert.equal(writeTmpFileMock.mock.callCount(), 1);
+            const [calledUrl] = fetchMock.mock.calls[0].arguments;
+            assert.deepEqual(calledUrl.searchParams.getAll('expand[]'), [
+                'custom_fields',
+                'subscription_premium_tiers'
+            ]);
+            assert.deepEqual(writeTmpFileMock.mock.calls[0].arguments, [
+                apiData,
+                'beehiiv_api_members_with_premium_tiers_0.json'
+            ]);
         });
 
         it('includes cursor when provided', async () => {

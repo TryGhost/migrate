@@ -55,19 +55,18 @@ const mapSubscription = (
     });
     labels.push(...segmentLabels);
 
-    // Determine if this is a complimentary plan
-    // A member is on a complimentary plan if they have premium access but no Stripe customer ID,
-    // or if they had a Stripe ID but includeStripe is false
-    const isPremium = subscription.subscription_tier === 'premium';
+    // Only subscriptions assigned to a premium tier can be imported with Stripe data.
+    const hasPremiumTier = Boolean(subscription.subscription_premium_tiers?.length);
     const hasStripeId = Boolean(subscription.stripe_customer_id);
-    const complimentaryPlan = isPremium && (!hasStripeId || !options.includeStripe);
+    const includeStripe = Boolean(options.includeStripe && hasPremiumTier && hasStripeId);
+    const complimentaryPlan = hasPremiumTier && !includeStripe;
 
     return {
         email: subscription.email,
         name: extractName(subscription.custom_fields || []),
         note: null,
         subscribed_to_emails: subscription.status === 'active',
-        stripe_customer_id: options.includeStripe ? subscription.stripe_customer_id || '' : '',
+        stripe_customer_id: includeStripe ? subscription.stripe_customer_id! : '',
         complimentary_plan: complimentaryPlan,
         labels,
         created_at: new Date(subscription.created * 1000)

@@ -3,6 +3,12 @@ import {describe, it} from 'node:test';
 import {extractName, mapSubscription, mapSubscriptions, mapMembersTasks} from '../lib/mapper.js';
 
 describe('beehiiv API Members Mapper', () => {
+    const premiumTier = {
+        id: 'tier-123',
+        name: 'Gold Plan',
+        status: 'active'
+    };
+
     describe('extractName', () => {
         it('combines first and last name', () => {
             const customFields = [
@@ -67,6 +73,7 @@ describe('beehiiv API Members Mapper', () => {
             created: 1704067200, // 2024-01-01 00:00:00 UTC
             subscription_tier: 'free',
             subscription_premium_tier_names: [],
+            subscription_premium_tiers: [],
             stripe_customer_id: null,
             custom_fields: [],
             tags: []
@@ -109,15 +116,30 @@ describe('beehiiv API Members Mapper', () => {
         });
 
         it('maps stripe_customer_id when includeStripe is true', () => {
-            const subscription = {...baseSubscription, stripe_customer_id: 'cus_abc123'};
+            const subscription = {
+                ...baseSubscription,
+                subscription_premium_tiers: [premiumTier],
+                stripe_customer_id: 'cus_abc123'
+            };
             const result = mapSubscription(subscription, {includeStripe: true});
             assert.equal(result.stripe_customer_id, 'cus_abc123');
+        });
+
+        it('excludes stripe_customer_id when there are no premium tiers', () => {
+            const subscription = {
+                ...baseSubscription,
+                stripe_customer_id: 'cus_abc123'
+            };
+            const result = mapSubscription(subscription, {includeStripe: true});
+            assert.equal(result.stripe_customer_id, '');
+            assert.equal(result.complimentary_plan, false);
         });
 
         it('excludes stripe_customer_id and sets complimentary_plan when includeStripe is false', () => {
             const subscription = {
                 ...baseSubscription,
                 subscription_tier: 'premium' as const,
+                subscription_premium_tiers: [premiumTier],
                 stripe_customer_id: 'cus_abc123'
             };
             const result = mapSubscription(subscription, {includeStripe: false});
@@ -129,6 +151,7 @@ describe('beehiiv API Members Mapper', () => {
             const subscription = {
                 ...baseSubscription,
                 subscription_tier: 'premium' as const,
+                subscription_premium_tiers: [premiumTier],
                 stripe_customer_id: null
             };
             const result = mapSubscription(subscription);
@@ -139,6 +162,7 @@ describe('beehiiv API Members Mapper', () => {
             const subscription = {
                 ...baseSubscription,
                 subscription_tier: 'premium' as const,
+                subscription_premium_tiers: [premiumTier],
                 stripe_customer_id: 'cus_abc123'
             };
             const result = mapSubscription(subscription);
@@ -246,6 +270,7 @@ describe('beehiiv API Members Mapper', () => {
                     created: 1704067200,
                     subscription_tier: 'free',
                     subscription_premium_tier_names: [],
+                    subscription_premium_tiers: [],
                     stripe_customer_id: null,
                     custom_fields: [],
                     tags: []
@@ -257,6 +282,7 @@ describe('beehiiv API Members Mapper', () => {
                     created: 1704067200,
                     subscription_tier: 'premium',
                     subscription_premium_tier_names: [],
+                    subscription_premium_tiers: [premiumTier],
                     stripe_customer_id: 'cus_paid123',
                     custom_fields: [],
                     tags: []
@@ -285,6 +311,7 @@ describe('beehiiv API Members Mapper', () => {
                     created: 1704067200,
                     subscription_tier: 'premium',
                     subscription_premium_tier_names: ['Gold Plan'],
+                    subscription_premium_tiers: [premiumTier],
                     stripe_customer_id: 'cus_paid123',
                     custom_fields: [],
                     tags: []
@@ -310,6 +337,7 @@ describe('beehiiv API Members Mapper', () => {
                     created: 1704067200,
                     subscription_tier: 'premium',
                     subscription_premium_tier_names: [],
+                    subscription_premium_tiers: [premiumTier],
                     stripe_customer_id: 'cus_paid123',
                     custom_fields: [],
                     tags: []
@@ -323,6 +351,30 @@ describe('beehiiv API Members Mapper', () => {
             assert.equal(result.paid[0].stripe_customer_id, 'cus_paid123');
         });
 
+        it('categorizes a member with Stripe but no premium tiers as free', () => {
+            const subscriptions: BeehiivSubscription[] = [
+                {
+                    id: 'sub-1',
+                    email: 'free-with-stripe@test.com',
+                    status: 'active',
+                    created: 1704067200,
+                    subscription_tier: 'free',
+                    subscription_premium_tier_names: [],
+                    subscription_premium_tiers: [],
+                    stripe_customer_id: 'cus_free123',
+                    custom_fields: [],
+                    tags: []
+                }
+            ];
+
+            const result = mapSubscriptions(subscriptions);
+
+            assert.equal(result.free.length, 1);
+            assert.equal(result.paid.length, 0);
+            assert.equal(result.free[0].stripe_customer_id, '');
+            assert.equal(result.free[0].complimentary_plan, false);
+        });
+
         it('categorizes complimentary premium as free', () => {
             const subscriptions: BeehiivSubscription[] = [
                 {
@@ -332,6 +384,7 @@ describe('beehiiv API Members Mapper', () => {
                     created: 1704067200,
                     subscription_tier: 'premium',
                     subscription_premium_tier_names: [],
+                    subscription_premium_tiers: [premiumTier],
                     stripe_customer_id: null, // No stripe ID means complimentary
                     custom_fields: [],
                     tags: []

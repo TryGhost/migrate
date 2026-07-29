@@ -8,6 +8,11 @@ type BeehiivSubscription = {
     created: number;
     subscription_tier: 'free' | 'premium';
     subscription_premium_tier_names: string[];
+    subscription_premium_tiers?: Array<{
+        id: string;
+        name: string;
+        status: string;
+    }>;
     stripe_customer_id: string | null;
     custom_fields: Array<{name: string; value: string}>;
     tags: string[];

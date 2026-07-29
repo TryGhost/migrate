@@ -42,7 +42,7 @@ const cachedFetch = async ({
     cursor: string | null;
     cursorIndex: number;
 }) => {
-    const filename = `beehiiv_api_members_${cursorIndex}.json`;
+    const filename = `beehiiv_api_members_with_premium_tiers_${cursorIndex}.json`;
 
     if (fileCache.hasFile(filename, 'tmp')) {
         return await fileCache.readTmpJSONFile(filename);
@@ -52,6 +52,7 @@ const cachedFetch = async ({
     url.searchParams.append('limit', API_LIMIT.toString());
     url.searchParams.append('status', 'active');
     url.searchParams.append('expand[]', 'custom_fields');
+    url.searchParams.append('expand[]', 'subscription_premium_tiers');
 
     if (cursor) {
         url.searchParams.append('cursor', cursor);

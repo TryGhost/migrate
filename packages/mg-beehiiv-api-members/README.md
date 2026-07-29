@@ -72,7 +72,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Create a zip file
     - bool - default: `false`
 - **`--includeStripe`**
-    - Include Stripe customer IDs for paid members. When set to false, paid members will be imported as complimentary members instead.
+    - Include Stripe customer IDs for members assigned to at least one beehiiv premium tier. When set to false, paid members will be imported as complimentary members instead.
     - bool - default: `true`
 - **`--segments`**
     - Include beehiiv segment memberships as Ghost member labels
