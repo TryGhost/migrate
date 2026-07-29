@@ -244,6 +244,11 @@ const processHTML = ({post, options}: {post?: mappedDataObject; options?: any}) 
         replaceWith(el, serializer.serialize(embedCard.render(cardOpts)));
     });
 
+    // Convert beehiiv subscriber breaks to Ghost paywall cards
+    parsed.$('div#subscriber-break').forEach(el => {
+        replaceWith(el, '<!--members-only-->');
+    });
+
     // Remove empty paragraphs
     parsed.$('p').forEach(el => {
         const text = (el.textContent || '').trim();

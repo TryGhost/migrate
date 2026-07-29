@@ -238,6 +238,13 @@ describe('beehiiv API processor', () => {
             );
         });
 
+        it('converts subscriber breaks to Ghost paywall cards', () => {
+            const html =
+                '<div id="content-blocks"><p>Public content</p><div id="subscriber-break"></div><p>Premium content</p></div>';
+            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            assert.equal(result, '<p>Public content</p><!--members-only--><p>Premium content</p>');
+        });
+
         it('converts image with caption to Ghost image card', () => {
             const html =
                 '<div id="content-blocks"><div style="padding-left:15px;padding-right:15px;"><div style="padding-bottom:20px;padding-top:20px;"><img alt="" src="https://media.beehiiv.com/image.jpg" /><div style="text-align:center;"><small style="font-style:italic;"><p>Caption text here</p></small></div></div></div></div>';
