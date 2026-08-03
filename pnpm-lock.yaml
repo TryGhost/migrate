@@ -99,8 +99,8 @@ importers:
         specifier: 'catalog:'
         version: 24.13.2
       knip:
-        specifier: 6.30.0
-        version: 6.30.0
+        specifier: 6.31.0
+        version: 6.31.0
       nx:
         specifier: 23.1.1
         version: 23.1.1
@@ -5163,8 +5163,8 @@ packages:
     resolution: {integrity: sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==}
     engines: {node: '>=0.10.0'}
 
-  knip@6.30.0:
-    resolution: {integrity: sha512-C5MsWT17QqMLtrvXIH4N9czRpt/T1GzwfkR/10qW3pdCHFUCoGF+Eeyq8FCKIkv56Gm5zSDv8fq3fs4whktehA==}
+  knip@6.31.0:
+    resolution: {integrity: sha512-NbeIEmUS2VUMjAkbiSNOKPJeV9wpCsr0660sUyKyMQbk4Iom0++nTLInVp4MJ+LfR4kORnw67bDi5tvO7YLnzA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
@@ -10493,7 +10493,7 @@ snapshots:
 
   kind-of@6.0.3: {}
 
-  knip@6.30.0:
+  knip@6.31.0:
     dependencies:
       fdir: 6.5.0(picomatch@4.0.5)
       formatly: 0.3.0
