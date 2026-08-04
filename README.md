@@ -111,6 +111,26 @@ Packages are published to npm automatically via GitHub Actions using OIDC truste
 
 You can also trigger a dry-run from the [Actions tab](https://github.com/TryGhost/migrate/actions/workflows/publish.yml) to preview what would be published without actually publishing.
 
+### Releasing a single package
+
+To version one package instead of the whole monorepo, pass `--projects`:
+
+```sh
+pnpm ship --projects=@tryghost/mg-context
+```
+
+You are prompted for the bump level — major, minor, patch, or a custom exact version — for that package alone. Anything depending on it is then bumped a patch automatically, so the published dependents point at the new version rather than the old one. Releasing `mg-context`, for example, also releases `mg-ghost-api`, `mg-queue` and `migrate`.
+
+The prompt starts on `major`, so arrow down to the bump you want rather than pressing enter.
+
+Preview the whole thing first with `--dry-run`, which writes and pushes nothing:
+
+```sh
+pnpm ship --projects=@tryghost/mg-context --dry-run
+```
+
+The publish workflow skips any version already on npm, so only the packages bumped here are published.
+
 ### First release of a new package
 
 When publishing a package for the first time:
