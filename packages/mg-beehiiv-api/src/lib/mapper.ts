@@ -14,6 +14,17 @@ const getVisibility = (webTargets: beehiivPostDataObject['web_targets']): mapped
     return targetsPremiumTier ? 'paid' : 'public';
 };
 
+const getStatus = (
+    platform: beehiivPostDataObject['platform'],
+    status: beehiivPostDataObject['status']
+): mappedDataObject['data']['status'] => {
+    if (platform === 'email') {
+        return 'draft';
+    }
+
+    return status === 'confirmed' ? 'published' : 'draft';
+};
+
 const mapPost = ({postData, options}: {postData: beehiivPostDataObject; options?: any}) => {
     const mappedData: mappedDataObject = {
         url: postData.web_url,
@@ -26,7 +37,7 @@ const mapPost = ({postData, options}: {postData: beehiivPostDataObject; options?
             title: postData.title,
             type: 'post',
             html: postData.content.premium.web,
-            status: postData.status === 'confirmed' ? 'published' : 'draft',
+            status: getStatus(postData.platform, postData.status),
             custom_excerpt: postData.subtitle ?? null,
             visibility: getVisibility(postData.web_targets),
             authors: [],

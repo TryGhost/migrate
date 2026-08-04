@@ -19,6 +19,7 @@ describe('beehiiv API Mapper', () => {
             web_url: 'https://example.beehiiv.com/p/test-post-title',
             status: 'confirmed',
             audience: 'free',
+            platform: 'both',
             publish_date: 1700000000, // Unix timestamp
             created: 1699900000,
             thumbnail_url: 'https://example.com/image.jpg',
@@ -60,14 +61,26 @@ describe('beehiiv API Mapper', () => {
             assert.equal(result.data.created_at.getTime(), 1699900000 * 1000);
         });
 
-        it('sets status to published for confirmed posts', () => {
-            const postData = createMockPostData({status: 'confirmed'});
+        it('sets status to published for confirmed posts targeting both platforms', () => {
+            const postData = createMockPostData({platform: 'both', status: 'confirmed'});
             const result = mapPost({postData});
             assert.equal(result.data.status, 'published');
         });
 
-        it('sets status to draft for non-confirmed posts', () => {
-            const postData = createMockPostData({status: 'draft'});
+        it('sets status to published for confirmed web posts', () => {
+            const postData = createMockPostData({platform: 'web', status: 'confirmed'});
+            const result = mapPost({postData});
+            assert.equal(result.data.status, 'published');
+        });
+
+        it('sets status to draft for non-confirmed web posts', () => {
+            const postData = createMockPostData({platform: 'web', status: 'draft'});
+            const result = mapPost({postData});
+            assert.equal(result.data.status, 'draft');
+        });
+
+        it('sets status to draft for email-only posts regardless of status', () => {
+            const postData = createMockPostData({platform: 'email', status: 'confirmed'});
             const result = mapPost({postData});
             assert.equal(result.data.status, 'draft');
         });
@@ -223,6 +236,7 @@ describe('beehiiv API Mapper', () => {
                             web_url: 'https://example.com/p/post-1',
                             status: 'confirmed',
                             audience: 'free',
+                            platform: 'both',
                             publish_date: 1700000000,
                             created: 1699900000,
                             thumbnail_url: '',
@@ -241,6 +255,7 @@ describe('beehiiv API Mapper', () => {
                             web_url: 'https://example.com/p/post-2',
                             status: 'confirmed',
                             audience: 'free',
+                            platform: 'both',
                             publish_date: 1700000000,
                             created: 1699900000,
                             thumbnail_url: '',
@@ -274,6 +289,7 @@ describe('beehiiv API Mapper', () => {
                             web_url: 'https://example.com/p/post-1',
                             status: 'confirmed',
                             audience: 'free',
+                            platform: 'both',
                             publish_date: 1700000000,
                             created: 1699900000,
                             thumbnail_url: '',
