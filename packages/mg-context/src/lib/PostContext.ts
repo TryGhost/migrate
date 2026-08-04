@@ -329,6 +329,23 @@ export default class PostContext extends MigrateBase {
             return;
         }
 
+        // Check for an existing post by lookup_key before anything is mutated or
+        // recorded, so a post that will never be inserted does not claim a slug
+        // or leave a rename behind
+        if (!this.dbId && this.#lookupKey) {
+            const existing = db.stmts.findPostByLookupKey.get(this.#lookupKey) as any;
+            if (existing) {
+                this.dbId = existing.id as number;
+                this.ghostId = existing.ghost_id as string;
+                this.#duplicateSkipped = true;
+                if (this.#warnOnLookupKeyDuplicate) {
+                    // eslint-disable-next-line no-console
+                    console.warn(`Duplicate post skipped for lookup_key: ${this.#lookupKey}`);
+                }
+                return;
+            }
+        }
+
         const isInsert = !this.dbId;
 
         const serializedSource = JSON.stringify(this.#source);
@@ -392,21 +409,6 @@ export default class PostContext extends MigrateBase {
                 this.dbId
             );
         } else {
-            // Check for existing post by lookup_key
-            if (this.#lookupKey) {
-                const existing = db.stmts.findPostByLookupKey.get(this.#lookupKey) as any;
-                if (existing) {
-                    this.dbId = existing.id as number;
-                    this.ghostId = existing.ghost_id as string;
-                    this.#duplicateSkipped = true;
-                    if (this.#warnOnLookupKeyDuplicate) {
-                        // eslint-disable-next-line no-console
-                        console.warn(`Duplicate post skipped for lookup_key: ${this.#lookupKey}`);
-                    }
-                    return;
-                }
-            }
-
             const result = db.stmts.insertPost.run(
                 serializedData,
                 serializedSource,
@@ -417,7 +419,7 @@ export default class PostContext extends MigrateBase {
                 createdAt,
                 updatedAt,
                 publishedAt,
-                slug,
+                originalSlug,
                 slug,
                 serializedWebscrapeData
             );

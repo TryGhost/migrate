@@ -1033,6 +1033,55 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
+        it('Does not record a slug rename for a post skipped by lookup_key', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post1 = await instance.addPost({lookupKey: 'https://example.com/post-1'});
+            post1.set('title', 'First Post');
+            post1.set('slug', 'same-slug');
+            post1.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            await post1.save(instance.db);
+
+            const post2 = await instance.addPost({lookupKey: 'https://example.com/post-1'});
+            post2.set('title', 'Duplicate Post');
+            post2.set('slug', 'same-slug');
+            post2.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
+            await post2.save(instance.db);
+
+            // The skipped post never claimed a slug, so no rename was recorded
+            assert.equal(instance.db.slugRenames.length, 0);
+            // ...and it still holds the slug it was given
+            assert.equal(post2.data.slug, 'same-slug');
+
+            const duplicates = await instance.deduplicateSlugs();
+            assert.equal(duplicates.length, 0);
+
+            await instance.close();
+        });
+
+        it('Still deduplicates slugs across posts with different lookup_keys', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post1 = await instance.addPost({lookupKey: 'https://example.com/post-1'});
+            post1.set('title', 'First Post');
+            post1.set('slug', 'same-slug');
+            post1.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            await post1.save(instance.db);
+
+            const post2 = await instance.addPost({lookupKey: 'https://example.com/post-2'});
+            post2.set('title', 'Second Post');
+            post2.set('slug', 'same-slug');
+            post2.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
+            await post2.save(instance.db);
+
+            assert.equal(instance.db.slugRenames.length, 1);
+            assert.equal(post2.data.slug, 'same-slug-2');
+
+            await instance.close();
+        });
+
         it('Posts without lookup_key always insert normally', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
@@ -2563,6 +2612,62 @@ describe('MigrateContext', () => {
     });
 
     describe('deduplicateSlugs', () => {
+        it('Stores the pre-deduplication slug in original_slug', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post1 = await instance.addPost();
+            post1.set('title', 'Older Post');
+            post1.set('slug', 'my-post');
+            post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post1.save(instance.db);
+
+            const post2 = await instance.addPost();
+            post2.set('title', 'Newer Post');
+            post2.set('slug', 'my-post');
+            post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
+            await post2.save(instance.db);
+
+            const rows = instance.db.db.prepare('SELECT slug, original_slug FROM Posts ORDER BY id ASC').all() as any[];
+
+            assert.equal(rows.length, 2);
+            assert.equal(rows[0].slug, 'my-post');
+            assert.equal(rows[0].original_slug, 'my-post');
+            assert.equal(rows[1].slug, 'my-post-2');
+            assert.equal(rows[1].original_slug, 'my-post');
+
+            await instance.close();
+        });
+
+        it('Leaves original_slug untouched when a post is updated', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post1 = await instance.addPost();
+            post1.set('title', 'Older Post');
+            post1.set('slug', 'my-post');
+            post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post1.save(instance.db);
+
+            const post2 = await instance.addPost();
+            post2.set('title', 'Newer Post');
+            post2.set('slug', 'my-post');
+            post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
+            await post2.save(instance.db);
+
+            post2.set('slug', 'renamed-by-hand');
+            await post2.save(instance.db);
+
+            const row = instance.db.db
+                .prepare('SELECT slug, original_slug FROM Posts WHERE id = ?')
+                .get(post2.dbId) as any;
+
+            assert.equal(row.slug, 'renamed-by-hand');
+            assert.equal(row.original_slug, 'my-post');
+
+            await instance.close();
+        });
+
         it('Returns empty array when no duplicates exist', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
