@@ -691,6 +691,8 @@ Ghost requires unique slugs. When a migration source contains multiple posts wit
 
 Called automatically by `prepareForExport()`, so you typically don't need to call it directly. It only runs once — subsequent calls reuse the cached result.
 
+Renaming happens at insert time, and the slug a post originally wanted is stored alongside it. The results are rebuilt from the database, so resuming against an existing `dbPath` still reports every rename, including those made on an earlier run. A slug changed after its post was inserted is not a duplicate and is not reported.
+
 After preparing, access the results via the `duplicateSlugs` getter to log renamed slugs for redirect handling:
 
 ```js

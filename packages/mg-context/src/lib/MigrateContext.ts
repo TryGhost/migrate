@@ -153,52 +153,66 @@ export default class MigrateContext extends MigrateBase {
         return this.#duplicateSlugs;
     }
 
+    #postUrl(row: any): string {
+        const source = JSON.parse(row.source as string);
+        const data = JSON.parse(row.data as string);
+        return source.url || data.canonical_url || '';
+    }
+
     async deduplicateSlugs(): Promise<DuplicateSlugEntry[]> {
         if (this.#slugsDeduped) {
             return this.#duplicateSlugs;
         }
         this.#slugsDeduped = true;
 
-        // Slug deduplication happens at insert time in PostContext.save().
-        // Build grouped result from the collected renames: for each original slug
-        // that was renamed, include the retained post (oldest) first, then the renamed ones.
-        const renames = this.db.slugRenames;
+        // Slug deduplication happens at insert time in PostContext.save(), which records the
+        // pre-deduplication slug in original_slug. The groups are rebuilt from the database
+        // rather than from the in-memory renames, so the result is still complete when
+        // resuming against an existing dbPath, where the renames happened on an earlier run.
+        const renamedRows = this.db.stmts.findRenamedPosts.all() as any[];
 
-        if (renames.length === 0) {
+        if (renamedRows.length === 0) {
             this.#duplicateSlugs = [];
             return [];
         }
 
-        const slugOrder: string[] = [];
-        const groups = new Map<string, DuplicateSlugEntry[]>();
-
-        for (const entry of renames) {
-            if (!groups.has(entry.oldSlug)) {
-                slugOrder.push(entry.oldSlug);
-
-                // Find the retained post (the one that kept the original slug)
-                const retainedRow = this.db.stmts.findPostsBySlug.all(entry.oldSlug) as any[];
-                let retainedUrl = '';
-                if (retainedRow.length > 0) {
-                    const source = JSON.parse(retainedRow[0].source as string);
-                    const data = JSON.parse(retainedRow[0].data as string);
-                    retainedUrl = source.url || data.canonical_url || '';
-                }
-
-                groups.set(entry.oldSlug, [
-                    {
-                        oldSlug: entry.oldSlug,
-                        newSlug: entry.oldSlug,
-                        url: retainedUrl
-                    }
-                ]);
+        // Group the renamed posts by the slug they originally wanted. Map preserves
+        // insertion order, so groups come out ordered by their first renamed post.
+        const groups = new Map<string, any[]>();
+        for (const row of renamedRows) {
+            const originalSlug = row.original_slug as string;
+            const group = groups.get(originalSlug);
+            if (group) {
+                group.push(row);
+            } else {
+                groups.set(originalSlug, [row]);
             }
-            groups.get(entry.oldSlug)!.push(entry);
         }
 
         const result: DuplicateSlugEntry[] = [];
-        for (const slug of slugOrder) {
-            result.push(...groups.get(slug)!);
+
+        for (const [originalSlug, rows] of groups) {
+            // The retained post is the one still holding the original slug. If no post
+            // holds it, these rows were not renamed by a collision — a slug changed after
+            // insert also leaves original_slug behind — so there is no group to report.
+            const retainedRows = this.db.stmts.findPostsBySlug.all(originalSlug) as any[];
+            if (retainedRows.length === 0) {
+                continue;
+            }
+
+            result.push({
+                oldSlug: originalSlug,
+                newSlug: originalSlug,
+                url: this.#postUrl(retainedRows[0])
+            });
+
+            for (const row of rows) {
+                result.push({
+                    oldSlug: originalSlug,
+                    newSlug: row.slug as string,
+                    url: this.#postUrl(row)
+                });
+            }
         }
 
         this.#duplicateSlugs = result;

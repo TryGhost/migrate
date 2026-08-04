@@ -25,6 +25,7 @@ export interface PreparedStatements {
     findPostById: ReturnType<DatabaseSync['prepare']>;
     findPostByLookupKey: ReturnType<DatabaseSync['prepare']>;
     findPostsBySlug: ReturnType<DatabaseSync['prepare']>;
+    findRenamedPosts: ReturnType<DatabaseSync['prepare']>;
     slugExists: ReturnType<DatabaseSync['prepare']>;
     findPostsForConversion: ReturnType<DatabaseSync['prepare']>;
     countPosts: ReturnType<DatabaseSync['prepare']>;
@@ -158,6 +159,9 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         findPostById: db.prepare('SELECT * FROM Posts WHERE id = ?'),
         findPostByLookupKey: db.prepare('SELECT * FROM Posts WHERE lookup_key = ?'),
         findPostsBySlug: db.prepare('SELECT * FROM Posts WHERE slug = ? ORDER BY id ASC'),
+        findRenamedPosts: db.prepare(
+            'SELECT id, slug, original_slug, source, data FROM Posts WHERE original_slug IS NOT NULL AND original_slug <> slug ORDER BY id ASC'
+        ),
         slugExists: db.prepare('SELECT 1 FROM Posts WHERE slug = ? LIMIT 1'),
         findPostsForConversion: db.prepare(
             'SELECT id, data, content_format FROM Posts ORDER BY id ASC LIMIT ? OFFSET ?'

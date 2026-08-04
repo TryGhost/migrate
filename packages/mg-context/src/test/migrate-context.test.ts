@@ -2668,6 +2668,68 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
+        it('Reports renames from an earlier run when resuming an existing dbPath', async () => {
+            const filePath = join(tmpdir(), `mg-context-dedup-resume-${Date.now()}.sqlite`);
+
+            const firstRun: any = new MigrateContext({dbPath: filePath});
+            await firstRun.init();
+
+            const post1 = await firstRun.addPost({source: {url: 'https://example.com/blog/my-post'}});
+            post1.set('title', 'First');
+            post1.set('slug', 'my-post');
+            post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post1.save(firstRun.db);
+
+            const post2 = await firstRun.addPost({source: {url: 'https://example.com/news/my-post'}});
+            post2.set('title', 'Second');
+            post2.set('slug', 'my-post');
+            post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
+            await post2.save(firstRun.db);
+
+            await firstRun.close();
+
+            // Resume against the same database — nothing is inserted this run, so the
+            // in-memory renames are empty, but the group is still reported from the DB
+            const secondRun: any = new MigrateContext({dbPath: filePath});
+            await secondRun.init();
+
+            assert.equal(secondRun.db.slugRenames.length, 0);
+
+            const duplicates = await secondRun.deduplicateSlugs();
+
+            assert.equal(duplicates.length, 2);
+            assert.equal(duplicates[0].oldSlug, 'my-post');
+            assert.equal(duplicates[0].newSlug, 'my-post');
+            assert.equal(duplicates[0].url, 'https://example.com/blog/my-post');
+            assert.equal(duplicates[1].oldSlug, 'my-post');
+            assert.equal(duplicates[1].newSlug, 'my-post-2');
+            assert.equal(duplicates[1].url, 'https://example.com/news/my-post');
+
+            await secondRun.close();
+            await unlink(filePath);
+        });
+
+        it('Ignores a slug that was changed after insert', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Only Post');
+            post.set('slug', 'original-slug');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post.save(instance.db);
+
+            // Renaming after insert leaves original_slug behind, but no post holds
+            // "original-slug" any more, so this was not a duplicate-slug collision
+            post.set('slug', 'renamed-by-hand');
+            await post.save(instance.db);
+
+            const duplicates = await instance.deduplicateSlugs();
+            assert.equal(duplicates.length, 0);
+
+            await instance.close();
+        });
+
         it('Returns empty array when no duplicates exist', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
