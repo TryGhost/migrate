@@ -1,8 +1,12 @@
 import errors from '@tryghost/errors';
 import {getFieldInfo} from './zod-schema-utils.js';
+import type {SanitizedField} from './database.js';
+
+const NO_URL_FIELDS: ReadonlySet<string> = new Set();
 
 export default class MigrateBase {
     #context;
+    #sanitized: SanitizedField[] = [];
     schema: any;
     data: any;
     dbId: number | null = null;
@@ -10,6 +14,112 @@ export default class MigrateBase {
 
     constructor() {
         this.#context = this.constructor.name;
+    }
+
+    /**
+     * Fields holding a URL. Cutting one to length leaves a link that points nowhere,
+     * so an over-long value is dropped instead of truncated. Subclasses override this.
+     *
+     * A getter rather than a field so it stays off the instance — getFinal() copies
+     * every own property.
+     */
+    protected get urlFields(): ReadonlySet<string> {
+        return NO_URL_FIELDS;
+    }
+
+    /**
+     * Normalize a single value to something Ghost will accept: strip surrounding
+     * whitespace, then truncate to the field's maximum length.
+     *
+     * Applied both when a value is set and again before it is saved, so values
+     * that bypass set() — supplied to a constructor, or loaded from a row — are
+     * covered too.
+     */
+    protected sanitizeValue(key: string, value: any): any {
+        if (typeof value !== 'string') {
+            return value;
+        }
+
+        let result = value.trim();
+
+        const info = getFieldInfo(this.schema.shape[key]);
+        if (info.maxLength && result.length > info.maxLength) {
+            // A truncated URL is a broken link, not a shorter one
+            if (this.urlFields.has(key)) {
+                return null;
+            }
+
+            result = result.slice(0, info.maxLength).trim();
+
+            // A slug cut mid-word can be left with a dangling separator
+            if (key === 'slug') {
+                result = result.replace(/-+$/, '');
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Every rule that runs before a save. Subclasses override this to add their own,
+     * calling super.applySanitizers() for the shared length and whitespace handling.
+     */
+    protected applySanitizers() {
+        for (const key of Object.keys(this.schema.shape)) {
+            if (typeof this.data[key] === 'string') {
+                this.data[key] = this.sanitizeValue(key, this.data[key]);
+            }
+        }
+    }
+
+    /**
+     * The single enforcement point. Normalizes every field against Ghost's schema and
+     * records what changed. Called by each context's save(), before anything is written.
+     */
+    sanitize(collector?: SanitizedField[]) {
+        const before = new Map<string, any>();
+        for (const key of Object.keys(this.schema.shape)) {
+            before.set(key, this.data[key]);
+        }
+
+        this.applySanitizers();
+
+        for (const [key, oldValue] of before) {
+            if (this.data[key] !== oldValue) {
+                this.#recordSanitized(key, oldValue, this.data[key]);
+            }
+        }
+
+        if (collector) {
+            this.flushSanitized(collector);
+        }
+    }
+
+    #recordSanitized(field: string, oldValue: any, newValue: any) {
+        const info = getFieldInfo(this.schema.shape[field]);
+
+        let reason: SanitizedField['reason'] = 'replaced';
+        if (typeof newValue === 'string') {
+            if (info.maxLength && oldValue.length > info.maxLength) {
+                reason = 'truncated';
+            } else if (oldValue.trim() === newValue) {
+                reason = 'trimmed';
+            }
+        }
+
+        this.#sanitized.push({context: this.#context, slug: '', field, reason, oldValue, newValue});
+    }
+
+    /**
+     * Hand off everything recorded so far. The slug is stamped on here rather than at
+     * record time because it may itself have been sanitized in the same pass.
+     */
+    protected flushSanitized(collector: SanitizedField[]) {
+        for (const entry of this.#sanitized) {
+            entry.slug = typeof this.data.slug === 'string' ? this.data.slug : '';
+            collector.push(entry);
+        }
+        this.#sanitized = [];
     }
 
     protected initializeData() {
@@ -81,9 +191,14 @@ export default class MigrateBase {
             //     this.validate(prop, value);
             // }
 
-            this.validate(prop, value);
+            const sanitized = this.sanitizeValue(prop, value);
+            if (sanitized !== value) {
+                this.#recordSanitized(prop, value, sanitized);
+            }
 
-            this.data[prop] = value;
+            this.validate(prop, sanitized);
+
+            this.data[prop] = sanitized;
         } else {
             throw new errors.InternalServerError({
                 message: `(${this.#context}) Property "${prop}" is not allowed in ${this.#context}`

@@ -20,7 +20,7 @@ describe('TagContext', () => {
         const nameInfo = getFieldInfo(tag.schema.shape.name);
         assert.equal(nameInfo.required, true);
         assert.equal(nameInfo.type, 'string');
-        assert.equal(nameInfo.maxLength, 255);
+        assert.equal(nameInfo.maxLength, 191);
     });
 
     it('Can accept initialData', () => {
@@ -76,24 +76,23 @@ describe('TagContext', () => {
         assert.equal(tag.data.slug, 'testing');
     });
 
-    it('Will throw on string value that is too long', () => {
+    it('Truncates a string value that is too long', () => {
         const tag: any = new TagContext();
         const longName = 'a'.repeat(256);
 
-        assert.throws(() => tag.set('name', longName), {
-            name: 'InternalServerError',
-            statusCode: 500,
-            message: '(TagContext) Value for "name" is too long. Currently 256 characters, Max 255.'
-        });
+        tag.set('name', longName);
+
+        assert.equal(tag.data.name, 'a'.repeat(191));
     });
 
     it('Includes the failing value as context in validation errors', () => {
-        const tag: any = new TagContext();
+        // The constructor bypasses set(), so the value reaches validate() unsanitized
         const longName = 'a'.repeat(256);
+        const tag: any = new TagContext({name: longName, slug: 'test'});
 
         try {
-            tag.set('name', longName);
-            assert.fail('Expected an error');
+            const final = tag.getFinal;
+            assert.fail(`Expected an error, got ${JSON.stringify(final)}`);
         } catch (err: any) {
             assert.equal(err.context, longName);
         }
@@ -121,5 +120,27 @@ describe('TagContext', () => {
         tag.remove('description');
 
         assert.equal(tag.data.description, null);
+    });
+
+    it('Strips a leading comma from the name', () => {
+        // Ghost validates tag names with matches: /^([^,]|$)/
+        const tag: any = new TagContext({name: ', Comma First', slug: 'comma-first'});
+        const collected: any[] = [];
+
+        tag.sanitize(collected);
+
+        assert.equal(tag.data.name, 'Comma First');
+        assert.equal(collected.length, 1);
+        assert.equal(collected[0].field, 'name');
+        assert.equal(collected[0].reason, 'replaced');
+        assert.equal(collected[0].slug, 'comma-first');
+    });
+
+    it('Keeps a comma that is not at the start of the name', () => {
+        const tag: any = new TagContext({name: 'Hello, World', slug: 'hello-world'});
+
+        tag.sanitize();
+
+        assert.equal(tag.data.name, 'Hello, World');
     });
 });

@@ -9,3 +9,4 @@ export default MigrateContext;
 export {MigrateBase, MigrateContext, PostContext, TagContext, AuthorContext};
 
 export type {WrittenFile, ForEachPostOptions, PostFilter, DuplicateSlugEntry} from './lib/MigrateContext.js';
+export type {SanitizedField, SlugRename} from './lib/database.js';

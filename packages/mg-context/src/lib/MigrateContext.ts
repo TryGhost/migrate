@@ -8,7 +8,7 @@ import MigrateBase from './MigrateBase.js';
 import PostContext, {PostConstructorOptions, normalizeContentFormat, type ContentFormat} from './PostContext.js';
 import TagContext from './TagContext.js';
 import AuthorContext from './AuthorContext.js';
-import {createDatabase, type DatabaseModels} from './database.js';
+import {createDatabase, type DatabaseModels, type SanitizedField} from './database.js';
 import {
     withTransaction,
     findByIds,
@@ -151,6 +151,14 @@ export default class MigrateContext extends MigrateBase {
 
     get duplicateSlugs(): DuplicateSlugEntry[] {
         return this.#duplicateSlugs;
+    }
+
+    /**
+     * Every value changed to satisfy Ghost's schema during this run — see
+     * MigrateBase.sanitize(). Collected as posts, tags and authors are saved.
+     */
+    get sanitizedFields(): SanitizedField[] {
+        return this.db.sanitizedFields;
     }
 
     #postUrl(row: any): string {

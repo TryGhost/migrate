@@ -7,12 +7,29 @@ export interface SlugRename {
     url: string;
 }
 
+/**
+ * A value that was changed on its way into the database to satisfy Ghost's
+ * schema — see MigrateBase.sanitize().
+ */
+export interface SanitizedField {
+    /** Which context the value belongs to, e.g. "PostContext" */
+    context: string;
+    /** Slug of the post/tag/author the value belongs to, for locating it afterwards */
+    slug: string;
+    field: string;
+    /** truncated: over Ghost's maximum length. trimmed: surrounding whitespace. replaced: rewritten to a valid value. */
+    reason: 'truncated' | 'trimmed' | 'replaced';
+    oldValue: string;
+    newValue: string | null;
+}
+
 export interface DatabaseModels {
     db: DatabaseSync;
     stmts: PreparedStatements;
     tagCache: Map<string, {dbId: number; ghostId: string}>;
     authorCache: Map<string, {dbId: number; ghostId: string}>;
     slugRenames: SlugRename[];
+    sanitizedFields: SanitizedField[];
     inTransaction: boolean;
 }
 
@@ -236,5 +253,13 @@ export function createDatabase(dbPath: string): DatabaseModels {
 
     const stmts = prepareStatements(db);
 
-    return {db, stmts, tagCache: new Map(), authorCache: new Map(), slugRenames: [], inTransaction: false};
+    return {
+        db,
+        stmts,
+        tagCache: new Map(),
+        authorCache: new Map(),
+        slugRenames: [],
+        sanitizedFields: [],
+        inTransaction: false
+    };
 }

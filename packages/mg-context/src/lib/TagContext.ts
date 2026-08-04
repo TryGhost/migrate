@@ -4,7 +4,7 @@ import MigrateBase from './MigrateBase.js';
 import type {DatabaseModels} from './database.js';
 
 const tagZodSchema = z.object({
-    name: z.string().max(255),
+    name: z.string().max(191),
     slug: z.string().max(191),
     description: z.string().max(500).nullable(),
     feature_image: z.string().max(2000).nullable(),
@@ -27,9 +27,15 @@ export type TagDataObject = {
     data: TagObject;
 };
 
+const TAG_URL_FIELDS: ReadonlySet<string> = new Set(['feature_image', 'og_image', 'twitter_image', 'canonical_url']);
+
 export default class TagContext extends MigrateBase {
     // eslint-disable-next-line no-unused-private-class-members -- assigned but not yet read
     #context;
+    protected override get urlFields() {
+        return TAG_URL_FIELDS;
+    }
+
     data: any = {};
 
     constructor(args?: any) {
@@ -56,7 +62,20 @@ export default class TagContext extends MigrateBase {
         });
     }
 
+    protected override applySanitizers() {
+        // Ghost rejects a tag name starting with a comma (matches: /^([^,]|$)/).
+        // Strip them before the shared pass so the length check sees the final value.
+        if (typeof this.data.name === 'string') {
+            this.data.name = this.data.name.replace(/^[\s,]+/, '');
+        }
+
+        super.applySanitizers();
+    }
+
     save(db: DatabaseModels) {
+        // Sanitize before the cache lookup below — the slug is the cache key
+        this.sanitize(db.sanitizedFields);
+
         // Check slug cache first — avoids DB round-trip for already-known tags
         if (!this.dbId && this.data.slug && db.tagCache.has(this.data.slug)) {
             const cached = db.tagCache.get(this.data.slug)!;

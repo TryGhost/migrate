@@ -15,16 +15,29 @@ export function normalizeContentFormat(contentFormat: unknown): ContentFormat {
     return contentFormat === 'html' ? 'html' : 'lexical';
 }
 
+const MAX_SLUG_LENGTH = 191;
+
+/**
+ * Build a deduplicated slug that still fits Ghost's limit, trimming the base
+ * to make room for the suffix rather than overflowing past it.
+ */
+function slugWithSuffix(base: string, suffix: number): string {
+    const tail = `-${suffix}`;
+    const room = MAX_SLUG_LENGTH - tail.length;
+    const trimmedBase = base.length > room ? base.slice(0, room).replace(/-+$/, '') : base;
+    return `${trimmedBase}${tail}`;
+}
+
 const postZodSchema = z.object({
     title: z.string().max(255),
-    slug: z.string().max(191),
+    slug: z.string().max(MAX_SLUG_LENGTH),
     html: z.string().max(1000000000).nullable(),
     mobiledoc: z.string().max(1000000000).nullable(),
     lexical: z.string().max(1000000000).nullable(),
     comment_id: z.string().max(50).nullable(),
     plaintext: z.string().max(1000000000).nullable(),
     feature_image: z.string().max(2000).nullable(),
-    feature_image_alt: z.string().max(125).nullable(),
+    feature_image_alt: z.string().max(191).nullable(),
     feature_image_caption: z.string().max(65535).nullable(),
     featured: z.boolean().default(false),
     type: z.enum(['post', 'page']).default('post'),
@@ -57,7 +70,13 @@ export type PostConstructorOptions = {
     lookupKey?: string;
 };
 
+const POST_URL_FIELDS: ReadonlySet<string> = new Set(['feature_image', 'og_image', 'twitter_image', 'canonical_url']);
+
 export default class PostContext extends MigrateBase {
+    protected override get urlFields() {
+        return POST_URL_FIELDS;
+    }
+
     #source: any;
     #meta: any;
     #contentFormat: ContentFormat;
@@ -346,6 +365,8 @@ export default class PostContext extends MigrateBase {
             }
         }
 
+        this.sanitize(db.sanitizedFields);
+
         const isInsert = !this.dbId;
 
         const serializedSource = JSON.stringify(this.#source);
@@ -369,10 +390,10 @@ export default class PostContext extends MigrateBase {
         // On insert, deduplicate the slug if it already exists
         if (!this.dbId && db.stmts.slugExists.get(slug)) {
             let suffix = 2;
-            let candidate = `${slug}-${suffix}`;
+            let candidate = slugWithSuffix(originalSlug, suffix);
             while (db.stmts.slugExists.get(candidate)) {
                 suffix += 1;
-                candidate = `${slug}-${suffix}`;
+                candidate = slugWithSuffix(originalSlug, suffix);
             }
             slug = candidate;
             this.data.slug = slug;

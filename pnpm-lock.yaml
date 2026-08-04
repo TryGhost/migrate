@@ -381,6 +381,9 @@ importers:
       '@tryghost/listr-smart-renderer':
         specifier: workspace:*
         version: link:../listr-smart-renderer
+      '@tryghost/string':
+        specifier: 'catalog:'
+        version: 0.3.5
       '@tryghost/validator':
         specifier: 3.1.4
         version: 3.1.4

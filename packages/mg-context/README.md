@@ -683,6 +683,47 @@ const dupe = await ctx.addPost({lookupKey: 'https://example.com/post-url'});
 await dupe.save(ctx.db); // skipped
 ```
 
+### Field sanitization
+
+Source data routinely carries values Ghost will not accept — a title over 255 characters, a tag name over 191, an email that is not an address. Rather than failing the migration, each context normalizes its own data against [Ghost's schema](https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/server/data/schema/schema.js) before anything is written.
+
+Enforcement lives in one place per context: `save()` calls `sanitize()`, which applies every rule and records what changed. That covers values set with `set()` as well as values handed to a constructor or loaded from a row, which bypass `set()` entirely.
+
+The rules:
+
+| Applies to | Rule |
+|------------|------|
+| Every string field | Surrounding whitespace is stripped |
+| Every string field | Values over the field's maximum are truncated; a slug left with a dangling `-` has it removed |
+| URL fields | An over-long URL is dropped to `null` rather than truncated — a cut URL is a broken link, not a shorter one. Covers `feature_image`, `og_image`, `twitter_image` and `canonical_url` on posts and tags, and `website`, `profile_image` and `cover_image` on authors |
+| Post slugs | A deduplicating suffix (`-2`, `-3`) trims the base rather than overflowing the 191 character limit |
+| Tag `name` | A leading comma is stripped — Ghost validates names with `matches: /^([^,]\|$)/` |
+| Author `email` | An address Ghost would reject is replaced with a derived placeholder at `example.com` (see below) |
+| Author `website` | Anything that is not a URL is dropped to `null`, on top of the length rule above |
+
+An invalid email cannot be trimmed into shape, so it is replaced with a recognisable stand-in: the address is slugified, minus the bogus tail after its last dot, and given the reserved `example.com` domain. `hello@world.com123` becomes `hello-world@example.com`. When there is nothing usable to slugify, it falls back to the author's slug, then their name, then `author`. The local part is capped at 50 characters, which is Ghost's limit.
+
+#### `sanitizedFields: SanitizedField[]`
+
+Getter listing every value changed during this run, so nothing is lost silently:
+
+```js
+for (const entry of ctx.sanitizedFields) {
+    console.log(`[${entry.reason}] ${entry.context} ${entry.slug} — ${entry.field}: ${entry.newValue}`);
+}
+```
+
+| Field      | Type     | Description                                                                       |
+|------------|----------|-----------------------------------------------------------------------------------|
+| `context`  | `string` | `PostContext`, `TagContext` or `AuthorContext`                                     |
+| `slug`     | `string` | Slug of the post, tag or author, for locating it afterwards                        |
+| `field`    | `string` | The field that changed                                                             |
+| `reason`   | `string` | `truncated`, `trimmed` or `replaced`                                               |
+| `oldValue` | `string` | The value before sanitization                                                      |
+| `newValue` | `string \| null` | The value that was stored                                                  |
+
+This is collected in memory as posts are saved, so it covers the current run only — resuming an existing `dbPath` starts empty, since the stored data was already sanitized when it was first written.
+
 ### Slug deduplication
 
 #### `deduplicateSlugs(): Promise<DuplicateSlugEntry[]>`

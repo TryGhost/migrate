@@ -3079,4 +3079,81 @@ describe('MigrateContext', () => {
             await instance.close();
         });
     });
+
+    describe('sanitizedFields', () => {
+        it('Reports values trimmed on the way into the database', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'a'.repeat(300));
+            post.set('slug', 'long-title-post');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post.addTag({name: 'b'.repeat(200), slug: 'long-tag'});
+            post.addAuthor({name: 'Jane', slug: 'jane', email: 'hello@world.com123'});
+            await post.save(instance.db);
+
+            const byField = new Map<string, any>(
+                instance.sanitizedFields.map((f: any) => [`${f.context}.${f.field}`, f])
+            );
+
+            assert.equal(byField.get('PostContext.title').reason, 'truncated');
+            assert.equal(byField.get('PostContext.title').newValue.length, 255);
+            assert.equal(byField.get('PostContext.title').slug, 'long-title-post');
+
+            assert.equal(byField.get('TagContext.name').reason, 'truncated');
+            assert.equal(byField.get('TagContext.name').newValue.length, 191);
+            assert.equal(byField.get('TagContext.name').slug, 'long-tag');
+
+            assert.equal(byField.get('AuthorContext.email').reason, 'replaced');
+            assert.equal(byField.get('AuthorContext.email').newValue, 'hello-world@example.com');
+
+            // The truncated values are what actually landed in the database
+            const stored = await instance.findPosts({slug: 'long-title-post'});
+            assert.equal(stored[0].data.title.length, 255);
+            assert.equal(stored[0].data.tags[0].data.name.length, 191);
+            assert.equal(stored[0].data.authors[0].data.email, 'hello-world@example.com');
+
+            await instance.close();
+        });
+
+        it('Is empty when nothing needed changing', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Fine');
+            post.set('slug', 'fine');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post.save(instance.db);
+
+            assert.equal(instance.sanitizedFields.length, 0);
+
+            await instance.close();
+        });
+
+        it('Keeps a deduplicated slug within the maximum length', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            // A slug already at the maximum length — the "-2" must not push it over
+            const longSlug = 'a'.repeat(191);
+
+            for (const title of ['First', 'Second']) {
+                const post = await instance.addPost();
+                post.set('title', title);
+                post.set('slug', longSlug);
+                post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+                await post.save(instance.db);
+            }
+
+            const rows = instance.db.db.prepare('SELECT slug FROM Posts ORDER BY id ASC').all() as any[];
+
+            assert.equal(rows[0].slug, longSlug);
+            assert.equal(rows[1].slug, `${'a'.repeat(189)}-2`);
+            assert.equal(rows[1].slug.length, 191);
+
+            await instance.close();
+        });
+    });
 });

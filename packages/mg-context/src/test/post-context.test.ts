@@ -164,15 +164,13 @@ describe('PostContext', function () {
     });
 
     describe('Validation Errors', function () {
-        it('Will throw on string value that is too long', () => {
+        it('Truncates a string value that is too long', () => {
             const instance: any = new PostContext();
             const longTitle = 'a'.repeat(256);
 
-            assert.throws(() => instance.set('title', longTitle), {
-                name: 'InternalServerError',
-                statusCode: 500,
-                message: '(PostContext) Value for "title" is too long. Currently 256 characters, Max 255.'
-            });
+            instance.set('title', longTitle);
+
+            assert.equal(instance.data.title, 'a'.repeat(255));
         });
 
         it('Will throw on invalid date value', () => {
@@ -922,6 +920,31 @@ describe('PostContext', function () {
 
             assert.equal(post.id, 'raw123');
             assert.equal(post.title, 'Raw');
+        });
+    });
+
+    describe('URL fields', () => {
+        it('Drops over-long URLs rather than truncating them', () => {
+            const longUrl = `https://example.com/${'a'.repeat(2100)}.jpg`;
+            const instance: any = new PostContext();
+
+            instance.set('feature_image', longUrl);
+            instance.set('canonical_url', longUrl);
+            instance.set('og_image', longUrl);
+            instance.set('twitter_image', longUrl);
+
+            assert.equal(instance.data.feature_image, null);
+            assert.equal(instance.data.canonical_url, null);
+            assert.equal(instance.data.og_image, null);
+            assert.equal(instance.data.twitter_image, null);
+        });
+
+        it('Keeps URLs within the limit', () => {
+            const instance: any = new PostContext();
+
+            instance.set('feature_image', 'https://example.com/photo.jpg');
+
+            assert.equal(instance.data.feature_image, 'https://example.com/photo.jpg');
         });
     });
 });
