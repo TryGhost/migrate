@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-wp-xml",
-  "version": "0.17.2",
+  "version": "0.17.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TryGhost/migrate.git",
