@@ -36,6 +36,6 @@
   "dependencies": {
     "@tryghost/mg-utils": "workspace:*",
     "escape-string-regexp": "catalog:",
-    "style-to-object": "1.0.14"
+    "style-to-object": "2.0.2"
   }
 }
