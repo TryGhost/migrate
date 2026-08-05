@@ -35,7 +35,7 @@ catalog:
   "sharp": "0.35.2"
   "simple-dom": "1.4.0"
   "transliteration": "2.6.1"
-  "typescript": "6.0.3"
+  "typescript": "7.0.2"
 
 allowBuilds:
   esbuild: true
