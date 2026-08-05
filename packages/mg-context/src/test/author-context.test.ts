@@ -111,10 +111,10 @@ describe('AuthorContext', () => {
             email: 'test@email.com'
         });
 
-        assert.throws(() => author.set('role', 'SuperAdmin'), {
+        assert.throws(() => author.set('roles', ['SuperAdmin']), {
             name: 'InternalServerError',
             statusCode: 500,
-            message: '(AuthorContext) Invalid choice for "role"'
+            message: '(AuthorContext) Invalid choice for "roles"'
         });
     });
 

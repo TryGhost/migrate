@@ -160,11 +160,22 @@ export default class MigrateBase {
                 message: `(${this.#context}) Invalid boolean value for "${key}"`,
                 context: value
             });
-        } else if (info.type === 'array' && !Array.isArray(value)) {
-            throw new errors.InternalServerError({
-                message: `(${this.#context}) Invalid array value for "${key}"`,
-                context: value
-            });
+        } else if (info.type === 'array') {
+            if (!Array.isArray(value)) {
+                throw new errors.InternalServerError({
+                    message: `(${this.#context}) Invalid array value for "${key}"`,
+                    context: value
+                });
+            }
+
+            for (const item of value) {
+                if (info.elementChoices && !info.elementChoices.includes(item)) {
+                    throw new errors.InternalServerError({
+                        message: `(${this.#context}) Invalid choice for "${key}"`,
+                        context: item
+                    });
+                }
+            }
         }
 
         // Run Zod refinements (e.g. .refine() on schema fields)

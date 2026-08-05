@@ -23,7 +23,8 @@ const authorZodSchema = z.object({
     twitter: z.string().max(2000).nullable(),
     meta_title: z.string().max(300).nullable(),
     meta_description: z.string().max(500).nullable(),
-    role: z.enum(['Contributor', 'Author', 'Editor', 'Administrator']).default('Contributor')
+    // Ghost's import format expects an array of role names, not a single role
+    roles: z.array(z.enum(['Contributor', 'Author', 'Editor', 'Administrator'])).default(['Contributor'])
 });
 
 export type AuthorObject = z.infer<typeof authorZodSchema>;

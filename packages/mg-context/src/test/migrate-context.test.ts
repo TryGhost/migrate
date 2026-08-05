@@ -2520,6 +2520,47 @@ describe('MigrateContext', () => {
         });
     });
 
+    describe('User roles', () => {
+        it('Exports roles as an array in the full Ghost JSON', async () => {
+            const ctx: any = new MigrateContext();
+            await ctx.init();
+
+            const post = await ctx.addPost();
+            post.set('title', 'Test');
+            post.set('slug', 'test');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post.addAuthor({name: 'Alice', slug: 'alice', email: 'alice@example.com'});
+            post.addAuthor({name: 'Bob', slug: 'bob', email: 'bob@example.com', roles: ['Editor']});
+            await post.save(ctx.db);
+
+            const dir = join(tmpdir(), `mg-roles-json-${Date.now()}`);
+            const files = await ctx.writeGhostJson(dir);
+            const content = JSON.parse(await readFile(files[0].path, 'utf-8'));
+
+            const alice = content.data.users.find((u: any) => u.slug === 'alice');
+            const bob = content.data.users.find((u: any) => u.slug === 'bob');
+
+            assert.deepEqual(alice.roles, ['Contributor']);
+            assert.deepEqual(bob.roles, ['Editor']);
+            assert.equal('role' in alice, false);
+            assert.equal('role' in bob, false);
+
+            await rm(dir, {recursive: true, force: true});
+            await ctx.close();
+        });
+
+        it('Gives each author its own roles array', async () => {
+            const first: any = new AuthorContext({name: 'A', slug: 'a', email: 'a@example.com'});
+            const second: any = new AuthorContext({name: 'B', slug: 'b', email: 'b@example.com'});
+
+            assert.deepEqual(first.data.roles, ['Contributor']);
+            assert.notEqual(first.data.roles, second.data.roles);
+
+            first.data.roles.push('Editor');
+            assert.deepEqual(second.data.roles, ['Contributor']);
+        });
+    });
+
     describe('writeGhostUsersJson', () => {
         it('Writes all users to a single JSON file', async () => {
             const ctx: any = new MigrateContext();
@@ -2546,6 +2587,10 @@ describe('MigrateContext', () => {
             assert.ok(content.meta.exported_on);
             assert.ok(!content.data.posts);
             assert.ok(!content.data.posts_authors);
+
+            // Ghost expects an array of role names, not a single "role" string
+            assert.deepEqual(content.data.users[0].roles, ['Contributor']);
+            assert.equal('role' in content.data.users[0], false);
 
             await rm(dir, {recursive: true, force: true});
             await ctx.close();

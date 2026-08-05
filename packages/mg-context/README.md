@@ -835,7 +835,7 @@ new AuthorContext({name: 'Alice', slug: 'alice', email: 'alice@example.com'})
 | `twitter`          | `string?` | 2000 |                                                              |
 | `meta_title`       | `string?` | 300  |                                                              |
 | `meta_description` | `string?` | 500  |                                                              |
-| `role`             | `enum`    | —    | `Contributor` (default), `Author`, `Editor`, `Administrator` |
+| `roles`            | `enum[]`  | —    | Defaults to `['Contributor']`. Each entry one of `Contributor`, `Author`, `Editor`, `Administrator` |
 
 ---
 

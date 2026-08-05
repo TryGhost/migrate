@@ -5,6 +5,8 @@ type FieldInfo = {
     required: boolean;
     maxLength?: number;
     choices?: string[];
+    /** Allowed values for each item, when the field is an array of enums */
+    elementChoices?: string[];
     defaultValue: any;
     hasDefault: boolean;
 };
@@ -79,6 +81,13 @@ export function getFieldInfo(fieldSchema: z.ZodType): FieldInfo {
 
     if (defType === 'enum') {
         info.choices = Object.values(inner._zod.def.entries) as string[];
+    }
+
+    if (defType === 'array') {
+        const {inner: element} = unwrap(inner._zod.def.element);
+        if (element._zod.def.type === 'enum') {
+            info.elementChoices = Object.values(element._zod.def.entries) as string[];
+        }
     }
 
     return info;
