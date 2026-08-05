@@ -34,8 +34,8 @@ catalogs:
       specifier: 11.0.0
       version: 11.0.0
     chalk:
-      specifier: 5.6.2
-      version: 5.6.2
+      specifier: 6.0.0
+      version: 6.0.0
     dotenv:
       specifier: 17.4.2
       version: 17.4.2
@@ -121,7 +121,7 @@ importers:
     dependencies:
       chalk:
         specifier: 'catalog:'
-        version: 5.6.2
+        version: 6.0.0
       cli-truncate:
         specifier: 6.1.1
         version: 6.1.1
@@ -674,7 +674,7 @@ importers:
     dependencies:
       chalk:
         specifier: 'catalog:'
-        version: 5.6.2
+        version: 6.0.0
       log-update:
         specifier: 'catalog:'
         version: 8.0.0
@@ -732,7 +732,7 @@ importers:
         version: 3.3.6
       chalk:
         specifier: 'catalog:'
-        version: 5.6.2
+        version: 6.0.0
       ora:
         specifier: 9.4.1
         version: 9.4.1
@@ -1081,7 +1081,7 @@ importers:
         version: 0.3.5
       chalk:
         specifier: 'catalog:'
-        version: 5.6.2
+        version: 6.0.0
       fs-extra:
         specifier: 'catalog:'
         version: 11.3.5
@@ -4081,6 +4081,10 @@ packages:
   chalk@5.6.2:
     resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
+
+  chalk@6.0.0:
+    resolution: {integrity: sha512-2uNTXIuTTxk7ciZgAU1BQcgnchcG0xXnrs6jzkQfj9SsRa9M2s5zE8WT96hS6KmG4MzWHSrvH43DF1m4XRkrFg==}
+    engines: {node: '>=22'}
 
   character-entities-html4@1.1.4:
     resolution: {integrity: sha512-HRcDxZuZqMx3/a+qrzxdBKBPUpxWEq9xw2OPZ3a/174ihfrQKVsFhqtthBInFy1zZ9GgZyFXOatNujm8M+El3g==}
@@ -9304,6 +9308,8 @@ snapshots:
       supports-color: 7.2.0
 
   chalk@5.6.2: {}
+
+  chalk@6.0.0: {}
 
   character-entities-html4@1.1.4: {}
 
