@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {describe, it, before, beforeEach, afterEach} from 'node:test';
+import {describe, it, after, before, beforeEach, afterEach} from 'node:test';
 import {readFile, writeFile, copyFile} from 'node:fs/promises';
 import fs, {chownSync, rmSync} from 'node:fs';
 import {join} from 'node:path';
@@ -11,6 +11,10 @@ import AssetScraper from '../index.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
 const fixturesPath = join(__dirname, '../../src/test/fixtures');
+
+// Keep the cache inside a throwaway dir rather than the user's real cache
+// location, which `CACHE_PATH` may point at
+const tmpPath = join(tmpdir(), `assetscraper-tests-${Date.now()}`);
 
 describe('Asset Scraper', () => {
     let fileCache: any;
@@ -51,11 +55,15 @@ describe('Asset Scraper', () => {
     });
 
     beforeEach(async () => {
-        fileCache = new fsUtils.FileCache('assetscraper-tests');
+        fileCache = new fsUtils.FileCache('assetscraper-tests', {tmpPath});
     });
 
     afterEach(async () => {
         await fileCache.emptyCurrentCacheDir();
+    });
+
+    after(() => {
+        rmSync(tmpPath, {recursive: true, force: true});
     });
 
     it('Runs tasks for a whole file', async () => {

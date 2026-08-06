@@ -1,17 +1,22 @@
 import assert from 'node:assert/strict';
-import {describe, it, beforeEach} from 'node:test';
+import {describe, it, after, beforeEach} from 'node:test';
 import {DatabaseSync} from 'node:sqlite';
 import {join} from 'node:path';
-import {mkdirSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {mkdirSync, rmSync} from 'node:fs';
 import AssetCache from '../lib/AssetCache.js';
 import fsUtils from '@tryghost/mg-fs-utils';
+
+// Keep the cache inside a throwaway dir rather than the user's real cache
+// location, which `CACHE_PATH` may point at
+const tmpPath = join(tmpdir(), `assetcache-tests-${Date.now()}`);
 
 describe('AssetCache from scratch', () => {
     let assetCache: any;
 
     beforeEach(async () => {
         assetCache = new AssetCache({
-            fileCache: new fsUtils.FileCache('assetcache-tests')
+            fileCache: new fsUtils.FileCache('assetcache-tests', {tmpPath})
         });
 
         // Reset the DB (drop the table) and init it again
@@ -19,10 +24,9 @@ describe('AssetCache from scratch', () => {
         await assetCache.init();
     });
 
-    // afterEach(async () => {
-    //     // await assetCache.fileCache.emptyCurrentCacheDir();
-    //     await assetCache._reset();
-    // });
+    after(() => {
+        rmSync(tmpPath, {recursive: true, force: true});
+    });
 
     it('Starts with an empty cache', async () => {
         const result = await assetCache.getAll();
@@ -137,7 +141,7 @@ describe('AssetCache from scratch', () => {
         await assetCache.update(item.id, 'status', 200);
 
         // User deletes the row externally (e.g. to force re-download)
-        const fileCache = new fsUtils.FileCache('assetcache-tests');
+        const fileCache = new fsUtils.FileCache('assetcache-tests', {tmpPath});
         const dbPath = join(fileCache.tmpDir, 'assets-cache', 'assets.db');
         const db = new DatabaseSync(dbPath);
         db.exec(`DELETE FROM Assets WHERE src = '/wp-content/2024/11/01/lorem.jpg'`);
@@ -154,7 +158,7 @@ describe('AssetCache from scratch', () => {
     });
 
     it('Works with an existing Sequelize-created database', async () => {
-        const fileCache = new fsUtils.FileCache('assetcache-tests');
+        const fileCache = new fsUtils.FileCache('assetcache-tests', {tmpPath});
         const dbDir = join(fileCache.tmpDir, 'assets-cache');
         mkdirSync(dbDir, {recursive: true});
         const dbPath = join(dbDir, 'assets.db');
@@ -191,7 +195,7 @@ describe('AssetCache from scratch', () => {
     });
 
     it('Adds timestamp columns to a table missing them', async () => {
-        const fileCache = new fsUtils.FileCache('assetcache-tests');
+        const fileCache = new fsUtils.FileCache('assetcache-tests', {tmpPath});
         const dbDir = join(fileCache.tmpDir, 'assets-cache');
         mkdirSync(dbDir, {recursive: true});
         const dbPath = join(dbDir, 'assets.db');
