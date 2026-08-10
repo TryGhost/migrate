@@ -1,13 +1,10 @@
 import {z} from 'zod/v4';
 import {randomBytes} from 'node:crypto';
-import {createRequire} from 'node:module';
+import {htmlToLexical} from '@tryghost/mg-html-lexical';
 import MigrateBase from './MigrateBase.js';
 import TagContext, {TagObject, TagDataObject} from './TagContext.js';
 import AuthorContext, {AuthorObject, AuthorDataObject} from './AuthorContext.js';
 import type {DatabaseModels} from './database.js';
-
-const require = createRequire(import.meta.url);
-const lexicalConverter = require('@tryghost/kg-html-to-lexical') as typeof import('@tryghost/kg-html-to-lexical');
 
 export type ContentFormat = 'lexical' | 'html';
 
@@ -162,7 +159,7 @@ export default class PostContext extends MigrateBase {
         }
 
         if (this.#contentFormat === 'lexical') {
-            this.data.lexical = this.data.html ? JSON.stringify(lexicalConverter.htmlToLexical(this.data.html)) : null;
+            this.data.lexical = this.data.html ? JSON.stringify(htmlToLexical(this.data.html)) : null;
             this.data.mobiledoc = null;
         }
 

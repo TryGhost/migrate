@@ -1,8 +1,8 @@
 import {stat, mkdir, open, writeFile} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
 import {EventEmitter} from 'node:events';
-import {createRequire} from 'node:module';
 import errors from '@tryghost/errors';
+import {htmlToLexical} from '@tryghost/mg-html-lexical';
 
 import MigrateBase from './MigrateBase.js';
 import PostContext, {PostConstructorOptions, normalizeContentFormat, type ContentFormat} from './PostContext.js';
@@ -21,9 +21,6 @@ import {
     findAllPostIdsWhere,
     findPostsByIds
 } from './db-helpers.js';
-
-const require = createRequire(import.meta.url);
-const lexicalConverter = require('@tryghost/kg-html-to-lexical') as typeof import('@tryghost/kg-html-to-lexical');
 
 type FindPostsOptions = {
     slug?: string;
@@ -248,7 +245,7 @@ export default class MigrateContext extends MigrateBase {
                     let changed = false;
 
                     if (!data.lexical && data.html) {
-                        data.lexical = JSON.stringify(lexicalConverter.htmlToLexical(data.html));
+                        data.lexical = JSON.stringify(htmlToLexical(data.html));
                         changed = true;
                     }
 

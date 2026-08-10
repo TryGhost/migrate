@@ -35,8 +35,8 @@
   },
   "dependencies": {
     "@tryghost/errors": "catalog:",
-    "@tryghost/kg-html-to-lexical": "catalog:",
     "@tryghost/listr-smart-renderer": "workspace:*",
+    "@tryghost/mg-html-lexical": "workspace:*",
     "@tryghost/string": "catalog:",
     "@tryghost/validator": "3.2.6",
     "c8": "catalog:",

@@ -1,5 +1,5 @@
-import {createRequire} from 'node:module';
 import errors from '@tryghost/errors';
+import lexicalConverter from './lexical-converter.js';
 import {convertToHTMLCard} from './convert-to-html-card.js';
 
 export type postOptions = {
@@ -20,10 +20,7 @@ const emptyParagraph = {
     version: 1
 };
 
-const require = createRequire(import.meta.url);
-const {htmlToLexical} = require('@tryghost/kg-html-to-lexical') as {
-    htmlToLexical: (typeof import('@tryghost/kg-html-to-lexical'))['htmlToLexical'];
-};
+const {htmlToLexical} = lexicalConverter;
 
 const convertPost = (post: postOptions, htmlCard = false) => {
     if (typeof post.html === 'undefined' || post.html === 'undefined') {
