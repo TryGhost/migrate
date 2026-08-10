@@ -194,6 +194,62 @@ describe('Convert', function () {
         assert.equal(ctx.result.db[0].data.posts.length, 1);
     });
 
+    it('Yields to the event loop between conversions', async function () {
+        const ctx: any = {
+            options: {
+                fallBackHTMLCard: false
+            },
+            result: {
+                posts: [
+                    {
+                        title: 'Title 1',
+                        slug: 'slug-1',
+                        html: '<p>Content 1</p>'
+                    },
+                    {
+                        title: 'Title 2',
+                        slug: 'slug-2',
+                        html: '<p>Content 2</p>'
+                    },
+                    {
+                        title: 'Title 3',
+                        slug: 'slug-3',
+                        html: '<p>Content 3</p>'
+                    }
+                ]
+            }
+        };
+
+        const tasks = convert(ctx, false);
+
+        // Count event-loop turns while the tasks run. Without a yield per task,
+        // the whole list runs as one microtask cascade and pending macrotasks
+        // (like jsdom's window-releasing nextTick callbacks) never fire until
+        // the end, pinning every JSDOM in memory at once.
+        let turns = 0;
+        let counting = true;
+        const countTurns = () => {
+            turns += 1;
+            if (counting) {
+                setImmediate(countTurns);
+            }
+        };
+        setImmediate(countTurns);
+
+        const taskRunner = makeTaskRunner(tasks, {
+            renderer: 'silent',
+            concurrent: 1
+        });
+
+        await taskRunner.run();
+        counting = false;
+
+        assert.ok(turns >= 3, `expected at least one event-loop turn per post, saw ${turns}`);
+        assert.deepEqual(Object.keys(ctx.result.posts[0]), ['title', 'slug', 'lexical']);
+        assert.deepEqual(Object.keys(ctx.result.posts[1]), ['title', 'slug', 'lexical']);
+        assert.deepEqual(Object.keys(ctx.result.posts[2]), ['title', 'slug', 'lexical']);
+    });
+
     it('Handles empty content', async function () {
         const ctx: any = {
             options: {

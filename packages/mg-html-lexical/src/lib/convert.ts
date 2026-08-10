@@ -1,3 +1,4 @@
+import {setImmediate} from 'node:timers/promises';
 import {convertPost} from './convert-post.js';
 import type {postOptions} from './convert-post.js';
 
@@ -22,6 +23,14 @@ const convert = (ctx: any, htmlCard: boolean) => {
         tasks.push({
             title: `Converting ${post.title}`,
             task: async () => {
+                // Yield to the event loop before each conversion. Each JSDOM created
+                // by htmlToLexical schedules a `process.nextTick` that closes over the
+                // whole window, and nextTick callbacks only run once the microtask
+                // queue is empty. Without a real event-loop turn between tasks, every
+                // window (~1MB) stays pinned until the whole list finishes, which
+                // OOMs on large sites.
+                await setImmediate();
+
                 try {
                     convertPost(post, htmlCard);
                 } catch (error) {
