@@ -38,7 +38,17 @@ const convertPost = (post: postOptions, htmlCard = false) => {
             html: post.html
         });
     } else {
-        const lexical = htmlToLexical(post.html);
+        // Lexical routes conversion errors to `onError` (default `console.error`)
+        // and carries on with an empty document, which silently blanks the post
+        // (e.g. inline MathML crashes Lexical's DOM walk). Throw instead so the
+        // failure surfaces and callers can fall back to an HTML card.
+        const lexical = htmlToLexical(post.html, {
+            editorConfig: {
+                onError: (error: Error) => {
+                    throw error;
+                }
+            }
+        });
         // Ensure the root has at least one child (Ghost rejects empty root children)
         if (lexical.root.children.length === 0) {
             lexical.root.children.push(emptyParagraph);

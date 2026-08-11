@@ -89,6 +89,20 @@ describe('Convert Tasks', function () {
         });
     });
 
+    it('Throws when Lexical conversion fails instead of writing an empty document', function () {
+        let post: postOptions = {
+            title: 'title',
+            slug: 'slug',
+            // Inline MathML: jsdom gives MathML elements no `style` property,
+            // which crashes Lexical's DOM walk. Lexical's default onError would
+            // swallow this and emit a blank document.
+            html: '<p>a <math><mi>x</mi></math> b</p>'
+        };
+
+        assert.throws(() => convertPost(post, false), TypeError);
+        assert.equal(post.lexical, undefined);
+    });
+
     it('Can catch an error', function () {
         // `convertPost` will not be expecting the `wrong_key` property, so it will throw an error
         let post: postOptionsTest = {

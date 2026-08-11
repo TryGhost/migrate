@@ -194,6 +194,41 @@ describe('Convert', function () {
         assert.equal(ctx.result.db[0].data.posts.length, 1);
     });
 
+    it('Falls back to HTML card when Lexical conversion fails', async function () {
+        // Inline MathML crashes Lexical's DOM walk; with fallBackHTMLCard the
+        // content must be preserved as an HTML card instead of a blank document
+        const mathHtml = '<p>a <math><mi>x</mi></math> b</p>';
+        const ctx: any = {
+            options: {
+                fallBackHTMLCard: true
+            },
+            result: {
+                posts: [
+                    {
+                        title: 'Math post',
+                        slug: 'math-post',
+                        html: mathHtml
+                    }
+                ]
+            }
+        };
+
+        const tasks = convert(ctx, false);
+
+        const taskRunner = makeTaskRunner(tasks, {
+            renderer: 'silent'
+        });
+
+        await taskRunner.run();
+
+        const post = ctx.result.posts[0];
+        assert.equal(post.html, undefined);
+
+        const lexical = JSON.parse(post.lexical);
+        assert.equal(lexical.root.children[0].type, 'html');
+        assert.equal(lexical.root.children[0].html, mathHtml);
+    });
+
     it('Yields to the event loop between conversions', async function () {
         const ctx: any = {
             options: {
