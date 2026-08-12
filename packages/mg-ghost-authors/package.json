@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-ghost-authors",
-  "version": "0.10.3",
+  "version": "0.10.4",
   "description": "Fetch existing Ghost users and merge with migrated authors",
   "repository": {
     "type": "git",
