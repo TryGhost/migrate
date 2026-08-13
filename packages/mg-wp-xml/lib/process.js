@@ -540,6 +540,53 @@ const processUsers = xml => {
     return usersOutput;
 };
 
+// Parse one or more XML export strings and merge them into a single
+// `{rss: {channel}}` structure. WordPress exports split over multiple files
+// each contain a complete document, so items are combined and authors are
+// deduplicated across all channels
+const parseAndMergeInputs = input => {
+    const parser = new XMLParser(parserOptions);
+    const inputs = Array.isArray(input) ? input : [input];
+
+    const channels = [];
+
+    for (const raw of inputs) {
+        const xml = parser.parse(raw);
+
+        // If a string contains multiple concatenated documents, `rss` is
+        // parsed as an array of documents rather than a single object
+        for (const rss of ensureArray(xml?.rss)) {
+            channels.push(...ensureArray(rss?.channel));
+        }
+    }
+
+    if (channels.length <= 1) {
+        return {rss: {channel: channels[0] ?? null}};
+    }
+
+    const mergedChannel = {...channels[0]};
+
+    mergedChannel.item = channels.flatMap(channel => ensureArray(channel.item));
+
+    const seenAuthorLogins = new Set();
+    mergedChannel['wp:author'] = channels
+        .flatMap(channel => ensureArray(channel['wp:author']))
+        .filter(author => {
+            const login = getText(author['wp:author_login']);
+            if (seenAuthorLogins.has(login)) {
+                return false;
+            }
+            seenAuthorLogins.add(login);
+            return true;
+        });
+
+    if (!mergedChannel.link) {
+        mergedChannel.link = channels.find(channel => channel.link)?.link;
+    }
+
+    return {rss: {channel: mergedChannel}};
+};
+
 const all = async (input, {options, fileCache}) => {
     const {drafts, pages, posts} = options;
     const output = {
@@ -551,10 +598,9 @@ const all = async (input, {options, fileCache}) => {
         return new errors.NoContentError({message: 'Input file is empty'});
     }
 
-    const parser = new XMLParser(parserOptions);
-    const xml = parser.parse(input);
+    const xml = parseAndMergeInputs(input);
 
-    // Release the raw XML string now that it's parsed
+    // Release the raw XML string(s) now that they're parsed
     input = null; // eslint-disable-line no-param-reassign
 
     // grab the URL of the site we're importing

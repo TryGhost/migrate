@@ -14,6 +14,8 @@ const readFolder = async path => {
         dot: false
     });
 
+    entries.sort();
+
     let out = [];
 
     for (const entry of entries) {
@@ -21,9 +23,10 @@ const readFolder = async path => {
         out.push(data);
     }
 
-    // When reading multiple files, we need to merge them
-    // Extract channel content from each and combine
-    return out.join('');
+    // Return one string per file. Concatenating raw XML documents produces an
+    // invalid document with multiple roots, so the processor parses each
+    // document separately and merges the parsed channels
+    return out;
 };
 
 const detectType = async path => {

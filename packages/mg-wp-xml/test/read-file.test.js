@@ -27,8 +27,13 @@ describe('Read file', function () {
     it('Can read folder of XML files', async function () {
         const result = await readFolder(join(__dirname, 'fixtures/multiple'));
 
-        assert.equal(result.match(/<wp:category>/g).length, 1);
-        assert.equal(result.match(/<wp:author>/g).length, 2);
-        assert.equal(result.match(/<item>/g).length, 6);
+        // One string per file, so each document can be parsed on its own
+        assert.equal(Array.isArray(result), true);
+        assert.equal(result.length, 3);
+
+        const combined = result.join('');
+        assert.equal(combined.match(/<wp:category>/g).length, 1);
+        assert.equal(combined.match(/<wp:author>/g).length, 3);
+        assert.equal(combined.match(/<item>/g).length, 6);
     });
 });

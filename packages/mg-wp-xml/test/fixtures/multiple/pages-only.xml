@@ -7,6 +7,14 @@
     <description />
     <language>en-US</language>
     <wp:wxr_version>1.2</wp:wxr_version>
+    <wp:author>
+      <wp:author_id>-31071980</wp:author_id>
+      <wp:author_login>harry@example.com</wp:author_login>
+      <wp:author_email>harry@example.com</wp:author_email>
+      <wp:author_display_name><![CDATA[Harry Potter]]></wp:author_display_name>
+      <wp:author_first_name><![CDATA[Harry]]></wp:author_first_name>
+      <wp:author_last_name><![CDATA[Potter]]></wp:author_last_name>
+    </wp:author>
     <item>
       <link>https://example.com/services</link>
       <title>Services</title>

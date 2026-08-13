@@ -4,6 +4,7 @@ import path from 'node:path';
 import {promises as fs} from 'node:fs';
 import {XMLParser} from 'fast-xml-parser';
 import process, {processWPMeta} from '../lib/process.js';
+import {readFileOrFolder} from '../lib/read-file.js';
 
 const parserOptions = {
     ignoreAttributes: false,
@@ -517,6 +518,46 @@ describe('Process', function () {
         const posts = processed.posts;
 
         assert.equal(posts.length, 1);
+    });
+
+    it('Can process a folder of multiple XML files', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                posts: true
+            }
+        };
+
+        const input = await readFileOrFolder(path.join(__dirname, 'fixtures', 'multiple'));
+        const processed = await process.all(input, ctx);
+
+        // 3 posts from posts-only.xml + 1 page from pages-only.xml
+        // (the customcpt item and the attachment are excluded)
+        assert.equal(processed.posts.length, 4);
+
+        const types = processed.posts.map(post => post.wpPostType);
+        assert.equal(types.filter(type => type === 'post').length, 3);
+        assert.equal(types.filter(type => type === 'page').length, 1);
+
+        // Authors appear in both posts-only.xml and pages-only.xml,
+        // and are deduplicated by login when merging
+        assert.equal(processed.users.length, 2);
+        const userSlugs = processed.users.map(user => user.data.slug);
+        assert.ok(userSlugs.includes('hermione-example-com'));
+        assert.ok(userSlugs.includes('harry-example-com'));
+
+        // The site URL is read from the merged channel
+        assert.equal(ctx.options.url, 'https://example.com');
+
+        // The feature image comes from an attachment in a different file
+        // than the post that references it
+        const withImage = processed.posts.filter(post => post.data.feature_image);
+        assert.equal(withImage.length, 2);
+        assert.equal(
+            withImage[0].data.feature_image,
+            'https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1268&q=80'
+        );
     });
 
     it('Can read post_meta', async function () {
