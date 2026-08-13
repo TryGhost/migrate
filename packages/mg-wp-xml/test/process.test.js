@@ -2,18 +2,9 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import path from 'node:path';
 import {promises as fs} from 'node:fs';
-import {XMLParser} from 'fast-xml-parser';
+import {xmlUtils} from '@tryghost/mg-utils';
 import process, {processWPMeta} from '../lib/process.js';
 import {readFileOrFolder} from '../lib/read-file.js';
-
-const parserOptions = {
-    ignoreAttributes: false,
-    attributeNamePrefix: '@_',
-    textNodeName: '#text',
-    parseTagValue: false,
-    parseAttributeValue: false,
-    trimValues: false
-};
 
 const __dirname = new URL('.', import.meta.url).pathname;
 
@@ -562,8 +553,7 @@ describe('Process', function () {
 
     it('Can read post_meta', async function () {
         const input = await readSync('has-meta.xml');
-        const parser = new XMLParser(parserOptions);
-        const xml = parser.parse(input);
+        const xml = await xmlUtils.parseXml(input);
 
         const items = xml?.rss?.channel?.item || [];
         const itemsArray = Array.isArray(items) ? items : [items];

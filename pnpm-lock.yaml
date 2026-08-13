@@ -956,9 +956,6 @@ importers:
       fast-glob:
         specifier: 3.3.3
         version: 3.3.3
-      fast-xml-parser:
-        specifier: 'catalog:'
-        version: 5.10.1
       markdown-it:
         specifier: 'catalog:'
         version: 15.0.0

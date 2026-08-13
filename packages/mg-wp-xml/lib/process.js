@@ -1,10 +1,9 @@
 import {URL} from 'node:url';
-import {XMLParser} from 'fast-xml-parser';
 import {slugify} from '@tryghost/string';
 import errors from '@tryghost/errors';
 import MarkdownIt from 'markdown-it';
 import MgWpAPI from '@tryghost/mg-wp-api';
-import {domUtils, youtubeUtils, stringUtils} from '@tryghost/mg-utils';
+import {domUtils, xmlUtils, youtubeUtils, stringUtils} from '@tryghost/mg-utils';
 import {isSerialized, unserialize} from 'php-serialize';
 
 /**
@@ -21,16 +20,7 @@ const fixSerializedLengths = value => {
 
 const {processFragment} = domUtils;
 const {getYouTubeID} = youtubeUtils;
-
-// XML Parser configuration
-const parserOptions = {
-    ignoreAttributes: false,
-    attributeNamePrefix: '@_',
-    textNodeName: '#text',
-    parseTagValue: false,
-    parseAttributeValue: false,
-    trimValues: false
-};
+const {parseXml} = xmlUtils;
 
 // Helper to ensure value is always an array
 const ensureArray = value => {
@@ -544,14 +534,18 @@ const processUsers = xml => {
 // `{rss: {channel}}` structure. WordPress exports split over multiple files
 // each contain a complete document, so items are combined and authors are
 // deduplicated across all channels
-const parseAndMergeInputs = input => {
-    const parser = new XMLParser(parserOptions);
+const parseAndMergeInputs = async input => {
     const inputs = Array.isArray(input) ? input : [input];
 
     const channels = [];
 
     for (const raw of inputs) {
-        const xml = parser.parse(raw);
+        // Skip empty documents, which parseXml would treat as a file path
+        if (!raw || !raw.trim()) {
+            continue;
+        }
+
+        const xml = await parseXml(raw);
 
         // If a string contains multiple concatenated documents, `rss` is
         // parsed as an array of documents rather than a single object
@@ -598,7 +592,7 @@ const all = async (input, {options, fileCache}) => {
         return new errors.NoContentError({message: 'Input file is empty'});
     }
 
-    const xml = parseAndMergeInputs(input);
+    const xml = await parseAndMergeInputs(input);
 
     // Release the raw XML string(s) now that they're parsed
     input = null; // eslint-disable-line no-param-reassign

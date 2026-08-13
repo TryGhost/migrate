@@ -1,20 +1,7 @@
-import {XMLParser} from 'fast-xml-parser';
-import {readFile} from './read-file.js';
-
-const parserOptions = {
-    ignoreAttributes: false,
-    attributeNamePrefix: '@_',
-    textNodeName: '#text',
-    parseTagValue: false,
-    parseAttributeValue: false,
-    trimValues: false
-};
+import {xmlUtils} from '@tryghost/mg-utils';
 
 const contentStats = async xmlPath => {
-    const input = await readFile(xmlPath);
-
-    const parser = new XMLParser(parserOptions);
-    const xml = parser.parse(input);
+    const xml = await xmlUtils.parseXml(xmlPath);
 
     const items = xml?.rss?.channel?.item || [];
     // Ensure items is always an array (single item becomes object)

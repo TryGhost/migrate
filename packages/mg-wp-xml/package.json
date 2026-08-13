@@ -27,7 +27,6 @@
     "@tryghost/string": "catalog:",
     "@tryghost/mg-wp-api": "workspace:*",
     "fast-glob": "3.3.3",
-    "fast-xml-parser": "catalog:",
     "markdown-it": "catalog:",
     "php-serialize": "5.1.3"
   }
