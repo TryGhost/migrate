@@ -306,6 +306,95 @@ describe('Process', function () {
         );
     });
 
+    it('Uses the attachment description as the feature image caption by default', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                posts: true
+            }
+        };
+        const input = await readSync('feature-image-captions.xml');
+        const processed = await process.all(input, ctx);
+
+        const post = processed.posts[0];
+        assert.deepEqual(post.data.slug, 'post-with-described-image');
+        assert.deepEqual(post.data.feature_image, 'https://example.com/wp-content/uploads/2013/06/described-image.jpg');
+        assert.deepEqual(post.data.feature_image_caption, 'The caption from the attachment description.');
+    });
+
+    it('Uses the attachment description as the feature image caption when featureImageCaption is true', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                posts: true,
+                featureImageCaption: true
+            }
+        };
+        const input = await readSync('feature-image-captions.xml');
+        const processed = await process.all(input, ctx);
+
+        const post = processed.posts[0];
+        assert.deepEqual(post.data.feature_image_caption, 'The caption from the attachment description.');
+    });
+
+    it('Has no feature image caption when featureImageCaption is false', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                posts: true,
+                featureImageCaption: false
+            }
+        };
+        const input = await readSync('feature-image-captions.xml');
+        const processed = await process.all(input, ctx);
+
+        const post = processed.posts[0];
+        // The image itself and its alt are unaffected by the flag
+        assert.deepEqual(post.data.feature_image, 'https://example.com/wp-content/uploads/2013/06/described-image.jpg');
+        assert.deepEqual(post.data.feature_image_caption, null);
+    });
+
+    it('Has no feature image caption when the attachment has no description', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                posts: true
+            }
+        };
+        const input = await readSync('feature-image-captions.xml');
+        const processed = await process.all(input, ctx);
+
+        const post = processed.posts[1];
+        assert.deepEqual(post.data.slug, 'post-with-title-only-image');
+        // The attachment resolved, but its title is not used as a caption fallback
+        assert.deepEqual(
+            post.data.feature_image,
+            'https://example.com/wp-content/uploads/2013/06/title-only-image.jpg'
+        );
+        assert.deepEqual(post.data.feature_image_caption, null);
+    });
+
+    it('Has no feature image caption when the post has no feature image', async function () {
+        let ctx = {
+            options: {
+                drafts: true,
+                pages: true,
+                posts: true
+            }
+        };
+        const input = await readSync('feature-image-captions.xml');
+        const processed = await process.all(input, ctx);
+
+        const post = processed.posts[2];
+        assert.deepEqual(post.data.slug, 'post-without-featured-image');
+        assert.deepEqual(post.data.feature_image, null);
+        assert.deepEqual(post.data.feature_image_caption, null);
+    });
+
     it('Can handle empty post slugs', async function () {
         let ctx = {
             options: {

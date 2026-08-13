@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:wp="http://wordpress.org/export/1.2/">
+  <channel>
+    <title>Acme Company</title>
+    <link>https://example.com</link>
+    <pubDate>Tue, 02 Apr 2013 05:16:20 +0000</pubDate>
+    <description />
+    <language>en-US</language>
+    <wp:wxr_version>1.2</wp:wxr_version>
+    <item>
+      <title>Post with Described Image</title>
+      <link>/blog/post-with-described-image.html</link>
+      <content:encoded><![CDATA[<p>This post's featured image has a description.</p>]]></content:encoded>
+      <wp:post_name>post-with-described-image</wp:post_name>
+      <wp:post_type>post</wp:post_type>
+      <wp:post_id>20</wp:post_id>
+      <wp:status>publish</wp:status>
+      <pubDate>Fri, 07 Jun 2013 03:00:44 +0000</pubDate>
+      <dc:creator>hermione@example.com</dc:creator>
+      <wp:postmeta>
+        <wp:meta_key>_thumbnail_id</wp:meta_key>
+        <wp:meta_value><![CDATA[25]]></wp:meta_value>
+      </wp:postmeta>
+    </item>
+    <item>
+      <title>Post with Title-Only Image</title>
+      <link>/blog/post-with-title-only-image.html</link>
+      <content:encoded><![CDATA[<p>This post's featured image only has a title, no description.</p>]]></content:encoded>
+      <wp:post_name>post-with-title-only-image</wp:post_name>
+      <wp:post_type>post</wp:post_type>
+      <wp:post_id>21</wp:post_id>
+      <wp:status>publish</wp:status>
+      <pubDate>Fri, 07 Jun 2013 03:00:44 +0000</pubDate>
+      <dc:creator>hermione@example.com</dc:creator>
+      <wp:postmeta>
+        <wp:meta_key>_thumbnail_id</wp:meta_key>
+        <wp:meta_value><![CDATA[26]]></wp:meta_value>
+      </wp:postmeta>
+    </item>
+    <item>
+      <title>Post without Featured Image</title>
+      <link>/blog/post-without-featured-image.html</link>
+      <content:encoded><![CDATA[<p>This post has no featured image at all.</p>]]></content:encoded>
+      <wp:post_name>post-without-featured-image</wp:post_name>
+      <wp:post_type>post</wp:post_type>
+      <wp:post_id>22</wp:post_id>
+      <wp:status>publish</wp:status>
+      <pubDate>Fri, 07 Jun 2013 03:00:44 +0000</pubDate>
+      <dc:creator>hermione@example.com</dc:creator>
+    </item>
+    <item>
+      <wp:attachment_url>https://example.com/wp-content/uploads/2013/06/described-image.jpg</wp:attachment_url>
+      <link>https://example.com/wp-content/uploads/2013/06/described-image.jpg</link>
+      <title>Described Image Title</title>
+      <wp:post_name>described-image-jpg</wp:post_name>
+      <wp:post_type>attachment</wp:post_type>
+      <wp:post_id>25</wp:post_id>
+      <wp:post_parent>20</wp:post_parent>
+      <wp:status>inherit</wp:status>
+      <content:encoded><![CDATA[The caption from the attachment description.]]></content:encoded>
+      <pubDate>Mon, 09 Oct 2017 01:30:56 +0000</pubDate>
+      <dc:creator>hermione@example.com</dc:creator>
+    </item>
+    <item>
+      <wp:attachment_url>https://example.com/wp-content/uploads/2013/06/title-only-image.jpg</wp:attachment_url>
+      <link>https://example.com/wp-content/uploads/2013/06/title-only-image.jpg</link>
+      <title>Title-Only Image Title</title>
+      <wp:post_name>title-only-image-jpg</wp:post_name>
+      <wp:post_type>attachment</wp:post_type>
+      <wp:post_id>26</wp:post_id>
+      <wp:post_parent>21</wp:post_parent>
+      <wp:status>inherit</wp:status>
+      <pubDate>Mon, 09 Oct 2017 01:30:56 +0000</pubDate>
+      <dc:creator>hermione@example.com</dc:creator>
+    </item>
+  </channel>
+</rss>

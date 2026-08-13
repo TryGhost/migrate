@@ -320,8 +320,7 @@ const processPost = async (post, users, options, fileCache) => {
             updated_at: postDate,
             feature_image: featureImage?.url ?? null,
             feature_image_alt: featureImage?.alt ?? null,
-            feature_image_caption:
-                featureImageCaption !== false ? (featureImage?.description ?? featureImage?.title ?? null) : null,
+            feature_image_caption: featureImageCaption !== false ? (featureImage?.description ?? null) : null,
             type: postType,
             // Use authors array only for multiple authors (Co-Authors Plus with 2+ authors)
             // Use single author field for backwards compatibility with single-author posts
