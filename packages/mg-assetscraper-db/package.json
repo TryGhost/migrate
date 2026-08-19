@@ -50,7 +50,7 @@
     "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/string": "catalog:",
     "escape-string-regexp": "catalog:",
-    "file-type": "22.0.1",
+    "file-type": "22.0.2",
     "heic-convert": "2.1.0",
     "sharp": "catalog:",
     "transliteration": "catalog:"

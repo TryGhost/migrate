@@ -162,8 +162,8 @@ importers:
         specifier: 'catalog:'
         version: 5.0.0
       file-type:
-        specifier: 22.0.1
-        version: 22.0.1(supports-color@7.2.0)
+        specifier: 22.0.2
+        version: 22.0.2(supports-color@7.2.0)
       heic-convert:
         specifier: 2.1.0
         version: 2.1.0
@@ -4607,8 +4607,8 @@ packages:
     resolution: {integrity: sha512-yaduQFRKLXYOGgEn6AZau90j3ggSOyiqXU0F9JZfeXYhNa+Jk4X+s45A2zg5jns87GAFa34BBm2kXw4XpNcbdg==}
     engines: {node: '>=8'}
 
-  file-type@22.0.1:
-    resolution: {integrity: sha512-ww5Mhre0EE+jmBvOXTmXAbEMuZE7uX4a3+oRCQFNj8w++g3ev913N6tXQz0XTXbueQ5TWQfm6BdaViEHHn8bhA==}
+  file-type@22.0.2:
+    resolution: {integrity: sha512-0H8TsCUGBLx+V5adH3EY52hTAcyLKbV1D4gq5cIOJ6DnQAHeV9Z2Hhuc5CoBX4YmvB2oL+JIC84z0qO7JsCoNw==}
     engines: {node: '>=22'}
 
   fill-range@7.1.1:
@@ -9907,7 +9907,7 @@ snapshots:
     dependencies:
       escape-string-regexp: 1.0.5
 
-  file-type@22.0.1(supports-color@7.2.0):
+  file-type@22.0.2(supports-color@7.2.0):
     dependencies:
       '@tokenizer/inflate': 0.4.1(supports-color@7.2.0)
       strtok3: 10.3.5
