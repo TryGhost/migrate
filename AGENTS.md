@@ -127,15 +127,29 @@ TypeScript packages live in `src/` and compile to `build/`.
 ```json
 {
   "type": "module",
+  "types": "./build/index.d.ts",
   "exports": {
     ".": {
+      "types": "./build/index.d.ts",
       "source": "./src/index.ts",
       "default": "./build/index.js"
     }
   },
-  "files": ["build"]
+  "files": ["build"],
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./build/index.d.ts",
+        "default": "./build/index.js"
+      }
+    }
+  }
 }
 ```
+
+**Why this shape:**
+- The `types` condition inside `exports` is required — when an `exports` map is present, TypeScript under `moduleResolution: NodeNext` resolves types through it and ignores the top-level `types` field. The top-level field is kept for older resolution modes and must point at `./build/index.d.ts` (the file `tsc` actually emits).
+- The `source` condition lets workspace packages import each other's TypeScript directly during development, but `src/` is not published (`files: ["build"]`), so `publishConfig.exports` overrides the map at publish time to drop `source` — otherwise the published package would point at a file that doesn't exist.
 
 ## Testing Patterns
 
@@ -216,13 +230,24 @@ Place test fixtures in `test/fixtures/` (JS) or `src/test/fixtures/` (TS).
      "name": "@tryghost/mg-newsource",
      "version": "0.0.1",
      "type": "module",
+     "types": "./build/index.d.ts",
      "exports": {
        ".": {
+         "types": "./build/index.d.ts",
          "source": "./src/index.ts",
          "default": "./build/index.js"
        }
      },
      "files": ["build"],
+     "publishConfig": {
+       "access": "public",
+       "exports": {
+         ".": {
+           "types": "./build/index.d.ts",
+           "default": "./build/index.js"
+         }
+       }
+     },
      "scripts": {
        "build": "tsc --build",
        "test": "pnpm build && node --test build/test"

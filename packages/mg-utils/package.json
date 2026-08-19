@@ -9,8 +9,10 @@
   "author": "Ghost Foundation",
   "license": "MIT",
   "type": "module",
+  "types": "./build/index.d.ts",
   "exports": {
     ".": {
+      "types": "./build/index.d.ts",
       "source": "./src/index.ts",
       "default": "./build/index.js"
     }
@@ -18,6 +20,14 @@
   "files": [
     "build"
   ],
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./build/index.d.ts",
+        "default": "./build/index.js"
+      }
+    }
+  },
   "scripts": {
     "build": "tsc --build",
     "test": "c8 --100 node --test 'build/test/**/*.test.js'",

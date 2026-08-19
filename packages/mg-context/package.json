@@ -10,9 +10,10 @@
   "license": "MIT",
   "type": "module",
   "main": "build/index.js",
-  "types": "build/types.d.ts",
+  "types": "./build/index.d.ts",
   "exports": {
     ".": {
+      "types": "./build/index.d.ts",
       "source": "./src/index.ts",
       "default": "./build/index.js"
     }
@@ -28,7 +29,13 @@
     "build"
   ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./build/index.d.ts",
+        "default": "./build/index.js"
+      }
+    }
   },
   "devDependencies": {
     "@types/node": "catalog:"
