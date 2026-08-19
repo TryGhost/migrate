@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-beehiiv-api-members",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "repository": "https://github.com/TryGhost/migrate/tree/main/packages/mg-beehiiv-api-members",
   "author": "Ghost Foundation",
   "license": "MIT",
