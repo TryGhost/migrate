@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-mailchimp-members",
-  "version": "0.14.5",
+  "version": "0.14.6",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TryGhost/migrate.git",
