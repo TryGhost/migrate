@@ -1,3 +1,4 @@
+import {randomUUID} from 'node:crypto';
 import {domUtils} from '@tryghost/mg-utils';
 // style-to-object's ESM types don't resolve correctly with NodeNext module resolution
 // eslint-disable-next-line
@@ -6,6 +7,7 @@ const styleToObject = _styleToObject as unknown as (style: string) => Record<str
 import escapeStringRegexp from 'escape-string-regexp';
 
 const {serializeChildren, replaceWith, parents, isComment, getCommentData, insertBefore, insertAfter} = domUtils;
+const htmlCardPattern = /<!--kg-card-begin: html-->[\s\S]*?<!--kg-card-end: html-->/g;
 
 interface CleanHTMLArgs {
     html?: string;
@@ -44,6 +46,16 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
     if (html === '') {
         return html;
     }
+
+    // HTML cards contain raw HTML which must remain byte-for-byte unchanged. Replace complete
+    // cards with comment placeholders so neither DOM parsing nor the cleanup steps can alter
+    // their contents, then restore them after the rest of the document has been processed.
+    const protectedHTMLCards = new Map<string, string>();
+    html = html.replace(htmlCardPattern, card => {
+        const placeholder = `<!--mg-clean-html-protected-card: ${randomUUID()}-->`;
+        protectedHTMLCards.set(placeholder, card);
+        return placeholder;
+    });
 
     return domUtils.processFragment(html, parsed => {
         // Remove left, center & right text alignment
@@ -323,6 +335,10 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
 
         // Remove empty attributes
         html = html.replace(/=""/g, '');
+
+        for (const [placeholder, card] of protectedHTMLCards) {
+            html = html.replace(placeholder, card);
+        }
 
         return html;
     });
