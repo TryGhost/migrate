@@ -23,7 +23,7 @@ catalog:
   "chalk": "6.0.0"
   "dotenv": "17.4.2"
   "escape-string-regexp": "5.0.0"
-  "fast-xml-parser": "5.10.1"
+  "fast-xml-parser": "5.11.0"
   "fs-extra": "11.4.0"
   "html-entities": "2.6.0"
   "listr2": "10.2.2"
