@@ -725,8 +725,8 @@ importers:
         specifier: 8.6.0
         version: 8.6.0(@types/node@24.13.2)
       '@inquirer/select':
-        specifier: 5.2.2
-        version: 5.2.2(@types/node@24.13.2)
+        specifier: 5.2.3
+        version: 5.2.3(@types/node@24.13.2)
       '@tryghost/pretty-cli':
         specifier: 'catalog:'
         version: 3.3.6
@@ -2193,8 +2193,8 @@ packages:
       '@types/node':
         optional: true
 
-  '@inquirer/select@5.2.2':
-    resolution: {integrity: sha512-RkI8dRHWt+bh04oLixvF1kFzKC7e5rqJoHKkzcqSHATebBXFC6GmrT8ddbVkgSzLV0HnHs2cPFuBINr8otij8Q==}
+  '@inquirer/select@5.2.3':
+    resolution: {integrity: sha512-KuRTodDa6xBXX2noIpjuitpX/QT7Sfav7dIZ/OfUY54Hxg95nrGoshSzxx6Ey7qqLbImKdiGkSDt7KjPXjQgmA==}
     engines: {node: '>=23.5.0 || ^22.13.0 || ^20.17.0'}
     peerDependencies:
       '@types/node': '>=18'
@@ -7453,7 +7453,7 @@ snapshots:
     dependencies:
       '@inquirer/ansi': 2.0.7
       '@inquirer/figures': 2.0.8
-      '@inquirer/type': 4.0.7(@types/node@24.13.2)
+      '@inquirer/type': 4.1.0(@types/node@24.13.2)
       cli-width: 4.1.0
       fast-wrap-ansi: 0.2.2
       mute-stream: 3.0.0
@@ -7530,7 +7530,7 @@ snapshots:
       '@inquirer/password': 5.1.2(@types/node@24.13.2)
       '@inquirer/rawlist': 5.3.2(@types/node@24.13.2)
       '@inquirer/search': 4.3.0(@types/node@24.13.2)
-      '@inquirer/select': 5.2.2(@types/node@24.13.2)
+      '@inquirer/select': 5.2.3(@types/node@24.13.2)
     optionalDependencies:
       '@types/node': 24.13.2
 
@@ -7549,12 +7549,12 @@ snapshots:
     optionalDependencies:
       '@types/node': 24.13.2
 
-  '@inquirer/select@5.2.2(@types/node@24.13.2)':
+  '@inquirer/select@5.2.3(@types/node@24.13.2)':
     dependencies:
       '@inquirer/ansi': 2.0.7
-      '@inquirer/core': 12.0.0(@types/node@24.13.2)
+      '@inquirer/core': 12.0.1(@types/node@24.13.2)
       '@inquirer/figures': 2.0.8
-      '@inquirer/type': 4.0.7(@types/node@24.13.2)
+      '@inquirer/type': 4.1.0(@types/node@24.13.2)
     optionalDependencies:
       '@types/node': 24.13.2
 
