@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@inquirer/input": "5.1.4",
-    "@inquirer/prompts": "8.6.0",
+    "@inquirer/prompts": "8.7.0",
     "@inquirer/select": "5.2.3",
     "@tryghost/pretty-cli": "catalog:",
     "chalk": "catalog:",
