@@ -70,7 +70,7 @@
     "@tryghost/string": "catalog:",
     "chalk": "catalog:",
     "fs-extra": "catalog:",
-    "pretty-ms": "9.3.0",
+    "pretty-ms": "9.3.1",
     "update-notifier": "7.3.1"
   }
 }
