@@ -48,6 +48,6 @@
     "@tryghost/validator": "3.2.6",
     "c8": "catalog:",
     "typescript": "catalog:",
-    "zod": "4.4.3"
+    "zod": "4.5.2"
   }
 }
