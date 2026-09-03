@@ -338,6 +338,10 @@ const processShortcodes = async ({html, options}) => {
         }
     });
 
+    shortcodes.add('et_pb_divider', ({content}) => {
+        return '<hr>';
+    });
+
     shortcodes.add('et_pb_image', ({attrs}) => {
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},

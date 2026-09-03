@@ -1175,6 +1175,14 @@ describe('Process shortcodes', function () {
         );
     });
 
+    it('Can handle Divi divider shortcodes', async function () {
+        let html = '<p>Hello</p>[et_pb_divider ][/et_pb_divider]<p>World</p>';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.equal(convertedHtml, '<p>Hello</p><hr><p>World</p>');
+    });
+
     it('Can handle advanced_iframe shortcodes', async function () {
         let html = '[advanced_iframe frameborder="0" height="200" scrolling="no" src="https://example.com?e=123456"]';
 
