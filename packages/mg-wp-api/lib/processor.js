@@ -338,6 +338,19 @@ const processShortcodes = async ({html, options}) => {
         }
     });
 
+    shortcodes.add('et_pb_image', ({attrs}) => {
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: attrs.src,
+                alt: attrs.alt,
+                caption: attrs.title_text
+            }
+        };
+
+        return serializer.serialize(imageCard.render(cardOpts));
+    });
+
     shortcodes.add('advanced_iframe', ({attrs}) => {
         return `<iframe src="${attrs.src}" height="${attrs.height}" style="border:0; width: 100%;" loading="lazy"></iframe>`;
     });

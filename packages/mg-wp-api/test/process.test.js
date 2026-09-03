@@ -1163,6 +1163,18 @@ describe('Process shortcodes', function () {
         assert.equal(convertedHtml, '<p> Hello</p>');
     });
 
+    it('Can handle Divi image shortcodes', async function () {
+        let html =
+            '<p>Hello</p>[et_pb_image src="https://example.com/path/to/image.jpg" alt="Scenic View" title_text="View of a landscape"][/et_pb_image]<p>World</p>';
+
+        let convertedHtml = await processor.processShortcodes({html});
+
+        assert.equal(
+            convertedHtml,
+            '<p>Hello</p><figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://example.com/path/to/image.jpg" class="kg-image" alt="Scenic View" loading="lazy"><figcaption>View of a landscape</figcaption></figure><p>World</p>'
+        );
+    });
+
     it('Can handle advanced_iframe shortcodes', async function () {
         let html = '[advanced_iframe frameborder="0" height="200" scrolling="no" src="https://example.com?e=123456"]';
 
