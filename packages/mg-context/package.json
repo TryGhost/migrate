@@ -45,7 +45,7 @@
     "@tryghost/listr-smart-renderer": "workspace:*",
     "@tryghost/mg-html-lexical": "workspace:*",
     "@tryghost/string": "catalog:",
-    "@tryghost/validator": "3.2.6",
+    "@tryghost/validator": "3.2.13",
     "c8": "catalog:",
     "typescript": "catalog:",
     "zod": "4.5.4"
