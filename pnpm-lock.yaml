@@ -187,7 +187,7 @@ overrides:
   trim: ^1.0.1
   parse-link-header: ^2.0.0
   form-data: ^4.0.6
-  js-yaml@3: ^3.15.0
+  js-yaml@3: ^5.0.0
 
 importers:
 
@@ -4006,9 +4006,6 @@ packages:
     resolution: {integrity: sha512-fV1orZfsnPn9BaSByR/qE67rJCLJEy2Ox5bq7nJh+jquWaNh6Sfec75kJ2T6PtdGUbPQlrVoSVCEOa5SdiTQ1g==}
     engines: {node: '>=18'}
 
-  argparse@1.0.10:
-    resolution: {integrity: sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==}
-
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
 
@@ -4676,11 +4673,6 @@ packages:
     resolution: {integrity: sha512-/veY75JbMK4j1yjvuUxuVsiS/hr/4iHs9FTT6cgTexxdE0Ly/glccBAkloH/DofkjRbZU3bnoj38mOmhkZ0lHw==}
     engines: {node: '>=12'}
 
-  esprima@4.0.1:
-    resolution: {integrity: sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==}
-    engines: {node: '>=4'}
-    hasBin: true
-
   esutils@2.0.3:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
@@ -5158,8 +5150,8 @@ packages:
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
-  js-yaml@3.15.2:
-    resolution: {integrity: sha512-6EuL879VkRA+1Cz578mKMiKvjPNEuk6+r1JaFzoSWejZmtf7xWbIyw1e3KkxlkzTIt9Taw6JBhEppG7utc1P+w==}
+  js-yaml@5.4.1:
+    resolution: {integrity: sha512-28R/k+NAjeuf7+CKlTxWZVExJGwVVLwY06DgEnOMz2gEpfNkDcD7QvyiVPT0xy0XXhU8vHsd4Ot42OOPdJG7dQ==}
     hasBin: true
 
   jsdom@29.1.1:
@@ -6024,9 +6016,6 @@ packages:
   source-map@0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
-
-  sprintf-js@1.0.3:
-    resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
 
   srcset@5.0.3:
     resolution: {integrity: sha512-AZswtOXIsu0LeHdo6YY7d0r2pCH2Rl1D8ae1utvXUX4GxG3RggsVUAOFX1r8RI4YHFMYb4g89+UBPBv3mNUU2g==}
@@ -9342,10 +9331,6 @@ snapshots:
       - bare-buffer
       - react-native-b4a
 
-  argparse@1.0.10:
-    dependencies:
-      sprintf-js: 1.0.3
-
   argparse@2.0.1: {}
 
   argparse@3.0.1: {}
@@ -10039,8 +10024,6 @@ snapshots:
 
   escape-string-regexp@5.0.0: {}
 
-  esprima@4.0.1: {}
-
   esutils@2.0.3: {}
 
   event-target-shim@5.0.1: {}
@@ -10178,7 +10161,7 @@ snapshots:
 
   front-matter@4.0.2:
     dependencies:
-      js-yaml: 3.15.2
+      js-yaml: 5.4.1
 
   fs-constants@1.0.0: {}
 
@@ -10501,10 +10484,9 @@ snapshots:
 
   js-tokens@4.0.0: {}
 
-  js-yaml@3.15.2:
+  js-yaml@5.4.1:
     dependencies:
-      argparse: 1.0.10
-      esprima: 4.0.1
+      argparse: 2.0.1
 
   jsdom@29.1.1:
     dependencies:
@@ -11658,8 +11640,6 @@ snapshots:
       source-map: 0.6.1
 
   source-map@0.6.1: {}
-
-  sprintf-js@1.0.3: {}
 
   srcset@5.0.3: {}
 
