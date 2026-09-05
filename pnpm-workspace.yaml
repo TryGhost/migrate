@@ -26,7 +26,7 @@ catalog:
   "fast-xml-parser": "5.11.0"
   "fs-extra": "11.4.0"
   "html-entities": "2.6.0"
-  "listr2": "10.2.2"
+  "listr2": "11.1.0"
   "log-update": "8.0.0"
   "markdown-it": "15.0.0"
   "nock": "14.0.17"
