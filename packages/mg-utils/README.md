@@ -66,12 +66,13 @@ const result = parsed.html();
 ### DOM Manipulation Helpers
 
 ```js
-const {replaceWith, insertBefore, insertAfter, wrap, createElement, attr} = domUtils;
+const {replaceWith, replaceTag, insertBefore, insertAfter, wrap, createElement, attr} = domUtils;
 
 const parsed = parseFragment('<div><p>Old</p></div>');
 const p = parsed.$('p')[0];
 
 replaceWith(p, '<span>New</span>');        // Replace element with HTML string or Node
+replaceTag(el, 'u');                       // Change the tag, preserving attributes and children
 insertBefore(el, '<!--kg-card-begin-->');   // Insert before element
 insertAfter(el, '<!--kg-card-end-->');      // Insert after element
 wrap(el, '<figure></figure>');              // Wrap element in a new parent

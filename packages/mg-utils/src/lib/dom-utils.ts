@@ -190,6 +190,28 @@ export function replaceWith(el: Element | null, content: string | Node): void {
 }
 
 /**
+ * Replace an element's tag while preserving its attributes and child nodes
+ */
+export function replaceTag(el: Element | null, tagName: string): Element | null {
+    if (!el || !el.parentNode) {
+        return null;
+    }
+
+    const replacement = el.ownerDocument.createElement(tagName);
+
+    for (const attribute of el.attributes) {
+        replacement.setAttribute(attribute.name, attribute.value);
+    }
+
+    while (el.firstChild) {
+        replacement.appendChild(el.firstChild);
+    }
+
+    el.parentNode.replaceChild(replacement, el);
+    return replacement;
+}
+
+/**
  * Insert content before an element
  */
 export function insertBefore(el: Element | null, content: string | Node): void {

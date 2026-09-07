@@ -6,6 +6,7 @@ import {
     serializeNode,
     serializeChildren,
     replaceWith,
+    replaceTag,
     insertBefore,
     insertAfter,
     wrap,
@@ -342,6 +343,29 @@ describe('replaceWith', function () {
         const orphan = parsed.document.createElement('div');
 
         assert.doesNotThrow(() => replaceWith(orphan, '<span>New</span>'));
+    });
+});
+
+describe('replaceTag', function () {
+    it('replaces the tag while preserving attributes and child nodes', function () {
+        const parsed = parseFragment('<span class="highlight">Hello <strong>world</strong></span>');
+        const span = parsed.$('span')[0];
+
+        const replacement = replaceTag(span, 'u');
+
+        assert.equal(replacement?.tagName.toLowerCase(), 'u');
+        assert.equal(parsed.html(), '<u class="highlight">Hello <strong>world</strong></u>');
+    });
+
+    it('returns null for a null element', function () {
+        assert.equal(replaceTag(null, 'u'), null);
+    });
+
+    it('returns null for an element without a parent', function () {
+        const parsed = parseFragment('');
+        const orphan = parsed.document.createElement('span');
+
+        assert.equal(replaceTag(orphan, 'u'), null);
     });
 });
 
