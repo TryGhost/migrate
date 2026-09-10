@@ -1034,8 +1034,8 @@ importers:
         specifier: 'catalog:'
         version: 1.4.0
       tldts:
-        specifier: 7.4.11
-        version: 7.4.11
+        specifier: 7.4.12
+        version: 7.4.12
       wpapi:
         specifier: 1.2.2
         version: 1.2.2(supports-color@7.2.0)
@@ -6129,8 +6129,15 @@ packages:
   tldts-core@7.4.11:
     resolution: {integrity: sha512-CW3WN2rIIE/Of21mulhgnGOwoDyEFNygyIBOONSdyAuSATgMMUCpLeUlB+E8sAwA5xRV9hYPl+kyZ9citHCaKg==}
 
+  tldts-core@7.4.12:
+    resolution: {integrity: sha512-nYNzS2WRf4QJmjzFFgAxLOBjyBxAGRbCy9PVBPaglcYyYajh40VBn+v5Ngr96ZMc7oM0+aCJdtQnNejvdBnXMQ==}
+
   tldts@7.4.11:
     resolution: {integrity: sha512-aBiNayCfTQxuIJBm06M+xR14cYaYlDlSXZbgsnKzKNxDKUVq7KFwTjwBSsb7m9Y5xO8WfPnBc63WaYFMTGlvqw==}
+    hasBin: true
+
+  tldts@7.4.12:
+    resolution: {integrity: sha512-WylhSDKVeYnWXL3a+vKTaOxjnOeEGw938hImY8zoRWJjRRK/Jp1K+IihBzIONpUmW4e3WmXT6q5FW6vlESVZCA==}
     hasBin: true
 
   tmp@0.2.7:
@@ -11773,9 +11780,15 @@ snapshots:
 
   tldts-core@7.4.11: {}
 
+  tldts-core@7.4.12: {}
+
   tldts@7.4.11:
     dependencies:
       tldts-core: 7.4.11
+
+  tldts@7.4.12:
+    dependencies:
+      tldts-core: 7.4.12
 
   tmp@0.2.7: {}
 
