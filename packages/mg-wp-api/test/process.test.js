@@ -813,6 +813,14 @@ describe('Process WordPress HTML', function () {
         assert.equal(processed, '<blockquote><p>Paragraph 1<br><br>Paragraph 2<br><br>Paragraph 3</p></blockquote>');
     });
 
+    it('Can ignore empty <p> tags when combining <blockquote> content', async function () {
+        const html = `<blockquote><p>Paragraph 1</p><p>&nbsp;</p><p>Paragraph 2</p></blockquote>`;
+
+        const processed = await processor.processContent({html});
+
+        assert.equal(processed, '<blockquote><p>Paragraph 1<br><br>Paragraph 2</p></blockquote>');
+    });
+
     it('Can handle <cite> tags in <blockquote>s', async function () {
         const html = `<blockquote class="wp-block-quote"><p><em>Lorem ipsum,<br>dolor simet.<br>Lorem Ipsum.<br>Dolor Simet.</em></p><cite>Person Name, Role. <em>Company</em>. Country.</cite></blockquote>`;
 

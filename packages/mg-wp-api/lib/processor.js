@@ -1104,6 +1104,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
         if (textElements.length >= 2) {
             const combinedText = Array.from(textElements)
+                .filter(element => element.textContent.trim())
                 .map(element => {
                     return element.innerHTML.trim();
                 })
