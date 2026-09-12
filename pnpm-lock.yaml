@@ -552,8 +552,8 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
       zod:
-        specifier: 4.5.4
-        version: 4.5.4
+        specifier: 4.6.1
+        version: 4.6.1
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -6550,6 +6550,9 @@ packages:
   zod@4.5.4:
     resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
 
+  zod@4.6.1:
+    resolution: {integrity: sha512-341aRWQsve0rvronKNTqZpjmzdbUDlFuzHaI/XLg/Ej82qffDJRRfBTCuv7+9q/rMjB6LSLyEBnW4InJeMtt/Q==}
+
 snapshots:
 
   '@asamuzakjp/css-color@5.1.11':
@@ -12182,3 +12185,5 @@ snapshots:
       readable-stream: 4.7.0
 
   zod@4.5.4: {}
+
+  zod@4.6.1: {}
