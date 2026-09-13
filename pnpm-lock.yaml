@@ -552,8 +552,8 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
       zod:
-        specifier: 4.6.1
-        version: 4.6.1
+        specifier: 4.6.2
+        version: 4.6.2
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -6550,8 +6550,8 @@ packages:
   zod@4.5.4:
     resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
 
-  zod@4.6.1:
-    resolution: {integrity: sha512-341aRWQsve0rvronKNTqZpjmzdbUDlFuzHaI/XLg/Ej82qffDJRRfBTCuv7+9q/rMjB6LSLyEBnW4InJeMtt/Q==}
+  zod@4.6.2:
+    resolution: {integrity: sha512-lh5RCAGFa1Cm2hjtNwLQhSs/AsqdWnTQaBER9fEwN/88pSh7KOtJavtBx/0VlkN/uFd61SwYmljLMDAsHlvzBQ==}
 
 snapshots:
 
@@ -12183,4 +12183,4 @@ snapshots:
 
   zod@4.5.4: {}
 
-  zod@4.6.1: {}
+  zod@4.6.2: {}
