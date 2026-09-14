@@ -305,7 +305,13 @@ export function buildSubscription(
         description: null,
         discounts: [],
         ended_at: null,
-        invoice_settings: {account_tax_ids: null, issuer: {type: 'self'}},
+        invoice_settings: {
+            account_tax_ids: null,
+            custom_fields: null,
+            description: null,
+            footer: null,
+            issuer: {type: 'self'}
+        },
         latest_invoice: null,
         livemode: false,
         metadata: {},
