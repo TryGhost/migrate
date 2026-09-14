@@ -1300,6 +1300,32 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         img.setAttribute('src', newSrc);
     }
 
+    // Promote standalone linked images out of paragraphs so HTML-to-Lexical
+    // converts them to block-level image nodes rather than inline link children.
+    for (const img of parsed.$('p > a > img')) {
+        const link = img.parentElement;
+        const paragraph = link ? link.parentElement : null;
+        const parentFigure = paragraph ? lastParent(paragraph, 'figure') : null;
+        const isStandaloneLink =
+            link && link.children.length === 1 && link.children[0] === img && link.textContent.trim() === '';
+        const isStandaloneParagraph =
+            paragraph &&
+            paragraph.children.length === 1 &&
+            paragraph.children[0] === link &&
+            paragraph.textContent.trim() === '';
+
+        if (!isStandaloneLink || !isStandaloneParagraph || parentFigure || !paragraph.parentNode) {
+            continue;
+        }
+
+        const figure = parsed.document.createElement('figure');
+        figure.setAttribute('class', 'kg-card kg-image-card');
+        img.classList.add('kg-image');
+
+        paragraph.parentNode.replaceChild(figure, paragraph);
+        figure.appendChild(link);
+    }
+
     // Detect full size images
     // TODO: add more classes that are used within WordPress to determine full-width images
     for (const img of parsed.$('img.full.size-full')) {
