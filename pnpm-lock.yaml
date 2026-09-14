@@ -244,7 +244,7 @@ overrides:
   trim: ^1.0.1
   parse-link-header: ^2.0.0
   form-data: ^4.0.6
-  js-yaml@3: ^5.0.0
+  js-yaml@3: 5.4.2
 
 importers:
 
@@ -697,9 +697,9 @@ importers:
       '@tryghost/string':
         specifier: 'catalog:'
         version: 0.3.5
-      front-matter:
-        specifier: 4.0.2
-        version: 4.0.2
+      js-yaml:
+        specifier: 5.4.2
+        version: 5.4.2
       markdown-it:
         specifier: 'catalog:'
         version: 15.0.0
@@ -4816,9 +4816,6 @@ packages:
   formidable@1.2.6:
     resolution: {integrity: sha512-KcpbcpuLNOwrEjnbpMC0gS+X8ciDoZE1kkqzat4a8vrprf+s9pKNQ/QIwWfbfs4ltgmFl3MD177SNTkve3BwGQ==}
     deprecated: 'Please upgrade to latest, formidable@v2 or formidable@v3! Check these notes: https://bit.ly/2ZEqIau'
-
-  front-matter@4.0.2:
-    resolution: {integrity: sha512-I8ZuJ/qG92NWX8i5x1Y8qyj3vizhXS31OxjKDu3LKP+7/qBgfIKValiZIEwoVoJKUHlhWtYrktkxV1XsX+pPlg==}
 
   fs-constants@1.0.0:
     resolution: {integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow==}
@@ -10167,10 +10164,6 @@ snapshots:
       fetch-blob: 3.2.0
 
   formidable@1.2.6: {}
-
-  front-matter@4.0.2:
-    dependencies:
-      js-yaml: 5.4.2
 
   fs-constants@1.0.0: {}
 

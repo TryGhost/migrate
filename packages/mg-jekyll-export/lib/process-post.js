@@ -1,12 +1,32 @@
 import MarkdownIt from 'markdown-it';
 import string from '@tryghost/string';
 import errors from '@tryghost/errors';
-import fm from 'front-matter';
+import {load, YAML11_SCHEMA} from 'js-yaml';
 import processHtml from './process-html.js';
 
 const md = new MarkdownIt({
     html: true
 });
+
+const frontMatterPattern = /^\uFEFF?(---|= yaml =)\r?\n([\s\S]*?)\r?\n(?:\1|\.\.\.)[ \t]*(?:\r?\n|$)/;
+
+function parseFrontMatter(contents) {
+    const match = contents.match(frontMatterPattern);
+
+    if (!match) {
+        return {
+            attributes: {},
+            body: contents
+        };
+    }
+
+    const yaml = match[2].trim();
+
+    return {
+        attributes: yaml ? load(yaml, {schema: YAML11_SCHEMA}) : {},
+        body: contents.slice(match[0].length)
+    };
+}
 
 // The frontmatter date may be a Date object or a string
 function _parseFrontMatterDate(fmDate) {
@@ -34,7 +54,7 @@ The body may be in Markdown or HTML.
 const processMeta = (fileName, fileContents, options) => {
     const inDraftsDir = fileName.startsWith('_drafts/');
 
-    let frontmatter = fm(fileContents);
+    let frontmatter = parseFrontMatter(fileContents);
     let frontmatterAttributes = frontmatter.attributes;
 
     let postDate = false;

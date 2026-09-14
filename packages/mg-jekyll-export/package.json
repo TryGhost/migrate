@@ -29,7 +29,7 @@
     "@tryghost/mg-utils": "workspace:*",
     "@tryghost/pretty-cli": "catalog:",
     "@tryghost/string": "catalog:",
-    "front-matter": "4.0.2",
+    "js-yaml": "5.4.2",
     "markdown-it": "catalog:"
   }
 }
