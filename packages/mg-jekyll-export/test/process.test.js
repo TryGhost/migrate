@@ -100,6 +100,21 @@ describe('Process', function () {
         assert.equal(post.data.author.data.name, 'Mark Stosberg');
     });
 
+    it('Can process a post without front matter', function () {
+        const post = processPost('_posts/2022-06-05-no-front-matter.md', 'Plain body');
+
+        assert.equal(post.data.title, '(Untitled)');
+        assert.equal(post.data.html, '<p>Plain body</p>');
+    });
+
+    it('Can process legacy front matter delimiters', function () {
+        const contents = '= yaml =\ntitle: Legacy delimiters\n...\nPlain body';
+        const post = processPost('_posts/2022-06-05-legacy-delimiters.md', contents);
+
+        assert.equal(post.data.title, 'Legacy delimiters');
+        assert.equal(post.data.html, '<p>Plain body</p>');
+    });
+
     it('Can process a basic Jekyll post with no author', function () {
         const fakeName = '_posts/2021-08-24-no-author.md';
         const fixture = readSync('2021-08-24-no-author.md');
