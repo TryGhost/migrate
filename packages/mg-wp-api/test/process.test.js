@@ -668,6 +668,33 @@ describe('Process WordPress HTML', function () {
         );
     });
 
+    it('Can convert a standalone linked image paragraph to an image card', async function () {
+        const html = `<p><a href="https://example.com/destination" target="_blank" rel="nofollow noopener"><img loading="lazy" class="aligncenter size-full wp-image-12345" src="__GHOST_URL__/content/images/example/wp-content/uploads/2020/01/example-image.jpg" alt="Example image." width="600" height="900"></a></p>`;
+
+        const processed = await processor.processContent({html});
+
+        assert.equal(
+            processed,
+            '<figure class="kg-card kg-image-card"><a href="https://example.com/destination" target="_blank" rel="nofollow noopener"><img loading="lazy" class="aligncenter size-full wp-image-12345 kg-image" src="__GHOST_URL__/content/images/example/wp-content/uploads/2020/01/example-image.jpg" alt="Example image." width="600" height="900"></a></figure>'
+        );
+    });
+
+    it('Does not convert a linked image paragraph containing other content to an image card', async function () {
+        const html = `<p>Before <a href="https://example.com"><img src="https://example.com/image.jpg">After</a></p>`;
+
+        const processed = await processor.processContent({html});
+
+        assert.equal(processed, html);
+    });
+
+    it('Does not nest an image card inside an existing figure', async function () {
+        const html = `<figure class="wp-block-image"><p><a href="https://example.com"><img src="https://example.com/image.jpg"></a></p></figure>`;
+
+        const processed = await processor.processContent({html});
+
+        assert.equal(processed, html);
+    });
+
     it('Can handle a single button element', async function () {
         const html = `<div class="wp-container-1 is-horizontal is-content-justification-center wp-block-buttons">
         <div class="wp-block-button"><a class="wp-block-button__link" href="https://ghost.org" target="_blank" rel="noreferrer noopener">Ghost</a></div>
