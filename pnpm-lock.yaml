@@ -195,8 +195,8 @@ catalogs:
       specifier: 6.0.0
       version: 6.0.0
     dotenv:
-      specifier: 17.4.2
-      version: 17.4.2
+      specifier: 18.0.3
+      version: 18.0.3
     escape-string-regexp:
       specifier: 5.0.0
       version: 5.0.0
@@ -602,7 +602,7 @@ importers:
         version: 7.0.2
       dotenv:
         specifier: 'catalog:'
-        version: 17.4.2
+        version: 18.0.3
       fs-extra:
         specifier: 'catalog:'
         version: 11.4.0
@@ -909,7 +909,7 @@ importers:
         version: 12.0.0
       dotenv:
         specifier: 'catalog:'
-        version: 17.4.2
+        version: 18.0.3
       sinon:
         specifier: 22.1.0
         version: 22.1.0
@@ -4592,9 +4592,10 @@ packages:
     resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
     engines: {node: '>=12'}
 
-  dotenv@17.4.2:
-    resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
+  dotenv@18.0.3:
+    resolution: {integrity: sha512-/8CJTyL817qPnfbQrJgOEcrU3fDrJkRIoXBE566wHuvIXKOCHUZhPqGPbCPi9SogjdGnreF0TlvnTgK6J/8zpA==}
     engines: {node: '>=12'}
+    hasBin: true
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -9939,7 +9940,7 @@ snapshots:
 
   dotenv@16.4.7: {}
 
-  dotenv@17.4.2: {}
+  dotenv@18.0.3: {}
 
   dunder-proto@1.0.1:
     dependencies:
