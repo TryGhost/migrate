@@ -192,8 +192,8 @@ catalogs:
       specifier: 12.0.0
       version: 12.0.0
     chalk:
-      specifier: 6.0.0
-      version: 6.0.0
+      specifier: 6.0.1
+      version: 6.0.1
     dotenv:
       specifier: 17.4.2
       version: 17.4.2
@@ -279,7 +279,7 @@ importers:
     dependencies:
       chalk:
         specifier: 'catalog:'
-        version: 6.0.0
+        version: 6.0.1
       cli-truncate:
         specifier: 6.1.1
         version: 6.1.1
@@ -832,7 +832,7 @@ importers:
     dependencies:
       chalk:
         specifier: 'catalog:'
-        version: 6.0.0
+        version: 6.0.1
       log-update:
         specifier: 'catalog:'
         version: 8.0.0
@@ -890,7 +890,7 @@ importers:
         version: 3.3.6
       chalk:
         specifier: 'catalog:'
-        version: 6.0.0
+        version: 6.0.1
       ora:
         specifier: 9.4.1
         version: 9.4.1
@@ -1236,7 +1236,7 @@ importers:
         version: 0.3.5
       chalk:
         specifier: 'catalog:'
-        version: 6.0.0
+        version: 6.0.1
       fs-extra:
         specifier: 'catalog:'
         version: 11.4.1
@@ -4264,8 +4264,8 @@ packages:
     resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
-  chalk@6.0.0:
-    resolution: {integrity: sha512-2uNTXIuTTxk7ciZgAU1BQcgnchcG0xXnrs6jzkQfj9SsRa9M2s5zE8WT96hS6KmG4MzWHSrvH43DF1m4XRkrFg==}
+  chalk@6.0.1:
+    resolution: {integrity: sha512-/Ce6KNm3vIbWdMlNna6RVIZ/ICQxnJxCicet5LBKK9ZffBkqzDw0xh9EiKSljdRtiIQ1S1z4YgcscUUGzNCWrA==}
     engines: {node: '>=22'}
 
   character-entities-html4@1.1.4:
@@ -9599,7 +9599,7 @@ snapshots:
 
   chalk@5.6.2: {}
 
-  chalk@6.0.0: {}
+  chalk@6.0.1: {}
 
   character-entities-html4@1.1.4: {}
 
