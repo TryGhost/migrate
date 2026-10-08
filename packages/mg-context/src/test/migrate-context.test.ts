@@ -1124,6 +1124,88 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
+        it('Uses a duplicate resolver to keep the most recently updated source revision', async () => {
+            const decisions: string[] = [];
+            const instance: any = new MigrateContext({
+                onDuplicate: (existing: PostContext, incoming: PostContext) => {
+                    decisions.push(`${existing.get('title')} -> ${incoming.get('title')}`);
+                    const existingUpdatedAt = existing.get('updated_at') as Date | null;
+                    const incomingUpdatedAt = incoming.get('updated_at') as Date | null;
+                    if (incomingUpdatedAt && (!existingUpdatedAt || incomingUpdatedAt > existingUpdatedAt)) {
+                        return 'replace';
+                    }
+                    return 'skip';
+                }
+            });
+            await instance.init();
+
+            const first = await instance.addPost({lookupKey: 'wordpress-post-900'});
+            first.set('title', 'Middle revision');
+            first.set('slug', 'post-900');
+            first.set('created_at', new Date('2026-10-02T10:00:00.000Z'));
+            first.set('updated_at', new Date('2026-10-04T10:00:00.000Z'));
+            await first.save(instance.db);
+
+            const older = await instance.addPost({lookupKey: 'wordpress-post-900'});
+            older.set('title', 'Older revision');
+            older.set('slug', 'post-900');
+            older.set('created_at', new Date('2026-10-02T10:00:00.000Z'));
+            older.set('updated_at', new Date('2026-10-03T09:00:00.000Z'));
+            await older.save(instance.db);
+
+            let posts = await instance.getAllPosts();
+            assert.equal(posts.length, 1);
+            assert.equal(posts[0].data.title, 'Middle revision');
+
+            const newest = await instance.addPost({lookupKey: 'wordpress-post-900'});
+            newest.set('title', 'Newest revision');
+            newest.set('slug', 'post-900');
+            newest.set('created_at', new Date('2026-10-02T10:00:00.000Z'));
+            newest.set('updated_at', new Date('2026-10-05T12:30:00.000Z'));
+            await newest.save(instance.db);
+
+            posts = await instance.getAllPosts();
+            assert.equal(posts.length, 1);
+            assert.equal(posts[0].data.title, 'Newest revision');
+            assert.deepEqual(posts[0].data.updated_at, new Date('2026-10-05T12:30:00.000Z'));
+            assert.equal(older.dbId, first.dbId);
+            assert.equal(newest.dbId, first.dbId);
+            assert.deepEqual(decisions, ['Middle revision -> Older revision', 'Middle revision -> Newest revision']);
+
+            await instance.close();
+        });
+
+        it('Rejects an invalid duplicate resolver result', async () => {
+            const instance: any = new MigrateContext({
+                onDuplicate: (() => 'merge') as any
+            });
+            await instance.init();
+
+            const original = await instance.addPost({lookupKey: 'invalid-resolver-result'});
+            original.set('title', 'Original');
+            original.set('slug', 'original');
+            original.set('created_at', new Date('2026-10-02T10:00:00.000Z'));
+            await original.save(instance.db);
+
+            const duplicate = await instance.addPost({lookupKey: 'invalid-resolver-result'});
+            duplicate.set('title', 'Duplicate');
+            duplicate.set('slug', 'duplicate');
+            duplicate.set('created_at', new Date('2026-10-03T10:00:00.000Z'));
+
+            assert.throws(() => duplicate.save(instance.db), {
+                name: 'InternalServerError',
+                message: 'Duplicate post resolver must return "skip" or "replace".'
+            });
+            assert.equal(duplicate.dbId, null);
+            assert.equal(duplicate.ghostId, null);
+
+            const posts = await instance.getAllPosts();
+            assert.equal(posts.length, 1);
+            assert.equal(posts[0].data.title, 'Original');
+
+            await instance.close();
+        });
+
         it('Deduplicates a replacement slug owned by another post', async () => {
             const instance: any = new MigrateContext();
             await instance.init();

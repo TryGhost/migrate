@@ -81,7 +81,7 @@ new MigrateContext(options?)
 | `ephemeral`                | `boolean`                            | `true` if no dbPath | Use in-memory database                       |
 | `emitEvents`               | `boolean`                            | `true`              | Emit progress events (see [Events](#events)) |
 | `warnOnLookupKeyDuplicate` | `boolean`                            | `false`             | Log when a duplicate lookupKey is skipped    |
-| `onDuplicate`              | `'skip' \| 'replace'`                | `'skip'`            | Default lookup-key duplicate policy           |
+| `onDuplicate`              | `'skip' \| 'replace' \| resolver`    | `'skip'`            | Default lookup-key duplicate policy           |
 
 ```js
 // In-memory (default)
@@ -693,12 +693,13 @@ const dupe = await ctx.addPost({lookupKey: 'https://example.com/post-url'});
 await dupe.save(ctx.db); // skipped
 ```
 
-#### `post.onDuplicate: 'skip' | 'replace'`
+#### `post.onDuplicate: 'skip' | 'replace' | DuplicatePostResolver`
 
 Controls what `save()` does when `lookupKey` matches a stored post:
 
 - `skip` (default) leaves the stored post unchanged. This preserves the original retry-safe behavior.
 - `replace` overwrites the stored post with the newly transformed post while preserving its database ID and Ghost ID. Scalar fields, source metadata, post metadata, tags, and authors are replaced. A subsequent `prepareForExport()` rebuilds Lexical from refreshed HTML when needed.
+- A resolver receives the stored and incoming `PostContext` objects and returns `skip` or `replace`. Resolvers are synchronous and can compare dates or other source-specific metadata without requiring a pre-indexing pass.
 
 Set a default for posts created by a context, or override it for one post:
 
@@ -712,6 +713,24 @@ const post = await ctx.addPost({
 ```
 
 Use `replace` only when the rerun supplies a complete post. It intentionally replaces tags and authors as well as scalar content; it does not merge missing values from the stored row.
+
+For example, an adapter that can encounter multiple source revisions in any order can keep the newest one:
+
+```js
+const newestRevisionWins = (existing, incoming) => {
+    const existingUpdatedAt = existing.get('updated_at');
+    const incomingUpdatedAt = incoming.get('updated_at');
+
+    if (incomingUpdatedAt && (!existingUpdatedAt || incomingUpdatedAt > existingUpdatedAt)) {
+        return 'replace';
+    }
+    return 'skip';
+};
+
+const ctx = new MigrateContext({onDuplicate: newestRevisionWins});
+```
+
+The resolver must return `skip` or `replace`; any other result throws an `InternalServerError` without changing the stored row.
 
 ### Field sanitization
 

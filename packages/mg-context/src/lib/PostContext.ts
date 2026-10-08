@@ -1,5 +1,6 @@
 import {z} from 'zod/v4';
 import {randomBytes} from 'node:crypto';
+import errors from '@tryghost/errors';
 import {htmlToLexical} from '@tryghost/mg-html-lexical';
 import MigrateBase from './MigrateBase.js';
 import TagContext, {TagObject, TagDataObject} from './TagContext.js';
@@ -7,7 +8,9 @@ import AuthorContext, {AuthorObject, AuthorDataObject} from './AuthorContext.js'
 import type {DatabaseModels} from './database.js';
 
 export type ContentFormat = 'lexical' | 'html';
-export type DuplicatePostPolicy = 'skip' | 'replace';
+export type DuplicatePostAction = 'skip' | 'replace';
+export type DuplicatePostResolver = (existing: PostContext, incoming: PostContext) => DuplicatePostAction;
+export type DuplicatePostPolicy = DuplicatePostAction | DuplicatePostResolver;
 
 export function normalizeContentFormat(contentFormat: unknown): ContentFormat {
     return contentFormat === 'html' ? 'html' : 'lexical';
@@ -126,7 +129,7 @@ export default class PostContext extends MigrateBase {
 
     set onDuplicate(value: DuplicatePostPolicy) {
         this.#onDuplicate = value;
-        if (value === 'replace') {
+        if (value !== 'skip') {
             this.#duplicateSkipped = false;
         }
     }
@@ -374,9 +377,20 @@ export default class PostContext extends MigrateBase {
         if (!this.dbId && this.#lookupKey) {
             const existing = db.stmts.findPostByLookupKey.get(this.#lookupKey) as any;
             if (existing) {
+                const action =
+                    typeof this.#onDuplicate === 'function'
+                        ? this.#onDuplicate(PostContext.fromRow(existing, db), this)
+                        : this.#onDuplicate;
+                if (action !== 'skip' && action !== 'replace') {
+                    throw new errors.InternalServerError({
+                        message: 'Duplicate post resolver must return "skip" or "replace".',
+                        context: action
+                    });
+                }
+
                 this.dbId = existing.id as number;
                 this.ghostId = existing.ghost_id as string;
-                if (this.#onDuplicate === 'skip') {
+                if (action === 'skip') {
                     this.#duplicateSkipped = true;
                     if (this.#warnOnLookupKeyDuplicate) {
                         // eslint-disable-next-line no-console
