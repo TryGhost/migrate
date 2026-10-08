@@ -115,10 +115,12 @@ async function loadSource({ref, source, commit}) {
         };
     }
 
-    const commitResponse = JSON.parse(
-        await fetchText(`https://api.github.com/repos/${GHOST_REPOSITORY}/commits/${encodeURIComponent(ref)}`)
+    const commitHistory = JSON.parse(
+        await fetchText(
+            `https://api.github.com/repos/${GHOST_REPOSITORY}/commits?sha=${encodeURIComponent(ref)}&path=${encodeURIComponent(GHOST_SCHEMA_PATH)}&per_page=1`
+        )
     );
-    const resolvedCommit = commitResponse.sha;
+    const resolvedCommit = commitHistory[0]?.sha;
     if (typeof resolvedCommit !== 'string' || !/^[a-f0-9]{40}$/.test(resolvedCommit)) {
         throw new Error(`Could not resolve Ghost ref ${ref}`);
     }
