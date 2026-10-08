@@ -1,24 +1,27 @@
 import {z} from 'zod/v4';
 import {randomBytes} from 'node:crypto';
 import MigrateBase from './MigrateBase.js';
+import {GHOST_FIELD_LIMITS} from './ghost-schema.js';
 import type {DatabaseModels} from './database.js';
 
+const TAG_LIMITS = GHOST_FIELD_LIMITS.tag;
+
 const tagZodSchema = z.object({
-    name: z.string().max(191),
-    slug: z.string().max(191),
-    description: z.string().max(500).nullable(),
-    feature_image: z.string().max(2000).nullable(),
-    og_image: z.string().max(2000).nullable(),
-    og_title: z.string().max(300).nullable(),
-    og_description: z.string().max(500).nullable(),
-    twitter_image: z.string().max(2000).nullable(),
-    twitter_title: z.string().max(300).nullable(),
-    twitter_description: z.string().max(500).nullable(),
-    meta_title: z.string().max(300).nullable(),
-    meta_description: z.string().max(500).nullable(),
-    codeinjection_head: z.string().max(65535).nullable(),
-    codeinjection_foot: z.string().max(65535).nullable(),
-    canonical_url: z.string().max(2000).nullable()
+    name: z.string().max(TAG_LIMITS.name),
+    slug: z.string().max(TAG_LIMITS.slug),
+    description: z.string().max(TAG_LIMITS.description).nullable(),
+    feature_image: z.string().max(TAG_LIMITS.feature_image).nullable(),
+    og_image: z.string().max(TAG_LIMITS.og_image).nullable(),
+    og_title: z.string().max(TAG_LIMITS.og_title).nullable(),
+    og_description: z.string().max(TAG_LIMITS.og_description).nullable(),
+    twitter_image: z.string().max(TAG_LIMITS.twitter_image).nullable(),
+    twitter_title: z.string().max(TAG_LIMITS.twitter_title).nullable(),
+    twitter_description: z.string().max(TAG_LIMITS.twitter_description).nullable(),
+    meta_title: z.string().max(TAG_LIMITS.meta_title).nullable(),
+    meta_description: z.string().max(TAG_LIMITS.meta_description).nullable(),
+    codeinjection_head: z.string().max(TAG_LIMITS.codeinjection_head).nullable(),
+    codeinjection_foot: z.string().max(TAG_LIMITS.codeinjection_foot).nullable(),
+    canonical_url: z.string().max(TAG_LIMITS.canonical_url).nullable()
 });
 
 export type TagObject = z.infer<typeof tagZodSchema>;

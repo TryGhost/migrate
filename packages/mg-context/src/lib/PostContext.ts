@@ -5,6 +5,7 @@ import {htmlToLexical} from '@tryghost/mg-html-lexical';
 import MigrateBase from './MigrateBase.js';
 import TagContext, {TagObject, TagDataObject} from './TagContext.js';
 import AuthorContext, {AuthorObject, AuthorDataObject} from './AuthorContext.js';
+import {GHOST_FIELD_LIMITS} from './ghost-schema.js';
 import type {DatabaseModels} from './database.js';
 
 export type ContentFormat = 'lexical' | 'html';
@@ -16,7 +17,8 @@ export function normalizeContentFormat(contentFormat: unknown): ContentFormat {
     return contentFormat === 'html' ? 'html' : 'lexical';
 }
 
-const MAX_SLUG_LENGTH = 191;
+const POST_LIMITS = GHOST_FIELD_LIMITS.post;
+const MAX_SLUG_LENGTH = POST_LIMITS.slug;
 
 /**
  * Build a deduplicated slug that still fits Ghost's limit, trimming the base
@@ -30,16 +32,16 @@ function slugWithSuffix(base: string, suffix: number): string {
 }
 
 const postZodSchema = z.object({
-    title: z.string().max(255),
+    title: z.string().max(POST_LIMITS.title),
     slug: z.string().max(MAX_SLUG_LENGTH),
-    html: z.string().max(1000000000).nullable(),
-    mobiledoc: z.string().max(1000000000).nullable(),
-    lexical: z.string().max(1000000000).nullable(),
-    comment_id: z.string().max(50).nullable(),
-    plaintext: z.string().max(1000000000).nullable(),
-    feature_image: z.string().max(2000).nullable(),
-    feature_image_alt: z.string().max(191).nullable(),
-    feature_image_caption: z.string().max(65535).nullable(),
+    html: z.string().max(POST_LIMITS.html).nullable(),
+    mobiledoc: z.string().max(POST_LIMITS.mobiledoc).nullable(),
+    lexical: z.string().max(POST_LIMITS.lexical).nullable(),
+    comment_id: z.string().max(POST_LIMITS.comment_id).nullable(),
+    plaintext: z.string().max(POST_LIMITS.plaintext).nullable(),
+    feature_image: z.string().max(POST_LIMITS.feature_image).nullable(),
+    feature_image_alt: z.string().max(POST_LIMITS.feature_image_alt).nullable(),
+    feature_image_caption: z.string().max(POST_LIMITS.feature_image_caption).nullable(),
     featured: z.boolean().default(false),
     type: z.enum(['post', 'page']).default('post'),
     status: z.enum(['published', 'draft', 'scheduled', 'sent']).default('draft'),
@@ -47,19 +49,19 @@ const postZodSchema = z.object({
     created_at: z.date(),
     updated_at: z.date().nullable(),
     published_at: z.date().nullable(),
-    custom_excerpt: z.string().max(300).nullable(),
-    codeinjection_head: z.string().max(65535).nullable(),
-    codeinjection_foot: z.string().max(65535).nullable(),
-    custom_template: z.string().max(100).nullable(),
-    canonical_url: z.string().max(2000).nullable(),
-    og_image: z.string().max(2000).nullable(),
-    og_title: z.string().max(300).nullable(),
-    og_description: z.string().max(500).nullable(),
-    twitter_image: z.string().max(2000).nullable(),
-    twitter_title: z.string().max(300).nullable(),
-    twitter_description: z.string().max(500).nullable(),
-    meta_title: z.string().max(300).nullable(),
-    meta_description: z.string().max(500).nullable(),
+    custom_excerpt: z.string().max(POST_LIMITS.custom_excerpt).nullable(),
+    codeinjection_head: z.string().max(POST_LIMITS.codeinjection_head).nullable(),
+    codeinjection_foot: z.string().max(POST_LIMITS.codeinjection_foot).nullable(),
+    custom_template: z.string().max(POST_LIMITS.custom_template).nullable(),
+    canonical_url: z.string().max(POST_LIMITS.canonical_url).nullable(),
+    og_image: z.string().max(POST_LIMITS.og_image).nullable(),
+    og_title: z.string().max(POST_LIMITS.og_title).nullable(),
+    og_description: z.string().max(POST_LIMITS.og_description).nullable(),
+    twitter_image: z.string().max(POST_LIMITS.twitter_image).nullable(),
+    twitter_title: z.string().max(POST_LIMITS.twitter_title).nullable(),
+    twitter_description: z.string().max(POST_LIMITS.twitter_description).nullable(),
+    meta_title: z.string().max(POST_LIMITS.meta_title).nullable(),
+    meta_description: z.string().max(POST_LIMITS.meta_description).nullable(),
     tags: z.array(z.any()).max(500).default([]),
     authors: z.array(z.any()).max(500).default([])
 });

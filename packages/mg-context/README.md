@@ -615,7 +615,7 @@ Persist the post and its tag/author relationships to the database.
 | `updated_at`            | `Date?`   | —     | `null`     |                                           |
 | `published_at`          | `Date?`   | —     | `null`     |                                           |
 | `feature_image`         | `string?` | 2000  | `null`     |                                           |
-| `feature_image_alt`     | `string?` | 125   | `null`     |                                           |
+| `feature_image_alt`     | `string?` | 191   | `null`     |                                           |
 | `feature_image_caption` | `string?` | 65535 | `null`     |                                           |
 | `custom_excerpt`        | `string?` | 300   | `null`     |                                           |
 | `canonical_url`         | `string?` | 2000  | `null`     |                                           |
@@ -821,6 +821,14 @@ The resolver must return `skip` or `replace`; any other result throws an `Intern
 ### Field sanitization
 
 Source data routinely carries values Ghost will not accept — a title over 255 characters, a tag name over 191, an email that is not an address. Rather than failing the migration, each context normalizes its own data against [Ghost's schema](https://github.com/TryGhost/Ghost/blob/main/ghost/core/server/data/schema/schema.js) before anything is written.
+
+The numeric limits are generated from an exact commit of that schema rather than repeated by hand. `GHOST_FIELD_LIMITS`, `GHOST_SCHEMA_VERSION`, and `GHOST_SCHEMA_SOURCE` are exported for adapters that need the same profile. When Ghost's schema changes, update the checked-in profile from the repository root:
+
+```bash
+pnpm --filter @tryghost/mg-context sync:ghost-schema
+```
+
+The generator prefers a field's `validations.isLength.max` over its storage `maxlength`. This is why a post title is limited to 255 even though its database column can hold 2000 characters, and why `feature_image_alt` is 191. The generated source URL is pinned to the Ghost commit used, so reviews can verify every change against the authoritative schema.
 
 Enforcement lives in one place per context: `save()` calls `sanitize()`, which applies every rule and records what changed. That covers values set with `set()` as well as values handed to a constructor or loaded from a row, which bypass `set()` entirely.
 

@@ -8,6 +8,7 @@ export default MigrateContext;
 
 export {MigrateBase, MigrateContext, PostContext, TagContext, AuthorContext};
 export {MIGRATE_CONTEXT_SCHEMA_VERSION} from './lib/database.js';
+export {GHOST_FIELD_LIMITS, GHOST_SCHEMA_SOURCE, GHOST_SCHEMA_VERSION} from './lib/ghost-schema.js';
 
 export type {
     WrittenFile,
