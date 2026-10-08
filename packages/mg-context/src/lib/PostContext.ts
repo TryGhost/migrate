@@ -7,6 +7,7 @@ import AuthorContext, {AuthorObject, AuthorDataObject} from './AuthorContext.js'
 import type {DatabaseModels} from './database.js';
 
 export type ContentFormat = 'lexical' | 'html';
+export type DuplicatePostPolicy = 'skip' | 'replace';
 
 export function normalizeContentFormat(contentFormat: unknown): ContentFormat {
     return contentFormat === 'html' ? 'html' : 'lexical';
@@ -65,6 +66,7 @@ export type PostConstructorOptions = {
     meta?: object;
     contentFormat?: ContentFormat;
     lookupKey?: string;
+    onDuplicate?: DuplicatePostPolicy;
 };
 
 const POST_URL_FIELDS: ReadonlySet<string> = new Set(['feature_image', 'og_image', 'twitter_image', 'canonical_url']);
@@ -78,13 +80,20 @@ export default class PostContext extends MigrateBase {
     #meta: any;
     #contentFormat: ContentFormat;
     #lookupKey: string | null = null;
+    #onDuplicate: DuplicatePostPolicy;
     #warnOnLookupKeyDuplicate = false;
     #duplicateSkipped = false;
     #htmlDirty = true;
     #webscrapeData: any = null;
     data: any = {};
 
-    constructor({source = {}, meta = {}, contentFormat = 'lexical', lookupKey}: PostConstructorOptions = {}) {
+    constructor({
+        source = {},
+        meta = {},
+        contentFormat = 'lexical',
+        lookupKey,
+        onDuplicate = 'skip'
+    }: PostConstructorOptions = {}) {
         super();
 
         // Source data from another platform
@@ -93,6 +102,7 @@ export default class PostContext extends MigrateBase {
         this.#meta = meta;
 
         this.#contentFormat = normalizeContentFormat(contentFormat);
+        this.#onDuplicate = onDuplicate;
 
         if (lookupKey) {
             this.#lookupKey = lookupKey;
@@ -108,6 +118,17 @@ export default class PostContext extends MigrateBase {
 
     set lookupKey(value: string | null) {
         this.#lookupKey = value;
+    }
+
+    get onDuplicate(): DuplicatePostPolicy {
+        return this.#onDuplicate;
+    }
+
+    set onDuplicate(value: DuplicatePostPolicy) {
+        this.#onDuplicate = value;
+        if (value === 'replace') {
+            this.#duplicateSkipped = false;
+        }
     }
 
     get warnOnLookupKeyDuplicate(): boolean {
@@ -345,6 +366,8 @@ export default class PostContext extends MigrateBase {
             return;
         }
 
+        let replacingDuplicate = false;
+
         // Check for an existing post by lookup_key before anything is mutated or
         // recorded, so a post that will never be inserted does not claim a slug
         // or leave a rename behind
@@ -353,12 +376,15 @@ export default class PostContext extends MigrateBase {
             if (existing) {
                 this.dbId = existing.id as number;
                 this.ghostId = existing.ghost_id as string;
-                this.#duplicateSkipped = true;
-                if (this.#warnOnLookupKeyDuplicate) {
-                    // eslint-disable-next-line no-console
-                    console.warn(`Duplicate post skipped for lookup_key: ${this.#lookupKey}`);
+                if (this.#onDuplicate === 'skip') {
+                    this.#duplicateSkipped = true;
+                    if (this.#warnOnLookupKeyDuplicate) {
+                        // eslint-disable-next-line no-console
+                        console.warn(`Duplicate post skipped for lookup_key: ${this.#lookupKey}`);
+                    }
+                    return;
                 }
-                return;
+                replacingDuplicate = true;
             }
         }
 
@@ -384,11 +410,18 @@ export default class PostContext extends MigrateBase {
         let slug = this.data.slug;
         const originalSlug = slug;
 
-        // On insert, deduplicate the slug if it already exists
-        if (!this.dbId && db.stmts.slugExists.get(slug)) {
+        const slugExists = (candidate: string) => {
+            if (replacingDuplicate) {
+                return db.stmts.slugExistsForOtherPost.get(candidate, this.dbId);
+            }
+            return !this.dbId && db.stmts.slugExists.get(candidate);
+        };
+
+        // On insert or lookup-key replacement, deduplicate the slug if another post owns it
+        if (slugExists(slug)) {
             let suffix = 2;
             let candidate = slugWithSuffix(originalSlug, suffix);
-            while (db.stmts.slugExists.get(candidate)) {
+            while (slugExists(candidate)) {
                 suffix += 1;
                 candidate = slugWithSuffix(originalSlug, suffix);
             }
@@ -412,20 +445,38 @@ export default class PostContext extends MigrateBase {
         const serializedData = JSON.stringify(postData);
 
         if (this.dbId) {
-            db.stmts.updatePost.run(
-                serializedData,
-                serializedSource,
-                serializedMeta,
-                this.#contentFormat,
-                this.#lookupKey,
-                this.ghostId,
-                createdAt,
-                updatedAt,
-                publishedAt,
-                slug,
-                serializedWebscrapeData,
-                this.dbId
-            );
+            if (replacingDuplicate) {
+                db.stmts.replacePost.run(
+                    serializedData,
+                    serializedSource,
+                    serializedMeta,
+                    this.#contentFormat,
+                    this.#lookupKey,
+                    this.ghostId,
+                    createdAt,
+                    updatedAt,
+                    publishedAt,
+                    originalSlug,
+                    slug,
+                    serializedWebscrapeData,
+                    this.dbId
+                );
+            } else {
+                db.stmts.updatePost.run(
+                    serializedData,
+                    serializedSource,
+                    serializedMeta,
+                    this.#contentFormat,
+                    this.#lookupKey,
+                    this.ghostId,
+                    createdAt,
+                    updatedAt,
+                    publishedAt,
+                    slug,
+                    serializedWebscrapeData,
+                    this.dbId
+                );
+            }
         } else {
             const result = db.stmts.insertPost.run(
                 serializedData,

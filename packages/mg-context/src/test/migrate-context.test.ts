@@ -1033,6 +1033,169 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
+        it('Replaces transformed content from an earlier run when onDuplicate is replace', async () => {
+            const filePath = join(tmpdir(), `mg-context-lookup-replace-${Date.now()}.sqlite`);
+
+            const firstRun: any = new MigrateContext({dbPath: filePath});
+            await firstRun.init();
+
+            const original = await firstRun.addPost({
+                lookupKey: 'https://example.com/refresh-me',
+                source: {parser: 'old'},
+                meta: {transform: 'old'}
+            });
+            original.set('title', 'Old title');
+            original.set('slug', 'old-slug');
+            original.set('html', '<p>Old shortcode output</p>');
+            original.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            original.addTag({name: 'Old Tag', slug: 'old-tag'});
+            original.addAuthor({name: 'Old Author', slug: 'old-author', email: 'old@example.com'});
+            await original.save(firstRun.db);
+            await firstRun.prepareForExport();
+
+            const originalDbId = original.dbId;
+            const originalGhostId = original.ghostId;
+            await firstRun.close();
+
+            const secondRun: any = new MigrateContext({dbPath: filePath, onDuplicate: 'replace'});
+            await secondRun.init();
+
+            const replacement = await secondRun.addPost({
+                lookupKey: 'https://example.com/refresh-me',
+                source: {parser: 'new'},
+                meta: {transform: 'new'}
+            });
+            replacement.set('title', 'New title');
+            replacement.set('slug', 'new-slug');
+            replacement.set('html', '<p>Fresh transformed content</p>');
+            replacement.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
+            replacement.addTag({name: 'New Tag', slug: 'new-tag'});
+            replacement.addAuthor({name: 'New Author', slug: 'new-author', email: 'new@example.com'});
+            await replacement.save(secondRun.db);
+            await secondRun.prepareForExport();
+
+            const allPosts = await secondRun.getAllPosts();
+            assert.equal(allPosts.length, 1);
+            assert.equal(replacement.dbId, originalDbId);
+            assert.equal(replacement.ghostId, originalGhostId);
+            assert.equal(allPosts[0].data.title, 'New title');
+            assert.equal(allPosts[0].data.slug, 'new-slug');
+            assert.equal(allPosts[0].data.html, '<p>Fresh transformed content</p>');
+            assert.match(allPosts[0].data.lexical, /Fresh transformed content/);
+            assert.doesNotMatch(allPosts[0].data.lexical, /Old shortcode output/);
+            assert.equal(allPosts[0].getSourceValue('parser'), 'new');
+            assert.equal(allPosts[0].getMetaValue('transform'), 'new');
+            assert.deepEqual(
+                allPosts[0].data.tags.map((tag: TagContext) => tag.data.slug),
+                ['new-tag']
+            );
+            assert.deepEqual(
+                allPosts[0].data.authors.map((author: AuthorContext) => author.data.slug),
+                ['new-author']
+            );
+
+            await secondRun.close();
+            await unlink(filePath);
+        });
+
+        it('Allows a per-post replace policy to override the context default', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const original = await instance.addPost({lookupKey: 'https://example.com/per-post-replace'});
+            original.set('title', 'Old title');
+            original.set('slug', 'old-slug');
+            original.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            await original.save(instance.db);
+
+            const replacement = await instance.addPost({
+                lookupKey: 'https://example.com/per-post-replace',
+                onDuplicate: 'replace'
+            });
+            replacement.set('title', 'New title');
+            replacement.set('slug', 'new-slug');
+            replacement.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
+            await replacement.save(instance.db);
+
+            const allPosts = await instance.getAllPosts();
+            assert.equal(allPosts.length, 1);
+            assert.equal(allPosts[0].data.title, 'New title');
+
+            await instance.close();
+        });
+
+        it('Deduplicates a replacement slug owned by another post', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const original = await instance.addPost({lookupKey: 'https://example.com/replaced-post'});
+            original.set('title', 'Original');
+            original.set('slug', 'original-slug');
+            original.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            await original.save(instance.db);
+
+            const retained = await instance.addPost({lookupKey: 'https://example.com/retained-post'});
+            retained.set('title', 'Retained');
+            retained.set('slug', 'refreshed-slug');
+            retained.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
+            await retained.save(instance.db);
+
+            const replacement = await instance.addPost({
+                lookupKey: 'https://example.com/replaced-post',
+                onDuplicate: 'replace'
+            });
+            replacement.set('title', 'Replacement');
+            replacement.set('slug', 'refreshed-slug');
+            replacement.set('created_at', new Date('2023-11-25T12:00:00.000Z'));
+            await replacement.save(instance.db);
+
+            assert.equal(replacement.data.slug, 'refreshed-slug-2');
+            assert.deepEqual(instance.db.slugRenames, [
+                {
+                    oldSlug: 'refreshed-slug',
+                    newSlug: 'refreshed-slug-2',
+                    url: ''
+                }
+            ]);
+
+            const row = instance.db.db
+                .prepare('SELECT slug, original_slug FROM Posts WHERE id = ?')
+                .get(replacement.dbId) as any;
+            assert.equal(row.slug, 'refreshed-slug-2');
+            assert.equal(row.original_slug, 'refreshed-slug');
+
+            const duplicates = await instance.deduplicateSlugs();
+            assert.deepEqual(duplicates, [
+                {oldSlug: 'refreshed-slug', newSlug: 'refreshed-slug', url: ''},
+                {oldSlug: 'refreshed-slug', newSlug: 'refreshed-slug-2', url: ''}
+            ]);
+
+            await instance.close();
+        });
+
+        it('Applies the context duplicate policy to a pre-built PostContext', async () => {
+            const instance: any = new MigrateContext({onDuplicate: 'replace'});
+            await instance.init();
+
+            const original = await instance.addPost({lookupKey: 'https://example.com/pre-built-replace'});
+            original.set('title', 'Old title');
+            original.set('slug', 'old-slug');
+            original.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            await original.save(instance.db);
+
+            const replacement = new PostContext({lookupKey: 'https://example.com/pre-built-replace'});
+            replacement.set('title', 'New title');
+            replacement.set('slug', 'new-slug');
+            replacement.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
+            await instance.addPost(replacement);
+
+            const allPosts = await instance.getAllPosts();
+            assert.equal(allPosts.length, 1);
+            assert.equal(allPosts[0].data.title, 'New title');
+
+            await instance.close();
+        });
+
         it('Does not record a slug rename for a post skipped by lookup_key', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
@@ -1127,13 +1290,17 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
-        it('Can get and set lookupKey and warnOnLookupKeyDuplicate on PostContext', () => {
+        it('Can get and set lookupKey, onDuplicate and warnOnLookupKeyDuplicate on PostContext', () => {
             const post = new PostContext({lookupKey: 'https://example.com/initial'});
             assert.equal(post.lookupKey, 'https://example.com/initial');
+            assert.equal(post.onDuplicate, 'skip');
             assert.equal(post.warnOnLookupKeyDuplicate, false);
 
             post.lookupKey = 'https://example.com/updated';
             assert.equal(post.lookupKey, 'https://example.com/updated');
+
+            post.onDuplicate = 'replace';
+            assert.equal(post.onDuplicate, 'replace');
 
             post.warnOnLookupKeyDuplicate = true;
             assert.equal(post.warnOnLookupKeyDuplicate, true);

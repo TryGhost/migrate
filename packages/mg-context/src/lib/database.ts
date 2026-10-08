@@ -37,6 +37,7 @@ export interface PreparedStatements {
     // Posts
     insertPost: ReturnType<DatabaseSync['prepare']>;
     updatePost: ReturnType<DatabaseSync['prepare']>;
+    replacePost: ReturnType<DatabaseSync['prepare']>;
     updatePostData: ReturnType<DatabaseSync['prepare']>;
     updatePostSlug: ReturnType<DatabaseSync['prepare']>;
     findPostById: ReturnType<DatabaseSync['prepare']>;
@@ -44,6 +45,7 @@ export interface PreparedStatements {
     findPostsBySlug: ReturnType<DatabaseSync['prepare']>;
     findRenamedPosts: ReturnType<DatabaseSync['prepare']>;
     slugExists: ReturnType<DatabaseSync['prepare']>;
+    slugExistsForOtherPost: ReturnType<DatabaseSync['prepare']>;
     findPostsForConversion: ReturnType<DatabaseSync['prepare']>;
     countPosts: ReturnType<DatabaseSync['prepare']>;
     findAllPostsOrdered: ReturnType<DatabaseSync['prepare']>;
@@ -171,6 +173,9 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         updatePost: db.prepare(
             'UPDATE Posts SET data = ?, source = ?, meta = ?, content_format = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, slug = ?, webscrape_data = ? WHERE id = ?'
         ),
+        replacePost: db.prepare(
+            'UPDATE Posts SET data = ?, source = ?, meta = ?, content_format = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, original_slug = ?, slug = ?, webscrape_data = ? WHERE id = ?'
+        ),
         updatePostData: db.prepare('UPDATE Posts SET data = ? WHERE id = ?'),
         updatePostSlug: db.prepare('UPDATE Posts SET slug = ?, data = ? WHERE id = ?'),
         findPostById: db.prepare('SELECT * FROM Posts WHERE id = ?'),
@@ -180,6 +185,7 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
             'SELECT id, slug, original_slug, source, data FROM Posts WHERE original_slug IS NOT NULL AND original_slug <> slug ORDER BY id ASC'
         ),
         slugExists: db.prepare('SELECT 1 FROM Posts WHERE slug = ? LIMIT 1'),
+        slugExistsForOtherPost: db.prepare('SELECT 1 FROM Posts WHERE slug = ? AND id <> ? LIMIT 1'),
         findPostsForConversion: db.prepare(
             'SELECT id, data, content_format FROM Posts ORDER BY id ASC LIMIT ? OFFSET ?'
         ),

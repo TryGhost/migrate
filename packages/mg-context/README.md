@@ -81,6 +81,7 @@ new MigrateContext(options?)
 | `ephemeral`                | `boolean`                            | `true` if no dbPath | Use in-memory database                       |
 | `emitEvents`               | `boolean`                            | `true`              | Emit progress events (see [Events](#events)) |
 | `warnOnLookupKeyDuplicate` | `boolean`                            | `false`             | Log when a duplicate lookupKey is skipped    |
+| `onDuplicate`              | `'skip' \| 'replace'`                | `'skip'`            | Default lookup-key duplicate policy           |
 
 ```js
 // In-memory (default)
@@ -88,6 +89,9 @@ const ctx = new MigrateContext();
 
 // Persistent file-based
 const ctx = new MigrateContext({dbPath: './migration.sqlite'});
+
+// Refresh transformed posts while preserving their database and Ghost IDs
+const ctx = new MigrateContext({dbPath: './migration.sqlite', onDuplicate: 'replace'});
 
 // Server mode — disable events for zero overhead
 const ctx = new MigrateContext({emitEvents: false});
@@ -129,6 +133,12 @@ const post = await ctx.addPost();
 
 // With a lookup key for deduplication
 const post = await ctx.addPost({lookupKey: 'https://example.com/original-url'});
+
+// Override the context's duplicate policy for one post
+const post = await ctx.addPost({
+    lookupKey: 'https://example.com/original-url',
+    onDuplicate: 'replace'
+});
 
 // With source metadata (preserved but not exported)
 const post = await ctx.addPost({source: {originalId: 123}});
@@ -671,7 +681,7 @@ if (scraped?.og_image) {
 
 #### `post.lookupKey: string | null`
 
-Get or set the lookup key. When a post with a matching lookup key already exists in the database, `save()` silently skips the insert.
+Get or set the lookup key. When a post with a matching lookup key already exists in the database, `save()` applies the post's `onDuplicate` policy.
 
 ```js
 const post = await ctx.addPost({lookupKey: 'https://example.com/post-url'});
@@ -682,6 +692,26 @@ await post.save(ctx.db);
 const dupe = await ctx.addPost({lookupKey: 'https://example.com/post-url'});
 await dupe.save(ctx.db); // skipped
 ```
+
+#### `post.onDuplicate: 'skip' | 'replace'`
+
+Controls what `save()` does when `lookupKey` matches a stored post:
+
+- `skip` (default) leaves the stored post unchanged. This preserves the original retry-safe behavior.
+- `replace` overwrites the stored post with the newly transformed post while preserving its database ID and Ghost ID. Scalar fields, source metadata, post metadata, tags, and authors are replaced. A subsequent `prepareForExport()` rebuilds Lexical from refreshed HTML when needed.
+
+Set a default for posts created by a context, or override it for one post:
+
+```js
+const ctx = new MigrateContext({dbPath: './migration.sqlite', onDuplicate: 'replace'});
+
+const post = await ctx.addPost({
+    lookupKey: 'https://example.com/post-url',
+    onDuplicate: 'skip' // optional per-post override
+});
+```
+
+Use `replace` only when the rerun supplies a complete post. It intentionally replaces tags and authors as well as scalar content; it does not merge missing values from the stored row.
 
 ### Field sanitization
 

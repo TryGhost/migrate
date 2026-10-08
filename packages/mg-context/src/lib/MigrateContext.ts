@@ -5,7 +5,12 @@ import errors from '@tryghost/errors';
 import {htmlToLexical} from '@tryghost/mg-html-lexical';
 
 import MigrateBase from './MigrateBase.js';
-import PostContext, {PostConstructorOptions, normalizeContentFormat, type ContentFormat} from './PostContext.js';
+import PostContext, {
+    PostConstructorOptions,
+    normalizeContentFormat,
+    type ContentFormat,
+    type DuplicatePostPolicy
+} from './PostContext.js';
 import TagContext from './TagContext.js';
 import AuthorContext from './AuthorContext.js';
 import {createDatabase, type DatabaseModels, type SanitizedField} from './database.js';
@@ -75,6 +80,7 @@ type MigrateContextOptions = {
     ephemeral?: boolean;
     emitEvents?: boolean;
     warnOnLookupKeyDuplicate?: boolean;
+    onDuplicate?: DuplicatePostPolicy;
 };
 
 export default class MigrateContext extends MigrateBase {
@@ -83,6 +89,7 @@ export default class MigrateContext extends MigrateBase {
     #ephemeral: boolean;
     #emitEvents: boolean;
     #warnOnLookupKeyDuplicate: boolean;
+    #onDuplicate: DuplicatePostPolicy | undefined;
     #db: DatabaseModels | null = null;
     #slugsDeduped = false;
     #duplicateSlugs: DuplicateSlugEntry[] = [];
@@ -93,13 +100,15 @@ export default class MigrateContext extends MigrateBase {
         dbPath,
         ephemeral,
         emitEvents = true,
-        warnOnLookupKeyDuplicate = false
+        warnOnLookupKeyDuplicate = false,
+        onDuplicate
     }: MigrateContextOptions = {}) {
         super();
 
         this.#contentFormat = normalizeContentFormat(contentFormat);
         this.#emitEvents = emitEvents;
         this.#warnOnLookupKeyDuplicate = warnOnLookupKeyDuplicate;
+        this.#onDuplicate = onDuplicate;
 
         if (dbPath) {
             this.#dbPath = dbPath;
@@ -457,13 +466,18 @@ export default class MigrateContext extends MigrateBase {
 
         if (post && post instanceof PostContext) {
             newPost = post;
+            newPost.onDuplicate = this.#onDuplicate ?? newPost.onDuplicate;
             newPost.warnOnLookupKeyDuplicate = this.#warnOnLookupKeyDuplicate;
             newPost.save(this.db);
         } else if (post && typeof post === 'object') {
-            newPost = new PostContext({...post, contentFormat: this.#contentFormat});
+            newPost = new PostContext({
+                ...post,
+                contentFormat: this.#contentFormat,
+                onDuplicate: post.onDuplicate ?? this.#onDuplicate
+            });
             newPost.warnOnLookupKeyDuplicate = this.#warnOnLookupKeyDuplicate;
         } else {
-            newPost = new PostContext({contentFormat: this.#contentFormat});
+            newPost = new PostContext({contentFormat: this.#contentFormat, onDuplicate: this.#onDuplicate});
             newPost.warnOnLookupKeyDuplicate = this.#warnOnLookupKeyDuplicate;
         }
 
