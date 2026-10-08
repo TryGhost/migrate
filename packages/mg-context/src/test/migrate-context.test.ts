@@ -352,6 +352,49 @@ describe('MigrateContext', () => {
         await instance.close();
     });
 
+    it('Bounds unfiltered post iteration to the rows present when it starts', async () => {
+        const instance: any = new MigrateContext();
+        await instance.init();
+
+        for (let i = 1; i <= 3; i += 1) {
+            const post = await instance.addPost();
+            post.set('title', `Original ${i}`);
+            post.set('slug', `original-${i}`);
+            await post.save(instance.db);
+        }
+
+        const titles: string[] = [];
+        const progressCalls: [number, number][] = [];
+        instance.on('progress', (event: string, processed: number, total: number) => {
+            if (event === 'forEachPost') {
+                progressCalls.push([processed, total]);
+            }
+        });
+
+        await instance.forEachPost(
+            async (post: PostContext) => {
+                titles.push(post.data.title);
+                if (titles.length === 1) {
+                    const added = await instance.addPost();
+                    added.set('title', 'Added during iteration');
+                    added.set('slug', 'added-during-iteration');
+                    await added.save(instance.db);
+                }
+            },
+            {batchSize: 1}
+        );
+
+        assert.deepEqual(titles, ['Original 1', 'Original 2', 'Original 3']);
+        assert.deepEqual(progressCalls, [
+            [1, 3],
+            [2, 3],
+            [3, 3]
+        ]);
+        assert.equal((await instance.getAllPosts()).length, 4);
+
+        await instance.close();
+    });
+
     describe('findPosts', () => {
         let reusedInstance: any;
 
@@ -560,10 +603,13 @@ describe('MigrateContext', () => {
             await post.save(instance.db);
 
             const slugs: string[] = [];
-            await instance.forEachTag(async (tag: any) => {
-                slugs.push(tag.data.slug);
-                tag.set('description', `Desc for ${tag.data.slug}`);
-            });
+            await instance.forEachTag(
+                async (tag: any) => {
+                    slugs.push(tag.data.slug);
+                    tag.set('description', `Desc for ${tag.data.slug}`);
+                },
+                {batchSize: 1}
+            );
 
             assert.deepEqual(slugs, ['alpha', 'beta']);
 
@@ -585,15 +631,19 @@ describe('MigrateContext', () => {
             post.set('slug', 'post');
             post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
             post.addAuthor({name: 'Alice', slug: 'alice', email: 'alice@example.com'});
+            post.addAuthor({name: 'Bob', slug: 'bob', email: 'bob@example.com'});
             await post.save(instance.db);
 
             const slugs: string[] = [];
-            await instance.forEachAuthor(async (author: any) => {
-                slugs.push(author.data.slug);
-                author.set('bio', 'Updated bio');
-            });
+            await instance.forEachAuthor(
+                async (author: any) => {
+                    slugs.push(author.data.slug);
+                    author.set('bio', 'Updated bio');
+                },
+                {batchSize: 1}
+            );
 
-            assert.deepEqual(slugs, ['alice']);
+            assert.deepEqual(slugs, ['alice', 'bob']);
 
             // Verify saves persisted
             const authors = await instance.findAuthors({slug: 'alice'});
@@ -2531,6 +2581,34 @@ describe('MigrateContext', () => {
                 assert.equal(titles.length, 5);
             });
 
+            it('Snapshots matches before callbacks mutate the filtered field', async () => {
+                const filtered: any = new MigrateContext();
+                await filtered.init();
+
+                for (let i = 1; i <= 2; i += 1) {
+                    const post = await filtered.addPost();
+                    post.set('title', `Filtered ${i}`);
+                    post.set('slug', `filtered-${i}`);
+                    post.set('created_at', new Date(`2023-01-0${i}T00:00:00.000Z`));
+                    await post.save(filtered.db);
+                }
+
+                const titles: string[] = [];
+                await filtered.forEachPost(
+                    async (post: PostContext) => {
+                        titles.push(post.data.title);
+                        post.set('created_at', new Date('2025-01-01T00:00:00.000Z'));
+                    },
+                    {
+                        batchSize: 1,
+                        filter: {createdAt: {before: new Date('2024-01-01T00:00:00.000Z')}}
+                    }
+                );
+
+                assert.deepEqual(titles, ['Filtered 1', 'Filtered 2']);
+                await filtered.close();
+            });
+
             it('Tag slug filter returns matching posts', async () => {
                 const titles = await collectTitles({tag: {slug: 'news'}});
                 assert.deepEqual(titles, ['Post A', 'Post B']);
@@ -2663,10 +2741,36 @@ describe('MigrateContext', () => {
         describe('streamPosts', () => {
             it('yields all posts as PostContext objects', async () => {
                 const titles: string[] = [];
-                for await (const post of ctx.streamPosts()) {
+                for await (const post of ctx.streamPosts({batchSize: 1})) {
                     titles.push(post.data.title);
                 }
                 assert.equal(titles.length, 5);
+            });
+
+            it('does not yield posts added after unfiltered streaming starts', async () => {
+                const streamed: any = new MigrateContext();
+                await streamed.init();
+
+                for (let i = 1; i <= 2; i += 1) {
+                    const post = await streamed.addPost();
+                    post.set('title', `Streamed ${i}`);
+                    post.set('slug', `streamed-${i}`);
+                    await post.save(streamed.db);
+                }
+
+                const titles: string[] = [];
+                for await (const post of streamed.streamPosts({batchSize: 1})) {
+                    titles.push(post.data.title);
+                    if (titles.length === 1) {
+                        const added = await streamed.addPost();
+                        added.set('title', 'Added during stream');
+                        added.set('slug', 'added-during-stream');
+                        await added.save(streamed.db);
+                    }
+                }
+
+                assert.deepEqual(titles, ['Streamed 1', 'Streamed 2']);
+                await streamed.close();
             });
 
             it('supports filter option', async () => {
@@ -2675,6 +2779,32 @@ describe('MigrateContext', () => {
                     titles.push(post.data.title);
                 }
                 assert.deepEqual(titles, ['Post A', 'Post B']);
+            });
+
+            it('snapshots matches before consumers persist filtered-field changes', async () => {
+                const filtered: any = new MigrateContext();
+                await filtered.init();
+
+                for (let i = 1; i <= 2; i += 1) {
+                    const post = await filtered.addPost();
+                    post.set('title', `Stream filter ${i}`);
+                    post.set('slug', `stream-filter-${i}`);
+                    post.set('created_at', new Date(`2023-02-0${i}T00:00:00.000Z`));
+                    await post.save(filtered.db);
+                }
+
+                const titles: string[] = [];
+                for await (const post of filtered.streamPosts({
+                    batchSize: 1,
+                    filter: {createdAt: {before: new Date('2024-01-01T00:00:00.000Z')}}
+                })) {
+                    titles.push(post.data.title);
+                    post.set('created_at', new Date('2025-01-01T00:00:00.000Z'));
+                    await post.save(filtered.db);
+                }
+
+                assert.deepEqual(titles, ['Stream filter 1', 'Stream filter 2']);
+                await filtered.close();
             });
 
             it('yields zero posts on empty context', async () => {
@@ -2693,7 +2823,7 @@ describe('MigrateContext', () => {
         describe('streamTags', () => {
             it('yields all used tags', async () => {
                 const slugs: string[] = [];
-                for await (const tag of ctx.streamTags()) {
+                for await (const tag of ctx.streamTags({batchSize: 1})) {
                     slugs.push(tag.data.slug);
                 }
                 assert.ok(slugs.includes('news'));
@@ -2704,7 +2834,7 @@ describe('MigrateContext', () => {
         describe('streamAuthors', () => {
             it('yields all used authors', async () => {
                 const slugs: string[] = [];
-                for await (const author of ctx.streamAuthors()) {
+                for await (const author of ctx.streamAuthors({batchSize: 1})) {
                     slugs.push(author.data.slug);
                 }
                 assert.ok(slugs.includes('alice'));

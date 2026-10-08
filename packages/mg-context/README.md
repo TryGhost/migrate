@@ -449,6 +449,10 @@ for await (const author of ctx.streamAuthors()) {
 | `batchSize` | `number`     | `100`   | Posts loaded per batch                        |
 | `filter`    | `PostFilter` | —       | Filter criteria (see [Filtering](#filtering)) |
 
+Unfiltered `forEachPost()`, `streamPosts()`, `forEachTag()`, `streamTags()`, `forEachAuthor()`, and `streamAuthors()` use keyset pagination. They retain only the current batch plus the highest database ID present when iteration starts, so memory use stays bounded and rows added later are left for the next iteration.
+
+Supplying a post `filter` with at least one criterion deliberately uses a different strategy: `forEachPost()` and `streamPosts()` snapshot every matching post ID before invoking the first callback or yielding the first post. This costs O(number of matches) memory, but it prevents a callback from skipping or duplicating posts when it saves changes to a date, tag, or author used by the filter.
+
 Progress is reported via the `progress` event (see [Events](#events)).
 
 ### Exporting

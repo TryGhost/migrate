@@ -58,6 +58,8 @@ export interface PreparedStatements {
     slugExistsForOtherPost: ReturnType<DatabaseSync['prepare']>;
     findPostsForConversion: ReturnType<DatabaseSync['prepare']>;
     countPosts: ReturnType<DatabaseSync['prepare']>;
+    findMaxPostId: ReturnType<DatabaseSync['prepare']>;
+    findPostsAfterId: ReturnType<DatabaseSync['prepare']>;
     findAllPostsOrdered: ReturnType<DatabaseSync['prepare']>;
     findPostsPaginated: ReturnType<DatabaseSync['prepare']>;
 
@@ -71,7 +73,9 @@ export interface PreparedStatements {
     findTagsByName: ReturnType<DatabaseSync['prepare']>;
     findAllTags: ReturnType<DatabaseSync['prepare']>;
     findUsedTags: ReturnType<DatabaseSync['prepare']>;
-    findUsedTagIds: ReturnType<DatabaseSync['prepare']>;
+    countUsedTags: ReturnType<DatabaseSync['prepare']>;
+    findMaxUsedTagId: ReturnType<DatabaseSync['prepare']>;
+    findUsedTagsAfterId: ReturnType<DatabaseSync['prepare']>;
 
     // Authors
     insertAuthor: ReturnType<DatabaseSync['prepare']>;
@@ -85,7 +89,9 @@ export interface PreparedStatements {
     findAuthorsByEmail: ReturnType<DatabaseSync['prepare']>;
     findAllAuthors: ReturnType<DatabaseSync['prepare']>;
     findUsedAuthors: ReturnType<DatabaseSync['prepare']>;
-    findUsedAuthorIds: ReturnType<DatabaseSync['prepare']>;
+    countUsedAuthors: ReturnType<DatabaseSync['prepare']>;
+    findMaxUsedAuthorId: ReturnType<DatabaseSync['prepare']>;
+    findUsedAuthorsAfterId: ReturnType<DatabaseSync['prepare']>;
 
     // PostTag junction
     insertPostTag: ReturnType<DatabaseSync['prepare']>;
@@ -223,6 +229,8 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
             'SELECT id, data, content_format FROM Posts ORDER BY id ASC LIMIT ? OFFSET ?'
         ),
         countPosts: db.prepare('SELECT COUNT(*) as count FROM Posts'),
+        findMaxPostId: db.prepare('SELECT MAX(id) AS max_id FROM Posts'),
+        findPostsAfterId: db.prepare('SELECT * FROM Posts WHERE id > ? AND id <= ? ORDER BY id ASC LIMIT ?'),
         findAllPostsOrdered: db.prepare('SELECT * FROM Posts ORDER BY id ASC'),
         findPostsPaginated: db.prepare('SELECT * FROM Posts ORDER BY id ASC LIMIT ? OFFSET ?'),
 
@@ -238,8 +246,14 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         findUsedTags: db.prepare(
             'SELECT DISTINCT t.* FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id ORDER BY t.id ASC'
         ),
-        findUsedTagIds: db.prepare(
-            'SELECT DISTINCT t.id FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id ORDER BY t.id ASC'
+        countUsedTags: db.prepare(
+            'SELECT COUNT(DISTINCT t.id) AS count FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id'
+        ),
+        findMaxUsedTagId: db.prepare(
+            'SELECT MAX(t.id) AS max_id FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id'
+        ),
+        findUsedTagsAfterId: db.prepare(
+            'SELECT DISTINCT t.* FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id WHERE t.id > ? AND t.id <= ? ORDER BY t.id ASC LIMIT ?'
         ),
 
         // Authors
@@ -258,8 +272,14 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         findUsedAuthors: db.prepare(
             'SELECT DISTINCT a.* FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id ORDER BY a.id ASC'
         ),
-        findUsedAuthorIds: db.prepare(
-            'SELECT DISTINCT a.id FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id ORDER BY a.id ASC'
+        countUsedAuthors: db.prepare(
+            'SELECT COUNT(DISTINCT a.id) AS count FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id'
+        ),
+        findMaxUsedAuthorId: db.prepare(
+            'SELECT MAX(a.id) AS max_id FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id'
+        ),
+        findUsedAuthorsAfterId: db.prepare(
+            'SELECT DISTINCT a.* FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id WHERE a.id > ? AND a.id <= ? ORDER BY a.id ASC LIMIT ?'
         ),
 
         // PostTag junction

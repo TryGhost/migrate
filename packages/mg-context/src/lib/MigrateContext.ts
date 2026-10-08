@@ -70,6 +70,10 @@ export interface ForEachPostOptions {
     filter?: PostFilter;
 }
 
+function hasPostFilter(filter?: PostFilter): boolean {
+    return Boolean(filter?.tag || filter?.author || filter?.createdAt || filter?.publishedAt);
+}
+
 export interface DuplicateSlugEntry {
     oldSlug: string;
     newSlug: string;
@@ -490,7 +494,29 @@ export default class MigrateContext extends MigrateBase {
         callback: (post: PostContext) => Promise<void>,
         {batchSize = 100, filter}: ForEachPostOptions = {}
     ) {
+        if (!hasPostFilter(filter)) {
+            const total = (this.db.stmts.countPosts.get() as {count: number}).count;
+            const maxId = (this.db.stmts.findMaxPostId.get() as {max_id: number | null}).max_id;
+
+            await this.#forEachByKeyset(
+                total,
+                maxId,
+                batchSize,
+                'forEachPost',
+                (afterId, upperId, limit) => this.db.stmts.findPostsAfterId.all(afterId, upperId, limit) as any[],
+                row => PostContext.fromRow(row, this.db),
+                callback,
+                post => {
+                    withTransaction(this.db, () => {
+                        post.save(this.db);
+                    });
+                }
+            );
+            return;
+        }
+
         const where = this.#buildFilterWhere(filter);
+
         // Snapshot matching IDs up front so mutations during iteration
         // cannot shift pagination (e.g. changing a date or tag used in the filter).
         const allIds = findAllPostIdsWhere(this.db, where);
@@ -517,6 +543,21 @@ export default class MigrateContext extends MigrateBase {
     }
 
     async *streamPosts({batchSize = 100, filter}: ForEachPostOptions = {}): AsyncGenerator<PostContext> {
+        if (!hasPostFilter(filter)) {
+            const total = (this.db.stmts.countPosts.get() as {count: number}).count;
+            const maxId = (this.db.stmts.findMaxPostId.get() as {max_id: number | null}).max_id;
+
+            yield* this.#streamByKeyset(
+                total,
+                maxId,
+                batchSize,
+                'streamPosts',
+                (afterId, upperId, limit) => this.db.stmts.findPostsAfterId.all(afterId, upperId, limit) as any[],
+                row => PostContext.fromRow(row, this.db)
+            );
+            return;
+        }
+
         const where = this.#buildFilterWhere(filter);
         const allIds = findAllPostIdsWhere(this.db, where);
 
@@ -530,27 +571,97 @@ export default class MigrateContext extends MigrateBase {
     }
 
     async *streamTags({batchSize = 100}: {batchSize?: number} = {}): AsyncGenerator<TagContext> {
-        const allIds = (this.db.stmts.findUsedTagIds.all() as any[]).map((r: any) => r.id as number);
+        const total = (this.db.stmts.countUsedTags.get() as {count: number}).count;
+        const maxId = (this.db.stmts.findMaxUsedTagId.get() as {max_id: number | null}).max_id;
 
-        yield* this.#streamByIds(
-            allIds,
+        yield* this.#streamByKeyset(
+            total,
+            maxId,
             batchSize,
             'streamTags',
-            ids => findByIds(this.db, 'Tags', ids),
+            (afterId, upperId, limit) => this.db.stmts.findUsedTagsAfterId.all(afterId, upperId, limit) as any[],
             row => TagContext.fromRow(row)
         );
     }
 
     async *streamAuthors({batchSize = 100}: {batchSize?: number} = {}): AsyncGenerator<AuthorContext> {
-        const allIds = (this.db.stmts.findUsedAuthorIds.all() as any[]).map((r: any) => r.id as number);
+        const total = (this.db.stmts.countUsedAuthors.get() as {count: number}).count;
+        const maxId = (this.db.stmts.findMaxUsedAuthorId.get() as {max_id: number | null}).max_id;
 
-        yield* this.#streamByIds(
-            allIds,
+        yield* this.#streamByKeyset(
+            total,
+            maxId,
             batchSize,
             'streamAuthors',
-            ids => findByIds(this.db, 'Authors', ids),
+            (afterId, upperId, limit) => this.db.stmts.findUsedAuthorsAfterId.all(afterId, upperId, limit) as any[],
             row => AuthorContext.fromRow(row)
         );
+    }
+
+    async #forEachByKeyset<T>(
+        total: number,
+        maxId: number | null,
+        batchSize: number,
+        eventName: string,
+        fetchBatch: (afterId: number, upperId: number, limit: number) => any[],
+        toEntity: (row: any) => T,
+        callback: (entity: T) => Promise<void>,
+        save: (entity: T) => void
+    ): Promise<void> {
+        if (maxId === null) {
+            return;
+        }
+
+        let processed = 0;
+        let lastId = 0;
+        let rows: any[];
+
+        do {
+            rows = fetchBatch(lastId, maxId, batchSize);
+
+            for (const row of rows) {
+                lastId = row.id as number;
+                const entity = toEntity(row);
+                await callback(entity);
+                save(entity);
+                processed += 1;
+            }
+
+            if (this.#emitEvents) {
+                this.#emitter.emit('progress', eventName, processed, total);
+            }
+        } while (rows.length === batchSize && lastId < maxId);
+    }
+
+    async *#streamByKeyset<T>(
+        total: number,
+        maxId: number | null,
+        batchSize: number,
+        eventName: string,
+        fetchBatch: (afterId: number, upperId: number, limit: number) => any[],
+        toEntity: (row: any) => T
+    ): AsyncGenerator<T> {
+        if (maxId === null) {
+            return;
+        }
+
+        let processed = 0;
+        let lastId = 0;
+        let rows: any[];
+
+        do {
+            rows = fetchBatch(lastId, maxId, batchSize);
+
+            for (const row of rows) {
+                lastId = row.id as number;
+                yield toEntity(row);
+                processed += 1;
+            }
+
+            if (this.#emitEvents) {
+                this.#emitter.emit('progress', eventName, processed, total);
+            }
+        } while (rows.length === batchSize && lastId < maxId);
     }
 
     // eslint-disable-next-line no-unused-vars
@@ -744,25 +855,19 @@ export default class MigrateContext extends MigrateBase {
 
     // eslint-disable-next-line no-unused-vars
     async forEachTag(callback: (tag: TagContext) => Promise<void>, {batchSize = 100}: {batchSize?: number} = {}) {
-        const allIds = (this.db.stmts.findUsedTagIds.all() as any[]).map((r: any) => r.id as number);
-        const total = allIds.length;
-        let processed = 0;
+        const total = (this.db.stmts.countUsedTags.get() as {count: number}).count;
+        const maxId = (this.db.stmts.findMaxUsedTagId.get() as {max_id: number | null}).max_id;
 
-        for (let offset = 0; offset < total; offset += batchSize) {
-            const batchIds = allIds.slice(offset, offset + batchSize);
-            const rows = findByIds(this.db, 'Tags', batchIds);
-
-            for (const row of rows) {
-                const tag = TagContext.fromRow(row);
-                await callback(tag);
-                tag.save(this.db);
-                processed += 1;
-            }
-
-            if (this.#emitEvents) {
-                this.#emitter.emit('progress', 'forEachTag', processed, total);
-            }
-        }
+        await this.#forEachByKeyset(
+            total,
+            maxId,
+            batchSize,
+            'forEachTag',
+            (afterId, upperId, limit) => this.db.stmts.findUsedTagsAfterId.all(afterId, upperId, limit) as any[],
+            row => TagContext.fromRow(row),
+            callback,
+            tag => tag.save(this.db)
+        );
     }
 
     // eslint-disable-next-line no-unused-vars
@@ -770,25 +875,19 @@ export default class MigrateContext extends MigrateBase {
         callback: (author: AuthorContext) => Promise<void>,
         {batchSize = 100}: {batchSize?: number} = {}
     ) {
-        const allIds = (this.db.stmts.findUsedAuthorIds.all() as any[]).map((r: any) => r.id as number);
-        const total = allIds.length;
-        let processed = 0;
+        const total = (this.db.stmts.countUsedAuthors.get() as {count: number}).count;
+        const maxId = (this.db.stmts.findMaxUsedAuthorId.get() as {max_id: number | null}).max_id;
 
-        for (let offset = 0; offset < total; offset += batchSize) {
-            const batchIds = allIds.slice(offset, offset + batchSize);
-            const rows = findByIds(this.db, 'Authors', batchIds);
-
-            for (const row of rows) {
-                const author = AuthorContext.fromRow(row);
-                await callback(author);
-                author.save(this.db);
-                processed += 1;
-            }
-
-            if (this.#emitEvents) {
-                this.#emitter.emit('progress', 'forEachAuthor', processed, total);
-            }
-        }
+        await this.#forEachByKeyset(
+            total,
+            maxId,
+            batchSize,
+            'forEachAuthor',
+            (afterId, upperId, limit) => this.db.stmts.findUsedAuthorsAfterId.all(afterId, upperId, limit) as any[],
+            row => AuthorContext.fromRow(row),
+            callback,
+            author => author.save(this.db)
+        );
     }
 
     async findAuthors({slug, name, email}: FindAuthorsOptions = {}): Promise<AuthorContext[] | null> {
