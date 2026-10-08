@@ -838,6 +838,7 @@ The rules:
 |------------|------|
 | Every string field | Surrounding whitespace is stripped |
 | Every string field | Values over the field's maximum are truncated; a slug left with a dangling `-` has it removed |
+| Post `title` | A missing or whitespace-only title becomes `(Untitled)`; export preparation also repairs rows already stored in SQLite |
 | URL fields | An over-long URL is dropped to `null` rather than truncated — a cut URL is a broken link, not a shorter one. Covers `feature_image`, `og_image`, `twitter_image` and `canonical_url` on posts and tags, and `website`, `profile_image` and `cover_image` on authors |
 | Post slugs | A deduplicating suffix (`-2`, `-3`) trims the base rather than overflowing the 191 character limit |
 | Tag `name` | A leading comma is stripped — Ghost validates names with `matches: /^([^,]\|$)/` |

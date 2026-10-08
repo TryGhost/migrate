@@ -1,8 +1,15 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {PostContext, TagContext, AuthorContext} from '../index.js';
+import {PostContext, TagContext, AuthorContext, normalizeTitle} from '../index.js';
 
 describe('PostContext', function () {
+    it('Normalizes missing, blank, padded, and oversized titles', () => {
+        assert.equal(normalizeTitle(null), '(Untitled)');
+        assert.equal(normalizeTitle('   '), '(Untitled)');
+        assert.equal(normalizeTitle('  A title  '), 'A title');
+        assert.equal(normalizeTitle('A'.repeat(300)), 'A'.repeat(255));
+    });
+
     it('Is instance of PostContext', () => {
         const instance: any = new PostContext();
 
@@ -870,6 +877,31 @@ describe('PostContext', function () {
 
             assert.equal(post.id, undefined);
             assert.equal(post.title, 'Test');
+        });
+
+        it('Backfills a blank title during final export mapping', () => {
+            const row = mockRow({
+                data: JSON.stringify({
+                    title: '   ',
+                    slug: 'untitled',
+                    created_at: '2023-01-01T00:00:00.000Z'
+                })
+            });
+            const {post} = PostContext.toGhostPost(row);
+
+            assert.equal(post.title, '(Untitled)');
+        });
+
+        it('Does not reject another blank required string during export', () => {
+            const row = mockRow({
+                data: JSON.stringify({
+                    title: 'Test',
+                    slug: '   ',
+                    created_at: '2023-01-01T00:00:00.000Z'
+                })
+            });
+
+            assert.doesNotThrow(() => PostContext.toGhostPost(row));
         });
 
         it('Extracts meta fields into posts_meta', () => {

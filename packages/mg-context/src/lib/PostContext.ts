@@ -31,6 +31,11 @@ function slugWithSuffix(base: string, suffix: number): string {
     return `${trimmedBase}${tail}`;
 }
 
+export function normalizeTitle(value: unknown): string {
+    const title = typeof value === 'string' ? value.trim() : '';
+    return (title || '(Untitled)').slice(0, POST_LIMITS.title);
+}
+
 const postZodSchema = z.object({
     title: z.string().max(POST_LIMITS.title),
     slug: z.string().max(MAX_SLUG_LENGTH),
@@ -79,6 +84,16 @@ const POST_URL_FIELDS: ReadonlySet<string> = new Set(['feature_image', 'og_image
 export default class PostContext extends MigrateBase {
     protected override get urlFields() {
         return POST_URL_FIELDS;
+    }
+
+    protected override sanitizeValue(key: string, value: any): any {
+        const sanitized = super.sanitizeValue(key, value);
+        return key === 'title' ? normalizeTitle(sanitized) : sanitized;
+    }
+
+    protected override applySanitizers() {
+        this.data.title = normalizeTitle(this.data.title);
+        super.applySanitizers();
     }
 
     #source: any;
@@ -193,6 +208,7 @@ export default class PostContext extends MigrateBase {
     }
 
     get getFinal(): any {
+        this.data.title = normalizeTitle(this.data.title);
         const result = super.getFinal;
 
         // Inject ghost IDs into nested tags and authors
@@ -553,6 +569,7 @@ export default class PostContext extends MigrateBase {
         const rawData = JSON.parse(row.data);
         const contentFormat = normalizeContentFormat(row.content_format);
         const ghostId = row.ghost_id as string;
+        rawData.title = normalizeTitle(rawData.title);
 
         // Null out fields not needed for this content format
         if (contentFormat === 'lexical') {

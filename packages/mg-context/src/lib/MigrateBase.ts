@@ -100,9 +100,9 @@ export default class MigrateBase {
 
         let reason: SanitizedField['reason'] = 'replaced';
         if (typeof newValue === 'string') {
-            if (info.maxLength && oldValue.length > info.maxLength) {
+            if (info.maxLength && typeof oldValue === 'string' && oldValue.length > info.maxLength) {
                 reason = 'truncated';
-            } else if (oldValue.trim() === newValue) {
+            } else if (typeof oldValue === 'string' && oldValue.trim() === newValue) {
                 reason = 'trimmed';
             }
         }

@@ -8,6 +8,7 @@ import MigrateBase from './MigrateBase.js';
 import PostContext, {
     PostConstructorOptions,
     normalizeContentFormat,
+    normalizeTitle,
     type ContentFormat,
     type DuplicatePostPolicy
 } from './PostContext.js';
@@ -347,21 +348,25 @@ export default class MigrateContext extends MigrateBase {
             try {
                 for (const row of rows) {
                     const cf = normalizeContentFormat(row.content_format);
-                    if (cf === 'html') {
-                        continue;
-                    }
-
                     const data = JSON.parse(row.data as string);
                     let changed = false;
+                    const title = normalizeTitle(data.title);
 
-                    if (!data.lexical && data.html) {
-                        data.lexical = JSON.stringify(htmlToLexical(data.html));
+                    if (data.title !== title) {
+                        data.title = title;
                         changed = true;
                     }
 
-                    if (data.mobiledoc !== null) {
-                        data.mobiledoc = null;
-                        changed = true;
+                    if (cf !== 'html') {
+                        if (!data.lexical && data.html) {
+                            data.lexical = JSON.stringify(htmlToLexical(data.html));
+                            changed = true;
+                        }
+
+                        if (data.mobiledoc !== null) {
+                            data.mobiledoc = null;
+                            changed = true;
+                        }
                     }
 
                     if (changed) {

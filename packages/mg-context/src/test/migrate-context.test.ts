@@ -2065,6 +2065,29 @@ describe('MigrateContext', () => {
     });
 
     describe('Conversion caching', () => {
+        it('Backfills blank titles already stored in SQLite', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost({contentFormat: 'html'});
+            post.set('title', 'Original');
+            post.set('slug', 'untitled');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post.save(instance.db);
+
+            const row = instance.db.stmts.findPostById.get(post.dbId) as any;
+            const data = JSON.parse(row.data);
+            data.title = '   ';
+            instance.db.stmts.updatePostData.run(JSON.stringify(data), post.dbId);
+
+            await instance.prepareForExport();
+
+            const updated = instance.db.stmts.findPostById.get(post.dbId) as any;
+            assert.equal(JSON.parse(updated.data).title, '(Untitled)');
+
+            await instance.close();
+        });
+
         it('prepareForExport converts and caches content in DB', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
@@ -3551,6 +3574,26 @@ describe('MigrateContext', () => {
     });
 
     describe('sanitizedFields', () => {
+        it('Stores a fallback when a post title is missing', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('slug', 'untitled');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post.save(instance.db);
+
+            const stored = await instance.findPosts({slug: 'untitled'});
+            assert.equal(stored[0].data.title, '(Untitled)');
+
+            const titleChange = instance.sanitizedFields.find((entry: any) => entry.field === 'title');
+            assert.equal(titleChange.reason, 'replaced');
+            assert.equal(titleChange.oldValue, null);
+            assert.equal(titleChange.newValue, '(Untitled)');
+
+            await instance.close();
+        });
+
         it('Reports values trimmed on the way into the database', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
