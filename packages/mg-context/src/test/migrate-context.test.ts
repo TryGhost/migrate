@@ -2,9 +2,17 @@ import assert from 'node:assert/strict';
 import {describe, it, before, after, mock} from 'node:test';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {DatabaseSync} from 'node:sqlite';
 import {readFile, unlink, rm} from 'node:fs/promises';
 import errors from '@tryghost/errors';
-import {MigrateContext, PostContext, TagContext, AuthorContext, type PostFilter} from '../index.js';
+import {
+    MigrateContext,
+    PostContext,
+    TagContext,
+    AuthorContext,
+    MIGRATE_CONTEXT_SCHEMA_VERSION,
+    type PostFilter
+} from '../index.js';
 import {withTransaction, findPostsByIds} from '../lib/db-helpers.js';
 
 describe('MigrateContext', () => {
@@ -28,6 +36,174 @@ describe('MigrateContext', () => {
         await instance.init();
         assert.ok(instance.db);
         await instance.close();
+    });
+
+    describe('database lifecycle', () => {
+        it('Reports the schema version and whether migration content exists', async () => {
+            const instance = new MigrateContext();
+            await instance.init();
+
+            assert.equal(instance.schemaVersion, MIGRATE_CONTEXT_SCHEMA_VERSION);
+            assert.equal(instance.hasContent(), false);
+
+            instance.addLink('example.com/existing/', '/existing/');
+            assert.deepEqual(instance.hasContent(), {
+                posts: 0,
+                pages: 0,
+                users: 0,
+                tags: 0,
+                userAssociations: 0,
+                tagAssociations: 0,
+                links: 1
+            });
+
+            instance.reset();
+            assert.equal(instance.hasContent(), false);
+            await instance.close();
+        });
+
+        it('Clears run-specific reports when the same context is reinitialized', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            for (const title of ['First', 'Second']) {
+                const post = await instance.addPost();
+                post.set('title', title);
+                post.set('slug', 'duplicate');
+                post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+                await post.save(instance.db);
+            }
+
+            assert.equal((await instance.deduplicateSlugs()).length, 2);
+            await instance.close();
+
+            await instance.init();
+            assert.deepEqual(instance.duplicateSlugs, []);
+            assert.deepEqual(await instance.deduplicateSlugs(), []);
+            await instance.close();
+        });
+
+        it('Resets all managed content, sequences, and in-memory state', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+            instance.setFingerprint('source', 'source-v1');
+
+            const first = await instance.addPost();
+            first.set('title', 'x'.repeat(300));
+            first.set('slug', 'reset-post');
+            first.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            first.addTag({name: 'Reset Tag', slug: 'reset-tag'});
+            first.addAuthor({name: 'Reset Author', slug: 'reset-author', email: 'reset@example.com'});
+            await first.save(instance.db);
+
+            const duplicate = await instance.addPost();
+            duplicate.set('title', 'Duplicate');
+            duplicate.set('slug', 'reset-post');
+            duplicate.set('type', 'page');
+            duplicate.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
+            await duplicate.save(instance.db);
+            instance.addLink('example.com/reset-post/', '/reset-post/');
+
+            assert.deepEqual(instance.hasContent(), {
+                posts: 1,
+                pages: 1,
+                users: 1,
+                tags: 1,
+                userAssociations: 1,
+                tagAssociations: 1,
+                links: 1
+            });
+            assert.equal((await instance.deduplicateSlugs()).length, 2);
+            assert.ok(instance.db.tagCache.size > 0);
+            assert.ok(instance.db.authorCache.size > 0);
+            assert.ok(instance.db.slugRenames.length > 0);
+            assert.ok(instance.sanitizedFields.length > 0);
+
+            instance.reset();
+
+            assert.equal(instance.hasContent(), false);
+            assert.equal(instance.getFingerprint('source'), null);
+            assert.equal(instance.db.tagCache.size, 0);
+            assert.equal(instance.db.authorCache.size, 0);
+            assert.equal(instance.db.slugRenames.length, 0);
+            assert.equal(instance.sanitizedFields.length, 0);
+            assert.deepEqual(instance.duplicateSlugs, []);
+
+            for (const table of ['Posts', 'Tags', 'Authors', 'PostTags', 'PostAuthors', 'Links']) {
+                const row = instance.db.db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get() as {count: number};
+                assert.equal(row.count, 0);
+            }
+
+            const replacement = await instance.addPost();
+            replacement.set('title', 'Replacement');
+            replacement.set('slug', 'reset-post');
+            replacement.set('created_at', new Date('2023-11-25T12:00:00.000Z'));
+            replacement.addTag({name: 'Reset Tag', slug: 'reset-tag'});
+            replacement.addAuthor({name: 'Reset Author', slug: 'reset-author', email: 'reset@example.com'});
+            await replacement.save(instance.db);
+
+            const secondDuplicate = await instance.addPost();
+            secondDuplicate.set('title', 'Replacement Duplicate');
+            secondDuplicate.set('slug', 'reset-post');
+            secondDuplicate.set('created_at', new Date('2023-11-26T12:00:00.000Z'));
+            await secondDuplicate.save(instance.db);
+
+            assert.equal(replacement.dbId, 1);
+            assert.equal(replacement.data.tags[0].dbId, 1);
+            assert.equal(replacement.data.authors[0].dbId, 1);
+            assert.equal((await instance.deduplicateSlugs()).length, 2);
+
+            await instance.close();
+        });
+
+        it('Persists opaque fingerprints and can preserve them across a content reset', async () => {
+            const filePath = join(tmpdir(), `mg-context-fingerprint-test-${Date.now()}.sqlite`);
+            const firstRun = new MigrateContext({dbPath: filePath});
+            await firstRun.init();
+
+            assert.equal(firstRun.getFingerprint('source'), null);
+            assert.equal(firstRun.matchesFingerprint('source', 'source-v1'), false);
+
+            firstRun.setFingerprint('source', 'source-v1');
+            firstRun.setFingerprint('transform', 'options-v1');
+            assert.equal(firstRun.matchesFingerprint('source', 'source-v1'), true);
+            assert.equal(firstRun.hasContent(), false);
+
+            firstRun.setFingerprint('transform', 'options-v2');
+            assert.equal(firstRun.getFingerprint('transform'), 'options-v2');
+
+            firstRun.deleteFingerprint('transform');
+            assert.equal(firstRun.getFingerprint('transform'), null);
+            await firstRun.close();
+
+            const secondRun = new MigrateContext({dbPath: filePath});
+            await secondRun.init();
+            assert.equal(secondRun.schemaVersion, MIGRATE_CONTEXT_SCHEMA_VERSION);
+            assert.equal(secondRun.getFingerprint('source'), 'source-v1');
+
+            secondRun.addLink('example.com/cached/', '/cached/');
+            secondRun.reset({preserveFingerprints: true});
+            assert.equal(secondRun.hasContent(), false);
+            assert.equal(secondRun.getFingerprint('source'), 'source-v1');
+
+            await secondRun.close();
+            await rm(filePath, {force: true});
+        });
+
+        it('Rejects a database created by a newer mg-context schema', async () => {
+            const filePath = join(tmpdir(), `mg-context-newer-schema-test-${Date.now()}.sqlite`);
+            const db = new DatabaseSync(filePath);
+            db.exec(`PRAGMA user_version = ${MIGRATE_CONTEXT_SCHEMA_VERSION + 1};`);
+            db.close();
+
+            const instance = new MigrateContext({dbPath: filePath});
+            await assert.rejects(() => instance.init(), {
+                name: 'InternalServerError',
+                message: `Database schema version ${MIGRATE_CONTEXT_SCHEMA_VERSION + 1} is newer than the supported version ${MIGRATE_CONTEXT_SCHEMA_VERSION}.`
+            });
+
+            await rm(filePath, {force: true});
+        });
     });
 
     it('Can use file-based DB with dbPath', async () => {

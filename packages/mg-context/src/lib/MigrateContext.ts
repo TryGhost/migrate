@@ -74,6 +74,20 @@ export interface DuplicateSlugEntry {
     url: string;
 }
 
+export interface ResetOptions {
+    preserveFingerprints?: boolean;
+}
+
+export interface ContentStats {
+    posts: number;
+    pages: number;
+    users: number;
+    tags: number;
+    userAssociations: number;
+    tagAssociations: number;
+    links: number;
+}
+
 type MigrateContextOptions = {
     contentFormat?: ContentFormat;
     dbPath?: string;
@@ -134,6 +148,8 @@ export default class MigrateContext extends MigrateBase {
         }
         const storage = this.#ephemeral ? ':memory:' : this.#dbPath;
         this.#db = createDatabase(storage);
+        this.#slugsDeduped = false;
+        this.#duplicateSlugs = [];
     }
 
     async close() {
@@ -141,6 +157,91 @@ export default class MigrateContext extends MigrateBase {
             this.#db.db.close();
             this.#db = null;
         }
+    }
+
+    /** The version of the mg-context schema stored in the open SQLite database. */
+    get schemaVersion(): number {
+        return this.db.schemaVersion;
+    }
+
+    /** Return content counts when populated, or false when the database is empty. */
+    hasContent(): ContentStats | false {
+        const row = this.db.stmts.contentStats.get() as {
+            posts: number;
+            pages: number;
+            users: number;
+            tags: number;
+            post_user_associations: number;
+            post_tag_associations: number;
+            links: number;
+        };
+        const stats: ContentStats = {
+            posts: row.posts,
+            pages: row.pages,
+            users: row.users,
+            tags: row.tags,
+            userAssociations: row.post_user_associations,
+            tagAssociations: row.post_tag_associations,
+            links: row.links
+        };
+
+        return Object.values(stats).some(count => count > 0) ? stats : false;
+    }
+
+    /**
+     * Remove migration content without deleting the SQLite file or any external
+     * caches. Fingerprints are cleared by default because they describe the data
+     * that was just removed.
+     */
+    reset({preserveFingerprints = false}: ResetOptions = {}): void {
+        const db = this.db;
+
+        withTransaction(db, () => {
+            db.db.exec(`
+                DELETE FROM PostTags;
+                DELETE FROM PostAuthors;
+                DELETE FROM Posts;
+                DELETE FROM Tags;
+                DELETE FROM Authors;
+                DELETE FROM Links;
+            `);
+
+            if (!preserveFingerprints) {
+                db.db.exec('DELETE FROM Fingerprints;');
+            }
+
+            db.db.exec(
+                "DELETE FROM sqlite_sequence WHERE name IN ('Posts', 'Tags', 'Authors', 'PostTags', 'PostAuthors', 'Links');"
+            );
+        });
+
+        db.tagCache.clear();
+        db.authorCache.clear();
+        db.slugRenames.length = 0;
+        db.sanitizedFields.length = 0;
+        this.#slugsDeduped = false;
+        this.#duplicateSlugs = [];
+    }
+
+    /** Return an opaque, caller-defined fingerprint persisted with this database. */
+    getFingerprint(name: string): string | null {
+        const row = this.db.stmts.getFingerprint.get(name) as {value: string} | undefined;
+        return row?.value ?? null;
+    }
+
+    /** Persist an opaque source, cache, or transformation fingerprint. */
+    setFingerprint(name: string, value: string): void {
+        this.db.stmts.setFingerprint.run(name, value);
+    }
+
+    /** Check a fingerprint without requiring callers to handle a missing value separately. */
+    matchesFingerprint(name: string, value: string): boolean {
+        return this.getFingerprint(name) === value;
+    }
+
+    /** Remove one persisted fingerprint. */
+    deleteFingerprint(name: string): void {
+        this.db.stmts.deleteFingerprint.run(name);
     }
 
     // eslint-disable-next-line no-unused-vars

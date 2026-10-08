@@ -1,5 +1,8 @@
 /* eslint-disable ghost/filenames/match-exported-class */
 import {DatabaseSync} from 'node:sqlite';
+import errors from '@tryghost/errors';
+
+export const MIGRATE_CONTEXT_SCHEMA_VERSION = 1;
 
 export interface SlugRename {
     oldSlug: string;
@@ -26,6 +29,7 @@ export interface SanitizedField {
 export interface DatabaseModels {
     db: DatabaseSync;
     stmts: PreparedStatements;
+    schemaVersion: number;
     tagCache: Map<string, {dbId: number; ghostId: string}>;
     authorCache: Map<string, {dbId: number; ghostId: string}>;
     slugRenames: SlugRename[];
@@ -34,6 +38,12 @@ export interface DatabaseModels {
 }
 
 export interface PreparedStatements {
+    // Lifecycle
+    contentStats: ReturnType<DatabaseSync['prepare']>;
+    getFingerprint: ReturnType<DatabaseSync['prepare']>;
+    setFingerprint: ReturnType<DatabaseSync['prepare']>;
+    deleteFingerprint: ReturnType<DatabaseSync['prepare']>;
+
     // Posts
     insertPost: ReturnType<DatabaseSync['prepare']>;
     updatePost: ReturnType<DatabaseSync['prepare']>;
@@ -162,10 +172,33 @@ CREATE TABLE IF NOT EXISTS Links (
     new_url TEXT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_links_old_url ON Links(old_url);
+
+CREATE TABLE IF NOT EXISTS Fingerprints (
+    name TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
 `;
 
 function prepareStatements(db: DatabaseSync): PreparedStatements {
     return {
+        // Lifecycle
+        contentStats: db.prepare(
+            `SELECT
+                COUNT(CASE WHEN COALESCE(json_extract(data, '$.type'), 'post') = 'post' THEN 1 END) AS posts,
+                COUNT(CASE WHEN json_extract(data, '$.type') = 'page' THEN 1 END) AS pages,
+                (SELECT COUNT(*) FROM Authors) AS users,
+                (SELECT COUNT(*) FROM Tags) AS tags,
+                (SELECT COUNT(*) FROM PostAuthors) AS post_user_associations,
+                (SELECT COUNT(*) FROM PostTags) AS post_tag_associations,
+                (SELECT COUNT(*) FROM Links) AS links
+            FROM Posts`
+        ),
+        getFingerprint: db.prepare('SELECT value FROM Fingerprints WHERE name = ?'),
+        setFingerprint: db.prepare(
+            'INSERT INTO Fingerprints (name, value) VALUES (?, ?) ON CONFLICT(name) DO UPDATE SET value = excluded.value'
+        ),
+        deleteFingerprint: db.prepare('DELETE FROM Fingerprints WHERE name = ?'),
+
         // Posts
         insertPost: db.prepare(
             'INSERT INTO Posts (data, source, meta, content_format, lookup_key, ghost_id, created_at, updated_at, published_at, original_slug, slug, webscrape_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
@@ -255,13 +288,26 @@ export function createDatabase(dbPath: string): DatabaseModels {
     db.exec('PRAGMA cache_size = -64000;');
     db.exec('PRAGMA temp_store = MEMORY;');
 
+    const existingVersion = (db.prepare('PRAGMA user_version').get() as {user_version: number}).user_version;
+    if (existingVersion > MIGRATE_CONTEXT_SCHEMA_VERSION) {
+        db.close();
+        throw new errors.InternalServerError({
+            message: `Database schema version ${existingVersion} is newer than the supported version ${MIGRATE_CONTEXT_SCHEMA_VERSION}.`
+        });
+    }
+
     db.exec(SCHEMA);
+
+    if (existingVersion < MIGRATE_CONTEXT_SCHEMA_VERSION) {
+        db.exec(`PRAGMA user_version = ${MIGRATE_CONTEXT_SCHEMA_VERSION};`);
+    }
 
     const stmts = prepareStatements(db);
 
     return {
         db,
         stmts,
+        schemaVersion: MIGRATE_CONTEXT_SCHEMA_VERSION,
         tagCache: new Map(),
         authorCache: new Map(),
         slugRenames: [],

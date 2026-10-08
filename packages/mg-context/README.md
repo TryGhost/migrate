@@ -117,6 +117,92 @@ try {
 }
 ```
 
+#### `schemaVersion: number`
+
+The version of the mg-context schema stored in the open SQLite database. The current version is also exported as `MIGRATE_CONTEXT_SCHEMA_VERSION`. `init()` records the current version after ensuring the schema exists and refuses to open a database written by a newer, incompatible version.
+
+#### `hasContent(): ContentStats | false`
+
+Returns `false` when the database is empty. When it contains migration data, it returns counts while remaining truthy for existing resume checks:
+
+```js
+const stats = ctx.hasContent();
+if (stats) {
+    console.log(`${stats.posts} posts, ${stats.pages} pages`);
+}
+```
+
+The returned object contains `posts`, `pages`, `users`, `tags`, `userAssociations`, `tagAssociations`, and `links`. Authors are reported as users because that is how they appear in the Ghost import. Fingerprints do not count as content.
+
+#### `reset(options?): void`
+
+Atomically removes every post, tag, author, relationship, and link mapping and clears the related in-memory caches and reports. It resets row ID sequences but keeps the SQLite database file open; it does not remove the database, its WAL/SHM files, downloaded assets, or an asset scraper's separate database.
+
+Fingerprints are cleared by default because they describe the removed content. Pass `{preserveFingerprints: true}` when the caller deliberately wants to retain them.
+
+```js
+if (ctx.hasContent()) {
+    ctx.reset();
+}
+```
+
+Objects loaded before `reset()` should be discarded because their database IDs no longer refer to stored rows.
+
+#### Fingerprints
+
+Fingerprints are primarily for adapter authors and custom migration integrations. They are public API, but people running a migration should not normally need to calculate or enter them. A user-facing option such as `--refresh` should express the user's intent; the adapter can use fingerprints internally to decide whether its persistent context is still reusable.
+
+A fingerprint is a stable identifier for an input that affects the stored migration content. It is not a copy of that input or a cache. mg-context only stores and compares the opaque strings supplied by the caller through `getFingerprint(name)`, `setFingerprint(name, value)`, `matchesFingerprint(name, value)`, and `deleteFingerprint(name)`. It does not hash files, serialize options, reset content, or clear external caches automatically.
+
+Fingerprints are useful when an adapter reuses the same `dbPath` across runs so it can resume work or avoid parsing a large export again. Typical fingerprints include:
+
+| Fingerprint | Include | Action when it changes |
+| --- | --- | --- |
+| `source` | The source file contents, or a stable digest of every file in a batch | Reset the context and ingest the source again |
+| `transform` | Content-affecting options and an adapter mapping/version number | Reset and regenerate posts, HTML, Lexical, slugs, and other transformed fields |
+| `asset-cache` | Asset rewrite rules or an external cache format version | Let the adapter invalidate or rebuild its external asset cache |
+
+Do not include operational options that cannot affect stored content, such as logging verbosity. Avoid storing secrets directly: fingerprint them instead. Use a deterministic representation for objects so the same settings always produce the same value.
+
+The usual lifecycle is:
+
+1. Compute the current source and transformation fingerprints.
+2. If content exists and every stored fingerprint matches, reuse the database.
+3. If content exists but a fingerprint is missing or different, call `reset()` and ingest again.
+4. Store the new fingerprints only after ingestion succeeds.
+
+```js
+const sourceFingerprint = await hashSourceFiles(xmlFiles);
+const transformFingerprint = hashOptions({
+    adapterVersion: 2,
+    featureImage,
+    shortcodes
+});
+
+const existing = ctx.hasContent();
+const reusable =
+    Boolean(existing) &&
+    ctx.matchesFingerprint('source', sourceFingerprint) &&
+    ctx.matchesFingerprint('transform', transformFingerprint);
+
+if (existing && !reusable) {
+    ctx.reset(); // external download and asset caches are unaffected
+}
+
+if (!reusable) {
+    await ingestSource(ctx, xmlFiles);
+
+    // Write these only after a successful ingest. If ingestion fails, the next
+    // run will see missing or stale fingerprints and rebuild the partial data.
+    ctx.setFingerprint('source', sourceFingerprint);
+    ctx.setFingerprint('transform', transformFingerprint);
+}
+```
+
+This is separate from lookup-key deduplication and `schemaVersion`: lookup keys identify individual source records, `schemaVersion` protects mg-context's SQLite layout, and fingerprints describe the caller's source and transformation assumptions across runs.
+
+Fingerprints are unnecessary for one-shot in-memory migrations or integrations that always start with a clean database. Use a distinct `dbPath` for each isolated batch. Reusing the same path deliberately shares content and fingerprints, while separate paths give each batch an independent lifecycle. `reset()` clears fingerprints by default; use `{preserveFingerprints: true}` only when the adapter intentionally wants to keep those assumptions while removing the content.
+
 #### `db: DatabaseModels`
 
 Access the underlying database models. Needed for `post.save(ctx.db)`.
