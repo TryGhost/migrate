@@ -458,9 +458,12 @@ Progress is reported via the `progress` event (see [Events](#events)).
 Prepare all posts for export. Must be called before `writeGhostJson()` or `forEachGhostPost()`. This:
 
 1. Deduplicates slugs (calls `deduplicateSlugs()` internally)
-2. Converts HTML to Lexical for all posts that need it
+2. Normalizes blank post titles to `(Untitled)`
+3. Converts HTML to Lexical for posts without cached Lexical
+4. Validates cached Lexical recursively and regenerates invalid documents from retained HTML
+5. Ensures converted Lexical has at least one root child; invalid Lexical without an HTML fallback throws a descriptive error
 
-The method is idempotent — posts that already have converted content are skipped. Call it again after modifying posts via `forEachPost()` to re-convert changed content.
+The method is idempotent — posts that already have valid converted content are skipped. Call it again after modifying posts via `forEachPost()` to re-convert changed content. Lexical is validated again when each post is mapped into the final Ghost JSON, so invalid content cannot bypass preparation and be serialized.
 
 | Option      | Type     | Default | Description               |
 |-------------|----------|---------|---------------------------|

@@ -20,6 +20,54 @@ export function normalizeContentFormat(contentFormat: unknown): ContentFormat {
 const POST_LIMITS = GHOST_FIELD_LIMITS.post;
 const MAX_SLUG_LENGTH = POST_LIMITS.slug;
 
+const EMPTY_PARAGRAPH = {
+    children: [],
+    direction: null,
+    format: '',
+    indent: 0,
+    type: 'paragraph',
+    version: 1
+};
+
+const lexicalNodeSchema: z.ZodType = z.lazy(() =>
+    z.looseObject({
+        children: z.array(lexicalNodeSchema).optional(),
+        type: z.string().min(1),
+        version: z.number().int().positive()
+    })
+);
+
+const lexicalDocumentSchema = z.object({
+    root: z.looseObject({
+        children: z.array(lexicalNodeSchema).min(1),
+        direction: z.enum(['ltr', 'rtl']).nullable(),
+        format: z.string(),
+        indent: z.number().int().nonnegative(),
+        type: z.literal('root'),
+        version: z.number().int().positive()
+    })
+});
+
+export function isValidLexical(value: unknown): boolean {
+    if (typeof value !== 'string') {
+        return false;
+    }
+
+    try {
+        return lexicalDocumentSchema.safeParse(JSON.parse(value)).success;
+    } catch {
+        return false;
+    }
+}
+
+export function convertHtmlToLexical(html: string): string {
+    const lexical = htmlToLexical(html);
+    if (lexical.root.children.length === 0) {
+        lexical.root.children.push(EMPTY_PARAGRAPH);
+    }
+    return JSON.stringify(lexical);
+}
+
 /**
  * Build a deduplicated slug that still fits Ghost's limit, trimming the base
  * to make room for the suffix rather than overflowing past it.
@@ -200,7 +248,7 @@ export default class PostContext extends MigrateBase {
         }
 
         if (this.#contentFormat === 'lexical') {
-            this.data.lexical = this.data.html ? JSON.stringify(htmlToLexical(this.data.html)) : null;
+            this.data.lexical = typeof this.data.html === 'string' ? convertHtmlToLexical(this.data.html) : null;
             this.data.mobiledoc = null;
         }
 
@@ -573,6 +621,11 @@ export default class PostContext extends MigrateBase {
 
         // Null out fields not needed for this content format
         if (contentFormat === 'lexical') {
+            if (rawData.lexical !== null && rawData.lexical !== undefined && !isValidLexical(rawData.lexical)) {
+                throw new errors.InternalServerError({
+                    message: `Post "${rawData.title}" has invalid Lexical content`
+                });
+            }
             rawData.html = null;
             rawData.mobiledoc = null;
         } else {

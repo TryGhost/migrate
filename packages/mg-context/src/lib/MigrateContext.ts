@@ -2,11 +2,12 @@ import {stat, mkdir, open, writeFile} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
 import {EventEmitter} from 'node:events';
 import errors from '@tryghost/errors';
-import {htmlToLexical} from '@tryghost/mg-html-lexical';
 
 import MigrateBase from './MigrateBase.js';
 import PostContext, {
     PostConstructorOptions,
+    convertHtmlToLexical,
+    isValidLexical,
     normalizeContentFormat,
     normalizeTitle,
     type ContentFormat,
@@ -358,8 +359,19 @@ export default class MigrateContext extends MigrateBase {
                     }
 
                     if (cf !== 'html') {
-                        if (!data.lexical && data.html) {
-                            data.lexical = JSON.stringify(htmlToLexical(data.html));
+                        const hasHtmlFallback = typeof data.html === 'string';
+                        const hasLexical = data.lexical !== null && data.lexical !== undefined;
+
+                        if (hasLexical && !isValidLexical(data.lexical)) {
+                            if (!hasHtmlFallback) {
+                                throw new errors.InternalServerError({
+                                    message: `Post "${data.title}" has invalid Lexical content and no HTML fallback`
+                                });
+                            }
+                            data.lexical = convertHtmlToLexical(data.html);
+                            changed = true;
+                        } else if (!hasLexical && hasHtmlFallback) {
+                            data.lexical = convertHtmlToLexical(data.html);
                             changed = true;
                         }
 

@@ -1,6 +1,27 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {PostContext, TagContext, AuthorContext, normalizeTitle} from '../index.js';
+import {isValidLexical} from '../lib/PostContext.js';
+
+const VALID_LEXICAL = JSON.stringify({
+    root: {
+        children: [
+            {
+                children: [{type: 'extended-text', version: 1}],
+                direction: null,
+                format: '',
+                indent: 0,
+                type: 'paragraph',
+                version: 1
+            }
+        ],
+        direction: null,
+        format: '',
+        indent: 0,
+        type: 'root',
+        version: 1
+    }
+});
 
 describe('PostContext', function () {
     it('Normalizes missing, blank, padded, and oversized titles', () => {
@@ -8,6 +29,28 @@ describe('PostContext', function () {
         assert.equal(normalizeTitle('   '), '(Untitled)');
         assert.equal(normalizeTitle('  A title  '), 'A title');
         assert.equal(normalizeTitle('A'.repeat(300)), 'A'.repeat(255));
+    });
+
+    it('Validates Lexical JSON, root structure, and nested nodes', () => {
+        const emptyRoot = JSON.stringify({
+            root: {children: [], direction: null, format: '', indent: 0, type: 'root', version: 1}
+        });
+        const invalidNestedNode = JSON.stringify({
+            root: {
+                children: [{children: [{type: 'extended-text'}], type: 'paragraph', version: 1}],
+                direction: null,
+                format: '',
+                indent: 0,
+                type: 'root',
+                version: 1
+            }
+        });
+
+        assert.equal(isValidLexical(VALID_LEXICAL), true);
+        assert.equal(isValidLexical(null), false);
+        assert.equal(isValidLexical('not-json'), false);
+        assert.equal(isValidLexical(emptyRoot), false);
+        assert.equal(isValidLexical(invalidNestedNode), false);
     });
 
     it('Is instance of PostContext', () => {
@@ -804,6 +847,21 @@ describe('PostContext', function () {
             post.convertContent();
             assert.equal(post.data.lexical, null);
         });
+
+        it('Adds an empty paragraph when HTML conversion creates an empty root', () => {
+            const post: any = new PostContext({contentFormat: 'lexical'});
+            post.set('title', 'Test');
+            post.set('slug', 'test');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post.set('html', '<div></div>');
+
+            post.convertContent();
+
+            const lexical = JSON.parse(post.data.lexical);
+            assert.equal(lexical.root.children.length, 1);
+            assert.equal(lexical.root.children[0].type, 'paragraph');
+            assert.equal(isValidLexical(post.data.lexical), true);
+        });
     });
 
     describe('toGhostPost', () => {
@@ -851,14 +909,14 @@ describe('PostContext', function () {
                     slug: 'test',
                     html: '<p>Hello</p>',
                     mobiledoc: '{"version":"0.3.1","atoms":[],"cards":[]}',
-                    lexical: '{"root":{"children":[],"type":"root"}}',
+                    lexical: VALID_LEXICAL,
                     created_at: '2023-01-01T00:00:00.000Z'
                 })
             });
             const {post} = PostContext.toGhostPost(row);
 
             assert.equal(post.html, null);
-            assert.equal(post.lexical, '{"root":{"children":[],"type":"root"}}');
+            assert.equal(post.lexical, VALID_LEXICAL);
             assert.equal(post.mobiledoc, null);
         });
 
@@ -930,15 +988,32 @@ describe('PostContext', function () {
                     title: 'Test',
                     slug: 'test',
                     html: '<p>Hello</p>',
-                    lexical: '{"root":{"children":[],"type":"root"}}',
+                    lexical: VALID_LEXICAL,
                     created_at: '2023-01-01T00:00:00.000Z'
                 })
             });
             const {post} = PostContext.toGhostPost(row);
 
             // Should use the pre-converted lexical, not reconvert
-            assert.equal(post.lexical, '{"root":{"children":[],"type":"root"}}');
+            assert.equal(post.lexical, VALID_LEXICAL);
             assert.equal(post.html, null);
+        });
+
+        it('Rejects invalid Lexical during final export mapping', () => {
+            const row = mockRow({
+                data: JSON.stringify({
+                    title: 'Test',
+                    slug: 'test',
+                    lexical:
+                        '{"root":{"children":[],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
+                    created_at: '2023-01-01T00:00:00.000Z'
+                })
+            });
+
+            assert.throws(() => PostContext.toGhostPost(row), {
+                name: 'InternalServerError',
+                message: 'Post "Test" has invalid Lexical content'
+            });
         });
 
         it('Works with plain objects (raw: true)', () => {

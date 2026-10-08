@@ -2115,6 +2115,56 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
+        it('Repairs invalid cached Lexical from retained HTML', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Repair Lexical');
+            post.set('slug', 'repair-lexical');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            post.set('html', '<div></div>');
+            await post.save(instance.db);
+
+            const row = instance.db.stmts.findPostById.get(post.dbId) as any;
+            const data = JSON.parse(row.data);
+            data.lexical = '{"root":{"children":[],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
+            instance.db.stmts.updatePostData.run(JSON.stringify(data), post.dbId);
+
+            await instance.prepareForExport();
+
+            const updatedRow = instance.db.stmts.findPostById.get(post.dbId) as any;
+            const lexical = JSON.parse(JSON.parse(updatedRow.data).lexical);
+            assert.equal(lexical.root.children.length, 1);
+            assert.equal(lexical.root.children[0].type, 'paragraph');
+            assert.equal(lexical.root.children[0].version, 1);
+
+            await instance.close();
+        });
+
+        it('Rejects invalid cached Lexical without an HTML fallback', async () => {
+            const instance: any = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Invalid Lexical');
+            post.set('slug', 'invalid-lexical');
+            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
+            await post.save(instance.db);
+
+            const row = instance.db.stmts.findPostById.get(post.dbId) as any;
+            const data = JSON.parse(row.data);
+            data.lexical = '';
+            instance.db.stmts.updatePostData.run(JSON.stringify(data), post.dbId);
+
+            await assert.rejects(() => instance.prepareForExport(), {
+                name: 'InternalServerError',
+                message: 'Post "Invalid Lexical" has invalid Lexical content and no HTML fallback'
+            });
+
+            await instance.close();
+        });
+
         it('Skips posts that already have converted content', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
