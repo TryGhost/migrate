@@ -685,7 +685,7 @@ await dupe.save(ctx.db); // skipped
 
 ### Field sanitization
 
-Source data routinely carries values Ghost will not accept — a title over 255 characters, a tag name over 191, an email that is not an address. Rather than failing the migration, each context normalizes its own data against [Ghost's schema](https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/server/data/schema/schema.js) before anything is written.
+Source data routinely carries values Ghost will not accept — a title over 255 characters, a tag name over 191, an email that is not an address. Rather than failing the migration, each context normalizes its own data against [Ghost's schema](https://github.com/TryGhost/Ghost/blob/main/ghost/core/server/data/schema/schema.js) before anything is written.
 
 Enforcement lives in one place per context: `save()` calls `sanitize()`, which applies every rule and records what changed. That covers values set with `set()` as well as values handed to a constructor or loaded from a row, which bypass `set()` entirely.
 

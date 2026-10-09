@@ -4,7 +4,7 @@ import convert from 'heic-convert';
 import {fileTypeFromBuffer} from 'file-type';
 import transliterate from 'transliteration';
 
-// Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/shared/config/overrides.json
+// Taken from https://github.com/TryGhost/Ghost/blob/main/ghost/core/shared/config/overrides.json
 const knownImageTypes = [
     'image/jpeg',
     'image/jpg',

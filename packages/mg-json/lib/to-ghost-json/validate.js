@@ -9,7 +9,7 @@ export default async json => {
     json.posts.forEach((item, index) => {
         let input = item.data;
 
-        // String length data from https://github.com/TryGhost/Ghost/blob/main/ghost/core/core/server/data/schema/schema.js
+        // String length data from https://github.com/TryGhost/Ghost/blob/main/ghost/core/server/data/schema/schema.js
         let properties = {
             title: 255,
             slug: 185,
