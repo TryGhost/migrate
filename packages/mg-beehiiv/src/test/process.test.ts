@@ -48,6 +48,11 @@ describe('beehiiv Processor', () => {
             assert.equal(processed, '<p>Hello</p>');
         });
 
+        it('Returns empty HTML when content blocks are missing', () => {
+            const processed = processHTML({html: '<p>Hello</p>'});
+            assert.equal(processed, '');
+        });
+
         it('Can remove empty p tags', () => {
             const processed = processHTML({html: '<table><tr id="content-blocks"><p>Hello</p><p></p></tr></table>'});
             assert.equal(processed, '<p>Hello</p>');
@@ -163,6 +168,14 @@ describe('beehiiv Processor', () => {
             assert.equal(processed, '<p>Real content</p>');
         });
 
+        it('Keeps headings that do not match the post title', () => {
+            const htmlContent =
+                '<body><table><tr id="content-blocks"><h1>Another heading</h1><p>Real content</p></tr></table></body>';
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
+
+            assert.equal(processed, '<h1>Another heading</h1><p>Real content</p>');
+        });
+
         it('Removes polls', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><td><table>
                     <tr>
@@ -262,6 +275,14 @@ describe('beehiiv Processor', () => {
             assert.equal(processed, '<p>Real content</p>');
         });
 
+        it('Removes personalized text outside a table', () => {
+            const htmlContent =
+                '<body><table><tr id="content-blocks"><p>{{rp_personalized_text}}</p><p>Real content</p></tr></table></body>';
+            const processed = processHTML({html: htmlContent, postData: mappedObject});
+
+            assert.equal(processed, '<p>Real content</p>');
+        });
+
         it('iframe tag', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><td><table>
                     <tr>
@@ -282,7 +303,7 @@ describe('beehiiv Processor', () => {
 
             assert.equal(
                 processed,
-                '<iframe src="https://example.com" width="600" height="400"> </iframe><p>Real content</p>'
+                '<iframe src="https://example.com" width="600" height="400"></iframe><p>Real content</p>'
             );
         });
 
@@ -865,6 +886,15 @@ describe('beehiiv Processor', () => {
     });
 
     describe('Feature image deduplication', () => {
+        it('Can return empty HTML', () => {
+            const newHtml = removeDuplicateFeatureImage({
+                html: '',
+                featureSrc: ''
+            });
+
+            assert.equal(newHtml, '');
+        });
+
         it('Can return basic HTML', () => {
             const newHtml = removeDuplicateFeatureImage({
                 html: '<p>Hi</p>',
@@ -889,7 +919,7 @@ describe('beehiiv Processor', () => {
                 featureSrc: 'https://example.com/the-target.png'
             });
 
-            assert.equal(newHtml, '<figure/><p>Hi</p>');
+            assert.equal(newHtml, '<figure></figure><p>Hi</p>');
         });
 
         it('Does remove first image if it is a match 3', () => {
@@ -898,7 +928,7 @@ describe('beehiiv Processor', () => {
                 featureSrc: 'https://example.com/the-target.png'
             });
 
-            assert.equal(newHtml, '<div><figure/></div><p>Hi</p>');
+            assert.equal(newHtml, '<div><figure></figure></div><p>Hi</p>');
         });
 
         it('Does remove first image if it is a match 4', () => {
@@ -907,7 +937,7 @@ describe('beehiiv Processor', () => {
                 featureSrc: 'https://media.beehiiv.com/cdn-cgi/image/quality=100/uploads/asset/file/12345678/image.png'
             });
 
-            assert.equal(newHtml, '<div><figure/></div><p>Hi</p>');
+            assert.equal(newHtml, '<div><figure></figure></div><p>Hi</p>');
         });
 
         it('Does remove first image if it is a match 5', () => {
@@ -917,7 +947,7 @@ describe('beehiiv Processor', () => {
                     'https://beehiiv-images-production.s3.amazonaws.com/uploads/asset/file/12345678-1234-5678-abcd-fc76ef777f64/photo.png?t=1234994175'
             });
 
-            assert.equal(newHtml, '<div><figure/></div><p>Hi</p>');
+            assert.equal(newHtml, '<div><figure></figure></div><p>Hi</p>');
         });
 
         it('Changes image size & quality attributes', () => {
@@ -926,7 +956,7 @@ describe('beehiiv Processor', () => {
                 featureSrc: 'https://media.beehiiv.com/cdn-cgi/image/quality=100/uploads/asset/file/12345678/image.png'
             });
 
-            assert.equal(newHtml, '<div><figure/></div><p>Hi</p>');
+            assert.equal(newHtml, '<div><figure></figure></div><p>Hi</p>');
         });
     });
 });

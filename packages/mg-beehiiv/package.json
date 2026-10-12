@@ -46,7 +46,6 @@
     "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
     "@tryghost/string": "catalog:",
-    "cheerio": "1.2.0",
     "sanitize-html": "catalog:",
     "simple-dom": "catalog:"
   }

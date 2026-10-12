@@ -1,16 +1,26 @@
-import * as cheerio from 'cheerio';
 import sanitizeHtml from 'sanitize-html';
 import SimpleDom from 'simple-dom';
-import {youtubeUtils, cardUtils} from '@tryghost/mg-utils';
+import {domUtils, youtubeUtils, cardUtils} from '@tryghost/mg-utils';
 
+const {parseFragment, serializeChildren, replaceWith, attr, parents} = domUtils;
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 const {getYouTubeID} = youtubeUtils;
 const imageCard = cardUtils.getCard('image');
 const embedCard = cardUtils.getCard('embed');
 const bookmarkCard = cardUtils.getCard('bookmark');
 
+const getAncestor = (el: Element, levels: number) => {
+    let current = el;
+
+    for (let level = 0; level < levels; level += 1) {
+        current = current.parentElement!;
+    }
+
+    return current;
+};
+
 const isURL = (urlString: string | undefined) => {
-    if (undefined === urlString) {
+    if (!urlString) {
         return false;
     }
 
@@ -40,24 +50,20 @@ const processHTML = ({
     html = html.replace(/{{subscriber_id}}/g, '#');
     html = html.replace(/{{rp_refer_url}}/g, '#');
     html = html.replace(/{{rp_refer_url_no_params}}/g, '#');
+    html = html.replace(/<figure([^>]*)\/>/gi, '<figure$1></figure>');
 
-    const $allHtml: any = cheerio.load(html, {
-        xml: {
-            xmlMode: true,
-            decodeEntities: false
-        }
-    });
+    const allParsed = parseFragment(html);
+    const contentBlocks = allParsed.$('#content-blocks')[0];
 
-    const $html: any = cheerio.load($allHtml('#content-blocks').html(), {
-        xml: {
-            xmlMode: true,
-            decodeEntities: false
-        }
-    });
+    if (!contentBlocks) {
+        return '';
+    }
+
+    const parsed = parseFragment(serializeChildren(contentBlocks.parentElement!));
 
     if (options?.url) {
-        $html('a').each((i: any, el: any) => {
-            const theHref = $html(el).attr('href');
+        parsed.$('a').forEach(el => {
+            const theHref = attr(el, 'href');
             const isHrefURL = isURL(theHref);
 
             if (theHref && isHrefURL) {
@@ -72,93 +78,100 @@ const processHTML = ({
 
                 url.search = params.toString();
 
-                $html(el).attr('href', url.toString());
+                attr(el, 'href', url.toString());
             }
         });
     }
 
     // Polls
-    $html('td[class="e"], td[class="ee e "]').each((i: any, el: any) => {
-        $html(el).remove();
+    parsed.$('td.e').forEach(el => {
+        el.remove();
     });
 
-    // FInd <p> tag which contains {{rp_personalized_text}} and find the parent table to remove the whole section
-    $html('p:contains("{{rp_personalized_text}}")').each((i: any, el: any) => {
-        const parentTable = $html(el).parents('table').first();
-        $html(parentTable).remove();
-    });
-
-    $html('h1 strong, h1 b, h2 strong, h2 b, h3 strong, h3 b, h4 strong, h4 b, h5 strong, h5 b, h6 strong, h6 b').each(
-        (i: any, el: any) => {
-            const text = $html(el).html().trim();
-            $html(el).replaceWith(text);
+    // Find <p> tag which contains {{rp_personalized_text}} and remove the parent table or the paragraph itself
+    parsed.$('p').forEach(el => {
+        if (!el.textContent!.includes('{{rp_personalized_text}}')) {
+            return;
         }
-    );
 
-    $html('table.j').each((i: any, el: any) => {
-        const tdContent = $html(el).find('td').html().trim();
+        const parentTable = parents(el, 'table')[0];
+        (parentTable || el).remove();
+    });
+
+    parsed
+        .$('h1 strong, h1 b, h2 strong, h2 b, h3 strong, h3 b, h4 strong, h4 b, h5 strong, h5 b, h6 strong, h6 b')
+        .forEach(el => {
+            replaceWith(el, serializeChildren(el).trim());
+        });
+
+    parsed.$('table.j').forEach(el => {
+        const td = parsed.$('td', el)[0];
+        const tdContent = serializeChildren(td).trim();
 
         if (tdContent === '&nbsp;') {
-            $html(el).replaceWith('<hr>');
+            replaceWith(el, '<hr>');
         }
     });
 
-    $html('table.d3[align="center"]').each((i: any, el: any) => {
-        const parent = $html(el).parent('td[align="center"]');
-        const text = $html(el)
-            .text()
-            .replace(/(\r\n|\n|\r|&nbsp;)/gm, ' ')
+    parsed.$('td[align="center"] > table.d3[align="center"]').forEach(el => {
+        const parent = el.parentElement!;
+        const text = el
+            .textContent!.replace(/(\r\n|\n|\r|&nbsp;)/gm, ' ')
             .replace(/(\s{2,})/gm, ' ')
             .trim();
-        $html(parent).replaceWith(
+        replaceWith(
+            parent,
             `<div class="kg-card kg-quote-card kg-align-center"><blockquote class="kg-blockquote"><p>${text}</p></blockquote></div>`
         );
     });
 
     // Galleries
-    $html('table.mob-w-full').each((i: any, el: any) => {
+    parsed.$('table.mob-w-full').forEach(el => {
         let allImages: string[] = [];
 
-        $html(el)
-            .find('td.mob-stack')
-            .each((ii: any, ell: any) => {
-                const img = $html(ell).find('img');
-                const pText = $html(ell).find('p').text().trim();
+        parsed.$('td.mob-stack', el).forEach(ell => {
+            const img = parsed.$('img', ell)[0];
+            const pText = parsed
+                .$('p', ell)
+                .map(paragraph => paragraph.textContent!)
+                .join('')
+                .trim();
 
-                let cardOpts: any = {
-                    env: {dom: new SimpleDom.Document()},
-                    payload: {
-                        src: img.attr('src'),
-                        alt: img.attr('alt')
-                    }
-                };
-
-                if (pText && pText.length > 0) {
-                    cardOpts.payload.caption = pText;
+            let cardOpts: any = {
+                env: {dom: new SimpleDom.Document()},
+                payload: {
+                    src: attr(img, 'src'),
+                    alt: attr(img, 'alt')
                 }
+            };
 
-                const isInLink = $html(img).parents('a').length;
+            if (pText && pText.length > 0) {
+                cardOpts.payload.caption = pText;
+            }
 
-                if (isInLink) {
-                    cardOpts.payload.href = $html(img).parents('a').attr('href');
-                }
+            const link = parents(img, 'a')[0];
 
-                allImages.push(serializer.serialize(imageCard.render(cardOpts)));
-            });
+            if (link) {
+                cardOpts.payload.href = attr(link, 'href');
+            }
 
-        $html(el).replaceWith(allImages.join(''));
+            allImages.push(serializer.serialize(imageCard.render(cardOpts)));
+        });
+
+        replaceWith(el, allImages.join(''));
     });
 
     // Embeds
-    $html('td.embed-img.mob-stack').each((i: any, el: any) => {
-        const parent = $html(el).parent().parent();
+    parsed.$('td.embed-img.mob-stack').forEach(el => {
+        const parent = el.parentElement!.parentElement!;
 
-        const href = $html(parent).find('a').attr('href');
-        const image = $html(parent).find('img').attr('src');
-        const title = $html(parent).find('p').eq(0).text();
-        const description = $html(parent).find('p').eq(1).text();
+        const href = attr(parsed.$('a', parent)[0], 'href');
+        const image = attr(parsed.$('img', parent)[0], 'src');
+        const paragraphs = parsed.$('p', parent);
+        const title = paragraphs[0]!.textContent!;
+        const description = paragraphs[1]!.textContent!;
 
-        const parentTable = $html(parent).parent().parent().parent().parent().parent();
+        const parentTable = getAncestor(parent, 5);
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
@@ -177,78 +190,83 @@ const processHTML = ({
             }
         };
 
-        $html(parentTable).replaceWith(serializer.serialize(bookmarkCard.render(cardOpts)));
+        replaceWith(parentTable, serializer.serialize(bookmarkCard.render(cardOpts)));
     });
 
     // Remove hidden elements
-    $html('[style*="display:none"]').remove();
-    $html('[style*="display: none"]').remove();
+    parsed.$('[style*="display:none"], [style*="display: none"]').forEach(el => el.remove());
 
     // Remove the share links at the top
-    $html('table.mob-block').remove();
+    parsed.$('table.mob-block').forEach(el => el.remove());
 
     // Remove sponsor blocks
-    $html('table.rec__content').remove();
+    parsed.$('table.rec__content').forEach(el => el.remove());
 
     // Remove the open tracking pixel element
-    $html('div[data-open-tracking="true"]:contains("{{OPEN_TRACKING_PIXEL}}")').remove();
+    parsed.$('div[data-open-tracking="true"]').forEach(el => {
+        if (el.textContent!.includes('{{OPEN_TRACKING_PIXEL}}')) {
+            el.remove();
+        }
+    });
 
-    $html('p:contains("{{rp_personalized_text}}")').remove();
-    $html('img[src="{{rp_next_milestone_image_url}}"]').remove();
-    $html(`a[href="{{rp_referral_hub_url}}"]`).remove();
+    parsed.$('img[src="{{rp_next_milestone_image_url}}"]').forEach(el => el.remove());
+    parsed.$('a[href="{{rp_referral_hub_url}}"]').forEach(el => el.remove());
 
     // Remove unsubscribe links, social links, & email footer
-    $html('td.b').remove();
+    parsed.$('td.b').forEach(el => el.remove());
 
     // Remove the 'Read online' link
-    $html('td.f').remove();
+    parsed.$('td.f').forEach(el => el.remove());
 
     // Remove the post title container, otherwise it would be a duplicate
     if (postData?.data?.title) {
-        $html(`h1:contains("${postData.data.title}")`).parentsUntil('table').remove();
+        parsed.$('h1').forEach(el => {
+            if (!el.textContent!.includes(postData.data.title)) {
+                return;
+            }
+
+            let titleContainer = el.parentElement;
+
+            while (titleContainer?.parentElement && titleContainer.parentElement.tagName !== 'TABLE') {
+                titleContainer = titleContainer.parentElement;
+            }
+
+            titleContainer?.remove();
+        });
     }
 
     // Remove cells that only contain a non-breaking space
-    $html('td').each((i: any, el: any) => {
-        const text = $html(el).html().trim();
+    parsed.$('td').forEach(el => {
+        const text = serializeChildren(el).trim();
 
         if (text === '&nbsp;') {
-            $html(el).remove();
+            el.remove();
         }
     });
 
     // Convert '...' to <hr />
-    $html('p').each((i: any, el: any) => {
-        const text = $html(el).text().trim();
+    parsed.$('p').forEach(el => {
+        const text = el.textContent!.trim();
 
         if (text === '...' || text === '…' || text === '&hellip;') {
-            $html(el).replaceWith('<hr />');
-        }
-    });
-
-    // If the iframe has no inner HTML, add a non-breaking space so it doesn't get removed later
-    // Case: There's a bug somewhere in the chain that causes iframes to become self-closing, and this prevents that.
-    $html('iframe').each((i: any, el: any) => {
-        const innerHtml = $html(el).html().length;
-
-        if (innerHtml === 0) {
-            $html(el).html('&nbsp;');
+            replaceWith(el, '<hr />');
         }
     });
 
     // Convert linked YouTube thumbnails to embeds
-    $html('a[href*="youtube.com"], a[href*="youtu.be"]').each((i: any, el: any) => {
-        const imageCount = $html(el).find('img').length;
-        const hasPlayIcon = $html(el).find('img[src*="youtube_play_icon.png"]').length;
-        const hasThumbnail = $html(el).find('img[src*="i.ytimg.com/vi"]').length;
-        const src = $html(el)?.attr('href');
-        const captionText = $html(el).find('p')?.text()?.trim() || false;
-        const captionHtml = $html(el).find('p')?.html()?.trim() || false;
+    parsed.$('a[href*="youtube.com"], a[href*="youtu.be"]').forEach(el => {
+        const imageCount = parsed.$('img', el).length;
+        const hasPlayIcon = parsed.$('img[src*="youtube_play_icon.png"]', el).length;
+        const hasThumbnail = parsed.$('img[src*="i.ytimg.com/vi"]', el).length;
+        const src = attr(el, 'href');
+        const caption = parsed.$('p', el)[0];
+        const captionText = caption?.textContent?.trim() || false;
+        const captionHtml = caption ? serializeChildren(caption).trim() : false;
 
         if (imageCount === 2 && hasPlayIcon && hasThumbnail && src) {
             const videoID = getYouTubeID(src);
 
-            let cardOpts = {
+            let cardOpts: any = {
                 env: {dom: new SimpleDom.Document()},
                 payload: {
                     caption: null,
@@ -260,29 +278,28 @@ const processHTML = ({
                 cardOpts.payload.caption = captionHtml;
             }
 
-            $html(el).replaceWith(serializer.serialize(embedCard.render(cardOpts)));
+            replaceWith(el, serializer.serialize(embedCard.render(cardOpts)));
         }
     });
 
-    $html('img').each((i: any, el: any) => {
+    parsed.$('img').forEach(el => {
         // Skip if the image is in a figure
-        const isInFigure = $html(el).parents('figure').length;
+        const isInFigure = parents(el, 'figure').length;
         if (isInFigure) {
             return;
         }
 
-        const parentTable = $html(el).parent().parent().parent();
+        const parentTable = getAncestor(el, 3);
 
-        const theSrc = $html(el).attr('src');
-        let theAlt = $html(el).attr('alt');
+        const theSrc = attr(el, 'src');
+        let theAlt = attr(el, 'alt');
 
-        const secondTr = $html(parentTable).find('tr').eq(1).find('p').length
-            ? $html(parentTable).find('tr').eq(1).find('p')
-            : false;
-        const theText = $html(secondTr)?.html()?.trim() ?? false;
+        const secondTr = parsed.$('tr', parentTable)[1];
+        const caption = secondTr ? parsed.$('p', secondTr)[0] : null;
+        const theText = caption ? serializeChildren(caption).trim() : false;
 
         if (!theAlt) {
-            theAlt = $html(secondTr)?.text()?.trim();
+            theAlt = caption?.textContent?.trim();
         }
 
         let cardOpts: any = {
@@ -295,67 +312,64 @@ const processHTML = ({
         };
 
         // Check if the parent element to this is a <a> tag
-        const isInLink = $html(el).parents('a').length;
+        const link = parents(el, 'a')[0];
 
-        if (isInLink) {
-            cardOpts.payload.href = $html(el).parents('a').attr('href');
+        if (link) {
+            cardOpts.payload.href = attr(link, 'href');
         }
 
-        $html(parentTable).replaceWith(serializer.serialize(imageCard.render(cardOpts)));
+        replaceWith(parentTable, serializer.serialize(imageCard.render(cardOpts)));
     });
 
     // Convert buttons to Ghost buttons
-    $html('a[style="color:#FFFFFF;font-size:18px;padding:0px 14px;text-decoration:none;"]').each((i: any, el: any) => {
-        const buttonText = $html(el).text();
-        const buttonHref = $html(el).attr('href');
-        $html(el).replaceWith(
+    parsed.$('a[style="color:#FFFFFF;font-size:18px;padding:0px 14px;text-decoration:none;"]').forEach(el => {
+        const buttonText = el.textContent!;
+        const buttonHref = attr(el, 'href');
+        replaceWith(
+            el,
             `<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`
         );
     });
 
     if (options?.url && options?.subscribeLink) {
-        $html(`a[href^="${options.url}/subscribe"]`).each((i: any, el: any) => {
-            $html(el).attr('href', options.subscribeLink);
-            $html(el).removeAttr('target');
-            $html(el).removeAttr('rel');
+        parsed.$(`a[href^="${options.url}/subscribe"]`).forEach(el => {
+            attr(el, 'href', options.subscribeLink);
+            el.removeAttribute('target');
+            el.removeAttribute('rel');
         });
     }
 
     if (options?.url && options?.comments && options?.commentLink) {
-        $html('a[href*="comments=true"]').each((i: any, el: any) => {
-            const href = $html(el).attr('href');
+        parsed.$('a[href*="comments=true"]').forEach(el => {
+            const href = attr(el, 'href');
 
-            if (href.includes(options.url)) {
-                $html(el).attr('href', options.commentLink);
-                $html(el).removeAttr('target');
-                $html(el).removeAttr('rel');
+            if (href?.includes(options.url)) {
+                attr(el, 'href', options.commentLink);
+                el.removeAttribute('target');
+                el.removeAttribute('rel');
             }
         });
     } else if (options?.url && options?.comments === false) {
-        $html('a[href*="comments=true"]').each((i: any, el: any) => {
-            const href = $html(el).attr('href');
+        parsed.$('a[href*="comments=true"]').forEach(el => {
+            const href = attr(el, 'href');
 
-            if (href.includes(options.url)) {
-                $html(el).remove();
+            if (href?.includes(options.url)) {
+                el.remove();
             }
         });
     }
 
     // Remove empty tags
-    $html('p, figure').each((i: any, el: any) => {
-        const elementHtml = $html(el).html().trim();
+    parsed.$('p, figure').forEach(el => {
+        const elementHtml = serializeChildren(el).trim();
 
         if (elementHtml === '') {
-            $html(el).remove();
+            el.remove();
         }
     });
 
     // Get the cleaned HTML
-    let bodyHtml = $html.html({
-        selfClosingTags: false
-    });
-
-    // return bodyHtml;
+    let bodyHtml = parsed.html();
 
     // Pass the cleaned HTML through the sanitizer to only include specific elements
     const sanitizedHtml = sanitizeHtml(bodyHtml, {
@@ -401,26 +415,19 @@ const processHTML = ({
 };
 
 const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string; featureSrc: string}) => {
-    let $html = cheerio.load(html, {
-        xml: {
-            xmlMode: true,
-            decodeEntities: false
-        }
-    });
+    const parsed = parseFragment(html);
+    const firstElement = parsed.body.firstElementChild;
+    const firstImage = firstElement?.tagName === 'IMG' ? firstElement : parsed.$('img', firstElement || undefined)[0];
 
-    let firstElement = $html('*').first();
-    let firstEl: any = $html(firstElement).get(0);
-
-    if ((firstEl && firstEl.name === 'img') || $html(firstElement).find('img').length) {
-        let theElementItself = firstEl?.name === 'img' ? firstElement : $html(firstElement).find('img');
-        let firstImgSrc: any = $html(theElementItself).attr('src');
+    if (firstImage) {
+        const firstImgSrc = attr(firstImage, 'src') as string;
 
         // Both images usually end in the same way, so we can split the URL and compare the last part
         const firstImageSplit = firstImgSrc.split('/uploads/asset/');
         const featureImageSplit = featureSrc.split('/uploads/asset/');
 
         if (firstImageSplit[1] === featureImageSplit[1]) {
-            $html(theElementItself).remove();
+            firstImage.remove();
         }
 
         if (featureSrc.length > 0 && firstImgSrc) {
@@ -430,12 +437,12 @@ const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string; featureS
             );
 
             if (featureSrc === normalizedFirstSrc) {
-                $html(theElementItself).remove();
+                firstImage.remove();
             }
         }
     }
 
-    return $html.html();
+    return parsed.html();
 };
 
 export {getYouTubeID, processHTML, removeDuplicateFeatureImage};
