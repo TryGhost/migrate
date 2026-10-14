@@ -18,7 +18,7 @@ catalog:
   "@tryghost/kg-html-to-lexical": "1.4.1"
   "@tryghost/pretty-cli": "3.3.16"
   "@tryghost/string": "0.3.7"
-  "@types/node": "24.19.1"
+  "@types/node": "24.19.2"
   "c8": "12.0.0"
   "chalk": "6.0.1"
   "dotenv": "18.0.7"
