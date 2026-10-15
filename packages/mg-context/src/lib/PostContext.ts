@@ -508,19 +508,6 @@ export default class PostContext extends MigrateBase {
         const ghostId = row.ghost_id as string;
         rawData.title = normalizeTitle(rawData.title);
 
-        // Old persistent databases may still contain fields from the previous
-        // multi-format implementation. HTML is the only supported export format.
-        const hasObsoleteContent =
-            (typeof rawData.mobiledoc === 'string' && rawData.mobiledoc.length > 0) ||
-            (typeof rawData.lexical === 'string' && rawData.lexical.length > 0);
-        if (typeof rawData.html !== 'string' && hasObsoleteContent) {
-            throw new errors.InternalServerError({
-                message: `Post "${rawData.title}" contains only an obsolete editor format. Re-ingest it as HTML before exporting.`
-            });
-        }
-        delete rawData.mobiledoc;
-        delete rawData.lexical;
-
         // Extract meta fields into posts_meta entry
         const metaEntry: any = {};
         let hasMeta = false;
@@ -567,10 +554,9 @@ export default class PostContext extends MigrateBase {
         post.dbId = row.id as number;
         post.ghostId = row.ghost_id as string;
 
-        // Set scalar data directly. Ignore fields left by the previous
-        // multi-format implementation when loading a persistent database.
+        // Set scalar data directly; junction tables provide relationships.
         for (const [key, value] of Object.entries(rawData)) {
-            if (key !== 'tags' && key !== 'authors' && key !== 'mobiledoc' && key !== 'lexical') {
+            if (key !== 'tags' && key !== 'authors') {
                 post.data[key] = value;
             }
         }

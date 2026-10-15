@@ -372,25 +372,6 @@ export default class MigrateContext extends MigrateBase {
                         changed = true;
                     }
 
-                    const hasObsoleteContent =
-                        (typeof data.mobiledoc === 'string' && data.mobiledoc.length > 0) ||
-                        (typeof data.lexical === 'string' && data.lexical.length > 0);
-                    if (typeof data.html !== 'string' && hasObsoleteContent) {
-                        throw new errors.InternalServerError({
-                            message: `Post "${data.title}" contains only an obsolete editor format. Re-ingest it as HTML before exporting.`
-                        });
-                    }
-
-                    if (Object.hasOwn(data, 'mobiledoc')) {
-                        delete data.mobiledoc;
-                        changed = true;
-                    }
-
-                    if (Object.hasOwn(data, 'lexical')) {
-                        delete data.lexical;
-                        changed = true;
-                    }
-
                     if (changed) {
                         this.db.stmts.updatePostData.run(JSON.stringify(data), row.id as number);
                     }

@@ -61,7 +61,9 @@ try {
 
 #### `schemaVersion: number`
 
-The version of the mg-context schema stored in the open SQLite database. The current version is also exported as `MIGRATE_CONTEXT_SCHEMA_VERSION`. `init()` records the current version after ensuring the schema exists and refuses to open a database written by a newer, incompatible version.
+The version of the mg-context schema stored in the open SQLite database. The current version is also exported as `MIGRATE_CONTEXT_SCHEMA_VERSION`.
+
+Schema version 2 is the compatibility baseline for HTML-only databases. `init()` marks a new database with the current version and reopens databases at that version. It rejects unversioned databases and both older and newer versions. Future schema changes must add an explicit migration before increasing the version; mg-context never silently reinterprets an existing database as a newer schema.
 
 #### `hasContent(): ContentStats | false`
 
@@ -423,11 +425,8 @@ Prepare all posts for export. Must be called before `writeGhostJson()` or `forEa
 
 1. Deduplicates slugs (calls `deduplicateSlugs()` internally)
 2. Normalizes blank post titles to `(Untitled)`
-3. Removes obsolete editor-format fields left in older persistent databases so exports contain HTML only
 
 The method is idempotent. Call it after ingestion and before writing the final Ghost JSON.
-
-Persistent schema-version 1 databases are upgraded when opened. Their retained HTML is preserved and obsolete editor-format fields are removed during preparation. If an old row contains editor content but no HTML, preparation stops with a descriptive error so the adapter can re-ingest that source instead of exporting an empty post.
 
 | Option      | Type     | Default | Description               |
 |-------------|----------|---------|---------------------------|

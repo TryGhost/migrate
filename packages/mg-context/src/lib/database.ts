@@ -306,12 +306,27 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
 export function createDatabase(dbPath: string): DatabaseModels {
     const db = new DatabaseSync(dbPath);
 
-    db.exec('PRAGMA journal_mode = WAL;');
-    db.exec('PRAGMA synchronous = NORMAL;');
-    db.exec('PRAGMA cache_size = -64000;');
-    db.exec('PRAGMA temp_store = MEMORY;');
-
     const existingVersion = (db.prepare('PRAGMA user_version').get() as {user_version: number}).user_version;
+    const hasExistingSchema = Boolean(
+        db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'Posts' LIMIT 1").get()
+    );
+
+    // Version 2 is the first compatibility baseline. Never silently advance an
+    // existing database: add an explicit migration before increasing this version.
+    if (existingVersion === 0 && hasExistingSchema) {
+        db.close();
+        throw new errors.InternalServerError({
+            message: `Unversioned migration databases are not supported. Recreate the database from source.`
+        });
+    }
+
+    if (existingVersion > 0 && existingVersion < MIGRATE_CONTEXT_SCHEMA_VERSION) {
+        db.close();
+        throw new errors.InternalServerError({
+            message: `Database schema version ${existingVersion} is older than the supported version ${MIGRATE_CONTEXT_SCHEMA_VERSION}. Recreate the database from source.`
+        });
+    }
+
     if (existingVersion > MIGRATE_CONTEXT_SCHEMA_VERSION) {
         db.close();
         throw new errors.InternalServerError({
@@ -319,9 +334,14 @@ export function createDatabase(dbPath: string): DatabaseModels {
         });
     }
 
+    db.exec('PRAGMA journal_mode = WAL;');
+    db.exec('PRAGMA synchronous = NORMAL;');
+    db.exec('PRAGMA cache_size = -64000;');
+    db.exec('PRAGMA temp_store = MEMORY;');
+
     db.exec(SCHEMA);
 
-    if (existingVersion < MIGRATE_CONTEXT_SCHEMA_VERSION) {
+    if (existingVersion === 0) {
         db.exec(`PRAGMA user_version = ${MIGRATE_CONTEXT_SCHEMA_VERSION};`);
     }
 

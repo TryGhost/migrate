@@ -84,8 +84,6 @@ describe('PostContext', function () {
             const final = instance.getFinal;
 
             assert.equal(final.data.html, '<p>Hello world</p>');
-            assert.equal(final.data.mobiledoc, undefined);
-            assert.equal(final.data.lexical, undefined);
         });
 
         it('Can get final object', function () {
@@ -145,8 +143,6 @@ describe('PostContext', function () {
         const final = instance.getFinal;
 
         assert.equal(final.data.html, '<p>Hello world</p>');
-        assert.equal(final.data.lexical, undefined);
-        assert.equal(final.data.mobiledoc, undefined);
     });
 
     it('getFinal includes unsaved tags and authors without ghostId', function () {
@@ -750,7 +746,6 @@ describe('PostContext', function () {
                     title: 'Test',
                     slug: 'test',
                     html: '<p>Hi</p>',
-                    lexical: null,
                     tags: [{slug: 'a'}],
                     authors: [{slug: 'b'}]
                 })
@@ -762,43 +757,6 @@ describe('PostContext', function () {
             assert.equal(post.tags, undefined);
             assert.equal(post.authors, undefined);
             assert.equal(meta, null);
-        });
-
-        it('Removes legacy content fields from persistent rows', () => {
-            const row = mockRow({
-                content_format: 'mobiledoc',
-                data: JSON.stringify({
-                    title: 'Test',
-                    slug: 'test',
-                    html: '<p>Hello</p>',
-                    mobiledoc: '{"version":"0.3.1","atoms":[],"cards":[]}',
-                    lexical: '{"root":{}}',
-                    created_at: '2023-01-01T00:00:00.000Z'
-                })
-            });
-            const {post} = PostContext.toGhostPost(row);
-
-            assert.equal(post.html, '<p>Hello</p>');
-            assert.equal(post.lexical, undefined);
-            assert.equal(post.mobiledoc, undefined);
-        });
-
-        it('Rejects persistent editor content without retained HTML', () => {
-            const row = mockRow({
-                data: JSON.stringify({
-                    title: 'Legacy only',
-                    slug: 'legacy-only',
-                    html: null,
-                    lexical: '{"root":{}}',
-                    created_at: '2023-01-01T00:00:00.000Z'
-                })
-            });
-
-            assert.throws(() => PostContext.toGhostPost(row), {
-                name: 'InternalServerError',
-                message:
-                    'Post "Legacy only" contains only an obsolete editor format. Re-ingest it as HTML before exporting.'
-            });
         });
 
         it('Handles missing ghostId', () => {

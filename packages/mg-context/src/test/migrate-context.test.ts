@@ -191,41 +191,34 @@ describe('MigrateContext', () => {
             await rm(filePath, {force: true});
         });
 
-        it('Opens version 1 databases and exports their retained HTML', async () => {
+        it('Rejects databases older than the HTML-only compatibility baseline', async () => {
             const filePath = join(tmpdir(), `mg-context-v1-schema-test-${Date.now()}.sqlite`);
-            const firstRun: any = new MigrateContext({dbPath: filePath});
-            await firstRun.init();
-
-            const post = await firstRun.addPost();
-            post.set('title', 'Legacy stored post');
-            post.set('slug', 'legacy-stored-post');
-            post.set('html', '<p>Retained HTML</p>');
-            post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
-            await post.save(firstRun.db);
-            await firstRun.close();
-
             const oldDb = new DatabaseSync(filePath);
-            oldDb.exec("ALTER TABLE Posts ADD COLUMN content_format TEXT DEFAULT 'lexical';");
-            const row = oldDb.prepare('SELECT id, data FROM Posts').get() as any;
-            const oldData = JSON.parse(row.data);
-            oldData.lexical = '{"root":{}}';
-            oldDb.prepare('UPDATE Posts SET data = ? WHERE id = ?').run(JSON.stringify(oldData), row.id);
+            oldDb.exec('CREATE TABLE Posts (id INTEGER PRIMARY KEY);');
             oldDb.exec('PRAGMA user_version = 1;');
             oldDb.close();
 
-            const secondRun: any = new MigrateContext({dbPath: filePath});
-            await secondRun.init();
-            assert.equal(secondRun.schemaVersion, MIGRATE_CONTEXT_SCHEMA_VERSION);
+            const instance = new MigrateContext({dbPath: filePath});
+            await assert.rejects(() => instance.init(), {
+                name: 'InternalServerError',
+                message: `Database schema version 1 is older than the supported version ${MIGRATE_CONTEXT_SCHEMA_VERSION}. Recreate the database from source.`
+            });
 
-            const [loaded] = await secondRun.getAllPosts();
-            assert.equal(loaded.data.html, '<p>Retained HTML</p>');
-            assert.equal(loaded.data.lexical, undefined);
+            await rm(filePath, {force: true});
+        });
 
-            await secondRun.prepareForExport();
-            const updated = secondRun.db.stmts.findPostById.get(loaded.dbId) as any;
-            assert.equal(JSON.parse(updated.data).lexical, undefined);
+        it('Rejects unversioned databases that already contain a migration schema', async () => {
+            const filePath = join(tmpdir(), `mg-context-unversioned-schema-test-${Date.now()}.sqlite`);
+            const oldDb = new DatabaseSync(filePath);
+            oldDb.exec('CREATE TABLE Posts (id INTEGER PRIMARY KEY);');
+            oldDb.close();
 
-            await secondRun.close();
+            const instance = new MigrateContext({dbPath: filePath});
+            await assert.rejects(() => instance.init(), {
+                name: 'InternalServerError',
+                message: 'Unversioned migration databases are not supported. Recreate the database from source.'
+            });
+
             await rm(filePath, {force: true});
         });
 
@@ -338,8 +331,6 @@ describe('MigrateContext', () => {
             const data = JSON.parse(row.data);
             assert.equal(data.title, 'Updated title');
             assert.equal(data.html, '<p>Enriched HTML</p>');
-            assert.equal(data.lexical, undefined);
-            assert.equal(data.mobiledoc, undefined);
             assert.equal(data.feature_image, null);
             assert.equal(row.created_at, '2023-11-23T12:00:00.000Z');
             assert.equal(row.updated_at, '2023-11-25T12:00:00.000Z');
@@ -1369,8 +1360,6 @@ describe('MigrateContext', () => {
 
             assert.equal(ghostJSON.data.posts.length, 1);
             assert.equal(ghostJSON.data.posts[0].html, '<p>Hello world</p>');
-            assert.equal(ghostJSON.data.posts[0].mobiledoc, undefined);
-            assert.equal(ghostJSON.data.posts[0].lexical, undefined);
 
             await unlink(writtenFiles[0].path);
             await instance.close();
@@ -1520,7 +1509,6 @@ describe('MigrateContext', () => {
             assert.equal(allPosts[0].data.title, 'New title');
             assert.equal(allPosts[0].data.slug, 'new-slug');
             assert.equal(allPosts[0].data.html, '<p>Fresh transformed content</p>');
-            assert.equal(allPosts[0].data.lexical, undefined);
             assert.equal(allPosts[0].getSourceValue('parser'), 'new');
             assert.equal(allPosts[0].getMetaValue('transform'), 'new');
             assert.deepEqual(
@@ -2344,58 +2332,6 @@ describe('MigrateContext', () => {
 
             const updated = instance.db.stmts.findPostById.get(post.dbId) as any;
             assert.equal(JSON.parse(updated.data).title, '(Untitled)');
-
-            await instance.close();
-        });
-
-        it('prepareForExport removes legacy content fields and preserves HTML', async () => {
-            const instance: any = new MigrateContext();
-            await instance.init();
-
-            const post = await instance.addPost();
-            post.set('title', 'Cache Test');
-            post.set('slug', 'cache-test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Hello</p>');
-            await post.save(instance.db);
-
-            const rowBefore = instance.db.stmts.findPostById.get(post.dbId) as any;
-            const staleData = JSON.parse(rowBefore.data);
-            staleData.lexical = '{"root":{}}';
-            staleData.mobiledoc = '{"version":"0.3.1"}';
-            instance.db.stmts.updatePostData.run(JSON.stringify(staleData), post.dbId);
-
-            await instance.prepareForExport();
-
-            const rowAfter = instance.db.stmts.findPostById.get(post.dbId) as any;
-            const stored = JSON.parse(rowAfter.data);
-            assert.equal(stored.html, '<p>Hello</p>');
-            assert.equal(stored.lexical, undefined);
-            assert.equal(stored.mobiledoc, undefined);
-
-            await instance.close();
-        });
-
-        it('Rejects legacy editor content without retained HTML', async () => {
-            const instance: any = new MigrateContext();
-            await instance.init();
-
-            const post = await instance.addPost();
-            post.set('title', 'Legacy only');
-            post.set('slug', 'legacy-only');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            await post.save(instance.db);
-
-            const row = instance.db.stmts.findPostById.get(post.dbId) as any;
-            const staleData = JSON.parse(row.data);
-            staleData.lexical = '{"root":{}}';
-            instance.db.stmts.updatePostData.run(JSON.stringify(staleData), post.dbId);
-
-            await assert.rejects(() => instance.prepareForExport(), {
-                name: 'InternalServerError',
-                message:
-                    'Post "Legacy only" contains only an obsolete editor format. Re-ingest it as HTML before exporting.'
-            });
 
             await instance.close();
         });
