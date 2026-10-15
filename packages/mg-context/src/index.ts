@@ -16,12 +16,15 @@ export type {
     PostFilter,
     DuplicateSlugEntry,
     ResetOptions,
-    ContentStats
+    ContentStats,
+    UpdatePostDataOptions
 } from './lib/MigrateContext.js';
 export type {
     DuplicatePostAction,
     DuplicatePostPolicy,
     DuplicatePostResolver,
-    PostConstructorOptions
+    PostConstructorOptions,
+    PostDataPatch,
+    PostObject
 } from './lib/PostContext.js';
 export type {SanitizedField, SlugRename} from './lib/database.js';

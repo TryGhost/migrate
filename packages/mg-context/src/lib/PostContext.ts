@@ -119,6 +119,9 @@ const postZodSchema = z.object({
     authors: z.array(z.any()).max(500).default([])
 });
 
+export type PostObject = z.infer<typeof postZodSchema>;
+export type PostDataPatch = Partial<Omit<PostObject, 'slug' | 'tags' | 'authors'>>;
+
 export type PostConstructorOptions = {
     source?: object;
     meta?: object;
@@ -657,7 +660,11 @@ export default class PostContext extends MigrateBase {
         return {post, meta};
     }
 
-    static fromRow(row: any, db: DatabaseModels): PostContext {
+    static fromRow(
+        row: any,
+        db: DatabaseModels,
+        {hydrateRelationships = true}: {hydrateRelationships?: boolean} = {}
+    ): PostContext {
         const rawData = JSON.parse(row.data);
         const source = JSON.parse(row.source);
         const meta = JSON.parse(row.meta);
@@ -689,6 +696,10 @@ export default class PostContext extends MigrateBase {
 
         // Post was loaded from DB; nothing has been modified yet
         post.#htmlDirty = false;
+
+        if (!hydrateRelationships) {
+            return post;
+        }
 
         // Load tags via join table
         const postTags = db.stmts.findPostTagsByPostId.all(post.dbId) as any[];

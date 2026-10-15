@@ -49,6 +49,8 @@ export interface PreparedStatements {
     updatePost: ReturnType<DatabaseSync['prepare']>;
     replacePost: ReturnType<DatabaseSync['prepare']>;
     updatePostData: ReturnType<DatabaseSync['prepare']>;
+    patchPostData: ReturnType<DatabaseSync['prepare']>;
+    updatePostWebscrapeData: ReturnType<DatabaseSync['prepare']>;
     updatePostSlug: ReturnType<DatabaseSync['prepare']>;
     findPostById: ReturnType<DatabaseSync['prepare']>;
     findPostByLookupKey: ReturnType<DatabaseSync['prepare']>;
@@ -216,6 +218,10 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
             'UPDATE Posts SET data = ?, source = ?, meta = ?, content_format = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, original_slug = ?, slug = ?, webscrape_data = ? WHERE id = ?'
         ),
         updatePostData: db.prepare('UPDATE Posts SET data = ? WHERE id = ?'),
+        patchPostData: db.prepare(
+            'UPDATE Posts SET data = ?, created_at = ?, updated_at = ?, published_at = ? WHERE id = ?'
+        ),
+        updatePostWebscrapeData: db.prepare('UPDATE Posts SET webscrape_data = ? WHERE id = ?'),
         updatePostSlug: db.prepare('UPDATE Posts SET slug = ?, data = ? WHERE id = ?'),
         findPostById: db.prepare('SELECT * FROM Posts WHERE id = ?'),
         findPostByLookupKey: db.prepare('SELECT * FROM Posts WHERE lookup_key = ?'),

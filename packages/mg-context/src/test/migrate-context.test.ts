@@ -253,6 +253,122 @@ describe('MigrateContext', () => {
         await instance.close();
     });
 
+    describe('updatePostData', () => {
+        it('Patches scalar data and scraper output without touching relationships', async () => {
+            const instance = new MigrateContext();
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Original title');
+            post.set('slug', 'original-title');
+            post.set('html', '<p>Original HTML</p>');
+            post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            post.set('published_at', new Date('2023-11-24T12:00:00.000Z'));
+            post.convertContent();
+            post.addTag(new TagContext({name: 'First tag', slug: 'first-tag'}));
+            post.addTag(new TagContext({name: 'Second tag', slug: 'second-tag'}));
+            post.addAuthor(new AuthorContext({name: 'First author', slug: 'first-author', email: 'first@example.com'}));
+            post.addAuthor(
+                new AuthorContext({name: 'Second author', slug: 'second-author', email: 'second@example.com'})
+            );
+            post.save(instance.db);
+
+            assert.ok(post.dbId);
+            const postTagsBefore = instance.db.stmts.findPostTagsByPostId.all(post.dbId);
+            const postAuthorsBefore = instance.db.stmts.findPostAuthorsByPostId.all(post.dbId);
+            const tagRead = mock.method(instance.db.stmts.findPostTagsByPostId, 'all');
+            const authorRead = mock.method(instance.db.stmts.findPostAuthorsByPostId, 'all');
+
+            instance.updatePostData(
+                post.dbId,
+                {
+                    title: '  Updated title  ',
+                    html: '<p>Enriched HTML</p>',
+                    feature_image: `https://example.com/${'x'.repeat(2000)}`,
+                    updated_at: new Date('2023-11-25T12:00:00.000Z'),
+                    published_at: null
+                },
+                {webscrapeData: {featureImage: 'downloaded.jpg'}}
+            );
+
+            assert.equal(tagRead.mock.callCount(), 0);
+            assert.equal(authorRead.mock.callCount(), 0);
+            tagRead.mock.restore();
+            authorRead.mock.restore();
+
+            const row = instance.db.stmts.findPostById.get(post.dbId) as any;
+            const data = JSON.parse(row.data);
+            assert.equal(data.title, 'Updated title');
+            assert.equal(data.html, '<p>Enriched HTML</p>');
+            assert.equal(data.lexical, null);
+            assert.equal(data.mobiledoc, null);
+            assert.equal(data.feature_image, null);
+            assert.equal(row.created_at, '2023-11-23T12:00:00.000Z');
+            assert.equal(row.updated_at, '2023-11-25T12:00:00.000Z');
+            assert.equal(row.published_at, null);
+            assert.deepEqual(JSON.parse(row.webscrape_data), {featureImage: 'downloaded.jpg'});
+            assert.deepEqual(instance.db.stmts.findPostTagsByPostId.all(post.dbId), postTagsBefore);
+            assert.deepEqual(instance.db.stmts.findPostAuthorsByPostId.all(post.dbId), postAuthorsBefore);
+
+            const [reloaded] = await instance.getAllPosts();
+            assert.deepEqual(
+                reloaded.data.tags.map((tag: TagContext) => tag.data.slug),
+                ['first-tag', 'second-tag']
+            );
+            assert.deepEqual(
+                reloaded.data.authors.map((author: AuthorContext) => author.data.slug),
+                ['first-author', 'second-author']
+            );
+            assert.deepEqual(
+                instance.sanitizedFields.map(field => [field.field, field.reason]),
+                [
+                    ['title', 'trimmed'],
+                    ['feature_image', 'replaced']
+                ]
+            );
+
+            instance.updatePostData(post.dbId, {status: 'published'});
+            const rowWithoutScraperUpdate = instance.db.stmts.findPostById.get(post.dbId) as any;
+            assert.deepEqual(JSON.parse(rowWithoutScraperUpdate.webscrape_data), {
+                featureImage: 'downloaded.jpg'
+            });
+
+            instance.updatePostData(post.dbId, {}, {webscrapeData: undefined});
+            const rowWithClearedScraperData = instance.db.stmts.findPostById.get(post.dbId) as any;
+            assert.equal(rowWithClearedScraperData.webscrape_data, null);
+
+            await instance.close();
+        });
+
+        it('Rejects invalid patches, relationship fields, slugs, and unknown posts', async () => {
+            const instance = new MigrateContext();
+            await instance.init();
+
+            assert.throws(() => instance.updatePostData(1, null as any), {
+                name: 'BadRequestError',
+                message: 'Post data patch must be an object.'
+            });
+            assert.throws(() => instance.updatePostData(1, [] as any), {
+                name: 'BadRequestError',
+                message: 'Post data patch must be an object.'
+            });
+            assert.throws(() => instance.updatePostData(1, {tags: []} as any), {
+                name: 'BadRequestError',
+                message: 'Post data patch cannot update "tags". Use PostContext.save() instead.'
+            });
+            assert.throws(() => instance.updatePostData(1, {slug: 'replacement'} as any), {
+                name: 'BadRequestError',
+                message: 'Post data patch cannot update "slug". Use PostContext.save() instead.'
+            });
+            assert.throws(() => instance.updatePostData(999, {title: 'Missing'}), {
+                name: 'NotFoundError',
+                message: 'Post with database ID 999 was not found.'
+            });
+
+            await instance.close();
+        });
+    });
+
     it('Can add existing PostContext to list of posts', async () => {
         const instance: any = new MigrateContext();
         await instance.init();

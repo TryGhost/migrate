@@ -11,7 +11,8 @@ import PostContext, {
     normalizeContentFormat,
     normalizeTitle,
     type ContentFormat,
-    type DuplicatePostPolicy
+    type DuplicatePostPolicy,
+    type PostDataPatch
 } from './PostContext.js';
 import TagContext from './TagContext.js';
 import AuthorContext from './AuthorContext.js';
@@ -92,6 +93,10 @@ export interface ContentStats {
     userAssociations: number;
     tagAssociations: number;
     links: number;
+}
+
+export interface UpdatePostDataOptions {
+    webscrapeData?: unknown;
 }
 
 type MigrateContextOptions = {
@@ -716,6 +721,56 @@ export default class MigrateContext extends MigrateBase {
     async getAllPosts(): Promise<PostContext[]> {
         const rows = this.db.stmts.findAllPostsOrdered.all() as any[];
         return rows.map((row: any) => PostContext.fromRow(row, this.db));
+    }
+
+    /**
+     * Patch scalar post data without hydrating or replacing tag/author relationships.
+     * Slugs stay on the full PostContext save path because they require deduplication
+     * and redirect tracking.
+     */
+    updatePostData(dbId: number, patch: PostDataPatch, options: UpdatePostDataOptions = {}): void {
+        if (!patch || typeof patch !== 'object' || Array.isArray(patch)) {
+            throw new errors.BadRequestError({message: 'Post data patch must be an object.'});
+        }
+
+        const forbiddenField = ['slug', 'tags', 'authors'].find(field => Object.hasOwn(patch, field));
+        if (forbiddenField) {
+            throw new errors.BadRequestError({
+                message: `Post data patch cannot update "${forbiddenField}". Use PostContext.save() instead.`
+            });
+        }
+
+        const row = this.db.stmts.findPostById.get(dbId) as any;
+        if (!row) {
+            throw new errors.NotFoundError({message: `Post with database ID ${dbId} was not found.`});
+        }
+
+        const post = PostContext.fromRow(row, this.db, {hydrateRelationships: false});
+        for (const [key, value] of Object.entries(patch)) {
+            post.set(key, value);
+        }
+        post.sanitize(this.db.sanitizedFields);
+        post.checkRequired(post.data);
+
+        const postData = {...post.data};
+        delete postData.tags;
+        delete postData.authors;
+
+        const toISOString = (value: Date | null): string | null => value?.toISOString() ?? null;
+
+        withTransaction(this.db, () => {
+            this.db.stmts.patchPostData.run(
+                JSON.stringify(postData),
+                toISOString(post.data.created_at),
+                toISOString(post.data.updated_at),
+                toISOString(post.data.published_at),
+                dbId
+            );
+
+            if (Object.hasOwn(options, 'webscrapeData')) {
+                this.db.stmts.updatePostWebscrapeData.run(JSON.stringify(options.webscrapeData) ?? null, dbId);
+            }
+        });
     }
 
     async findPosts({

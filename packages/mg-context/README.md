@@ -339,6 +339,24 @@ Find authors by `slug`, `name`, or `email`.
 
 Load all posts. Use `forEachPost` for large datasets to avoid loading everything into memory.
 
+#### `updatePostData(dbId, patch, options?): void`
+
+Patch scalar post fields without loading or rewriting the post's tag and author relationships. This is useful for asset scraping and HTML enrichment when the adapter retained the internal SQLite ID from `post.dbId` during ingestion.
+
+```js
+ctx.updatePostData(postDbId, {
+    html: enrichedHtml,
+    feature_image: downloadedFeatureImage,
+    updated_at: new Date()
+}, {
+    webscrapeData: scraperResult
+});
+```
+
+The patch goes through the same validation and sanitization as a full save. Changing `html` clears cached `lexical` and `mobiledoc`, and changing a date also updates the corresponding indexed SQLite column. Pass `webscrapeData` separately when the raw scraper result should be stored; omit it to leave the existing value unchanged.
+
+`dbId` is mg-context's internal numeric database ID, not the eventual Ghost ID. This method does not query or write `PostTags` or `PostAuthors`. It deliberately rejects `slug`, `tags`, and `authors`: slugs require deduplication and redirect tracking, while relationships require junction-table handling. Load the post and use `PostContext.save()` when changing those fields.
+
 ### Iterating
 
 #### `forEachPost(callback, options?): Promise<void>`
