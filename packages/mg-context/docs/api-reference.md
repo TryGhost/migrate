@@ -17,27 +17,40 @@ The top-level class that manages the database and all entity operations.
 new MigrateContext(options?)
 ```
 
-| Option                     | Type                              | Default             | Description                                  |
-| -------------------------- | --------------------------------- | ------------------- | -------------------------------------------- |
-| `dbPath`                   | `string`                          | —                   | Path to a SQLite file for persistent storage |
-| `ephemeral`                | `boolean`                         | `true` if no dbPath | Use in-memory database                       |
-| `emitEvents`               | `boolean`                         | `true`              | Emit progress events (see [Events](#events)) |
-| `warnOnLookupKeyDuplicate` | `boolean`                         | `false`             | Log when a duplicate lookupKey is skipped    |
-| `onDuplicate`              | `'skip' \| 'replace' \| resolver` | `'skip'`            | Default lookup-key duplicate policy          |
+| Option               | Type                                  | Default       | Description                                               |
+| -------------------- | ------------------------------------- | ------------- | --------------------------------------------------------- |
+| `dbPath`             | `string`                              | —             | Path to a SQLite file for persistent, resumable storage   |
+| `storage`            | `'temporary' \| 'memory'`             | `'temporary'` | Storage used when `dbPath` is absent                       |
+| `mode`               | `'resume' \| 'refresh'`               | `'resume'`    | Reuse compatible content or reset it during `init()`       |
+| `contentFingerprint` | `string`                              | —             | Stable identity for the source and content-affecting input |
+| `onDuplicate`        | `'skip' \| 'replace' \| resolver`     | `'skip'`      | Default lookup-key duplicate policy                       |
+| `ephemeral`          | `boolean`                             | —             | Deprecated compatibility alias for memory storage         |
+| `emitEvents`         | `boolean`                             | `true`        | Deprecated; omit listeners to opt out naturally           |
+| `warnOnLookupKeyDuplicate` | `boolean`                     | —             | Deprecated; duplicate outcomes are never logged directly  |
 
 ```js
-// In-memory (default)
+// Managed temporary on-disk database (default)
 const ctx = new MigrateContext();
 
-// Persistent file-based
-const ctx = new MigrateContext({dbPath: './migration.sqlite'});
+// Persistent and resumable
+const ctx = new MigrateContext({
+    dbPath: './migration.sqlite',
+    mode: 'resume',
+    contentFingerprint: sourceAndOptionsDigest
+});
 
-// Refresh transformed posts while preserving their database and Ghost IDs
-const ctx = new MigrateContext({dbPath: './migration.sqlite', onDuplicate: 'replace'});
+// Rebuild stored content while leaving separately managed asset caches alone
+const ctx = new MigrateContext({
+    dbPath: './migration.sqlite',
+    mode: 'refresh',
+    contentFingerprint: sourceAndOptionsDigest
+});
 
-// Server mode — disable events for zero overhead
-const ctx = new MigrateContext({emitEvents: false});
+// Explicit in-memory storage, mainly for small jobs and tests
+const ctx = new MigrateContext({storage: 'memory'});
 ```
+
+Pass either `dbPath` or `storage`, never both. The default temporary database is deleted when the context closes. A `dbPath` is not deleted.
 
 ### Lifecycle
 
@@ -63,7 +76,11 @@ try {
 
 The version of the mg-context schema stored in the open SQLite database. The current version is also exported as `MIGRATE_CONTEXT_SCHEMA_VERSION`.
 
-Schema version 2 is the compatibility baseline for HTML-only databases. `init()` marks a new database with the current version and reopens databases at that version. It rejects unversioned databases and both older and newer versions. Future schema changes must add an explicit migration before increasing the version; mg-context never silently reinterprets an existing database as a newer schema.
+Schema version 3 is current. `init()` transactionally migrates version 2 databases to version 3, marks new databases with the current version, and reopens databases already at that version. It rejects unversioned, unsupported older, and newer databases. Future changes must add an explicit migration; mg-context never silently reinterprets an existing database as a newer schema.
+
+#### `databasePath: string`
+
+The SQLite path in use after `init()`. Returns `':memory:'` for explicit memory storage. The path for default temporary storage is owned by the context and becomes invalid after `close()`.
 
 #### `hasContent(): ContentStats | false`
 
@@ -92,60 +109,31 @@ if (ctx.hasContent()) {
 
 Objects loaded before `reset()` should be discarded because their database IDs no longer refer to stored rows.
 
-#### Fingerprints
+#### Resume, refresh, and content fingerprints
 
-Fingerprints are primarily for adapter authors and custom migration integrations. They are public API, but people running a migration should not normally need to calculate or enter them. A user-facing option such as `--refresh` should express the user's intent; the adapter can use fingerprints internally to decide whether its persistent context is still reusable.
+`mode` expresses the migration's intent. In `resume` mode, mg-context reuses compatible content and skips existing lookup keys. In `refresh` mode, `init()` clears mg-context content, reports, and fingerprints before ingest begins. It does not touch asset files or databases managed by another package.
 
-A fingerprint is a stable identifier for an input that affects the stored migration content. It is not a copy of that input or a cache. mg-context only stores and compares the opaque strings supplied by the caller through `getFingerprint(name)`, `setFingerprint(name, value)`, `matchesFingerprint(name, value)`, and `deleteFingerprint(name)`. It does not hash files, serialize options, reset content, or clear external caches automatically.
-
-Fingerprints are useful when an adapter reuses the same `dbPath` across runs so it can resume work or avoid parsing a large export again. Typical fingerprints include:
-
-| Fingerprint | Include | Action when it changes |
-| --- | --- | --- |
-| `source` | The source file contents, or a stable digest of every file in a batch | Reset the context and ingest the source again |
-| `transform` | Content-affecting options and an adapter mapping/version number | Reset and regenerate posts, HTML, slugs, and other transformed fields |
-| `asset-cache` | Asset rewrite rules or an external cache format version | Let the adapter invalidate or rebuild its external asset cache |
-
-Do not include operational options that cannot affect stored content, such as logging verbosity. Avoid storing secrets directly: fingerprint them instead. Use a deterministic representation for objects so the same settings always produce the same value.
-
-The usual lifecycle is:
-
-1. Compute the current source and transformation fingerprints.
-2. If content exists and every stored fingerprint matches, reuse the database.
-3. If content exists but a fingerprint is missing or different, call `reset()` and ingest again.
-4. Store the new fingerprints only after ingestion succeeds.
+`contentFingerprint` is one opaque, deterministic string covering both the source identity and every option or adapter version that can change stored content. mg-context stores the value; the caller decides how to calculate it. Do not include operational settings such as log verbosity, and hash secrets instead of embedding them.
 
 ```js
-const sourceFingerprint = await hashSourceFiles(xmlFiles);
-const transformFingerprint = hashOptions({
-    adapterVersion: 2,
+const contentFingerprint = hashStable({
+    sourceFiles: await hashSourceFiles(xmlFiles),
+    adapterVersion: 3,
     featureImage,
     shortcodes
 });
 
-const existing = ctx.hasContent();
-const reusable =
-    Boolean(existing) &&
-    ctx.matchesFingerprint('source', sourceFingerprint) &&
-    ctx.matchesFingerprint('transform', transformFingerprint);
-
-if (existing && !reusable) {
-    ctx.reset(); // external download and asset caches are unaffected
-}
-
-if (!reusable) {
-    await ingestSource(ctx, xmlFiles);
-
-    // Write these only after a successful ingest. If ingestion fails, the next
-    // run will see missing or stale fingerprints and rebuild the partial data.
-    ctx.setFingerprint('source', sourceFingerprint);
-    ctx.setFingerprint('transform', transformFingerprint);
-}
+const ctx = new MigrateContext({
+    dbPath: './migration.sqlite',
+    mode: refreshRequested ? 'refresh' : 'resume',
+    contentFingerprint
+});
+await ctx.init();
 ```
 
-This is separate from lookup-key deduplication and `schemaVersion`: lookup keys identify individual source records, `schemaVersion` protects mg-context's SQLite layout, and fingerprints describe the caller's source and transformation assumptions across runs.
+When `contentFingerprint` is supplied, `init()` rejects a populated resume database without the same fingerprint and explains how to rebuild with `mode: 'refresh'`. A one-shot temporary or memory migration usually does not need a fingerprint.
 
-Fingerprints are unnecessary for one-shot in-memory migrations or integrations that always start with a clean database. Use a distinct `dbPath` for each isolated batch. Reusing the same path deliberately shares content and fingerprints, while separate paths give each batch an independent lifecycle. `reset()` clears fingerprints by default; use `{preserveFingerprints: true}` only when the adapter intentionally wants to keep those assumptions while removing the content.
+The named methods `getFingerprint(name)`, `setFingerprint(name, value)`, `matchesFingerprint(name, value)`, and `deleteFingerprint(name)` remain available for advanced integration metadata and transition compatibility. They are not needed for the normal resume/refresh flow.
 
 #### `db: DatabaseModels`
 
@@ -271,13 +259,18 @@ const posts = await ctx.findPosts({authorEmail: 'alice@example.com'});
 const posts = await ctx.findPosts({sourceAttr: {key: 'url', value: 'https://example.com/post'}});
 ```
 
-#### `findTags(options): Promise<TagContext[] | null>`
+#### `findTags(options?): Promise<TagContext[] | null>`
 
-Find tags by `slug` or `name`.
+Find tags by `slug` or `name`. `scope` is `'referenced'` by default, so standalone tags are omitted unless `{scope: 'all'}` is passed.
 
-#### `findAuthors(options): Promise<AuthorContext[] | null>`
+#### `findAuthors(options?): Promise<AuthorContext[] | null>`
 
-Find authors by `slug`, `name`, or `email`.
+Find authors by `slug`, `name`, or `email`, with the same `scope: 'referenced' | 'all'` behavior.
+
+```js
+const usedTags = await ctx.findTags({name: 'News'});
+const everyTag = await ctx.findTags({name: 'News', scope: 'all'});
+```
 
 #### `getAllPosts(): Promise<PostContext[]>`
 
@@ -316,7 +309,7 @@ await ctx.forEachPost(async (post) => {
 
 #### `forEachTag(callback, options?): Promise<void>`
 
-Iterate all tags that are referenced by at least one post, in batches. Each tag is automatically saved after the callback.
+Iterate tags in batches. The default scope is `referenced`; pass `{scope: 'all'}` to include standalone tags. Each tag is automatically saved after the callback.
 
 ```js
 await ctx.forEachTag(async (tag) => {
@@ -324,13 +317,14 @@ await ctx.forEachTag(async (tag) => {
 });
 ```
 
-| Option      | Type     | Default | Description            |
-|-------------|----------|---------|------------------------|
-| `batchSize` | `number` | `100`   | Tags loaded per batch |
+| Option      | Type                    | Default        | Description           |
+|-------------|-------------------------|----------------|-----------------------|
+| `batchSize` | `number`                | `100`          | Tags loaded per batch |
+| `scope`     | `'referenced' \| 'all'` | `'referenced'` | Which tags to include |
 
 #### `forEachAuthor(callback, options?): Promise<void>`
 
-Iterate all authors that are referenced by at least one post, in batches. Each author is automatically saved after the callback.
+Iterate authors in batches. The default scope is `referenced`; pass `{scope: 'all'}` to include standalone authors. Each author is automatically saved after the callback.
 
 ```js
 await ctx.forEachAuthor(async (author) => {
@@ -338,9 +332,10 @@ await ctx.forEachAuthor(async (author) => {
 });
 ```
 
-| Option      | Type     | Default | Description              |
-|-------------|----------|---------|--------------------------|
-| `batchSize` | `number` | `100`   | Authors loaded per batch |
+| Option      | Type                    | Default        | Description              |
+|-------------|-------------------------|----------------|--------------------------|
+| `batchSize` | `number`                | `100`          | Authors loaded per batch |
+| `scope`     | `'referenced' \| 'all'` | `'referenced'` | Which authors to include |
 
 #### `forEachGhostPost(callback, options?): Promise<void>`
 
@@ -386,7 +381,7 @@ await queue.run(postTasks());
 
 #### `streamTags(options?): AsyncGenerator<TagContext>`
 
-Async generator that yields tags referenced by at least one post. Tags are not auto-saved.
+Async generator that yields referenced tags by default. Pass `{scope: 'all'}` for every tag. Tags are not auto-saved.
 
 ```js
 for await (const tag of ctx.streamTags()) {
@@ -396,7 +391,7 @@ for await (const tag of ctx.streamTags()) {
 
 #### `streamAuthors(options?): AsyncGenerator<AuthorContext>`
 
-Async generator that yields authors referenced by at least one post. Authors are not auto-saved.
+Async generator that yields referenced authors by default. Pass `{scope: 'all'}` for every author. Authors are not auto-saved.
 
 ```js
 for await (const author of ctx.streamAuthors()) {
@@ -411,6 +406,8 @@ for await (const author of ctx.streamAuthors()) {
 | `batchSize` | `number`     | `100`   | Posts loaded per batch                        |
 | `filter`    | `PostFilter` | —       | Filter criteria (see [Filtering](#filtering)) |
 
+Tag and author iteration accepts `batchSize` and `scope` instead of a post filter. The same scope terms apply to find, iteration, streaming, and standalone export methods.
+
 Unfiltered `forEachPost()`, `streamPosts()`, `forEachTag()`, `streamTags()`, `forEachAuthor()`, and `streamAuthors()` use keyset pagination. They retain only the current batch plus the highest database ID present when iteration starts, so memory use stays bounded and rows added later are left for the next iteration.
 
 Supplying a post `filter` with at least one criterion deliberately uses a different strategy: `forEachPost()` and `streamPosts()` snapshot every matching post ID before invoking the first callback or yielding the first post. This costs O(number of matches) memory, but it prevents a callback from skipping or duplicating posts when it saves changes to a date, tag, or author used by the filter.
@@ -421,12 +418,12 @@ Progress is reported via the `progress` event (see [Events](#events)).
 
 #### `prepareForExport(options?): Promise<void>`
 
-Prepare all posts for export. Must be called before `writeGhostJson()` or `forEachGhostPost()`. This:
+Prepare all posts for export. Export methods call this automatically. Calling it directly is useful only when code needs to inspect prepared data before writing. This:
 
-1. Deduplicates slugs (calls `deduplicateSlugs()` internally)
+1. Rebuilds the duplicate-slug report from the requested and final stored slugs
 2. Normalizes blank post titles to `(Untitled)`
 
-The method is idempotent. Call it after ingestion and before writing the final Ghost JSON.
+The method is idempotent.
 
 | Option      | Type     | Default | Description               |
 |-------------|----------|---------|---------------------------|
@@ -446,7 +443,7 @@ Write posts, tags, authors, and junction tables to Ghost JSON files.
 | `filename`        | `string`                      | `'posts'` | Base filename (without `.json`)                               |
 | `filter`          | `PostFilter`                  | —         | Filter criteria                                               |
 | `onWrite`         | `(file: WrittenFile) => void` | —         | Callback after each file is written                           |
-| `replaceExisting` | `boolean`                     | `false`   | Remove stale files from an earlier export with this filename  |
+| `replaceExisting` | `boolean`                     | —         | Deprecated compatibility option; cleanup is automatic         |
 
 Returns an array of `WrittenFile` objects:
 
@@ -457,13 +454,12 @@ Returns an array of `WrittenFile` objects:
 | `size`  | `number` | File size in bytes             |
 | `posts` | `number` | Number of posts in this file   |
 
-Set `replaceExisting: true` when reusing a staging directory. After the new files have been written successfully, mg-context removes obsolete members of the same export-name family: exactly `<filename>.json` and `<filename>-N.json`, where `N` is a positive batch number. Other files are left untouched. Cleanup happens after writing, so a failed export does not first erase the previous complete set.
+Export preparation is automatic. mg-context stores `.mg-context-export-manifest.json` beside the output and, after a later export succeeds, removes only obsolete files recorded for the same export. Files it does not own are untouched. The manifest is replaced only after output generation succeeds, so an interrupted export does not turn a partial file set into the recorded completed set.
 
 ```js
 const files = await ctx.writeGhostJson('./output/', {
     filename: 'export',
     batchSize: 2000,
-    replaceExisting: true,
     onWrite(f) {
         console.log(`Wrote ${f.name} (${f.posts} posts)`);
     }
@@ -472,15 +468,15 @@ const files = await ctx.writeGhostJson('./output/', {
 
 #### `writeGhostTagsJson(outputDir, options?): Promise<WrittenFile>`
 
-Export tags as a standalone JSON file. Only tags referenced by at least one post are included.
+Export tags as a standalone JSON file. The default scope is `referenced`; pass `{scope: 'all'}` to include standalone tags. Preparation and manifest updates are automatic.
 
 #### `writeGhostUsersJson(outputDir, options?): Promise<WrittenFile>`
 
-Export authors/users as a standalone JSON file. Only authors referenced by at least one post are included.
+Export authors/users as a standalone JSON file. The default scope is `referenced`; pass `{scope: 'all'}` to include standalone authors. Preparation and manifest updates are automatic.
 
 ```js
 await ctx.writeGhostTagsJson('./output/', {filename: 'my-tags'});
-await ctx.writeGhostUsersJson('./output/', {filename: 'my-users'});
+await ctx.writeGhostUsersJson('./output/', {filename: 'my-users', scope: 'all'});
 ```
 
 ### Filtering
@@ -508,9 +504,9 @@ await ctx.forEachPost(async (post) => { /* ... */ }, {
 
 Posts with `null` `published_at` (drafts) are excluded by a `publishedAt` filter.
 
-### Events
+### Events and durable reports
 
-MigrateContext emits events via `on`/`off`, powered by `node:events`. This lets you set up a single listener for progress across all operations instead of passing callbacks to each method.
+MigrateContext has typed `on`/`off` methods powered by `node:events`.
 
 #### `on(event, listener): this`
 
@@ -520,27 +516,38 @@ Register an event listener. Returns `this` for chaining.
 
 Remove an event listener.
 
-#### `progress` event
+Events are synchronous and live; they are not replayed after a database reopens. Durable mutations are recorded and committed before their events are emitted. If a listener throws, its error propagates, but the committed database change remains. Register no listeners when events are not needed. The deprecated `emitEvents` option remains for one transition release.
 
-Emitted after each batch during `prepareForExport()`, `forEachPost()`, `forEachGhostPost()`, `streamPosts()`, `streamTags()`, and `streamAuthors()`.
+Mutation events carry before and after state. Outcome events that do not change an existing value do not invent those fields.
 
 ```js
-ctx.on('progress', (event, processed, total) => {
-    console.log(`[${event}] ${processed}/${total}`);
+ctx.on('progress', ({operation, processed, total}) => {
+    console.log(`[${operation}] ${processed}/${total}`);
+});
+
+ctx.on('slug:renamed', ({oldSlug, newSlug, url}) => {
+    console.log(`${oldSlug} -> ${newSlug}: ${url}`);
 });
 ```
 
-| Argument    | Type     | Description                                                  |
-|-------------|----------|--------------------------------------------------------------|
-| `event`     | `string` | Operation name: `prepareForExport`, `forEachPost`, `forEachGhostPost`, `streamPosts`, `streamTags`, or `streamAuthors` |
-| `processed` | `number` | Posts processed so far                                       |
-| `total`     | `number` | Total posts to process                                       |
+| Event | Payload | When it fires |
+|-------|---------|---------------|
+| `progress` | `{operation, processed, total}` | After each iteration or preparation batch |
+| `post:skipped` | `{lookupKey, existingPostId}` | A duplicate lookup key uses the `skip` outcome |
+| `post:replaced` | `{lookupKey, postId, previous, current}` | A duplicate lookup key uses the `replace` outcome |
+| `field:sanitized` | `{context, slug, field, reason, oldValue, newValue}` | A value is changed to satisfy Ghost's schema |
+| `slug:renamed` | `{postId, lookupKey, oldSlug, newSlug, url}` | The final stored slug differs from the requested slug |
+| `export:file-written` | `{path, name, size, posts}` | An output file has been completed |
 
-Events can be disabled entirely at construction with `emitEvents: false` for server environments where the overhead is unwanted:
+`slug:renamed` is emitted only after suffixing and length enforcement, and never for a skipped duplicate that did not claim a slug. `oldSlug` is the requested slug and `newSlug` is the final persisted slug.
 
-```js
-const ctx = new MigrateContext({emitEvents: false});
-```
+`post:replaced` carries complete detached snapshots. Each snapshot contains `databaseId`, `ghostId`, `lookupKey`, `data`, `source`, `meta`, and `webscrapeData`. Tags and authors inside `data` are plain values, not live context objects. Full HTML and relationships are included. Mutating a snapshot cannot change the stored post or a later event.
+
+#### `getMigrationReport(): MigrationReport`
+
+Returns the durable migration report from SQLite. Its `summary` counts `post:inserted`, `post:skipped`, `post:replaced`, `field:sanitized`, and `slug:renamed`; `events` contains their identities, compact details, and timestamps. The report survives reopening a persistent database and is cleared by `reset()` or refresh mode.
+
+Replacement report rows contain changed field names and summary data rather than duplicating the live event's complete before/after snapshots. Export and progress events are operational and are not persisted.
 
 ---
 
@@ -832,22 +839,22 @@ for (const entry of ctx.sanitizedFields) {
 | `oldValue` | `string` | The value before sanitization                                                      |
 | `newValue` | `string \| null` | The value that was stored                                                  |
 
-This is collected in memory as posts are saved, so it covers the current run only — resuming an existing `dbPath` starts empty, since the stored data was already sanitized when it was first written.
+This getter is collected in memory as entities are saved, so it covers the current run only. The durable migration report retains compact `field:sanitized` entries across persistent database resumptions.
 
 ### Slug deduplication
 
 #### `deduplicateSlugs(): Promise<DuplicateSlugEntry[]>`
 
-Ghost requires unique slugs. When a migration source contains multiple posts with the same slug, this method renames newer duplicates by appending `-2`, `-3`, etc., while the oldest post keeps the original slug.
+Ghost requires unique slugs. Slugs are allocated when posts are saved: the first stored post keeps the requested slug, and later collisions receive `-2`, `-3`, and so on. This method rebuilds the resulting duplicate report; it does not defer slug allocation until export.
 
-Called automatically by `prepareForExport()`, so you typically don't need to call it directly. It only runs once — subsequent calls reuse the cached result.
+Called automatically by export methods through `prepareForExport()`, so you typically don't need to call it directly. It only runs once — subsequent calls reuse the cached result.
 
 Renaming happens at insert time, and the slug a post originally wanted is stored alongside it. The results are rebuilt from the database, so resuming against an existing `dbPath` still reports every rename, including those made on an earlier run. A slug changed after its post was inserted is not a duplicate and is not reported.
 
-After preparing, access the results via the `duplicateSlugs` getter to log renamed slugs for redirect handling:
+After exporting, access the results via the `duplicateSlugs` getter to log renamed slugs for redirect handling:
 
 ```js
-await ctx.prepareForExport();
+await ctx.writeGhostJson('./output');
 
 for (const entry of ctx.duplicateSlugs) {
     const label = entry.oldSlug === entry.newSlug ? 'kept' : 'renamed';
@@ -865,7 +872,7 @@ Getter that returns the results of the most recent deduplication. Results are gr
 | `newSlug` | `string` | The final slug — same as `oldSlug` for the retained post          |
 | `url`     | `string` | Original URL from `source.url` or `canonical_url` (empty if none) |
 
-Ordering is determined by `published_at` (falling back to `created_at`), so the earliest post keeps the original slug. If a suffix like `-2` already belongs to a real post, it skips to `-3`, etc.
+Entries follow database insertion order. If a suffix like `-2` already belongs to a real post, allocation skips to `-3`, and so on. Adapters that can encounter several source revisions should use a duplicate resolver or preselect the revision they want before saving.
 
 See [examples/deduplicate-slugs.ts](../examples/deduplicate-slugs.ts) for a complete example.
 

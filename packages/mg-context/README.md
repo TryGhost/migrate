@@ -12,14 +12,12 @@ pnpm add @tryghost/mg-context
 
 ## Quick start
 
-This is the complete lifecycle: open a context, ingest content, prepare it, export it, and close the database.
+This is the complete lifecycle: open a context, ingest content, export it, and close the database.
 
 ```js
 import {MigrateContext} from '@tryghost/mg-context';
 
-const context = new MigrateContext({
-    dbPath: './migration.sqlite'
-});
+const context = new MigrateContext();
 
 await context.init();
 
@@ -43,10 +41,7 @@ try {
     });
     post.save(context.db);
 
-    await context.prepareForExport();
-    const files = await context.writeGhostJson('./output', {
-        replaceExisting: true
-    });
+    const files = await context.writeGhostJson('./output');
 
     console.log(`Wrote ${files.length} file(s)`);
 } finally {
@@ -60,9 +55,9 @@ The normal data flow has three stages:
 
 1. **Ingest** — `addPost()` creates a post, and `post.save(context.db)` validates and persists it with its tags and authors. A stable `lookupKey` makes repeated ingestion retry-safe.
 2. **Transform** — `forEachPost()` loads posts in batches, runs a callback, and saves each post automatically. `streamPosts()` is available when the caller needs to control persistence or concurrency.
-3. **Export** — `prepareForExport()` repairs export invariants and deduplicates slugs. `writeGhostJson()` then writes one or more Ghost import files with the stored HTML.
+3. **Export** — `writeGhostJson()` automatically repairs export invariants, writes one or more Ghost import files with the stored HTML, and removes stale files owned by the previous export manifest.
 
-`MigrateContext` uses an in-memory SQLite database when `dbPath` is omitted. Pass a path for large or resumable migrations.
+By default, `MigrateContext` uses a managed temporary SQLite file and removes it on `close()`. Pass `dbPath` for resumable migrations, or `{storage: 'memory'}` when an in-memory database is explicitly preferable.
 
 ## Common recipes
 
@@ -71,7 +66,11 @@ The normal data flow has three stages:
 `hasContent()` returns existing content counts, or `false` for an empty database.
 
 ```js
-const context = new MigrateContext({dbPath: './migration.sqlite'});
+const context = new MigrateContext({
+    dbPath: './migration.sqlite',
+    mode: 'resume',
+    contentFingerprint: sourceAndOptionsFingerprint
+});
 await context.init();
 
 const stats = context.hasContent();
@@ -82,18 +81,21 @@ if (stats) {
 }
 ```
 
-Use [fingerprints](docs/api-reference.md#fingerprints) when reuse also depends on source files or transformation options. Use `reset()` when stored content is no longer valid but external asset caches should remain intact.
+`contentFingerprint` should identify the source and every option that affects stored content. Resume rejects an incompatible database with an actionable error instead of silently exporting stale rows.
 
-### Replace posts during a refresh
+### Refresh transformed content
 
-With a stable `lookupKey`, the default duplicate policy is `skip`. Use `replace` when rescanning the source should update stored content.
+Use refresh mode when a changed source or transformation should rebuild the context database. It clears managed migration content and reports without touching separately managed asset caches.
 
 ```js
 const context = new MigrateContext({
     dbPath: './migration.sqlite',
-    onDuplicate: 'replace'
+    mode: 'refresh',
+    contentFingerprint: sourceAndOptionsFingerprint
 });
 ```
+
+Within one compatible run, a stable `lookupKey` still defaults to retry-safe `skip`. Advanced integrations can use `onDuplicate: 'replace'` or a resolver.
 
 ### Transform every post
 
@@ -111,7 +113,6 @@ await context.forEachPost(async (post) => {
 Filters combine with `AND` logic. Relationship filters accept a tag or author identity, while date filters accept ranges.
 
 ```js
-await context.prepareForExport();
 await context.writeGhostJson('./output', {
     filename: 'news',
     filter: {
@@ -148,16 +149,18 @@ Source data routinely carries values Ghost will not accept — a title over 255 
 
 | Behaviour | Default |
 | --- | --- |
-| Storage | In-memory when `dbPath` is omitted; persistent SQLite when it is provided |
+| Storage | Managed temporary on-disk SQLite; persistent when `dbPath` is provided |
 | Post content | HTML is preserved and exported unchanged |
 | Duplicate lookup key | Skip the incoming post |
-| Progress events | Enabled |
+| Resume mode | Reuse a compatible persistent database |
+| Progress and change events | Typed EventEmitter events; no listeners means no presentation work |
 | Post iteration batch | 100 records |
 | JSON export batch | 5,000 posts per file |
-| Existing export files | Preserved unless `replaceExisting: true` |
-| Standalone tag and author export | Only entities referenced by a post |
+| Export preparation | Automatic |
+| Existing export files | Only stale files owned by the previous export manifest are removed |
+| Tag and author scope | `referenced`; pass `scope: 'all'` explicitly for standalone entities |
 
-Save-time sanitization trims strings, enforces Ghost field limits, repairs invalid author emails, drops invalid URL fields, and records every change in `context.sanitizedFields`. Export preparation normalizes blank titles and records duplicate slug changes in `context.duplicateSlugs`.
+Save-time sanitization trims strings, enforces Ghost field limits, repairs invalid author emails, drops invalid URL fields, and records every change. `getMigrationReport()` persists inserted, skipped, replaced, sanitized, and renamed outcomes across resumptions. Live typed events provide immediate progress and complete before/after replacement snapshots.
 
 ## Advanced integration
 
@@ -166,8 +169,8 @@ The [API reference](docs/api-reference.md) covers every method, option, field, a
 - [Transactions](docs/api-reference.md#transactions)
 - [Finding and iterating entities](docs/api-reference.md#finding-entities)
 - [Filtering](docs/api-reference.md#filtering)
-- [Fingerprints](docs/api-reference.md#fingerprints)
-- [Progress events](docs/api-reference.md#events)
+- [Resume, refresh, and fingerprints](docs/api-reference.md#resume-refresh-and-content-fingerprints)
+- [Events and durable reports](docs/api-reference.md#events-and-durable-reports)
 - [Field sanitization](docs/api-reference.md#field-sanitization)
 - [Slug reports](docs/api-reference.md#slug-deduplication)
 
