@@ -1,72 +1,18 @@
 import {z} from 'zod/v4';
 import {randomBytes} from 'node:crypto';
 import errors from '@tryghost/errors';
-import {htmlToLexical} from '@tryghost/mg-html-lexical';
 import MigrateBase from './MigrateBase.js';
 import TagContext, {TagObject, TagDataObject} from './TagContext.js';
 import AuthorContext, {AuthorObject, AuthorDataObject} from './AuthorContext.js';
 import {GHOST_FIELD_LIMITS} from './ghost-schema.js';
 import type {DatabaseModels} from './database.js';
 
-export type ContentFormat = 'lexical' | 'html';
 export type DuplicatePostAction = 'skip' | 'replace';
 export type DuplicatePostResolver = (existing: PostContext, incoming: PostContext) => DuplicatePostAction;
 export type DuplicatePostPolicy = DuplicatePostAction | DuplicatePostResolver;
 
-export function normalizeContentFormat(contentFormat: unknown): ContentFormat {
-    return contentFormat === 'html' ? 'html' : 'lexical';
-}
-
 const POST_LIMITS = GHOST_FIELD_LIMITS.post;
 const MAX_SLUG_LENGTH = POST_LIMITS.slug;
-
-const EMPTY_PARAGRAPH = {
-    children: [],
-    direction: null,
-    format: '',
-    indent: 0,
-    type: 'paragraph',
-    version: 1
-};
-
-const lexicalNodeSchema: z.ZodType = z.lazy(() =>
-    z.looseObject({
-        children: z.array(lexicalNodeSchema).optional(),
-        type: z.string().min(1),
-        version: z.number().int().positive()
-    })
-);
-
-const lexicalDocumentSchema = z.object({
-    root: z.looseObject({
-        children: z.array(lexicalNodeSchema).min(1),
-        direction: z.enum(['ltr', 'rtl']).nullable(),
-        format: z.string(),
-        indent: z.number().int().nonnegative(),
-        type: z.literal('root'),
-        version: z.number().int().positive()
-    })
-});
-
-export function isValidLexical(value: unknown): boolean {
-    if (typeof value !== 'string') {
-        return false;
-    }
-
-    try {
-        return lexicalDocumentSchema.safeParse(JSON.parse(value)).success;
-    } catch {
-        return false;
-    }
-}
-
-export function convertHtmlToLexical(html: string): string {
-    const lexical = htmlToLexical(html);
-    if (lexical.root.children.length === 0) {
-        lexical.root.children.push(EMPTY_PARAGRAPH);
-    }
-    return JSON.stringify(lexical);
-}
 
 /**
  * Build a deduplicated slug that still fits Ghost's limit, trimming the base
@@ -88,8 +34,6 @@ const postZodSchema = z.object({
     title: z.string().max(POST_LIMITS.title),
     slug: z.string().max(MAX_SLUG_LENGTH),
     html: z.string().max(POST_LIMITS.html).nullable(),
-    mobiledoc: z.string().max(POST_LIMITS.mobiledoc).nullable(),
-    lexical: z.string().max(POST_LIMITS.lexical).nullable(),
     comment_id: z.string().max(POST_LIMITS.comment_id).nullable(),
     plaintext: z.string().max(POST_LIMITS.plaintext).nullable(),
     feature_image: z.string().max(POST_LIMITS.feature_image).nullable(),
@@ -125,7 +69,6 @@ export type PostDataPatch = Partial<Omit<PostObject, 'slug' | 'tags' | 'authors'
 export type PostConstructorOptions = {
     source?: object;
     meta?: object;
-    contentFormat?: ContentFormat;
     lookupKey?: string;
     onDuplicate?: DuplicatePostPolicy;
 };
@@ -149,22 +92,14 @@ export default class PostContext extends MigrateBase {
 
     #source: any;
     #meta: any;
-    #contentFormat: ContentFormat;
     #lookupKey: string | null = null;
     #onDuplicate: DuplicatePostPolicy;
     #warnOnLookupKeyDuplicate = false;
     #duplicateSkipped = false;
-    #htmlDirty = true;
     #webscrapeData: any = null;
     data: any = {};
 
-    constructor({
-        source = {},
-        meta = {},
-        contentFormat = 'lexical',
-        lookupKey,
-        onDuplicate = 'skip'
-    }: PostConstructorOptions = {}) {
+    constructor({source = {}, meta = {}, lookupKey, onDuplicate = 'skip'}: PostConstructorOptions = {}) {
         super();
 
         // Source data from another platform
@@ -172,7 +107,6 @@ export default class PostContext extends MigrateBase {
 
         this.#meta = meta;
 
-        this.#contentFormat = normalizeContentFormat(contentFormat);
         this.#onDuplicate = onDuplicate;
 
         if (lookupKey) {
@@ -222,42 +156,6 @@ export default class PostContext extends MigrateBase {
         this.#webscrapeData = value;
     }
 
-    get htmlDirty(): boolean {
-        return this.#htmlDirty;
-    }
-
-    set(prop: string, value: any) {
-        super.set(prop, value);
-        if (prop === 'html') {
-            this.#htmlDirty = true;
-            // Invalidate cached conversion
-            this.data.lexical = null;
-            this.data.mobiledoc = null;
-        }
-        return this;
-    }
-
-    convertContent() {
-        if (this.#contentFormat === 'html') {
-            this.#htmlDirty = false;
-            return;
-        }
-
-        // Skip if HTML hasn't changed and conversion is already cached
-        if (!this.#htmlDirty) {
-            if (this.#contentFormat === 'lexical' && this.data.lexical) {
-                return;
-            }
-        }
-
-        if (this.#contentFormat === 'lexical') {
-            this.data.lexical = typeof this.data.html === 'string' ? convertHtmlToLexical(this.data.html) : null;
-            this.data.mobiledoc = null;
-        }
-
-        this.#htmlDirty = false;
-    }
-
     get getFinal(): any {
         this.data.title = normalizeTitle(this.data.title);
         const result = super.getFinal;
@@ -278,14 +176,6 @@ export default class PostContext extends MigrateBase {
                 }
                 return author;
             });
-        }
-
-        if (this.#contentFormat === 'lexical') {
-            result.data.html = null;
-            result.data.mobiledoc = null;
-        } else {
-            result.data.mobiledoc = null;
-            result.data.lexical = null;
         }
 
         return result;
@@ -533,7 +423,6 @@ export default class PostContext extends MigrateBase {
                     serializedData,
                     serializedSource,
                     serializedMeta,
-                    this.#contentFormat,
                     this.#lookupKey,
                     this.ghostId,
                     createdAt,
@@ -549,7 +438,6 @@ export default class PostContext extends MigrateBase {
                     serializedData,
                     serializedSource,
                     serializedMeta,
-                    this.#contentFormat,
                     this.#lookupKey,
                     this.ghostId,
                     createdAt,
@@ -565,7 +453,6 @@ export default class PostContext extends MigrateBase {
                 serializedData,
                 serializedSource,
                 serializedMeta,
-                this.#contentFormat,
                 this.#lookupKey,
                 this.ghostId,
                 createdAt,
@@ -618,23 +505,21 @@ export default class PostContext extends MigrateBase {
 
     static toGhostPost(row: any): {post: any; meta: any} {
         const rawData = JSON.parse(row.data);
-        const contentFormat = normalizeContentFormat(row.content_format);
         const ghostId = row.ghost_id as string;
         rawData.title = normalizeTitle(rawData.title);
 
-        // Null out fields not needed for this content format
-        if (contentFormat === 'lexical') {
-            if (rawData.lexical !== null && rawData.lexical !== undefined && !isValidLexical(rawData.lexical)) {
-                throw new errors.InternalServerError({
-                    message: `Post "${rawData.title}" has invalid Lexical content`
-                });
-            }
-            rawData.html = null;
-            rawData.mobiledoc = null;
-        } else {
-            rawData.mobiledoc = null;
-            rawData.lexical = null;
+        // Old persistent databases may still contain fields from the previous
+        // multi-format implementation. HTML is the only supported export format.
+        const hasObsoleteContent =
+            (typeof rawData.mobiledoc === 'string' && rawData.mobiledoc.length > 0) ||
+            (typeof rawData.lexical === 'string' && rawData.lexical.length > 0);
+        if (typeof rawData.html !== 'string' && hasObsoleteContent) {
+            throw new errors.InternalServerError({
+                message: `Post "${rawData.title}" contains only an obsolete editor format. Re-ingest it as HTML before exporting.`
+            });
         }
+        delete rawData.mobiledoc;
+        delete rawData.lexical;
 
         // Extract meta fields into posts_meta entry
         const metaEntry: any = {};
@@ -668,7 +553,6 @@ export default class PostContext extends MigrateBase {
         const rawData = JSON.parse(row.data);
         const source = JSON.parse(row.source);
         const meta = JSON.parse(row.meta);
-        const contentFormat = normalizeContentFormat(row.content_format);
 
         // Convert date strings back to Date objects
         const dateFields = ['created_at', 'updated_at', 'published_at'];
@@ -679,13 +563,14 @@ export default class PostContext extends MigrateBase {
         }
 
         const lookupKey = row.lookup_key as string | null;
-        const post = new PostContext({source, meta, contentFormat, lookupKey: lookupKey ?? undefined});
+        const post = new PostContext({source, meta, lookupKey: lookupKey ?? undefined});
         post.dbId = row.id as number;
         post.ghostId = row.ghost_id as string;
 
-        // Set scalar data directly (bypass set() to avoid re-conversion)
+        // Set scalar data directly. Ignore fields left by the previous
+        // multi-format implementation when loading a persistent database.
         for (const [key, value] of Object.entries(rawData)) {
-            if (key !== 'tags' && key !== 'authors') {
+            if (key !== 'tags' && key !== 'authors' && key !== 'mobiledoc' && key !== 'lexical') {
                 post.data[key] = value;
             }
         }
@@ -693,9 +578,6 @@ export default class PostContext extends MigrateBase {
         if (row.webscrape_data) {
             post.#webscrapeData = JSON.parse(row.webscrape_data);
         }
-
-        // Post was loaded from DB; nothing has been modified yet
-        post.#htmlDirty = false;
 
         if (!hydrateRelationships) {
             return post;

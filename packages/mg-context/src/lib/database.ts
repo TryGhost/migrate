@@ -2,7 +2,7 @@
 import {DatabaseSync} from 'node:sqlite';
 import errors from '@tryghost/errors';
 
-export const MIGRATE_CONTEXT_SCHEMA_VERSION = 1;
+export const MIGRATE_CONTEXT_SCHEMA_VERSION = 2;
 
 export interface SlugRename {
     oldSlug: string;
@@ -58,7 +58,7 @@ export interface PreparedStatements {
     findRenamedPosts: ReturnType<DatabaseSync['prepare']>;
     slugExists: ReturnType<DatabaseSync['prepare']>;
     slugExistsForOtherPost: ReturnType<DatabaseSync['prepare']>;
-    findPostsForConversion: ReturnType<DatabaseSync['prepare']>;
+    findPostsForPreparation: ReturnType<DatabaseSync['prepare']>;
     countPosts: ReturnType<DatabaseSync['prepare']>;
     findMaxPostId: ReturnType<DatabaseSync['prepare']>;
     findPostsAfterId: ReturnType<DatabaseSync['prepare']>;
@@ -118,7 +118,6 @@ CREATE TABLE IF NOT EXISTS Posts (
     data TEXT NOT NULL,
     source TEXT DEFAULT '{}',
     meta TEXT DEFAULT '{}',
-    content_format TEXT DEFAULT 'html',
     lookup_key TEXT,
     ghost_id TEXT,
     created_at TEXT,
@@ -209,13 +208,13 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
 
         // Posts
         insertPost: db.prepare(
-            'INSERT INTO Posts (data, source, meta, content_format, lookup_key, ghost_id, created_at, updated_at, published_at, original_slug, slug, webscrape_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO Posts (data, source, meta, lookup_key, ghost_id, created_at, updated_at, published_at, original_slug, slug, webscrape_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         ),
         updatePost: db.prepare(
-            'UPDATE Posts SET data = ?, source = ?, meta = ?, content_format = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, slug = ?, webscrape_data = ? WHERE id = ?'
+            'UPDATE Posts SET data = ?, source = ?, meta = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, slug = ?, webscrape_data = ? WHERE id = ?'
         ),
         replacePost: db.prepare(
-            'UPDATE Posts SET data = ?, source = ?, meta = ?, content_format = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, original_slug = ?, slug = ?, webscrape_data = ? WHERE id = ?'
+            'UPDATE Posts SET data = ?, source = ?, meta = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, original_slug = ?, slug = ?, webscrape_data = ? WHERE id = ?'
         ),
         updatePostData: db.prepare('UPDATE Posts SET data = ? WHERE id = ?'),
         patchPostData: db.prepare(
@@ -231,9 +230,7 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         ),
         slugExists: db.prepare('SELECT 1 FROM Posts WHERE slug = ? LIMIT 1'),
         slugExistsForOtherPost: db.prepare('SELECT 1 FROM Posts WHERE slug = ? AND id <> ? LIMIT 1'),
-        findPostsForConversion: db.prepare(
-            'SELECT id, data, content_format FROM Posts ORDER BY id ASC LIMIT ? OFFSET ?'
-        ),
+        findPostsForPreparation: db.prepare('SELECT id, data FROM Posts ORDER BY id ASC LIMIT ? OFFSET ?'),
         countPosts: db.prepare('SELECT COUNT(*) as count FROM Posts'),
         findMaxPostId: db.prepare('SELECT MAX(id) AS max_id FROM Posts'),
         findPostsAfterId: db.prepare('SELECT * FROM Posts WHERE id > ? AND id <= ? ORDER BY id ASC LIMIT ?'),

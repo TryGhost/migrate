@@ -106,7 +106,7 @@ const fetchPage = async (
     page: number
 ): Promise<BrowseResponse<Post>> => {
     const params = {
-        formats: 'lexical',
+        formats: 'html',
         limit: options.limit,
         page: page,
         filter: (type === 'posts' ? options.postFilter : options.pageFilter) || null

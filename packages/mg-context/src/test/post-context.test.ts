@@ -1,27 +1,6 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {PostContext, TagContext, AuthorContext, normalizeTitle} from '../index.js';
-import {isValidLexical} from '../lib/PostContext.js';
-
-const VALID_LEXICAL = JSON.stringify({
-    root: {
-        children: [
-            {
-                children: [{type: 'extended-text', version: 1}],
-                direction: null,
-                format: '',
-                indent: 0,
-                type: 'paragraph',
-                version: 1
-            }
-        ],
-        direction: null,
-        format: '',
-        indent: 0,
-        type: 'root',
-        version: 1
-    }
-});
 
 describe('PostContext', function () {
     it('Normalizes missing, blank, padded, and oversized titles', () => {
@@ -29,28 +8,6 @@ describe('PostContext', function () {
         assert.equal(normalizeTitle('   '), '(Untitled)');
         assert.equal(normalizeTitle('  A title  '), 'A title');
         assert.equal(normalizeTitle('A'.repeat(300)), 'A'.repeat(255));
-    });
-
-    it('Validates Lexical JSON, root structure, and nested nodes', () => {
-        const emptyRoot = JSON.stringify({
-            root: {children: [], direction: null, format: '', indent: 0, type: 'root', version: 1}
-        });
-        const invalidNestedNode = JSON.stringify({
-            root: {
-                children: [{children: [{type: 'extended-text'}], type: 'paragraph', version: 1}],
-                direction: null,
-                format: '',
-                indent: 0,
-                type: 'root',
-                version: 1
-            }
-        });
-
-        assert.equal(isValidLexical(VALID_LEXICAL), true);
-        assert.equal(isValidLexical(null), false);
-        assert.equal(isValidLexical('not-json'), false);
-        assert.equal(isValidLexical(emptyRoot), false);
-        assert.equal(isValidLexical(invalidNestedNode), false);
     });
 
     it('Is instance of PostContext', () => {
@@ -115,7 +72,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.slug, 'my-post');
         });
 
-        it('Default format is lexical', function () {
+        it('Keeps HTML as the post content', function () {
             const instance: any = new PostContext();
             instance.set('title', 'My Post');
             instance.set('slug', 'my-post');
@@ -124,13 +81,11 @@ describe('PostContext', function () {
             instance.set('updated_at', new Date('2023-11-24T12:00:00.000Z'));
             instance.set('published_at', new Date('2023-11-24T12:00:00.000Z'));
 
-            instance.convertContent();
             const final = instance.getFinal;
 
-            assert.equal(final.data.html, null);
-            assert.equal(final.data.mobiledoc, null);
-            assert.equal(typeof final.data.lexical, 'string');
-            assert.ok(JSON.parse(final.data.lexical).root);
+            assert.equal(final.data.html, '<p>Hello world</p>');
+            assert.equal(final.data.mobiledoc, undefined);
+            assert.equal(final.data.lexical, undefined);
         });
 
         it('Can get final object', function () {
@@ -148,8 +103,6 @@ describe('PostContext', function () {
                     title: 'My Post',
                     slug: 'my-post',
                     html: null,
-                    mobiledoc: null,
-                    lexical: null,
                     comment_id: null,
                     plaintext: null,
                     feature_image: null,
@@ -182,8 +135,8 @@ describe('PostContext', function () {
         });
     });
 
-    it('getFinal keeps html when contentFormat is html', function () {
-        const instance: any = new PostContext({contentFormat: 'html'});
+    it('getFinal keeps html', function () {
+        const instance: any = new PostContext();
         instance.set('title', 'My Post');
         instance.set('slug', 'my-post');
         instance.set('html', '<p>Hello world</p>');
@@ -192,8 +145,8 @@ describe('PostContext', function () {
         const final = instance.getFinal;
 
         assert.equal(final.data.html, '<p>Hello world</p>');
-        assert.equal(final.data.lexical, null);
-        assert.equal(final.data.mobiledoc, null);
+        assert.equal(final.data.lexical, undefined);
+        assert.equal(final.data.mobiledoc, undefined);
     });
 
     it('getFinal includes unsaved tags and authors without ghostId', function () {
@@ -776,94 +729,6 @@ describe('PostContext', function () {
         });
     });
 
-    describe('convertContent', () => {
-        it('Converts HTML to lexical and clears dirty flag', () => {
-            const post: any = new PostContext({contentFormat: 'lexical'});
-            post.set('title', 'Test');
-            post.set('slug', 'test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Hello</p>');
-
-            assert.equal(post.htmlDirty, true);
-            post.convertContent();
-            assert.equal(post.htmlDirty, false);
-            assert.ok(post.data.lexical);
-            assert.equal(typeof post.data.lexical, 'string');
-            assert.ok(JSON.parse(post.data.lexical).root);
-        });
-
-        it('Skips conversion when not dirty', () => {
-            const post: any = new PostContext({contentFormat: 'lexical'});
-            post.set('title', 'Test');
-            post.set('slug', 'test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Hello</p>');
-
-            post.convertContent();
-            const firstLexical = post.data.lexical;
-
-            // Second call is a no-op
-            post.convertContent();
-            assert.equal(post.data.lexical, firstLexical);
-        });
-
-        it('Re-converts when HTML changes after conversion', () => {
-            const post: any = new PostContext({contentFormat: 'lexical'});
-            post.set('title', 'Test');
-            post.set('slug', 'test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Hello</p>');
-
-            post.convertContent();
-            const firstLexical = post.data.lexical;
-            assert.equal(post.htmlDirty, false);
-
-            post.set('html', '<p>Updated</p>');
-            assert.equal(post.htmlDirty, true);
-
-            post.convertContent();
-            assert.notEqual(post.data.lexical, firstLexical);
-        });
-
-        it('Is a no-op for html contentFormat', () => {
-            const post: any = new PostContext({contentFormat: 'html'});
-            post.set('title', 'Test');
-            post.set('slug', 'test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Hello</p>');
-
-            post.convertContent();
-            assert.equal(post.data.lexical, null);
-            assert.equal(post.data.mobiledoc, null);
-            assert.equal(post.data.html, '<p>Hello</p>');
-        });
-
-        it('Sets lexical to null when html is null', () => {
-            const post: any = new PostContext({contentFormat: 'lexical'});
-            post.set('title', 'Test');
-            post.set('slug', 'test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-
-            post.convertContent();
-            assert.equal(post.data.lexical, null);
-        });
-
-        it('Adds an empty paragraph when HTML conversion creates an empty root', () => {
-            const post: any = new PostContext({contentFormat: 'lexical'});
-            post.set('title', 'Test');
-            post.set('slug', 'test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<div></div>');
-
-            post.convertContent();
-
-            const lexical = JSON.parse(post.data.lexical);
-            assert.equal(lexical.root.children.length, 1);
-            assert.equal(lexical.root.children[0].type, 'paragraph');
-            assert.equal(isValidLexical(post.data.lexical), true);
-        });
-    });
-
     describe('toGhostPost', () => {
         function mockRow(overrides: any = {}) {
             return {
@@ -874,13 +739,12 @@ describe('PostContext', function () {
                     html: '<p>Hello</p>',
                     created_at: '2023-01-01T00:00:00.000Z'
                 }),
-                content_format: 'lexical',
                 ghost_id: 'abc123',
                 ...overrides
             };
         }
 
-        it('Nulls html and strips tags/authors for lexical format', () => {
+        it('Keeps HTML and strips tags/authors', () => {
             const row = mockRow({
                 data: JSON.stringify({
                     title: 'Test',
@@ -894,14 +758,13 @@ describe('PostContext', function () {
             const {post, meta} = PostContext.toGhostPost(row);
 
             assert.equal(post.id, 'abc123');
-            assert.equal(post.html, null);
-            assert.equal(post.lexical, null);
+            assert.equal(post.html, '<p>Hi</p>');
             assert.equal(post.tags, undefined);
             assert.equal(post.authors, undefined);
             assert.equal(meta, null);
         });
 
-        it('Treats legacy mobiledoc format rows as lexical', () => {
+        it('Removes legacy content fields from persistent rows', () => {
             const row = mockRow({
                 content_format: 'mobiledoc',
                 data: JSON.stringify({
@@ -909,24 +772,33 @@ describe('PostContext', function () {
                     slug: 'test',
                     html: '<p>Hello</p>',
                     mobiledoc: '{"version":"0.3.1","atoms":[],"cards":[]}',
-                    lexical: VALID_LEXICAL,
+                    lexical: '{"root":{}}',
                     created_at: '2023-01-01T00:00:00.000Z'
                 })
             });
             const {post} = PostContext.toGhostPost(row);
 
-            assert.equal(post.html, null);
-            assert.equal(post.lexical, VALID_LEXICAL);
-            assert.equal(post.mobiledoc, null);
+            assert.equal(post.html, '<p>Hello</p>');
+            assert.equal(post.lexical, undefined);
+            assert.equal(post.mobiledoc, undefined);
         });
 
-        it('Keeps html when format is html', () => {
-            const row = mockRow({content_format: 'html'});
-            const {post} = PostContext.toGhostPost(row);
+        it('Rejects persistent editor content without retained HTML', () => {
+            const row = mockRow({
+                data: JSON.stringify({
+                    title: 'Legacy only',
+                    slug: 'legacy-only',
+                    html: null,
+                    lexical: '{"root":{}}',
+                    created_at: '2023-01-01T00:00:00.000Z'
+                })
+            });
 
-            assert.equal(post.html, '<p>Hello</p>');
-            assert.equal(post.lexical, null);
-            assert.equal(post.mobiledoc, null);
+            assert.throws(() => PostContext.toGhostPost(row), {
+                name: 'InternalServerError',
+                message:
+                    'Post "Legacy only" contains only an obsolete editor format. Re-ingest it as HTML before exporting.'
+            });
         });
 
         it('Handles missing ghostId', () => {
@@ -982,45 +854,10 @@ describe('PostContext', function () {
             assert.equal(meta.meta_description, 'Meta desc');
         });
 
-        it('Uses pre-converted lexical and skips conversion', () => {
-            const row = mockRow({
-                data: JSON.stringify({
-                    title: 'Test',
-                    slug: 'test',
-                    html: '<p>Hello</p>',
-                    lexical: VALID_LEXICAL,
-                    created_at: '2023-01-01T00:00:00.000Z'
-                })
-            });
-            const {post} = PostContext.toGhostPost(row);
-
-            // Should use the pre-converted lexical, not reconvert
-            assert.equal(post.lexical, VALID_LEXICAL);
-            assert.equal(post.html, null);
-        });
-
-        it('Rejects invalid Lexical during final export mapping', () => {
-            const row = mockRow({
-                data: JSON.stringify({
-                    title: 'Test',
-                    slug: 'test',
-                    lexical:
-                        '{"root":{"children":[],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
-                    created_at: '2023-01-01T00:00:00.000Z'
-                })
-            });
-
-            assert.throws(() => PostContext.toGhostPost(row), {
-                name: 'InternalServerError',
-                message: 'Post "Test" has invalid Lexical content'
-            });
-        });
-
         it('Works with plain objects (raw: true)', () => {
             const row = {
                 id: 6,
                 data: JSON.stringify({title: 'Raw', slug: 'raw', created_at: '2023-01-01T00:00:00.000Z'}),
-                content_format: 'lexical',
                 ghost_id: 'raw123'
             };
             const {post} = PostContext.toGhostPost(row);

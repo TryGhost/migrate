@@ -6,11 +6,7 @@ import errors from '@tryghost/errors';
 import MigrateBase from './MigrateBase.js';
 import PostContext, {
     PostConstructorOptions,
-    convertHtmlToLexical,
-    isValidLexical,
-    normalizeContentFormat,
     normalizeTitle,
-    type ContentFormat,
     type DuplicatePostPolicy,
     type PostDataPatch
 } from './PostContext.js';
@@ -114,7 +110,6 @@ function isExportFileName(fileName: string, filename: string): boolean {
 }
 
 type MigrateContextOptions = {
-    contentFormat?: ContentFormat;
     dbPath?: string;
     ephemeral?: boolean;
     emitEvents?: boolean;
@@ -123,7 +118,6 @@ type MigrateContextOptions = {
 };
 
 export default class MigrateContext extends MigrateBase {
-    #contentFormat: ContentFormat;
     #dbPath: string;
     #ephemeral: boolean;
     #emitEvents: boolean;
@@ -135,7 +129,6 @@ export default class MigrateContext extends MigrateBase {
     #emitter = new EventEmitter();
 
     constructor({
-        contentFormat = 'lexical',
         dbPath,
         ephemeral,
         emitEvents = true,
@@ -144,7 +137,6 @@ export default class MigrateContext extends MigrateBase {
     }: MigrateContextOptions = {}) {
         super();
 
-        this.#contentFormat = normalizeContentFormat(contentFormat);
         this.#emitEvents = emitEvents;
         this.#warnOnLookupKeyDuplicate = warnOnLookupKeyDuplicate;
         this.#onDuplicate = onDuplicate;
@@ -366,12 +358,11 @@ export default class MigrateContext extends MigrateBase {
         let processed = 0;
 
         for (let offset = 0; offset < total; offset += batchSize) {
-            const rows = this.db.stmts.findPostsForConversion.all(batchSize, offset) as any[];
+            const rows = this.db.stmts.findPostsForPreparation.all(batchSize, offset) as any[];
 
             this.db.db.exec('BEGIN');
             try {
                 for (const row of rows) {
-                    const cf = normalizeContentFormat(row.content_format);
                     const data = JSON.parse(row.data as string);
                     let changed = false;
                     const title = normalizeTitle(data.title);
@@ -381,27 +372,23 @@ export default class MigrateContext extends MigrateBase {
                         changed = true;
                     }
 
-                    if (cf !== 'html') {
-                        const hasHtmlFallback = typeof data.html === 'string';
-                        const hasLexical = data.lexical !== null && data.lexical !== undefined;
+                    const hasObsoleteContent =
+                        (typeof data.mobiledoc === 'string' && data.mobiledoc.length > 0) ||
+                        (typeof data.lexical === 'string' && data.lexical.length > 0);
+                    if (typeof data.html !== 'string' && hasObsoleteContent) {
+                        throw new errors.InternalServerError({
+                            message: `Post "${data.title}" contains only an obsolete editor format. Re-ingest it as HTML before exporting.`
+                        });
+                    }
 
-                        if (hasLexical && !isValidLexical(data.lexical)) {
-                            if (!hasHtmlFallback) {
-                                throw new errors.InternalServerError({
-                                    message: `Post "${data.title}" has invalid Lexical content and no HTML fallback`
-                                });
-                            }
-                            data.lexical = convertHtmlToLexical(data.html);
-                            changed = true;
-                        } else if (!hasLexical && hasHtmlFallback) {
-                            data.lexical = convertHtmlToLexical(data.html);
-                            changed = true;
-                        }
+                    if (Object.hasOwn(data, 'mobiledoc')) {
+                        delete data.mobiledoc;
+                        changed = true;
+                    }
 
-                        if (data.mobiledoc !== null) {
-                            data.mobiledoc = null;
-                            changed = true;
-                        }
+                    if (Object.hasOwn(data, 'lexical')) {
+                        delete data.lexical;
+                        changed = true;
                     }
 
                     if (changed) {
@@ -419,12 +406,6 @@ export default class MigrateContext extends MigrateBase {
             if (this.#emitEvents) {
                 this.#emitter.emit('progress', 'prepareForExport', processed, total);
             }
-
-            // Yield to the event loop between batches so V8 can garbage-collect
-            // the intermediate DOM/lexical trees created by the converter
-            await new Promise(r => {
-                setImmediate(r);
-            });
         }
     }
 
@@ -720,12 +701,11 @@ export default class MigrateContext extends MigrateBase {
         } else if (post && typeof post === 'object') {
             newPost = new PostContext({
                 ...post,
-                contentFormat: this.#contentFormat,
                 onDuplicate: post.onDuplicate ?? this.#onDuplicate
             });
             newPost.warnOnLookupKeyDuplicate = this.#warnOnLookupKeyDuplicate;
         } else {
-            newPost = new PostContext({contentFormat: this.#contentFormat, onDuplicate: this.#onDuplicate});
+            newPost = new PostContext({onDuplicate: this.#onDuplicate});
             newPost.warnOnLookupKeyDuplicate = this.#warnOnLookupKeyDuplicate;
         }
 

@@ -48,7 +48,7 @@ async function main() {
             console.log(`[${event}] ${processed}/${total}`);
         });
 
-        // Prepare for export (deduplicate slugs, convert HTML to Lexical)
+        // Prepare for export (normalize titles and deduplicate slugs)
         await ctx.prepareForExport();
 
         // Export to Ghost JSON

@@ -533,9 +533,6 @@ importers:
       '@tryghost/listr-smart-renderer':
         specifier: workspace:*
         version: link:../listr-smart-renderer
-      '@tryghost/mg-html-lexical':
-        specifier: workspace:*
-        version: link:../mg-html-lexical
       '@tryghost/string':
         specifier: 'catalog:'
         version: 0.3.7

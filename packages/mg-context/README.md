@@ -60,7 +60,7 @@ The normal data flow has three stages:
 
 1. **Ingest** — `addPost()` creates a post, and `post.save(context.db)` validates and persists it with its tags and authors. A stable `lookupKey` makes repeated ingestion retry-safe.
 2. **Transform** — `forEachPost()` loads posts in batches, runs a callback, and saves each post automatically. `streamPosts()` is available when the caller needs to control persistence or concurrency.
-3. **Export** — `prepareForExport()` repairs export invariants, deduplicates slugs, and converts retained HTML to Lexical. `writeGhostJson()` then writes one or more Ghost import files.
+3. **Export** — `prepareForExport()` repairs export invariants and deduplicates slugs. `writeGhostJson()` then writes one or more Ghost import files with the stored HTML.
 
 `MigrateContext` uses an in-memory SQLite database when `dbPath` is omitted. Pass a path for large or resumable migrations.
 
@@ -149,7 +149,7 @@ Source data routinely carries values Ghost will not accept — a title over 255 
 | Behaviour | Default |
 | --- | --- |
 | Storage | In-memory when `dbPath` is omitted; persistent SQLite when it is provided |
-| Content format | Lexical, generated from retained HTML during preparation |
+| Post content | HTML is preserved and exported unchanged |
 | Duplicate lookup key | Skip the incoming post |
 | Progress events | Enabled |
 | Post iteration batch | 100 records |
@@ -157,7 +157,7 @@ Source data routinely carries values Ghost will not accept — a title over 255 
 | Existing export files | Preserved unless `replaceExisting: true` |
 | Standalone tag and author export | Only entities referenced by a post |
 
-Save-time sanitization trims strings, enforces Ghost field limits, repairs invalid author emails, drops invalid URL fields, and records every change in `context.sanitizedFields`. Export preparation normalizes blank titles, validates Lexical, regenerates it from HTML where possible, and records duplicate slug changes in `context.duplicateSlugs`.
+Save-time sanitization trims strings, enforces Ghost field limits, repairs invalid author emails, drops invalid URL fields, and records every change in `context.sanitizedFields`. Export preparation normalizes blank titles and records duplicate slug changes in `context.duplicateSlugs`.
 
 ## Advanced integration
 

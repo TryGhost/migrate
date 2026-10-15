@@ -10,8 +10,6 @@ export const GHOST_FIELD_LIMITS = {
         title: 255,
         slug: 191,
         html: 1000000000,
-        mobiledoc: 1000000000,
-        lexical: 1000000000,
         comment_id: 50,
         plaintext: 1000000000,
         feature_image: 2000,

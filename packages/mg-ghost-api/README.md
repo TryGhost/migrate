@@ -2,7 +2,7 @@
 
 Export content from an existing Ghost installation using the [Admin API](https://docs.ghost.org/admin-api), and generate a `zip` file you can import into a Ghost installation.
 
-Posts are fetched in their native Lexical format and stored in a [mg-context](../mg-context) SQLite database (cached in the migration's tmp dir). The exporter writes chunked `posts.json` / `posts-N.json` files via `MigrateContext.writeGhostJson` so very large sites stay within Ghost's import file size limits. Re-running the same command is idempotent — posts are deduplicated by their Ghost ID via mg-context's `lookupKey`.
+Posts are fetched as HTML and stored in a [mg-context](../mg-context) SQLite database (cached in the migration's tmp dir). The exporter writes chunked `posts.json` / `posts-N.json` files via `MigrateContext.writeGhostJson` so very large sites stay within Ghost's import file size limits. Re-running the same command is idempotent — posts are deduplicated by their Ghost ID via mg-context's `lookupKey`.
 
 
 ## Install

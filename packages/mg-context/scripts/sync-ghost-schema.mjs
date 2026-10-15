@@ -12,8 +12,6 @@ const FIELD_SOURCES = {
         title: ['posts', 'title'],
         slug: ['posts', 'slug'],
         html: ['posts', 'html'],
-        mobiledoc: ['posts', 'mobiledoc'],
-        lexical: ['posts', 'lexical'],
         comment_id: ['posts', 'comment_id'],
         plaintext: ['posts', 'plaintext'],
         feature_image: ['posts', 'feature_image'],

@@ -17,14 +17,13 @@ The top-level class that manages the database and all entity operations.
 new MigrateContext(options?)
 ```
 
-| Option                     | Type                                 | Default             | Description                                  |
-|----------------------------|--------------------------------------|---------------------|----------------------------------------------|
-| `contentFormat`            | `'lexical' \| 'html'`                | `'lexical'`         | Target format for HTML conversion on export  |
-| `dbPath`                   | `string`                             | —                   | Path to a SQLite file for persistent storage |
-| `ephemeral`                | `boolean`                            | `true` if no dbPath | Use in-memory database                       |
-| `emitEvents`               | `boolean`                            | `true`              | Emit progress events (see [Events](#events)) |
-| `warnOnLookupKeyDuplicate` | `boolean`                            | `false`             | Log when a duplicate lookupKey is skipped    |
-| `onDuplicate`              | `'skip' \| 'replace' \| resolver`    | `'skip'`            | Default lookup-key duplicate policy           |
+| Option                     | Type                              | Default             | Description                                  |
+| -------------------------- | --------------------------------- | ------------------- | -------------------------------------------- |
+| `dbPath`                   | `string`                          | —                   | Path to a SQLite file for persistent storage |
+| `ephemeral`                | `boolean`                         | `true` if no dbPath | Use in-memory database                       |
+| `emitEvents`               | `boolean`                         | `true`              | Emit progress events (see [Events](#events)) |
+| `warnOnLookupKeyDuplicate` | `boolean`                         | `false`             | Log when a duplicate lookupKey is skipped    |
+| `onDuplicate`              | `'skip' \| 'replace' \| resolver` | `'skip'`            | Default lookup-key duplicate policy          |
 
 ```js
 // In-memory (default)
@@ -102,7 +101,7 @@ Fingerprints are useful when an adapter reuses the same `dbPath` across runs so 
 | Fingerprint | Include | Action when it changes |
 | --- | --- | --- |
 | `source` | The source file contents, or a stable digest of every file in a batch | Reset the context and ingest the source again |
-| `transform` | Content-affecting options and an adapter mapping/version number | Reset and regenerate posts, HTML, Lexical, slugs, and other transformed fields |
+| `transform` | Content-affecting options and an adapter mapping/version number | Reset and regenerate posts, HTML, slugs, and other transformed fields |
 | `asset-cache` | Asset rewrite rules or an external cache format version | Let the adapter invalidate or rebuild its external asset cache |
 
 Do not include operational options that cannot affect stored content, such as logging verbosity. Avoid storing secrets directly: fingerprint them instead. Use a deterministic representation for objects so the same settings always produce the same value.
@@ -178,7 +177,7 @@ When called with a `PostContext` instance, saves it immediately instead.
 #### `addPost(postContext): Promise<PostContext>`
 
 ```js
-const post = new PostContext({contentFormat: 'html'});
+const post = new PostContext();
 post.set('title', 'Pre-built');
 post.set('slug', 'pre-built');
 post.set('created_at', new Date());
@@ -296,7 +295,7 @@ ctx.updatePostData(postDbId, {
 });
 ```
 
-The patch goes through the same validation and sanitization as a full save. Changing `html` clears cached `lexical` and `mobiledoc`, and changing a date also updates the corresponding indexed SQLite column. Pass `webscrapeData` separately when the raw scraper result should be stored; omit it to leave the existing value unchanged.
+The patch goes through the same validation and sanitization as a full save. Changing a date also updates the corresponding indexed SQLite column. Pass `webscrapeData` separately when the raw scraper result should be stored; omit it to leave the existing value unchanged.
 
 `dbId` is mg-context's internal numeric database ID, not the eventual Ghost ID. This method does not query or write `PostTags` or `PostAuthors`. It deliberately rejects `slug`, `tags`, and `authors`: slugs require deduplication and redirect tracking, while relationships require junction-table handling. Load the post and use `PostContext.save()` when changing those fields.
 
@@ -424,11 +423,11 @@ Prepare all posts for export. Must be called before `writeGhostJson()` or `forEa
 
 1. Deduplicates slugs (calls `deduplicateSlugs()` internally)
 2. Normalizes blank post titles to `(Untitled)`
-3. Converts HTML to Lexical for posts without cached Lexical
-4. Validates cached Lexical recursively and regenerates invalid documents from retained HTML
-5. Ensures converted Lexical has at least one root child; invalid Lexical without an HTML fallback throws a descriptive error
+3. Removes obsolete editor-format fields left in older persistent databases so exports contain HTML only
 
-The method is idempotent — posts that already have valid converted content are skipped. Call it again after modifying posts via `forEachPost()` to re-convert changed content. Lexical is validated again when each post is mapped into the final Ghost JSON, so invalid content cannot bypass preparation and be serialized.
+The method is idempotent. Call it after ingestion and before writing the final Ghost JSON.
+
+Persistent schema-version 1 databases are upgraded when opened. Their retained HTML is preserved and obsolete editor-format fields are removed during preparation. If an old row contains editor content but no HTML, preparation stops with a descriptive error so the adapter can re-ingest that source instead of exporting an empty post.
 
 | Option      | Type     | Default | Description               |
 |-------------|----------|---------|---------------------------|
@@ -560,8 +559,6 @@ Get a property value.
 
 Set a property value. Validates against the schema (type, max length, allowed values). Returns `this` for chaining.
 
-Setting `html` invalidates cached `lexical` — call `prepareForExport()` again to re-convert.
-
 #### `post.remove(prop): PostContext`
 
 Reset a property to its default value (or `null`).
@@ -576,9 +573,7 @@ Persist the post and its tag/author relationships to the database.
 |-------------------------|-----------|-------|------------|-------------------------------------------|
 | `title`                 | `string`  | 255   | —          | **Required**                              |
 | `slug`                  | `string`  | 191   | —          | **Required**                              |
-| `html`                  | `string?` | —     | `null`     | Source HTML content                       |
-| `lexical`               | `string?` | —     | `null`     | Auto-generated on export                  |
-| `mobiledoc`             | `string?` | —     | `null`     | Legacy Ghost field, always exported null  |
+| `html`                  | `string?` | —     | `null`     | HTML content exported to Ghost            |
 | `status`                | `enum`    | —     | `'draft'`  | `published`, `draft`, `scheduled`, `sent` |
 | `type`                  | `enum`    | —     | `'post'`   | `post`, `page`                            |
 | `visibility`            | `enum`    | —     | `'public'` | `public`, `members`, `paid`               |
@@ -756,7 +751,7 @@ await dupe.save(ctx.db); // skipped
 Controls what `save()` does when `lookupKey` matches a stored post:
 
 - `skip` (default) leaves the stored post unchanged. This preserves the original retry-safe behavior.
-- `replace` overwrites the stored post with the newly transformed post while preserving its database ID and Ghost ID. Scalar fields, source metadata, post metadata, tags, and authors are replaced. A subsequent `prepareForExport()` rebuilds Lexical from refreshed HTML when needed.
+- `replace` overwrites the stored post with the newly transformed post while preserving its database ID and Ghost ID. Scalar fields, source metadata, post metadata, tags, and authors are replaced.
 - A resolver receives the stored and incoming `PostContext` objects and returns `skip` or `replace`. Resolvers are synchronous and can compare dates or other source-specific metadata without requiring a pre-indexing pass.
 
 Set a default for posts created by a context, or override it for one post:

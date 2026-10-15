@@ -30,7 +30,6 @@ const initialize = options => {
             });
 
             ctx.migrateContext = new MigrateContext({
-                contentFormat: 'lexical',
                 dbPath: join(ctx.fileCache.tmpDir, 'mg-context.sqlite')
             });
             await ctx.migrateContext.init();

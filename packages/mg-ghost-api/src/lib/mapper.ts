@@ -48,7 +48,7 @@ export interface GhostApiPost {
     status?: 'published' | 'draft' | 'scheduled' | 'sent';
     visibility?: 'public' | 'members' | 'paid';
     featured?: boolean;
-    lexical?: string | null;
+    html?: string | null;
     feature_image?: string | null;
     feature_image_alt?: string | null;
     feature_image_caption?: string | null;
@@ -81,6 +81,7 @@ const POST_OBJECT_FIELDS = [
     'visibility',
     'featured',
     'type',
+    'html',
     'feature_image',
     'feature_image_alt',
     'feature_image_caption',
@@ -185,10 +186,6 @@ export async function mapPost(ghPost: GhostApiPost, migrateContext: MigrateConte
         if (date) {
             post.set(field, date);
         }
-    }
-
-    if (ghPost.lexical) {
-        post.set('lexical', ghPost.lexical);
     }
 
     if (ghPost.tags) {

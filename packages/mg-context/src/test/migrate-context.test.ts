@@ -191,6 +191,44 @@ describe('MigrateContext', () => {
             await rm(filePath, {force: true});
         });
 
+        it('Opens version 1 databases and exports their retained HTML', async () => {
+            const filePath = join(tmpdir(), `mg-context-v1-schema-test-${Date.now()}.sqlite`);
+            const firstRun: any = new MigrateContext({dbPath: filePath});
+            await firstRun.init();
+
+            const post = await firstRun.addPost();
+            post.set('title', 'Legacy stored post');
+            post.set('slug', 'legacy-stored-post');
+            post.set('html', '<p>Retained HTML</p>');
+            post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            await post.save(firstRun.db);
+            await firstRun.close();
+
+            const oldDb = new DatabaseSync(filePath);
+            oldDb.exec("ALTER TABLE Posts ADD COLUMN content_format TEXT DEFAULT 'lexical';");
+            const row = oldDb.prepare('SELECT id, data FROM Posts').get() as any;
+            const oldData = JSON.parse(row.data);
+            oldData.lexical = '{"root":{}}';
+            oldDb.prepare('UPDATE Posts SET data = ? WHERE id = ?').run(JSON.stringify(oldData), row.id);
+            oldDb.exec('PRAGMA user_version = 1;');
+            oldDb.close();
+
+            const secondRun: any = new MigrateContext({dbPath: filePath});
+            await secondRun.init();
+            assert.equal(secondRun.schemaVersion, MIGRATE_CONTEXT_SCHEMA_VERSION);
+
+            const [loaded] = await secondRun.getAllPosts();
+            assert.equal(loaded.data.html, '<p>Retained HTML</p>');
+            assert.equal(loaded.data.lexical, undefined);
+
+            await secondRun.prepareForExport();
+            const updated = secondRun.db.stmts.findPostById.get(loaded.dbId) as any;
+            assert.equal(JSON.parse(updated.data).lexical, undefined);
+
+            await secondRun.close();
+            await rm(filePath, {force: true});
+        });
+
         it('Rejects a database created by a newer mg-context schema', async () => {
             const filePath = join(tmpdir(), `mg-context-newer-schema-test-${Date.now()}.sqlite`);
             const db = new DatabaseSync(filePath);
@@ -265,7 +303,6 @@ describe('MigrateContext', () => {
             post.set('html', '<p>Original HTML</p>');
             post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
             post.set('published_at', new Date('2023-11-24T12:00:00.000Z'));
-            post.convertContent();
             post.addTag(new TagContext({name: 'First tag', slug: 'first-tag'}));
             post.addTag(new TagContext({name: 'Second tag', slug: 'second-tag'}));
             post.addAuthor(new AuthorContext({name: 'First author', slug: 'first-author', email: 'first@example.com'}));
@@ -301,8 +338,8 @@ describe('MigrateContext', () => {
             const data = JSON.parse(row.data);
             assert.equal(data.title, 'Updated title');
             assert.equal(data.html, '<p>Enriched HTML</p>');
-            assert.equal(data.lexical, null);
-            assert.equal(data.mobiledoc, null);
+            assert.equal(data.lexical, undefined);
+            assert.equal(data.mobiledoc, undefined);
             assert.equal(data.feature_image, null);
             assert.equal(row.created_at, '2023-11-23T12:00:00.000Z');
             assert.equal(row.updated_at, '2023-11-25T12:00:00.000Z');
@@ -1314,9 +1351,9 @@ describe('MigrateContext', () => {
         await instance.close();
     });
 
-    describe('Ghost JSON content formats', () => {
-        it('Can export with HTML only', async () => {
-            const instance: any = new MigrateContext({contentFormat: 'html'});
+    describe('Ghost JSON content', () => {
+        it('Exports HTML only', async () => {
+            const instance: any = new MigrateContext();
             await instance.init();
 
             const post = await instance.addPost();
@@ -1332,35 +1369,8 @@ describe('MigrateContext', () => {
 
             assert.equal(ghostJSON.data.posts.length, 1);
             assert.equal(ghostJSON.data.posts[0].html, '<p>Hello world</p>');
-            assert.equal(ghostJSON.data.posts[0].mobiledoc, null);
-            assert.equal(ghostJSON.data.posts[0].lexical, null);
-
-            await unlink(writtenFiles[0].path);
-            await instance.close();
-        });
-
-        it('Can export with Lexical only', async () => {
-            const instance: any = new MigrateContext({contentFormat: 'lexical'});
-            await instance.init();
-
-            const post = await instance.addPost();
-            post.set('title', 'Lexical Only Post');
-            post.set('slug', 'lexical-only-post');
-            post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
-            post.set('html', '<p>Hello world</p>');
-            post.addAuthor({name: 'Test Author', slug: 'test-author', email: 'test@example.com'});
-            await post.save(instance.db);
-
-            await instance.prepareForExport();
-            const writtenFiles = await instance.writeGhostJson(tmpdir(), {filename: 'lexical-test'});
-            const ghostJSON = JSON.parse(await readFile(writtenFiles[0].path, 'utf-8'));
-
-            assert.equal(ghostJSON.data.posts.length, 1);
-            assert.equal(ghostJSON.data.posts[0].html, null);
-            assert.ok(ghostJSON.data.posts[0].lexical);
-            assert.equal(typeof ghostJSON.data.posts[0].lexical, 'string');
-            assert.ok(JSON.parse(ghostJSON.data.posts[0].lexical).root);
-            assert.equal(ghostJSON.data.posts[0].mobiledoc, null);
+            assert.equal(ghostJSON.data.posts[0].mobiledoc, undefined);
+            assert.equal(ghostJSON.data.posts[0].lexical, undefined);
 
             await unlink(writtenFiles[0].path);
             await instance.close();
@@ -1510,8 +1520,7 @@ describe('MigrateContext', () => {
             assert.equal(allPosts[0].data.title, 'New title');
             assert.equal(allPosts[0].data.slug, 'new-slug');
             assert.equal(allPosts[0].data.html, '<p>Fresh transformed content</p>');
-            assert.match(allPosts[0].data.lexical, /Fresh transformed content/);
-            assert.doesNotMatch(allPosts[0].data.lexical, /Old shortcode output/);
+            assert.equal(allPosts[0].data.lexical, undefined);
             assert.equal(allPosts[0].getSourceValue('parser'), 'new');
             assert.equal(allPosts[0].getMetaValue('transform'), 'new');
             assert.deepEqual(
@@ -2000,7 +2009,6 @@ describe('MigrateContext', () => {
                             JSON.stringify({title: 'Rolled Back', slug: 'before-rollback'}),
                             '{}',
                             '{}',
-                            'lexical',
                             null,
                             post.ghostId,
                             '2023-11-23T00:00:00.000Z',
@@ -2039,7 +2047,6 @@ describe('MigrateContext', () => {
                         JSON.stringify({title: 'Updated In Nested', slug: 'nested-tx'}),
                         '{}',
                         '{}',
-                        'lexical',
                         null,
                         post.ghostId,
                         '2023-11-23T00:00:00.000Z',
@@ -2317,12 +2324,12 @@ describe('MigrateContext', () => {
         });
     });
 
-    describe('Conversion caching', () => {
+    describe('Export preparation', () => {
         it('Backfills blank titles already stored in SQLite', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
-            const post = await instance.addPost({contentFormat: 'html'});
+            const post = await instance.addPost();
             post.set('title', 'Original');
             post.set('slug', 'untitled');
             post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
@@ -2341,7 +2348,7 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
-        it('prepareForExport converts and caches content in DB', async () => {
+        it('prepareForExport removes legacy content fields and preserves HTML', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
@@ -2352,249 +2359,48 @@ describe('MigrateContext', () => {
             post.set('html', '<p>Hello</p>');
             await post.save(instance.db);
 
-            // Before: no cached lexical
             const rowBefore = instance.db.stmts.findPostById.get(post.dbId) as any;
-            assert.equal(JSON.parse(rowBefore.data).lexical, null);
+            const staleData = JSON.parse(rowBefore.data);
+            staleData.lexical = '{"root":{}}';
+            staleData.mobiledoc = '{"version":"0.3.1"}';
+            instance.db.stmts.updatePostData.run(JSON.stringify(staleData), post.dbId);
 
             await instance.prepareForExport();
 
-            // After: lexical cached in DB
             const rowAfter = instance.db.stmts.findPostById.get(post.dbId) as any;
             const stored = JSON.parse(rowAfter.data);
-            assert.ok(stored.lexical, 'lexical should be cached after prepareForExport');
-            assert.ok(JSON.parse(stored.lexical).root);
-            assert.equal(stored.html, '<p>Hello</p>', 'html should be preserved');
+            assert.equal(stored.html, '<p>Hello</p>');
+            assert.equal(stored.lexical, undefined);
+            assert.equal(stored.mobiledoc, undefined);
 
             await instance.close();
         });
 
-        it('Repairs invalid cached Lexical from retained HTML', async () => {
+        it('Rejects legacy editor content without retained HTML', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
             const post = await instance.addPost();
-            post.set('title', 'Repair Lexical');
-            post.set('slug', 'repair-lexical');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<div></div>');
-            await post.save(instance.db);
-
-            const row = instance.db.stmts.findPostById.get(post.dbId) as any;
-            const data = JSON.parse(row.data);
-            data.lexical = '{"root":{"children":[],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
-            instance.db.stmts.updatePostData.run(JSON.stringify(data), post.dbId);
-
-            await instance.prepareForExport();
-
-            const updatedRow = instance.db.stmts.findPostById.get(post.dbId) as any;
-            const lexical = JSON.parse(JSON.parse(updatedRow.data).lexical);
-            assert.equal(lexical.root.children.length, 1);
-            assert.equal(lexical.root.children[0].type, 'paragraph');
-            assert.equal(lexical.root.children[0].version, 1);
-
-            await instance.close();
-        });
-
-        it('Rejects invalid cached Lexical without an HTML fallback', async () => {
-            const instance: any = new MigrateContext();
-            await instance.init();
-
-            const post = await instance.addPost();
-            post.set('title', 'Invalid Lexical');
-            post.set('slug', 'invalid-lexical');
+            post.set('title', 'Legacy only');
+            post.set('slug', 'legacy-only');
             post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
             await post.save(instance.db);
 
             const row = instance.db.stmts.findPostById.get(post.dbId) as any;
-            const data = JSON.parse(row.data);
-            data.lexical = '';
-            instance.db.stmts.updatePostData.run(JSON.stringify(data), post.dbId);
+            const staleData = JSON.parse(row.data);
+            staleData.lexical = '{"root":{}}';
+            instance.db.stmts.updatePostData.run(JSON.stringify(staleData), post.dbId);
 
             await assert.rejects(() => instance.prepareForExport(), {
                 name: 'InternalServerError',
-                message: 'Post "Invalid Lexical" has invalid Lexical content and no HTML fallback'
+                message:
+                    'Post "Legacy only" contains only an obsolete editor format. Re-ingest it as HTML before exporting.'
             });
 
             await instance.close();
         });
 
-        it('Skips posts that already have converted content', async () => {
-            const instance: any = new MigrateContext();
-            await instance.init();
-
-            const post = await instance.addPost();
-            post.set('title', 'Skip Test');
-            post.set('slug', 'skip-test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Hello</p>');
-            await post.save(instance.db);
-
-            const dir = join(tmpdir(), `mg-skip-${Date.now()}`);
-
-            await instance.prepareForExport();
-            await instance.writeGhostJson(dir);
-            const file1 = JSON.parse(await readFile(join(dir, 'posts.json'), 'utf-8'));
-
-            // Second prepare + write: uses cached content (same output)
-            await instance.prepareForExport();
-            await instance.writeGhostJson(dir);
-            const file2 = JSON.parse(await readFile(join(dir, 'posts.json'), 'utf-8'));
-
-            assert.equal(file1.data.posts[0].lexical, file2.data.posts[0].lexical);
-
-            await rm(dir, {recursive: true, force: true});
-            await instance.close();
-        });
-
-        it('Re-converts after HTML changes via forEachPost', async () => {
-            const instance: any = new MigrateContext();
-            await instance.init();
-
-            const post = await instance.addPost();
-            post.set('title', 'Invalidate Test');
-            post.set('slug', 'invalidate-test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Original</p>');
-            await post.save(instance.db);
-
-            // First prepare: converts and caches
-            await instance.prepareForExport();
-            const row1 = instance.db.stmts.findPostById.get(post.dbId) as any;
-            const lexical1 = JSON.parse(row1.data).lexical;
-            assert.ok(lexical1);
-
-            // Modify HTML → clears cached lexical
-            await instance.forEachPost(async (p: PostContext) => {
-                p.set('html', '<p>Updated</p>');
-            });
-
-            const rowAfterUpdate = instance.db.stmts.findPostById.get(post.dbId) as any;
-            assert.equal(JSON.parse(rowAfterUpdate.data).lexical, null, 'lexical should be cleared after HTML change');
-
-            // Second prepare: re-converts with new HTML
-            await instance.prepareForExport();
-            const row2 = instance.db.stmts.findPostById.get(post.dbId) as any;
-            const lexical2 = JSON.parse(row2.data).lexical;
-            assert.ok(lexical2);
-            assert.notEqual(lexical1, lexical2);
-
-            await instance.close();
-        });
-
-        it('set html invalidates cached conversion', async () => {
-            const instance: any = new MigrateContext();
-            await instance.init();
-
-            const post = await instance.addPost();
-            post.set('title', 'Invalidate Test');
-            post.set('slug', 'invalidate-test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Original</p>');
-            post.convertContent();
-            assert.ok(post.data.lexical);
-
-            // Setting HTML should clear cached lexical
-            post.set('html', '<p>New HTML</p>');
-            assert.equal(post.data.lexical, null);
-            assert.equal(post.htmlDirty, true);
-
-            await instance.close();
-        });
-
-        it('Lexical conversion is cached by prepareForExport', async () => {
-            const instance: any = new MigrateContext();
-            await instance.init();
-
-            const post = await instance.addPost();
-            post.set('title', 'Lexical Test');
-            post.set('slug', 'lexical-test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Lexical</p>');
-            await post.save(instance.db);
-
-            await instance.prepareForExport();
-
-            const row = instance.db.stmts.findPostById.get(post.dbId) as any;
-            const stored = JSON.parse(row.data);
-            assert.ok(stored.lexical);
-            assert.ok(JSON.parse(stored.lexical).root);
-            assert.equal(stored.mobiledoc, null);
-
-            await instance.close();
-        });
-
-        it('Clears stale mobiledoc during prepareForExport', async () => {
-            const instance: any = new MigrateContext();
-            await instance.init();
-
-            const post = await instance.addPost();
-            post.set('title', 'Stale Mobiledoc');
-            post.set('slug', 'stale-mobiledoc');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Hello</p>');
-            await post.save(instance.db);
-
-            const row = instance.db.stmts.findPostById.get(post.dbId) as any;
-            const data = JSON.parse(row.data);
-            data.mobiledoc = '{"version":"0.3.1","atoms":[],"cards":[]}';
-            instance.db.stmts.updatePostData.run(JSON.stringify(data), post.dbId);
-
-            await instance.prepareForExport();
-
-            const updatedRow = instance.db.stmts.findPostById.get(post.dbId) as any;
-            const stored = JSON.parse(updatedRow.data);
-            assert.ok(stored.lexical);
-            assert.equal(stored.mobiledoc, null);
-
-            await instance.close();
-        });
-
-        it('Skips html-format posts', async () => {
-            const instance: any = new MigrateContext({contentFormat: 'html'});
-            await instance.init();
-
-            const post = await instance.addPost();
-            post.set('title', 'HTML Only');
-            post.set('slug', 'html-only');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Hello</p>');
-            await post.save(instance.db);
-
-            await instance.prepareForExport();
-
-            const row = instance.db.stmts.findPostById.get(post.dbId) as any;
-            const stored = JSON.parse(row.data);
-            assert.equal(stored.html, '<p>Hello</p>');
-            assert.equal(stored.lexical, null);
-            assert.equal(stored.mobiledoc, null);
-
-            await instance.close();
-        });
-
-        it('convertContent can be called manually', async () => {
-            const instance: any = new MigrateContext();
-            await instance.init();
-
-            const post = await instance.addPost();
-            post.set('title', 'Manual Test');
-            post.set('slug', 'manual-test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Manual</p>');
-
-            post.convertContent();
-            assert.ok(post.data.lexical);
-            assert.equal(post.htmlDirty, false);
-
-            await post.save(instance.db);
-
-            const row = instance.db.stmts.findPostById.get(post.dbId) as any;
-            const stored = JSON.parse(row.data);
-            assert.ok(stored.lexical);
-
-            await instance.close();
-        });
-
-        it('Reports progress during conversion', async () => {
+        it('Reports progress during preparation', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
