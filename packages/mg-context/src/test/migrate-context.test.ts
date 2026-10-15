@@ -3,7 +3,7 @@ import {describe, it, before, after, mock} from 'node:test';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
-import {readFile, unlink, rm} from 'node:fs/promises';
+import {readFile, unlink, rm, writeFile} from 'node:fs/promises';
 import errors from '@tryghost/errors';
 import {
     MigrateContext,
@@ -11,7 +11,8 @@ import {
     TagContext,
     AuthorContext,
     MIGRATE_CONTEXT_SCHEMA_VERSION,
-    type PostFilter
+    type PostFilter,
+    type WrittenFile
 } from '../index.js';
 import {withTransaction, findPostsByIds} from '../lib/db-helpers.js';
 
@@ -1178,6 +1179,92 @@ describe('MigrateContext', () => {
         for (const f of writtenFiles) {
             await unlink(f.path);
         }
+        await instance.close();
+    });
+
+    it('Optionally removes stale files from a previous export set', async () => {
+        const instance: any = new MigrateContext();
+        await instance.init();
+
+        for (let i = 1; i <= 4; i += 1) {
+            const post = await instance.addPost();
+            post.set('title', `Manifest Post ${i}`);
+            post.set('slug', `manifest-post-${i}`);
+            post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
+            await post.save(instance.db);
+        }
+
+        const dir = join(tmpdir(), `mg-context-manifest-test-${Date.now()}`);
+        const first = await instance.writeGhostJson(dir, {batchSize: 1, filename: 'manifest-test'});
+        assert.deepEqual(
+            first.map((file: WrittenFile) => file.name),
+            ['manifest-test-1.json', 'manifest-test-2.json', 'manifest-test-3.json', 'manifest-test-4.json']
+        );
+
+        const unrelatedPath = join(dir, 'manifest-test-not-generated.json');
+        await writeFile(unrelatedPath, 'not created by mg-context');
+
+        const withoutCleanup = await instance.writeGhostJson(dir, {batchSize: 2, filename: 'manifest-test'});
+        assert.deepEqual(
+            withoutCleanup.map((file: WrittenFile) => file.name),
+            ['manifest-test-1.json', 'manifest-test-2.json']
+        );
+        await readFile(first[2].path);
+        await readFile(first[3].path);
+
+        const second = await instance.writeGhostJson(dir, {
+            batchSize: 2,
+            filename: 'manifest-test',
+            replaceExisting: true
+        });
+        assert.deepEqual(
+            second.map((file: WrittenFile) => file.name),
+            ['manifest-test-1.json', 'manifest-test-2.json']
+        );
+        await assert.rejects(readFile(first[2].path), {code: 'ENOENT'});
+        await assert.rejects(readFile(first[3].path), {code: 'ENOENT'});
+        assert.equal(await readFile(unrelatedPath, 'utf8'), 'not created by mg-context');
+
+        const third = await instance.writeGhostJson(dir, {
+            batchSize: 10,
+            filename: 'manifest-test',
+            replaceExisting: true
+        });
+        assert.deepEqual(
+            third.map((file: WrittenFile) => file.name),
+            ['manifest-test.json']
+        );
+        await assert.rejects(readFile(second[0].path), {code: 'ENOENT'});
+        await assert.rejects(readFile(second[1].path), {code: 'ENOENT'});
+        assert.equal(await readFile(unrelatedPath, 'utf8'), 'not created by mg-context');
+
+        const fourth = await instance.writeGhostJson(dir, {
+            batchSize: 2,
+            filename: 'manifest-test',
+            replaceExisting: true
+        });
+        assert.deepEqual(
+            fourth.map((file: WrittenFile) => file.name),
+            ['manifest-test-1.json', 'manifest-test-2.json']
+        );
+        await assert.rejects(readFile(third[0].path), {code: 'ENOENT'});
+        assert.equal(await readFile(unrelatedPath, 'utf8'), 'not created by mg-context');
+
+        await rm(dir, {recursive: true, force: true});
+        await instance.close();
+    });
+
+    it('Rejects invalid export filenames', async () => {
+        const instance: any = new MigrateContext();
+        await instance.init();
+
+        for (const filename of ['.json', 'nested/export', 'nested\\export']) {
+            await assert.rejects(() => instance.writeGhostJson(tmpdir(), {filename}), {
+                name: 'BadRequestError',
+                message: 'Ghost JSON filename must be a non-empty base filename without path separators.'
+            });
+        }
+
         await instance.close();
     });
 

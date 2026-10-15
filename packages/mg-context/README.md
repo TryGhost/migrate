@@ -499,12 +499,13 @@ await ctx.prepareForExport();
 
 Write posts, tags, authors, and junction tables to Ghost JSON files.
 
-| Option      | Type                          | Default   | Description                         |
-|-------------|-------------------------------|-----------|-------------------------------------|
-| `batchSize` | `number`                      | `5000`    | Posts per output file               |
-| `filename`  | `string`                      | `'posts'` | Base filename (without `.json`)     |
-| `filter`    | `PostFilter`                  | —         | Filter criteria                     |
-| `onWrite`   | `(file: WrittenFile) => void` | —         | Callback after each file is written |
+| Option            | Type                          | Default   | Description                                                   |
+|-------------------|-------------------------------|-----------|---------------------------------------------------------------|
+| `batchSize`       | `number`                      | `5000`    | Posts per output file                                         |
+| `filename`        | `string`                      | `'posts'` | Base filename (without `.json`)                               |
+| `filter`          | `PostFilter`                  | —         | Filter criteria                                               |
+| `onWrite`         | `(file: WrittenFile) => void` | —         | Callback after each file is written                           |
+| `replaceExisting` | `boolean`                     | `false`   | Remove stale files from an earlier export with this filename  |
 
 Returns an array of `WrittenFile` objects:
 
@@ -515,10 +516,13 @@ Returns an array of `WrittenFile` objects:
 | `size`  | `number` | File size in bytes             |
 | `posts` | `number` | Number of posts in this file   |
 
+Set `replaceExisting: true` when reusing a staging directory. After the new files have been written successfully, mg-context removes obsolete members of the same export-name family: exactly `<filename>.json` and `<filename>-N.json`, where `N` is a positive batch number. Other files are left untouched. Cleanup happens after writing, so a failed export does not first erase the previous complete set.
+
 ```js
 const files = await ctx.writeGhostJson('./output/', {
     filename: 'export',
     batchSize: 2000,
+    replaceExisting: true,
     onWrite(f) {
         console.log(`Wrote ${f.name} (${f.posts} posts)`);
     }

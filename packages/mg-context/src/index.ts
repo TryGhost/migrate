@@ -17,7 +17,8 @@ export type {
     DuplicateSlugEntry,
     ResetOptions,
     ContentStats,
-    UpdatePostDataOptions
+    UpdatePostDataOptions,
+    WriteGhostJsonOptions
 } from './lib/MigrateContext.js';
 export type {
     DuplicatePostAction,

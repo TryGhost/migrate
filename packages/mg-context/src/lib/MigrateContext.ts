@@ -1,4 +1,4 @@
-import {stat, mkdir, open, writeFile} from 'node:fs/promises';
+import {stat, mkdir, open, readdir, rm, writeFile} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
 import {EventEmitter} from 'node:events';
 import errors from '@tryghost/errors';
@@ -97,6 +97,20 @@ export interface ContentStats {
 
 export interface UpdatePostDataOptions {
     webscrapeData?: unknown;
+}
+
+export interface WriteGhostJsonOptions {
+    batchSize?: number;
+    filename?: string;
+    filter?: PostFilter;
+    onWrite?: (file: WrittenFile) => void;
+    replaceExisting?: boolean;
+}
+
+function isExportFileName(fileName: string, filename: string): boolean {
+    const numberedPrefix = `${filename}-`;
+    const numberedSuffix = fileName.startsWith(numberedPrefix) ? fileName.slice(numberedPrefix.length) : '';
+    return fileName === `${filename}.json` || /^[1-9]\d*\.json$/.test(numberedSuffix);
 }
 
 type MigrateContextOptions = {
@@ -995,14 +1009,29 @@ export default class MigrateContext extends MigrateBase {
             batchSize = 5000,
             filename: rawFilename = 'posts',
             filter,
-            onWrite
-        }: {batchSize?: number; filename?: string; filter?: PostFilter; onWrite?: (file: WrittenFile) => void} = {}
+            onWrite,
+            replaceExisting = false
+        }: WriteGhostJsonOptions = {}
     ): Promise<WrittenFile[]> {
         const filename = rawFilename.replace(/\.json$/i, '');
+        if (!filename || filename.includes('/') || filename.includes('\\')) {
+            throw new errors.BadRequestError({
+                message: 'Ghost JSON filename must be a non-empty base filename without path separators.'
+            });
+        }
+
         await mkdir(outputDir, {recursive: true});
         const where = this.#buildFilterWhere(filter);
         const count = countWhere(this.db, where);
         const totalBatches = Math.max(1, Math.ceil(count / batchSize));
+        const currentFileNames = Array.from({length: totalBatches}, (_, batch) =>
+            totalBatches === 1 ? `${filename}.json` : `${filename}-${batch + 1}.json`
+        );
+        const currentFileNameSet = new Set(currentFileNames);
+        const previousFileNames = replaceExisting
+            ? (await readdir(outputDir)).filter(fileName => isExportFileName(fileName, filename))
+            : [];
+
         const writtenFiles: WrittenFile[] = [];
 
         const subBatchSize = 200;
@@ -1058,7 +1087,7 @@ export default class MigrateContext extends MigrateBase {
             }));
 
             // Stream file: posts are loaded and written in sub-batches
-            const fileName = totalBatches === 1 ? `${filename}.json` : `${filename}-${batch + 1}.json`;
+            const fileName = currentFileNames[batch];
             const outputPath = join(outputDir, fileName);
             const fh = await open(outputPath, 'w');
             const postsMeta: any[] = [];
@@ -1121,6 +1150,10 @@ export default class MigrateContext extends MigrateBase {
             if (onWrite) {
                 onWrite(written);
             }
+        }
+
+        for (const staleFileName of previousFileNames.filter(fileName => !currentFileNameSet.has(fileName))) {
+            await rm(join(outputDir, staleFileName), {force: true});
         }
 
         return writtenFiles;
