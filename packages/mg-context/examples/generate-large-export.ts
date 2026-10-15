@@ -56,7 +56,7 @@ async function main() {
 
     const startTime = Date.now();
 
-    const ctx = new MigrateContext({dbPath: join(__dirname, 'posts.db'), ephemeral: false});
+    const ctx = new MigrateContext({dbPath: join(__dirname, 'posts.db'), mode: 'resume'});
     await ctx.init();
 
     try {
@@ -103,9 +103,9 @@ async function main() {
         // Second pass: update HTML on every post
         // Centralised progress listener for all operations
         let batchTime = Date.now();
-        ctx.on('progress', (event, processed, total) => {
+        ctx.on('progress', ({operation, processed, total}) => {
             const duration = ((Date.now() - batchTime) / 1000).toFixed(1);
-            console.log(`- [${event}] ${processed.toLocaleString()}/${total.toLocaleString()} (${duration}s)`);
+            console.log(`- [${operation}] ${processed.toLocaleString()}/${total.toLocaleString()} (${duration}s)`);
             batchTime = Date.now();
         });
 
@@ -121,13 +121,7 @@ async function main() {
             }
         }, {batchSize: BATCH_SIZE});
 
-        console.log('Preparing for export...');
-        const prepTime = Date.now();
-        await ctx.prepareForExport();
-        const prepDuration = ((Date.now() - prepTime) / 1000).toFixed(1);
-        console.log(`Prepared in ${prepDuration}s`);
-
-        console.log('Writing Ghost JSON...');
+        console.log('Preparing and writing Ghost JSON...');
         const writeTime = Date.now();
         const writtenFiles = await ctx.writeGhostJson(outputPath, {
             batchSize: 5000,

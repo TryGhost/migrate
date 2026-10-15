@@ -6,17 +6,15 @@ import {MigrateContext} from '../src/index.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function main() {
-    const ctx = new MigrateContext({dbPath: join(__dirname, 'posts.db'), ephemeral: false});
+    const ctx = new MigrateContext({dbPath: join(__dirname, 'posts.db'), mode: 'resume'});
     await ctx.init();
 
     const startTime = Date.now();
 
     try {
-        ctx.on('progress', (event, processed, total) => {
-            console.log(`--- [${event}] ${processed}/${total} ---`);
+        ctx.on('progress', ({operation, processed, total}) => {
+            console.log(`--- [${operation}] ${processed}/${total} ---`);
         });
-
-        await ctx.prepareForExport();
 
         await ctx.forEachGhostPost(async (json, post) => {
             await new Promise(r => setTimeout(r, 250));

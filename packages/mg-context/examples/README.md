@@ -8,7 +8,7 @@ npx tsx examples/<filename>.ts
 
 ## generate-and-export.ts
 
-Creates 500 posts in an **in-memory** database with tags and authors, then exports them to Ghost JSON. A good starting point for understanding the basic workflow: create a context, add posts in batched transactions, and write the output.
+Creates 500 posts in a managed temporary on-disk database with tags and authors, then exports them to Ghost JSON. A good starting point for understanding the basic workflow: create a context, add posts in batched transactions, and write the output.
 
 ```bash
 npx tsx examples/generate-and-export.ts

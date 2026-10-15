@@ -47,7 +47,7 @@ const authors = [
 
 async function main() {
     const dbExists = existsSync(DB_PATH);
-    const ctx = new MigrateContext({dbPath: DB_PATH, ephemeral: false});
+    const ctx = new MigrateContext({dbPath: DB_PATH, mode: 'resume'});
     await ctx.init();
 
     try {
@@ -90,10 +90,10 @@ async function main() {
         const streamStart = Date.now();
         let count = 0;
 
-        ctx.on('progress', (event, processed, total) => {
+        ctx.on('progress', ({operation, processed, total}) => {
             const elapsed = ((Date.now() - streamStart) / 1000).toFixed(1);
             const rss = (process.memoryUsage().rss / 1024 / 1024).toFixed(0);
-            console.log(`  [${event}] ${processed.toLocaleString()}/${total.toLocaleString()} (${elapsed}s, ${rss} MB)`);
+            console.log(`  [${operation}] ${processed.toLocaleString()}/${total.toLocaleString()} (${elapsed}s, ${rss} MB)`);
         });
 
         for await (const post of ctx.streamPosts({batchSize: 500})) {

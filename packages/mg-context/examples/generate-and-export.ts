@@ -44,14 +44,11 @@ async function main() {
         }
 
         // Listen for progress events
-        ctx.on('progress', (event, processed, total) => {
-            console.log(`[${event}] ${processed}/${total}`);
+        ctx.on('progress', ({operation, processed, total}) => {
+            console.log(`[${operation}] ${processed}/${total}`);
         });
 
-        // Prepare for export (normalize titles and deduplicate slugs)
-        await ctx.prepareForExport();
-
-        // Export to Ghost JSON
+        // Export to Ghost JSON (preparation is automatic)
         const writtenFiles = await ctx.writeGhostJson('./export/', {
             filename: 'posts',
             onWrite(f) {

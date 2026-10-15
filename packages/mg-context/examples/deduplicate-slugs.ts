@@ -3,8 +3,8 @@
 // Demonstrates slug deduplication. When multiple posts share the same slug,
 // the oldest keeps the original; newer duplicates get -2, -3, etc.
 //
-// Call prepareForExport() before exporting to deduplicate slugs and convert content.
-// Access ctx.duplicateSlugs for the list of renamed slugs.
+// Export preparation deduplicates slugs automatically. Access
+// ctx.duplicateSlugs afterwards for the list of renamed slugs.
 
 import {MigrateContext} from '../src/index.js';
 
@@ -40,10 +40,7 @@ async function main() {
 
         console.log(`Imported ${sourceData.length} posts\n`);
 
-        // 2. Prepare for export (deduplicates slugs + converts content)
-        await ctx.prepareForExport();
-
-        // 3. Export to Ghost JSON
+        // 2. Export to Ghost JSON (preparation and slug deduplication are automatic)
         const files = await ctx.writeGhostJson('./export/', {
             filename: 'deduplicated',
             onWrite(f) {
@@ -51,7 +48,7 @@ async function main() {
             }
         });
 
-        // 4. Log duplicate slug groups for redirect handling
+        // 3. Log duplicate slug groups for redirect handling
         //    Results are grouped by slug. The first entry in each group is the
         //    retained post (oldSlug === newSlug), followed by the renamed ones.
         if (ctx.duplicateSlugs.length > 0) {
