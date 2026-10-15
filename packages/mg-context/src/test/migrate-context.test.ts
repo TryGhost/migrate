@@ -3,7 +3,7 @@ import {describe, it, before, after, mock} from 'node:test';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
-import {readFile, unlink, rm, writeFile} from 'node:fs/promises';
+import {mkdir, readFile, stat, unlink, rm, writeFile} from 'node:fs/promises';
 import errors from '@tryghost/errors';
 import {
     MigrateContext,
@@ -15,6 +15,7 @@ import {
     type WrittenFile
 } from '../index.js';
 import {withTransaction, findPostsByIds} from '../lib/db-helpers.js';
+import {MG_CONTEXT_V2_SCHEMA} from './fixtures/mg-context-v2.js';
 
 describe('MigrateContext', () => {
     it('Is instance of', () => {
@@ -40,6 +41,39 @@ describe('MigrateContext', () => {
     });
 
     describe('database lifecycle', () => {
+        it('Uses a managed temporary on-disk database by default and removes it on close', async () => {
+            const instance = new MigrateContext();
+            await instance.init();
+
+            const databasePath = instance.databasePath;
+            assert.notEqual(databasePath, ':memory:');
+            assert.ok((await stat(databasePath)).isFile());
+
+            await instance.close();
+            await assert.rejects(stat(databasePath), {code: 'ENOENT'});
+        });
+
+        it('Uses memory only when explicitly requested', async () => {
+            const instance = new MigrateContext({storage: 'memory'});
+            await instance.init();
+            assert.equal(instance.databasePath, ':memory:');
+            await instance.close();
+        });
+
+        it('Retains ephemeral as a one-release memory compatibility shim', async () => {
+            const instance = new MigrateContext({ephemeral: true});
+            await instance.init();
+            assert.equal(instance.databasePath, ':memory:');
+            await instance.close();
+        });
+
+        it('Rejects conflicting storage options', () => {
+            assert.throws(() => new MigrateContext({dbPath: 'migration.sqlite', storage: 'memory'}), {
+                name: 'BadRequestError',
+                message: 'Pass either dbPath or storage, not both.'
+            });
+        });
+
         it('Reports the schema version and whether migration content exists', async () => {
             const instance = new MigrateContext();
             await instance.init();
@@ -191,6 +225,69 @@ describe('MigrateContext', () => {
             await rm(filePath, {force: true});
         });
 
+        it('Uses a single content fingerprint to make resume and refresh intent explicit', async () => {
+            const filePath = join(tmpdir(), `mg-context-content-fingerprint-${Date.now()}.sqlite`);
+            const firstRun = new MigrateContext({dbPath: filePath, contentFingerprint: 'source-and-options-v1'});
+            await firstRun.init();
+            const post = await firstRun.addPost({lookupKey: 'post-1'});
+            post.set('title', 'Version one');
+            post.set('slug', 'version-one');
+            post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+            post.save(firstRun.db);
+            await firstRun.close();
+
+            const resumed = new MigrateContext({dbPath: filePath, contentFingerprint: 'source-and-options-v1'});
+            await resumed.init();
+            const resumedStats = resumed.hasContent();
+            assert.ok(resumedStats);
+            assert.equal(resumedStats.posts, 1);
+            await resumed.close();
+
+            const incompatible = new MigrateContext({
+                dbPath: filePath,
+                contentFingerprint: 'source-and-options-v2'
+            });
+            await assert.rejects(() => incompatible.init(), {
+                name: 'InternalServerError',
+                message:
+                    'The stored migration content was created with a different content fingerprint. Re-run with mode: "refresh" to rebuild it.'
+            });
+
+            const refreshed = new MigrateContext({
+                dbPath: filePath,
+                mode: 'refresh',
+                contentFingerprint: 'source-and-options-v2'
+            });
+            await refreshed.init();
+            assert.equal(refreshed.hasContent(), false);
+            assert.equal(refreshed.getFingerprint('content'), 'source-and-options-v2');
+            assert.equal(refreshed.getMigrationReport().events.length, 0);
+            await refreshed.close();
+            await rm(filePath, {force: true});
+        });
+
+        it('Migrates the frozen v2 fixture transactionally and preserves its content', async () => {
+            const filePath = join(tmpdir(), `mg-context-v2-fixture-${Date.now()}.sqlite`);
+            const v2 = new DatabaseSync(filePath);
+            v2.exec(MG_CONTEXT_V2_SCHEMA);
+            v2.prepare('INSERT INTO Links (old_url, new_url) VALUES (?, ?)').run('example.com/old/', '/new/');
+            v2.close();
+
+            const instance = new MigrateContext({dbPath: filePath});
+            await instance.init();
+
+            assert.equal(instance.schemaVersion, 3);
+            assert.equal(instance.findLink('example.com/old/'), '/new/');
+            assert.ok(
+                instance.db.db
+                    .prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'MigrationEvents'")
+                    .get()
+            );
+
+            await instance.close();
+            await rm(filePath, {force: true});
+        });
+
         it('Rejects databases older than the HTML-only compatibility baseline', async () => {
             const filePath = join(tmpdir(), `mg-context-v1-schema-test-${Date.now()}.sqlite`);
             const oldDb = new DatabaseSync(filePath);
@@ -290,7 +387,7 @@ describe('MigrateContext', () => {
             const instance = new MigrateContext();
             await instance.init();
 
-            const post = await instance.addPost();
+            const post: any = await instance.addPost();
             post.set('title', 'Original title');
             post.set('slug', 'original-title');
             post.set('html', '<p>Original HTML</p>');
@@ -475,7 +572,7 @@ describe('MigrateContext', () => {
         await post2.save(instance.db);
 
         const progressCalls: [number, number][] = [];
-        instance.on('progress', (_event: string, processed: number, total: number) => {
+        instance.on('progress', ({processed, total}: {processed: number; total: number}) => {
             progressCalls.push([processed, total]);
         });
 
@@ -510,8 +607,8 @@ describe('MigrateContext', () => {
 
         const titles: string[] = [];
         const progressCalls: [number, number][] = [];
-        instance.on('progress', (event: string, processed: number, total: number) => {
-            if (event === 'forEachPost') {
+        instance.on('progress', ({operation, processed, total}: any) => {
+            if (operation === 'forEachPost') {
                 progressCalls.push([processed, total]);
             }
         });
@@ -860,6 +957,96 @@ describe('MigrateContext', () => {
         });
     });
 
+    describe('tag and author scope', () => {
+        it('Uses referenced by default and applies all consistently across find, iterate, stream, and export', async () => {
+            const instance = new MigrateContext({storage: 'memory'});
+            await instance.init();
+
+            const post: any = await instance.addPost();
+            post.set('title', 'Scoped post');
+            post.set('slug', 'scoped-post');
+            post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+            post.addTag({name: 'Used tag', slug: 'used-tag'});
+            post.addAuthor({name: 'Used author', slug: 'used-author', email: 'used@example.com'});
+            post.save(instance.db);
+
+            new TagContext({name: 'Orphan tag', slug: 'orphan-tag'}).save(instance.db);
+            new AuthorContext({
+                name: 'Orphan author',
+                slug: 'orphan-author',
+                email: 'orphan@example.com'
+            }).save(instance.db);
+
+            assert.deepEqual(await instance.findTags({slug: 'orphan-tag'}), []);
+            assert.equal((await instance.findTags({slug: 'orphan-tag', scope: 'all'}))![0].data.name, 'Orphan tag');
+            assert.deepEqual(await instance.findAuthors({slug: 'orphan-author'}), []);
+            assert.equal(
+                (await instance.findAuthors({slug: 'orphan-author', scope: 'all'}))![0].data.name,
+                'Orphan author'
+            );
+
+            const referencedTags: string[] = [];
+            await instance.forEachTag(async tag => {
+                referencedTags.push(tag.data.slug);
+            });
+            assert.deepEqual(referencedTags, ['used-tag']);
+
+            const allTags: string[] = [];
+            await instance.forEachTag(
+                async tag => {
+                    allTags.push(tag.data.slug);
+                },
+                {scope: 'all'}
+            );
+            assert.deepEqual(allTags, ['used-tag', 'orphan-tag']);
+
+            const allStreamedTags: string[] = [];
+            for await (const tag of instance.streamTags({scope: 'all'})) {
+                allStreamedTags.push(tag.data.slug);
+            }
+            assert.deepEqual(allStreamedTags, ['used-tag', 'orphan-tag']);
+
+            const referencedAuthors: string[] = [];
+            for await (const author of instance.streamAuthors()) {
+                referencedAuthors.push(author.data.slug);
+            }
+            assert.deepEqual(referencedAuthors, ['used-author']);
+
+            const allAuthors: string[] = [];
+            for await (const author of instance.streamAuthors({scope: 'all'})) {
+                allAuthors.push(author.data.slug);
+            }
+            assert.deepEqual(allAuthors, ['used-author', 'orphan-author']);
+
+            const allIteratedAuthors: string[] = [];
+            await instance.forEachAuthor(
+                async author => {
+                    allIteratedAuthors.push(author.data.slug);
+                },
+                {scope: 'all'}
+            );
+            assert.deepEqual(allIteratedAuthors, ['used-author', 'orphan-author']);
+
+            const directory = join(tmpdir(), `mg-context-scope-${Date.now()}`);
+            const referencedTagFile = await instance.writeGhostTagsJson(directory, {filename: 'referenced-tags'});
+            const referencedTagsJson = JSON.parse(await readFile(referencedTagFile.path, 'utf8'));
+            const allTagFile = await instance.writeGhostTagsJson(directory, {filename: 'all-tags', scope: 'all'});
+            const referencedUserFile = await instance.writeGhostUsersJson(directory, {filename: 'referenced-users'});
+            const referencedUsersJson = JSON.parse(await readFile(referencedUserFile.path, 'utf8'));
+            const allUserFile = await instance.writeGhostUsersJson(directory, {filename: 'all-users', scope: 'all'});
+
+            assert.equal(referencedTagsJson.data.tags.length, 1);
+            assert.equal(JSON.parse(await readFile(allTagFile.path, 'utf8')).data.tags.length, 2);
+            assert.equal(referencedUsersJson.data.users.length, 1);
+            assert.equal(JSON.parse(await readFile(allUserFile.path, 'utf8')).data.users.length, 2);
+            await assert.rejects(readFile(referencedTagFile.path), {code: 'ENOENT'});
+            await assert.rejects(readFile(referencedUserFile.path), {code: 'ENOENT'});
+
+            await rm(directory, {recursive: true, force: true});
+            await instance.close();
+        });
+    });
+
     describe('addLink / findLink', () => {
         it('Stores and retrieves links', async () => {
             const instance = new MigrateContext();
@@ -975,7 +1162,7 @@ describe('MigrateContext', () => {
             }
 
             const progressCalls: [number, number][] = [];
-            instance.on('progress', (_event: string, processed: number, total: number) => {
+            instance.on('progress', ({processed, total}: {processed: number; total: number}) => {
                 progressCalls.push([processed, total]);
             });
 
@@ -1155,6 +1342,27 @@ describe('MigrateContext', () => {
         await instance.close();
     });
 
+    it('Emits export:file-written after each completed file', async () => {
+        const instance = new MigrateContext({storage: 'memory'});
+        await instance.init();
+
+        const post = await instance.addPost();
+        post.set('title', 'Event export');
+        post.set('slug', 'event-export');
+        post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+        post.save(instance.db);
+
+        const events: WrittenFile[] = [];
+        instance.on('export:file-written', event => events.push(event));
+        const directory = join(tmpdir(), `mg-context-export-event-${Date.now()}`);
+        const files = await instance.writeGhostJson(directory);
+
+        assert.deepEqual(events, files);
+
+        await rm(directory, {recursive: true, force: true});
+        await instance.close();
+    });
+
     it('Can write batched Ghost JSON files', async () => {
         const instance: any = new MigrateContext();
         await instance.init();
@@ -1210,7 +1418,7 @@ describe('MigrateContext', () => {
         await instance.close();
     });
 
-    it('Optionally removes stale files from a previous export set', async () => {
+    it('Automatically removes only stale files owned by the previous export manifest', async () => {
         const instance: any = new MigrateContext();
         await instance.init();
 
@@ -1237,8 +1445,8 @@ describe('MigrateContext', () => {
             withoutCleanup.map((file: WrittenFile) => file.name),
             ['manifest-test-1.json', 'manifest-test-2.json']
         );
-        await readFile(first[2].path);
-        await readFile(first[3].path);
+        await assert.rejects(readFile(first[2].path), {code: 'ENOENT'});
+        await assert.rejects(readFile(first[3].path), {code: 'ENOENT'});
 
         const second = await instance.writeGhostJson(dir, {
             batchSize: 2,
@@ -1278,7 +1486,54 @@ describe('MigrateContext', () => {
         await assert.rejects(readFile(third[0].path), {code: 'ENOENT'});
         assert.equal(await readFile(unrelatedPath, 'utf8'), 'not created by mg-context');
 
+        const renamed = await instance.writeGhostJson(dir, {batchSize: 10, filename: 'renamed-export'});
+        assert.equal(renamed[0].name, 'renamed-export.json');
+        await assert.rejects(readFile(fourth[0].path), {code: 'ENOENT'});
+        await assert.rejects(readFile(fourth[1].path), {code: 'ENOENT'});
+        assert.equal(await readFile(unrelatedPath, 'utf8'), 'not created by mg-context');
+
         await rm(dir, {recursive: true, force: true});
+        await instance.close();
+    });
+
+    it('Keeps the previous manifest and output set when generation is interrupted', async () => {
+        const instance = new MigrateContext({storage: 'memory'});
+        await instance.init();
+
+        for (let i = 1; i <= 2; i += 1) {
+            const post = await instance.addPost();
+            post.set('title', `Interrupted Post ${i}`);
+            post.set('slug', `interrupted-post-${i}`);
+            post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+            post.save(instance.db);
+        }
+
+        const directory = join(tmpdir(), `mg-context-interrupted-export-${Date.now()}`);
+        const previous = await instance.writeGhostJson(directory, {batchSize: 1, filename: 'previous'});
+        const manifestPath = join(directory, '.mg-context-export-manifest.json');
+        const previousManifest = await readFile(manifestPath, 'utf8');
+        const originalToGhostPost = PostContext.toGhostPost;
+        let calls = 0;
+        const converter = mock.method(PostContext, 'toGhostPost', (row: any) => {
+            calls += 1;
+            if (calls === 2) {
+                throw new Error('interrupted export');
+            }
+            return originalToGhostPost(row);
+        });
+
+        await assert.rejects(() => instance.writeGhostJson(directory, {batchSize: 1, filename: 'interrupted'}), {
+            message: 'interrupted export'
+        });
+        converter.mock.restore();
+
+        assert.equal(await readFile(manifestPath, 'utf8'), previousManifest);
+        await readFile(previous[0].path);
+        await readFile(previous[1].path);
+        await assert.rejects(readFile(join(directory, 'interrupted-1.json')), {code: 'ENOENT'});
+        await assert.rejects(readFile(join(directory, 'interrupted-2.json')), {code: 'ENOENT'});
+
+        await rm(directory, {recursive: true, force: true});
         await instance.close();
     });
 
@@ -1291,8 +1546,44 @@ describe('MigrateContext', () => {
                 name: 'BadRequestError',
                 message: 'Ghost JSON filename must be a non-empty base filename without path separators.'
             });
+            await assert.rejects(() => instance.writeGhostTagsJson(tmpdir(), {filename}), {
+                name: 'BadRequestError',
+                message: 'Ghost JSON filename must be a non-empty base filename without path separators.'
+            });
+            await assert.rejects(() => instance.writeGhostUsersJson(tmpdir(), {filename}), {
+                name: 'BadRequestError',
+                message: 'Ghost JSON filename must be a non-empty base filename without path separators.'
+            });
         }
 
+        await instance.close();
+    });
+
+    it('Refuses to clean output when the ownership manifest is invalid', async () => {
+        const instance = new MigrateContext({storage: 'memory'});
+        await instance.init();
+        const directory = join(tmpdir(), `mg-context-invalid-manifest-${Date.now()}`);
+        await mkdir(directory, {recursive: true});
+        for (const invalid of [
+            {version: 99},
+            {version: 1},
+            {version: 1, exports: 'invalid'},
+            {version: 1, exports: []},
+            {version: 1, exports: {posts: 'invalid'}},
+            {version: 1, exports: {posts: [1]}},
+            {version: 1, exports: {posts: ['x']}},
+            {version: 1, exports: {posts: ['posts.txt']}},
+            {version: 1, exports: {posts: ['../posts.json']}},
+            {version: 1, exports: {posts: ['nested\\posts.json']}}
+        ]) {
+            await writeFile(join(directory, '.mg-context-export-manifest.json'), JSON.stringify(invalid));
+            await assert.rejects(() => instance.writeGhostJson(directory), {
+                name: 'InternalServerError',
+                message: 'Could not read .mg-context-export-manifest.json. Remove or repair it before exporting again.'
+            });
+        }
+
+        await rm(directory, {recursive: true, force: true});
         await instance.close();
     });
 
@@ -1855,7 +2146,7 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
-        it('Warning logged when warnOnLookupKeyDuplicate is true', async () => {
+        it('Deprecated warning option does not log and the skip is reported', async () => {
             const warnMock = mock.method(console, 'warn', () => {});
 
             const instance: any = new MigrateContext({warnOnLookupKeyDuplicate: true});
@@ -1873,8 +2164,8 @@ describe('MigrateContext', () => {
             post2.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
             await post2.save(instance.db);
 
-            assert.equal(warnMock.mock.calls.length, 1);
-            assert.ok((warnMock.mock.calls[0].arguments[0] as string).includes('https://example.com/warn-me'));
+            assert.equal(warnMock.mock.calls.length, 0);
+            assert.equal(instance.getMigrationReport().summary['post:skipped'], 1);
 
             warnMock.mock.restore();
             await instance.close();
@@ -2122,7 +2413,7 @@ describe('MigrateContext', () => {
             await tag.save(instance.db);
 
             assert.ok(tag.dbId);
-            const found = await instance.findTags({slug: 'pre-tag'});
+            const found = await instance.findTags({slug: 'pre-tag', scope: 'all'});
             assert.equal(found!.length, 1);
             assert.equal(found![0].data.name, 'Updated Pre-existing');
 
@@ -2151,7 +2442,7 @@ describe('MigrateContext', () => {
             await author.save(instance.db);
 
             assert.ok(author.dbId);
-            const found = await instance.findAuthors({slug: 'pre-author'});
+            const found = await instance.findAuthors({slug: 'pre-author', scope: 'all'});
             assert.equal(found!.length, 1);
             assert.equal(found![0].data.name, 'Updated Pre-existing');
 
@@ -2313,6 +2604,31 @@ describe('MigrateContext', () => {
     });
 
     describe('Export preparation', () => {
+        it('Runs automatically before writing Ghost JSON', async () => {
+            const instance = new MigrateContext({storage: 'memory'});
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Original');
+            post.set('slug', 'automatic-preparation');
+            post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+            post.save(instance.db);
+
+            const row = instance.db.stmts.findPostById.get(post.dbId) as any;
+            const data = JSON.parse(row.data);
+            data.title = '   ';
+            instance.db.stmts.updatePostData.run(JSON.stringify(data), post.dbId);
+
+            const directory = join(tmpdir(), `mg-context-automatic-preparation-${Date.now()}`);
+            const files = await instance.writeGhostJson(directory);
+            const output = JSON.parse(await readFile(files[0].path, 'utf8'));
+            assert.equal(output.data.posts[0].title, '(Untitled)');
+            assert.equal(instance.getMigrationReport().summary['field:sanitized'], 1);
+
+            await rm(directory, {recursive: true, force: true});
+            await instance.close();
+        });
+
         it('Backfills blank titles already stored in SQLite', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
@@ -2336,6 +2652,46 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
+        it('Reports an empty slug when preparing a legacy malformed row', async () => {
+            const instance = new MigrateContext({storage: 'memory'});
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Original');
+            post.set('slug', 'legacy-malformed');
+            post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+            post.save(instance.db);
+
+            const row = instance.db.stmts.findPostById.get(post.dbId) as any;
+            const data = JSON.parse(row.data);
+            data.title = '';
+            delete data.slug;
+            instance.db.stmts.updatePostData.run(JSON.stringify(data), post.dbId);
+
+            await instance.prepareForExport();
+            assert.equal(instance.sanitizedFields.at(-1)!.slug, '');
+
+            await instance.close();
+        });
+
+        it('Rolls back preparation and clears queued events when a stored row is invalid', async () => {
+            const instance = new MigrateContext({storage: 'memory'});
+            await instance.init();
+
+            const post = await instance.addPost();
+            post.set('title', 'Invalid row');
+            post.set('slug', 'invalid-row');
+            post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+            post.save(instance.db);
+            instance.db.stmts.updatePostData.run('{not json', post.dbId);
+
+            await assert.rejects(() => instance.prepareForExport(), SyntaxError);
+            assert.equal(instance.db.inTransaction, false);
+            assert.equal(instance.db.pendingEvents.length, 0);
+
+            await instance.close();
+        });
+
         it('Reports progress during preparation', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
@@ -2350,7 +2706,7 @@ describe('MigrateContext', () => {
             }
 
             const calls: [number, number][] = [];
-            instance.on('progress', (_event: string, processed: number, total: number) => {
+            instance.on('progress', ({processed, total}: {processed: number; total: number}) => {
                 calls.push([processed, total]);
             });
 
@@ -2376,7 +2732,7 @@ describe('MigrateContext', () => {
             await post.save(instance.db);
 
             const calls: number[] = [];
-            const listener = (_event: string, processed: number) => {
+            const listener = ({processed}: {processed: number}) => {
                 calls.push(processed);
             };
             instance.on('progress', listener);
@@ -2658,7 +3014,7 @@ describe('MigrateContext', () => {
 
             it('Progress reports correct filtered total', async () => {
                 const progressCalls: [number, number][] = [];
-                ctx.on('progress', (_event: string, processed: number, total: number) => {
+                ctx.on('progress', ({processed, total}: {processed: number; total: number}) => {
                     progressCalls.push([processed, total]);
                 });
                 // eslint-disable-next-line no-unused-vars
@@ -2802,7 +3158,7 @@ describe('MigrateContext', () => {
 
             it('Tag filter with progress reports correct total', async () => {
                 const progressCalls: [number, number][] = [];
-                ctx.on('progress', (_event: string, processed: number, total: number) => {
+                ctx.on('progress', ({processed, total}: {processed: number; total: number}) => {
                     progressCalls.push([processed, total]);
                 });
                 // eslint-disable-next-line no-unused-vars
@@ -3226,6 +3582,222 @@ describe('MigrateContext', () => {
 
             await rm(dir, {recursive: true, force: true});
             await ctx.close();
+        });
+    });
+
+    describe('typed change events and durable reports', () => {
+        it('Emits sanitization and slug changes with before/after values after commit', async () => {
+            const instance = new MigrateContext({storage: 'memory'});
+            await instance.init();
+
+            const sanitized: any[] = [];
+            const renamed: any[] = [];
+            instance.on('field:sanitized', event => sanitized.push(event));
+            instance.on('slug:renamed', event => {
+                assert.ok(instance.db.stmts.findPostById.get(event.postId));
+                renamed.push(event);
+            });
+
+            const first = await instance.addPost({lookupKey: 'first'});
+            first.set('title', 'First');
+            first.set('slug', 'same-slug');
+            first.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+            first.save(instance.db);
+
+            const second = await instance.addPost({lookupKey: 'second'});
+            second.set('title', 'x'.repeat(300));
+            second.set('slug', 'same-slug');
+            second.set('created_at', new Date('2026-01-02T00:00:00.000Z'));
+            second.save(instance.db);
+
+            assert.equal(sanitized.at(-1).oldValue, 'x'.repeat(300));
+            assert.equal(sanitized.at(-1).newValue, 'x'.repeat(255));
+            assert.deepEqual(renamed, [
+                {
+                    postId: second.dbId,
+                    lookupKey: 'second',
+                    oldSlug: 'same-slug',
+                    newSlug: 'same-slug-2',
+                    url: ''
+                }
+            ]);
+
+            const report = instance.getMigrationReport();
+            assert.equal(report.summary['post:inserted'], 2);
+            assert.equal(report.summary['field:sanitized'], 1);
+            assert.equal(report.summary['slug:renamed'], 1);
+            assert.equal(
+                (report.events.find(event => event.type === 'slug:renamed')!.details as any).newSlug,
+                'same-slug-2'
+            );
+
+            await instance.close();
+        });
+
+        it('Persists duplicate skips for later runs and emits their identity', async () => {
+            const filePath = join(tmpdir(), `mg-context-report-${Date.now()}.sqlite`);
+            const firstRun = new MigrateContext({dbPath: filePath});
+            await firstRun.init();
+
+            const skipped: any[] = [];
+            firstRun.on('post:skipped', event => skipped.push(event));
+
+            const original = await firstRun.addPost({lookupKey: 'same-source-id'});
+            original.set('title', 'Original');
+            original.set('slug', 'original');
+            original.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+            original.save(firstRun.db);
+
+            const duplicate = await firstRun.addPost({lookupKey: 'same-source-id'});
+            duplicate.set('title', 'Duplicate');
+            duplicate.set('slug', 'duplicate');
+            duplicate.set('created_at', new Date('2026-01-02T00:00:00.000Z'));
+            duplicate.save(firstRun.db);
+
+            assert.deepEqual(skipped, [{lookupKey: 'same-source-id', existingPostId: original.dbId}]);
+            await firstRun.close();
+
+            const secondRun = new MigrateContext({dbPath: filePath});
+            await secondRun.init();
+            const report = secondRun.getMigrationReport();
+            assert.equal(report.summary['post:skipped'], 1);
+            assert.deepEqual(report.events.find(event => event.type === 'post:skipped')!.details, {
+                existingPostId: original.dbId
+            });
+
+            await secondRun.close();
+            await rm(filePath, {force: true});
+        });
+
+        it('Emits complete detached snapshots for replacements', async () => {
+            const instance = new MigrateContext({storage: 'memory', onDuplicate: 'replace'});
+            await instance.init();
+
+            const original: any = await instance.addPost({
+                lookupKey: 'replace-me',
+                source: {url: 'https://example.com/old'},
+                meta: {revision: 1}
+            });
+            original.set('title', 'Old title');
+            original.set('slug', 'replace-me');
+            original.set('html', '<p>Old</p>');
+            original.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+            original.webscrapeData = {old: true};
+            original.addTag({name: 'Old tag', slug: 'old-tag'});
+            original.addAuthor({name: 'Old author', slug: 'old-author', email: 'old@example.com'});
+            original.save(instance.db);
+
+            let replacementEvent: any;
+            instance.on('post:replaced', event => {
+                const stored = instance.db.stmts.findPostById.get(event.postId) as any;
+                assert.equal(JSON.parse(stored.data).title, 'New title');
+                replacementEvent = event;
+            });
+
+            const replacement: any = await instance.addPost({
+                lookupKey: 'replace-me',
+                source: {url: 'https://example.com/new'},
+                meta: {revision: 2}
+            });
+            replacement.set('title', 'New title');
+            replacement.set('slug', 'replace-me');
+            replacement.set('html', '<p>New</p>');
+            replacement.set('created_at', new Date('2026-02-01T00:00:00.000Z'));
+            replacement.webscrapeData = {new: true};
+            replacement.addTag({name: 'New tag', slug: 'new-tag'});
+            replacement.addAuthor({name: 'New author', slug: 'new-author', email: 'new@example.com'});
+            replacement.save(instance.db);
+
+            assert.equal(replacementEvent.previous.data.title, 'Old title');
+            assert.equal(replacementEvent.previous.data.tags[0].name, 'Old tag');
+            assert.equal(replacementEvent.previous.data.authors[0].name, 'Old author');
+            assert.deepEqual(replacementEvent.previous.webscrapeData, {old: true});
+            assert.equal(replacementEvent.current.data.title, 'New title');
+            assert.equal(replacementEvent.current.data.html, '<p>New</p>');
+            assert.equal(replacementEvent.current.data.tags[0].name, 'New tag');
+            assert.equal(replacementEvent.current.data.authors[0].name, 'New author');
+            assert.deepEqual(replacementEvent.current.source, {url: 'https://example.com/new'});
+            assert.deepEqual(replacementEvent.current.meta, {revision: 2});
+
+            replacementEvent.current.data.title = 'Listener mutation';
+            replacementEvent.current.data.tags[0].name = 'Listener tag mutation';
+            const stored = (await instance.findPosts({slug: 'replace-me'}))![0];
+            assert.equal(stored.data.title, 'New title');
+            assert.equal(stored.data.tags[0].data.name, 'New tag');
+
+            const replaced = instance.getMigrationReport().events.find(event => event.type === 'post:replaced')!;
+            assert.ok((replaced.details as any).changedFields.includes('html'));
+            assert.ok((replaced.details as any).changedFields.includes('tags'));
+
+            await instance.close();
+        });
+
+        it('Leaves a committed replacement intact when its listener throws', async () => {
+            const instance = new MigrateContext({storage: 'memory', onDuplicate: 'replace'});
+            await instance.init();
+
+            const original = await instance.addPost({lookupKey: 'listener-error'});
+            original.set('title', 'Before');
+            original.set('slug', 'listener-error');
+            original.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+            original.save(instance.db);
+
+            instance.on('post:replaced', () => {
+                throw new Error('listener failed');
+            });
+
+            const replacement = await instance.addPost({lookupKey: 'listener-error'});
+            replacement.set('title', 'After');
+            replacement.set('slug', 'listener-error');
+            replacement.set('created_at', new Date('2026-02-01T00:00:00.000Z'));
+            assert.throws(() => replacement.save(instance.db), {message: 'listener failed'});
+
+            assert.equal((await instance.findPosts({slug: 'listener-error'}))![0].data.title, 'After');
+            assert.equal(instance.getMigrationReport().summary['post:replaced'], 1);
+
+            await instance.close();
+        });
+
+        it('Does not emit or persist rolled-back outcomes', async () => {
+            const instance = new MigrateContext({storage: 'memory'});
+            await instance.init();
+            const sanitized: any[] = [];
+            instance.on('field:sanitized', event => sanitized.push(event));
+
+            await assert.rejects(
+                instance.transaction(async () => {
+                    const post = await instance.addPost({lookupKey: 'rolled-back'});
+                    post.set('title', 'x'.repeat(300));
+                    post.set('slug', 'rolled-back');
+                    post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+                    post.save(instance.db);
+                    throw new Error('rollback');
+                }),
+                {message: 'rollback'}
+            );
+
+            assert.deepEqual(sanitized, []);
+            assert.equal(instance.hasContent(), false);
+            assert.equal(instance.getMigrationReport().events.length, 0);
+
+            await instance.close();
+        });
+
+        it('Emits standalone entity sanitization after the save completes', async () => {
+            const instance = new MigrateContext({storage: 'memory'});
+            await instance.init();
+            const events: any[] = [];
+            instance.on('field:sanitized', event => events.push(event));
+
+            const tag = new TagContext({name: ',Standalone', slug: 'standalone'});
+            tag.save(instance.db);
+
+            assert.equal(events.length, 1);
+            assert.equal(events[0].oldValue, ',Standalone');
+            assert.equal(events[0].newValue, 'Standalone');
+            assert.ok(instance.db.stmts.findTagById.get(tag.dbId));
+
+            await instance.close();
         });
     });
 

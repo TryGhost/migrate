@@ -1,5 +1,5 @@
 /* eslint-disable ghost/filenames/match-exported-class */
-import type {DatabaseModels} from './database.js';
+import {flushDatabaseEvents, type DatabaseModels} from './database.js';
 
 export function withTransaction<T>(db: DatabaseModels, callback: () => T): T {
     if (db.inTransaction) {
@@ -8,12 +8,18 @@ export function withTransaction<T>(db: DatabaseModels, callback: () => T): T {
 
     db.db.exec('BEGIN');
     db.inTransaction = true;
+    const pendingEventCount = db.pendingEvents.length;
     try {
         const result = callback();
         db.db.exec('COMMIT');
+        db.inTransaction = false;
+        flushDatabaseEvents(db);
         return result;
     } catch (err) {
-        db.db.exec('ROLLBACK');
+        if (db.inTransaction) {
+            db.db.exec('ROLLBACK');
+        }
+        db.pendingEvents.splice(pendingEventCount);
         throw err;
         /* c8 ignore next */
     } finally {

@@ -18,7 +18,21 @@ export type {
     ResetOptions,
     ContentStats,
     UpdatePostDataOptions,
-    WriteGhostJsonOptions
+    WriteGhostJsonOptions,
+    MigrateContextOptions,
+    EntityScope,
+    EntityIterationOptions,
+    FindTagsOptions,
+    FindAuthorsOptions,
+    ProgressEvent,
+    PostSkippedEvent,
+    PostReplacedEvent,
+    SanitizedFieldEvent,
+    SlugRenamedEvent,
+    ExportFileWrittenEvent,
+    MigrateContextEventMap,
+    MigrationReport,
+    MigrationReportEntry
 } from './lib/MigrateContext.js';
 export type {
     DuplicatePostAction,
@@ -26,6 +40,7 @@ export type {
     DuplicatePostResolver,
     PostConstructorOptions,
     PostDataPatch,
-    PostObject
+    PostObject,
+    PostSnapshot
 } from './lib/PostContext.js';
-export type {SanitizedField, SlugRename} from './lib/database.js';
+export type {SanitizedField, SlugRename, MigrationEventType} from './lib/database.js';

@@ -1,5 +1,7 @@
-import {stat, mkdir, open, readdir, rm, writeFile} from 'node:fs/promises';
-import {join, resolve} from 'node:path';
+import {stat, mkdir, mkdtemp, open, readFile, rename, rm, writeFile} from 'node:fs/promises';
+import {randomUUID} from 'node:crypto';
+import {tmpdir} from 'node:os';
+import {dirname, join, resolve} from 'node:path';
 import {EventEmitter} from 'node:events';
 import errors from '@tryghost/errors';
 
@@ -8,11 +10,20 @@ import PostContext, {
     PostConstructorOptions,
     normalizeTitle,
     type DuplicatePostPolicy,
-    type PostDataPatch
+    type PostDataPatch,
+    type PostSnapshot
 } from './PostContext.js';
 import TagContext from './TagContext.js';
 import AuthorContext from './AuthorContext.js';
-import {createDatabase, type DatabaseModels, type SanitizedField} from './database.js';
+import {
+    createDatabase,
+    flushDatabaseEvents,
+    recordSanitizedFields,
+    type DatabaseEvent,
+    type DatabaseModels,
+    type MigrationEventType,
+    type SanitizedField
+} from './database.js';
 import {
     withTransaction,
     findByIds,
@@ -37,22 +48,70 @@ type FindPostsOptions = {
     authorEmail?: string;
 };
 
-type FindTagsOptions = {
+export type FindTagsOptions = {
     slug?: string;
     name?: string;
+    scope?: EntityScope;
 };
 
-type FindAuthorsOptions = {
+export type FindAuthorsOptions = {
     slug?: string;
     name?: string;
     email?: string;
+    scope?: EntityScope;
 };
+
+export type EntityScope = 'referenced' | 'all';
+
+export interface EntityIterationOptions {
+    batchSize?: number;
+    scope?: EntityScope;
+}
 
 export interface WrittenFile {
     path: string;
     name: string;
     size: number;
     posts: number;
+}
+
+export interface ProgressEvent {
+    operation: string;
+    processed: number;
+    total: number;
+}
+
+export interface PostSkippedEvent {
+    lookupKey: string;
+    existingPostId: number;
+}
+
+export interface PostReplacedEvent {
+    lookupKey: string;
+    postId: number;
+    previous: PostSnapshot;
+    current: PostSnapshot;
+}
+
+export type SanitizedFieldEvent = SanitizedField;
+
+export interface SlugRenamedEvent {
+    postId: number;
+    lookupKey: string | null;
+    oldSlug: string;
+    newSlug: string;
+    url: string;
+}
+
+export type ExportFileWrittenEvent = WrittenFile;
+
+export interface MigrateContextEventMap {
+    progress: ProgressEvent;
+    'post:skipped': PostSkippedEvent;
+    'post:replaced': PostReplacedEvent;
+    'field:sanitized': SanitizedFieldEvent;
+    'slug:renamed': SlugRenamedEvent;
+    'export:file-written': ExportFileWrittenEvent;
 }
 
 export interface PostFilter {
@@ -100,26 +159,107 @@ export interface WriteGhostJsonOptions {
     filename?: string;
     filter?: PostFilter;
     onWrite?: (file: WrittenFile) => void;
+    /** @deprecated Export-manifest cleanup is always enabled. */
     replaceExisting?: boolean;
 }
 
-function isExportFileName(fileName: string, filename: string): boolean {
-    const numberedPrefix = `${filename}-`;
-    const numberedSuffix = fileName.startsWith(numberedPrefix) ? fileName.slice(numberedPrefix.length) : '';
-    return fileName === `${filename}.json` || /^[1-9]\d*\.json$/.test(numberedSuffix);
+export interface MigrationReportEntry {
+    id: number;
+    type: MigrationEventType;
+    postId: number | null;
+    lookupKey: string | null;
+    details: unknown;
+    createdAt: string;
 }
 
-type MigrateContextOptions = {
+export interface MigrationReport {
+    summary: Record<MigrationEventType, number>;
+    events: MigrationReportEntry[];
+}
+
+export interface MigrateContextOptions {
     dbPath?: string;
+    storage?: 'temporary' | 'memory';
+    mode?: 'resume' | 'refresh';
+    contentFingerprint?: string;
+    /** @deprecated Use storage: 'memory' for an explicit in-memory database. */
     ephemeral?: boolean;
+    /** @deprecated Events are naturally disabled when no listeners are registered. */
     emitEvents?: boolean;
+    /** @deprecated Duplicate skips are available through events and getMigrationReport(). */
     warnOnLookupKeyDuplicate?: boolean;
     onDuplicate?: DuplicatePostPolicy;
-};
+}
+
+const CONTENT_FINGERPRINT = 'content';
+const EXPORT_MANIFEST = '.mg-context-export-manifest.json';
+
+interface ExportManifest {
+    version: 1;
+    exports: Record<string, string[]>;
+}
+
+function exportBaseFilename(rawFilename: string): string {
+    const filename = rawFilename.replace(/\.json$/i, '');
+    if (!filename || filename.includes('/') || filename.includes('\\')) {
+        throw new errors.BadRequestError({
+            message: 'Ghost JSON filename must be a non-empty base filename without path separators.'
+        });
+    }
+    return filename;
+}
+
+async function readExportManifest(outputDir: string): Promise<ExportManifest> {
+    try {
+        const parsed = JSON.parse(await readFile(join(outputDir, EXPORT_MANIFEST), 'utf8')) as ExportManifest;
+        const exportsAreValid =
+            parsed.exports &&
+            typeof parsed.exports === 'object' &&
+            !Array.isArray(parsed.exports) &&
+            Object.values(parsed.exports).every(
+                fileNames =>
+                    Array.isArray(fileNames) &&
+                    fileNames.every(
+                        fileName =>
+                            typeof fileName === 'string' &&
+                            fileName.length > '.json'.length &&
+                            fileName.endsWith('.json') &&
+                            !fileName.includes('/') &&
+                            !fileName.includes('\\')
+                    )
+            );
+        if (parsed.version !== 1 || !exportsAreValid) {
+            throw new Error('Unsupported manifest shape');
+        }
+        return parsed;
+    } catch (error: any) {
+        if (error?.code === 'ENOENT') {
+            return {version: 1, exports: {}};
+        }
+        throw new errors.InternalServerError({
+            message: `Could not read ${EXPORT_MANIFEST}. Remove or repair it before exporting again.`,
+            context: error
+        });
+    }
+}
+
+async function writeExportManifest(outputDir: string, manifest: ExportManifest): Promise<void> {
+    const manifestPath = join(outputDir, EXPORT_MANIFEST);
+    const temporaryPath = `${manifestPath}.${randomUUID()}.tmp`;
+    try {
+        await writeFile(temporaryPath, JSON.stringify(manifest, null, 2));
+        await rename(temporaryPath, manifestPath);
+    } finally {
+        await rm(temporaryPath, {force: true});
+    }
+}
 
 export default class MigrateContext extends MigrateBase {
-    #dbPath: string;
-    #ephemeral: boolean;
+    #dbPath: string | null;
+    #storage: 'persistent' | 'temporary' | 'memory';
+    #temporaryDirectory: string | null = null;
+    #mode: 'resume' | 'refresh';
+    #contentFingerprint: string | undefined;
     #emitEvents: boolean;
     #warnOnLookupKeyDuplicate: boolean;
     #onDuplicate: DuplicatePostPolicy | undefined;
@@ -130,6 +270,9 @@ export default class MigrateContext extends MigrateBase {
 
     constructor({
         dbPath,
+        storage,
+        mode = 'resume',
+        contentFingerprint,
         ephemeral,
         emitEvents = true,
         warnOnLookupKeyDuplicate = false,
@@ -140,13 +283,22 @@ export default class MigrateContext extends MigrateBase {
         this.#emitEvents = emitEvents;
         this.#warnOnLookupKeyDuplicate = warnOnLookupKeyDuplicate;
         this.#onDuplicate = onDuplicate;
+        this.#mode = mode;
+        this.#contentFingerprint = contentFingerprint;
+
+        if (dbPath && storage) {
+            throw new errors.BadRequestError({message: 'Pass either dbPath or storage, not both.'});
+        }
 
         if (dbPath) {
             this.#dbPath = dbPath;
-            this.#ephemeral = ephemeral ?? false;
+            this.#storage = 'persistent';
+        } else if (storage === 'memory' || ephemeral === true) {
+            this.#dbPath = null;
+            this.#storage = 'memory';
         } else {
-            this.#dbPath = ':memory:';
-            this.#ephemeral = ephemeral ?? true;
+            this.#dbPath = null;
+            this.#storage = 'temporary';
         }
     }
 
@@ -163,10 +315,51 @@ export default class MigrateContext extends MigrateBase {
                 message: 'MigrateContext is already initialized. Call close() before reinitializing.'
             });
         }
-        const storage = this.#ephemeral ? ':memory:' : this.#dbPath;
-        this.#db = createDatabase(storage);
+        let databasePath: string;
+        if (this.#storage === 'memory') {
+            databasePath = ':memory:';
+        } else if (this.#storage === 'persistent') {
+            databasePath = this.#dbPath!;
+            await mkdir(dirname(databasePath), {recursive: true});
+        } else {
+            this.#temporaryDirectory = await mkdtemp(join(tmpdir(), 'mg-context-'));
+            databasePath = join(this.#temporaryDirectory, 'mg-context.sqlite');
+            this.#dbPath = databasePath;
+        }
+
+        try {
+            this.#db = createDatabase(databasePath);
+        } catch (error) {
+            /* c8 ignore next 4 -- defensive cleanup when SQLite initialization fails */
+            if (this.#temporaryDirectory) {
+                await rm(this.#temporaryDirectory, {recursive: true, force: true});
+                this.#temporaryDirectory = null;
+            }
+            throw error;
+        }
+        this.#db.emitEvent = (event: DatabaseEvent) => {
+            if (this.#emitEvents) {
+                this.#emitter.emit(event.type, event.payload);
+            }
+        };
         this.#slugsDeduped = false;
         this.#duplicateSlugs = [];
+
+        if (this.#mode === 'refresh') {
+            this.reset();
+        }
+
+        if (this.#contentFingerprint !== undefined) {
+            const stored = this.getFingerprint(CONTENT_FINGERPRINT);
+            if (this.#mode === 'resume' && this.hasContent() && stored !== this.#contentFingerprint) {
+                await this.close();
+                throw new errors.InternalServerError({
+                    message:
+                        'The stored migration content was created with a different content fingerprint. Re-run with mode: "refresh" to rebuild it.'
+                });
+            }
+            this.setFingerprint(CONTENT_FINGERPRINT, this.#contentFingerprint);
+        }
     }
 
     async close() {
@@ -174,6 +367,15 @@ export default class MigrateContext extends MigrateBase {
             this.#db.db.close();
             this.#db = null;
         }
+        if (this.#temporaryDirectory) {
+            await rm(this.#temporaryDirectory, {recursive: true, force: true});
+            this.#temporaryDirectory = null;
+        }
+    }
+
+    /** The SQLite path in use, or :memory: for explicit memory storage. */
+    get databasePath(): string {
+        return this.#storage === 'memory' ? ':memory:' : this.#dbPath!;
     }
 
     /** The version of the mg-context schema stored in the open SQLite database. */
@@ -221,6 +423,7 @@ export default class MigrateContext extends MigrateBase {
                 DELETE FROM Tags;
                 DELETE FROM Authors;
                 DELETE FROM Links;
+                DELETE FROM MigrationEvents;
             `);
 
             if (!preserveFingerprints) {
@@ -228,7 +431,7 @@ export default class MigrateContext extends MigrateBase {
             }
 
             db.db.exec(
-                "DELETE FROM sqlite_sequence WHERE name IN ('Posts', 'Tags', 'Authors', 'PostTags', 'PostAuthors', 'Links');"
+                "DELETE FROM sqlite_sequence WHERE name IN ('Posts', 'Tags', 'Authors', 'PostTags', 'PostAuthors', 'Links', 'MigrationEvents');"
             );
         });
 
@@ -236,6 +439,7 @@ export default class MigrateContext extends MigrateBase {
         db.authorCache.clear();
         db.slugRenames.length = 0;
         db.sanitizedFields.length = 0;
+        db.pendingEvents.length = 0;
         this.#slugsDeduped = false;
         this.#duplicateSlugs = [];
     }
@@ -261,16 +465,41 @@ export default class MigrateContext extends MigrateBase {
         this.db.stmts.deleteFingerprint.run(name);
     }
 
-    // eslint-disable-next-line no-unused-vars
-    on(event: string, listener: (...args: any[]) => void) {
+    on<K extends keyof MigrateContextEventMap>(event: K, listener: (payload: MigrateContextEventMap[K]) => void) {
         this.#emitter.on(event, listener);
         return this;
     }
 
-    // eslint-disable-next-line no-unused-vars
-    off(event: string, listener: (...args: any[]) => void) {
+    off<K extends keyof MigrateContextEventMap>(event: K, listener: (payload: MigrateContextEventMap[K]) => void) {
         this.#emitter.off(event, listener);
         return this;
+    }
+
+    getMigrationReport(): MigrationReport {
+        const summary: Record<MigrationEventType, number> = {
+            'post:inserted': 0,
+            'post:skipped': 0,
+            'post:replaced': 0,
+            'field:sanitized': 0,
+            'slug:renamed': 0
+        };
+        for (const row of this.db.stmts.countMigrationEventsByType.all() as Array<{
+            type: MigrationEventType;
+            count: number;
+        }>) {
+            summary[row.type] = row.count;
+        }
+
+        const events = (this.db.stmts.findMigrationEvents.all() as any[]).map(row => ({
+            id: row.id as number,
+            type: row.type as MigrationEventType,
+            postId: (row.post_id as number | null) ?? null,
+            lookupKey: (row.lookup_key as string | null) ?? null,
+            details: JSON.parse(row.details as string),
+            createdAt: row.created_at as string
+        }));
+
+        return {summary, events};
     }
 
     get duplicateSlugs(): DuplicateSlugEntry[] {
@@ -361,6 +590,8 @@ export default class MigrateContext extends MigrateBase {
             const rows = this.db.stmts.findPostsForPreparation.all(batchSize, offset) as any[];
 
             this.db.db.exec('BEGIN');
+            this.db.inTransaction = true;
+            const pendingEventCount = this.db.pendingEvents.length;
             try {
                 for (const row of rows) {
                     const data = JSON.parse(row.data as string);
@@ -368,8 +599,18 @@ export default class MigrateContext extends MigrateBase {
                     const title = normalizeTitle(data.title);
 
                     if (data.title !== title) {
+                        const field: SanitizedField = {
+                            context: 'PostContext',
+                            slug: data.slug ?? '',
+                            field: 'title',
+                            reason: 'replaced',
+                            oldValue: data.title,
+                            newValue: title
+                        };
                         data.title = title;
                         changed = true;
+                        this.db.sanitizedFields.push(field);
+                        recordSanitizedFields(this.db, [field]);
                     }
 
                     if (changed) {
@@ -377,15 +618,22 @@ export default class MigrateContext extends MigrateBase {
                     }
                 }
                 this.db.db.exec('COMMIT');
+                this.db.inTransaction = false;
+                flushDatabaseEvents(this.db);
                 /* c8 ignore next 4 */
             } catch (err) {
-                this.db.db.exec('ROLLBACK');
+                if (this.db.inTransaction) {
+                    this.db.db.exec('ROLLBACK');
+                }
+                this.db.pendingEvents.splice(pendingEventCount);
                 throw err;
+            } finally {
+                this.db.inTransaction = false;
             }
 
             processed += rows.length;
             if (this.#emitEvents) {
-                this.#emitter.emit('progress', 'prepareForExport', processed, total);
+                this.#emitter.emit('progress', {operation: 'prepareForExport', processed, total});
             }
         }
     }
@@ -397,12 +645,18 @@ export default class MigrateContext extends MigrateBase {
 
         this.db.db.exec('BEGIN');
         this.db.inTransaction = true;
+        const pendingEventCount = this.db.pendingEvents.length;
         try {
             const result = await callback();
             this.db.db.exec('COMMIT');
+            this.db.inTransaction = false;
+            flushDatabaseEvents(this.db);
             return result;
         } catch (err) {
-            this.db.db.exec('ROLLBACK');
+            if (this.db.inTransaction) {
+                this.db.db.exec('ROLLBACK');
+            }
+            this.db.pendingEvents.splice(pendingEventCount);
             throw err;
             /* c8 ignore next */
         } finally {
@@ -518,7 +772,7 @@ export default class MigrateContext extends MigrateBase {
             }
 
             if (this.#emitEvents) {
-                this.#emitter.emit('progress', 'forEachPost', processed, total);
+                this.#emitter.emit('progress', {operation: 'forEachPost', processed, total});
             }
         }
     }
@@ -551,30 +805,58 @@ export default class MigrateContext extends MigrateBase {
         );
     }
 
-    async *streamTags({batchSize = 100}: {batchSize?: number} = {}): AsyncGenerator<TagContext> {
-        const total = (this.db.stmts.countUsedTags.get() as {count: number}).count;
-        const maxId = (this.db.stmts.findMaxUsedTagId.get() as {max_id: number | null}).max_id;
+    async *streamTags({
+        batchSize = 100,
+        scope = 'referenced'
+    }: EntityIterationOptions = {}): AsyncGenerator<TagContext> {
+        const total = (
+            (scope === 'all' ? this.db.stmts.countAllTags : this.db.stmts.countUsedTags).get() as {count: number}
+        ).count;
+        const maxId = (
+            (scope === 'all' ? this.db.stmts.findMaxTagId : this.db.stmts.findMaxUsedTagId).get() as {
+                max_id: number | null;
+            }
+        ).max_id;
 
         yield* this.#streamByKeyset(
             total,
             maxId,
             batchSize,
             'streamTags',
-            (afterId, upperId, limit) => this.db.stmts.findUsedTagsAfterId.all(afterId, upperId, limit) as any[],
+            (afterId, upperId, limit) =>
+                (scope === 'all' ? this.db.stmts.findTagsAfterId : this.db.stmts.findUsedTagsAfterId).all(
+                    afterId,
+                    upperId,
+                    limit
+                ) as any[],
             row => TagContext.fromRow(row)
         );
     }
 
-    async *streamAuthors({batchSize = 100}: {batchSize?: number} = {}): AsyncGenerator<AuthorContext> {
-        const total = (this.db.stmts.countUsedAuthors.get() as {count: number}).count;
-        const maxId = (this.db.stmts.findMaxUsedAuthorId.get() as {max_id: number | null}).max_id;
+    async *streamAuthors({
+        batchSize = 100,
+        scope = 'referenced'
+    }: EntityIterationOptions = {}): AsyncGenerator<AuthorContext> {
+        const total = (
+            (scope === 'all' ? this.db.stmts.countAllAuthors : this.db.stmts.countUsedAuthors).get() as {count: number}
+        ).count;
+        const maxId = (
+            (scope === 'all' ? this.db.stmts.findMaxAuthorId : this.db.stmts.findMaxUsedAuthorId).get() as {
+                max_id: number | null;
+            }
+        ).max_id;
 
         yield* this.#streamByKeyset(
             total,
             maxId,
             batchSize,
             'streamAuthors',
-            (afterId, upperId, limit) => this.db.stmts.findUsedAuthorsAfterId.all(afterId, upperId, limit) as any[],
+            (afterId, upperId, limit) =>
+                (scope === 'all' ? this.db.stmts.findAuthorsAfterId : this.db.stmts.findUsedAuthorsAfterId).all(
+                    afterId,
+                    upperId,
+                    limit
+                ) as any[],
             row => AuthorContext.fromRow(row)
         );
     }
@@ -609,7 +891,7 @@ export default class MigrateContext extends MigrateBase {
             }
 
             if (this.#emitEvents) {
-                this.#emitter.emit('progress', eventName, processed, total);
+                this.#emitter.emit('progress', {operation: eventName, processed, total});
             }
         } while (rows.length === batchSize && lastId < maxId);
     }
@@ -640,7 +922,7 @@ export default class MigrateContext extends MigrateBase {
             }
 
             if (this.#emitEvents) {
-                this.#emitter.emit('progress', eventName, processed, total);
+                this.#emitter.emit('progress', {operation: eventName, processed, total});
             }
         } while (rows.length === batchSize && lastId < maxId);
     }
@@ -666,7 +948,7 @@ export default class MigrateContext extends MigrateBase {
             }
 
             if (this.#emitEvents) {
-                this.#emitter.emit('progress', eventName, processed, total);
+                this.#emitter.emit('progress', {operation: eventName, processed, total});
             }
         }
     }
@@ -724,7 +1006,9 @@ export default class MigrateContext extends MigrateBase {
         for (const [key, value] of Object.entries(patch)) {
             post.set(key, value);
         }
+        const sanitizedStart = this.db.sanitizedFields.length;
         post.sanitize(this.db.sanitizedFields);
+        const sanitized = this.db.sanitizedFields.slice(sanitizedStart);
         post.checkRequired(post.data);
 
         const postData = {...post.data};
@@ -745,6 +1029,7 @@ export default class MigrateContext extends MigrateBase {
             if (Object.hasOwn(options, 'webscrapeData')) {
                 this.db.stmts.updatePostWebscrapeData.run(JSON.stringify(options.webscrapeData) ?? null, dbId);
             }
+            recordSanitizedFields(this.db, sanitized);
         });
     }
 
@@ -871,29 +1156,47 @@ export default class MigrateContext extends MigrateBase {
         return row ? (row.new_url as string) : null;
     }
 
-    async findTags({slug, name}: FindTagsOptions = {}): Promise<TagContext[] | null> {
+    async findTags({slug, name, scope = 'referenced'}: FindTagsOptions = {}): Promise<TagContext[] | null> {
+        let rows: any[];
         if (slug) {
-            const rows = this.db.stmts.findTagsBySlug.all(slug) as any[];
-            return rows.map((row: any) => TagContext.fromRow(row));
+            rows = this.db.stmts.findTagsBySlug.all(slug) as any[];
         } else if (name) {
-            const rows = this.db.stmts.findTagsByName.all(name) as any[];
-            return rows.map((row: any) => TagContext.fromRow(row));
+            rows = this.db.stmts.findTagsByName.all(name) as any[];
         } else {
             return null;
         }
+
+        if (scope === 'referenced') {
+            rows = rows.filter(row => this.db.stmts.tagIsUsed.get(row.id));
+        }
+        return rows.map((row: any) => TagContext.fromRow(row));
     }
 
     // eslint-disable-next-line no-unused-vars
-    async forEachTag(callback: (tag: TagContext) => Promise<void>, {batchSize = 100}: {batchSize?: number} = {}) {
-        const total = (this.db.stmts.countUsedTags.get() as {count: number}).count;
-        const maxId = (this.db.stmts.findMaxUsedTagId.get() as {max_id: number | null}).max_id;
+    async forEachTag(
+        callback: (tag: TagContext) => Promise<void>,
+        {batchSize = 100, scope = 'referenced'}: EntityIterationOptions = {}
+    ) {
+        const total = (
+            (scope === 'all' ? this.db.stmts.countAllTags : this.db.stmts.countUsedTags).get() as {count: number}
+        ).count;
+        const maxId = (
+            (scope === 'all' ? this.db.stmts.findMaxTagId : this.db.stmts.findMaxUsedTagId).get() as {
+                max_id: number | null;
+            }
+        ).max_id;
 
         await this.#forEachByKeyset(
             total,
             maxId,
             batchSize,
             'forEachTag',
-            (afterId, upperId, limit) => this.db.stmts.findUsedTagsAfterId.all(afterId, upperId, limit) as any[],
+            (afterId, upperId, limit) =>
+                (scope === 'all' ? this.db.stmts.findTagsAfterId : this.db.stmts.findUsedTagsAfterId).all(
+                    afterId,
+                    upperId,
+                    limit
+                ) as any[],
             row => TagContext.fromRow(row),
             callback,
             tag => tag.save(this.db)
@@ -903,36 +1206,52 @@ export default class MigrateContext extends MigrateBase {
     // eslint-disable-next-line no-unused-vars
     async forEachAuthor(
         callback: (author: AuthorContext) => Promise<void>,
-        {batchSize = 100}: {batchSize?: number} = {}
+        {batchSize = 100, scope = 'referenced'}: EntityIterationOptions = {}
     ) {
-        const total = (this.db.stmts.countUsedAuthors.get() as {count: number}).count;
-        const maxId = (this.db.stmts.findMaxUsedAuthorId.get() as {max_id: number | null}).max_id;
+        const total = (
+            (scope === 'all' ? this.db.stmts.countAllAuthors : this.db.stmts.countUsedAuthors).get() as {count: number}
+        ).count;
+        const maxId = (
+            (scope === 'all' ? this.db.stmts.findMaxAuthorId : this.db.stmts.findMaxUsedAuthorId).get() as {
+                max_id: number | null;
+            }
+        ).max_id;
 
         await this.#forEachByKeyset(
             total,
             maxId,
             batchSize,
             'forEachAuthor',
-            (afterId, upperId, limit) => this.db.stmts.findUsedAuthorsAfterId.all(afterId, upperId, limit) as any[],
+            (afterId, upperId, limit) =>
+                (scope === 'all' ? this.db.stmts.findAuthorsAfterId : this.db.stmts.findUsedAuthorsAfterId).all(
+                    afterId,
+                    upperId,
+                    limit
+                ) as any[],
             row => AuthorContext.fromRow(row),
             callback,
             author => author.save(this.db)
         );
     }
 
-    async findAuthors({slug, name, email}: FindAuthorsOptions = {}): Promise<AuthorContext[] | null> {
+    async findAuthors({slug, name, email, scope = 'referenced'}: FindAuthorsOptions = {}): Promise<
+        AuthorContext[] | null
+    > {
+        let rows: any[];
         if (slug) {
-            const rows = this.db.stmts.findAuthorsBySlug.all(slug) as any[];
-            return rows.map((row: any) => AuthorContext.fromRow(row));
+            rows = this.db.stmts.findAuthorsBySlug.all(slug) as any[];
         } else if (name) {
-            const rows = this.db.stmts.findAuthorsByName.all(name) as any[];
-            return rows.map((row: any) => AuthorContext.fromRow(row));
+            rows = this.db.stmts.findAuthorsByName.all(name) as any[];
         } else if (email) {
-            const rows = this.db.stmts.findAuthorsByEmail.all(email) as any[];
-            return rows.map((row: any) => AuthorContext.fromRow(row));
+            rows = this.db.stmts.findAuthorsByEmail.all(email) as any[];
         } else {
             return null;
         }
+
+        if (scope === 'referenced') {
+            rows = rows.filter(row => this.db.stmts.authorIsUsed.get(row.id));
+        }
+        return rows.map((row: any) => AuthorContext.fromRow(row));
     }
 
     // eslint-disable-next-line no-unused-vars
@@ -958,7 +1277,7 @@ export default class MigrateContext extends MigrateBase {
             }
 
             if (this.#emitEvents) {
-                this.#emitter.emit('progress', 'forEachGhostPost', processed, total);
+                this.#emitter.emit('progress', {operation: 'forEachGhostPost', processed, total});
             }
         }
     }
@@ -971,17 +1290,15 @@ export default class MigrateContext extends MigrateBase {
             filename: rawFilename = 'posts',
             filter,
             onWrite,
-            replaceExisting = false
+            replaceExisting: _replaceExisting = true
         }: WriteGhostJsonOptions = {}
     ): Promise<WrittenFile[]> {
-        const filename = rawFilename.replace(/\.json$/i, '');
-        if (!filename || filename.includes('/') || filename.includes('\\')) {
-            throw new errors.BadRequestError({
-                message: 'Ghost JSON filename must be a non-empty base filename without path separators.'
-            });
-        }
+        const filename = exportBaseFilename(rawFilename);
 
+        await this.prepareForExport();
         await mkdir(outputDir, {recursive: true});
+        const manifest = await readExportManifest(outputDir);
+        const manifestKey = 'posts';
         const where = this.#buildFilterWhere(filter);
         const count = countWhere(this.db, where);
         const totalBatches = Math.max(1, Math.ceil(count / batchSize));
@@ -989,145 +1306,178 @@ export default class MigrateContext extends MigrateBase {
             totalBatches === 1 ? `${filename}.json` : `${filename}-${batch + 1}.json`
         );
         const currentFileNameSet = new Set(currentFileNames);
-        const previousFileNames = replaceExisting
-            ? (await readdir(outputDir)).filter(fileName => isExportFileName(fileName, filename))
-            : [];
+        const previousFileNames = manifest.exports[manifestKey] ?? [];
 
         const writtenFiles: WrittenFile[] = [];
+        const temporaryPaths: string[] = [];
+        const pendingOutputs: Array<{temporaryPath: string; outputPath: string; written: WrittenFile}> = [];
 
         const subBatchSize = 200;
 
-        for (let batch = 0; batch < totalBatches; batch++) {
-            const batchOffset = batch * batchSize;
-            const batchLimit = Math.min(batchSize, count - batchOffset);
+        try {
+            for (let batch = 0; batch < totalBatches; batch++) {
+                const batchOffset = batch * batchSize;
+                const batchLimit = Math.min(batchSize, count - batchOffset);
 
-            // Query post IDs and ghost IDs for this file batch
-            const postIdRows = findPostIdColumnsWhere(this.db, where, batchLimit, batchOffset);
-            const postIds = postIdRows.map((r: any) => r.id as number);
-            const ghostIdMap = new Map<number, string>(postIdRows.map((r: any) => [r.id, r.ghost_id]));
+                // Query post IDs and ghost IDs for this file batch
+                const postIdRows = findPostIdColumnsWhere(this.db, where, batchLimit, batchOffset);
+                const postIds = postIdRows.map((r: any) => r.id as number);
+                const ghostIdMap = new Map<number, string>(postIdRows.map((r: any) => [r.id, r.ghost_id]));
 
-            // Load junction + entity data from DB (small — tags/authors are few)
-            const postTagRows = findByColumn(this.db, 'PostTags', 'post_id', postIds, 'post_id ASC, sort_order ASC');
-            const postAuthorRows = findByColumn(
-                this.db,
-                'PostAuthors',
-                'post_id',
-                postIds,
-                'post_id ASC, sort_order ASC'
-            );
+                // Load junction + entity data from DB (small — tags/authors are few)
+                const postTagRows = findByColumn(
+                    this.db,
+                    'PostTags',
+                    'post_id',
+                    postIds,
+                    'post_id ASC, sort_order ASC'
+                );
+                const postAuthorRows = findByColumn(
+                    this.db,
+                    'PostAuthors',
+                    'post_id',
+                    postIds,
+                    'post_id ASC, sort_order ASC'
+                );
 
-            const tagDbIds = [...new Set(postTagRows.map((r: any) => r.tag_id as number))];
-            const authorDbIds = [...new Set(postAuthorRows.map((r: any) => r.author_id as number))];
+                const tagDbIds = [...new Set(postTagRows.map((r: any) => r.tag_id as number))];
+                const authorDbIds = [...new Set(postAuthorRows.map((r: any) => r.author_id as number))];
 
-            const tagRows = findByIds(this.db, 'Tags', tagDbIds);
-            const authorRows = findByIds(this.db, 'Authors', authorDbIds);
+                const tagRows = findByIds(this.db, 'Tags', tagDbIds);
+                const authorRows = findByIds(this.db, 'Authors', authorDbIds);
 
-            // Build small Ghost JSON arrays
-            const tagGhostIds = new Map<number, string>();
-            const tags = tagRows.map((r: any) => {
-                const data = JSON.parse(r.data);
-                tagGhostIds.set(r.id, r.ghost_id);
-                return {id: r.ghost_id, ...data};
-            });
-            const authorGhostIds = new Map<number, string>();
-            const users = authorRows.map((r: any) => {
-                const data = JSON.parse(r.data);
-                authorGhostIds.set(r.id, r.ghost_id);
-                return {id: r.ghost_id, ...data};
-            });
+                // Build small Ghost JSON arrays
+                const tagGhostIds = new Map<number, string>();
+                const tags = tagRows.map((r: any) => {
+                    const data = JSON.parse(r.data);
+                    tagGhostIds.set(r.id, r.ghost_id);
+                    return {id: r.ghost_id, ...data};
+                });
+                const authorGhostIds = new Map<number, string>();
+                const users = authorRows.map((r: any) => {
+                    const data = JSON.parse(r.data);
+                    authorGhostIds.set(r.id, r.ghost_id);
+                    return {id: r.ghost_id, ...data};
+                });
 
-            const postsTags = postTagRows.map((r: any) => ({
-                post_id: ghostIdMap.get(r.post_id),
-                tag_id: tagGhostIds.get(r.tag_id),
-                sort_order: r.sort_order
-            }));
-            const postsAuthors = postAuthorRows.map((r: any) => ({
-                post_id: ghostIdMap.get(r.post_id),
-                author_id: authorGhostIds.get(r.author_id),
-                sort_order: r.sort_order
-            }));
+                const postsTags = postTagRows.map((r: any) => ({
+                    post_id: ghostIdMap.get(r.post_id),
+                    tag_id: tagGhostIds.get(r.tag_id),
+                    sort_order: r.sort_order
+                }));
+                const postsAuthors = postAuthorRows.map((r: any) => ({
+                    post_id: ghostIdMap.get(r.post_id),
+                    author_id: authorGhostIds.get(r.author_id),
+                    sort_order: r.sort_order
+                }));
 
-            // Stream file: posts are loaded and written in sub-batches
-            const fileName = currentFileNames[batch];
-            const outputPath = join(outputDir, fileName);
-            const fh = await open(outputPath, 'w');
-            const postsMeta: any[] = [];
-            let postCount = 0;
+                // Stream file: posts are loaded and written in sub-batches
+                const fileName = currentFileNames[batch];
+                const outputPath = join(outputDir, fileName);
+                const temporaryPath = `${outputPath}.${randomUUID()}.tmp`;
+                temporaryPaths.push(temporaryPath);
+                const fh = await open(temporaryPath, 'w');
+                const postsMeta: any[] = [];
+                let postCount = 0;
 
-            // Indent a JSON.stringify block so all lines after the first are at the given depth
-            const pretty = (obj: any, depth: number) => {
-                const pad = ' '.repeat(depth);
-                return JSON.stringify(obj, null, 2).replace(/\n/g, `\n${pad}`);
-            };
+                // Indent a JSON.stringify block so all lines after the first are at the given depth
+                const pretty = (obj: any, depth: number) => {
+                    const pad = ' '.repeat(depth);
+                    return JSON.stringify(obj, null, 2).replace(/\n/g, `\n${pad}`);
+                };
 
-            try {
-                await fh.write('{\n');
-                await fh.write(`  "meta": ${pretty({exported_on: Date.now(), version: '2.0.0'}, 2)},\n`);
-                await fh.write('  "data": {\n');
-                await fh.write('    "posts": [\n');
+                try {
+                    await fh.write('{\n');
+                    await fh.write(`  "meta": ${pretty({exported_on: Date.now(), version: '2.0.0'}, 2)},\n`);
+                    await fh.write('  "data": {\n');
+                    await fh.write('    "posts": [\n');
 
-                // Stream posts in sub-batches
-                for (let sub = 0; sub < batchLimit; sub += subBatchSize) {
-                    const rows = findPostsWhere(
-                        this.db,
-                        where,
-                        Math.min(subBatchSize, batchLimit - sub),
-                        batchOffset + sub
-                    );
+                    // Stream posts in sub-batches
+                    for (let sub = 0; sub < batchLimit; sub += subBatchSize) {
+                        const rows = findPostsWhere(
+                            this.db,
+                            where,
+                            Math.min(subBatchSize, batchLimit - sub),
+                            batchOffset + sub
+                        );
 
-                    for (const row of rows) {
-                        const {post, meta} = PostContext.toGhostPost(row);
+                        for (const row of rows) {
+                            const {post, meta} = PostContext.toGhostPost(row);
 
-                        if (postCount > 0) {
-                            await fh.write(',\n');
+                            if (postCount > 0) {
+                                await fh.write(',\n');
+                            }
+                            await fh.write(`      ${pretty(post, 6)}`);
+                            if (meta) {
+                                postsMeta.push(meta);
+                            }
+                            postCount += 1;
                         }
-                        await fh.write(`      ${pretty(post, 6)}`);
-                        if (meta) {
-                            postsMeta.push(meta);
-                        }
-                        postCount += 1;
                     }
+
+                    await fh.write('\n    ],\n');
+                    await fh.write(`    "users": ${pretty(users, 4)},\n`);
+                    await fh.write(`    "tags": ${pretty(tags, 4)},\n`);
+                    await fh.write(`    "posts_authors": ${pretty(postsAuthors, 4)},\n`);
+                    await fh.write(`    "posts_tags": ${pretty(postsTags, 4)},\n`);
+                    await fh.write(`    "posts_meta": ${pretty(postsMeta, 4)}\n`);
+                    await fh.write('  }\n}\n');
+                } finally {
+                    await fh.close();
                 }
 
-                await fh.write('\n    ],\n');
-                await fh.write(`    "users": ${pretty(users, 4)},\n`);
-                await fh.write(`    "tags": ${pretty(tags, 4)},\n`);
-                await fh.write(`    "posts_authors": ${pretty(postsAuthors, 4)},\n`);
-                await fh.write(`    "posts_tags": ${pretty(postsTags, 4)},\n`);
-                await fh.write(`    "posts_meta": ${pretty(postsMeta, 4)}\n`);
-                await fh.write('  }\n}\n');
-            } finally {
-                await fh.close();
+                const fileStats = await stat(temporaryPath);
+                const written: WrittenFile = {
+                    path: resolve(outputPath),
+                    name: fileName,
+                    size: fileStats.size,
+                    posts: postCount
+                };
+                writtenFiles.push(written);
+                pendingOutputs.push({temporaryPath, outputPath, written});
             }
 
-            const fileStats = await stat(outputPath);
-            const written: WrittenFile = {
-                path: resolve(outputPath),
-                name: fileName,
-                size: fileStats.size,
-                posts: postCount
-            };
-            writtenFiles.push(written);
-            if (onWrite) {
-                onWrite(written);
+            for (const {temporaryPath, outputPath} of pendingOutputs) {
+                await rename(temporaryPath, outputPath);
+            }
+
+            for (const staleFileName of previousFileNames.filter(fileName => !currentFileNameSet.has(fileName))) {
+                await rm(join(outputDir, staleFileName), {force: true});
+            }
+
+            manifest.exports[manifestKey] = currentFileNames;
+            await writeExportManifest(outputDir, manifest);
+
+            for (const written of writtenFiles) {
+                if (onWrite) {
+                    onWrite(written);
+                }
+                if (this.#emitEvents) {
+                    this.#emitter.emit('export:file-written', structuredClone(written));
+                }
+            }
+
+            return writtenFiles;
+        } finally {
+            for (const temporaryPath of temporaryPaths) {
+                await rm(temporaryPath, {force: true});
             }
         }
-
-        for (const staleFileName of previousFileNames.filter(fileName => !currentFileNameSet.has(fileName))) {
-            await rm(join(outputDir, staleFileName), {force: true});
-        }
-
-        return writtenFiles;
     }
 
-    async writeGhostTagsJson(outputDir: string, {filename = 'tags'}: {filename?: string} = {}): Promise<WrittenFile> {
-        const name = filename.replace(/\.json$/i, '') + '.json';
+    async writeGhostTagsJson(
+        outputDir: string,
+        {filename = 'tags', scope = 'referenced'}: {filename?: string; scope?: EntityScope} = {}
+    ): Promise<WrittenFile> {
+        const name = exportBaseFilename(filename) + '.json';
+        await this.prepareForExport();
         await mkdir(outputDir, {recursive: true});
 
-        const rows = this.db.stmts.findUsedTags.all() as any[];
+        const rows = (scope === 'all' ? this.db.stmts.findAllTags : this.db.stmts.findUsedTags).all() as any[];
         const tags = rows.map((r: any) => ({id: r.ghost_id, ...JSON.parse(r.data)}));
 
         const outputPath = join(outputDir, name);
+        const temporaryPath = `${outputPath}.${randomUUID()}.tmp`;
         const content = JSON.stringify(
             {
                 meta: {exported_on: Date.now(), version: '2.0.0'},
@@ -1137,20 +1487,39 @@ export default class MigrateContext extends MigrateBase {
             2
         );
 
-        await writeFile(outputPath, content);
-        const fileStats = await stat(outputPath);
-
-        return {path: resolve(outputPath), name, size: fileStats.size, posts: 0};
+        const manifest = await readExportManifest(outputDir);
+        try {
+            await writeFile(temporaryPath, content);
+            const fileStats = await stat(temporaryPath);
+            const written = {path: resolve(outputPath), name, size: fileStats.size, posts: 0};
+            await rename(temporaryPath, outputPath);
+            for (const staleFileName of (manifest.exports.tags ?? []).filter(fileName => fileName !== name)) {
+                await rm(join(outputDir, staleFileName), {force: true});
+            }
+            manifest.exports.tags = [name];
+            await writeExportManifest(outputDir, manifest);
+            if (this.#emitEvents) {
+                this.#emitter.emit('export:file-written', structuredClone(written));
+            }
+            return written;
+        } finally {
+            await rm(temporaryPath, {force: true});
+        }
     }
 
-    async writeGhostUsersJson(outputDir: string, {filename = 'users'}: {filename?: string} = {}): Promise<WrittenFile> {
-        const name = filename.replace(/\.json$/i, '') + '.json';
+    async writeGhostUsersJson(
+        outputDir: string,
+        {filename = 'users', scope = 'referenced'}: {filename?: string; scope?: EntityScope} = {}
+    ): Promise<WrittenFile> {
+        const name = exportBaseFilename(filename) + '.json';
+        await this.prepareForExport();
         await mkdir(outputDir, {recursive: true});
 
-        const rows = this.db.stmts.findUsedAuthors.all() as any[];
+        const rows = (scope === 'all' ? this.db.stmts.findAllAuthors : this.db.stmts.findUsedAuthors).all() as any[];
         const users = rows.map((r: any) => ({id: r.ghost_id, ...JSON.parse(r.data)}));
 
         const outputPath = join(outputDir, name);
+        const temporaryPath = `${outputPath}.${randomUUID()}.tmp`;
         const content = JSON.stringify(
             {
                 meta: {exported_on: Date.now(), version: '2.0.0'},
@@ -1160,9 +1529,23 @@ export default class MigrateContext extends MigrateBase {
             2
         );
 
-        await writeFile(outputPath, content);
-        const fileStats = await stat(outputPath);
-
-        return {path: resolve(outputPath), name, size: fileStats.size, posts: 0};
+        const manifest = await readExportManifest(outputDir);
+        try {
+            await writeFile(temporaryPath, content);
+            const fileStats = await stat(temporaryPath);
+            const written = {path: resolve(outputPath), name, size: fileStats.size, posts: 0};
+            await rename(temporaryPath, outputPath);
+            for (const staleFileName of (manifest.exports.users ?? []).filter(fileName => fileName !== name)) {
+                await rm(join(outputDir, staleFileName), {force: true});
+            }
+            manifest.exports.users = [name];
+            await writeExportManifest(outputDir, manifest);
+            if (this.#emitEvents) {
+                this.#emitter.emit('export:file-written', structuredClone(written));
+            }
+            return written;
+        } finally {
+            await rm(temporaryPath, {force: true});
+        }
     }
 }

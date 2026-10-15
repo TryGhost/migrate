@@ -4,7 +4,7 @@ import ghValidate from '@tryghost/validator';
 import {slugify} from '@tryghost/string';
 import MigrateBase from './MigrateBase.js';
 import {GHOST_FIELD_LIMITS} from './ghost-schema.js';
-import type {DatabaseModels} from './database.js';
+import {recordSanitizedFields, type DatabaseModels} from './database.js';
 
 const PLACEHOLDER_EMAIL_DOMAIN = 'example.com';
 const AUTHOR_LIMITS = GHOST_FIELD_LIMITS.author;
@@ -106,13 +106,16 @@ export default class AuthorContext extends MigrateBase {
 
     save(db: DatabaseModels) {
         // Sanitize before the cache lookup below — the slug is the cache key
+        const sanitizedStart = db.sanitizedFields.length;
         this.sanitize(db.sanitizedFields);
+        const sanitized = db.sanitizedFields.slice(sanitizedStart);
 
         // Check slug cache first — avoids DB round-trip for already-known authors
         if (!this.dbId && this.data.slug && db.authorCache.has(this.data.slug)) {
             const cached = db.authorCache.get(this.data.slug)!;
             this.dbId = cached.dbId;
             this.ghostId = cached.ghostId;
+            recordSanitizedFields(db, sanitized);
             return;
         }
 
@@ -161,6 +164,8 @@ export default class AuthorContext extends MigrateBase {
         if (this.data.slug && this.dbId && this.ghostId) {
             db.authorCache.set(this.data.slug, {dbId: this.dbId, ghostId: this.ghostId});
         }
+
+        recordSanitizedFields(db, sanitized);
     }
 
     static fromRow(row: any): AuthorContext {

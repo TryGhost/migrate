@@ -2,7 +2,7 @@ import {z} from 'zod/v4';
 import {randomBytes} from 'node:crypto';
 import MigrateBase from './MigrateBase.js';
 import {GHOST_FIELD_LIMITS} from './ghost-schema.js';
-import type {DatabaseModels} from './database.js';
+import {recordSanitizedFields, type DatabaseModels} from './database.js';
 
 const TAG_LIMITS = GHOST_FIELD_LIMITS.tag;
 
@@ -77,13 +77,16 @@ export default class TagContext extends MigrateBase {
 
     save(db: DatabaseModels) {
         // Sanitize before the cache lookup below — the slug is the cache key
+        const sanitizedStart = db.sanitizedFields.length;
         this.sanitize(db.sanitizedFields);
+        const sanitized = db.sanitizedFields.slice(sanitizedStart);
 
         // Check slug cache first — avoids DB round-trip for already-known tags
         if (!this.dbId && this.data.slug && db.tagCache.has(this.data.slug)) {
             const cached = db.tagCache.get(this.data.slug)!;
             this.dbId = cached.dbId;
             this.ghostId = cached.ghostId;
+            recordSanitizedFields(db, sanitized);
             return;
         }
 
@@ -112,6 +115,8 @@ export default class TagContext extends MigrateBase {
         if (this.data.slug && this.dbId && this.ghostId) {
             db.tagCache.set(this.data.slug, {dbId: this.dbId, ghostId: this.ghostId});
         }
+
+        recordSanitizedFields(db, sanitized);
     }
 
     static fromRow(row: any): TagContext {

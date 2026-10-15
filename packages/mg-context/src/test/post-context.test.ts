@@ -16,6 +16,14 @@ describe('PostContext', function () {
         assert.equal(instance instanceof PostContext, true);
     });
 
+    it('Cannot snapshot an unsaved post', () => {
+        const instance = new PostContext();
+        assert.throws(() => instance.toSnapshot(), {
+            name: 'InternalServerError',
+            message: 'Cannot snapshot a post before it is saved.'
+        });
+    });
+
     it('Can set & get meta', () => {
         const instance: any = new PostContext();
         instance.setMeta({

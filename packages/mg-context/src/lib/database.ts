@@ -2,7 +2,19 @@
 import {DatabaseSync} from 'node:sqlite';
 import errors from '@tryghost/errors';
 
-export const MIGRATE_CONTEXT_SCHEMA_VERSION = 2;
+export const MIGRATE_CONTEXT_SCHEMA_VERSION = 3;
+
+export type MigrationEventType =
+    | 'post:inserted'
+    | 'post:skipped'
+    | 'post:replaced'
+    | 'field:sanitized'
+    | 'slug:renamed';
+
+export interface DatabaseEvent {
+    type: string;
+    payload: unknown;
+}
 
 export interface SlugRename {
     oldSlug: string;
@@ -35,6 +47,8 @@ export interface DatabaseModels {
     slugRenames: SlugRename[];
     sanitizedFields: SanitizedField[];
     inTransaction: boolean;
+    pendingEvents: DatabaseEvent[];
+    emitEvent: (event: DatabaseEvent) => void;
 }
 
 export interface PreparedStatements {
@@ -43,6 +57,9 @@ export interface PreparedStatements {
     getFingerprint: ReturnType<DatabaseSync['prepare']>;
     setFingerprint: ReturnType<DatabaseSync['prepare']>;
     deleteFingerprint: ReturnType<DatabaseSync['prepare']>;
+    insertMigrationEvent: ReturnType<DatabaseSync['prepare']>;
+    findMigrationEvents: ReturnType<DatabaseSync['prepare']>;
+    countMigrationEventsByType: ReturnType<DatabaseSync['prepare']>;
 
     // Posts
     insertPost: ReturnType<DatabaseSync['prepare']>;
@@ -75,9 +92,13 @@ export interface PreparedStatements {
     findTagsByName: ReturnType<DatabaseSync['prepare']>;
     findAllTags: ReturnType<DatabaseSync['prepare']>;
     findUsedTags: ReturnType<DatabaseSync['prepare']>;
+    countAllTags: ReturnType<DatabaseSync['prepare']>;
     countUsedTags: ReturnType<DatabaseSync['prepare']>;
+    findMaxTagId: ReturnType<DatabaseSync['prepare']>;
     findMaxUsedTagId: ReturnType<DatabaseSync['prepare']>;
+    findTagsAfterId: ReturnType<DatabaseSync['prepare']>;
     findUsedTagsAfterId: ReturnType<DatabaseSync['prepare']>;
+    tagIsUsed: ReturnType<DatabaseSync['prepare']>;
 
     // Authors
     insertAuthor: ReturnType<DatabaseSync['prepare']>;
@@ -91,9 +112,13 @@ export interface PreparedStatements {
     findAuthorsByEmail: ReturnType<DatabaseSync['prepare']>;
     findAllAuthors: ReturnType<DatabaseSync['prepare']>;
     findUsedAuthors: ReturnType<DatabaseSync['prepare']>;
+    countAllAuthors: ReturnType<DatabaseSync['prepare']>;
     countUsedAuthors: ReturnType<DatabaseSync['prepare']>;
+    findMaxAuthorId: ReturnType<DatabaseSync['prepare']>;
     findMaxUsedAuthorId: ReturnType<DatabaseSync['prepare']>;
+    findAuthorsAfterId: ReturnType<DatabaseSync['prepare']>;
     findUsedAuthorsAfterId: ReturnType<DatabaseSync['prepare']>;
+    authorIsUsed: ReturnType<DatabaseSync['prepare']>;
 
     // PostTag junction
     insertPostTag: ReturnType<DatabaseSync['prepare']>;
@@ -184,6 +209,16 @@ CREATE TABLE IF NOT EXISTS Fingerprints (
     name TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS MigrationEvents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL,
+    post_id INTEGER,
+    lookup_key TEXT,
+    details TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_migrationevents_type ON MigrationEvents(type);
 `;
 
 function prepareStatements(db: DatabaseSync): PreparedStatements {
@@ -205,6 +240,13 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
             'INSERT INTO Fingerprints (name, value) VALUES (?, ?) ON CONFLICT(name) DO UPDATE SET value = excluded.value'
         ),
         deleteFingerprint: db.prepare('DELETE FROM Fingerprints WHERE name = ?'),
+        insertMigrationEvent: db.prepare(
+            'INSERT INTO MigrationEvents (type, post_id, lookup_key, details, created_at) VALUES (?, ?, ?, ?, ?)'
+        ),
+        findMigrationEvents: db.prepare('SELECT * FROM MigrationEvents ORDER BY id ASC'),
+        countMigrationEventsByType: db.prepare(
+            'SELECT type, COUNT(*) AS count FROM MigrationEvents GROUP BY type ORDER BY type ASC'
+        ),
 
         // Posts
         insertPost: db.prepare(
@@ -249,15 +291,19 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         findUsedTags: db.prepare(
             'SELECT DISTINCT t.* FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id ORDER BY t.id ASC'
         ),
+        countAllTags: db.prepare('SELECT COUNT(*) AS count FROM Tags'),
         countUsedTags: db.prepare(
             'SELECT COUNT(DISTINCT t.id) AS count FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id'
         ),
         findMaxUsedTagId: db.prepare(
             'SELECT MAX(t.id) AS max_id FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id'
         ),
+        findMaxTagId: db.prepare('SELECT MAX(id) AS max_id FROM Tags'),
+        findTagsAfterId: db.prepare('SELECT * FROM Tags WHERE id > ? AND id <= ? ORDER BY id ASC LIMIT ?'),
         findUsedTagsAfterId: db.prepare(
             'SELECT DISTINCT t.* FROM Tags t INNER JOIN PostTags pt ON t.id = pt.tag_id WHERE t.id > ? AND t.id <= ? ORDER BY t.id ASC LIMIT ?'
         ),
+        tagIsUsed: db.prepare('SELECT 1 FROM PostTags WHERE tag_id = ? LIMIT 1'),
 
         // Authors
         insertAuthor: db.prepare('INSERT INTO Authors (data, slug, name, email, ghost_id) VALUES (?, ?, ?, ?, ?)'),
@@ -275,15 +321,19 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         findUsedAuthors: db.prepare(
             'SELECT DISTINCT a.* FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id ORDER BY a.id ASC'
         ),
+        countAllAuthors: db.prepare('SELECT COUNT(*) AS count FROM Authors'),
         countUsedAuthors: db.prepare(
             'SELECT COUNT(DISTINCT a.id) AS count FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id'
         ),
         findMaxUsedAuthorId: db.prepare(
             'SELECT MAX(a.id) AS max_id FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id'
         ),
+        findMaxAuthorId: db.prepare('SELECT MAX(id) AS max_id FROM Authors'),
+        findAuthorsAfterId: db.prepare('SELECT * FROM Authors WHERE id > ? AND id <= ? ORDER BY id ASC LIMIT ?'),
         findUsedAuthorsAfterId: db.prepare(
             'SELECT DISTINCT a.* FROM Authors a INNER JOIN PostAuthors pa ON a.id = pa.author_id WHERE a.id > ? AND a.id <= ? ORDER BY a.id ASC LIMIT ?'
         ),
+        authorIsUsed: db.prepare('SELECT 1 FROM PostAuthors WHERE author_id = ? LIMIT 1'),
 
         // PostTag junction
         insertPostTag: db.prepare('INSERT INTO PostTags (post_id, tag_id, sort_order) VALUES (?, ?, ?)'),
@@ -311,8 +361,7 @@ export function createDatabase(dbPath: string): DatabaseModels {
         db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'Posts' LIMIT 1").get()
     );
 
-    // Version 2 is the first compatibility baseline. Never silently advance an
-    // existing database: add an explicit migration before increasing this version.
+    // Version 2 is the first compatibility baseline.
     if (existingVersion === 0 && hasExistingSchema) {
         db.close();
         throw new errors.InternalServerError({
@@ -320,7 +369,7 @@ export function createDatabase(dbPath: string): DatabaseModels {
         });
     }
 
-    if (existingVersion > 0 && existingVersion < MIGRATE_CONTEXT_SCHEMA_VERSION) {
+    if (existingVersion > 0 && existingVersion < 2) {
         db.close();
         throw new errors.InternalServerError({
             message: `Database schema version ${existingVersion} is older than the supported version ${MIGRATE_CONTEXT_SCHEMA_VERSION}. Recreate the database from source.`
@@ -339,6 +388,23 @@ export function createDatabase(dbPath: string): DatabaseModels {
     db.exec('PRAGMA cache_size = -64000;');
     db.exec('PRAGMA temp_store = MEMORY;');
 
+    if (existingVersion === 2) {
+        db.exec(`
+            BEGIN;
+            CREATE TABLE MigrationEvents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                type TEXT NOT NULL,
+                post_id INTEGER,
+                lookup_key TEXT,
+                details TEXT NOT NULL DEFAULT '{}',
+                created_at TEXT NOT NULL
+            );
+            CREATE INDEX idx_migrationevents_type ON MigrationEvents(type);
+            PRAGMA user_version = 3;
+            COMMIT;
+        `);
+    }
+
     db.exec(SCHEMA);
 
     if (existingVersion === 0) {
@@ -355,6 +421,49 @@ export function createDatabase(dbPath: string): DatabaseModels {
         authorCache: new Map(),
         slugRenames: [],
         sanitizedFields: [],
-        inTransaction: false
+        inTransaction: false,
+        pendingEvents: [],
+        /* c8 ignore next -- replaced by MigrateContext immediately after initialization */
+        emitEvent: () => {}
     };
+}
+
+export function queueDatabaseEvent(db: DatabaseModels, event: DatabaseEvent): void {
+    if (db.inTransaction) {
+        db.pendingEvents.push(event);
+        return;
+    }
+    db.emitEvent(event);
+}
+
+export function flushDatabaseEvents(db: DatabaseModels): void {
+    const events = db.pendingEvents.splice(0);
+    for (const event of events) {
+        db.emitEvent(event);
+    }
+}
+
+export function recordMigrationEvent(
+    db: DatabaseModels,
+    type: MigrationEventType,
+    {
+        postId = null,
+        lookupKey = null,
+        details = {},
+        liveEvent
+    }: {postId?: number | null; lookupKey?: string | null; details?: unknown; liveEvent?: DatabaseEvent}
+): void {
+    db.stmts.insertMigrationEvent.run(type, postId, lookupKey, JSON.stringify(details), new Date().toISOString());
+    if (liveEvent) {
+        queueDatabaseEvent(db, liveEvent);
+    }
+}
+
+export function recordSanitizedFields(db: DatabaseModels, fields: SanitizedField[]): void {
+    for (const field of fields) {
+        recordMigrationEvent(db, 'field:sanitized', {
+            details: field,
+            liveEvent: {type: 'field:sanitized', payload: structuredClone(field)}
+        });
+    }
 }
