@@ -22,7 +22,6 @@ new MigrateContext(options?)
 | `dbPath`             | `string`                              | —             | Path to a SQLite file for persistent, resumable storage   |
 | `storage`            | `'temporary' \| 'memory'`             | `'temporary'` | Storage used when `dbPath` is absent                       |
 | `contentIdentity`    | `ContentIdentity`                     | —             | Required for persistent resume; identifies the raw source snapshot |
-| `mapSourcePost`      | `(post) => void \| Promise<void>`     | —             | Rebuild a full mapped post from its raw source on every resume |
 | `rereadSource`       | `boolean`                             | `false`       | Clear staged content so the adapter can read the export again |
 | `onDuplicate`        | `'skip' \| 'replace' \| resolver`     | `'skip'`      | Default lookup-key duplicate policy                       |
 | `ephemeral`          | `boolean`                             | —             | Deprecated compatibility alias for memory storage         |
@@ -39,8 +38,7 @@ const ctx = new MigrateContext({
     contentIdentity: {
         source: 'wordpress-example-com',
         revision: sourceFileSha256
-    },
-    mapSourcePost: post => mapRawItem(post)
+    }
 });
 
 // Rebuild stored content while leaving separately managed asset caches alone
@@ -79,7 +77,7 @@ try {
 
 The version of the mg-context schema stored in the open SQLite database. The current version is also exported as `MIGRATE_CONTEXT_SCHEMA_VERSION`.
 
-Schema version 4 is current. `init()` transactionally migrates version 2 and 3 databases, marks new databases with the current version, and reopens databases already at that version. Existing rows without raw source content cannot be replayed; use `rereadSource: true` to refill them. It rejects unversioned, unsupported older, and newer databases.
+Schema version 4 is current. `init()` transactionally migrates version 2 and 3 databases, marks new databases with the current version, and reopens databases already at that version. Existing mapped rows without raw source content remain readable, but must be reread before they can be saved under the current persistent-post requirements. It rejects unversioned, unsupported older, and newer databases.
 
 #### `databasePath: string`
 
@@ -114,7 +112,7 @@ Objects loaded before `reset()` should be discarded because their database IDs n
 
 #### Resume, refresh, and content identity
 
-On a persistent resume, `init()` replays every stored post through `mapSourcePost` and saves its newly mapped fields and relationships. The callback receives a new `PostContext` with `sourceContent`, `sourceMeta`, and `lookupKey`; it should populate the post but not save it. Replay replaces the mapped post regardless of the ingest-time duplicate policy. A mapper code change therefore takes effect on the next run without a version bump. `rereadSource: true` clears mg-context content, reports, and source identity before ingestion; it does not touch separately managed asset files or databases.
+On a persistent resume, `init()` leaves stored mapped posts unchanged. The adapter can check `hasContent()` and skip source ingestion when content is present. Mapping happens when the adapter ingests new records, not on resume. To apply changes to the mapper, set `rereadSource: true` and ingest the original source again. This clears mg-context content, reports, and source identity before ingestion; it does not touch separately managed asset files or databases.
 
 Persistent `resume` requires `contentIdentity`, including for a newly created database. There is no unsafe resume option. Each field has a distinct purpose:
 
@@ -137,9 +135,9 @@ for await (const chunk of createReadStream('./site.xml')) {
 const sourceFileSha256 = hash.digest('hex');
 ```
 
-For multiple files, hash selected file names and contents in a deterministic order. Avoid `Date.now()` or another per-run value. Do not put transformation settings such as feature-image handling or shortcode conversion in the identity: replay applies current mapper behavior to saved raw source. Options must contain only plain JSON values, not `undefined`, functions, `Date` objects, or cycles. Object key order does not matter, but array order does. Avoid secrets in identity fields; include a digest if a secret affects source selection.
+For multiple files, hash selected file names and contents in a deterministic order. Avoid `Date.now()` or another per-run value. Do not put transformation settings such as feature-image handling or shortcode conversion in the identity; explicitly reread the source when those settings change. Options must contain only plain JSON values, not `undefined`, functions, `Date` objects, or cycles. Object key order does not matter, but array order does. Avoid secrets in identity fields; include a digest if a secret affects source selection.
 
-mg-context hashes the source identity. A changed identity rejects a populated resume database and requires `rereadSource: true` to rebuild it. Ghost schema and mapper changes do not alter this identity because mapped posts are rebuilt from source on resume.
+mg-context hashes the source identity. A changed identity rejects a populated resume database and requires `rereadSource: true` to rebuild it. Ghost schema and mapper changes do not alter this identity; callers must explicitly reread when they want those changes reflected in stored posts.
 
 ```js
 const ctx = new MigrateContext({
@@ -149,15 +147,12 @@ const ctx = new MigrateContext({
         source: 'wordpress-example-com',
         revision: sourceFileSha256,
         options: {includeDrafts}
-    },
-    mapSourcePost: post => mapRawItem(post)
+    }
 });
 await ctx.init();
 ```
 
-`init()` rejects a populated resume database with a missing or different source identity. It also rejects posts without raw source content or lookup keys, and a populated resume without `mapSourcePost`. Rereading clears context content but not separately managed asset caches. A one-shot temporary or memory migration does not need an identity. For a live source without a revision, treat the first fetch as a frozen snapshot and use the explicit reread flag when a newer snapshot is wanted.
-
-Replay saves one mapped post at a time. If a mapper throws, `init()` fails and closes the database; posts already replayed remain committed, and the next run replays all posts again. Do not export after a failed initialization.
+`init()` rejects a populated resume database with a missing or different source identity. Saving a persistent post requires raw source content and a lookup key. Rereading clears context content but not separately managed asset caches. A one-shot temporary or memory migration does not need an identity. For a live source without a revision, treat the first fetch as a frozen snapshot and use the explicit reread flag when a newer snapshot is wanted.
 
 #### `db: DatabaseModels`
 
@@ -194,15 +189,19 @@ When called with a `PostContext` instance, saves it immediately instead.
 
 Persistent posts require both `sourceContent` and `lookupKey`. `sourceContent` is the unmodified text of one source record, not mapped Ghost HTML. The deprecated `source` object option remains an alias for `sourceMeta` during the transition release.
 
-#### `addSourcePost(options): Promise<PostContext>`
+#### `addSourcePost(options, mapPost): Promise<PostContext>`
 
-Map and save one raw record using the context's `mapSourcePost` callback. `options` must include `lookupKey` and `sourceContent`; it may include `sourceMeta` and `meta`. The same callback runs again for every stored post on a later resume.
+Map and save one raw record using the supplied `mapPost` callback. `options` must include `lookupKey` and `sourceContent`; it may include `sourceMeta` and `meta`. The callback runs during ingestion only; a later resume uses the stored mapped post.
 
 ```js
 await ctx.addSourcePost({
     lookupKey: item.id,
     sourceContent: item.rawXml,
     sourceMeta: {url: item.url}
+}, (post) => {
+    const source = parseSourceItem(post.sourceContent);
+    post.set('title', source.title);
+    post.set('html', source.html);
 });
 ```
 

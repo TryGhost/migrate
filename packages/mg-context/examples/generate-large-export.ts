@@ -70,7 +70,7 @@ function mapSyntheticPost(post: PostContext) {
 async function main() {
     const args = process.argv.slice(2);
     const insertFlagIndex = args.indexOf('--insert');
-    const skipInsert = insertFlagIndex !== -1 && args[insertFlagIndex + 1] === 'false';
+    const skipInsertRequested = insertFlagIndex !== -1 && args[insertFlagIndex + 1] === 'false';
     const outputPath = args.find(a => !a.startsWith('--') && (insertFlagIndex === -1 || args.indexOf(a) !== insertFlagIndex + 1)) || './export/files/posts/';
 
     const startTime = Date.now();
@@ -81,15 +81,16 @@ async function main() {
             source: 'mg-context-example:large-export',
             revision: `synthetic-${POST_COUNT}`
         },
-        mapSourcePost: mapSyntheticPost
+        rereadSource: args.includes('--reread-source')
     });
     await ctx.init();
 
     try {
         console.log('Database initialized');
+        const skipInsert = skipInsertRequested || Boolean(ctx.hasContent());
 
         if (skipInsert) {
-            console.log('Skipping insert (--insert false)');
+            console.log(skipInsertRequested ? 'Skipping source insertion (--insert false)' : 'Using mapped posts already in the database');
         } else {
             console.log(`About to generate ${POST_COUNT.toLocaleString()} posts...`);
         }
@@ -106,7 +107,7 @@ async function main() {
                             index: i,
                             html: html.replace('Lorem ipsum', `Post ${i + 1}: Lorem ipsum`)
                         })
-                    });
+                    }, mapSyntheticPost);
                 }
             });
 

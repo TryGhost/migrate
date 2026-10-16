@@ -6,7 +6,7 @@ import {join} from 'node:path';
 import ghostSource from '../sources/ghost.js';
 
 describe('Ghost API context lifecycle', function () {
-    it('replays saved posts by default, rereads on request, and preserves the asset cache', async function () {
+    it('reuses mapped posts by default, rereads on request, and preserves the asset cache', async function () {
         const tmpPath = await mkdtemp(join(tmpdir(), 'mg-ghost-context-test-'));
         const options = {
             url: 'https://example.com',
@@ -24,18 +24,26 @@ describe('Ghost API context lifecycle', function () {
         try {
             const first = {};
             await ghostSource.getFullTaskList(options)[0].task(first, task);
-            await first.migrateContext.addSourcePost({
-                lookupKey: 'ghost-post-1',
-                sourceContent: JSON.stringify({
-                    id: 'ghost-post-1',
-                    url: 'https://example.com/ghost-post/',
-                    title: 'Original Ghost post',
-                    slug: 'ghost-post',
-                    html: '<p>Original HTML</p>',
-                    created_at: '2026-01-01T00:00:00.000Z'
-                }),
-                sourceMeta: {url: 'https://example.com/ghost-post/'}
-            });
+            await first.migrateContext.addSourcePost(
+                {
+                    lookupKey: 'ghost-post-1',
+                    sourceContent: JSON.stringify({
+                        id: 'ghost-post-1',
+                        url: 'https://example.com/ghost-post/',
+                        title: 'Original Ghost post',
+                        slug: 'ghost-post',
+                        html: '<p>Original HTML</p>',
+                        created_at: '2026-01-01T00:00:00.000Z'
+                    }),
+                    sourceMeta: {url: 'https://example.com/ghost-post/'}
+                },
+                post => {
+                    post.set('title', 'Original Ghost post');
+                    post.set('slug', 'ghost-post');
+                    post.set('html', '<p>Original HTML</p>');
+                    post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+                }
+            );
             first.migrateContext.addLink('example.com/old/', '/new/');
             const cacheMarker = join(first.fileCache.tmpDir, 'assets-cache', 'marker.txt');
             await writeFile(cacheMarker, 'cached asset');

@@ -421,7 +421,7 @@ export default class PostContext extends MigrateBase {
 
         if (db.requireSourceContent && (this.#sourceContent === null || !this.#lookupKey)) {
             throw new errors.BadRequestError({
-                message: 'Persistent posts require sourceContent and lookupKey for replay.'
+                message: 'Persistent posts require sourceContent and lookupKey.'
             });
         }
 

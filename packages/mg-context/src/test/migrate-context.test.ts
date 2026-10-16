@@ -96,14 +96,10 @@ describe('MigrateContext', () => {
             assert.doesNotThrow(() => new MigrateContext());
         });
 
-        it('Validates source replay options', () => {
+        it('Validates source refresh options', () => {
             assert.throws(() => new MigrateContext({rereadSource: 'yes' as any}), {
                 name: 'BadRequestError',
                 message: 'rereadSource must be a boolean.'
-            });
-            assert.throws(() => new MigrateContext({mapSourcePost: 'mapper' as any}), {
-                name: 'BadRequestError',
-                message: 'mapSourcePost must be a function.'
             });
         });
 
@@ -272,15 +268,7 @@ describe('MigrateContext', () => {
             post.save(firstRun.db);
             await firstRun.close();
 
-            const resumed = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity,
-                mapSourcePost: sourcePost => {
-                    sourcePost.set('title', JSON.parse(sourcePost.sourceContent!).title);
-                    sourcePost.set('slug', 'version-one');
-                    sourcePost.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
-                }
-            });
+            const resumed = new MigrateContext({dbPath: filePath, contentIdentity});
             await resumed.init();
             const resumedStats = resumed.hasContent();
             assert.ok(resumedStats);
@@ -313,156 +301,80 @@ describe('MigrateContext', () => {
             await rm(filePath, {force: true});
         });
 
-        it('Rebuilds complete mapped posts from saved source on every resume', async () => {
-            const filePath = join(tmpdir(), `mg-context-raw-replay-${Date.now()}.sqlite`);
-            let mapperVersion = 1;
-            const mapSourcePost = (post: PostContext) => {
-                const raw = JSON.parse(post.sourceContent!);
-                post.set('title', mapperVersion === 1 ? raw.title : `${raw.title} remapped`);
-                post.set('slug', raw.slug);
-                post.set('html', mapperVersion === 1 ? raw.html : '<p>New HTML</p>');
-                post.set('created_at', new Date(raw.createdAt));
-                post.addTag(
-                    new TagContext({
-                        initialData: {
-                            name: mapperVersion === 1 ? 'Old Tag' : 'New Tag',
-                            slug: mapperVersion === 1 ? 'old-tag' : 'new-tag'
-                        }
-                    })
-                );
-                post.addAuthor(
-                    new AuthorContext({
-                        initialData: {
-                            name: mapperVersion === 1 ? 'Old Author' : 'New Author',
-                            slug: mapperVersion === 1 ? 'old-author' : 'new-author',
-                            email: 'author@example.com'
-                        }
-                    })
-                );
-            };
-            const rawText = JSON.stringify({
-                title: 'Original title',
-                slug: 'replay-me',
-                html: '<p>Old HTML</p>',
-                createdAt: '2026-01-01T00:00:00.000Z'
-            });
-            const first = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY, mapSourcePost});
-            await first.init();
-            const inserted = await first.addSourcePost({
-                lookupKey: 'raw-1',
-                sourceContent: rawText,
-                sourceMeta: {url: 'https://example.com/replay-me'}
-            });
-            const databaseId = inserted.dbId;
-            const ghostId = inserted.ghostId;
-            await first.close();
-
-            mapperVersion = 2;
-            const second = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity: TEST_CONTENT_IDENTITY,
-                mapSourcePost
-            });
-            const replacements: any[] = [];
-            const progress: any[] = [];
-            second.on('post:replaced', event => replacements.push(event));
-            second.on('progress', event => progress.push(event));
-            await second.init();
-            const [replayed] = await second.getAllPosts();
-            assert.equal(replayed.dbId, databaseId);
-            assert.equal(replayed.ghostId, ghostId);
-            assert.equal(replayed.sourceContent, rawText);
-            assert.deepEqual(replayed.sourceMeta, {url: 'https://example.com/replay-me'});
-            assert.equal(replayed.data.title, 'Original title remapped');
-            assert.equal(replayed.data.html, '<p>New HTML</p>');
-            assert.deepEqual(
-                replayed.data.tags.map((tag: TagContext) => tag.data.slug),
-                ['new-tag']
-            );
-            assert.deepEqual(
-                replayed.data.authors.map((author: AuthorContext) => author.data.slug),
-                ['new-author']
-            );
-            assert.equal(replacements.length, 1);
-            assert.equal(replacements[0].previous.sourceContent, rawText);
-            assert.equal(replacements[0].previous.data.html, '<p>Old HTML</p>');
-            assert.equal(replacements[0].current.data.html, '<p>New HTML</p>');
-            assert.deepEqual(progress, [{operation: 'replaySourcePosts', processed: 1, total: 1}]);
-            replacements[0].current.sourceMeta.url = 'changed by listener';
-            assert.equal((await second.getAllPosts())[0].getSourceValue('url'), 'https://example.com/replay-me');
-            await second.close();
-
-            const silent = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity: TEST_CONTENT_IDENTITY,
-                mapSourcePost,
-                emitEvents: false
-            });
-            let emitted = false;
-            silent.on('progress', () => {
-                emitted = true;
-            });
-            await silent.init();
-            assert.equal(emitted, false);
-            await silent.close();
-            await rm(filePath, {force: true});
-        });
-
-        it('Rereads the source only when explicitly requested', async () => {
-            const filePath = join(tmpdir(), `mg-context-reread-${Date.now()}.sqlite`);
-            const mapper = (post: PostContext) => {
-                post.set('title', post.sourceContent!);
-                post.set('slug', 'reread');
-                post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
-            };
-            const first = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity: TEST_CONTENT_IDENTITY,
-                mapSourcePost: mapper
-            });
-            await first.init();
-            await first.addSourcePost({lookupKey: 'old', sourceContent: 'Old source'});
-            await first.close();
-
-            const reread = new MigrateContext({dbPath: filePath, rereadSource: true, mapSourcePost: mapper});
-            await reread.init();
-            assert.equal(reread.hasContent(), false);
-            await reread.addSourcePost({lookupKey: 'new', sourceContent: 'New source'});
-            assert.equal((await reread.getAllPosts())[0].sourceContent, 'New source');
-            await reread.close();
-            await rm(filePath, {force: true});
-        });
-
-        it('Rejects resume when saved posts cannot be replayed', async () => {
-            const filePath = join(tmpdir(), `mg-context-unreplayable-${Date.now()}.sqlite`);
+        it('Reuses complete mapped posts without remapping on resume', async () => {
+            const filePath = join(tmpdir(), `mg-context-stored-resume-${Date.now()}.sqlite`);
             const first = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
             await first.init();
-            const post = await first.addPost({lookupKey: 'raw', sourceContent: 'Raw'});
-            post.set('title', 'Raw');
-            post.set('slug', 'raw');
+            const post = await first.addPost({
+                lookupKey: 'raw-1',
+                sourceContent: '<item>Original source</item>',
+                sourceMeta: {url: 'https://example.com/original'}
+            });
+            post.set('title', 'Original title');
+            post.set('slug', 'original');
+            post.set('html', '<p>Original HTML</p>');
             post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+            post.addTag(new TagContext({initialData: {name: 'Original Tag', slug: 'original-tag'}}));
+            post.addAuthor(
+                new AuthorContext({
+                    initialData: {name: 'Original Author', slug: 'original-author', email: 'author@example.com'}
+                })
+            );
             post.save(first.db);
+            const databaseId = post.dbId;
+            const ghostId = post.ghostId;
             await first.close();
 
-            const withoutMapper = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
-            await assert.rejects(withoutMapper.init(), {
-                name: 'BadRequestError',
-                message: 'Persistent resume requires mapSourcePost to rebuild stored posts from source content.'
-            });
+            const resumed = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
+            const replacements: unknown[] = [];
+            resumed.on('post:replaced', event => replacements.push(event));
+            await resumed.init();
+            const [stored] = await resumed.getAllPosts();
+            assert.equal(stored.dbId, databaseId);
+            assert.equal(stored.ghostId, ghostId);
+            assert.equal(stored.sourceContent, '<item>Original source</item>');
+            assert.equal(stored.getSourceValue('url'), 'https://example.com/original');
+            assert.equal(stored.data.title, 'Original title');
+            assert.equal(stored.data.html, '<p>Original HTML</p>');
+            assert.deepEqual(
+                stored.data.tags.map((tag: TagContext) => tag.data.slug),
+                ['original-tag']
+            );
+            assert.deepEqual(
+                stored.data.authors.map((author: AuthorContext) => author.data.slug),
+                ['original-author']
+            );
+            assert.deepEqual(replacements, []);
+            await resumed.close();
+            await rm(filePath, {force: true});
+        });
 
-            const v3 = new DatabaseSync(filePath);
-            v3.prepare('UPDATE Posts SET source_content = NULL').run();
-            v3.close();
-            const withMapper = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity: TEST_CONTENT_IDENTITY,
-                mapSourcePost: () => {}
+        it('Rereads source only when explicitly requested', async () => {
+            const filePath = join(tmpdir(), `mg-context-reread-${Date.now()}.sqlite`);
+            const first = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
+            await first.init();
+            await first.addSourcePost({lookupKey: 'old', sourceContent: 'Old source'}, post => {
+                post.set('title', post.sourceContent);
+                post.set('slug', 'old');
+                post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
             });
-            await assert.rejects(withMapper.init(), {
-                name: 'BadRequestError',
-                message:
-                    'Stored posts without sourceContent or lookupKey cannot be replayed. Re-run with rereadSource: true to read the export again.'
+            await first.close();
+
+            const resumed = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
+            await resumed.init();
+            assert.equal((await resumed.getAllPosts())[0].data.title, 'Old source');
+            await resumed.close();
+
+            const reread = new MigrateContext({dbPath: filePath, rereadSource: true});
+            await reread.init();
+            assert.equal(reread.hasContent(), false);
+            await reread.addSourcePost({lookupKey: 'new', sourceContent: 'New source'}, post => {
+                post.set('title', post.sourceContent);
+                post.set('slug', 'new');
+                post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
             });
+            assert.equal((await reread.getAllPosts())[0].sourceContent, 'New source');
+            await reread.close();
             await rm(filePath, {force: true});
         });
 
@@ -473,107 +385,18 @@ describe('MigrateContext', () => {
             const missingContent = await ctx.addPost({lookupKey: 'missing-content'});
             assert.throws(() => missingContent.save(ctx.db), {
                 name: 'BadRequestError',
-                message: 'Persistent posts require sourceContent and lookupKey for replay.'
+                message: 'Persistent posts require sourceContent and lookupKey.'
             });
             const missingKey = await ctx.addPost({sourceContent: '<item />'});
             assert.throws(() => missingKey.save(ctx.db), {
                 name: 'BadRequestError',
-                message: 'Persistent posts require sourceContent and lookupKey for replay.'
+                message: 'Persistent posts require sourceContent and lookupKey.'
             });
-            await assert.rejects(ctx.addSourcePost({lookupKey: 'raw', sourceContent: 'raw'}), {
+            await assert.rejects(ctx.addSourcePost({lookupKey: 'raw', sourceContent: 'raw'}, undefined as any), {
                 name: 'BadRequestError',
-                message: 'addSourcePost requires mapSourcePost.'
+                message: 'addSourcePost requires a mapper function.'
             });
             await ctx.close();
-            await rm(filePath, {force: true});
-        });
-
-        it('Stops replay cleanly if a mapper removes the remaining source rows', async () => {
-            const filePath = join(tmpdir(), `mg-context-replay-deleted-tail-${Date.now()}.sqlite`);
-            let activeContext: MigrateContext | undefined;
-            let deleteTail = false;
-            const mapper = (post: PostContext) => {
-                post.set('title', post.sourceContent!);
-                post.set('slug', post.lookupKey!);
-                post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
-                if (deleteTail && post.lookupKey === 'post-1') {
-                    activeContext!.db.db.prepare('DELETE FROM Posts WHERE lookup_key = ?').run('post-101');
-                }
-            };
-            const first = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity: TEST_CONTENT_IDENTITY,
-                mapSourcePost: mapper
-            });
-            await first.init();
-            for (let index = 1; index <= 101; index += 1) {
-                await first.addSourcePost({lookupKey: `post-${index}`, sourceContent: `Post ${index}`});
-            }
-            await first.close();
-
-            deleteTail = true;
-            const second = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity: TEST_CONTENT_IDENTITY,
-                mapSourcePost: mapper
-            });
-            activeContext = second;
-            await second.init();
-            assert.equal((await second.getAllPosts()).length, 100);
-            await second.close();
-            await rm(filePath, {force: true});
-        });
-
-        it('Can retry a partial replay after a mapper error', async () => {
-            const filePath = join(tmpdir(), `mg-context-replay-retry-${Date.now()}.sqlite`);
-            let version = 'old';
-            let failOnSecond = false;
-            const mapper = (post: PostContext) => {
-                if (failOnSecond && post.lookupKey === 'second') {
-                    throw new Error('mapper failed');
-                }
-                post.set('title', `${post.sourceContent} ${version}`);
-                post.set('slug', post.lookupKey!);
-                post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
-            };
-            const first = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity: TEST_CONTENT_IDENTITY,
-                mapSourcePost: mapper
-            });
-            await first.init();
-            await first.addSourcePost({lookupKey: 'first', sourceContent: 'First'});
-            await first.addSourcePost({lookupKey: 'second', sourceContent: 'Second'});
-            await first.close();
-
-            version = 'new';
-            failOnSecond = true;
-            const interrupted = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity: TEST_CONTENT_IDENTITY,
-                mapSourcePost: mapper
-            });
-            await assert.rejects(interrupted.init(), {message: 'mapper failed'});
-            const partial = new DatabaseSync(filePath);
-            const titles = partial
-                .prepare('SELECT data FROM Posts ORDER BY id')
-                .all()
-                .map((row: any) => JSON.parse(row.data).title);
-            assert.deepEqual(titles, ['First new', 'Second old']);
-            partial.close();
-
-            failOnSecond = false;
-            const resumed = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity: TEST_CONTENT_IDENTITY,
-                mapSourcePost: mapper
-            });
-            await resumed.init();
-            assert.deepEqual(
-                (await resumed.getAllPosts()).map(post => post.data.title),
-                ['First new', 'Second new']
-            );
-            await resumed.close();
             await rm(filePath, {force: true});
         });
 
@@ -582,7 +405,7 @@ describe('MigrateContext', () => {
             const contentIdentity = {
                 source: 'wordpress-export:site.xml',
                 revision: 'sha256:source-v1',
-                options: {featureImage: true, shortcodes: ['gallery', 'caption']}
+                options: {includeDrafts: true, languages: ['en', 'fr']}
             };
             const firstRun = new MigrateContext({dbPath: filePath, contentIdentity});
             await firstRun.init();
@@ -595,7 +418,7 @@ describe('MigrateContext', () => {
                 dbPath: filePath,
                 contentIdentity: {
                     ...contentIdentity,
-                    options: {shortcodes: ['gallery', 'caption'], featureImage: true}
+                    options: {languages: ['en', 'fr'], includeDrafts: true}
                 }
             });
             await resumed.init();
@@ -606,7 +429,7 @@ describe('MigrateContext', () => {
             for (const changedIdentity of [
                 {...contentIdentity, source: 'wordpress-export:another.xml'},
                 {...contentIdentity, revision: 'sha256:source-v2'},
-                {...contentIdentity, options: {...contentIdentity.options, featureImage: false}}
+                {...contentIdentity, options: {...contentIdentity.options, includeDrafts: false}}
             ]) {
                 const incompatible = new MigrateContext({dbPath: filePath, contentIdentity: changedIdentity});
                 await assert.rejects(() => incompatible.init(), {
@@ -711,15 +534,10 @@ describe('MigrateContext', () => {
             assert.deepEqual(JSON.parse(row.source_meta), {url: 'https://example.com/old'});
             migrated.db.close();
 
-            const resume = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity: TEST_CONTENT_IDENTITY,
-                mapSourcePost: () => {}
-            });
-            await assert.rejects(resume.init(), {
-                message:
-                    'Stored posts without sourceContent or lookupKey cannot be replayed. Re-run with rereadSource: true to read the export again.'
-            });
+            const resume = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
+            await resume.init();
+            assert.equal((await resume.getAllPosts())[0].data.title, 'Old mapped post');
+            await resume.close();
             const refresh = new MigrateContext({dbPath: filePath, rereadSource: true});
             await refresh.init();
             assert.equal(refresh.hasContent(), false);
@@ -2219,13 +2037,7 @@ describe('MigrateContext', () => {
             const secondRun: any = new MigrateContext({
                 dbPath: filePath,
                 contentIdentity: TEST_CONTENT_IDENTITY,
-                onDuplicate: 'replace',
-                mapSourcePost: post => {
-                    post.set('title', 'Old title');
-                    post.set('slug', 'old-slug');
-                    post.set('html', post.sourceContent);
-                    post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
-                }
+                onDuplicate: 'replace'
             });
             await secondRun.init();
 
@@ -4109,15 +3921,7 @@ describe('MigrateContext', () => {
             assert.deepEqual(skipped, [{lookupKey: 'same-source-id', existingPostId: original.dbId}]);
             await firstRun.close();
 
-            const secondRun = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity: TEST_CONTENT_IDENTITY,
-                mapSourcePost: post => {
-                    post.set('title', post.sourceContent);
-                    post.set('slug', 'original');
-                    post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
-                }
-            });
+            const secondRun = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
             await secondRun.init();
             const report = secondRun.getMigrationReport();
             assert.equal(report.summary['post:skipped'], 1);
@@ -4347,20 +4151,11 @@ describe('MigrateContext', () => {
 
             await firstRun.close();
 
-            // Resume against the same database — both posts are remapped from source,
-            // and the second post claims the same suffixed slug again.
-            const secondRun: any = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity: TEST_CONTENT_IDENTITY,
-                mapSourcePost: post => {
-                    post.set('title', post.sourceContent);
-                    post.set('slug', 'my-post');
-                    post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-                }
-            });
+            // Resume keeps the stored slugs; the duplicate report is rebuilt from SQLite.
+            const secondRun: any = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
             await secondRun.init();
 
-            assert.equal(secondRun.db.slugRenames.length, 1);
+            assert.equal(secondRun.db.slugRenames.length, 0);
 
             const duplicates = await secondRun.deduplicateSlugs();
 

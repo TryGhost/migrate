@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
-import ghostAPI, {mapPost} from '@tryghost/mg-ghost-api';
+import ghostAPI from '@tryghost/mg-ghost-api';
 import {MigrateContext} from '@tryghost/mg-context';
 import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import fsUtils from '@tryghost/mg-fs-utils';
@@ -44,16 +44,7 @@ const initialize = (options, {infoOnly = false} = {}) => {
                             postFilter: options.postFilter ?? null,
                             pageFilter: options.pageFilter ?? null
                         }
-                    },
-                    mapSourcePost: post =>
-                        mapPost(
-                            {
-                                ...JSON.parse(post.sourceContent),
-                                type: post.sourceMeta.type
-                            },
-                            ctx.migrateContext,
-                            post
-                        )
+                    }
                 });
                 await ctx.migrateContext.init();
                 const existing = ctx.migrateContext.hasContent();

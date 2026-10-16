@@ -2,9 +2,8 @@
 //
 // Iterates 50k posts using streamPosts() and tracks peak memory usage.
 // On the first run, posts are inserted. Subsequent runs reuse the existing DB.
-// Delete examples/stream-posts.db to regenerate.
+// Pass --reread-source to regenerate from the synthetic source.
 import {dirname, join} from 'node:path';
-import {existsSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {MigrateContext, type PostContext} from '../src/index.js';
 
@@ -59,19 +58,18 @@ function mapSyntheticPost(post: PostContext) {
 }
 
 async function main() {
-    const dbExists = existsSync(DB_PATH);
     const ctx = new MigrateContext({
         dbPath: DB_PATH,
         contentIdentity: {
             source: 'mg-context-example:stream-posts',
             revision: `synthetic-${POST_COUNT}`
         },
-        mapSourcePost: mapSyntheticPost
+        rereadSource: process.argv.includes('--reread-source')
     });
     await ctx.init();
 
     try {
-        if (!dbExists) {
+        if (!ctx.hasContent()) {
             console.log(`Generating ${POST_COUNT.toLocaleString()} posts...`);
             const insertStart = Date.now();
 
@@ -83,7 +81,7 @@ async function main() {
                         await ctx.addSourcePost({
                             lookupKey: `post-${i + 1}`,
                             sourceContent: JSON.stringify({index: i})
-                        });
+                        }, mapSyntheticPost);
                     }
                 });
 

@@ -178,8 +178,6 @@ export interface MigrateContextOptions {
     dbPath?: string;
     storage?: 'temporary' | 'memory';
     contentIdentity?: ContentIdentity;
-    /** Rebuild each stored post from its raw source on every persistent resume. */
-    mapSourcePost?: (post: PostContext) => void | Promise<void>;
     /** Discard staged source records so the caller can read the export again. */
     rereadSource?: boolean;
     /** @deprecated Use storage: 'memory' for an explicit in-memory database. */
@@ -259,7 +257,6 @@ export default class MigrateContext extends MigrateBase {
     #storage: 'persistent' | 'temporary' | 'memory';
     #temporaryDirectory: string | null = null;
     #contentIdentityHash: string | undefined;
-    #mapSourcePost: ((post: PostContext) => void | Promise<void>) | undefined;
     #rereadSource: boolean;
     #emitEvents: boolean;
     #warnOnLookupKeyDuplicate: boolean;
@@ -273,7 +270,6 @@ export default class MigrateContext extends MigrateBase {
         dbPath,
         storage,
         contentIdentity,
-        mapSourcePost,
         rereadSource = false,
         ephemeral,
         emitEvents = true,
@@ -286,7 +282,6 @@ export default class MigrateContext extends MigrateBase {
         this.#emitEvents = emitEvents;
         this.#warnOnLookupKeyDuplicate = warnOnLookupKeyDuplicate;
         this.#onDuplicate = onDuplicate;
-        this.#mapSourcePost = mapSourcePost;
         this.#rereadSource = rereadSource;
 
         if (Object.hasOwn(unsupportedOptions, 'mode')) {
@@ -297,9 +292,6 @@ export default class MigrateContext extends MigrateBase {
         }
         if (typeof rereadSource !== 'boolean') {
             throw new errors.BadRequestError({message: 'rereadSource must be a boolean.'});
-        }
-        if (mapSourcePost !== undefined && typeof mapSourcePost !== 'function') {
-            throw new errors.BadRequestError({message: 'mapSourcePost must be a function.'});
         }
         if (dbPath && storage) {
             throw new errors.BadRequestError({message: 'Pass either dbPath or storage, not both.'});
@@ -383,58 +375,6 @@ export default class MigrateContext extends MigrateBase {
                 });
             }
             this.#setContentIdentityHash(this.#contentIdentityHash);
-        }
-
-        if (this.#storage === 'persistent' && !this.#rereadSource) {
-            try {
-                await this.#replaySourcePosts();
-            } catch (error) {
-                await this.close();
-                throw error;
-            }
-        }
-    }
-
-    async #replaySourcePosts(): Promise<void> {
-        const total = (this.db.stmts.countPosts.get() as {count: number}).count;
-        if (total === 0) {
-            return;
-        }
-        if (!this.#mapSourcePost) {
-            throw new errors.BadRequestError({
-                message: 'Persistent resume requires mapSourcePost to rebuild stored posts from source content.'
-            });
-        }
-
-        const maxId = (this.db.stmts.findMaxPostId.get() as {max_id: number}).max_id;
-        let lastId = 0;
-        let processed = 0;
-        while (lastId < maxId) {
-            const rows = this.db.stmts.findPostsAfterId.all(lastId, maxId, 100) as any[];
-            if (rows.length === 0) {
-                break;
-            }
-            for (const row of rows) {
-                lastId = row.id as number;
-                if (row.source_content === null || !row.lookup_key) {
-                    throw new errors.BadRequestError({
-                        message:
-                            'Stored posts without sourceContent or lookupKey cannot be replayed. Re-run with rereadSource: true to read the export again.'
-                    });
-                }
-                const post = new PostContext({
-                    sourceContent: row.source_content as string,
-                    sourceMeta: JSON.parse(row.source_meta as string),
-                    lookupKey: row.lookup_key as string,
-                    onDuplicate: 'replace'
-                });
-                await this.#mapSourcePost(post);
-                post.save(this.db);
-                processed += 1;
-            }
-            if (this.#emitEvents) {
-                this.#emitter.emit('progress', {operation: 'replaySourcePosts', processed, total});
-            }
         }
     }
 
@@ -1041,15 +981,16 @@ export default class MigrateContext extends MigrateBase {
         return newPost;
     }
 
-    /** Map and save a raw source record, keeping its original text for future runs. */
+    /** Map and save one raw source record during ingestion. */
     async addSourcePost(
-        options: PostConstructorOptions & {sourceContent: string; lookupKey: string}
+        options: PostConstructorOptions & {sourceContent: string; lookupKey: string},
+        mapPost: (post: PostContext) => void | Promise<void>
     ): Promise<PostContext> {
-        if (!this.#mapSourcePost) {
-            throw new errors.BadRequestError({message: 'addSourcePost requires mapSourcePost.'});
+        if (typeof mapPost !== 'function') {
+            throw new errors.BadRequestError({message: 'addSourcePost requires a mapper function.'});
         }
         const post = new PostContext({...options, onDuplicate: options.onDuplicate ?? this.#onDuplicate});
-        await this.#mapSourcePost(post);
+        await mapPost(post);
         post.save(this.db);
         return post;
     }
