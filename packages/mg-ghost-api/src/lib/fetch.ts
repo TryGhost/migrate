@@ -112,17 +112,9 @@ const fetchPage = async (
         filter: (type === 'posts' ? options.postFilter : options.pageFilter) || null
     };
 
-    const response =
-        type === 'posts'
-            ? await api.site.posts.browse(params, {source: 'html'})
-            : await api.site.pages.browse(params, {source: 'html'});
-
-    const ghostType = type === 'posts' ? 'post' : 'page';
-    response.forEach(item => {
-        item.type = ghostType;
-    });
-
-    return response;
+    return type === 'posts'
+        ? await api.site.posts.browse(params, {source: 'html'})
+        : await api.site.pages.browse(params, {source: 'html'});
 };
 
 const buildTasks = (tasks: ListrTask[], api: DiscoverResult, type: FetchType, options: FetchOptions): void => {
@@ -134,7 +126,21 @@ const buildTasks = (tasks: ListrTask[], api: DiscoverResult, type: FetchType, op
                     const response = await fetchPage(api, type, options, page);
                     await ctx.migrateContext.transaction(async () => {
                         for (const ghPost of response) {
-                            const post = await mapPost(ghPost as unknown as GhostApiPost, ctx.migrateContext);
+                            const sourcePost = ghPost as unknown as GhostApiPost;
+                            const post = await ctx.migrateContext.addPost({
+                                lookupKey: sourcePost.id,
+                                sourceContent: JSON.stringify(sourcePost),
+                                sourceMeta: {
+                                    id: sourcePost.id,
+                                    url: sourcePost.url,
+                                    type: type === 'posts' ? 'post' : 'page'
+                                }
+                            });
+                            await mapPost(
+                                {...sourcePost, type: type === 'posts' ? 'post' : 'page'},
+                                ctx.migrateContext,
+                                post
+                            );
                             post.save(ctx.migrateContext.db);
                         }
                     });

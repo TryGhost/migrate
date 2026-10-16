@@ -168,11 +168,18 @@ const toDate = (value: string | null | undefined): Date | null => {
     return new Date(value);
 };
 
-export async function mapPost(ghPost: GhostApiPost, migrateContext: MigrateContext): Promise<PostContext> {
-    const post = await migrateContext.addPost({
-        source: {url: ghPost.url, id: ghPost.id},
-        lookupKey: ghPost.id
-    });
+export async function mapPost(
+    ghPost: GhostApiPost,
+    migrateContext: MigrateContext,
+    existingPost?: PostContext
+): Promise<PostContext> {
+    const post =
+        existingPost ??
+        (await migrateContext.addPost({
+            sourceContent: JSON.stringify(ghPost),
+            sourceMeta: {url: ghPost.url, id: ghPost.id, type: ghPost.type},
+            lookupKey: ghPost.id
+        }));
 
     for (const field of POST_OBJECT_FIELDS) {
         const value = ghPost[field];
