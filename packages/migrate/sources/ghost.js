@@ -1,13 +1,13 @@
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
-import ghostAPI from '@tryghost/mg-ghost-api';
+import ghostAPI, {mapPost} from '@tryghost/mg-ghost-api';
 import {MigrateContext} from '@tryghost/mg-context';
 import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import prettyMilliseconds from 'pretty-ms';
 
-const initialize = options => {
+const initialize = (options, {infoOnly = false} = {}) => {
     return {
         title: 'Initializing Workspace',
         task: async (ctx, task) => {
@@ -29,19 +29,45 @@ const initialize = options => {
                 batchName: options.batch
             });
 
-            ctx.migrateContext = new MigrateContext({
-                dbPath: join(ctx.fileCache.tmpDir, 'mg-context.sqlite')
-            });
-            await ctx.migrateContext.init();
+            if (!infoOnly) {
+                ctx.migrateContext = new MigrateContext({
+                    dbPath: join(ctx.fileCache.tmpDir, 'mg-context.sqlite'),
+                    rereadSource: Boolean(options.rereadSource),
+                    contentIdentity: {
+                        source: `ghost-api:${options.url}`,
+                        revision: 'live-api-snapshot',
+                        options: {
+                            batch: options.batch ?? 0,
+                            limit: options.batch > 0 ? (options.limit ?? 15) : null,
+                            posts: options.posts ?? true,
+                            pages: options.pages ?? true,
+                            postFilter: options.postFilter ?? null,
+                            pageFilter: options.pageFilter ?? null
+                        }
+                    },
+                    mapSourcePost: post =>
+                        mapPost(
+                            {
+                                ...JSON.parse(post.sourceContent),
+                                type: post.sourceMeta.type
+                            },
+                            ctx.migrateContext,
+                            post
+                        )
+                });
+                await ctx.migrateContext.init();
+                const existing = ctx.migrateContext.hasContent();
+                ctx.hasStoredSource = Boolean(existing && existing.posts + existing.pages > 0);
 
-            ctx.assetScraper = new MgAssetScraper(
-                ctx.fileCache,
-                {
-                    allowAllDomains: true
-                },
-                ctx
-            );
-            await ctx.assetScraper.init();
+                ctx.assetScraper = new MgAssetScraper(
+                    ctx.fileCache,
+                    {
+                        allowAllDomains: true
+                    },
+                    ctx
+                );
+                await ctx.assetScraper.init();
+            }
 
             task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
 
@@ -54,7 +80,7 @@ const initialize = options => {
 
 const getInfoTaskList = options => {
     return [
-        initialize(options),
+        initialize(options, {infoOnly: true}),
         {
             title: 'Fetch Content Info from Ghost API',
             task: async ctx => {
@@ -81,6 +107,7 @@ const getFullTaskList = options => {
         initialize(options),
         {
             title: 'Fetch Content from Ghost API',
+            skip: ctx => ctx.hasStoredSource && !options.rereadSource,
             task: async ctx => {
                 try {
                     let tasks = await ghostAPI.fetch.tasks(options, ctx);

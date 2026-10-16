@@ -111,6 +111,12 @@ const options = [
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
     },
     {
+        type: 'boolean',
+        flags: '--rereadSource',
+        defaultValue: false,
+        desc: 'Fetch the source again instead of replaying posts saved in the context database'
+    },
+    {
         type: 'string',
         flags: '--tmpPath',
         defaultValue: null,
