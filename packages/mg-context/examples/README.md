@@ -1,5 +1,7 @@
 # Examples
 
+These runnable scripts show how to create Ghost exports, rerun migrations, and work with posts, tags, and authors.
+
 Run any example from the `packages/mg-context/` directory:
 
 ```bash
@@ -16,17 +18,25 @@ pnpm exec tsx examples/generate-and-export.ts
 
 ## generate-large-export.ts
 
-Stress-test that generates **500,000 posts** in a persistent on-disk SQLite database (`posts.db`), runs a second pass to update metadata, then writes the Ghost JSON export. Later runs reuse the mapped posts. Tracks peak memory usage throughout.
+Stress-test that stores **500,000 raw source posts** in a persistent on-disk SQLite database (`posts.db`), maps them from that stored source on every run, then writes the Ghost JSON export. Tracks peak memory usage throughout. Changes to the mapping code take effect on the next run without regenerating source posts.
 
 ```bash
-# Full run — insert + update + export
+# Full run — ingest + map + export
 pnpm exec tsx examples/generate-large-export.ts
 
-# Skip source insertion and use posts already in the database
+# Skip source ingestion when the database already has posts, but map them again
 pnpm exec tsx examples/generate-large-export.ts --insert false
 
 # Clear context content, then regenerate and remap the synthetic source
 pnpm exec tsx examples/generate-large-export.ts --reread-source
+```
+
+## deduplicate-slugs.ts
+
+Shows how saving posts assigns unique slugs and how to read the duplicate-slug report after export. The first saved post keeps a requested slug; later collisions receive numbered suffixes.
+
+```bash
+pnpm exec tsx examples/deduplicate-slugs.ts
 ```
 
 ## reorder-tags-authors.ts
@@ -47,8 +57,11 @@ pnpm exec tsx examples/foreach-ghost-post.ts
 
 ## stream-posts.ts
 
-Iterates **50,000 posts** using `streamPosts()` and tracks peak memory usage. On the first run, source posts are mapped into `stream-posts.db`. Subsequent runs reuse the mapped posts; pass `--reread-source` to regenerate them.
+Stores **50,000 raw source posts** in `stream-posts.db`, maps them from that stored source on every run, then iterates with `streamPosts()` while tracking peak memory usage. Pass `--reread-source` to regenerate the source posts. If you have a database from an older version of this example, use that flag once because the stored source format changed.
 
 ```bash
 pnpm exec tsx examples/stream-posts.ts
+
+# Replace an older database or regenerate the synthetic source
+pnpm exec tsx examples/stream-posts.ts --reread-source
 ```

@@ -1,10 +1,10 @@
-// Run this with: `npx tsx examples/deduplicate-slugs.ts`
+// Run this with: `pnpm exec tsx examples/deduplicate-slugs.ts`
 //
 // Demonstrates slug deduplication. When multiple posts share the same slug,
-// the oldest keeps the original; newer duplicates get -2, -3, etc.
+// the first saved keeps the original; later duplicates get -2, -3, etc.
 //
-// Export preparation deduplicates slugs automatically. Access
-// ctx.duplicateSlugs afterwards for the list of renamed slugs.
+// Saving allocates unique slugs. Export preparation rebuilds the duplicate
+// report, which is available afterwards through ctx.duplicateSlugs.
 
 import {MigrateContext} from '../src/index.js';
 
@@ -26,7 +26,7 @@ async function main() {
         // 1. Import all posts
         await ctx.transaction(async () => {
             for (const item of sourceData) {
-                const post = await ctx.addPost({source: {url: item.url}});
+                const post = await ctx.addPost({sourceMeta: {url: item.url}});
                 post.set('title', item.title);
                 post.set('slug', item.slug);
                 post.set('status', 'published');

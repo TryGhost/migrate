@@ -45,14 +45,16 @@ const authors = [
 ];
 
 function mapSyntheticPost(post: PostContext) {
-    const {index: i} = JSON.parse(post.sourceContent!);
+    const {index: i, html: sourceHtml} = JSON.parse(post.sourceContent!);
+    post.setTagOrder(() => []);
+    post.setAuthorOrder(() => []);
     post.set('title', `Post ${i + 1}`);
     post.set('slug', `post-${i + 1}`);
     post.set('status', 'published');
     const postDate = new Date(2025, 0, 1, 0, i * 6);
     post.set('created_at', postDate);
     post.set('published_at', postDate);
-    post.set('html', html.replace('Lorem ipsum', `Post ${i + 1}: Lorem ipsum`));
+    post.set('html', sourceHtml);
     post.addTag(tags[i % tags.length]);
     post.addAuthor(authors[i % authors.length]);
 }
@@ -62,7 +64,7 @@ async function main() {
         dbPath: DB_PATH,
         contentIdentity: {
             source: 'mg-context-example:stream-posts',
-            revision: `synthetic-${POST_COUNT}`
+            revision: `synthetic-${POST_COUNT}-with-html`
         },
         resetContent: process.argv.includes('--reread-source')
     });
@@ -80,8 +82,10 @@ async function main() {
                     for (let i = batchStart; i < batchEnd; i++) {
                         await ctx.addSourcePost(post => {
                             post.setSource('lookupKey', `post-${i + 1}`);
-                            post.setSource('content', JSON.stringify({index: i}));
-                            mapSyntheticPost(post);
+                            post.setSource('content', JSON.stringify({
+                                index: i,
+                                html: html.replace('Lorem ipsum', `Post ${i + 1}: Lorem ipsum`)
+                            }));
                         });
                     }
                 });
@@ -96,6 +100,12 @@ async function main() {
         } else {
             console.log(`Using existing database at ${DB_PATH}\n`);
         }
+
+        // Rebuild mapped fields from the stored source on every run.
+        console.log('Mapping all posts from stored source...');
+        await ctx.forEachPost(async post => {
+            mapSyntheticPost(post);
+        }, {batchSize: BATCH_SIZE});
 
         // Stream all posts and simulate processing
         console.log('Streaming posts with streamPosts()...');

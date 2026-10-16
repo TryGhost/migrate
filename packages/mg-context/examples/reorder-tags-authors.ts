@@ -1,4 +1,4 @@
-// Run this with: `npx tsx examples/reorder-tags-authors.ts`
+// Run this with: `pnpm exec tsx examples/reorder-tags-authors.ts`
 import {MigrateContext} from '../src/index.js';
 
 async function main() {

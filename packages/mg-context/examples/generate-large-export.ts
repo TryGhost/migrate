@@ -50,6 +50,8 @@ const authors = [
 
 function mapSyntheticPost(post: PostContext) {
     const {index: i, html: sourceHtml} = JSON.parse(post.sourceContent!);
+    post.setTagOrder(() => []);
+    post.setAuthorOrder(() => []);
     post.set('title', `Post Number ${i + 1}`);
     post.set('slug', `post-number-${i + 1}`);
     post.set('status', 'published');
@@ -71,6 +73,7 @@ async function main() {
     const args = process.argv.slice(2);
     const insertFlagIndex = args.indexOf('--insert');
     const skipInsertRequested = insertFlagIndex !== -1 && args[insertFlagIndex + 1] === 'false';
+    const refreshData = args.includes('--reread-source');
     const outputPath = args.find(a => !a.startsWith('--') && (insertFlagIndex === -1 || args.indexOf(a) !== insertFlagIndex + 1)) || './export/files/posts/';
 
     const startTime = Date.now();
@@ -81,16 +84,20 @@ async function main() {
             source: 'mg-context-example:large-export',
             revision: `synthetic-${POST_COUNT}`
         },
-        resetContent: args.includes('--reread-source')
+        resetContent: refreshData
     });
     await ctx.init();
 
     try {
         console.log('Database initialized');
-        const skipInsert = skipInsertRequested || Boolean(ctx.hasContent());
+        const hasContent = Boolean(ctx.hasContent());
+        if (skipInsertRequested && !hasContent) {
+            throw new Error('Cannot skip source insertion: the context database has no posts.');
+        }
+        const skipInsert = skipInsertRequested || hasContent;
 
         if (skipInsert) {
-            console.log(skipInsertRequested ? 'Skipping source insertion (--insert false)' : 'Using mapped posts already in the database');
+            console.log(skipInsertRequested ? 'Skipping source insertion (--insert false)' : 'Using source posts already in the database');
         } else {
             console.log(`About to generate ${POST_COUNT.toLocaleString()} posts...`);
         }
@@ -107,7 +114,6 @@ async function main() {
                             index: i,
                             html: html.replace('Lorem ipsum', `Post ${i + 1}: Lorem ipsum`)
                         }));
-                        mapSyntheticPost(post);
                     });
                 }
             });
@@ -116,7 +122,7 @@ async function main() {
             console.log(`- Inserted ${batchEnd.toLocaleString()} posts (${batchDuration}s)`);
         }
 
-        // Second pass: update HTML on every post
+        // Map the stored source on every run, including when insertion was skipped.
         // Centralised progress listener for all operations
         let batchTime = Date.now();
         ctx.on('progress', ({operation, processed, total}) => {
@@ -125,9 +131,9 @@ async function main() {
             batchTime = Date.now();
         });
 
-        console.log('Updating HTML on all posts...');
-        await ctx.forEachPost(async (post: any) => {
-            // post.set('html', post.data.html + '\n<p><em>Not inserted first.</em></p>');
+        console.log('Mapping all posts from stored source...');
+        await ctx.forEachPost(async (post: PostContext) => {
+            mapSyntheticPost(post);
             post.set('meta_title', `Post meta title`);
             if (post.get('title').includes('Post Number 200')) {
                 post.addTag({

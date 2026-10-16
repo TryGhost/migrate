@@ -1,4 +1,4 @@
-// Run this with: `npx tsx examples/generate-and-export.ts`
+// Run this with: `pnpm exec tsx examples/generate-and-export.ts`
 import {MigrateContext} from '../src/index.js';
 
 const POST_COUNT = 500;
