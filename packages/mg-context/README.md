@@ -24,7 +24,8 @@ await context.init();
 try {
     const post = await context.addPost({
         lookupKey: 'source-post-123',
-        source: {id: '123'}
+        sourceContent: '<p>Welcome to the new site.</p>',
+        sourceMeta: {id: '123'}
     });
 
     post.set('title', 'Hello world');
@@ -53,8 +54,8 @@ try {
 
 The normal data flow has three stages:
 
-1. **Ingest** — `addPost()` creates a post, and `post.save(context.db)` validates and persists it with its tags and authors. A stable `lookupKey` makes repeated ingestion retry-safe.
-2. **Transform** — `forEachPost()` loads posts in batches, runs a callback, and saves each post automatically. `streamPosts()` is available when the caller needs to control persistence or concurrency.
+1. **Ingest** — `addPost()` creates a post, and `post.save(context.db)` validates and persists it with its tags and authors. For a persistent migration, save the original per-post text in `sourceContent`, related JSON in `sourceMeta`, and a stable `lookupKey`.
+2. **Transform** — A persistent context replays saved raw posts through `mapSourcePost` on every resume. `forEachPost()` loads mapped posts in batches for later enrichment and saves each one automatically. `streamPosts()` is available when the caller needs to control persistence or concurrency.
 3. **Export** — `writeGhostJson()` automatically repairs export invariants, writes one or more Ghost import files with the stored HTML, and removes stale files owned by the previous export manifest.
 
 By default, `MigrateContext` uses a managed temporary SQLite file and removes it on `close()`. Pass `dbPath` for resumable migrations, or `{storage: 'memory'}` when an in-memory database is explicitly preferable.
@@ -66,34 +67,79 @@ By default, `MigrateContext` uses a managed temporary SQLite file and removes it
 `hasContent()` returns existing content counts, or `false` for an empty database.
 
 ```js
+import {createHash} from 'node:crypto';
+import {createReadStream} from 'node:fs';
+import {MigrateContext} from '@tryghost/mg-context';
+
+// Hash the source file without loading the whole export into memory.
+const hash = createHash('sha256');
+for await (const chunk of createReadStream('./site.xml')) {
+    hash.update(chunk);
+}
+const sourceFileSha256 = hash.digest('hex');
+const mapSourcePost = (post) => {
+    const item = parseSourceItem(post.sourceContent);
+    post.set('title', item.title);
+    post.set('slug', item.slug);
+    post.set('html', item.html);
+    post.set('created_at', new Date(item.createdAt));
+    for (const tag of item.tags ?? []) post.addTag(tag);
+    for (const author of item.authors ?? []) post.addAuthor(author);
+};
+
 const context = new MigrateContext({
     dbPath: './migration.sqlite',
-    mode: 'resume',
-    contentFingerprint: sourceAndOptionsFingerprint
+    contentIdentity: {
+        source: 'wordpress-example-com',
+        revision: sourceFileSha256
+    },
+    mapSourcePost,
+    rereadSource: cliOptions.rereadSource ?? false
 });
 await context.init();
 
-const stats = context.hasContent();
-if (stats) {
-    console.log(`Reusing ${stats.posts} posts and ${stats.pages} pages`);
-} else {
-    await ingestSource(context);
+try {
+    const stats = context.hasContent();
+    if (stats) {
+        console.log(`Reprocessed ${stats.posts} posts and ${stats.pages} pages from SQLite`);
+    } else {
+        for await (const item of readSourceItems('./site.xml')) {
+            await context.addSourcePost({
+                lookupKey: item.id,
+                sourceContent: item.rawText,
+                sourceMeta: {url: item.url}
+            });
+        }
+    }
+} finally {
+    await context.close();
 }
 ```
 
-`contentFingerprint` should identify the source and every option that affects stored content. Resume rejects an incompatible database with an actionable error instead of silently exporting stale rows.
+`mapSourcePost` is the adapter's mapping function. `mg-context` calls it for every stored post on each resume, using a fresh post object built from `sourceContent` and `sourceMeta`; it then saves the mapped fields and relationships. Change this function freely while developing a migration—no mapper version or configuration change is needed. A resumed run does not parse the export file. The example hashes the file for source-identity verification; if the export will be unavailable on later runs, retain its original digest in the adapter's configuration.
+
+Persistent resume requires `contentIdentity`, even for a new database. `source` is any stable, nonblank name for this migration source; `wordpress-example-com` is fine. `revision` identifies the raw source snapshot. Here it is a digest of the XML file's bytes. The identity describes the input, not the mapper.
+
+`options` is optional. Include only settings that change which raw records are ingested or the raw text retained for them. Mapping options such as feature-image handling or shortcode conversion are deliberately excluded: replay applies the current mapper to the saved raw input. Values must be JSON-compatible (no functions, `undefined`, `Date`, or cycles).
+
+mg-context hashes the source identity and rejects an incompatible populated database rather than silently using the wrong raw snapshot. Do not use a per-run timestamp. Stored raw content is the replay input; a changed source snapshot requires `rereadSource: true`.
+
+`readSourceItems()` and `parseSourceItem()` in the example are your adapter's source parser. The first must provide the original per-post XML, HTML, JSON, or other text as `rawText`; the second converts that same text into values the mapper can use. Do not store already-transformed Ghost HTML as the source. `sourceMeta` carries related JSON such as the original URL. The existing `post.meta` is separate adapter metadata.
 
 ### Refresh transformed content
 
-Use refresh mode when a changed source or transformation should rebuild the context database. It clears managed migration content and reports without touching separately managed asset caches.
+Set `rereadSource` from a CLI boolean flag when the original export should be fetched or parsed again. It clears managed migration content and reports without touching separately managed asset caches. A normal resume reprocesses the saved raw content instead.
 
 ```js
 const context = new MigrateContext({
     dbPath: './migration.sqlite',
-    mode: 'refresh',
-    contentFingerprint: sourceAndOptionsFingerprint
+    contentIdentity: {source: 'wordpress-example-com', revision: newSourceFileSha256},
+    mapSourcePost,
+    rereadSource: true
 });
 ```
+
+Rereading does not require an identity, but passing one lets the next run resume safely. Older databases that lack raw per-post content also require a reread. `mode: 'refresh'` remains an equivalent compatibility option.
 
 Within one compatible run, a stable `lookupKey` still defaults to retry-safe `skip`. Advanced integrations can use `onDuplicate: 'replace'` or a resolver.
 
@@ -129,14 +175,11 @@ Use an on-disk database, save ingestion batches inside `transaction()`, and use 
 ```js
 await context.transaction(async () => {
     for (const sourcePost of sourceBatch) {
-        const post = await context.addPost({
+        await context.addSourcePost({
             lookupKey: sourcePost.id,
-            source: sourcePost
+            sourceContent: sourcePost.rawText,
+            sourceMeta: {url: sourcePost.url}
         });
-        post.set('title', sourcePost.title);
-        post.set('slug', sourcePost.slug);
-        post.set('html', sourcePost.html);
-        post.save(context.db);
     }
 });
 ```
@@ -169,7 +212,7 @@ The [API reference](docs/api-reference.md) covers every method, option, field, a
 - [Transactions](docs/api-reference.md#transactions)
 - [Finding and iterating entities](docs/api-reference.md#finding-entities)
 - [Filtering](docs/api-reference.md#filtering)
-- [Resume, refresh, and fingerprints](docs/api-reference.md#resume-refresh-and-content-fingerprints)
+- [Resume, refresh, and content identity](docs/api-reference.md#resume-refresh-and-content-identity)
 - [Events and durable reports](docs/api-reference.md#events-and-durable-reports)
 - [Field sanitization](docs/api-reference.md#field-sanitization)
 - [Slug reports](docs/api-reference.md#slug-deduplication)

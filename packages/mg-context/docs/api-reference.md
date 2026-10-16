@@ -22,7 +22,9 @@ new MigrateContext(options?)
 | `dbPath`             | `string`                              | —             | Path to a SQLite file for persistent, resumable storage   |
 | `storage`            | `'temporary' \| 'memory'`             | `'temporary'` | Storage used when `dbPath` is absent                       |
 | `mode`               | `'resume' \| 'refresh'`               | `'resume'`    | Reuse compatible content or reset it during `init()`       |
-| `contentFingerprint` | `string`                              | —             | Stable identity for the source and content-affecting input |
+| `contentIdentity`    | `ContentIdentity`                     | —             | Required for persistent resume; identifies the raw source snapshot |
+| `mapSourcePost`      | `(post) => void \| Promise<void>`     | —             | Rebuild a full mapped post from its raw source on every resume |
+| `rereadSource`       | `boolean`                             | `false`       | Clear staged content so the adapter can read the export again |
 | `onDuplicate`        | `'skip' \| 'replace' \| resolver`     | `'skip'`      | Default lookup-key duplicate policy                       |
 | `ephemeral`          | `boolean`                             | —             | Deprecated compatibility alias for memory storage         |
 | `emitEvents`         | `boolean`                             | `true`        | Deprecated; omit listeners to opt out naturally           |
@@ -36,14 +38,17 @@ const ctx = new MigrateContext();
 const ctx = new MigrateContext({
     dbPath: './migration.sqlite',
     mode: 'resume',
-    contentFingerprint: sourceAndOptionsDigest
+    contentIdentity: {
+        source: 'wordpress-example-com',
+        revision: sourceFileSha256
+    },
+    mapSourcePost: post => mapRawItem(post)
 });
 
 // Rebuild stored content while leaving separately managed asset caches alone
 const ctx = new MigrateContext({
     dbPath: './migration.sqlite',
-    mode: 'refresh',
-    contentFingerprint: sourceAndOptionsDigest
+    rereadSource: true
 });
 
 // Explicit in-memory storage, mainly for small jobs and tests
@@ -76,7 +81,7 @@ try {
 
 The version of the mg-context schema stored in the open SQLite database. The current version is also exported as `MIGRATE_CONTEXT_SCHEMA_VERSION`.
 
-Schema version 3 is current. `init()` transactionally migrates version 2 databases to version 3, marks new databases with the current version, and reopens databases already at that version. It rejects unversioned, unsupported older, and newer databases. Future changes must add an explicit migration; mg-context never silently reinterprets an existing database as a newer schema.
+Schema version 4 is current. `init()` transactionally migrates version 2 and 3 databases, marks new databases with the current version, and reopens databases already at that version. Existing rows without raw source content cannot be replayed; use `rereadSource: true` to refill them. It rejects unversioned, unsupported older, and newer databases.
 
 #### `databasePath: string`
 
@@ -109,31 +114,54 @@ if (ctx.hasContent()) {
 
 Objects loaded before `reset()` should be discarded because their database IDs no longer refer to stored rows.
 
-#### Resume, refresh, and content fingerprints
+#### Resume, refresh, and content identity
 
-`mode` expresses the migration's intent. In `resume` mode, mg-context reuses compatible content and skips existing lookup keys. In `refresh` mode, `init()` clears mg-context content, reports, and fingerprints before ingest begins. It does not touch asset files or databases managed by another package.
+On a persistent resume, `init()` replays every stored post through `mapSourcePost` and saves its newly mapped fields and relationships. The callback receives a new `PostContext` with `sourceContent`, `sourceMeta`, and `lookupKey`; it should populate the post but not save it. Replay replaces the mapped post regardless of the ingest-time duplicate policy. A mapper code change therefore takes effect on the next run without a version bump. `rereadSource: true` clears mg-context content, reports, and fingerprints before ingestion; it does not touch separately managed asset files or databases. `mode: 'refresh'` remains an equivalent compatibility option.
 
-`contentFingerprint` is one opaque, deterministic string covering both the source identity and every option or adapter version that can change stored content. mg-context stores the value; the caller decides how to calculate it. Do not include operational settings such as log verbosity, and hash secrets instead of embedding them.
+Persistent `resume` requires `contentIdentity`, including for a newly created database. There is no unsafe resume option. Each field has a distinct purpose:
+
+| Field | Meaning | Example |
+| --- | --- | --- |
+| `source` | Any stable, nonblank identifier for the site, export, or collection. It need not be a path and is not a per-post `lookupKey`. | `'wordpress-example-com'` |
+| `revision` | A stable revision of the source content. Change it when the source changes; hash file bytes when the source has no revision ID. | `sourceFileSha256` |
+| `options` | Optional, JSON-compatible settings that change source selection or raw text retained. Mapping-only settings do not belong here. | `{includeDrafts: true}` |
+
+For a single XML file, calculate `sourceFileSha256` with a streaming SHA-256 hash:
 
 ```js
-const contentFingerprint = hashStable({
-    sourceFiles: await hashSourceFiles(xmlFiles),
-    adapterVersion: 3,
-    featureImage,
-    shortcodes
-});
+import {createHash} from 'node:crypto';
+import {createReadStream} from 'node:fs';
 
+const hash = createHash('sha256');
+for await (const chunk of createReadStream('./site.xml')) {
+    hash.update(chunk);
+}
+const sourceFileSha256 = hash.digest('hex');
+```
+
+For multiple files, hash selected file names and contents in a deterministic order. Avoid `Date.now()` or another per-run value. Do not put transformation settings such as feature-image handling or shortcode conversion in the identity: replay applies current mapper behavior to saved raw source. Options must contain only plain JSON values, not `undefined`, functions, `Date` objects, or cycles. Object key order does not matter, but array order does. Avoid secrets in identity fields; include a digest if a secret affects source selection.
+
+mg-context hashes the source identity. A changed identity rejects a populated resume database and requires `rereadSource: true` to rebuild it. Ghost schema and mapper changes do not alter this identity because mapped posts are rebuilt from source on resume.
+
+```js
 const ctx = new MigrateContext({
     dbPath: './migration.sqlite',
-    mode: refreshRequested ? 'refresh' : 'resume',
-    contentFingerprint
+    rereadSource: cliOptions.rereadSource,
+    contentIdentity: {
+        source: 'wordpress-example-com',
+        revision: sourceFileSha256,
+        options: {includeDrafts}
+    },
+    mapSourcePost: post => mapRawItem(post)
 });
 await ctx.init();
 ```
 
-When `contentFingerprint` is supplied, `init()` rejects a populated resume database without the same fingerprint and explains how to rebuild with `mode: 'refresh'`. A one-shot temporary or memory migration usually does not need a fingerprint.
+`init()` rejects a populated resume database with a missing or different source identity. It also rejects posts without raw source content or lookup keys, and a populated resume without `mapSourcePost`. Rereading clears context content but not separately managed asset caches. A one-shot temporary or memory migration does not need an identity. For a live source without a revision, treat the first fetch as a frozen snapshot and use the explicit reread flag when a newer snapshot is wanted.
 
-The named methods `getFingerprint(name)`, `setFingerprint(name, value)`, `matchesFingerprint(name, value)`, and `deleteFingerprint(name)` remain available for advanced integration metadata and transition compatibility. They are not needed for the normal resume/refresh flow.
+Replay saves one mapped post at a time. If a mapper throws, `init()` fails and closes the database; posts already replayed remain committed, and the next run replays all posts again. Do not export after a failed initialization.
+
+The named methods `getFingerprint(name)`, `setFingerprint(name, value)`, `matchesFingerprint(name, value)`, and `deleteFingerprint(name)` remain available for advanced integration metadata. They are not needed for the normal resume/refresh flow.
 
 #### `db: DatabaseModels`
 
@@ -158,11 +186,29 @@ const post = await ctx.addPost({
     onDuplicate: 'replace'
 });
 
-// With source metadata (preserved but not exported)
-const post = await ctx.addPost({source: {originalId: 123}});
+// With original source text and related metadata (not exported)
+const post = await ctx.addPost({
+    lookupKey: '123',
+    sourceContent: '<item>...</item>',
+    sourceMeta: {originalId: 123}
+});
 ```
 
 When called with a `PostContext` instance, saves it immediately instead.
+
+Persistent posts require both `sourceContent` and `lookupKey`. `sourceContent` is the unmodified text of one source record, not mapped Ghost HTML. The deprecated `source` object option remains an alias for `sourceMeta` during the transition release.
+
+#### `addSourcePost(options): Promise<PostContext>`
+
+Map and save one raw record using the context's `mapSourcePost` callback. `options` must include `lookupKey` and `sourceContent`; it may include `sourceMeta` and `meta`. The same callback runs again for every stored post on a later resume.
+
+```js
+await ctx.addSourcePost({
+    lookupKey: item.id,
+    sourceContent: item.rawXml,
+    sourceMeta: {url: item.url}
+});
+```
 
 #### `addPost(postContext): Promise<PostContext>`
 
@@ -541,7 +587,7 @@ ctx.on('slug:renamed', ({oldSlug, newSlug, url}) => {
 
 `slug:renamed` is emitted only after suffixing and length enforcement, and never for a skipped duplicate that did not claim a slug. `oldSlug` is the requested slug and `newSlug` is the final persisted slug.
 
-`post:replaced` carries complete detached snapshots. Each snapshot contains `databaseId`, `ghostId`, `lookupKey`, `data`, `source`, `meta`, and `webscrapeData`. Tags and authors inside `data` are plain values, not live context objects. Full HTML and relationships are included. Mutating a snapshot cannot change the stored post or a later event.
+`post:replaced` carries complete detached snapshots. Each snapshot contains `databaseId`, `ghostId`, `lookupKey`, `data`, `sourceContent`, `sourceMeta`, `meta`, and `webscrapeData`. Tags and authors inside `data` are plain values, not live context objects. Full HTML and relationships are included. Mutating a snapshot cannot change the stored post or a later event.
 
 #### `getMigrationReport(): MigrationReport`
 
@@ -697,13 +743,17 @@ post.setAuthorOrder((authors) => [...authors].reverse());
 
 ### Source & metadata
 
-#### `post.source`
+#### `post.sourceContent`
 
-Access the source data object (set at construction). Not exported to Ghost JSON — use this to store original platform data for reference during migration.
+The original per-post source text, or `null` for older or temporary posts that did not provide it. Persistent posts must provide it, and a resume rebuilds mapped content from it.
+
+#### `post.sourceMeta`
+
+Related source data stored as JSON, such as the original URL or ID. The deprecated `post.source` getter aliases this object for one transition release.
 
 #### `post.getSourceValue(key): any`
 
-Get a single value from the source data.
+Get a single value from `sourceMeta` (kept for web-scraper compatibility).
 
 #### `post.meta`
 
@@ -763,7 +813,11 @@ Controls what `save()` does when `lookupKey` matches a stored post:
 Set a default for posts created by a context, or override it for one post:
 
 ```js
-const ctx = new MigrateContext({dbPath: './migration.sqlite', onDuplicate: 'replace'});
+const ctx = new MigrateContext({
+    dbPath: './migration.sqlite',
+    contentIdentity: {source: 'example.xml', revision: sourceFileSha256},
+    onDuplicate: 'replace'
+});
 
 const post = await ctx.addPost({
     lookupKey: 'https://example.com/post-url',
@@ -870,7 +924,7 @@ Getter that returns the results of the most recent deduplication. Results are gr
 |-----------|----------|-------------------------------------------------------------------|
 | `oldSlug` | `string` | The original (duplicate) slug                                     |
 | `newSlug` | `string` | The final slug — same as `oldSlug` for the retained post          |
-| `url`     | `string` | Original URL from `source.url` or `canonical_url` (empty if none) |
+| `url`     | `string` | Original URL from `sourceMeta.url` or `canonical_url` (empty if none) |
 
 Entries follow database insertion order. If a suffix like `-2` already belongs to a real post, allocation skips to `-3`, and so on. Adapters that can encounter several source revisions should use a duplicate resolver or preselect the revision they want before saving.
 

@@ -1,7 +1,7 @@
-// Run this with: `npx tsx examples/generate-large-export.ts`
+// Run this with: `pnpm exec tsx examples/generate-large-export.ts`
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {MigrateContext} from '../src/index.js';
+import {MigrateContext, type PostContext} from '../src/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -48,6 +48,25 @@ const authors = [
     {name: 'Carol Williams', slug: 'carol-williams', email: 'carol@example.com'}
 ];
 
+function mapSyntheticPost(post: PostContext) {
+    const {index: i, html: sourceHtml} = JSON.parse(post.sourceContent!);
+    post.set('title', `Post Number ${i + 1}`);
+    post.set('slug', `post-number-${i + 1}`);
+    post.set('status', 'published');
+    const postDate = new Date(2025, 0, 1, 0, i * 6);
+    post.set('created_at', postDate);
+    post.set('updated_at', postDate);
+    post.set('published_at', postDate);
+    post.set('html', sourceHtml);
+    post.addTag(tags[i % tags.length]);
+    post.addTag(tags[(i + 1) % tags.length]);
+    post.addAuthor(authors[i % authors.length]);
+    if (i === 10050) {
+        post.addTag({name: 'Art', slug: 'art'});
+        post.addAuthor({name: 'Ron', slug: 'ron', email: 'ron@example.com'});
+    }
+}
+
 async function main() {
     const args = process.argv.slice(2);
     const insertFlagIndex = args.indexOf('--insert');
@@ -56,7 +75,15 @@ async function main() {
 
     const startTime = Date.now();
 
-    const ctx = new MigrateContext({dbPath: join(__dirname, 'posts.db'), mode: 'resume'});
+    const ctx = new MigrateContext({
+        dbPath: join(__dirname, 'posts.db'),
+        mode: 'resume',
+        contentIdentity: {
+            source: 'mg-context-example:large-export',
+            revision: `synthetic-${POST_COUNT}`
+        },
+        mapSourcePost: mapSyntheticPost
+    });
     await ctx.init();
 
     try {
@@ -74,25 +101,13 @@ async function main() {
 
             await ctx.transaction(async () => {
                 for (let i = batchStart; i < batchEnd; i++) {
-                    const post = await ctx.addPost({lookupKey: `https://example.com/post-number-${i + 1}`});
-                    post.set('title', `Post Number ${i + 1}`);
-                    post.set('slug', `post-number-${i + 1}`);
-                    post.set('status', 'published');
-                    const postDate = new Date(2025, 0, 1, 0, i * 6);
-                    post.set('created_at', postDate);
-                    post.set('updated_at', postDate);
-                    post.set('published_at', postDate);
-                    post.set('html', html.replace('Lorem ipsum', `Post ${i + 1}: Lorem ipsum`));
-                    post.addTag(tags[i % tags.length]);
-                    post.addTag(tags[(i + 1) % tags.length]);
-                    post.addAuthor(authors[i % authors.length]);
-
-                    if (i === 10050) {
-                        post.addTag({name: 'Art', slug: 'art'});
-                        post.addAuthor({name: 'Ron', slug: 'ron', email: 'ron@example.com'});
-                    }
-
-                    await post.save(ctx.db);
+                    await ctx.addSourcePost({
+                        lookupKey: `https://example.com/post-number-${i + 1}`,
+                        sourceContent: JSON.stringify({
+                            index: i,
+                            html: html.replace('Lorem ipsum', `Post ${i + 1}: Lorem ipsum`)
+                        })
+                    });
                 }
             });
 
