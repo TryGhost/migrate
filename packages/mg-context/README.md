@@ -139,7 +139,7 @@ const context = new MigrateContext({
 });
 ```
 
-Rereading does not require an identity, but passing one lets the next run resume safely. Older databases that lack raw per-post content also require a reread. `mode: 'refresh'` remains an equivalent compatibility option.
+Rereading does not require an identity, but passing one lets the next run resume safely. Older databases that lack raw per-post content also require a reread.
 
 Within one compatible run, a stable `lookupKey` still defaults to retry-safe `skip`. Advanced integrations can use `onDuplicate: 'replace'` or a resolver.
 
@@ -195,7 +195,7 @@ Source data routinely carries values Ghost will not accept — a title over 255 
 | Storage | Managed temporary on-disk SQLite; persistent when `dbPath` is provided |
 | Post content | HTML is preserved and exported unchanged |
 | Duplicate lookup key | Skip the incoming post |
-| Resume mode | Reuse a compatible persistent database |
+| Persistent resume | Reuse a compatible database and replay its saved source; pass `rereadSource: true` to replace it |
 | Progress and change events | Typed EventEmitter events; no listeners means no presentation work |
 | Post iteration batch | 100 records |
 | JSON export batch | 5,000 posts per file |

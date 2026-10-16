@@ -77,7 +77,6 @@ async function main() {
 
     const ctx = new MigrateContext({
         dbPath: join(__dirname, 'posts.db'),
-        mode: 'resume',
         contentIdentity: {
             source: 'mg-context-example:large-export',
             revision: `synthetic-${POST_COUNT}`

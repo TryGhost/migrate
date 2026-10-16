@@ -24,6 +24,11 @@ const TEST_CONTENT_IDENTITY = {
     revision: 'test-source-v1'
 };
 
+function readStoredContentIdentity(context: MigrateContext): string | null {
+    const row = context.db.stmts.getFingerprint.get('content') as {value: string} | undefined;
+    return row?.value ?? null;
+}
+
 describe('MigrateContext', () => {
     it('Is instance of', () => {
         const instance: any = new MigrateContext();
@@ -87,7 +92,6 @@ describe('MigrateContext', () => {
                 message:
                     'Persistent resume requires contentIdentity. Pass a source revision, or use rereadSource: true to read the export again.'
             });
-            assert.doesNotThrow(() => new MigrateContext({dbPath: 'migration.sqlite', mode: 'refresh'}));
             assert.doesNotThrow(() => new MigrateContext({dbPath: 'migration.sqlite', rereadSource: true}));
             assert.doesNotThrow(() => new MigrateContext());
         });
@@ -103,7 +107,7 @@ describe('MigrateContext', () => {
             });
         });
 
-        it('Does not let an invalid path or mode bypass persistent resume validation', () => {
+        it('Does not let an invalid path bypass persistent resume validation', () => {
             assert.throws(() => new MigrateContext({dbPath: ''}), {
                 name: 'BadRequestError',
                 message: 'dbPath must be a non-empty path.'
@@ -112,9 +116,9 @@ describe('MigrateContext', () => {
                 name: 'BadRequestError',
                 message: 'dbPath must be a non-empty path.'
             });
-            assert.throws(() => new MigrateContext({dbPath: 'migration.sqlite', mode: 'other' as any}), {
+            assert.throws(() => new MigrateContext({mode: 'refresh'} as any), {
                 name: 'BadRequestError',
-                message: 'mode must be "resume" or "refresh".'
+                message: 'Use rereadSource: true instead of the removed mode option.'
             });
         });
 
@@ -173,7 +177,7 @@ describe('MigrateContext', () => {
         it('Resets all managed content, sequences, and in-memory state', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
-            instance.setFingerprint('source', 'source-v1');
+            instance.db.stmts.setFingerprint.run('source', 'source-v1');
 
             const first = await instance.addPost();
             first.set('title', 'x'.repeat(300));
@@ -209,7 +213,7 @@ describe('MigrateContext', () => {
             instance.reset();
 
             assert.equal(instance.hasContent(), false);
-            assert.equal(instance.getFingerprint('source'), null);
+            assert.equal(instance.db.stmts.getFingerprint.get('source'), undefined);
             assert.equal(instance.db.tagCache.size, 0);
             assert.equal(instance.db.authorCache.size, 0);
             assert.equal(instance.db.slugRenames.length, 0);
@@ -243,42 +247,21 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
-        it('Persists opaque fingerprints and can preserve them across a content reset', async () => {
-            const filePath = join(tmpdir(), `mg-context-fingerprint-test-${Date.now()}.sqlite`);
-            const firstRun = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
-            await firstRun.init();
-
-            assert.equal(firstRun.getFingerprint('source'), null);
-            assert.equal(firstRun.matchesFingerprint('source', 'source-v1'), false);
-
-            firstRun.setFingerprint('source', 'source-v1');
-            firstRun.setFingerprint('transform', 'options-v1');
-            assert.equal(firstRun.matchesFingerprint('source', 'source-v1'), true);
-            assert.equal(firstRun.hasContent(), false);
-
-            firstRun.setFingerprint('transform', 'options-v2');
-            assert.equal(firstRun.getFingerprint('transform'), 'options-v2');
-
-            firstRun.deleteFingerprint('transform');
-            assert.equal(firstRun.getFingerprint('transform'), null);
-            await firstRun.close();
-
-            const secondRun = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
-            await secondRun.init();
-            assert.equal(secondRun.schemaVersion, MIGRATE_CONTEXT_SCHEMA_VERSION);
-            assert.equal(secondRun.getFingerprint('source'), 'source-v1');
-
-            secondRun.addLink('example.com/cached/', '/cached/');
-            secondRun.reset({preserveFingerprints: true});
-            assert.equal(secondRun.hasContent(), false);
-            assert.equal(secondRun.getFingerprint('source'), 'source-v1');
-
-            await secondRun.close();
-            await rm(filePath, {force: true});
+        it('Clears stored content identity when resetting migration content', async () => {
+            const instance = new MigrateContext({contentIdentity: TEST_CONTENT_IDENTITY});
+            await instance.init();
+            assert.equal(readStoredContentIdentity(instance), fingerprintContentIdentity(TEST_CONTENT_IDENTITY));
+            assert.throws(() => (instance.reset as any)({preserveFingerprints: true}), {
+                name: 'BadRequestError',
+                message: 'reset() no longer accepts options; source identity is always cleared.'
+            });
+            instance.reset();
+            assert.equal(readStoredContentIdentity(instance), null);
+            await instance.close();
         });
 
-        it('Uses content identity to make resume and refresh intent explicit', async () => {
-            const filePath = join(tmpdir(), `mg-context-content-identity-mode-${Date.now()}.sqlite`);
+        it('Uses content identity to make resume and reread intent explicit', async () => {
+            const filePath = join(tmpdir(), `mg-context-content-identity-reread-${Date.now()}.sqlite`);
             const contentIdentity = {...TEST_CONTENT_IDENTITY, revision: 'source-and-options-v1'};
             const firstRun = new MigrateContext({dbPath: filePath, contentIdentity});
             await firstRun.init();
@@ -316,13 +299,13 @@ describe('MigrateContext', () => {
 
             const refreshed = new MigrateContext({
                 dbPath: filePath,
-                mode: 'refresh',
+                rereadSource: true,
                 contentIdentity: {...contentIdentity, revision: 'source-and-options-v2'}
             });
             await refreshed.init();
             assert.equal(refreshed.hasContent(), false);
             assert.equal(
-                refreshed.getFingerprint('content'),
+                readStoredContentIdentity(refreshed),
                 fingerprintContentIdentity({...contentIdentity, revision: 'source-and-options-v2'})
             );
             assert.equal(refreshed.getMigrationReport().events.length, 0);
@@ -604,7 +587,7 @@ describe('MigrateContext', () => {
             const firstRun = new MigrateContext({dbPath: filePath, contentIdentity});
             await firstRun.init();
             firstRun.addLink('example.com/old/', '/new/');
-            const storedFingerprint = firstRun.getFingerprint('content');
+            const storedFingerprint = readStoredContentIdentity(firstRun);
             assert.match(storedFingerprint!, /^sha256:[a-f0-9]{64}$/);
             await firstRun.close();
 
@@ -616,7 +599,7 @@ describe('MigrateContext', () => {
                 }
             });
             await resumed.init();
-            assert.equal(resumed.getFingerprint('content'), storedFingerprint);
+            assert.equal(readStoredContentIdentity(resumed), storedFingerprint);
             assert.equal(resumed.findLink('example.com/old/'), '/new/');
             await resumed.close();
 
@@ -635,7 +618,7 @@ describe('MigrateContext', () => {
 
             const refreshed = new MigrateContext({
                 dbPath: filePath,
-                mode: 'refresh',
+                rereadSource: true,
                 contentIdentity: {
                     ...contentIdentity,
                     revision: 'sha256:source-v2'
@@ -643,14 +626,14 @@ describe('MigrateContext', () => {
             });
             await refreshed.init();
             assert.equal(refreshed.hasContent(), false);
-            assert.notEqual(refreshed.getFingerprint('content'), storedFingerprint);
+            assert.notEqual(readStoredContentIdentity(refreshed), storedFingerprint);
             await refreshed.close();
             await rm(filePath, {force: true});
         });
 
         it('Rejects populated legacy databases without a stored content identity', async () => {
             const filePath = join(tmpdir(), `mg-context-unidentified-${Date.now()}.sqlite`);
-            const original = new MigrateContext({dbPath: filePath, mode: 'refresh'});
+            const original = new MigrateContext({dbPath: filePath, rereadSource: true});
             await original.init();
             original.addLink('example.com/old/', '/new/');
             await original.close();

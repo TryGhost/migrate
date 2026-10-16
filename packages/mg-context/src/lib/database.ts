@@ -57,7 +57,6 @@ export interface PreparedStatements {
     contentStats: ReturnType<DatabaseSync['prepare']>;
     getFingerprint: ReturnType<DatabaseSync['prepare']>;
     setFingerprint: ReturnType<DatabaseSync['prepare']>;
-    deleteFingerprint: ReturnType<DatabaseSync['prepare']>;
     insertMigrationEvent: ReturnType<DatabaseSync['prepare']>;
     findMigrationEvents: ReturnType<DatabaseSync['prepare']>;
     countMigrationEventsByType: ReturnType<DatabaseSync['prepare']>;
@@ -241,7 +240,6 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         setFingerprint: db.prepare(
             'INSERT INTO Fingerprints (name, value) VALUES (?, ?) ON CONFLICT(name) DO UPDATE SET value = excluded.value'
         ),
-        deleteFingerprint: db.prepare('DELETE FROM Fingerprints WHERE name = ?'),
         insertMigrationEvent: db.prepare(
             'INSERT INTO MigrationEvents (type, post_id, lookup_key, details, created_at) VALUES (?, ?, ?, ?, ?)'
         ),

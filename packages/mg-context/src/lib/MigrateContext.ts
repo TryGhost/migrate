@@ -137,10 +137,6 @@ export interface DuplicateSlugEntry {
     url: string;
 }
 
-export interface ResetOptions {
-    preserveFingerprints?: boolean;
-}
-
 export interface ContentStats {
     posts: number;
     pages: number;
@@ -181,7 +177,6 @@ export interface MigrationReport {
 export interface MigrateContextOptions {
     dbPath?: string;
     storage?: 'temporary' | 'memory';
-    mode?: 'resume' | 'refresh';
     contentIdentity?: ContentIdentity;
     /** Rebuild each stored post from its raw source on every persistent resume. */
     mapSourcePost?: (post: PostContext) => void | Promise<void>;
@@ -263,7 +258,6 @@ export default class MigrateContext extends MigrateBase {
     #dbPath: string | null;
     #storage: 'persistent' | 'temporary' | 'memory';
     #temporaryDirectory: string | null = null;
-    #mode: 'resume' | 'refresh';
     #contentIdentityHash: string | undefined;
     #mapSourcePost: ((post: PostContext) => void | Promise<void>) | undefined;
     #rereadSource: boolean;
@@ -278,29 +272,28 @@ export default class MigrateContext extends MigrateBase {
     constructor({
         dbPath,
         storage,
-        mode = 'resume',
         contentIdentity,
         mapSourcePost,
         rereadSource = false,
         ephemeral,
         emitEvents = true,
         warnOnLookupKeyDuplicate = false,
-        onDuplicate
+        onDuplicate,
+        ...unsupportedOptions
     }: MigrateContextOptions = {}) {
         super();
 
         this.#emitEvents = emitEvents;
         this.#warnOnLookupKeyDuplicate = warnOnLookupKeyDuplicate;
         this.#onDuplicate = onDuplicate;
-        this.#mode = mode;
         this.#mapSourcePost = mapSourcePost;
         this.#rereadSource = rereadSource;
 
+        if (Object.hasOwn(unsupportedOptions, 'mode')) {
+            throw new errors.BadRequestError({message: 'Use rereadSource: true instead of the removed mode option.'});
+        }
         if (dbPath !== undefined && (typeof dbPath !== 'string' || !dbPath.trim())) {
             throw new errors.BadRequestError({message: 'dbPath must be a non-empty path.'});
-        }
-        if (mode !== 'resume' && mode !== 'refresh') {
-            throw new errors.BadRequestError({message: 'mode must be "resume" or "refresh".'});
         }
         if (typeof rereadSource !== 'boolean') {
             throw new errors.BadRequestError({message: 'rereadSource must be a boolean.'});
@@ -311,7 +304,7 @@ export default class MigrateContext extends MigrateBase {
         if (dbPath && storage) {
             throw new errors.BadRequestError({message: 'Pass either dbPath or storage, not both.'});
         }
-        if (dbPath && mode === 'resume' && !rereadSource && contentIdentity === undefined) {
+        if (dbPath && !rereadSource && contentIdentity === undefined) {
             throw new errors.BadRequestError({
                 message:
                     'Persistent resume requires contentIdentity. Pass a source revision, or use rereadSource: true to read the export again.'
@@ -376,28 +369,23 @@ export default class MigrateContext extends MigrateBase {
         this.#slugsDeduped = false;
         this.#duplicateSlugs = [];
 
-        if (this.#mode === 'refresh' || this.#rereadSource) {
+        if (this.#rereadSource) {
             this.reset();
         }
 
         if (this.#contentIdentityHash !== undefined) {
-            const stored = this.getFingerprint(CONTENT_IDENTITY_KEY);
-            if (
-                this.#mode === 'resume' &&
-                !this.#rereadSource &&
-                this.hasContent() &&
-                stored !== this.#contentIdentityHash
-            ) {
+            const stored = this.#getContentIdentityHash();
+            if (!this.#rereadSource && this.hasContent() && stored !== this.#contentIdentityHash) {
                 await this.close();
                 throw new errors.InternalServerError({
                     message:
                         'The stored migration content has a different or missing source identity. Re-run with rereadSource: true to read the export again.'
                 });
             }
-            this.setFingerprint(CONTENT_IDENTITY_KEY, this.#contentIdentityHash);
+            this.#setContentIdentityHash(this.#contentIdentityHash);
         }
 
-        if (this.#storage === 'persistent' && this.#mode === 'resume' && !this.#rereadSource) {
+        if (this.#storage === 'persistent' && !this.#rereadSource) {
             try {
                 await this.#replaySourcePosts();
             } catch (error) {
@@ -497,10 +485,14 @@ export default class MigrateContext extends MigrateBase {
 
     /**
      * Remove migration content without deleting the SQLite file or any external
-     * caches. Fingerprints are cleared by default because they describe the data
-     * that was just removed.
+     * caches. The source identity is cleared with the content it describes.
      */
-    reset({preserveFingerprints = false}: ResetOptions = {}): void {
+    reset(): void {
+        if (arguments.length > 0) {
+            throw new errors.BadRequestError({
+                message: 'reset() no longer accepts options; source identity is always cleared.'
+            });
+        }
         const db = this.db;
 
         withTransaction(db, () => {
@@ -514,9 +506,7 @@ export default class MigrateContext extends MigrateBase {
                 DELETE FROM MigrationEvents;
             `);
 
-            if (!preserveFingerprints) {
-                db.db.exec('DELETE FROM Fingerprints;');
-            }
+            db.db.exec('DELETE FROM Fingerprints;');
 
             db.db.exec(
                 "DELETE FROM sqlite_sequence WHERE name IN ('Posts', 'Tags', 'Authors', 'PostTags', 'PostAuthors', 'Links', 'MigrationEvents');"
@@ -532,25 +522,13 @@ export default class MigrateContext extends MigrateBase {
         this.#duplicateSlugs = [];
     }
 
-    /** Return an opaque, caller-defined fingerprint persisted with this database. */
-    getFingerprint(name: string): string | null {
-        const row = this.db.stmts.getFingerprint.get(name) as {value: string} | undefined;
+    #getContentIdentityHash(): string | null {
+        const row = this.db.stmts.getFingerprint.get(CONTENT_IDENTITY_KEY) as {value: string} | undefined;
         return row?.value ?? null;
     }
 
-    /** Persist an opaque source, cache, or transformation fingerprint. */
-    setFingerprint(name: string, value: string): void {
-        this.db.stmts.setFingerprint.run(name, value);
-    }
-
-    /** Check a fingerprint without requiring callers to handle a missing value separately. */
-    matchesFingerprint(name: string, value: string): boolean {
-        return this.getFingerprint(name) === value;
-    }
-
-    /** Remove one persisted fingerprint. */
-    deleteFingerprint(name: string): void {
-        this.db.stmts.deleteFingerprint.run(name);
+    #setContentIdentityHash(value: string): void {
+        this.db.stmts.setFingerprint.run(CONTENT_IDENTITY_KEY, value);
     }
 
     on<K extends keyof MigrateContextEventMap>(event: K, listener: (payload: MigrateContextEventMap[K]) => void) {

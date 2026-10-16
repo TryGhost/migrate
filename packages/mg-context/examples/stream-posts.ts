@@ -62,7 +62,6 @@ async function main() {
     const dbExists = existsSync(DB_PATH);
     const ctx = new MigrateContext({
         dbPath: DB_PATH,
-        mode: 'resume',
         contentIdentity: {
             source: 'mg-context-example:stream-posts',
             revision: `synthetic-${POST_COUNT}`

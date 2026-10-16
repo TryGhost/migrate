@@ -21,7 +21,6 @@ new MigrateContext(options?)
 | -------------------- | ------------------------------------- | ------------- | --------------------------------------------------------- |
 | `dbPath`             | `string`                              | —             | Path to a SQLite file for persistent, resumable storage   |
 | `storage`            | `'temporary' \| 'memory'`             | `'temporary'` | Storage used when `dbPath` is absent                       |
-| `mode`               | `'resume' \| 'refresh'`               | `'resume'`    | Reuse compatible content or reset it during `init()`       |
 | `contentIdentity`    | `ContentIdentity`                     | —             | Required for persistent resume; identifies the raw source snapshot |
 | `mapSourcePost`      | `(post) => void \| Promise<void>`     | —             | Rebuild a full mapped post from its raw source on every resume |
 | `rereadSource`       | `boolean`                             | `false`       | Clear staged content so the adapter can read the export again |
@@ -37,7 +36,6 @@ const ctx = new MigrateContext();
 // Persistent and resumable
 const ctx = new MigrateContext({
     dbPath: './migration.sqlite',
-    mode: 'resume',
     contentIdentity: {
         source: 'wordpress-example-com',
         revision: sourceFileSha256
@@ -98,13 +96,13 @@ if (stats) {
 }
 ```
 
-The returned object contains `posts`, `pages`, `users`, `tags`, `userAssociations`, `tagAssociations`, and `links`. Authors are reported as users because that is how they appear in the Ghost import. Fingerprints do not count as content.
+The returned object contains `posts`, `pages`, `users`, `tags`, `userAssociations`, `tagAssociations`, and `links`. Authors are reported as users because that is how they appear in the Ghost import. Stored source identity metadata does not count as content.
 
-#### `reset(options?): void`
+#### `reset(): void`
 
 Atomically removes every post, tag, author, relationship, and link mapping and clears the related in-memory caches and reports. It resets row ID sequences but keeps the SQLite database file open; it does not remove the database, its WAL/SHM files, downloaded assets, or an asset scraper's separate database.
 
-Fingerprints are cleared by default because they describe the removed content. Pass `{preserveFingerprints: true}` when the caller deliberately wants to retain them.
+The stored source identity is cleared with the content it describes.
 
 ```js
 if (ctx.hasContent()) {
@@ -116,7 +114,7 @@ Objects loaded before `reset()` should be discarded because their database IDs n
 
 #### Resume, refresh, and content identity
 
-On a persistent resume, `init()` replays every stored post through `mapSourcePost` and saves its newly mapped fields and relationships. The callback receives a new `PostContext` with `sourceContent`, `sourceMeta`, and `lookupKey`; it should populate the post but not save it. Replay replaces the mapped post regardless of the ingest-time duplicate policy. A mapper code change therefore takes effect on the next run without a version bump. `rereadSource: true` clears mg-context content, reports, and fingerprints before ingestion; it does not touch separately managed asset files or databases. `mode: 'refresh'` remains an equivalent compatibility option.
+On a persistent resume, `init()` replays every stored post through `mapSourcePost` and saves its newly mapped fields and relationships. The callback receives a new `PostContext` with `sourceContent`, `sourceMeta`, and `lookupKey`; it should populate the post but not save it. Replay replaces the mapped post regardless of the ingest-time duplicate policy. A mapper code change therefore takes effect on the next run without a version bump. `rereadSource: true` clears mg-context content, reports, and source identity before ingestion; it does not touch separately managed asset files or databases.
 
 Persistent `resume` requires `contentIdentity`, including for a newly created database. There is no unsafe resume option. Each field has a distinct purpose:
 
@@ -160,8 +158,6 @@ await ctx.init();
 `init()` rejects a populated resume database with a missing or different source identity. It also rejects posts without raw source content or lookup keys, and a populated resume without `mapSourcePost`. Rereading clears context content but not separately managed asset caches. A one-shot temporary or memory migration does not need an identity. For a live source without a revision, treat the first fetch as a frozen snapshot and use the explicit reread flag when a newer snapshot is wanted.
 
 Replay saves one mapped post at a time. If a mapper throws, `init()` fails and closes the database; posts already replayed remain committed, and the next run replays all posts again. Do not export after a failed initialization.
-
-The named methods `getFingerprint(name)`, `setFingerprint(name, value)`, `matchesFingerprint(name, value)`, and `deleteFingerprint(name)` remain available for advanced integration metadata. They are not needed for the normal resume/refresh flow.
 
 #### `db: DatabaseModels`
 
@@ -591,7 +587,7 @@ ctx.on('slug:renamed', ({oldSlug, newSlug, url}) => {
 
 #### `getMigrationReport(): MigrationReport`
 
-Returns the durable migration report from SQLite. Its `summary` counts `post:inserted`, `post:skipped`, `post:replaced`, `field:sanitized`, and `slug:renamed`; `events` contains their identities, compact details, and timestamps. The report survives reopening a persistent database and is cleared by `reset()` or refresh mode.
+Returns the durable migration report from SQLite. Its `summary` counts `post:inserted`, `post:skipped`, `post:replaced`, `field:sanitized`, and `slug:renamed`; `events` contains their identities, compact details, and timestamps. The report survives reopening a persistent database and is cleared by `reset()` or `rereadSource: true`.
 
 Replacement report rows contain changed field names and summary data rather than duplicating the live event's complete before/after snapshots. Export and progress events are operational and are not persisted.
 

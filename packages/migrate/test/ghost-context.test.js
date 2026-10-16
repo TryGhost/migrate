@@ -16,6 +16,10 @@ describe('Ghost API context lifecycle', function () {
             cacheName: 'test-ghost-source'
         };
         const task = {title: 'Initializing Workspace'};
+        assert.equal(
+            ghostSource.getFullTaskList(options).some(step => step.title === 'Prepare data for export'),
+            false
+        );
 
         try {
             const first = {};

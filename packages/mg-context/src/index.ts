@@ -16,7 +16,6 @@ export type {
     ForEachPostOptions,
     PostFilter,
     DuplicateSlugEntry,
-    ResetOptions,
     ContentStats,
     UpdatePostDataOptions,
     WriteGhostJsonOptions,

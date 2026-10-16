@@ -145,17 +145,6 @@ const getFullTaskList = options => {
             }
         },
         {
-            title: 'Prepare data for export',
-            task: async ctx => {
-                try {
-                    await ctx.migrateContext.prepareForExport();
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to prepare data for export', error});
-                    throw error;
-                }
-            }
-        },
-        {
             title: 'Write Ghost import JSON file(s)',
             task: async ctx => {
                 try {
