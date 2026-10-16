@@ -81,7 +81,7 @@ async function main() {
             source: 'mg-context-example:large-export',
             revision: `synthetic-${POST_COUNT}`
         },
-        rereadSource: args.includes('--reread-source')
+        resetContent: args.includes('--reread-source')
     });
     await ctx.init();
 

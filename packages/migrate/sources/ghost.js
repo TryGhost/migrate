@@ -32,7 +32,7 @@ const initialize = (options, {infoOnly = false} = {}) => {
             if (!infoOnly) {
                 ctx.migrateContext = new MigrateContext({
                     dbPath: join(ctx.fileCache.tmpDir, 'mg-context.sqlite'),
-                    rereadSource: Boolean(options.rereadSource),
+                    resetContent: Boolean(options.rereadSource),
                     contentIdentity: {
                         source: `ghost-api:${options.url}`,
                         revision: 'live-api-snapshot',

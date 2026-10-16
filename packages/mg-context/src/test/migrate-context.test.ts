@@ -90,16 +90,20 @@ describe('MigrateContext', () => {
             assert.throws(() => new MigrateContext({dbPath: 'migration.sqlite'}), {
                 name: 'BadRequestError',
                 message:
-                    'Persistent resume requires contentIdentity. Pass a source revision, or use rereadSource: true to read the export again.'
+                    'Persistent resume requires contentIdentity. Pass a source revision, or use resetContent: true to rebuild stored content.'
             });
-            assert.doesNotThrow(() => new MigrateContext({dbPath: 'migration.sqlite', rereadSource: true}));
+            assert.doesNotThrow(() => new MigrateContext({dbPath: 'migration.sqlite', resetContent: true}));
             assert.doesNotThrow(() => new MigrateContext());
         });
 
-        it('Validates source refresh options', () => {
-            assert.throws(() => new MigrateContext({rereadSource: 'yes' as any}), {
+        it('Validates the content reset option', () => {
+            assert.throws(() => new MigrateContext({resetContent: 'yes' as any}), {
                 name: 'BadRequestError',
-                message: 'rereadSource must be a boolean.'
+                message: 'resetContent must be a boolean.'
+            });
+            assert.throws(() => new MigrateContext({rereadSource: true} as any), {
+                name: 'BadRequestError',
+                message: 'Use resetContent instead of rereadSource.'
             });
         });
 
@@ -114,7 +118,7 @@ describe('MigrateContext', () => {
             });
             assert.throws(() => new MigrateContext({mode: 'refresh'} as any), {
                 name: 'BadRequestError',
-                message: 'Use rereadSource: true instead of the removed mode option.'
+                message: 'Use resetContent: true instead of the removed mode option.'
             });
         });
 
@@ -122,7 +126,7 @@ describe('MigrateContext', () => {
             assert.throws(() => new MigrateContext({dbPath: 'migration.sqlite', contentFingerprint: 'legacy'} as any), {
                 name: 'BadRequestError',
                 message:
-                    'Persistent resume requires contentIdentity. Pass a source revision, or use rereadSource: true to read the export again.'
+                    'Persistent resume requires contentIdentity. Pass a source revision, or use resetContent: true to rebuild stored content.'
             });
         });
 
@@ -282,12 +286,12 @@ describe('MigrateContext', () => {
             await assert.rejects(() => incompatible.init(), {
                 name: 'InternalServerError',
                 message:
-                    'The stored migration content has a different or missing source identity. Re-run with rereadSource: true to read the export again.'
+                    'The stored migration content has a different or missing source identity. Re-run with resetContent: true to rebuild it.'
             });
 
             const refreshed = new MigrateContext({
                 dbPath: filePath,
-                rereadSource: true,
+                resetContent: true,
                 contentIdentity: {...contentIdentity, revision: 'source-and-options-v2'}
             });
             await refreshed.init();
@@ -349,7 +353,7 @@ describe('MigrateContext', () => {
             await rm(filePath, {force: true});
         });
 
-        it('Rereads source only when explicitly requested', async () => {
+        it('Clears stored content only when explicitly requested, leaving ingestion to the caller', async () => {
             const filePath = join(tmpdir(), `mg-context-reread-${Date.now()}.sqlite`);
             const first = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
             await first.init();
@@ -367,18 +371,18 @@ describe('MigrateContext', () => {
             assert.equal((await resumed.getAllPosts())[0].data.title, 'Old source');
             await resumed.close();
 
-            const reread = new MigrateContext({dbPath: filePath, rereadSource: true});
-            await reread.init();
-            assert.equal(reread.hasContent(), false);
-            await reread.addSourcePost(post => {
+            const reset = new MigrateContext({dbPath: filePath, resetContent: true});
+            await reset.init();
+            assert.equal(reset.hasContent(), false);
+            await reset.addSourcePost(post => {
                 post.setSource('lookupKey', 'new');
                 post.setSource('content', 'New source');
                 post.set('title', post.sourceContent);
                 post.set('slug', 'new');
                 post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
             });
-            assert.equal((await reread.getAllPosts())[0].sourceContent, 'New source');
-            await reread.close();
+            assert.equal((await reset.getAllPosts())[0].sourceContent, 'New source');
+            await reset.close();
             await rm(filePath, {force: true});
         });
 
@@ -489,13 +493,13 @@ describe('MigrateContext', () => {
                 await assert.rejects(() => incompatible.init(), {
                     name: 'InternalServerError',
                     message:
-                        'The stored migration content has a different or missing source identity. Re-run with rereadSource: true to read the export again.'
+                        'The stored migration content has a different or missing source identity. Re-run with resetContent: true to rebuild it.'
                 });
             }
 
             const refreshed = new MigrateContext({
                 dbPath: filePath,
-                rereadSource: true,
+                resetContent: true,
                 contentIdentity: {
                     ...contentIdentity,
                     revision: 'sha256:source-v2'
@@ -510,7 +514,7 @@ describe('MigrateContext', () => {
 
         it('Rejects populated legacy databases without a stored content identity', async () => {
             const filePath = join(tmpdir(), `mg-context-unidentified-${Date.now()}.sqlite`);
-            const original = new MigrateContext({dbPath: filePath, rereadSource: true});
+            const original = new MigrateContext({dbPath: filePath, resetContent: true});
             await original.init();
             original.addLink('example.com/old/', '/new/');
             await original.close();
@@ -522,7 +526,7 @@ describe('MigrateContext', () => {
             await assert.rejects(() => resumed.init(), {
                 name: 'InternalServerError',
                 message:
-                    'The stored migration content has a different or missing source identity. Re-run with rereadSource: true to read the export again.'
+                    'The stored migration content has a different or missing source identity. Re-run with resetContent: true to rebuild it.'
             });
             await rm(filePath, {force: true});
         });
@@ -592,7 +596,7 @@ describe('MigrateContext', () => {
             await resume.init();
             assert.equal((await resume.getAllPosts())[0].data.title, 'Old mapped post');
             await resume.close();
-            const refresh = new MigrateContext({dbPath: filePath, rereadSource: true});
+            const refresh = new MigrateContext({dbPath: filePath, resetContent: true});
             await refresh.init();
             assert.equal(refresh.hasContent(), false);
             await refresh.close();

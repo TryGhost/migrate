@@ -64,7 +64,7 @@ async function main() {
             source: 'mg-context-example:stream-posts',
             revision: `synthetic-${POST_COUNT}`
         },
-        rereadSource: process.argv.includes('--reread-source')
+        resetContent: process.argv.includes('--reread-source')
     });
     await ctx.init();
 

@@ -40,7 +40,7 @@ try {
 
 ## Rerun a completed migration
 
-Give the database a path so it survives the first run. When you run the adapter again, it can export the posts already stored there without parsing and mapping the source a second time. `hasContent()` returns stored content counts, or `false` if the database is empty.
+Give the database a path so it survives the first run. On later runs, the adapter can skip source ingestion and process the original records stored in SQLite again before export. `hasContent()` returns stored content counts, or `false` if the database is empty.
 
 When saving a post to a persistent database, both `post.setSource('lookupKey', ...)` and `post.setSource('content', ...)` are required. `content` holds the original source record, not the transformed Ghost HTML; `meta` is optional.
 
@@ -49,7 +49,7 @@ This is an **adapter outline**, not a standalone program: your adapter supplies 
 ```js
 import {MigrateContext} from '@tryghost/mg-context';
 
-// This will come from your integration, such as a CLI flag, passed to this constructor
+// Usually supplied by your adapter's CLI; true discards and re-ingests source records.
 const refreshData = false;
 
 const context = new MigrateContext({
@@ -58,24 +58,27 @@ const context = new MigrateContext({
         source: 'wordpress-example-com',
         revision: sourceFileSha256
     },
-    rereadSource: refreshData
+    resetContent: refreshData
 });
 await context.init();
 
 try {
-    if (!context.hasContent()) {
+    if (!context.hasContent() || refreshData) {
         for await (const item of readSourceItems('./site.xml')) {
             await context.addSourcePost((post) => {
                 post.setSource('lookupKey', item.id);
                 post.setSource('content', item.rawText);
-                const source = parseSourceItem(post.sourceContent);
-                post.set('title', source.title);
-                post.set('slug', source.slug);
-                post.set('html', source.html);
-                post.set('created_at', new Date(source.createdAt));
             });
         }
     }
+
+    await context.forEachPost(async (post) => {
+        const source = parseSourceItem(post.sourceContent);
+        post.set('title', source.title);
+        post.set('slug', source.slug);
+        post.set('html', source.html);
+        post.set('created_at', new Date(source.createdAt));
+    });
 
     await context.writeGhostJson('./output');
 } finally {
@@ -83,7 +86,7 @@ try {
 }
 ```
 
-On the first run, the adapter maps each source record to Ghost fields. The `lookupKey` identifies the record if ingestion is retried. On later runs, the stored posts are exported again; the mapping callback does not run. Pass `--reread-source` after changing the source or mapping logic to clear and rebuild the context database. Separately managed asset caches are untouched.
+The first block saves the original source records only when needed. The second block processes every stored post on every run; `forEachPost()` saves each post after the callback, so no extra `post.save()` is needed. This lets mapping changes use the original content already in SQLite. Fields the callback does not set or remove keep their previous values. Set `refreshData` to `true` when the source records themselves change: `resetContent` clears the context database, and the caller ingests the source again. Separately managed asset caches are untouched.
 
 Persistent databases require `contentIdentity`: `source` is a stable name you choose, and `revision` identifies the source snapshot. A changed identity cannot reuse old content. The [identity guide](docs/api-reference.md#resume-refresh-and-content-identity) explains how to hash source files and when to use optional `options`.
 

@@ -178,8 +178,8 @@ export interface MigrateContextOptions {
     dbPath?: string;
     storage?: 'temporary' | 'memory';
     contentIdentity?: ContentIdentity;
-    /** Discard staged source records so the caller can read the export again. */
-    rereadSource?: boolean;
+    /** Clear stored migration content during init so the caller can ingest the source again. */
+    resetContent?: boolean;
     /** @deprecated Use storage: 'memory' for an explicit in-memory database. */
     ephemeral?: boolean;
     /** @deprecated Events are naturally disabled when no listeners are registered. */
@@ -257,7 +257,7 @@ export default class MigrateContext extends MigrateBase {
     #storage: 'persistent' | 'temporary' | 'memory';
     #temporaryDirectory: string | null = null;
     #contentIdentityHash: string | undefined;
-    #rereadSource: boolean;
+    #resetContent: boolean;
     #emitEvents: boolean;
     #warnOnLookupKeyDuplicate: boolean;
     #onDuplicate: DuplicatePostPolicy | undefined;
@@ -270,7 +270,7 @@ export default class MigrateContext extends MigrateBase {
         dbPath,
         storage,
         contentIdentity,
-        rereadSource = false,
+        resetContent = false,
         ephemeral,
         emitEvents = true,
         warnOnLookupKeyDuplicate = false,
@@ -282,24 +282,27 @@ export default class MigrateContext extends MigrateBase {
         this.#emitEvents = emitEvents;
         this.#warnOnLookupKeyDuplicate = warnOnLookupKeyDuplicate;
         this.#onDuplicate = onDuplicate;
-        this.#rereadSource = rereadSource;
+        this.#resetContent = resetContent;
 
         if (Object.hasOwn(unsupportedOptions, 'mode')) {
-            throw new errors.BadRequestError({message: 'Use rereadSource: true instead of the removed mode option.'});
+            throw new errors.BadRequestError({message: 'Use resetContent: true instead of the removed mode option.'});
+        }
+        if (Object.hasOwn(unsupportedOptions, 'rereadSource')) {
+            throw new errors.BadRequestError({message: 'Use resetContent instead of rereadSource.'});
         }
         if (dbPath !== undefined && (typeof dbPath !== 'string' || !dbPath.trim())) {
             throw new errors.BadRequestError({message: 'dbPath must be a non-empty path.'});
         }
-        if (typeof rereadSource !== 'boolean') {
-            throw new errors.BadRequestError({message: 'rereadSource must be a boolean.'});
+        if (typeof resetContent !== 'boolean') {
+            throw new errors.BadRequestError({message: 'resetContent must be a boolean.'});
         }
         if (dbPath && storage) {
             throw new errors.BadRequestError({message: 'Pass either dbPath or storage, not both.'});
         }
-        if (dbPath && !rereadSource && contentIdentity === undefined) {
+        if (dbPath && !resetContent && contentIdentity === undefined) {
             throw new errors.BadRequestError({
                 message:
-                    'Persistent resume requires contentIdentity. Pass a source revision, or use rereadSource: true to read the export again.'
+                    'Persistent resume requires contentIdentity. Pass a source revision, or use resetContent: true to rebuild stored content.'
             });
         }
         this.#contentIdentityHash =
@@ -361,17 +364,17 @@ export default class MigrateContext extends MigrateBase {
         this.#slugsDeduped = false;
         this.#duplicateSlugs = [];
 
-        if (this.#rereadSource) {
+        if (this.#resetContent) {
             this.reset();
         }
 
         if (this.#contentIdentityHash !== undefined) {
             const stored = this.#getContentIdentityHash();
-            if (!this.#rereadSource && this.hasContent() && stored !== this.#contentIdentityHash) {
+            if (!this.#resetContent && this.hasContent() && stored !== this.#contentIdentityHash) {
                 await this.close();
                 throw new errors.InternalServerError({
                     message:
-                        'The stored migration content has a different or missing source identity. Re-run with rereadSource: true to read the export again.'
+                        'The stored migration content has a different or missing source identity. Re-run with resetContent: true to rebuild it.'
                 });
             }
             this.#setContentIdentityHash(this.#contentIdentityHash);

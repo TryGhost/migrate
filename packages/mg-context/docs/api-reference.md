@@ -22,7 +22,7 @@ new MigrateContext(options?)
 | `dbPath`             | `string`                              | —             | Path to a SQLite file for persistent, resumable storage   |
 | `storage`            | `'temporary' \| 'memory'`             | `'temporary'` | Storage used when `dbPath` is absent                       |
 | `contentIdentity`    | `ContentIdentity`                     | —             | Required for persistent resume; identifies the raw source snapshot |
-| `rereadSource`       | `boolean`                             | `false`       | Clear staged content so the adapter can read the export again |
+| `resetContent`       | `boolean`                             | `false`       | Clear stored migration content during `init()`; the caller decides whether to ingest again |
 | `onDuplicate`        | `'skip' \| 'replace' \| resolver`     | `'skip'`      | Default lookup-key duplicate policy                       |
 | `ephemeral`          | `boolean`                             | —             | Deprecated compatibility alias for memory storage         |
 | `emitEvents`         | `boolean`                             | `true`        | Deprecated; omit listeners to opt out naturally           |
@@ -41,10 +41,14 @@ const ctx = new MigrateContext({
     }
 });
 
-// Rebuild stored content while leaving separately managed asset caches alone
+// Clear stored content before the caller ingests again; asset caches are untouched
 const ctx = new MigrateContext({
     dbPath: './migration.sqlite',
-    rereadSource: true
+    contentIdentity: {
+        source: 'wordpress-example-com',
+        revision: sourceFileSha256
+    },
+    resetContent: true
 });
 
 // Explicit in-memory storage, mainly for small jobs and tests
@@ -112,7 +116,7 @@ Objects loaded before `reset()` should be discarded because their database IDs n
 
 #### Resume, refresh, and content identity
 
-On a persistent resume, `init()` leaves stored mapped posts unchanged. The adapter can check `hasContent()` and skip source ingestion when content is present. Mapping happens when the adapter ingests new records, not on resume. To apply changes to the mapper, set `rereadSource: true` and ingest the original source again. This clears mg-context content, reports, and source identity before ingestion; it does not touch separately managed asset files or databases.
+On a persistent rerun, `init()` leaves stored posts unchanged. The adapter can check `hasContent()` and skip source ingestion when content is present, then process the stored source records again with `forEachPost()`. Set `resetContent: true` only when the source records need to be ingested again. The option clears mg-context content, reports, and source identity during `init()`; it does not read the source or touch separately managed asset files or databases.
 
 Persistent `resume` requires `contentIdentity`, including for a newly created database. There is no unsafe resume option. Each field has a distinct purpose:
 
@@ -135,14 +139,15 @@ for await (const chunk of createReadStream('./site.xml')) {
 const sourceFileSha256 = hash.digest('hex');
 ```
 
-For multiple files, hash selected file names and contents in a deterministic order. Avoid `Date.now()` or another per-run value. Do not put transformation settings such as feature-image handling or shortcode conversion in the identity; explicitly reread the source when those settings change. Options must contain only plain JSON values, not `undefined`, functions, `Date` objects, or cycles. Object key order does not matter, but array order does. Avoid secrets in identity fields; include a digest if a secret affects source selection.
+For multiple files, hash selected file names and contents in a deterministic order. Avoid `Date.now()` or another per-run value. Do not put transformation settings such as feature-image handling or shortcode conversion in the identity; rerun the mapping pass over stored source records when those settings change. Options must contain only plain JSON values, not `undefined`, functions, `Date` objects, or cycles. Object key order does not matter, but array order does. Avoid secrets in identity fields; include a digest if a secret affects source selection.
 
-mg-context hashes the source identity. A changed identity rejects a populated resume database and requires `rereadSource: true` to rebuild it. Ghost schema and mapper changes do not alter this identity; callers must explicitly reread when they want those changes reflected in stored posts.
+mg-context hashes the source identity. A changed identity rejects a populated database unless `resetContent: true` clears its old content first. Ghost schema and mapper changes do not alter this identity; callers can process stored source records again to apply mapping changes without re-ingesting them.
 
 ```js
+const refreshData = cliOptions.refreshData;
 const ctx = new MigrateContext({
     dbPath: './migration.sqlite',
-    rereadSource: cliOptions.rereadSource,
+    resetContent: refreshData,
     contentIdentity: {
         source: 'wordpress-example-com',
         revision: sourceFileSha256,
@@ -150,9 +155,17 @@ const ctx = new MigrateContext({
     }
 });
 await ctx.init();
+
+if (!ctx.hasContent() || refreshData) {
+    // The caller reads the original source and adds its posts here.
+}
+
+await ctx.forEachPost(async post => {
+    // The caller maps post.sourceContent to Ghost fields on every run.
+});
 ```
 
-`init()` rejects a populated resume database with a missing or different source identity. Saving a persistent post requires raw source content and a lookup key. Rereading clears context content but not separately managed asset caches. A one-shot temporary or memory migration does not need an identity. For a live source without a revision, treat the first fetch as a frozen snapshot and use the explicit reread flag when a newer snapshot is wanted.
+`init()` rejects a populated database with a missing or different source identity unless `resetContent` is true. Saving a persistent post requires raw source content and a lookup key. Resetting clears context content but not separately managed asset caches. A one-shot temporary or memory migration does not need an identity. For a live source without a revision, treat the first fetch as a frozen snapshot and use an explicit refresh flag when a newer snapshot is wanted. A mapping pass updates existing posts: fields and relationships it does not change retain their previous values.
 
 #### `db: DatabaseModels`
 
@@ -191,16 +204,13 @@ Persistent posts require both `sourceContent` and `lookupKey`. `sourceContent` i
 
 #### `addSourcePost(mapPost): Promise<PostContext>`
 
-Create, map, and save one source record using the supplied callback. Set the source `lookupKey` and `content` in the callback before it returns; `meta` is optional and defaults to `{}`. Set `post.onDuplicate` in the callback to override the context's duplicate policy for this post. The callback runs during ingestion only; a later resume uses the stored mapped post. Missing required source fields fail before saving.
+Create and save one source record using the supplied callback. Set the source `lookupKey` and `content` in the callback before it returns; `meta` is optional and defaults to `{}`. You may map Ghost fields here or in a later `forEachPost()` pass. Set `post.onDuplicate` in the callback to override the context's duplicate policy for this post. The callback runs during ingestion only; a later run can process the stored raw content. Missing required source fields fail before saving.
 
 ```js
 await ctx.addSourcePost((post) => {
     post.setSource('lookupKey', item.id);
     post.setSource('content', item.rawXml);
     post.setSource('meta', {url: item.url});
-    const source = parseSourceItem(post.sourceContent);
-    post.set('title', source.title);
-    post.set('html', source.html);
 });
 ```
 
@@ -585,7 +595,7 @@ ctx.on('slug:renamed', ({oldSlug, newSlug, url}) => {
 
 #### `getMigrationReport(): MigrationReport`
 
-Returns the durable migration report from SQLite. Its `summary` counts `post:inserted`, `post:skipped`, `post:replaced`, `field:sanitized`, and `slug:renamed`; `events` contains their identities, compact details, and timestamps. The report survives reopening a persistent database and is cleared by `reset()` or `rereadSource: true`.
+Returns the durable migration report from SQLite. Its `summary` counts `post:inserted`, `post:skipped`, `post:replaced`, `field:sanitized`, and `slug:renamed`; `events` contains their identities, compact details, and timestamps. The report survives reopening a persistent database and is cleared by `reset()` or `resetContent: true`.
 
 Replacement report rows contain changed field names and summary data rather than duplicating the live event's complete before/after snapshots. Export and progress events are operational and are not persisted.
 
@@ -749,7 +759,7 @@ post.setSource('meta', {url: item.url}); // optional
 
 #### `post.sourceContent`
 
-The original per-post source text, or `null` for older or temporary posts that did not provide it. Persistent posts must provide it. A resume retains the existing mapped content; it does not rerun the mapper.
+The original per-post source text, or `null` for older or temporary posts that did not provide it. Persistent posts must provide it. Reopening the database does not run a mapper automatically; the caller can use this value in a `forEachPost()` processing pass.
 
 #### `post.sourceMeta`
 
