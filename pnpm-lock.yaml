@@ -530,9 +530,6 @@ importers:
       '@tryghost/errors':
         specifier: 'catalog:'
         version: 3.4.2
-      '@tryghost/listr-smart-renderer':
-        specifier: workspace:*
-        version: link:../listr-smart-renderer
       '@tryghost/string':
         specifier: 'catalog:'
         version: 0.3.7
@@ -552,6 +549,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
+      '@tryghost/listr-smart-renderer':
+        specifier: workspace:*
+        version: link:../listr-smart-renderer
 
   packages/mg-curated-export:
     dependencies:
