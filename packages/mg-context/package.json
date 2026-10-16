@@ -40,8 +40,9 @@
     }
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "@tryghost/listr-smart-renderer": "workspace:*"
+    "@tryghost/listr-smart-renderer": "workspace:*",
+    "@tryghost/mg-queue": "workspace:*",
+    "@types/node": "catalog:"
   },
   "dependencies": {
     "@tryghost/errors": "catalog:",

@@ -31,6 +31,25 @@ pnpm exec tsx examples/generate-large-export.ts --insert false
 pnpm exec tsx examples/generate-large-export.ts --reread-source
 ```
 
+## generate-large-export-with-queue.ts
+
+Like the large-export example, this stores raw source posts and maps them before streaming posts into `mg-queue` for bounded, concurrent HTML enrichment. The asynchronous enrichment is a stand-in for network or file work; queue errors stop the export. By default it uses a temporary on-disk database, which is removed when the run finishes. The Ghost JSON export remains in `./export/files/queue-posts/`.
+
+Build the workspace dependency once, then run a small sample or the full **500,000-post** stress test:
+
+```bash
+pnpm --filter @tryghost/mg-queue build
+pnpm exec tsx examples/generate-large-export-with-queue.ts --count 1000
+pnpm exec tsx examples/generate-large-export-with-queue.ts
+```
+
+To keep the database for reruns, pass `--db`. Reruns with that database reuse stored source posts but redo mapping and enrichment. Pass `--reread-source` with `--db` to replace the stored source. Use `--output` to change the export directory.
+
+```bash
+pnpm exec tsx examples/generate-large-export-with-queue.ts --count 1000 --db ./queue-posts.db
+pnpm exec tsx examples/generate-large-export-with-queue.ts --count 1000 --db ./queue-posts.db --reread-source
+```
+
 ## deduplicate-slugs.ts
 
 Shows how saving posts assigns unique slugs and how to read the duplicate-slug report after export. The first saved post keeps a requested slug; later collisions receive numbered suffixes.
