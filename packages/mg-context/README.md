@@ -1,8 +1,6 @@
 # Migrate Context
 
-SQLite-backed staging for building Ghost migration imports from posts, tags, and authors.
-
-`@tryghost/mg-context` is intended for migration adapter authors. It validates and sanitizes content as it is saved, supports batched processing through an on-disk database, and writes Ghost-compatible JSON in batches.
+Build Ghost import JSON from source posts. `@tryghost/mg-context` stores them in SQLite, checks Ghost's field rules, and writes the export in batches.
 
 ## Install
 
@@ -10,9 +8,9 @@ SQLite-backed staging for building Ghost migration imports from posts, tags, and
 pnpm add @tryghost/mg-context
 ```
 
-## Quick start
+## Export one post
 
-This is the complete lifecycle: open a context, ingest content, export it, and close the database.
+Save this as `create-import.mjs`, then run `node create-import.mjs`. It creates a Ghost JSON file in `./output`.
 
 ```js
 import {MigrateContext} from '@tryghost/mg-context';
@@ -22,11 +20,7 @@ const context = new MigrateContext();
 await context.init();
 
 try {
-    const post = await context.addPost({
-        lookupKey: 'source-post-123',
-        sourceContent: '<p>Welcome to the new site.</p>',
-        sourceMeta: {id: '123'}
-    });
+    const post = await context.addPost();
 
     post.set('title', 'Hello world');
     post.set('slug', 'hello-world');
@@ -34,49 +28,29 @@ try {
     post.set('created_at', new Date('2025-01-15T10:00:00Z'));
     post.set('published_at', new Date('2025-01-15T10:00:00Z'));
     post.set('html', '<p>Welcome to the new site.</p>');
-    post.addTag({name: 'News', slug: 'news'});
-    post.addAuthor({
-        name: 'Alice',
-        slug: 'alice',
-        email: 'alice@example.com'
-    });
     post.save(context.db);
 
-    const files = await context.writeGhostJson('./output');
-
-    console.log(`Wrote ${files.length} file(s)`);
+    await context.writeGhostJson('./output');
 } finally {
     await context.close();
 }
 ```
 
-## How it works
+`addPost()` creates a post; `post.save()` stores it. `writeGhostJson()` prepares titles and slugs, then exports the stored HTML. The default database is a temporary file, removed when you close the context. The JSON output remains.
 
-The normal data flow has three stages:
+## Rerun a completed migration
 
-1. **Ingest** — `addPost()` creates a post, and `post.save(context.db)` validates and persists it with its tags and authors. For a persistent migration, save the original per-post text in `sourceContent`, related JSON in `sourceMeta`, and a stable `lookupKey`.
-2. **Transform** — Map source records when they are first ingested. A persistent context keeps the mapped posts on resume. `forEachPost()` loads posts in batches for later enrichment and saves each one automatically. `streamPosts()` is available when the caller needs to control persistence or concurrency.
-3. **Export** — `writeGhostJson()` automatically repairs export invariants, writes one or more Ghost import files with the stored HTML, and removes stale files owned by the previous export manifest.
+Give the database a path so it survives the first run. When you run the adapter again, it can export the posts already stored there without parsing and mapping the source a second time. `hasContent()` returns stored content counts, or `false` if the database is empty.
 
-By default, `MigrateContext` uses a managed temporary SQLite file and removes it on `close()`. Pass `dbPath` for resumable migrations, or `{storage: 'memory'}` when an in-memory database is explicitly preferable.
+When saving a post to a persistent database, both `post.setSource('lookupKey', ...)` and `post.setSource('content', ...)` are required. `content` holds the original source record, not the transformed Ghost HTML; `meta` is optional.
 
-## Common recipes
-
-### Resume a persistent migration
-
-`hasContent()` returns existing content counts, or `false` for an empty database. In the ingestion callback, `setSource()` keeps the original input separate from Ghost export fields set with `set()`. `lookupKey` and `content` are required; `meta` is optional and defaults to `{}`.
+This is an **adapter outline**, not a standalone program: your adapter supplies `sourceFileSha256`, `readSourceItems()`, and `parseSourceItem()`. See [how to calculate the source file hash](docs/api-reference.md#resume-refresh-and-content-identity).
 
 ```js
-import {createHash} from 'node:crypto';
-import {createReadStream} from 'node:fs';
 import {MigrateContext} from '@tryghost/mg-context';
 
-// Hash the source file without loading the whole export into memory.
-const hash = createHash('sha256');
-for await (const chunk of createReadStream('./site.xml')) {
-    hash.update(chunk);
-}
-const sourceFileSha256 = hash.digest('hex');
+// This will come from your integration, such as a CLI flag, passed to this constructor
+const refreshData = false;
 
 const context = new MigrateContext({
     dbPath: './migration.sqlite',
@@ -84,141 +58,42 @@ const context = new MigrateContext({
         source: 'wordpress-example-com',
         revision: sourceFileSha256
     },
-    rereadSource: cliOptions.rereadSource ?? false
+    rereadSource: refreshData
 });
 await context.init();
 
 try {
-    const stats = context.hasContent();
-    if (stats) {
-        console.log(`Resuming ${stats.posts} posts and ${stats.pages} pages from SQLite`);
-    } else {
+    if (!context.hasContent()) {
         for await (const item of readSourceItems('./site.xml')) {
             await context.addSourcePost((post) => {
                 post.setSource('lookupKey', item.id);
                 post.setSource('content', item.rawText);
-                post.setSource('meta', {url: item.url});
                 const source = parseSourceItem(post.sourceContent);
                 post.set('title', source.title);
                 post.set('slug', source.slug);
                 post.set('html', source.html);
                 post.set('created_at', new Date(source.createdAt));
-                for (const tag of source.tags ?? []) post.addTag(tag);
-                for (const author of source.authors ?? []) post.addAuthor(author);
             });
         }
     }
+
+    await context.writeGhostJson('./output');
 } finally {
     await context.close();
 }
 ```
 
-The callback passed to `addSourcePost()` maps each record during ingestion. A resumed run uses the mapped posts already in SQLite; it does not parse the export or run the callback again. To apply mapping changes, explicitly set `rereadSource: true` and ingest the source again. The example hashes the file for source-identity verification; if the export will be unavailable on later runs, retain its original digest in the adapter's configuration.
+On the first run, the adapter maps each source record to Ghost fields. The `lookupKey` identifies the record if ingestion is retried. On later runs, the stored posts are exported again; the mapping callback does not run. Pass `--reread-source` after changing the source or mapping logic to clear and rebuild the context database. Separately managed asset caches are untouched.
 
-Persistent resume requires `contentIdentity`, even for a new database. `source` is any stable, nonblank name for this migration source; `wordpress-example-com` is fine. `revision` identifies the raw source snapshot. Here it is a digest of the XML file's bytes. The identity describes the input, not the mapper.
+Persistent databases require `contentIdentity`: `source` is a stable name you choose, and `revision` identifies the source snapshot. A changed identity cannot reuse old content. The [identity guide](docs/api-reference.md#resume-refresh-and-content-identity) explains how to hash source files and when to use optional `options`.
 
-`options` is optional. Include only settings that change which raw records are ingested or the raw text retained for them. Mapping options such as feature-image handling or shortcode conversion are excluded; change them with an explicit reread when you want to rebuild mapped posts. Values must be JSON-compatible (no functions, `undefined`, `Date`, or cycles).
+## What to expect
 
-mg-context hashes the source identity and rejects an incompatible populated database rather than silently using the wrong source snapshot. Do not use a per-run timestamp. A changed source snapshot requires `rereadSource: true`.
+- HTML is stored and exported without converting formats, though save-time sanitization may trim or limit fields.
+- Duplicate lookup keys are skipped by default; `getMigrationReport()` shows what was skipped.
+- Export prepares titles and slugs automatically. On a later export, it removes only stale files listed in its previous export manifest.
 
-`readSourceItems()` and `parseSourceItem()` in the example are your adapter's source parser. The first must provide the original per-post XML, HTML, JSON, or other text as `rawText`; the second converts that same text into values the mapper can use. Do not store already-transformed Ghost HTML as the source. `sourceMeta` carries related JSON such as the original URL. The existing `post.meta` is separate adapter metadata.
-
-### Refresh transformed content
-
-Set `rereadSource` from a CLI boolean flag when the original export should be fetched or parsed again, including after mapper changes. It clears managed migration content and reports without touching separately managed asset caches. A normal resume leaves mapped posts unchanged.
-
-```js
-const context = new MigrateContext({
-    dbPath: './migration.sqlite',
-    contentIdentity: {source: 'wordpress-example-com', revision: newSourceFileSha256},
-    rereadSource: true
-});
-```
-
-Rereading does not require an identity, but passing one lets the next run resume safely. Older databases that lack raw per-post content also require a reread.
-
-Within one compatible run, a stable `lookupKey` still defaults to retry-safe `skip`. Advanced integrations can use `onDuplicate: 'replace'` or a resolver.
-
-### Transform every post
-
-`forEachPost()` saves each post after the callback completes.
-
-```js
-await context.forEachPost(async (post) => {
-    post.set('status', 'published');
-    post.addTag({name: 'Migrated', slug: 'migrated'});
-}, {batchSize: 200});
-```
-
-### Export part of a migration
-
-Filters combine with `AND` logic. Relationship filters accept a tag or author identity, while date filters accept ranges.
-
-```js
-await context.writeGhostJson('./output', {
-    filename: 'news',
-    filter: {
-        tag: {slug: 'news'},
-        publishedAt: {onOrAfter: new Date('2025-01-01')}
-    }
-});
-```
-
-### Process a large migration
-
-Use an on-disk database, save ingestion batches inside `transaction()`, and use the batched iterators rather than `getAllPosts()`.
-
-```js
-await context.transaction(async () => {
-    for (const sourcePost of sourceBatch) {
-        await context.addSourcePost((post) => {
-            post.setSource('lookupKey', sourcePost.id);
-            post.setSource('content', sourcePost.rawText);
-            post.setSource('meta', {url: sourcePost.url});
-            const source = parseSourceItem(post.sourceContent);
-            post.set('title', source.title);
-            post.set('slug', source.slug);
-            post.set('html', source.html);
-            post.set('created_at', new Date(source.createdAt));
-        });
-    }
-});
-```
-
-See the [large export and streaming examples](examples/README.md) for complete runnable programs.
-
-## Defaults and guarantees
-
-Source data routinely carries values Ghost will not accept — a title over 255 characters, a tag name over 191, an email that is not an address. Rather than failing the migration, each context normalizes its own data against [Ghost's schema](https://github.com/TryGhost/Ghost/blob/main/ghost/core/server/data/schema/schema.js) before anything is written.
-
-| Behaviour | Default |
-| --- | --- |
-| Storage | Managed temporary on-disk SQLite; persistent when `dbPath` is provided |
-| Post content | HTML is preserved and exported unchanged |
-| Duplicate lookup key | Skip the incoming post |
-| Persistent resume | Reuse compatible mapped posts; pass `rereadSource: true` to reingest and remap |
-| Progress and change events | Typed EventEmitter events; no listeners means no presentation work |
-| Post iteration batch | 100 records |
-| JSON export batch | 5,000 posts per file |
-| Export preparation | Automatic |
-| Existing export files | Only stale files owned by the previous export manifest are removed |
-| Tag and author scope | `referenced`; pass `scope: 'all'` explicitly for standalone entities |
-
-Save-time sanitization trims strings, enforces Ghost field limits, repairs invalid author emails, drops invalid URL fields, and records every change. `getMigrationReport()` persists inserted, skipped, replaced, sanitized, and renamed outcomes across resumptions. Live typed events provide immediate progress and complete before/after replacement snapshots.
-
-## Advanced integration
-
-The [API reference](docs/api-reference.md) covers every method, option, field, and report. The sections most useful to adapter authors are:
-
-- [Transactions](docs/api-reference.md#transactions)
-- [Finding and iterating entities](docs/api-reference.md#finding-entities)
-- [Filtering](docs/api-reference.md#filtering)
-- [Resume, refresh, and content identity](docs/api-reference.md#resume-refresh-and-content-identity)
-- [Events and durable reports](docs/api-reference.md#events-and-durable-reports)
-- [Field sanitization](docs/api-reference.md#field-sanitization)
-- [Slug reports](docs/api-reference.md#slug-deduplication)
-
-The [examples](examples/README.md) demonstrate bulk generation, streaming, tag and author ordering, per-post Ghost JSON, and duplicate-slug reporting.
+For bulk processing, filters, tags and authors, events, and all options, see the [API reference](docs/api-reference.md) and [runnable examples](examples/README.md).
 
 ## Development
 
