@@ -24,26 +24,25 @@ describe('Ghost API context lifecycle', function () {
         try {
             const first = {};
             await ghostSource.getFullTaskList(options)[0].task(first, task);
-            await first.migrateContext.addSourcePost(
-                {
-                    lookupKey: 'ghost-post-1',
-                    sourceContent: JSON.stringify({
+            await first.migrateContext.addSourcePost(post => {
+                post.setSource('lookupKey', 'ghost-post-1');
+                post.setSource(
+                    'content',
+                    JSON.stringify({
                         id: 'ghost-post-1',
                         url: 'https://example.com/ghost-post/',
                         title: 'Original Ghost post',
                         slug: 'ghost-post',
                         html: '<p>Original HTML</p>',
                         created_at: '2026-01-01T00:00:00.000Z'
-                    }),
-                    sourceMeta: {url: 'https://example.com/ghost-post/'}
-                },
-                post => {
-                    post.set('title', 'Original Ghost post');
-                    post.set('slug', 'ghost-post');
-                    post.set('html', '<p>Original HTML</p>');
-                    post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
-                }
-            );
+                    })
+                );
+                post.setSource('meta', {url: 'https://example.com/ghost-post/'});
+                post.set('title', 'Original Ghost post');
+                post.set('slug', 'ghost-post');
+                post.set('html', '<p>Original HTML</p>');
+                post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+            });
             first.migrateContext.addLink('example.com/old/', '/new/');
             const cacheMarker = join(first.fileCache.tmpDir, 'assets-cache', 'marker.txt');
             await writeFile(cacheMarker, 'cached asset');

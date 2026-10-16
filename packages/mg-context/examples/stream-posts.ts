@@ -78,10 +78,11 @@ async function main() {
 
                 await ctx.transaction(async () => {
                     for (let i = batchStart; i < batchEnd; i++) {
-                        await ctx.addSourcePost({
-                            lookupKey: `post-${i + 1}`,
-                            sourceContent: JSON.stringify({index: i})
-                        }, mapSyntheticPost);
+                        await ctx.addSourcePost(post => {
+                            post.setSource('lookupKey', `post-${i + 1}`);
+                            post.setSource('content', JSON.stringify({index: i}));
+                            mapSyntheticPost(post);
+                        });
                     }
                 });
 

@@ -74,6 +74,44 @@ describe('PostContext', function () {
         });
     });
 
+    it('Sets source fields without adding them to Ghost post data', () => {
+        const post = new PostContext();
+        assert.deepEqual(post.sourceMeta, {});
+        assert.equal(post.setSource('lookupKey', 'source-1'), post);
+        assert.equal(post.setSource('content', ''), post);
+        assert.equal(post.setSource('meta', {url: 'https://example.com/original'}), post);
+        assert.equal(post.lookupKey, 'source-1');
+        assert.equal(post.sourceContent, '');
+        assert.deepEqual(post.sourceMeta, {url: 'https://example.com/original'});
+        assert.equal(Object.hasOwn(post.data, 'lookupKey'), false);
+        assert.equal(Object.hasOwn(post.data, 'content'), false);
+        assert.equal(Object.hasOwn(post.data, 'meta'), false);
+    });
+
+    it('Rejects invalid source field names and values when set', () => {
+        const post = new PostContext();
+        for (const value of ['', '   ', 123, null]) {
+            assert.throws(() => post.setSource('lookupKey', value as string), {
+                name: 'BadRequestError',
+                message: 'Source lookupKey must be a non-empty string.'
+            });
+        }
+        assert.throws(() => post.setSource('content', 123 as any), {
+            name: 'BadRequestError',
+            message: 'Source content must be a string.'
+        });
+        for (const value of [null, [], 'metadata']) {
+            assert.throws(() => post.setSource('meta', value as any), {
+                name: 'BadRequestError',
+                message: 'Source meta must be an object.'
+            });
+        }
+        assert.throws(() => (post as any).setSource('other', 'value'), {
+            name: 'BadRequestError',
+            message: 'Unknown source field: other.'
+        });
+    });
+
     it('Can get source key', () => {
         const instance: any = new PostContext({
             source: {

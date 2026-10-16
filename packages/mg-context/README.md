@@ -64,7 +64,7 @@ By default, `MigrateContext` uses a managed temporary SQLite file and removes it
 
 ### Resume a persistent migration
 
-`hasContent()` returns existing content counts, or `false` for an empty database.
+`hasContent()` returns existing content counts, or `false` for an empty database. In the ingestion callback, `setSource()` keeps the original input separate from Ghost export fields set with `set()`. `lookupKey` and `content` are required; `meta` is optional and defaults to `{}`.
 
 ```js
 import {createHash} from 'node:crypto';
@@ -94,11 +94,10 @@ try {
         console.log(`Resuming ${stats.posts} posts and ${stats.pages} pages from SQLite`);
     } else {
         for await (const item of readSourceItems('./site.xml')) {
-            await context.addSourcePost({
-                lookupKey: item.id,
-                sourceContent: item.rawText,
-                sourceMeta: {url: item.url}
-            }, (post) => {
+            await context.addSourcePost((post) => {
+                post.setSource('lookupKey', item.id);
+                post.setSource('content', item.rawText);
+                post.setSource('meta', {url: item.url});
                 const source = parseSourceItem(post.sourceContent);
                 post.set('title', source.title);
                 post.set('slug', source.slug);
@@ -172,11 +171,10 @@ Use an on-disk database, save ingestion batches inside `transaction()`, and use 
 ```js
 await context.transaction(async () => {
     for (const sourcePost of sourceBatch) {
-        await context.addSourcePost({
-            lookupKey: sourcePost.id,
-            sourceContent: sourcePost.rawText,
-            sourceMeta: {url: sourcePost.url}
-        }, (post) => {
+        await context.addSourcePost((post) => {
+            post.setSource('lookupKey', sourcePost.id);
+            post.setSource('content', sourcePost.rawText);
+            post.setSource('meta', {url: sourcePost.url});
             const source = parseSourceItem(post.sourceContent);
             post.set('title', source.title);
             post.set('slug', source.slug);

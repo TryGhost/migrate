@@ -353,7 +353,9 @@ describe('MigrateContext', () => {
             const filePath = join(tmpdir(), `mg-context-reread-${Date.now()}.sqlite`);
             const first = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
             await first.init();
-            await first.addSourcePost({lookupKey: 'old', sourceContent: 'Old source'}, post => {
+            await first.addSourcePost(post => {
+                post.setSource('lookupKey', 'old');
+                post.setSource('content', 'Old source');
                 post.set('title', post.sourceContent);
                 post.set('slug', 'old');
                 post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
@@ -368,7 +370,9 @@ describe('MigrateContext', () => {
             const reread = new MigrateContext({dbPath: filePath, rereadSource: true});
             await reread.init();
             assert.equal(reread.hasContent(), false);
-            await reread.addSourcePost({lookupKey: 'new', sourceContent: 'New source'}, post => {
+            await reread.addSourcePost(post => {
+                post.setSource('lookupKey', 'new');
+                post.setSource('content', 'New source');
                 post.set('title', post.sourceContent);
                 post.set('slug', 'new');
                 post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
@@ -392,12 +396,62 @@ describe('MigrateContext', () => {
                 name: 'BadRequestError',
                 message: 'Persistent posts require sourceContent and lookupKey.'
             });
-            await assert.rejects(ctx.addSourcePost({lookupKey: 'raw', sourceContent: 'raw'}, undefined as any), {
+            const blankKey = await ctx.addPost({lookupKey: '   ', sourceContent: '<item />'});
+            assert.throws(() => blankKey.save(ctx.db), {
+                name: 'BadRequestError',
+                message: 'Persistent posts require sourceContent and lookupKey.'
+            });
+            await assert.rejects(ctx.addSourcePost(undefined as any), {
                 name: 'BadRequestError',
                 message: 'addSourcePost requires a mapper function.'
             });
             await ctx.close();
             await rm(filePath, {force: true});
+        });
+
+        it('Requires source identity and content after the ingestion callback', async () => {
+            const ctx = new MigrateContext({storage: 'memory'});
+            await ctx.init();
+
+            await assert.rejects(
+                ctx.addSourcePost(post => {
+                    post.setSource('content', 'Raw');
+                }),
+                {
+                    name: 'BadRequestError',
+                    message: 'addSourcePost requires source lookupKey and content.'
+                }
+            );
+            await assert.rejects(
+                ctx.addSourcePost(post => {
+                    post.setSource('lookupKey', 'source-1');
+                }),
+                {
+                    name: 'BadRequestError',
+                    message: 'addSourcePost requires source lookupKey and content.'
+                }
+            );
+            await assert.rejects(
+                ctx.addSourcePost(post => {
+                    post.lookupKey = '   ';
+                    post.setSource('content', 'Raw');
+                }),
+                {name: 'BadRequestError', message: 'addSourcePost requires source lookupKey and content.'}
+            );
+            assert.equal(ctx.hasContent(), false);
+
+            const saved = await ctx.addSourcePost(async post => {
+                await Promise.resolve();
+                post.setSource('lookupKey', 'source-1');
+                post.setSource('content', 'Raw');
+                post.set('title', 'Mapped');
+                post.set('slug', 'mapped');
+                post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
+            });
+            assert.ok(saved.dbId);
+            assert.deepEqual(saved.sourceMeta, {});
+            assert.equal((await ctx.getAllPosts())[0].data.title, 'Mapped');
+            await ctx.close();
         });
 
         it('Matches a structured source identity and rejects changed source or input options', async () => {

@@ -246,6 +246,31 @@ export default class PostContext extends MigrateBase {
         return this.#sourceMeta;
     }
 
+    setSource(field: 'lookupKey' | 'content', value: string): this;
+    setSource(field: 'meta', value: Record<string, unknown>): this;
+    setSource(field: 'lookupKey' | 'content' | 'meta', value: string | Record<string, unknown>): this {
+        if (field === 'lookupKey') {
+            if (typeof value !== 'string' || !value.trim()) {
+                throw new errors.BadRequestError({message: 'Source lookupKey must be a non-empty string.'});
+            }
+            this.#lookupKey = value;
+        } else if (field === 'content') {
+            if (typeof value !== 'string') {
+                throw new errors.BadRequestError({message: 'Source content must be a string.'});
+            }
+            this.#sourceContent = value;
+        } else if (field === 'meta') {
+            if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+                throw new errors.BadRequestError({message: 'Source meta must be an object.'});
+            }
+            this.#sourceMeta = value;
+        } else {
+            throw new errors.BadRequestError({message: `Unknown source field: ${field}.`});
+        }
+
+        return this;
+    }
+
     /** @deprecated Use sourceMeta. */
     get source() {
         return this.#sourceMeta;
@@ -414,15 +439,18 @@ export default class PostContext extends MigrateBase {
             return;
         }
 
-        if (!db.inTransaction) {
-            withTransaction(db, () => this.save(db));
-            return;
-        }
-
-        if (db.requireSourceContent && (this.#sourceContent === null || !this.#lookupKey)) {
+        if (
+            db.requireSourceContent &&
+            (this.#sourceContent === null || typeof this.#lookupKey !== 'string' || !this.#lookupKey.trim())
+        ) {
             throw new errors.BadRequestError({
                 message: 'Persistent posts require sourceContent and lookupKey.'
             });
+        }
+
+        if (!db.inTransaction) {
+            withTransaction(db, () => this.save(db));
+            return;
         }
 
         let replacingDuplicate = false;

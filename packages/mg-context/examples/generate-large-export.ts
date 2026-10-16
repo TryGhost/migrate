@@ -101,13 +101,14 @@ async function main() {
 
             await ctx.transaction(async () => {
                 for (let i = batchStart; i < batchEnd; i++) {
-                    await ctx.addSourcePost({
-                        lookupKey: `https://example.com/post-number-${i + 1}`,
-                        sourceContent: JSON.stringify({
+                    await ctx.addSourcePost(post => {
+                        post.setSource('lookupKey', `https://example.com/post-number-${i + 1}`);
+                        post.setSource('content', JSON.stringify({
                             index: i,
                             html: html.replace('Lorem ipsum', `Post ${i + 1}: Lorem ipsum`)
-                        })
-                    }, mapSyntheticPost);
+                        }));
+                        mapSyntheticPost(post);
+                    });
                 }
             });
 

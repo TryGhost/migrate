@@ -189,16 +189,15 @@ When called with a `PostContext` instance, saves it immediately instead.
 
 Persistent posts require both `sourceContent` and `lookupKey`. `sourceContent` is the unmodified text of one source record, not mapped Ghost HTML. The deprecated `source` object option remains an alias for `sourceMeta` during the transition release.
 
-#### `addSourcePost(options, mapPost): Promise<PostContext>`
+#### `addSourcePost(mapPost): Promise<PostContext>`
 
-Map and save one raw record using the supplied `mapPost` callback. `options` must include `lookupKey` and `sourceContent`; it may include `sourceMeta` and `meta`. The callback runs during ingestion only; a later resume uses the stored mapped post.
+Create, map, and save one source record using the supplied callback. Set the source `lookupKey` and `content` in the callback before it returns; `meta` is optional and defaults to `{}`. Set `post.onDuplicate` in the callback to override the context's duplicate policy for this post. The callback runs during ingestion only; a later resume uses the stored mapped post. Missing required source fields fail before saving.
 
 ```js
-await ctx.addSourcePost({
-    lookupKey: item.id,
-    sourceContent: item.rawXml,
-    sourceMeta: {url: item.url}
-}, (post) => {
+await ctx.addSourcePost((post) => {
+    post.setSource('lookupKey', item.id);
+    post.setSource('content', item.rawXml);
+    post.setSource('meta', {url: item.url});
     const source = parseSourceItem(post.sourceContent);
     post.set('title', source.title);
     post.set('html', source.html);
@@ -738,9 +737,19 @@ post.setAuthorOrder((authors) => [...authors].reverse());
 
 ### Source & metadata
 
+#### `post.setSource(field, value): PostContext`
+
+Set a migration-only source field without adding it to the Ghost export data. `lookupKey` must be a nonblank string, `content` must be a string (an empty string is allowed), and `meta` must be an object. Invalid values fail immediately. For `addSourcePost()`, missing `lookupKey` or `content` fails after its callback completes, before the post is saved.
+
+```js
+post.setSource('lookupKey', item.id);
+post.setSource('content', item.rawXml);
+post.setSource('meta', {url: item.url}); // optional
+```
+
 #### `post.sourceContent`
 
-The original per-post source text, or `null` for older or temporary posts that did not provide it. Persistent posts must provide it, and a resume rebuilds mapped content from it.
+The original per-post source text, or `null` for older or temporary posts that did not provide it. Persistent posts must provide it. A resume retains the existing mapped content; it does not rerun the mapper.
 
 #### `post.sourceMeta`
 

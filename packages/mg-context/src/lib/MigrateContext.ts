@@ -982,15 +982,15 @@ export default class MigrateContext extends MigrateBase {
     }
 
     /** Map and save one raw source record during ingestion. */
-    async addSourcePost(
-        options: PostConstructorOptions & {sourceContent: string; lookupKey: string},
-        mapPost: (post: PostContext) => void | Promise<void>
-    ): Promise<PostContext> {
+    async addSourcePost(mapPost: (post: PostContext) => void | Promise<void>): Promise<PostContext> {
         if (typeof mapPost !== 'function') {
             throw new errors.BadRequestError({message: 'addSourcePost requires a mapper function.'});
         }
-        const post = new PostContext({...options, onDuplicate: options.onDuplicate ?? this.#onDuplicate});
+        const post = new PostContext({onDuplicate: this.#onDuplicate});
         await mapPost(post);
+        if (typeof post.lookupKey !== 'string' || !post.lookupKey.trim() || post.sourceContent === null) {
+            throw new errors.BadRequestError({message: 'addSourcePost requires source lookupKey and content.'});
+        }
         post.save(this.db);
         return post;
     }
