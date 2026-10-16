@@ -2,7 +2,7 @@
 import {DatabaseSync} from 'node:sqlite';
 import errors from '@tryghost/errors';
 
-export const MIGRATE_CONTEXT_SCHEMA_VERSION = 3;
+export const MIGRATE_CONTEXT_SCHEMA_VERSION = 4;
 
 export type MigrationEventType =
     | 'post:inserted'
@@ -42,6 +42,7 @@ export interface DatabaseModels {
     db: DatabaseSync;
     stmts: PreparedStatements;
     schemaVersion: number;
+    requireSourceContent: boolean;
     tagCache: Map<string, {dbId: number; ghostId: string}>;
     authorCache: Map<string, {dbId: number; ghostId: string}>;
     slugRenames: SlugRename[];
@@ -141,7 +142,8 @@ const SCHEMA = `
 CREATE TABLE IF NOT EXISTS Posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     data TEXT NOT NULL,
-    source TEXT DEFAULT '{}',
+    source_content TEXT,
+    source_meta TEXT NOT NULL DEFAULT '{}',
     meta TEXT DEFAULT '{}',
     lookup_key TEXT,
     ghost_id TEXT,
@@ -250,13 +252,13 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
 
         // Posts
         insertPost: db.prepare(
-            'INSERT INTO Posts (data, source, meta, lookup_key, ghost_id, created_at, updated_at, published_at, original_slug, slug, webscrape_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO Posts (data, source_content, source_meta, meta, lookup_key, ghost_id, created_at, updated_at, published_at, original_slug, slug, webscrape_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         ),
         updatePost: db.prepare(
-            'UPDATE Posts SET data = ?, source = ?, meta = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, slug = ?, webscrape_data = ? WHERE id = ?'
+            'UPDATE Posts SET data = ?, source_content = ?, source_meta = ?, meta = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, slug = ?, webscrape_data = ? WHERE id = ?'
         ),
         replacePost: db.prepare(
-            'UPDATE Posts SET data = ?, source = ?, meta = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, original_slug = ?, slug = ?, webscrape_data = ? WHERE id = ?'
+            'UPDATE Posts SET data = ?, source_content = ?, source_meta = ?, meta = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, original_slug = ?, slug = ?, webscrape_data = ? WHERE id = ?'
         ),
         updatePostData: db.prepare('UPDATE Posts SET data = ? WHERE id = ?'),
         patchPostData: db.prepare(
@@ -268,7 +270,7 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         findPostByLookupKey: db.prepare('SELECT * FROM Posts WHERE lookup_key = ?'),
         findPostsBySlug: db.prepare('SELECT * FROM Posts WHERE slug = ? ORDER BY id ASC'),
         findRenamedPosts: db.prepare(
-            'SELECT id, slug, original_slug, source, data FROM Posts WHERE original_slug IS NOT NULL AND original_slug <> slug ORDER BY id ASC'
+            'SELECT id, slug, original_slug, source_meta, data FROM Posts WHERE original_slug IS NOT NULL AND original_slug <> slug ORDER BY id ASC'
         ),
         slugExists: db.prepare('SELECT 1 FROM Posts WHERE slug = ? LIMIT 1'),
         slugExistsForOtherPost: db.prepare('SELECT 1 FROM Posts WHERE slug = ? AND id <> ? LIMIT 1'),
@@ -388,9 +390,12 @@ export function createDatabase(dbPath: string): DatabaseModels {
     db.exec('PRAGMA cache_size = -64000;');
     db.exec('PRAGMA temp_store = MEMORY;');
 
-    if (existingVersion === 2) {
+    if (existingVersion === 2 || existingVersion === 3) {
         db.exec(`
             BEGIN;
+            ${
+                existingVersion === 2
+                    ? `
             CREATE TABLE MigrationEvents (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 type TEXT NOT NULL,
@@ -400,7 +405,12 @@ export function createDatabase(dbPath: string): DatabaseModels {
                 created_at TEXT NOT NULL
             );
             CREATE INDEX idx_migrationevents_type ON MigrationEvents(type);
-            PRAGMA user_version = 3;
+            `
+                    : ''
+            }
+            ALTER TABLE Posts RENAME COLUMN source TO source_meta;
+            ALTER TABLE Posts ADD COLUMN source_content TEXT;
+            PRAGMA user_version = 4;
             COMMIT;
         `);
     }
@@ -417,6 +427,7 @@ export function createDatabase(dbPath: string): DatabaseModels {
         db,
         stmts,
         schemaVersion: MIGRATE_CONTEXT_SCHEMA_VERSION,
+        requireSourceContent: false,
         tagCache: new Map(),
         authorCache: new Map(),
         slugRenames: [],

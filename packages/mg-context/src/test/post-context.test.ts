@@ -58,6 +58,22 @@ describe('PostContext', function () {
         });
     });
 
+    it('Keeps raw source text separate from source metadata', () => {
+        const post = new PostContext({sourceContent: '<item>original</item>', sourceMeta: {id: '123'}});
+        assert.equal(post.sourceContent, '<item>original</item>');
+        assert.deepEqual(post.sourceMeta, {id: '123'});
+        assert.equal(post.getSourceValue('id'), '123');
+        assert.deepEqual(post.source, {id: '123'});
+        assert.throws(() => new PostContext({sourceContent: 3 as any}), {
+            name: 'BadRequestError',
+            message: 'sourceContent must be a string.'
+        });
+        assert.throws(() => new PostContext({sourceMeta: {}, source: {}}), {
+            name: 'BadRequestError',
+            message: 'Pass sourceMeta or the deprecated source option, not both.'
+        });
+    });
+
     it('Can get source key', () => {
         const instance: any = new PostContext({
             source: {

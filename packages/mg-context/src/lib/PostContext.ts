@@ -72,12 +72,16 @@ export interface PostSnapshot {
     ghostId: string | null;
     lookupKey: string | null;
     data: PostObject;
-    source: Record<string, unknown>;
+    sourceContent: string | null;
+    sourceMeta: Record<string, unknown>;
     meta: Record<string, unknown>;
     webscrapeData: unknown | null;
 }
 
 export type PostConstructorOptions = {
+    sourceContent?: string;
+    sourceMeta?: object;
+    /** @deprecated Use sourceMeta for structured source facts. */
     source?: object;
     meta?: object;
     lookupKey?: string;
@@ -94,7 +98,7 @@ function changedSnapshotFields(previous: PostSnapshot, current: PostSnapshot): s
             JSON.stringify(current.data[field as keyof PostObject])
     );
 
-    for (const field of ['source', 'meta', 'webscrapeData'] as const) {
+    for (const field of ['sourceContent', 'sourceMeta', 'meta', 'webscrapeData'] as const) {
         if (JSON.stringify(previous[field]) !== JSON.stringify(current[field])) {
             changed.push(field);
         }
@@ -118,7 +122,8 @@ export default class PostContext extends MigrateBase {
         super.applySanitizers();
     }
 
-    #source: any;
+    #sourceContent: string | null;
+    #sourceMeta: any;
     #meta: any;
     #lookupKey: string | null = null;
     #onDuplicate: DuplicatePostPolicy;
@@ -127,11 +132,24 @@ export default class PostContext extends MigrateBase {
     #webscrapeData: any = null;
     data: any = {};
 
-    constructor({source = {}, meta = {}, lookupKey, onDuplicate = 'skip'}: PostConstructorOptions = {}) {
+    constructor({
+        sourceContent,
+        sourceMeta,
+        source,
+        meta = {},
+        lookupKey,
+        onDuplicate = 'skip'
+    }: PostConstructorOptions = {}) {
         super();
 
-        // Source data from another platform
-        this.#source = source;
+        if (sourceContent !== undefined && typeof sourceContent !== 'string') {
+            throw new errors.BadRequestError({message: 'sourceContent must be a string.'});
+        }
+        if (sourceMeta !== undefined && source !== undefined) {
+            throw new errors.BadRequestError({message: 'Pass sourceMeta or the deprecated source option, not both.'});
+        }
+        this.#sourceContent = sourceContent ?? null;
+        this.#sourceMeta = sourceMeta ?? source ?? {};
 
         this.#meta = meta;
 
@@ -220,8 +238,17 @@ export default class PostContext extends MigrateBase {
         return this.#meta[key];
     }
 
+    get sourceContent(): string | null {
+        return this.#sourceContent;
+    }
+
+    get sourceMeta(): Record<string, unknown> {
+        return this.#sourceMeta;
+    }
+
+    /** @deprecated Use sourceMeta. */
     get source() {
-        return this.#source;
+        return this.#sourceMeta;
     }
 
     toSnapshot(): PostSnapshot {
@@ -245,14 +272,15 @@ export default class PostContext extends MigrateBase {
             ghostId: this.ghostId,
             lookupKey: this.#lookupKey,
             data,
-            source: JSON.parse(JSON.stringify(this.#source)),
+            sourceContent: this.#sourceContent,
+            sourceMeta: JSON.parse(JSON.stringify(this.#sourceMeta)),
             meta: JSON.parse(JSON.stringify(this.#meta)),
             webscrapeData: this.#webscrapeData === null ? null : JSON.parse(JSON.stringify(this.#webscrapeData))
         };
     }
 
     getSourceValue(key: string) {
-        return this.#source[key];
+        return this.#sourceMeta[key];
     }
 
     hasTagSlug(tagSlug: string) {
@@ -391,6 +419,12 @@ export default class PostContext extends MigrateBase {
             return;
         }
 
+        if (db.requireSourceContent && (this.#sourceContent === null || !this.#lookupKey)) {
+            throw new errors.BadRequestError({
+                message: 'Persistent posts require sourceContent and lookupKey for replay.'
+            });
+        }
+
         let replacingDuplicate = false;
         let previousSnapshot: PostSnapshot | null = null;
 
@@ -436,7 +470,8 @@ export default class PostContext extends MigrateBase {
 
         const isInsert = !this.dbId;
 
-        const serializedSource = JSON.stringify(this.#source);
+        const serializedSourceContent = this.#sourceContent;
+        const serializedSourceMeta = JSON.stringify(this.#sourceMeta);
         const serializedMeta = JSON.stringify(this.#meta);
         const serializedWebscrapeData = this.#webscrapeData ? JSON.stringify(this.#webscrapeData) : null;
         /* c8 ignore next 3 -- dates are always Date instances from set()/fromRow(); ternary is defensive */
@@ -476,7 +511,7 @@ export default class PostContext extends MigrateBase {
             slugRename = {
                 oldSlug: originalSlug,
                 newSlug: slug,
-                url: this.#source.url || this.data.canonical_url || ''
+                url: this.#sourceMeta.url || this.data.canonical_url || ''
             };
             db.slugRenames.push(slugRename);
         }
@@ -494,7 +529,8 @@ export default class PostContext extends MigrateBase {
             if (replacingDuplicate) {
                 db.stmts.replacePost.run(
                     serializedData,
-                    serializedSource,
+                    serializedSourceContent,
+                    serializedSourceMeta,
                     serializedMeta,
                     this.#lookupKey,
                     this.ghostId,
@@ -509,7 +545,8 @@ export default class PostContext extends MigrateBase {
             } else {
                 db.stmts.updatePost.run(
                     serializedData,
-                    serializedSource,
+                    serializedSourceContent,
+                    serializedSourceMeta,
                     serializedMeta,
                     this.#lookupKey,
                     this.ghostId,
@@ -524,7 +561,8 @@ export default class PostContext extends MigrateBase {
         } else {
             const result = db.stmts.insertPost.run(
                 serializedData,
-                serializedSource,
+                serializedSourceContent,
+                serializedSourceMeta,
                 serializedMeta,
                 this.#lookupKey,
                 this.ghostId,
@@ -651,7 +689,8 @@ export default class PostContext extends MigrateBase {
         {hydrateRelationships = true}: {hydrateRelationships?: boolean} = {}
     ): PostContext {
         const rawData = JSON.parse(row.data);
-        const source = JSON.parse(row.source);
+        const sourceContent = row.source_content as string | null;
+        const sourceMeta = JSON.parse(row.source_meta);
         const meta = JSON.parse(row.meta);
 
         // Convert date strings back to Date objects
@@ -663,7 +702,12 @@ export default class PostContext extends MigrateBase {
         }
 
         const lookupKey = row.lookup_key as string | null;
-        const post = new PostContext({source, meta, lookupKey: lookupKey ?? undefined});
+        const post = new PostContext({
+            sourceContent: sourceContent ?? undefined,
+            sourceMeta,
+            meta,
+            lookupKey: lookupKey ?? undefined
+        });
         post.dbId = row.id as number;
         post.ghostId = row.ghost_id as string;
 

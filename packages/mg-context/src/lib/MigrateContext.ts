@@ -6,6 +6,7 @@ import {EventEmitter} from 'node:events';
 import errors from '@tryghost/errors';
 
 import MigrateBase from './MigrateBase.js';
+import {fingerprintContentIdentity, type ContentIdentity} from './content-identity.js';
 import PostContext, {
     PostConstructorOptions,
     normalizeTitle,
@@ -181,7 +182,11 @@ export interface MigrateContextOptions {
     dbPath?: string;
     storage?: 'temporary' | 'memory';
     mode?: 'resume' | 'refresh';
-    contentFingerprint?: string;
+    contentIdentity?: ContentIdentity;
+    /** Rebuild each stored post from its raw source on every persistent resume. */
+    mapSourcePost?: (post: PostContext) => void | Promise<void>;
+    /** Discard staged source records so the caller can read the export again. */
+    rereadSource?: boolean;
     /** @deprecated Use storage: 'memory' for an explicit in-memory database. */
     ephemeral?: boolean;
     /** @deprecated Events are naturally disabled when no listeners are registered. */
@@ -191,7 +196,7 @@ export interface MigrateContextOptions {
     onDuplicate?: DuplicatePostPolicy;
 }
 
-const CONTENT_FINGERPRINT = 'content';
+const CONTENT_IDENTITY_KEY = 'content';
 const EXPORT_MANIFEST = '.mg-context-export-manifest.json';
 
 interface ExportManifest {
@@ -259,7 +264,9 @@ export default class MigrateContext extends MigrateBase {
     #storage: 'persistent' | 'temporary' | 'memory';
     #temporaryDirectory: string | null = null;
     #mode: 'resume' | 'refresh';
-    #contentFingerprint: string | undefined;
+    #contentIdentityHash: string | undefined;
+    #mapSourcePost: ((post: PostContext) => void | Promise<void>) | undefined;
+    #rereadSource: boolean;
     #emitEvents: boolean;
     #warnOnLookupKeyDuplicate: boolean;
     #onDuplicate: DuplicatePostPolicy | undefined;
@@ -272,7 +279,9 @@ export default class MigrateContext extends MigrateBase {
         dbPath,
         storage,
         mode = 'resume',
-        contentFingerprint,
+        contentIdentity,
+        mapSourcePost,
+        rereadSource = false,
         ephemeral,
         emitEvents = true,
         warnOnLookupKeyDuplicate = false,
@@ -284,11 +293,32 @@ export default class MigrateContext extends MigrateBase {
         this.#warnOnLookupKeyDuplicate = warnOnLookupKeyDuplicate;
         this.#onDuplicate = onDuplicate;
         this.#mode = mode;
-        this.#contentFingerprint = contentFingerprint;
+        this.#mapSourcePost = mapSourcePost;
+        this.#rereadSource = rereadSource;
 
+        if (dbPath !== undefined && (typeof dbPath !== 'string' || !dbPath.trim())) {
+            throw new errors.BadRequestError({message: 'dbPath must be a non-empty path.'});
+        }
+        if (mode !== 'resume' && mode !== 'refresh') {
+            throw new errors.BadRequestError({message: 'mode must be "resume" or "refresh".'});
+        }
+        if (typeof rereadSource !== 'boolean') {
+            throw new errors.BadRequestError({message: 'rereadSource must be a boolean.'});
+        }
+        if (mapSourcePost !== undefined && typeof mapSourcePost !== 'function') {
+            throw new errors.BadRequestError({message: 'mapSourcePost must be a function.'});
+        }
         if (dbPath && storage) {
             throw new errors.BadRequestError({message: 'Pass either dbPath or storage, not both.'});
         }
+        if (dbPath && mode === 'resume' && !rereadSource && contentIdentity === undefined) {
+            throw new errors.BadRequestError({
+                message:
+                    'Persistent resume requires contentIdentity. Pass a source revision, or use rereadSource: true to read the export again.'
+            });
+        }
+        this.#contentIdentityHash =
+            contentIdentity === undefined ? undefined : fingerprintContentIdentity(contentIdentity);
 
         if (dbPath) {
             this.#dbPath = dbPath;
@@ -337,6 +367,7 @@ export default class MigrateContext extends MigrateBase {
             }
             throw error;
         }
+        this.#db.requireSourceContent = this.#storage === 'persistent';
         this.#db.emitEvent = (event: DatabaseEvent) => {
             if (this.#emitEvents) {
                 this.#emitter.emit(event.type, event.payload);
@@ -345,20 +376,77 @@ export default class MigrateContext extends MigrateBase {
         this.#slugsDeduped = false;
         this.#duplicateSlugs = [];
 
-        if (this.#mode === 'refresh') {
+        if (this.#mode === 'refresh' || this.#rereadSource) {
             this.reset();
         }
 
-        if (this.#contentFingerprint !== undefined) {
-            const stored = this.getFingerprint(CONTENT_FINGERPRINT);
-            if (this.#mode === 'resume' && this.hasContent() && stored !== this.#contentFingerprint) {
+        if (this.#contentIdentityHash !== undefined) {
+            const stored = this.getFingerprint(CONTENT_IDENTITY_KEY);
+            if (
+                this.#mode === 'resume' &&
+                !this.#rereadSource &&
+                this.hasContent() &&
+                stored !== this.#contentIdentityHash
+            ) {
                 await this.close();
                 throw new errors.InternalServerError({
                     message:
-                        'The stored migration content was created with a different content fingerprint. Re-run with mode: "refresh" to rebuild it.'
+                        'The stored migration content has a different or missing source identity. Re-run with rereadSource: true to read the export again.'
                 });
             }
-            this.setFingerprint(CONTENT_FINGERPRINT, this.#contentFingerprint);
+            this.setFingerprint(CONTENT_IDENTITY_KEY, this.#contentIdentityHash);
+        }
+
+        if (this.#storage === 'persistent' && this.#mode === 'resume' && !this.#rereadSource) {
+            try {
+                await this.#replaySourcePosts();
+            } catch (error) {
+                await this.close();
+                throw error;
+            }
+        }
+    }
+
+    async #replaySourcePosts(): Promise<void> {
+        const total = (this.db.stmts.countPosts.get() as {count: number}).count;
+        if (total === 0) {
+            return;
+        }
+        if (!this.#mapSourcePost) {
+            throw new errors.BadRequestError({
+                message: 'Persistent resume requires mapSourcePost to rebuild stored posts from source content.'
+            });
+        }
+
+        const maxId = (this.db.stmts.findMaxPostId.get() as {max_id: number}).max_id;
+        let lastId = 0;
+        let processed = 0;
+        while (lastId < maxId) {
+            const rows = this.db.stmts.findPostsAfterId.all(lastId, maxId, 100) as any[];
+            if (rows.length === 0) {
+                break;
+            }
+            for (const row of rows) {
+                lastId = row.id as number;
+                if (row.source_content === null || !row.lookup_key) {
+                    throw new errors.BadRequestError({
+                        message:
+                            'Stored posts without sourceContent or lookupKey cannot be replayed. Re-run with rereadSource: true to read the export again.'
+                    });
+                }
+                const post = new PostContext({
+                    sourceContent: row.source_content as string,
+                    sourceMeta: JSON.parse(row.source_meta as string),
+                    lookupKey: row.lookup_key as string,
+                    onDuplicate: 'replace'
+                });
+                await this.#mapSourcePost(post);
+                post.save(this.db);
+                processed += 1;
+            }
+            if (this.#emitEvents) {
+                this.#emitter.emit('progress', {operation: 'replaySourcePosts', processed, total});
+            }
         }
     }
 
@@ -515,7 +603,7 @@ export default class MigrateContext extends MigrateBase {
     }
 
     #postUrl(row: any): string {
-        const source = JSON.parse(row.source as string);
+        const source = JSON.parse(row.source_meta as string);
         const data = JSON.parse(row.data as string);
         return source.url || data.canonical_url || '';
     }
@@ -975,6 +1063,19 @@ export default class MigrateContext extends MigrateBase {
         return newPost;
     }
 
+    /** Map and save a raw source record, keeping its original text for future runs. */
+    async addSourcePost(
+        options: PostConstructorOptions & {sourceContent: string; lookupKey: string}
+    ): Promise<PostContext> {
+        if (!this.#mapSourcePost) {
+            throw new errors.BadRequestError({message: 'addSourcePost requires mapSourcePost.'});
+        }
+        const post = new PostContext({...options, onDuplicate: options.onDuplicate ?? this.#onDuplicate});
+        await this.#mapSourcePost(post);
+        post.save(this.db);
+        return post;
+    }
+
     async getAllPosts(): Promise<PostContext[]> {
         const rows = this.db.stmts.findAllPostsOrdered.all() as any[];
         return rows.map((row: any) => PostContext.fromRow(row, this.db));
@@ -1060,7 +1161,7 @@ export default class MigrateContext extends MigrateBase {
             const rows = this.db.stmts.findAllPostsOrdered.all() as any[];
             const results: PostContext[] = [];
             for (const row of rows) {
-                const source = JSON.parse(row.source as string);
+                const source = JSON.parse(row.source_meta as string);
                 if (source[sourceAttr.key] === sourceAttr.value) {
                     results.push(PostContext.fromRow(row, this.db));
                 }
