@@ -320,8 +320,8 @@ importers:
         specifier: 'catalog:'
         version: 5.0.0
       file-type:
-        specifier: 22.1.1
-        version: 22.1.1(supports-color@7.2.0)
+        specifier: 22.2.0
+        version: 22.2.0(supports-color@7.2.0)
       heic-convert:
         specifier: 2.1.0
         version: 2.1.0
@@ -3819,8 +3819,8 @@ packages:
     engines: {node: '>=0.10.0', npm: '>2.7.0'}
     os: [aix, darwin, freebsd, linux, macos, openbsd, sunos, win32, windows]
 
-  '@tokenizer/inflate@0.4.1':
-    resolution: {integrity: sha512-2mAv+8pkG6GIZiF1kNg1jAjh27IDxEPKwdGul3snfztFerfPGI1LjDezZp3i7BElXompqEtPmoPx6c2wgtWsOA==}
+  '@tokenizer/inflate@0.5.1':
+    resolution: {integrity: sha512-56U2O6fDLFtqokwWh597IdeUgtM7j+TT9tb1soybhgA6cy163gAcVmoQr8H4Ud/CkgCkViwcuLyqtn6wYqw59Q==}
     engines: {node: '>=18'}
 
   '@tokenizer/token@0.3.0':
@@ -4838,8 +4838,8 @@ packages:
     resolution: {integrity: sha512-yaduQFRKLXYOGgEn6AZau90j3ggSOyiqXU0F9JZfeXYhNa+Jk4X+s45A2zg5jns87GAFa34BBm2kXw4XpNcbdg==}
     engines: {node: '>=8'}
 
-  file-type@22.1.1:
-    resolution: {integrity: sha512-sEB0oStmeLGtpmSAD88RDNuLsvhv4iC3u0lE25CUvfCULvj49xoQ3l3K525Vn+ZzsZ6DOLajQCV6RmhwwhqiJg==}
+  file-type@22.2.0:
+    resolution: {integrity: sha512-XmEVJsRpQMVYC+sWFW+FKAVo2P7/lPctDdWH4UQ1r6oxhdrTobnowdM3z+ZJ93a4J8D3yDpxX0bEvRuFev0vUQ==}
     engines: {node: '>=22'}
 
   fill-range@7.1.1:
@@ -6117,8 +6117,8 @@ packages:
   strnum@2.5.1:
     resolution: {integrity: sha512-UM4nTLWzQiDBseVxUGxN0wJzIk0UU89Qi7pKXz9qISo+lhviJikTuikBsK/oFRlpvYHvSdz0TVoLyQ+sEpYwxA==}
 
-  strtok3@10.3.5:
-    resolution: {integrity: sha512-ki4hZQfh5rX0QDLLkOCj+h+CVNkqmp/CMf8v8kZpkNVK6jGQooMytqzLZYUVYIZcFZ6yDB70EfD8POcFXiF5oA==}
+  strtok3@10.5.0:
+    resolution: {integrity: sha512-PgAsgIuizbZN/r4+g4UNvbVCTpJWdoIdI71kIWwKmdIH0vJ0q7ylMVGU8PWj2s9O98y4MtFWiDTIrtNukZMMgQ==}
     engines: {node: '>=18'}
 
   stubborn-fs@2.0.0:
@@ -9021,7 +9021,7 @@ snapshots:
       '@stdlib/utils-constructor-name': 0.2.3
       '@stdlib/utils-global': 0.2.3
 
-  '@tokenizer/inflate@0.4.1(supports-color@7.2.0)':
+  '@tokenizer/inflate@0.5.1(supports-color@7.2.0)':
     dependencies:
       debug: 4.4.3(supports-color@7.2.0)
       token-types: 6.1.2
@@ -10127,10 +10127,10 @@ snapshots:
     dependencies:
       escape-string-regexp: 1.0.5
 
-  file-type@22.1.1(supports-color@7.2.0):
+  file-type@22.2.0(supports-color@7.2.0):
     dependencies:
-      '@tokenizer/inflate': 0.4.1(supports-color@7.2.0)
-      strtok3: 10.3.5
+      '@tokenizer/inflate': 0.5.1(supports-color@7.2.0)
+      strtok3: 10.5.0
       token-types: 6.1.2
       uint8array-extras: 1.6.0
     transitivePeerDependencies:
@@ -11614,7 +11614,7 @@ snapshots:
     dependencies:
       anynum: 1.0.1
 
-  strtok3@10.3.5:
+  strtok3@10.5.0:
     dependencies:
       '@tokenizer/token': 0.3.0
 
