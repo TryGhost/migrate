@@ -695,8 +695,8 @@ importers:
         specifier: 'catalog:'
         version: 0.3.7
       js-yaml:
-        specifier: 5.4.3
-        version: 5.4.3
+        specifier: 5.5.0
+        version: 5.5.0
       markdown-it:
         specifier: 'catalog:'
         version: 15.0.2
@@ -4119,6 +4119,9 @@ packages:
   argparse@3.0.2:
     resolution: {integrity: sha512-mFdDM6WqWKraGLsVb+C9CahPnzTXOefAOLq3jYcca2YZ8bEWpr++Tzj+zSaKW9+X9L5uSxcm1AZ3Y6aZJ09OhQ==}
 
+  argparse@3.0.3:
+    resolution: {integrity: sha512-Sn98ftV3KfsO8xfLPHG6oT8y+b0yvbrLgZjgPDXsharNY15tTAjqIsIju4S32nl6/iEUNNE4v+yL2Zhm8ooP3w==}
+
   assured@1.0.16:
     resolution: {integrity: sha512-KwttBV8EIJw4/KqRFTJzKELLm9c3d1V9+fefORWv8cJNgKouuCRQ5rvCgjpBwA1AxVwqpR5Y1ePLU5SINJzhQg==}
 
@@ -5232,8 +5235,8 @@ packages:
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
-  js-yaml@5.4.3:
-    resolution: {integrity: sha512-yzzNtgczwgoVHNigCyKTXcQJU4Y8t/ikU4UxXW0BvrLfHTGWZhsNcOT2s/a7vn81/4KqVnNmHjaUEPlvWnNwVw==}
+  js-yaml@5.5.0:
+    resolution: {integrity: sha512-paNr4LFIFPjeeSmwNYdrb8FafLLG/Cr2Af3GjbsHJ5CxIjH4r0c2emlmRdAtpPAieP1gRVzk6buBbVP5gBMGAg==}
     hasBin: true
 
   jsdom@30.0.1:
@@ -9367,6 +9370,8 @@ snapshots:
 
   argparse@3.0.2: {}
 
+  argparse@3.0.3: {}
+
   assured@1.0.16:
     dependencies:
       noop6: 1.0.10
@@ -10491,9 +10496,9 @@ snapshots:
 
   js-tokens@4.0.0: {}
 
-  js-yaml@5.4.3:
+  js-yaml@5.5.0:
     dependencies:
-      argparse: 2.0.1
+      argparse: 3.0.3
 
   jsdom@30.0.1:
     dependencies:
