@@ -19,6 +19,7 @@ export type {
     ContentStats,
     UpdatePostDataOptions,
     WriteGhostJsonOptions,
+    WriteGhostCSVOptions,
     MigrateContextOptions,
     EntityScope,
     EntityIterationOptions,

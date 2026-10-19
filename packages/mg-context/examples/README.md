@@ -31,6 +31,23 @@ pnpm exec tsx examples/generate-large-export.ts --insert false
 pnpm exec tsx examples/generate-large-export.ts --reread-source
 ```
 
+## generate-large-csv-export.ts
+
+Generates and maps up to **500,000 posts**, then streams them into one Ghost post CSV. It tracks peak memory use and uses a temporary on-disk database by default; the CSV remains after the context closes. Start with a small run:
+
+```bash
+pnpm exec tsx examples/generate-large-csv-export.ts --count 1000
+```
+
+The default output is `./export/files/csv-posts/posts.csv`. Use `--output <directory>` to change it. Pass `--db <path>` to keep the source database for reruns; mapping runs again from stored source records, while `--reread-source` resets and regenerates them.
+
+```bash
+pnpm exec tsx examples/generate-large-csv-export.ts --count 1000 --db ./csv-posts.db
+pnpm exec tsx examples/generate-large-csv-export.ts --count 1000 --db ./csv-posts.db --reread-source
+```
+
+The CSV lists `Alice Johnson`, `Bob Smith`, `News`, and `Technology`, but does not create them. Create matching authors and tags in the destination Ghost site before importing it.
+
 ## generate-large-export-with-queue.ts
 
 Like the large-export example, this stores raw source posts and maps them before streaming posts into `mg-queue` for bounded, concurrent HTML enrichment. The asynchronous enrichment is a stand-in for network or file work; queue errors stop the export. By default it uses a temporary on-disk database, which is removed when the run finishes. The Ghost JSON export remains in `./export/files/queue-posts/`.

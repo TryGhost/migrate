@@ -1,6 +1,6 @@
 # Migrate Context
 
-Build Ghost import JSON from source posts. `@tryghost/mg-context` stores them in SQLite, checks Ghost's field rules, and writes the export in batches.
+Build Ghost import JSON or post CSV from source posts. `@tryghost/mg-context` stores them in SQLite, checks Ghost's field rules, and writes exports without loading every post into memory.
 
 ## Install
 
@@ -37,6 +37,16 @@ try {
 ```
 
 `addPost()` creates a post; `post.save()` stores it. `writeGhostJson()` prepares titles and slugs, then exports the stored HTML. The default database is a temporary file, removed when you close the context. The JSON output remains.
+
+## Export posts as CSV
+
+In the example above, replace the JSON export call with:
+
+```js
+await context.writeGhostCSV('./output'); // Writes ./output/posts.csv
+```
+
+CSV exports one file with the stored HTML. It lists post authors and tags but does not create them: those authors and tags must already exist in the destination Ghost site. Their names must match the CSV names; commas in names become spaces and extra whitespace is collapsed. Use JSON export when you also need to import authors and tags. See the [large CSV example](examples/generate-large-csv-export.ts) or [CSV export options and columns](docs/api-reference.md#writeghostcsvoutputdir-options-promisewrittenfile).
 
 ## Rerun a completed migration
 

@@ -516,6 +516,31 @@ const files = await ctx.writeGhostJson('./output/', {
 });
 ```
 
+#### `writeGhostCSV(outputDir, options?): Promise<WrittenFile>`
+
+Write one streamed post CSV. It uses the same stored posts and `PostFilter` as `writeGhostJson()`, but does not export standalone authors or tags.
+
+| Option     | Type         | Default   | Description                                  |
+|------------|--------------|-----------|----------------------------------------------|
+| `filename` | `string`     | `'posts'` | Base filename (without `.csv`)                |
+| `filter`   | `PostFilter` | —         | Include only posts matching these criteria   |
+
+```js
+const file = await ctx.writeGhostCSV('./output', {
+    filename: 'selected-posts',
+    filter: {tag: {slug: 'news'}}
+});
+// file.name === 'selected-posts.csv'
+```
+
+The return value is one `WrittenFile` with `path`, `name`, `size`, and `posts`. An empty selection still writes a header-only CSV. Preparation is automatic. Rows are read in bounded database batches and streamed to a temporary file; a completed file replaces the destination. A previous CSV is removed only when its filename changes and it is listed in the export manifest. CSV and JSON outputs are tracked separately, so exporting either format leaves the other intact.
+
+Columns follow Ghost's post CSV import order: `title`, `html`, `slug`, `custom_excerpt`, `type`, `status`, `visibility`, `featured`, `created_at`, `updated_at`, `published_at`, `feature_image`, `feature_image_alt`, `feature_image_caption`, `meta_title`, `meta_description`, `canonical_url`, `og_image`, `og_title`, `og_description`, `twitter_image`, `twitter_title`, `twitter_description`, `custom_template`, `codeinjection_head`, `codeinjection_foot`, `authors`, `author_emails`, `tags`. The optional `markdown`, `frontmatter`, and `show_title_and_feature_image` columns are omitted. Only stored HTML is exported.
+
+The `authors`, `author_emails`, and `tags` cells contain comma-separated values in relationship order. Author names, corresponding emails, and tag names retain that order. To keep names unambiguous in those lists, the exporter replaces commas in names with spaces, collapses repeated whitespace, and trims them. **The destination Ghost site must already contain the matching authors and tags under these normalized names.** The exporter does not create or verify them.
+
+Nulls become empty cells, dates use ISO timestamps, and booleans are `true` or `false`. `scheduled` and `sent` posts export as `draft` for CSV import; their other fields are unchanged. This conversion does not modify SQLite or JSON output. Quotes, commas, and multiline HTML are CSV-escaped.
+
 #### `writeGhostTagsJson(outputDir, options?): Promise<WrittenFile>`
 
 Export tags as a standalone JSON file. The default scope is `referenced`; pass `{scope: 'all'}` to include standalone tags. Preparation and manifest updates are automatic.

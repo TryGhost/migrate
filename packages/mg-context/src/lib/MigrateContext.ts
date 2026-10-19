@@ -1,8 +1,11 @@
 import {stat, mkdir, mkdtemp, open, readFile, rename, rm, writeFile} from 'node:fs/promises';
+import {createWriteStream} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 import {tmpdir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {EventEmitter} from 'node:events';
+import {Readable} from 'node:stream';
+import {pipeline} from 'node:stream/promises';
 import errors from '@tryghost/errors';
 
 import MigrateBase from './MigrateBase.js';
@@ -16,6 +19,7 @@ import PostContext, {
 } from './PostContext.js';
 import TagContext from './TagContext.js';
 import AuthorContext from './AuthorContext.js';
+import {GHOST_CSV_COLUMNS, csvLine, csvPostLine, type CsvPostRelations} from './ghost-csv.js';
 import {
     createDatabase,
     flushDatabaseEvents,
@@ -131,6 +135,38 @@ function hasPostFilter(filter?: PostFilter): boolean {
     return Boolean(filter?.tag || filter?.author || filter?.createdAt || filter?.publishedAt);
 }
 
+function buildCsvPostWhere(filter?: PostFilter) {
+    const dateWhere = buildDateWhere(filter);
+    const conditions = dateWhere.sql ? [dateWhere.sql] : [];
+    const params = [...dateWhere.params];
+
+    if (filter?.tag) {
+        const column = filter.tag.slug ? 'slug' : filter.tag.name ? 'name' : null;
+        if (column) {
+            conditions.push(
+                `EXISTS (SELECT 1 FROM PostTags pt JOIN Tags t ON t.id = pt.tag_id WHERE pt.post_id = Posts.id AND t.${column} = ?)`
+            );
+            params.push(filter.tag[column]!);
+        } else {
+            conditions.push('1 = 0');
+        }
+    }
+
+    if (filter?.author) {
+        const column = filter.author.slug ? 'slug' : filter.author.name ? 'name' : filter.author.email ? 'email' : null;
+        if (column) {
+            conditions.push(
+                `EXISTS (SELECT 1 FROM PostAuthors pa JOIN Authors a ON a.id = pa.author_id WHERE pa.post_id = Posts.id AND a.${column} = ?)`
+            );
+            params.push(filter.author[column]!);
+        } else {
+            conditions.push('1 = 0');
+        }
+    }
+
+    return {sql: conditions.length ? `WHERE ${conditions.join(' AND ')}` : '', params};
+}
+
 export interface DuplicateSlugEntry {
     oldSlug: string;
     newSlug: string;
@@ -158,6 +194,11 @@ export interface WriteGhostJsonOptions {
     onWrite?: (file: WrittenFile) => void;
     /** @deprecated Export-manifest cleanup is always enabled. */
     replaceExisting?: boolean;
+}
+
+export interface WriteGhostCSVOptions {
+    filename?: string;
+    filter?: PostFilter;
 }
 
 export interface MigrationReportEntry {
@@ -193,15 +234,15 @@ const CONTENT_IDENTITY_KEY = 'content';
 const EXPORT_MANIFEST = '.mg-context-export-manifest.json';
 
 interface ExportManifest {
-    version: 1;
+    version: 1 | 2;
     exports: Record<string, string[]>;
 }
 
-function exportBaseFilename(rawFilename: string): string {
-    const filename = rawFilename.replace(/\.json$/i, '');
+function exportBaseFilename(rawFilename: string, extension: 'json' | 'csv' = 'json'): string {
+    const filename = rawFilename.replace(new RegExp(`\\.${extension}$`, 'i'), '');
     if (!filename || filename.includes('/') || filename.includes('\\')) {
         throw new errors.BadRequestError({
-            message: 'Ghost JSON filename must be a non-empty base filename without path separators.'
+            message: `Ghost ${extension.toUpperCase()} filename must be a non-empty base filename without path separators.`
         });
     }
     return filename;
@@ -214,19 +255,22 @@ async function readExportManifest(outputDir: string): Promise<ExportManifest> {
             parsed.exports &&
             typeof parsed.exports === 'object' &&
             !Array.isArray(parsed.exports) &&
-            Object.values(parsed.exports).every(
-                fileNames =>
+            Object.entries(parsed.exports).every(
+                ([kind, fileNames]) =>
                     Array.isArray(fileNames) &&
-                    fileNames.every(
-                        fileName =>
+                    (parsed.version === 2 || kind !== 'posts-csv') &&
+                    fileNames.every(fileName => {
+                        const extension = kind === 'posts-csv' ? '.csv' : '.json';
+                        return (
                             typeof fileName === 'string' &&
-                            fileName.length > '.json'.length &&
-                            fileName.endsWith('.json') &&
+                            fileName.length > extension.length &&
+                            fileName.endsWith(extension) &&
                             !fileName.includes('/') &&
                             !fileName.includes('\\')
-                    )
+                        );
+                    })
             );
-        if (parsed.version !== 1 || !exportsAreValid) {
+        if ((parsed.version !== 1 && parsed.version !== 2) || !exportsAreValid) {
             throw new Error('Unsupported manifest shape');
         }
         return parsed;
@@ -1485,6 +1529,93 @@ export default class MigrateContext extends MigrateBase {
             for (const temporaryPath of temporaryPaths) {
                 await rm(temporaryPath, {force: true});
             }
+        }
+    }
+
+    async writeGhostCSV(
+        outputDir: string,
+        {filename: rawFilename = 'posts', filter}: WriteGhostCSVOptions = {}
+    ): Promise<WrittenFile> {
+        const name = `${exportBaseFilename(rawFilename, 'csv')}.csv`;
+        await this.prepareForExport();
+        await mkdir(outputDir, {recursive: true});
+
+        const manifest = await readExportManifest(outputDir);
+        const where = buildCsvPostWhere(filter);
+        const total = countWhere(this.db, where);
+        const {max_id: maxId} = this.db.db
+            .prepare(`SELECT MAX(id) AS max_id FROM Posts ${where.sql}`)
+            .get(...where.params) as {
+            max_id: number | null;
+        };
+        const keysetWhere = where.sql
+            ? `${where.sql} AND Posts.id > ? AND Posts.id <= ?`
+            : 'WHERE Posts.id > ? AND Posts.id <= ?';
+        const findBatch = this.db.db.prepare(`SELECT * FROM Posts ${keysetWhere} ORDER BY Posts.id ASC LIMIT ?`);
+        const outputPath = join(outputDir, name);
+        const temporaryPath = `${outputPath}.${randomUUID()}.tmp`;
+        let postCount = 0;
+        async function* lines(context: MigrateContext) {
+            yield csvLine(GHOST_CSV_COLUMNS);
+            let afterId = 0;
+
+            while (maxId !== null) {
+                const rows = findBatch.all(...where.params, afterId, maxId, 200) as Array<{id: number; data: string}>;
+                if (rows.length === 0) {
+                    break;
+                }
+
+                const postIds = rows.map(row => row.id);
+                const placeholders = postIds.map(() => '?').join(',');
+                const tagRows = context.db.db
+                    .prepare(
+                        `SELECT pt.post_id, t.data FROM PostTags pt JOIN Tags t ON t.id = pt.tag_id WHERE pt.post_id IN (${placeholders}) ORDER BY pt.post_id ASC, pt.sort_order ASC`
+                    )
+                    .all(...postIds) as Array<{post_id: number; data: string}>;
+                const authorRows = context.db.db
+                    .prepare(
+                        `SELECT pa.post_id, a.data FROM PostAuthors pa JOIN Authors a ON a.id = pa.author_id WHERE pa.post_id IN (${placeholders}) ORDER BY pa.post_id ASC, pa.sort_order ASC`
+                    )
+                    .all(...postIds) as Array<{post_id: number; data: string}>;
+                const relations = new Map<number, CsvPostRelations>(postIds.map(id => [id, {authors: [], tags: []}]));
+
+                for (const row of tagRows) {
+                    const tag = JSON.parse(row.data) as {name: string};
+                    relations.get(row.post_id)!.tags.push(tag.name);
+                }
+                for (const row of authorRows) {
+                    const author = JSON.parse(row.data) as {name: string; email: string};
+                    relations.get(row.post_id)!.authors.push({name: author.name, email: author.email});
+                }
+
+                for (const row of rows) {
+                    yield csvPostLine(JSON.parse(row.data) as Record<string, unknown>, relations.get(row.id)!);
+                    postCount += 1;
+                }
+                afterId = rows[rows.length - 1].id;
+                if (context.#emitEvents) {
+                    context.#emitter.emit('progress', {operation: 'writeGhostCSV', processed: postCount, total});
+                }
+            }
+        }
+
+        try {
+            await pipeline(Readable.from(lines(this)), createWriteStream(temporaryPath, {encoding: 'utf8'}));
+            const fileStats = await stat(temporaryPath);
+            const written: WrittenFile = {path: resolve(outputPath), name, size: fileStats.size, posts: postCount};
+            await rename(temporaryPath, outputPath);
+            for (const staleFileName of (manifest.exports['posts-csv'] ?? []).filter(fileName => fileName !== name)) {
+                await rm(join(outputDir, staleFileName), {force: true});
+            }
+            manifest.version = 2;
+            manifest.exports['posts-csv'] = [name];
+            await writeExportManifest(outputDir, manifest);
+            if (this.#emitEvents) {
+                this.#emitter.emit('export:file-written', structuredClone(written));
+            }
+            return written;
+        } finally {
+            await rm(temporaryPath, {force: true});
         }
     }
 
