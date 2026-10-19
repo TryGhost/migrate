@@ -1,10 +1,10 @@
-// Run this with: `npx tsx examples/deduplicate-slugs.ts`
+// Run this with: `pnpm exec tsx examples/deduplicate-slugs.ts`
 //
 // Demonstrates slug deduplication. When multiple posts share the same slug,
-// the oldest keeps the original; newer duplicates get -2, -3, etc.
+// the first saved keeps the original; later duplicates get -2, -3, etc.
 //
-// Call prepareForExport() before exporting to deduplicate slugs and convert content.
-// Access ctx.duplicateSlugs for the list of renamed slugs.
+// Saving allocates unique slugs. Export preparation rebuilds the duplicate
+// report, which is available afterwards through ctx.duplicateSlugs.
 
 import {MigrateContext} from '../src/index.js';
 
@@ -26,7 +26,7 @@ async function main() {
         // 1. Import all posts
         await ctx.transaction(async () => {
             for (const item of sourceData) {
-                const post = await ctx.addPost({source: {url: item.url}});
+                const post = await ctx.addPost({sourceMeta: {url: item.url}});
                 post.set('title', item.title);
                 post.set('slug', item.slug);
                 post.set('status', 'published');
@@ -40,10 +40,7 @@ async function main() {
 
         console.log(`Imported ${sourceData.length} posts\n`);
 
-        // 2. Prepare for export (deduplicates slugs + converts content)
-        await ctx.prepareForExport();
-
-        // 3. Export to Ghost JSON
+        // 2. Export to Ghost JSON (preparation and slug deduplication are automatic)
         const files = await ctx.writeGhostJson('./export/', {
             filename: 'deduplicated',
             onWrite(f) {
@@ -51,7 +48,7 @@ async function main() {
             }
         });
 
-        // 4. Log duplicate slug groups for redirect handling
+        // 3. Log duplicate slug groups for redirect handling
         //    Results are grouped by slug. The first entry in each group is the
         //    retained post (oldSlug === newSlug), followed by the renamed ones.
         if (ctx.duplicateSlugs.length > 0) {

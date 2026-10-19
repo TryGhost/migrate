@@ -1,12 +1,11 @@
-// Run this with: `npx tsx examples/stream-posts.ts`
+// Run this with: `pnpm exec tsx examples/stream-posts.ts`
 //
 // Iterates 50k posts using streamPosts() and tracks peak memory usage.
 // On the first run, posts are inserted. Subsequent runs reuse the existing DB.
-// Delete examples/stream-posts.db to regenerate.
+// Pass --reread-source to regenerate from the synthetic source.
 import {dirname, join} from 'node:path';
-import {existsSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
-import {MigrateContext} from '../src/index.js';
+import {MigrateContext, type PostContext} from '../src/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = join(__dirname, 'stream-posts.db');
@@ -45,13 +44,34 @@ const authors = [
     {name: 'Bob Smith', slug: 'bob-smith', email: 'bob@example.com'}
 ];
 
+function mapSyntheticPost(post: PostContext) {
+    const {index: i, html: sourceHtml} = JSON.parse(post.sourceContent!);
+    post.setTagOrder(() => []);
+    post.setAuthorOrder(() => []);
+    post.set('title', `Post ${i + 1}`);
+    post.set('slug', `post-${i + 1}`);
+    post.set('status', 'published');
+    const postDate = new Date(2025, 0, 1, 0, i * 6);
+    post.set('created_at', postDate);
+    post.set('published_at', postDate);
+    post.set('html', sourceHtml);
+    post.addTag(tags[i % tags.length]);
+    post.addAuthor(authors[i % authors.length]);
+}
+
 async function main() {
-    const dbExists = existsSync(DB_PATH);
-    const ctx = new MigrateContext({dbPath: DB_PATH, ephemeral: false});
+    const ctx = new MigrateContext({
+        dbPath: DB_PATH,
+        contentIdentity: {
+            source: 'mg-context-example:stream-posts',
+            revision: `synthetic-${POST_COUNT}-with-html`
+        },
+        resetContent: process.argv.includes('--reread-source')
+    });
     await ctx.init();
 
     try {
-        if (!dbExists) {
+        if (!ctx.hasContent()) {
             console.log(`Generating ${POST_COUNT.toLocaleString()} posts...`);
             const insertStart = Date.now();
 
@@ -60,17 +80,13 @@ async function main() {
 
                 await ctx.transaction(async () => {
                     for (let i = batchStart; i < batchEnd; i++) {
-                        const post = await ctx.addPost();
-                        post.set('title', `Post ${i + 1}`);
-                        post.set('slug', `post-${i + 1}`);
-                        post.set('status', 'published');
-                        const postDate = new Date(2025, 0, 1, 0, i * 6);
-                        post.set('created_at', postDate);
-                        post.set('published_at', postDate);
-                        post.set('html', html.replace('Lorem ipsum', `Post ${i + 1}: Lorem ipsum`));
-                        post.addTag(tags[i % tags.length]);
-                        post.addAuthor(authors[i % authors.length]);
-                        await post.save(ctx.db);
+                        await ctx.addSourcePost(post => {
+                            post.setSource('lookupKey', `post-${i + 1}`);
+                            post.setSource('content', JSON.stringify({
+                                index: i,
+                                html: html.replace('Lorem ipsum', `Post ${i + 1}: Lorem ipsum`)
+                            }));
+                        });
                     }
                 });
 
@@ -85,15 +101,21 @@ async function main() {
             console.log(`Using existing database at ${DB_PATH}\n`);
         }
 
+        // Rebuild mapped fields from the stored source on every run.
+        console.log('Mapping all posts from stored source...');
+        await ctx.forEachPost(async post => {
+            mapSyntheticPost(post);
+        }, {batchSize: BATCH_SIZE});
+
         // Stream all posts and simulate processing
         console.log('Streaming posts with streamPosts()...');
         const streamStart = Date.now();
         let count = 0;
 
-        ctx.on('progress', (event, processed, total) => {
+        ctx.on('progress', ({operation, processed, total}) => {
             const elapsed = ((Date.now() - streamStart) / 1000).toFixed(1);
             const rss = (process.memoryUsage().rss / 1024 / 1024).toFixed(0);
-            console.log(`  [${event}] ${processed.toLocaleString()}/${total.toLocaleString()} (${elapsed}s, ${rss} MB)`);
+            console.log(`  [${operation}] ${processed.toLocaleString()}/${total.toLocaleString()} (${elapsed}s, ${rss} MB)`);
         });
 
         for await (const post of ctx.streamPosts({batchSize: 500})) {

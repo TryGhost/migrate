@@ -13,7 +13,7 @@ describe('mapPost', function () {
     let ctx: MigrateContext;
 
     before(async function () {
-        ctx = new MigrateContext({contentFormat: 'lexical'});
+        ctx = new MigrateContext();
         await ctx.init();
     });
 
@@ -30,10 +30,11 @@ describe('mapPost', function () {
         assert.equal(post.get('status'), 'published');
         assert.equal(post.get('feature_image'), 'https://casper.ghost.org/v2.0.0/images/welcome-to-ghost.jpg');
         assert.equal(post.get('custom_excerpt'), "Welcome, it's great to have you here.");
+        assert.equal(post.sourceContent, JSON.stringify(fixture.posts[0]));
+        assert.equal(post.sourceMeta.id, fixture.posts[0].id);
 
-        const lexical = post.get('lexical');
-        assert.ok(lexical, 'lexical was preserved from the Ghost API response');
-        assert.match(lexical, /Welcome/);
+        const html = post.get('html');
+        assert.equal(html, "<p>👋 Welcome, it's great to have you here.</p>");
 
         assert.ok(post.get('created_at') instanceof Date);
         assert.ok(post.get('published_at') instanceof Date);

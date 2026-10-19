@@ -1,7 +1,7 @@
-// Run this with: `npx tsx examples/generate-large-export.ts`
+// Run this with: `pnpm exec tsx examples/generate-large-export.ts`
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {MigrateContext} from '../src/index.js';
+import {MigrateContext, type PostContext} from '../src/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -48,22 +48,56 @@ const authors = [
     {name: 'Carol Williams', slug: 'carol-williams', email: 'carol@example.com'}
 ];
 
+function mapSyntheticPost(post: PostContext) {
+    const {index: i, html: sourceHtml} = JSON.parse(post.sourceContent!);
+    post.setTagOrder(() => []);
+    post.setAuthorOrder(() => []);
+    post.set('title', `Post Number ${i + 1}`);
+    post.set('slug', `post-number-${i + 1}`);
+    post.set('status', 'published');
+    const postDate = new Date(2025, 0, 1, 0, i * 6);
+    post.set('created_at', postDate);
+    post.set('updated_at', postDate);
+    post.set('published_at', postDate);
+    post.set('html', sourceHtml);
+    post.addTag(tags[i % tags.length]);
+    post.addTag(tags[(i + 1) % tags.length]);
+    post.addAuthor(authors[i % authors.length]);
+    if (i === 10050) {
+        post.addTag({name: 'Art', slug: 'art'});
+        post.addAuthor({name: 'Ron', slug: 'ron', email: 'ron@example.com'});
+    }
+}
+
 async function main() {
     const args = process.argv.slice(2);
     const insertFlagIndex = args.indexOf('--insert');
-    const skipInsert = insertFlagIndex !== -1 && args[insertFlagIndex + 1] === 'false';
+    const skipInsertRequested = insertFlagIndex !== -1 && args[insertFlagIndex + 1] === 'false';
+    const refreshData = args.includes('--reread-source');
     const outputPath = args.find(a => !a.startsWith('--') && (insertFlagIndex === -1 || args.indexOf(a) !== insertFlagIndex + 1)) || './export/files/posts/';
 
     const startTime = Date.now();
 
-    const ctx = new MigrateContext({dbPath: join(__dirname, 'posts.db'), ephemeral: false});
+    const ctx = new MigrateContext({
+        dbPath: join(__dirname, 'posts.db'),
+        contentIdentity: {
+            source: 'mg-context-example:large-export',
+            revision: `synthetic-${POST_COUNT}`
+        },
+        resetContent: refreshData
+    });
     await ctx.init();
 
     try {
         console.log('Database initialized');
+        const hasContent = Boolean(ctx.hasContent());
+        if (skipInsertRequested && !hasContent) {
+            throw new Error('Cannot skip source insertion: the context database has no posts.');
+        }
+        const skipInsert = skipInsertRequested || hasContent;
 
         if (skipInsert) {
-            console.log('Skipping insert (--insert false)');
+            console.log(skipInsertRequested ? 'Skipping source insertion (--insert false)' : 'Using source posts already in the database');
         } else {
             console.log(`About to generate ${POST_COUNT.toLocaleString()} posts...`);
         }
@@ -74,25 +108,13 @@ async function main() {
 
             await ctx.transaction(async () => {
                 for (let i = batchStart; i < batchEnd; i++) {
-                    const post = await ctx.addPost({lookupKey: `https://example.com/post-number-${i + 1}`});
-                    post.set('title', `Post Number ${i + 1}`);
-                    post.set('slug', `post-number-${i + 1}`);
-                    post.set('status', 'published');
-                    const postDate = new Date(2025, 0, 1, 0, i * 6);
-                    post.set('created_at', postDate);
-                    post.set('updated_at', postDate);
-                    post.set('published_at', postDate);
-                    post.set('html', html.replace('Lorem ipsum', `Post ${i + 1}: Lorem ipsum`));
-                    post.addTag(tags[i % tags.length]);
-                    post.addTag(tags[(i + 1) % tags.length]);
-                    post.addAuthor(authors[i % authors.length]);
-
-                    if (i === 10050) {
-                        post.addTag({name: 'Art', slug: 'art'});
-                        post.addAuthor({name: 'Ron', slug: 'ron', email: 'ron@example.com'});
-                    }
-
-                    await post.save(ctx.db);
+                    await ctx.addSourcePost(post => {
+                        post.setSource('lookupKey', `https://example.com/post-number-${i + 1}`);
+                        post.setSource('content', JSON.stringify({
+                            index: i,
+                            html: html.replace('Lorem ipsum', `Post ${i + 1}: Lorem ipsum`)
+                        }));
+                    });
                 }
             });
 
@@ -100,18 +122,18 @@ async function main() {
             console.log(`- Inserted ${batchEnd.toLocaleString()} posts (${batchDuration}s)`);
         }
 
-        // Second pass: update HTML on every post
+        // Map the stored source on every run, including when insertion was skipped.
         // Centralised progress listener for all operations
         let batchTime = Date.now();
-        ctx.on('progress', (event, processed, total) => {
+        ctx.on('progress', ({operation, processed, total}) => {
             const duration = ((Date.now() - batchTime) / 1000).toFixed(1);
-            console.log(`- [${event}] ${processed.toLocaleString()}/${total.toLocaleString()} (${duration}s)`);
+            console.log(`- [${operation}] ${processed.toLocaleString()}/${total.toLocaleString()} (${duration}s)`);
             batchTime = Date.now();
         });
 
-        console.log('Updating HTML on all posts...');
-        await ctx.forEachPost(async (post: any) => {
-            // post.set('html', post.data.html + '\n<p><em>Not inserted first.</em></p>');
+        console.log('Mapping all posts from stored source...');
+        await ctx.forEachPost(async (post: PostContext) => {
+            mapSyntheticPost(post);
             post.set('meta_title', `Post meta title`);
             if (post.get('title').includes('Post Number 200')) {
                 post.addTag({
@@ -121,13 +143,7 @@ async function main() {
             }
         }, {batchSize: BATCH_SIZE});
 
-        console.log('Preparing for export...');
-        const prepTime = Date.now();
-        await ctx.prepareForExport();
-        const prepDuration = ((Date.now() - prepTime) / 1000).toFixed(1);
-        console.log(`Prepared in ${prepDuration}s`);
-
-        console.log('Writing Ghost JSON...');
+        console.log('Preparing and writing Ghost JSON...');
         const writeTime = Date.now();
         const writtenFiles = await ctx.writeGhostJson(outputPath, {
             batchSize: 5000,

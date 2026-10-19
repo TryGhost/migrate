@@ -7,7 +7,7 @@ import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import prettyMilliseconds from 'pretty-ms';
 
-const initialize = options => {
+const initialize = (options, {infoOnly = false} = {}) => {
     return {
         title: 'Initializing Workspace',
         task: async (ctx, task) => {
@@ -29,20 +29,36 @@ const initialize = options => {
                 batchName: options.batch
             });
 
-            ctx.migrateContext = new MigrateContext({
-                contentFormat: 'lexical',
-                dbPath: join(ctx.fileCache.tmpDir, 'mg-context.sqlite')
-            });
-            await ctx.migrateContext.init();
+            if (!infoOnly) {
+                ctx.migrateContext = new MigrateContext({
+                    dbPath: join(ctx.fileCache.tmpDir, 'mg-context.sqlite'),
+                    resetContent: Boolean(options.rereadSource),
+                    contentIdentity: {
+                        source: `ghost-api:${options.url}`,
+                        revision: 'live-api-snapshot',
+                        options: {
+                            batch: options.batch ?? 0,
+                            limit: options.batch > 0 ? (options.limit ?? 15) : null,
+                            posts: options.posts ?? true,
+                            pages: options.pages ?? true,
+                            postFilter: options.postFilter ?? null,
+                            pageFilter: options.pageFilter ?? null
+                        }
+                    }
+                });
+                await ctx.migrateContext.init();
+                const existing = ctx.migrateContext.hasContent();
+                ctx.hasStoredSource = Boolean(existing && existing.posts + existing.pages > 0);
 
-            ctx.assetScraper = new MgAssetScraper(
-                ctx.fileCache,
-                {
-                    allowAllDomains: true
-                },
-                ctx
-            );
-            await ctx.assetScraper.init();
+                ctx.assetScraper = new MgAssetScraper(
+                    ctx.fileCache,
+                    {
+                        allowAllDomains: true
+                    },
+                    ctx
+                );
+                await ctx.assetScraper.init();
+            }
 
             task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
 
@@ -55,7 +71,7 @@ const initialize = options => {
 
 const getInfoTaskList = options => {
     return [
-        initialize(options),
+        initialize(options, {infoOnly: true}),
         {
             title: 'Fetch Content Info from Ghost API',
             task: async ctx => {
@@ -82,6 +98,7 @@ const getFullTaskList = options => {
         initialize(options),
         {
             title: 'Fetch Content from Ghost API',
+            skip: ctx => ctx.hasStoredSource && !options.rereadSource,
             task: async ctx => {
                 try {
                     let tasks = await ghostAPI.fetch.tasks(options, ctx);
@@ -114,17 +131,6 @@ const getFullTaskList = options => {
                     });
                 } catch (error) {
                     ctx.errors.push({message: 'Failed to fetch images via AssetScraper', error});
-                    throw error;
-                }
-            }
-        },
-        {
-            title: 'Prepare data for export',
-            task: async ctx => {
-                try {
-                    await ctx.migrateContext.prepareForExport();
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to prepare data for export', error});
                     throw error;
                 }
             }

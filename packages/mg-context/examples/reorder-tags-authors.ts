@@ -1,4 +1,4 @@
-// Run this with: `npx tsx examples/reorder-tags-authors.ts`
+// Run this with: `pnpm exec tsx examples/reorder-tags-authors.ts`
 import {MigrateContext} from '../src/index.js';
 
 async function main() {
@@ -106,8 +106,7 @@ async function main() {
             printOrder(p);
         }
 
-        // Export and show sort_order in the JSON
-        await ctx.prepareForExport();
+        // Export (with automatic preparation) and show sort_order in the JSON
         const files = await ctx.writeGhostJson('./export/', {filename: 'reorder-example'});
         const fs = await import('node:fs/promises');
         const json = JSON.parse(await fs.readFile(files[0].path, 'utf-8'));

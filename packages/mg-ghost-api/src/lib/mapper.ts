@@ -48,7 +48,7 @@ export interface GhostApiPost {
     status?: 'published' | 'draft' | 'scheduled' | 'sent';
     visibility?: 'public' | 'members' | 'paid';
     featured?: boolean;
-    lexical?: string | null;
+    html?: string | null;
     feature_image?: string | null;
     feature_image_alt?: string | null;
     feature_image_caption?: string | null;
@@ -81,6 +81,7 @@ const POST_OBJECT_FIELDS = [
     'visibility',
     'featured',
     'type',
+    'html',
     'feature_image',
     'feature_image_alt',
     'feature_image_caption',
@@ -167,11 +168,18 @@ const toDate = (value: string | null | undefined): Date | null => {
     return new Date(value);
 };
 
-export async function mapPost(ghPost: GhostApiPost, migrateContext: MigrateContext): Promise<PostContext> {
-    const post = await migrateContext.addPost({
-        source: {url: ghPost.url, id: ghPost.id},
-        lookupKey: ghPost.id
-    });
+export async function mapPost(
+    ghPost: GhostApiPost,
+    migrateContext: MigrateContext,
+    existingPost?: PostContext
+): Promise<PostContext> {
+    const post =
+        existingPost ??
+        (await migrateContext.addPost({
+            sourceContent: JSON.stringify(ghPost),
+            sourceMeta: {url: ghPost.url, id: ghPost.id, type: ghPost.type},
+            lookupKey: ghPost.id
+        }));
 
     for (const field of POST_OBJECT_FIELDS) {
         const value = ghPost[field];
@@ -185,10 +193,6 @@ export async function mapPost(ghPost: GhostApiPost, migrateContext: MigrateConte
         if (date) {
             post.set(field, date);
         }
-    }
-
-    if (ghPost.lexical) {
-        post.set('lexical', ghPost.lexical);
     }
 
     if (ghPost.tags) {

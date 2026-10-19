@@ -1,12 +1,27 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {PostContext, TagContext, AuthorContext} from '../index.js';
+import {PostContext, TagContext, AuthorContext, normalizeTitle} from '../index.js';
 
 describe('PostContext', function () {
+    it('Normalizes missing, blank, padded, and oversized titles', () => {
+        assert.equal(normalizeTitle(null), '(Untitled)');
+        assert.equal(normalizeTitle('   '), '(Untitled)');
+        assert.equal(normalizeTitle('  A title  '), 'A title');
+        assert.equal(normalizeTitle('A'.repeat(300)), 'A'.repeat(255));
+    });
+
     it('Is instance of PostContext', () => {
         const instance: any = new PostContext();
 
         assert.equal(instance instanceof PostContext, true);
+    });
+
+    it('Cannot snapshot an unsaved post', () => {
+        const instance = new PostContext();
+        assert.throws(() => instance.toSnapshot(), {
+            name: 'InternalServerError',
+            message: 'Cannot snapshot a post before it is saved.'
+        });
     });
 
     it('Can set & get meta', () => {
@@ -43,6 +58,60 @@ describe('PostContext', function () {
         });
     });
 
+    it('Keeps raw source text separate from source metadata', () => {
+        const post = new PostContext({sourceContent: '<item>original</item>', sourceMeta: {id: '123'}});
+        assert.equal(post.sourceContent, '<item>original</item>');
+        assert.deepEqual(post.sourceMeta, {id: '123'});
+        assert.equal(post.getSourceValue('id'), '123');
+        assert.deepEqual(post.source, {id: '123'});
+        assert.throws(() => new PostContext({sourceContent: 3 as any}), {
+            name: 'BadRequestError',
+            message: 'sourceContent must be a string.'
+        });
+        assert.throws(() => new PostContext({sourceMeta: {}, source: {}}), {
+            name: 'BadRequestError',
+            message: 'Pass sourceMeta or the deprecated source option, not both.'
+        });
+    });
+
+    it('Sets source fields without adding them to Ghost post data', () => {
+        const post = new PostContext();
+        assert.deepEqual(post.sourceMeta, {});
+        assert.equal(post.setSource('lookupKey', 'source-1'), post);
+        assert.equal(post.setSource('content', ''), post);
+        assert.equal(post.setSource('meta', {url: 'https://example.com/original'}), post);
+        assert.equal(post.lookupKey, 'source-1');
+        assert.equal(post.sourceContent, '');
+        assert.deepEqual(post.sourceMeta, {url: 'https://example.com/original'});
+        assert.equal(Object.hasOwn(post.data, 'lookupKey'), false);
+        assert.equal(Object.hasOwn(post.data, 'content'), false);
+        assert.equal(Object.hasOwn(post.data, 'meta'), false);
+    });
+
+    it('Rejects invalid source field names and values when set', () => {
+        const post = new PostContext();
+        for (const value of ['', '   ', 123, null]) {
+            assert.throws(() => post.setSource('lookupKey', value as string), {
+                name: 'BadRequestError',
+                message: 'Source lookupKey must be a non-empty string.'
+            });
+        }
+        assert.throws(() => post.setSource('content', 123 as any), {
+            name: 'BadRequestError',
+            message: 'Source content must be a string.'
+        });
+        for (const value of [null, [], 'metadata']) {
+            assert.throws(() => post.setSource('meta', value as any), {
+                name: 'BadRequestError',
+                message: 'Source meta must be an object.'
+            });
+        }
+        assert.throws(() => (post as any).setSource('other', 'value'), {
+            name: 'BadRequestError',
+            message: 'Unknown source field: other.'
+        });
+    });
+
     it('Can get source key', () => {
         const instance: any = new PostContext({
             source: {
@@ -65,7 +134,7 @@ describe('PostContext', function () {
             assert.equal(instance.data.slug, 'my-post');
         });
 
-        it('Default format is lexical', function () {
+        it('Keeps HTML as the post content', function () {
             const instance: any = new PostContext();
             instance.set('title', 'My Post');
             instance.set('slug', 'my-post');
@@ -74,13 +143,9 @@ describe('PostContext', function () {
             instance.set('updated_at', new Date('2023-11-24T12:00:00.000Z'));
             instance.set('published_at', new Date('2023-11-24T12:00:00.000Z'));
 
-            instance.convertContent();
             const final = instance.getFinal;
 
-            assert.equal(final.data.html, null);
-            assert.equal(final.data.mobiledoc, null);
-            assert.equal(typeof final.data.lexical, 'string');
-            assert.ok(JSON.parse(final.data.lexical).root);
+            assert.equal(final.data.html, '<p>Hello world</p>');
         });
 
         it('Can get final object', function () {
@@ -98,8 +163,6 @@ describe('PostContext', function () {
                     title: 'My Post',
                     slug: 'my-post',
                     html: null,
-                    mobiledoc: null,
-                    lexical: null,
                     comment_id: null,
                     plaintext: null,
                     feature_image: null,
@@ -132,8 +195,8 @@ describe('PostContext', function () {
         });
     });
 
-    it('getFinal keeps html when contentFormat is html', function () {
-        const instance: any = new PostContext({contentFormat: 'html'});
+    it('getFinal keeps html', function () {
+        const instance: any = new PostContext();
         instance.set('title', 'My Post');
         instance.set('slug', 'my-post');
         instance.set('html', '<p>Hello world</p>');
@@ -142,8 +205,6 @@ describe('PostContext', function () {
         const final = instance.getFinal;
 
         assert.equal(final.data.html, '<p>Hello world</p>');
-        assert.equal(final.data.lexical, null);
-        assert.equal(final.data.mobiledoc, null);
     });
 
     it('getFinal includes unsaved tags and authors without ghostId', function () {
@@ -726,79 +787,6 @@ describe('PostContext', function () {
         });
     });
 
-    describe('convertContent', () => {
-        it('Converts HTML to lexical and clears dirty flag', () => {
-            const post: any = new PostContext({contentFormat: 'lexical'});
-            post.set('title', 'Test');
-            post.set('slug', 'test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Hello</p>');
-
-            assert.equal(post.htmlDirty, true);
-            post.convertContent();
-            assert.equal(post.htmlDirty, false);
-            assert.ok(post.data.lexical);
-            assert.equal(typeof post.data.lexical, 'string');
-            assert.ok(JSON.parse(post.data.lexical).root);
-        });
-
-        it('Skips conversion when not dirty', () => {
-            const post: any = new PostContext({contentFormat: 'lexical'});
-            post.set('title', 'Test');
-            post.set('slug', 'test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Hello</p>');
-
-            post.convertContent();
-            const firstLexical = post.data.lexical;
-
-            // Second call is a no-op
-            post.convertContent();
-            assert.equal(post.data.lexical, firstLexical);
-        });
-
-        it('Re-converts when HTML changes after conversion', () => {
-            const post: any = new PostContext({contentFormat: 'lexical'});
-            post.set('title', 'Test');
-            post.set('slug', 'test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Hello</p>');
-
-            post.convertContent();
-            const firstLexical = post.data.lexical;
-            assert.equal(post.htmlDirty, false);
-
-            post.set('html', '<p>Updated</p>');
-            assert.equal(post.htmlDirty, true);
-
-            post.convertContent();
-            assert.notEqual(post.data.lexical, firstLexical);
-        });
-
-        it('Is a no-op for html contentFormat', () => {
-            const post: any = new PostContext({contentFormat: 'html'});
-            post.set('title', 'Test');
-            post.set('slug', 'test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-            post.set('html', '<p>Hello</p>');
-
-            post.convertContent();
-            assert.equal(post.data.lexical, null);
-            assert.equal(post.data.mobiledoc, null);
-            assert.equal(post.data.html, '<p>Hello</p>');
-        });
-
-        it('Sets lexical to null when html is null', () => {
-            const post: any = new PostContext({contentFormat: 'lexical'});
-            post.set('title', 'Test');
-            post.set('slug', 'test');
-            post.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
-
-            post.convertContent();
-            assert.equal(post.data.lexical, null);
-        });
-    });
-
     describe('toGhostPost', () => {
         function mockRow(overrides: any = {}) {
             return {
@@ -809,19 +797,17 @@ describe('PostContext', function () {
                     html: '<p>Hello</p>',
                     created_at: '2023-01-01T00:00:00.000Z'
                 }),
-                content_format: 'lexical',
                 ghost_id: 'abc123',
                 ...overrides
             };
         }
 
-        it('Nulls html and strips tags/authors for lexical format', () => {
+        it('Keeps HTML and strips tags/authors', () => {
             const row = mockRow({
                 data: JSON.stringify({
                     title: 'Test',
                     slug: 'test',
                     html: '<p>Hi</p>',
-                    lexical: null,
                     tags: [{slug: 'a'}],
                     authors: [{slug: 'b'}]
                 })
@@ -829,39 +815,10 @@ describe('PostContext', function () {
             const {post, meta} = PostContext.toGhostPost(row);
 
             assert.equal(post.id, 'abc123');
-            assert.equal(post.html, null);
-            assert.equal(post.lexical, null);
+            assert.equal(post.html, '<p>Hi</p>');
             assert.equal(post.tags, undefined);
             assert.equal(post.authors, undefined);
             assert.equal(meta, null);
-        });
-
-        it('Treats legacy mobiledoc format rows as lexical', () => {
-            const row = mockRow({
-                content_format: 'mobiledoc',
-                data: JSON.stringify({
-                    title: 'Test',
-                    slug: 'test',
-                    html: '<p>Hello</p>',
-                    mobiledoc: '{"version":"0.3.1","atoms":[],"cards":[]}',
-                    lexical: '{"root":{"children":[],"type":"root"}}',
-                    created_at: '2023-01-01T00:00:00.000Z'
-                })
-            });
-            const {post} = PostContext.toGhostPost(row);
-
-            assert.equal(post.html, null);
-            assert.equal(post.lexical, '{"root":{"children":[],"type":"root"}}');
-            assert.equal(post.mobiledoc, null);
-        });
-
-        it('Keeps html when format is html', () => {
-            const row = mockRow({content_format: 'html'});
-            const {post} = PostContext.toGhostPost(row);
-
-            assert.equal(post.html, '<p>Hello</p>');
-            assert.equal(post.lexical, null);
-            assert.equal(post.mobiledoc, null);
         });
 
         it('Handles missing ghostId', () => {
@@ -870,6 +827,31 @@ describe('PostContext', function () {
 
             assert.equal(post.id, undefined);
             assert.equal(post.title, 'Test');
+        });
+
+        it('Backfills a blank title during final export mapping', () => {
+            const row = mockRow({
+                data: JSON.stringify({
+                    title: '   ',
+                    slug: 'untitled',
+                    created_at: '2023-01-01T00:00:00.000Z'
+                })
+            });
+            const {post} = PostContext.toGhostPost(row);
+
+            assert.equal(post.title, '(Untitled)');
+        });
+
+        it('Does not reject another blank required string during export', () => {
+            const row = mockRow({
+                data: JSON.stringify({
+                    title: 'Test',
+                    slug: '   ',
+                    created_at: '2023-01-01T00:00:00.000Z'
+                })
+            });
+
+            assert.doesNotThrow(() => PostContext.toGhostPost(row));
         });
 
         it('Extracts meta fields into posts_meta', () => {
@@ -892,28 +874,10 @@ describe('PostContext', function () {
             assert.equal(meta.meta_description, 'Meta desc');
         });
 
-        it('Uses pre-converted lexical and skips conversion', () => {
-            const row = mockRow({
-                data: JSON.stringify({
-                    title: 'Test',
-                    slug: 'test',
-                    html: '<p>Hello</p>',
-                    lexical: '{"root":{"children":[],"type":"root"}}',
-                    created_at: '2023-01-01T00:00:00.000Z'
-                })
-            });
-            const {post} = PostContext.toGhostPost(row);
-
-            // Should use the pre-converted lexical, not reconvert
-            assert.equal(post.lexical, '{"root":{"children":[],"type":"root"}}');
-            assert.equal(post.html, null);
-        });
-
         it('Works with plain objects (raw: true)', () => {
             const row = {
                 id: 6,
                 data: JSON.stringify({title: 'Raw', slug: 'raw', created_at: '2023-01-01T00:00:00.000Z'}),
-                content_format: 'lexical',
                 ghost_id: 'raw123'
             };
             const {post} = PostContext.toGhostPost(row);

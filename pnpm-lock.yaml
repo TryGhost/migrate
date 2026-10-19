@@ -530,12 +530,6 @@ importers:
       '@tryghost/errors':
         specifier: 'catalog:'
         version: 3.4.2
-      '@tryghost/listr-smart-renderer':
-        specifier: workspace:*
-        version: link:../listr-smart-renderer
-      '@tryghost/mg-html-lexical':
-        specifier: workspace:*
-        version: link:../mg-html-lexical
       '@tryghost/string':
         specifier: 'catalog:'
         version: 0.3.7
@@ -552,6 +546,12 @@ importers:
         specifier: 4.6.7
         version: 4.6.7
     devDependencies:
+      '@tryghost/listr-smart-renderer':
+        specifier: workspace:*
+        version: link:../listr-smart-renderer
+      '@tryghost/mg-queue':
+        specifier: workspace:*
+        version: link:../mg-queue
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2

@@ -1,18 +1,19 @@
 import {z} from 'zod/v4';
 import {randomBytes} from 'node:crypto';
-import {htmlToLexical} from '@tryghost/mg-html-lexical';
+import errors from '@tryghost/errors';
 import MigrateBase from './MigrateBase.js';
 import TagContext, {TagObject, TagDataObject} from './TagContext.js';
 import AuthorContext, {AuthorObject, AuthorDataObject} from './AuthorContext.js';
-import type {DatabaseModels} from './database.js';
+import {GHOST_FIELD_LIMITS} from './ghost-schema.js';
+import {recordMigrationEvent, recordSanitizedFields, type DatabaseModels} from './database.js';
+import {withTransaction} from './db-helpers.js';
 
-export type ContentFormat = 'lexical' | 'html';
+export type DuplicatePostAction = 'skip' | 'replace';
+export type DuplicatePostResolver = (existing: PostContext, incoming: PostContext) => DuplicatePostAction;
+export type DuplicatePostPolicy = DuplicatePostAction | DuplicatePostResolver;
 
-export function normalizeContentFormat(contentFormat: unknown): ContentFormat {
-    return contentFormat === 'html' ? 'html' : 'lexical';
-}
-
-const MAX_SLUG_LENGTH = 191;
+const POST_LIMITS = GHOST_FIELD_LIMITS.post;
+const MAX_SLUG_LENGTH = POST_LIMITS.slug;
 
 /**
  * Build a deduplicated slug that still fits Ghost's limit, trimming the base
@@ -25,17 +26,20 @@ function slugWithSuffix(base: string, suffix: number): string {
     return `${trimmedBase}${tail}`;
 }
 
+export function normalizeTitle(value: unknown): string {
+    const title = typeof value === 'string' ? value.trim() : '';
+    return (title || '(Untitled)').slice(0, POST_LIMITS.title);
+}
+
 const postZodSchema = z.object({
-    title: z.string().max(255),
+    title: z.string().max(POST_LIMITS.title),
     slug: z.string().max(MAX_SLUG_LENGTH),
-    html: z.string().max(1000000000).nullable(),
-    mobiledoc: z.string().max(1000000000).nullable(),
-    lexical: z.string().max(1000000000).nullable(),
-    comment_id: z.string().max(50).nullable(),
-    plaintext: z.string().max(1000000000).nullable(),
-    feature_image: z.string().max(2000).nullable(),
-    feature_image_alt: z.string().max(191).nullable(),
-    feature_image_caption: z.string().max(65535).nullable(),
+    html: z.string().max(POST_LIMITS.html).nullable(),
+    comment_id: z.string().max(POST_LIMITS.comment_id).nullable(),
+    plaintext: z.string().max(POST_LIMITS.plaintext).nullable(),
+    feature_image: z.string().max(POST_LIMITS.feature_image).nullable(),
+    feature_image_alt: z.string().max(POST_LIMITS.feature_image_alt).nullable(),
+    feature_image_caption: z.string().max(POST_LIMITS.feature_image_caption).nullable(),
     featured: z.boolean().default(false),
     type: z.enum(['post', 'page']).default('post'),
     status: z.enum(['published', 'draft', 'scheduled', 'sent']).default('draft'),
@@ -43,56 +47,113 @@ const postZodSchema = z.object({
     created_at: z.date(),
     updated_at: z.date().nullable(),
     published_at: z.date().nullable(),
-    custom_excerpt: z.string().max(300).nullable(),
-    codeinjection_head: z.string().max(65535).nullable(),
-    codeinjection_foot: z.string().max(65535).nullable(),
-    custom_template: z.string().max(100).nullable(),
-    canonical_url: z.string().max(2000).nullable(),
-    og_image: z.string().max(2000).nullable(),
-    og_title: z.string().max(300).nullable(),
-    og_description: z.string().max(500).nullable(),
-    twitter_image: z.string().max(2000).nullable(),
-    twitter_title: z.string().max(300).nullable(),
-    twitter_description: z.string().max(500).nullable(),
-    meta_title: z.string().max(300).nullable(),
-    meta_description: z.string().max(500).nullable(),
+    custom_excerpt: z.string().max(POST_LIMITS.custom_excerpt).nullable(),
+    codeinjection_head: z.string().max(POST_LIMITS.codeinjection_head).nullable(),
+    codeinjection_foot: z.string().max(POST_LIMITS.codeinjection_foot).nullable(),
+    custom_template: z.string().max(POST_LIMITS.custom_template).nullable(),
+    canonical_url: z.string().max(POST_LIMITS.canonical_url).nullable(),
+    og_image: z.string().max(POST_LIMITS.og_image).nullable(),
+    og_title: z.string().max(POST_LIMITS.og_title).nullable(),
+    og_description: z.string().max(POST_LIMITS.og_description).nullable(),
+    twitter_image: z.string().max(POST_LIMITS.twitter_image).nullable(),
+    twitter_title: z.string().max(POST_LIMITS.twitter_title).nullable(),
+    twitter_description: z.string().max(POST_LIMITS.twitter_description).nullable(),
+    meta_title: z.string().max(POST_LIMITS.meta_title).nullable(),
+    meta_description: z.string().max(POST_LIMITS.meta_description).nullable(),
     tags: z.array(z.any()).max(500).default([]),
     authors: z.array(z.any()).max(500).default([])
 });
 
+export type PostObject = z.infer<typeof postZodSchema>;
+export type PostDataPatch = Partial<Omit<PostObject, 'slug' | 'tags' | 'authors'>>;
+
+export interface PostSnapshot {
+    databaseId: number;
+    ghostId: string | null;
+    lookupKey: string | null;
+    data: PostObject;
+    sourceContent: string | null;
+    sourceMeta: Record<string, unknown>;
+    meta: Record<string, unknown>;
+    webscrapeData: unknown | null;
+}
+
 export type PostConstructorOptions = {
+    sourceContent?: string;
+    sourceMeta?: object;
+    /** @deprecated Use sourceMeta for structured source facts. */
     source?: object;
     meta?: object;
-    contentFormat?: ContentFormat;
     lookupKey?: string;
+    onDuplicate?: DuplicatePostPolicy;
 };
 
 const POST_URL_FIELDS: ReadonlySet<string> = new Set(['feature_image', 'og_image', 'twitter_image', 'canonical_url']);
+
+function changedSnapshotFields(previous: PostSnapshot, current: PostSnapshot): string[] {
+    const fields = new Set([...Object.keys(previous.data), ...Object.keys(current.data)]);
+    const changed = [...fields].filter(
+        field =>
+            JSON.stringify(previous.data[field as keyof PostObject]) !==
+            JSON.stringify(current.data[field as keyof PostObject])
+    );
+
+    for (const field of ['sourceContent', 'sourceMeta', 'meta', 'webscrapeData'] as const) {
+        if (JSON.stringify(previous[field]) !== JSON.stringify(current[field])) {
+            changed.push(field);
+        }
+    }
+
+    return changed;
+}
 
 export default class PostContext extends MigrateBase {
     protected override get urlFields() {
         return POST_URL_FIELDS;
     }
 
-    #source: any;
+    protected override sanitizeValue(key: string, value: any): any {
+        const sanitized = super.sanitizeValue(key, value);
+        return key === 'title' ? normalizeTitle(sanitized) : sanitized;
+    }
+
+    protected override applySanitizers() {
+        this.data.title = normalizeTitle(this.data.title);
+        super.applySanitizers();
+    }
+
+    #sourceContent: string | null;
+    #sourceMeta: any;
     #meta: any;
-    #contentFormat: ContentFormat;
     #lookupKey: string | null = null;
+    #onDuplicate: DuplicatePostPolicy;
     #warnOnLookupKeyDuplicate = false;
     #duplicateSkipped = false;
-    #htmlDirty = true;
     #webscrapeData: any = null;
     data: any = {};
 
-    constructor({source = {}, meta = {}, contentFormat = 'lexical', lookupKey}: PostConstructorOptions = {}) {
+    constructor({
+        sourceContent,
+        sourceMeta,
+        source,
+        meta = {},
+        lookupKey,
+        onDuplicate = 'skip'
+    }: PostConstructorOptions = {}) {
         super();
 
-        // Source data from another platform
-        this.#source = source;
+        if (sourceContent !== undefined && typeof sourceContent !== 'string') {
+            throw new errors.BadRequestError({message: 'sourceContent must be a string.'});
+        }
+        if (sourceMeta !== undefined && source !== undefined) {
+            throw new errors.BadRequestError({message: 'Pass sourceMeta or the deprecated source option, not both.'});
+        }
+        this.#sourceContent = sourceContent ?? null;
+        this.#sourceMeta = sourceMeta ?? source ?? {};
 
         this.#meta = meta;
 
-        this.#contentFormat = normalizeContentFormat(contentFormat);
+        this.#onDuplicate = onDuplicate;
 
         if (lookupKey) {
             this.#lookupKey = lookupKey;
@@ -110,11 +171,25 @@ export default class PostContext extends MigrateBase {
         this.#lookupKey = value;
     }
 
+    get onDuplicate(): DuplicatePostPolicy {
+        return this.#onDuplicate;
+    }
+
+    set onDuplicate(value: DuplicatePostPolicy) {
+        this.#onDuplicate = value;
+        if (value !== 'skip') {
+            this.#duplicateSkipped = false;
+        }
+    }
+
+    /** @deprecated Duplicate skips are available through events and getMigrationReport(). */
     get warnOnLookupKeyDuplicate(): boolean {
         return this.#warnOnLookupKeyDuplicate;
     }
 
+    /** @deprecated Duplicate skips are available through events and getMigrationReport(). */
     set warnOnLookupKeyDuplicate(value: boolean) {
+        // Deprecated compatibility shim. Duplicate skips are reported instead of logged.
         this.#warnOnLookupKeyDuplicate = value;
     }
 
@@ -130,43 +205,8 @@ export default class PostContext extends MigrateBase {
         this.#webscrapeData = value;
     }
 
-    get htmlDirty(): boolean {
-        return this.#htmlDirty;
-    }
-
-    set(prop: string, value: any) {
-        super.set(prop, value);
-        if (prop === 'html') {
-            this.#htmlDirty = true;
-            // Invalidate cached conversion
-            this.data.lexical = null;
-            this.data.mobiledoc = null;
-        }
-        return this;
-    }
-
-    convertContent() {
-        if (this.#contentFormat === 'html') {
-            this.#htmlDirty = false;
-            return;
-        }
-
-        // Skip if HTML hasn't changed and conversion is already cached
-        if (!this.#htmlDirty) {
-            if (this.#contentFormat === 'lexical' && this.data.lexical) {
-                return;
-            }
-        }
-
-        if (this.#contentFormat === 'lexical') {
-            this.data.lexical = this.data.html ? JSON.stringify(htmlToLexical(this.data.html)) : null;
-            this.data.mobiledoc = null;
-        }
-
-        this.#htmlDirty = false;
-    }
-
     get getFinal(): any {
+        this.data.title = normalizeTitle(this.data.title);
         const result = super.getFinal;
 
         // Inject ghost IDs into nested tags and authors
@@ -187,14 +227,6 @@ export default class PostContext extends MigrateBase {
             });
         }
 
-        if (this.#contentFormat === 'lexical') {
-            result.data.html = null;
-            result.data.mobiledoc = null;
-        } else {
-            result.data.mobiledoc = null;
-            result.data.lexical = null;
-        }
-
         return result;
     }
 
@@ -206,12 +238,74 @@ export default class PostContext extends MigrateBase {
         return this.#meta[key];
     }
 
+    get sourceContent(): string | null {
+        return this.#sourceContent;
+    }
+
+    get sourceMeta(): Record<string, unknown> {
+        return this.#sourceMeta;
+    }
+
+    setSource(field: 'lookupKey' | 'content', value: string): this;
+    setSource(field: 'meta', value: Record<string, unknown>): this;
+    setSource(field: 'lookupKey' | 'content' | 'meta', value: string | Record<string, unknown>): this {
+        if (field === 'lookupKey') {
+            if (typeof value !== 'string' || !value.trim()) {
+                throw new errors.BadRequestError({message: 'Source lookupKey must be a non-empty string.'});
+            }
+            this.#lookupKey = value;
+        } else if (field === 'content') {
+            if (typeof value !== 'string') {
+                throw new errors.BadRequestError({message: 'Source content must be a string.'});
+            }
+            this.#sourceContent = value;
+        } else if (field === 'meta') {
+            if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+                throw new errors.BadRequestError({message: 'Source meta must be an object.'});
+            }
+            this.#sourceMeta = value;
+        } else {
+            throw new errors.BadRequestError({message: `Unknown source field: ${field}.`});
+        }
+
+        return this;
+    }
+
+    /** @deprecated Use sourceMeta. */
     get source() {
-        return this.#source;
+        return this.#sourceMeta;
+    }
+
+    toSnapshot(): PostSnapshot {
+        if (!this.dbId) {
+            throw new errors.InternalServerError({message: 'Cannot snapshot a post before it is saved.'});
+        }
+
+        const data: any = {};
+        for (const [key, value] of Object.entries(this.data)) {
+            if (key !== 'tags' && key !== 'authors') {
+                data[key] = structuredClone(value);
+            }
+        }
+        data.tags = this.data.tags.map((tag: TagContext | TagDataObject) => structuredClone(tag.data));
+        data.authors = this.data.authors.map((author: AuthorContext | AuthorDataObject) =>
+            structuredClone(author.data)
+        );
+
+        return {
+            databaseId: this.dbId,
+            ghostId: this.ghostId,
+            lookupKey: this.#lookupKey,
+            data,
+            sourceContent: this.#sourceContent,
+            sourceMeta: JSON.parse(JSON.stringify(this.#sourceMeta)),
+            meta: JSON.parse(JSON.stringify(this.#meta)),
+            webscrapeData: this.#webscrapeData === null ? null : JSON.parse(JSON.stringify(this.#webscrapeData))
+        };
     }
 
     getSourceValue(key: string) {
-        return this.#source[key];
+        return this.#sourceMeta[key];
     }
 
     hasTagSlug(tagSlug: string) {
@@ -340,10 +434,27 @@ export default class PostContext extends MigrateBase {
         });
     }
 
-    save(db: DatabaseModels) {
+    save(db: DatabaseModels): void {
         if (this.#duplicateSkipped) {
             return;
         }
+
+        if (
+            db.requireSourceContent &&
+            (this.#sourceContent === null || typeof this.#lookupKey !== 'string' || !this.#lookupKey.trim())
+        ) {
+            throw new errors.BadRequestError({
+                message: 'Persistent posts require sourceContent and lookupKey.'
+            });
+        }
+
+        if (!db.inTransaction) {
+            withTransaction(db, () => this.save(db));
+            return;
+        }
+
+        let replacingDuplicate = false;
+        let previousSnapshot: PostSnapshot | null = null;
 
         // Check for an existing post by lookup_key before anything is mutated or
         // recorded, so a post that will never be inserted does not claim a slug
@@ -351,22 +462,44 @@ export default class PostContext extends MigrateBase {
         if (!this.dbId && this.#lookupKey) {
             const existing = db.stmts.findPostByLookupKey.get(this.#lookupKey) as any;
             if (existing) {
+                const existingPost = PostContext.fromRow(existing, db);
+                previousSnapshot = existingPost.toSnapshot();
+                const action =
+                    typeof this.#onDuplicate === 'function' ? this.#onDuplicate(existingPost, this) : this.#onDuplicate;
+                if (action !== 'skip' && action !== 'replace') {
+                    throw new errors.InternalServerError({
+                        message: 'Duplicate post resolver must return "skip" or "replace".',
+                        context: action
+                    });
+                }
+
                 this.dbId = existing.id as number;
                 this.ghostId = existing.ghost_id as string;
-                this.#duplicateSkipped = true;
-                if (this.#warnOnLookupKeyDuplicate) {
-                    // eslint-disable-next-line no-console
-                    console.warn(`Duplicate post skipped for lookup_key: ${this.#lookupKey}`);
+                if (action === 'skip') {
+                    this.#duplicateSkipped = true;
+                    recordMigrationEvent(db, 'post:skipped', {
+                        postId: this.dbId,
+                        lookupKey: this.#lookupKey,
+                        details: {existingPostId: this.dbId},
+                        liveEvent: {
+                            type: 'post:skipped',
+                            payload: {lookupKey: this.#lookupKey, existingPostId: this.dbId}
+                        }
+                    });
+                    return;
                 }
-                return;
+                replacingDuplicate = true;
             }
         }
 
+        const sanitizedStart = db.sanitizedFields.length;
         this.sanitize(db.sanitizedFields);
+        const sanitized = db.sanitizedFields.slice(sanitizedStart);
 
         const isInsert = !this.dbId;
 
-        const serializedSource = JSON.stringify(this.#source);
+        const serializedSourceContent = this.#sourceContent;
+        const serializedSourceMeta = JSON.stringify(this.#sourceMeta);
         const serializedMeta = JSON.stringify(this.#meta);
         const serializedWebscrapeData = this.#webscrapeData ? JSON.stringify(this.#webscrapeData) : null;
         /* c8 ignore next 3 -- dates are always Date instances from set()/fromRow(); ternary is defensive */
@@ -384,22 +517,31 @@ export default class PostContext extends MigrateBase {
         let slug = this.data.slug;
         const originalSlug = slug;
 
-        // On insert, deduplicate the slug if it already exists
-        if (!this.dbId && db.stmts.slugExists.get(slug)) {
+        const slugExists = (candidate: string) => {
+            if (replacingDuplicate) {
+                return db.stmts.slugExistsForOtherPost.get(candidate, this.dbId);
+            }
+            return !this.dbId && db.stmts.slugExists.get(candidate);
+        };
+
+        // On insert or lookup-key replacement, deduplicate the slug if another post owns it
+        let slugRename: {oldSlug: string; newSlug: string; url: string} | null = null;
+        if (slugExists(slug)) {
             let suffix = 2;
             let candidate = slugWithSuffix(originalSlug, suffix);
-            while (db.stmts.slugExists.get(candidate)) {
+            while (slugExists(candidate)) {
                 suffix += 1;
                 candidate = slugWithSuffix(originalSlug, suffix);
             }
             slug = candidate;
             this.data.slug = slug;
 
-            db.slugRenames.push({
+            slugRename = {
                 oldSlug: originalSlug,
                 newSlug: slug,
-                url: this.#source.url || this.data.canonical_url || ''
-            });
+                url: this.#sourceMeta.url || this.data.canonical_url || ''
+            };
+            db.slugRenames.push(slugRename);
         }
 
         // Serialize post data excluding tags and authors (after slug dedup)
@@ -412,26 +554,44 @@ export default class PostContext extends MigrateBase {
         const serializedData = JSON.stringify(postData);
 
         if (this.dbId) {
-            db.stmts.updatePost.run(
-                serializedData,
-                serializedSource,
-                serializedMeta,
-                this.#contentFormat,
-                this.#lookupKey,
-                this.ghostId,
-                createdAt,
-                updatedAt,
-                publishedAt,
-                slug,
-                serializedWebscrapeData,
-                this.dbId
-            );
+            if (replacingDuplicate) {
+                db.stmts.replacePost.run(
+                    serializedData,
+                    serializedSourceContent,
+                    serializedSourceMeta,
+                    serializedMeta,
+                    this.#lookupKey,
+                    this.ghostId,
+                    createdAt,
+                    updatedAt,
+                    publishedAt,
+                    originalSlug,
+                    slug,
+                    serializedWebscrapeData,
+                    this.dbId
+                );
+            } else {
+                db.stmts.updatePost.run(
+                    serializedData,
+                    serializedSourceContent,
+                    serializedSourceMeta,
+                    serializedMeta,
+                    this.#lookupKey,
+                    this.ghostId,
+                    createdAt,
+                    updatedAt,
+                    publishedAt,
+                    slug,
+                    serializedWebscrapeData,
+                    this.dbId
+                );
+            }
         } else {
             const result = db.stmts.insertPost.run(
                 serializedData,
-                serializedSource,
+                serializedSourceContent,
+                serializedSourceMeta,
                 serializedMeta,
-                this.#contentFormat,
                 this.#lookupKey,
                 this.ghostId,
                 createdAt,
@@ -467,6 +627,46 @@ export default class PostContext extends MigrateBase {
                 db.stmts.insertPostAuthor.run(this.dbId, author.dbId, i + 1);
             }
         }
+
+        const currentSnapshot = this.toSnapshot();
+        if (replacingDuplicate && previousSnapshot) {
+            recordMigrationEvent(db, 'post:replaced', {
+                postId: this.dbId,
+                lookupKey: this.#lookupKey,
+                details: {changedFields: changedSnapshotFields(previousSnapshot, currentSnapshot)},
+                liveEvent: {
+                    type: 'post:replaced',
+                    payload: {
+                        lookupKey: this.#lookupKey,
+                        postId: this.dbId,
+                        previous: previousSnapshot,
+                        current: currentSnapshot
+                    }
+                }
+            });
+        } else if (isInsert) {
+            recordMigrationEvent(db, 'post:inserted', {
+                postId: this.dbId,
+                lookupKey: this.#lookupKey,
+                details: {slug: this.data.slug, title: this.data.title}
+            });
+        }
+
+        if (slugRename) {
+            const payload = {
+                postId: this.dbId,
+                lookupKey: this.#lookupKey,
+                ...slugRename
+            };
+            recordMigrationEvent(db, 'slug:renamed', {
+                postId: this.dbId,
+                lookupKey: this.#lookupKey,
+                details: payload,
+                liveEvent: {type: 'slug:renamed', payload}
+            });
+        }
+
+        recordSanitizedFields(db, sanitized);
     }
 
     static readonly META_FIELDS = [
@@ -484,17 +684,8 @@ export default class PostContext extends MigrateBase {
 
     static toGhostPost(row: any): {post: any; meta: any} {
         const rawData = JSON.parse(row.data);
-        const contentFormat = normalizeContentFormat(row.content_format);
         const ghostId = row.ghost_id as string;
-
-        // Null out fields not needed for this content format
-        if (contentFormat === 'lexical') {
-            rawData.html = null;
-            rawData.mobiledoc = null;
-        } else {
-            rawData.mobiledoc = null;
-            rawData.lexical = null;
-        }
+        rawData.title = normalizeTitle(rawData.title);
 
         // Extract meta fields into posts_meta entry
         const metaEntry: any = {};
@@ -520,11 +711,15 @@ export default class PostContext extends MigrateBase {
         return {post, meta};
     }
 
-    static fromRow(row: any, db: DatabaseModels): PostContext {
+    static fromRow(
+        row: any,
+        db: DatabaseModels,
+        {hydrateRelationships = true}: {hydrateRelationships?: boolean} = {}
+    ): PostContext {
         const rawData = JSON.parse(row.data);
-        const source = JSON.parse(row.source);
+        const sourceContent = row.source_content as string | null;
+        const sourceMeta = JSON.parse(row.source_meta);
         const meta = JSON.parse(row.meta);
-        const contentFormat = normalizeContentFormat(row.content_format);
 
         // Convert date strings back to Date objects
         const dateFields = ['created_at', 'updated_at', 'published_at'];
@@ -535,11 +730,16 @@ export default class PostContext extends MigrateBase {
         }
 
         const lookupKey = row.lookup_key as string | null;
-        const post = new PostContext({source, meta, contentFormat, lookupKey: lookupKey ?? undefined});
+        const post = new PostContext({
+            sourceContent: sourceContent ?? undefined,
+            sourceMeta,
+            meta,
+            lookupKey: lookupKey ?? undefined
+        });
         post.dbId = row.id as number;
         post.ghostId = row.ghost_id as string;
 
-        // Set scalar data directly (bypass set() to avoid re-conversion)
+        // Set scalar data directly; junction tables provide relationships.
         for (const [key, value] of Object.entries(rawData)) {
             if (key !== 'tags' && key !== 'authors') {
                 post.data[key] = value;
@@ -550,8 +750,9 @@ export default class PostContext extends MigrateBase {
             post.#webscrapeData = JSON.parse(row.webscrape_data);
         }
 
-        // Post was loaded from DB; nothing has been modified yet
-        post.#htmlDirty = false;
+        if (!hydrateRelationships) {
+            return post;
+        }
 
         // Load tags via join table
         const postTags = db.stmts.findPostTagsByPostId.all(post.dbId) as any[];

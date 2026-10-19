@@ -6,7 +6,6 @@
       "uuid": "3a033ce7-9e2d-4b3b-a9ef-76887efacc7f",
       "title": "Welcome",
       "html": "<p>👋 Welcome, it's great to have you here.</p>",
-      "lexical": "{\"root\":{\"children\":[{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"Welcome\",\"type\":\"extended-text\",\"version\":1}],\"direction\":\"ltr\",\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1}],\"direction\":\"ltr\",\"format\":\"\",\"indent\":0,\"type\":\"root\",\"version\":1}}",
       "status": "published",
       "comment_id": "5c7ece47da174000c0c5c6d7",
       "feature_image": "https://casper.ghost.org/v2.0.0/images/welcome-to-ghost.jpg",

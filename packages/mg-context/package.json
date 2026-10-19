@@ -22,6 +22,8 @@
     "dev": "echo \"Implement me!\"",
     "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",
     "build": "tsc --build --sourceMap",
+    "sync:ghost-schema": "node scripts/sync-ghost-schema.mjs",
+    "check:ghost-schema": "node scripts/sync-ghost-schema.mjs --check",
     "test": "c8 --src src --all --check-coverage --100 --reporter text --reporter cobertura node --test 'build/test/**/*.test.js'",
     "test:local": "pnpm build && pnpm test"
   },
@@ -38,12 +40,12 @@
     }
   },
   "devDependencies": {
+    "@tryghost/listr-smart-renderer": "workspace:*",
+    "@tryghost/mg-queue": "workspace:*",
     "@types/node": "catalog:"
   },
   "dependencies": {
     "@tryghost/errors": "catalog:",
-    "@tryghost/listr-smart-renderer": "workspace:*",
-    "@tryghost/mg-html-lexical": "workspace:*",
     "@tryghost/string": "catalog:",
     "@tryghost/validator": "3.2.17",
     "c8": "catalog:",
