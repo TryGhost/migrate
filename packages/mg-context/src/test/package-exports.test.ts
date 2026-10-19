@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
-import {mkdtemp, mkdir, readFile, rm, symlink} from 'node:fs/promises';
+import {execFile} from 'node:child_process';
+import {mkdtemp, mkdir, readFile, rm, symlink, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {describe, it} from 'node:test';
-import ts from 'typescript';
+import {promisify} from 'node:util';
+
+const execFileAsync = promisify(execFile);
 
 type PackageJson = {
     types?: string;
@@ -39,19 +42,29 @@ describe('package exports', () => {
         try {
             await mkdir(dirname(packagePath), {recursive: true});
             await symlink(packageRoot, packagePath, process.platform === 'win32' ? 'junction' : 'dir');
+            await writeFile(
+                join(consumerRoot, 'index.mts'),
+                "import {MigrateContext} from '@tryghost/mg-context';\nconst context: MigrateContext = new MigrateContext();\nvoid context;\n"
+            );
 
-            const resolution = ts.resolveModuleName(
-                '@tryghost/mg-context',
-                join(consumerRoot, 'index.ts'),
-                {
-                    module: ts.ModuleKind.NodeNext,
-                    moduleResolution: ts.ModuleResolutionKind.NodeNext
-                },
-                ts.sys
-            ).resolvedModule;
-
-            assert.equal(resolution?.extension, ts.Extension.Dts);
-            assert.equal(resolution?.resolvedFileName, join(packageRoot, 'build', 'index.d.ts'));
+            const tscPath = join(dirname(fileURLToPath(import.meta.resolve('typescript/package.json'))), 'bin', 'tsc');
+            await execFileAsync(
+                process.execPath,
+                [
+                    tscPath,
+                    '--noEmit',
+                    '--strict',
+                    '--skipLibCheck',
+                    '--module',
+                    'nodenext',
+                    '--moduleResolution',
+                    'nodenext',
+                    '--target',
+                    'es2022',
+                    'index.mts'
+                ],
+                {cwd: consumerRoot}
+            );
         } finally {
             await rm(consumerRoot, {recursive: true, force: true});
         }
