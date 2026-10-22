@@ -24,10 +24,10 @@ Stress-test that stores **500,000 raw source posts** in a persistent on-disk SQL
 # Full run — ingest + map + export
 pnpm exec tsx examples/generate-large-export.ts
 
-# Skip source ingestion when the database already has posts, but map them again
+# Skip source ingestion when the database has completed source ingestion, but map them again
 pnpm exec tsx examples/generate-large-export.ts --insert false
 
-# Clear context content, then regenerate and remap the synthetic source
+# Stage replacement source, then remap after successful ingestion
 pnpm exec tsx examples/generate-large-export.ts --reread-source
 ```
 
@@ -39,7 +39,7 @@ Generates and maps up to **500,000 posts**, then streams them into one Ghost pos
 pnpm exec tsx examples/generate-large-csv-export.ts --count 1000
 ```
 
-The default output is `./export/files/csv-posts/posts.csv`. Use `--output <directory>` to change it. Pass `--db <path>` to keep the source database for reruns; mapping runs again from stored source records, while `--reread-source` resets and regenerates them.
+The default output is `./export/files/csv-posts/posts.csv`. Use `--output <directory>` to change it. Pass `--db <path>` to keep the source database for reruns; mapping runs again from stored source records, while `--reread-source` stages replacement originals.
 
 ```bash
 pnpm exec tsx examples/generate-large-csv-export.ts --count 1000 --db ./csv-posts.db
@@ -93,11 +93,15 @@ pnpm exec tsx examples/foreach-ghost-post.ts
 
 ## stream-posts.ts
 
-Stores **50,000 raw source posts** in `stream-posts.db`, maps them from that stored source on every run, then iterates with `streamPosts()` while tracking peak memory usage. Pass `--reread-source` to regenerate the source posts. If you have a database from an older version of this example, use that flag once because the stored source format changed.
+Stores **50,000 raw source posts** in `stream-posts.db`, maps them from that stored source on every run, then iterates with `streamPosts()` while tracking peak memory usage. Pass `--reread-source` to regenerate the source posts. Older database layouts must be explicitly rebuilt; --reread-source does not bypass schema validation.
 
 ```bash
 pnpm exec tsx examples/stream-posts.ts
 
-# Replace an older database or regenerate the synthetic source
+# Regenerate source in a compatible database
 pnpm exec tsx examples/stream-posts.ts --reread-source
 ```
+
+All source-replay examples use `utils/stream-posts.ts` to demonstrate caller-owned ingestion policy and atomic rebuilding from completed source records. Internal staging is private; no snapshot or identity comparison API is involved.
+
+Consumers own output staging, publication, recovery, and cleanup. Choose a fresh staging directory, finish the export successfully, then publish or deliver that directory. A failed export may leave completed earlier chunks; discard that partial staging directory. These examples do not remove earlier or differently named exports.

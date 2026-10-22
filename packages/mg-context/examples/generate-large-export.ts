@@ -1,4 +1,5 @@
 // Run this with: `pnpm exec tsx examples/generate-large-export.ts`
+import {ingestSyntheticData, mapSyntheticData} from './utils/stream-posts.js';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {MigrateContext, type PostContext} from '../src/index.js';
@@ -22,8 +23,7 @@ process.on('exit', () => {
     console.log(`Max memory consumption: ${maxMB} MB at ${_dtOfMaxMemoryConsumption?.toISOString()}`);
 });
 
-const POST_COUNT = 500_000;
-const BATCH_SIZE = 1000;
+const POST_COUNT = Number(process.env.MG_CONTEXT_EXAMPLE_COUNT ?? 500_000);
 
 const html = `
 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
@@ -48,8 +48,8 @@ const authors = [
     {name: 'Carol Williams', slug: 'carol-williams', email: 'carol@example.com'}
 ];
 
-function mapSyntheticPost(post: PostContext) {
-    const {index: i, html: sourceHtml} = JSON.parse(post.sourceContent!);
+function mapSyntheticPost(post: PostContext, original: {index: number; html: string}) {
+    const {index: i, html: sourceHtml} = original;
     post.setTagOrder(() => []);
     post.setAuthorOrder(() => []);
     post.set('title', `Post Number ${i + 1}`);
@@ -80,47 +80,12 @@ async function main() {
 
     const ctx = new MigrateContext({
         dbPath: join(__dirname, 'posts.db'),
-        contentIdentity: {
-            source: 'mg-context-example:large-export',
-            revision: `synthetic-${POST_COUNT}`
-        },
-        resetContent: refreshData
     });
     await ctx.init();
 
     try {
         console.log('Database initialized');
-        const hasContent = Boolean(ctx.hasContent());
-        if (skipInsertRequested && !hasContent) {
-            throw new Error('Cannot skip source insertion: the context database has no posts.');
-        }
-        const skipInsert = skipInsertRequested || hasContent;
-
-        if (skipInsert) {
-            console.log(skipInsertRequested ? 'Skipping source insertion (--insert false)' : 'Using source posts already in the database');
-        } else {
-            console.log(`About to generate ${POST_COUNT.toLocaleString()} posts...`);
-        }
-
-        for (let batchStart = 0; !skipInsert && batchStart < POST_COUNT; batchStart += BATCH_SIZE) {
-            const batchEnd = Math.min(batchStart + BATCH_SIZE, POST_COUNT);
-            const batchTime = Date.now();
-
-            await ctx.transaction(async () => {
-                for (let i = batchStart; i < batchEnd; i++) {
-                    await ctx.addSourcePost(post => {
-                        post.setSource('lookupKey', `https://example.com/post-number-${i + 1}`);
-                        post.setSource('content', JSON.stringify({
-                            index: i,
-                            html: html.replace('Lorem ipsum', `Post ${i + 1}: Lorem ipsum`)
-                        }));
-                    });
-                }
-            });
-
-            const batchDuration = ((Date.now() - batchTime) / 1000).toFixed(1);
-            console.log(`- Inserted ${batchEnd.toLocaleString()} posts (${batchDuration}s)`);
-        }
+        await ingestSyntheticData(ctx, POST_COUNT, {reread: refreshData, skip: skipInsertRequested, html});
 
         // Map the stored source on every run, including when insertion was skipped.
         // Centralised progress listener for all operations
@@ -132,8 +97,8 @@ async function main() {
         });
 
         console.log('Mapping all posts from stored source...');
-        await ctx.forEachPost(async (post: PostContext) => {
-            mapSyntheticPost(post);
+        await mapSyntheticData(ctx, async (post, original) => {
+            mapSyntheticPost(post, original);
             post.set('meta_title', `Post meta title`);
             if (post.get('title').includes('Post Number 200')) {
                 post.addTag({
@@ -141,7 +106,7 @@ async function main() {
                     slug: 'post-200x'
                 });
             }
-        }, {batchSize: BATCH_SIZE});
+        });
 
         console.log('Preparing and writing Ghost JSON...');
         const writeTime = Date.now();

@@ -24,9 +24,15 @@ async function main() {
         ];
 
         // 1. Import all posts
-        await ctx.transaction(async () => {
+        await ctx.sources.ingest({}, stage => {
             for (const item of sourceData) {
-                const post = await ctx.addPost({sourceMeta: {url: item.url}});
+                stage.put({kind: 'post', key: item.url, content: JSON.stringify(item), format: 'json'});
+            }
+        });
+        await ctx.rebuildMappedContent(async () => {
+            for await (const record of ctx.sources.records()) {
+                const item = JSON.parse(record.content);
+                const post = await ctx.addPost();
                 post.set('title', item.title);
                 post.set('slug', item.slug);
                 post.set('status', 'published');
@@ -35,6 +41,7 @@ async function main() {
                 post.set('html', `<p>Content for ${item.title}</p>`);
                 post.addAuthor({name: 'Editor', slug: 'editor', email: 'editor@example.com'});
                 await post.save(ctx.db);
+                ctx.sources.link(record.id, {type: 'post', id: post.dbId!});
             }
         });
 

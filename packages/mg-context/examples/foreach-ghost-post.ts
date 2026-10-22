@@ -8,10 +8,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 async function main() {
     const ctx = new MigrateContext({
         dbPath: join(__dirname, 'posts.db'),
-        contentIdentity: {
-            source: 'mg-context-example:large-export',
-            revision: 'synthetic-500000'
-        }
     });
     await ctx.init();
 

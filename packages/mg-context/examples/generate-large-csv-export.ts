@@ -1,10 +1,10 @@
 // Run from packages/mg-context/ with:
 //   pnpm exec tsx examples/generate-large-csv-export.ts --count 1000
+import {ingestSyntheticData, mapSyntheticData} from './utils/stream-posts.js';
 import {resolve} from 'node:path';
 import {parseArgs} from 'node:util';
 import {MigrateContext} from '../src/index.js';
 
-const BATCH_SIZE = 1000;
 const tags = [
     {name: 'News', slug: 'news'},
     {name: 'Technology', slug: 'technology'}
@@ -36,13 +36,6 @@ async function main() {
     const outputDir = resolve(values.output ?? './export/files/csv-posts/');
     const ctx = new MigrateContext({
         dbPath,
-        contentIdentity: dbPath
-            ? {
-                  source: 'mg-context-example:large-csv-export',
-                  revision: `synthetic-${postCount}-v1`
-              }
-            : undefined,
-        resetContent: values['reread-source'] ?? false
     });
     await ctx.init();
 
@@ -54,39 +47,11 @@ async function main() {
     const startTime = Date.now();
 
     try {
-        const stored = ctx.hasContent();
-        if (stored && stored.posts !== postCount) {
-            throw new Error(`Found ${stored.posts} of ${postCount} source posts. Rerun with --reread-source.`);
-        }
-
-        if (!stored) {
-            console.log(`Ingesting ${postCount.toLocaleString()} source posts...`);
-            for (let batchStart = 0; batchStart < postCount; batchStart += BATCH_SIZE) {
-                const batchEnd = Math.min(batchStart + BATCH_SIZE, postCount);
-                await ctx.transaction(async () => {
-                    for (let i = batchStart; i < batchEnd; i++) {
-                        await ctx.addSourcePost(post => {
-                            post.setSource('lookupKey', `synthetic-post-${i + 1}`);
-                            post.setSource('content', JSON.stringify({
-                                index: i,
-                                html: `<p>Post ${i + 1}: HTML with a comma, and a "quotation".</p>\n<p>Second paragraph.</p>`
-                            }));
-                        });
-                    }
-                });
-                console.log(`  Stored ${batchEnd.toLocaleString()}/${postCount.toLocaleString()}`);
-            }
-        } else {
-            console.log(`Reusing source posts in ${ctx.databasePath}`);
-        }
-
-        ctx.on('progress', ({operation, processed, total}) => {
-            console.log(`  [${operation}] ${processed.toLocaleString()}/${total.toLocaleString()}`);
-        });
+        await ingestSyntheticData(ctx, postCount, {reread: values['reread-source'] ?? false});
 
         console.log('Mapping posts from stored source...');
-        await ctx.forEachPost(async post => {
-            const {index, html} = JSON.parse(post.sourceContent!) as {index: number; html: string};
+        await mapSyntheticData(ctx, async (post, original) => {
+            const {index, html} = original;
             const postDate = new Date(2025, 0, 1, 0, index * 6);
             post.setTagOrder(() => []);
             post.setAuthorOrder(() => []);
@@ -98,7 +63,7 @@ async function main() {
             post.set('html', html);
             post.addTag(tags[index % tags.length]);
             post.addAuthor(authors[index % authors.length]);
-        }, {batchSize: BATCH_SIZE});
+        });
 
         console.log('Writing Ghost post CSV...');
         const file = await ctx.writeGhostCSV(outputDir);

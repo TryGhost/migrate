@@ -1,5 +1,6 @@
 // Run from packages/mg-context/ with:
 //   pnpm exec tsx examples/generate-large-export-with-queue.ts --count 1000
+import {ingestSyntheticData, mapSyntheticData} from './utils/stream-posts.js';
 import {resolve} from 'node:path';
 import {setImmediate} from 'node:timers/promises';
 import {parseArgs} from 'node:util';
@@ -36,13 +37,6 @@ async function main() {
     const outputDir = resolve(values.output ?? './export/files/queue-posts/');
     const ctx = new MigrateContext({
         dbPath,
-        contentIdentity: dbPath
-            ? {
-                  source: 'mg-context-example:large-export-with-queue',
-                  revision: `synthetic-${postCount}-v1`
-              }
-            : undefined,
-        resetContent: values['reread-source'] ?? false
     });
     await ctx.init();
 
@@ -53,36 +47,11 @@ async function main() {
     memoryInterval.unref();
 
     try {
-        const stored = ctx.hasContent();
-        if (stored && stored.posts !== postCount) {
-            throw new Error(`Found ${stored.posts} of ${postCount} source posts. Rerun with --reread-source.`);
-        }
+        await ingestSyntheticData(ctx, postCount, {reread: values['reread-source'] ?? false});
 
-        // Ingest raw source records only when the database is empty.
-        if (!stored) {
-            console.log(`Ingesting ${postCount.toLocaleString()} source posts...`);
-            for (let batchStart = 0; batchStart < postCount; batchStart += BATCH_SIZE) {
-                const batchEnd = Math.min(batchStart + BATCH_SIZE, postCount);
-                await ctx.transaction(async () => {
-                    for (let i = batchStart; i < batchEnd; i++) {
-                        await ctx.addSourcePost(post => {
-                            post.setSource('lookupKey', `synthetic-post-${i + 1}`);
-                            post.setSource('content', JSON.stringify({
-                                index: i,
-                                html: `<p>Original HTML for post ${i + 1}.</p>`
-                            }));
-                        });
-                    }
-                });
-            }
-        } else {
-            console.log(`Reusing source posts in ${ctx.databasePath}`);
-        }
-
-        // Replay the mapping from original source content on every run.
         console.log('Mapping posts from stored source...');
-        await ctx.forEachPost(async post => {
-            const {index, html} = JSON.parse(post.sourceContent!) as {index: number; html: string};
+        await mapSyntheticData(ctx, async (post, original) => {
+            const {index, html} = original;
             const postDate = new Date(2025, 0, 1, 0, index * 6);
             post.set('title', `Post Number ${index + 1}`);
             post.set('slug', `post-number-${index + 1}`);
@@ -90,7 +59,7 @@ async function main() {
             post.set('created_at', postDate);
             post.set('published_at', postDate);
             post.set('html', html);
-        }, {batchSize: BATCH_SIZE});
+        });
 
         // Feed the queue lazily: only the current stream batch and active tasks
         // are held in memory. Patch HTML without rewriting post relationships.

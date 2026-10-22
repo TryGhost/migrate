@@ -3,6 +3,7 @@
 // Iterates 50k posts using streamPosts() and tracks peak memory usage.
 // On the first run, posts are inserted. Subsequent runs reuse the existing DB.
 // Pass --reread-source to regenerate from the synthetic source.
+import {ingestSyntheticData, mapSyntheticData} from './utils/stream-posts.js';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {MigrateContext, type PostContext} from '../src/index.js';
@@ -23,8 +24,7 @@ process.on('exit', () => {
     console.log(`Peak memory: ${(peakRss / 1024 / 1024).toFixed(1)} MB`);
 });
 
-const POST_COUNT = 50_000;
-const BATCH_SIZE = 1000;
+const POST_COUNT = Number(process.env.MG_CONTEXT_EXAMPLE_COUNT ?? 50_000);
 
 const html = `
 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
@@ -44,8 +44,8 @@ const authors = [
     {name: 'Bob Smith', slug: 'bob-smith', email: 'bob@example.com'}
 ];
 
-function mapSyntheticPost(post: PostContext) {
-    const {index: i, html: sourceHtml} = JSON.parse(post.sourceContent!);
+function mapSyntheticPost(post: PostContext, original: {index: number; html: string}) {
+    const {index: i, html: sourceHtml} = original;
     post.setTagOrder(() => []);
     post.setAuthorOrder(() => []);
     post.set('title', `Post ${i + 1}`);
@@ -62,50 +62,17 @@ function mapSyntheticPost(post: PostContext) {
 async function main() {
     const ctx = new MigrateContext({
         dbPath: DB_PATH,
-        contentIdentity: {
-            source: 'mg-context-example:stream-posts',
-            revision: `synthetic-${POST_COUNT}-with-html`
-        },
-        resetContent: process.argv.includes('--reread-source')
     });
     await ctx.init();
 
     try {
-        if (!ctx.hasContent()) {
-            console.log(`Generating ${POST_COUNT.toLocaleString()} posts...`);
-            const insertStart = Date.now();
-
-            for (let batchStart = 0; batchStart < POST_COUNT; batchStart += BATCH_SIZE) {
-                const batchEnd = Math.min(batchStart + BATCH_SIZE, POST_COUNT);
-
-                await ctx.transaction(async () => {
-                    for (let i = batchStart; i < batchEnd; i++) {
-                        await ctx.addSourcePost(post => {
-                            post.setSource('lookupKey', `post-${i + 1}`);
-                            post.setSource('content', JSON.stringify({
-                                index: i,
-                                html: html.replace('Lorem ipsum', `Post ${i + 1}: Lorem ipsum`)
-                            }));
-                        });
-                    }
-                });
-
-                if (batchEnd % 10_000 === 0) {
-                    console.log(`  Inserted ${batchEnd.toLocaleString()}`);
-                }
-            }
-
-            const insertDuration = ((Date.now() - insertStart) / 1000).toFixed(1);
-            console.log(`Insert complete in ${insertDuration}s\n`);
-        } else {
-            console.log(`Using existing database at ${DB_PATH}\n`);
-        }
+        await ingestSyntheticData(ctx, POST_COUNT, {reread: process.argv.includes('--reread-source'), html});
 
         // Rebuild mapped fields from the stored source on every run.
         console.log('Mapping all posts from stored source...');
-        await ctx.forEachPost(async post => {
-            mapSyntheticPost(post);
-        }, {batchSize: BATCH_SIZE});
+        await mapSyntheticData(ctx, async (post, original) => {
+            mapSyntheticPost(post, original);
+        });
 
         // Stream all posts and simulate processing
         console.log('Streaming posts with streamPosts()...');
