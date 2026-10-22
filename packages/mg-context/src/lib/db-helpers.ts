@@ -8,7 +8,6 @@ export function withTransaction<T>(db: DatabaseModels, callback: () => T): T {
 
     db.db.exec('BEGIN');
     db.inTransaction = true;
-    const pendingEventCount = db.pendingEvents.length;
     try {
         const result = callback();
         db.db.exec('COMMIT');
@@ -19,7 +18,6 @@ export function withTransaction<T>(db: DatabaseModels, callback: () => T): T {
         if (db.inTransaction) {
             db.db.exec('ROLLBACK');
         }
-        db.pendingEvents.splice(pendingEventCount);
         throw err;
         /* c8 ignore next */
     } finally {
@@ -106,30 +104,6 @@ export function buildDateWhere(filter?: {createdAt?: DateRange; publishedAt?: Da
     };
 }
 
-export function buildFullWhere(dateWhere: WhereClause, postIds: number[] | null): WhereClause {
-    const conditions: string[] = [];
-    const params: (string | number | null)[] = [];
-
-    if (postIds !== null) {
-        if (postIds.length === 0) {
-            return {sql: 'WHERE 1 = 0', params: []};
-        }
-        const placeholders = postIds.map(() => '?').join(',');
-        conditions.push(`id IN (${placeholders})`);
-        params.push(...postIds);
-    }
-
-    if (dateWhere.sql) {
-        conditions.push(dateWhere.sql);
-        params.push(...dateWhere.params);
-    }
-
-    return {
-        sql: conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '',
-        params
-    };
-}
-
 export function countWhere(db: DatabaseModels, where: WhereClause): number {
     const row = db.db.prepare(`SELECT COUNT(*) as count FROM Posts ${where.sql}`).get(...where.params) as any;
     return row.count;
@@ -139,23 +113,4 @@ export function findPostsWhere(db: DatabaseModels, where: WhereClause, limit: nu
     return db.db
         .prepare(`SELECT * FROM Posts ${where.sql} ORDER BY id ASC LIMIT ? OFFSET ?`)
         .all(...where.params, limit, offset);
-}
-
-export function findPostIdColumnsWhere(db: DatabaseModels, where: WhereClause, limit: number, offset: number): any[] {
-    return db.db
-        .prepare(`SELECT id, ghost_id FROM Posts ${where.sql} ORDER BY id ASC LIMIT ? OFFSET ?`)
-        .all(...where.params, limit, offset);
-}
-
-export function findAllPostIdsWhere(db: DatabaseModels, where: WhereClause): number[] {
-    const rows = db.db.prepare(`SELECT id FROM Posts ${where.sql} ORDER BY id ASC`).all(...where.params) as any[];
-    return rows.map((r: any) => r.id as number);
-}
-
-export function findPostsByIds(db: DatabaseModels, ids: number[]): any[] {
-    if (ids.length === 0) {
-        return [];
-    }
-    const placeholders = ids.map(() => '?').join(',');
-    return db.db.prepare(`SELECT * FROM Posts WHERE id IN (${placeholders}) ORDER BY id ASC`).all(...ids);
 }

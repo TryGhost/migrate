@@ -1,6 +1,6 @@
 /**
  * Frozen schema-v2 database fixture. Keep this independent from the production
- * schema so migration tests prove that old databases are upgraded in place.
+ * schema so compatibility tests prove old databases are rejected without mutation.
  */
 export const MG_CONTEXT_V2_SCHEMA = `
 CREATE TABLE Posts (

@@ -3,7 +3,7 @@ import {describe, it, before, after, mock} from 'node:test';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
-import {mkdir, readFile, stat, unlink, rm, writeFile} from 'node:fs/promises';
+import {mkdir, readFile, readdir, stat, unlink, rm, writeFile} from 'node:fs/promises';
 import errors from '@tryghost/errors';
 import {
     MigrateContext,
@@ -14,20 +14,8 @@ import {
     type PostFilter,
     type WrittenFile
 } from '../index.js';
-import {withTransaction, findPostsByIds} from '../lib/db-helpers.js';
-import {fingerprintContentIdentity} from '../lib/content-identity.js';
-import {createDatabase} from '../lib/database.js';
+import {withTransaction} from '../lib/db-helpers.js';
 import {MG_CONTEXT_V2_SCHEMA} from './fixtures/mg-context-v2.js';
-
-const TEST_CONTENT_IDENTITY = {
-    source: 'mg-context-test',
-    revision: 'test-source-v1'
-};
-
-function readStoredContentIdentity(context: MigrateContext): string | null {
-    const row = context.db.stmts.getFingerprint.get('content') as {value: string} | undefined;
-    return row?.value ?? null;
-}
 
 describe('MigrateContext', () => {
     it('Is instance of', () => {
@@ -86,16 +74,6 @@ describe('MigrateContext', () => {
             });
         });
 
-        it('Requires content identity for every persistent resume, including a new database', () => {
-            assert.throws(() => new MigrateContext({dbPath: 'migration.sqlite'}), {
-                name: 'BadRequestError',
-                message:
-                    'Persistent resume requires contentIdentity. Pass a source revision, or use resetContent: true to rebuild stored content.'
-            });
-            assert.doesNotThrow(() => new MigrateContext({dbPath: 'migration.sqlite', resetContent: true}));
-            assert.doesNotThrow(() => new MigrateContext());
-        });
-
         it('Validates the content reset option', () => {
             assert.throws(() => new MigrateContext({resetContent: 'yes' as any}), {
                 name: 'BadRequestError',
@@ -119,14 +97,6 @@ describe('MigrateContext', () => {
             assert.throws(() => new MigrateContext({mode: 'refresh'} as any), {
                 name: 'BadRequestError',
                 message: 'Use resetContent: true instead of the removed mode option.'
-            });
-        });
-
-        it('Does not accept the removed contentFingerprint option as identity', () => {
-            assert.throws(() => new MigrateContext({dbPath: 'migration.sqlite', contentFingerprint: 'legacy'} as any), {
-                name: 'BadRequestError',
-                message:
-                    'Persistent resume requires contentIdentity. Pass a source revision, or use resetContent: true to rebuild stored content.'
             });
         });
 
@@ -205,8 +175,6 @@ describe('MigrateContext', () => {
                 links: 1
             });
             assert.equal((await instance.deduplicateSlugs()).length, 2);
-            assert.ok(instance.db.tagCache.size > 0);
-            assert.ok(instance.db.authorCache.size > 0);
             assert.ok(instance.db.slugRenames.length > 0);
             assert.ok(instance.sanitizedFields.length > 0);
 
@@ -214,8 +182,6 @@ describe('MigrateContext', () => {
 
             assert.equal(instance.hasContent(), false);
             assert.equal(instance.db.stmts.getFingerprint.get('source'), undefined);
-            assert.equal(instance.db.tagCache.size, 0);
-            assert.equal(instance.db.authorCache.size, 0);
             assert.equal(instance.db.slugRenames.length, 0);
             assert.equal(instance.sanitizedFields.length, 0);
             assert.deepEqual(instance.duplicateSlugs, []);
@@ -247,72 +213,12 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
-        it('Clears stored content identity when resetting migration content', async () => {
-            const instance = new MigrateContext({contentIdentity: TEST_CONTENT_IDENTITY});
-            await instance.init();
-            assert.equal(readStoredContentIdentity(instance), fingerprintContentIdentity(TEST_CONTENT_IDENTITY));
-            assert.throws(() => (instance.reset as any)({preserveFingerprints: true}), {
-                name: 'BadRequestError',
-                message: 'reset() no longer accepts options; source identity is always cleared.'
-            });
-            instance.reset();
-            assert.equal(readStoredContentIdentity(instance), null);
-            await instance.close();
-        });
-
-        it('Uses content identity to make resume and reread intent explicit', async () => {
-            const filePath = join(tmpdir(), `mg-context-content-identity-reread-${Date.now()}.sqlite`);
-            const contentIdentity = {...TEST_CONTENT_IDENTITY, revision: 'source-and-options-v1'};
-            const firstRun = new MigrateContext({dbPath: filePath, contentIdentity});
-            await firstRun.init();
-            const post = await firstRun.addPost({lookupKey: 'post-1', sourceContent: '{"title":"Version one"}'});
-            post.set('title', 'Version one');
-            post.set('slug', 'version-one');
-            post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
-            post.save(firstRun.db);
-            await firstRun.close();
-
-            const resumed = new MigrateContext({dbPath: filePath, contentIdentity});
-            await resumed.init();
-            const resumedStats = resumed.hasContent();
-            assert.ok(resumedStats);
-            assert.equal(resumedStats.posts, 1);
-            await resumed.close();
-
-            const incompatible = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity: {...contentIdentity, revision: 'source-and-options-v2'}
-            });
-            await assert.rejects(() => incompatible.init(), {
-                name: 'InternalServerError',
-                message:
-                    'The stored migration content has a different or missing source identity. Re-run with resetContent: true to rebuild it.'
-            });
-
-            const refreshed = new MigrateContext({
-                dbPath: filePath,
-                resetContent: true,
-                contentIdentity: {...contentIdentity, revision: 'source-and-options-v2'}
-            });
-            await refreshed.init();
-            assert.equal(refreshed.hasContent(), false);
-            assert.equal(
-                readStoredContentIdentity(refreshed),
-                fingerprintContentIdentity({...contentIdentity, revision: 'source-and-options-v2'})
-            );
-            assert.equal(refreshed.getMigrationReport().events.length, 0);
-            await refreshed.close();
-            await rm(filePath, {force: true});
-        });
-
         it('Reuses complete mapped posts without remapping on resume', async () => {
             const filePath = join(tmpdir(), `mg-context-stored-resume-${Date.now()}.sqlite`);
-            const first = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
+            const first = new MigrateContext({dbPath: filePath});
             await first.init();
             const post = await first.addPost({
-                lookupKey: 'raw-1',
-                sourceContent: '<item>Original source</item>',
-                sourceMeta: {url: 'https://example.com/original'}
+                lookupKey: 'raw-1'
             });
             post.set('title', 'Original title');
             post.set('slug', 'original');
@@ -329,15 +235,13 @@ describe('MigrateContext', () => {
             const ghostId = post.ghostId;
             await first.close();
 
-            const resumed = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
+            const resumed = new MigrateContext({dbPath: filePath});
             const replacements: unknown[] = [];
             resumed.on('post:replaced', event => replacements.push(event));
             await resumed.init();
             const [stored] = await resumed.getAllPosts();
             assert.equal(stored.dbId, databaseId);
             assert.equal(stored.ghostId, ghostId);
-            assert.equal(stored.sourceContent, '<item>Original source</item>');
-            assert.equal(stored.getSourceValue('url'), 'https://example.com/original');
             assert.equal(stored.data.title, 'Original title');
             assert.equal(stored.data.html, '<p>Original HTML</p>');
             assert.deepEqual(
@@ -353,256 +257,6 @@ describe('MigrateContext', () => {
             await rm(filePath, {force: true});
         });
 
-        it('Clears stored content only when explicitly requested, leaving ingestion to the caller', async () => {
-            const filePath = join(tmpdir(), `mg-context-reread-${Date.now()}.sqlite`);
-            const first = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
-            await first.init();
-            await first.addSourcePost(post => {
-                post.setSource('lookupKey', 'old');
-                post.setSource('content', 'Old source');
-                post.set('title', post.sourceContent);
-                post.set('slug', 'old');
-                post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
-            });
-            await first.close();
-
-            const resumed = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
-            await resumed.init();
-            assert.equal((await resumed.getAllPosts())[0].data.title, 'Old source');
-            await resumed.close();
-
-            const reset = new MigrateContext({dbPath: filePath, resetContent: true});
-            await reset.init();
-            assert.equal(reset.hasContent(), false);
-            await reset.addSourcePost(post => {
-                post.setSource('lookupKey', 'new');
-                post.setSource('content', 'New source');
-                post.set('title', post.sourceContent);
-                post.set('slug', 'new');
-                post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
-            });
-            assert.equal((await reset.getAllPosts())[0].sourceContent, 'New source');
-            await reset.close();
-            await rm(filePath, {force: true});
-        });
-
-        it('Requires raw content and lookup keys when saving persistent posts', async () => {
-            const filePath = join(tmpdir(), `mg-context-raw-required-${Date.now()}.sqlite`);
-            const ctx = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
-            await ctx.init();
-            const missingContent = await ctx.addPost({lookupKey: 'missing-content'});
-            assert.throws(() => missingContent.save(ctx.db), {
-                name: 'BadRequestError',
-                message: 'Persistent posts require sourceContent and lookupKey.'
-            });
-            const missingKey = await ctx.addPost({sourceContent: '<item />'});
-            assert.throws(() => missingKey.save(ctx.db), {
-                name: 'BadRequestError',
-                message: 'Persistent posts require sourceContent and lookupKey.'
-            });
-            const blankKey = await ctx.addPost({lookupKey: '   ', sourceContent: '<item />'});
-            assert.throws(() => blankKey.save(ctx.db), {
-                name: 'BadRequestError',
-                message: 'Persistent posts require sourceContent and lookupKey.'
-            });
-            await assert.rejects(ctx.addSourcePost(undefined as any), {
-                name: 'BadRequestError',
-                message: 'addSourcePost requires a mapper function.'
-            });
-            await ctx.close();
-            await rm(filePath, {force: true});
-        });
-
-        it('Requires source identity and content after the ingestion callback', async () => {
-            const ctx = new MigrateContext({storage: 'memory'});
-            await ctx.init();
-
-            await assert.rejects(
-                ctx.addSourcePost(post => {
-                    post.setSource('content', 'Raw');
-                }),
-                {
-                    name: 'BadRequestError',
-                    message: 'addSourcePost requires source lookupKey and content.'
-                }
-            );
-            await assert.rejects(
-                ctx.addSourcePost(post => {
-                    post.setSource('lookupKey', 'source-1');
-                }),
-                {
-                    name: 'BadRequestError',
-                    message: 'addSourcePost requires source lookupKey and content.'
-                }
-            );
-            await assert.rejects(
-                ctx.addSourcePost(post => {
-                    post.lookupKey = '   ';
-                    post.setSource('content', 'Raw');
-                }),
-                {name: 'BadRequestError', message: 'addSourcePost requires source lookupKey and content.'}
-            );
-            assert.equal(ctx.hasContent(), false);
-
-            const saved = await ctx.addSourcePost(async post => {
-                await Promise.resolve();
-                post.setSource('lookupKey', 'source-1');
-                post.setSource('content', 'Raw');
-                post.set('title', 'Mapped');
-                post.set('slug', 'mapped');
-                post.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
-            });
-            assert.ok(saved.dbId);
-            assert.deepEqual(saved.sourceMeta, {});
-            assert.equal((await ctx.getAllPosts())[0].data.title, 'Mapped');
-            await ctx.close();
-        });
-
-        it('Matches a structured source identity and rejects changed source or input options', async () => {
-            const filePath = join(tmpdir(), `mg-context-content-identity-${Date.now()}.sqlite`);
-            const contentIdentity = {
-                source: 'wordpress-export:site.xml',
-                revision: 'sha256:source-v1',
-                options: {includeDrafts: true, languages: ['en', 'fr']}
-            };
-            const firstRun = new MigrateContext({dbPath: filePath, contentIdentity});
-            await firstRun.init();
-            firstRun.addLink('example.com/old/', '/new/');
-            const storedFingerprint = readStoredContentIdentity(firstRun);
-            assert.match(storedFingerprint!, /^sha256:[a-f0-9]{64}$/);
-            await firstRun.close();
-
-            const resumed = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity: {
-                    ...contentIdentity,
-                    options: {languages: ['en', 'fr'], includeDrafts: true}
-                }
-            });
-            await resumed.init();
-            assert.equal(readStoredContentIdentity(resumed), storedFingerprint);
-            assert.equal(resumed.findLink('example.com/old/'), '/new/');
-            await resumed.close();
-
-            for (const changedIdentity of [
-                {...contentIdentity, source: 'wordpress-export:another.xml'},
-                {...contentIdentity, revision: 'sha256:source-v2'},
-                {...contentIdentity, options: {...contentIdentity.options, includeDrafts: false}}
-            ]) {
-                const incompatible = new MigrateContext({dbPath: filePath, contentIdentity: changedIdentity});
-                await assert.rejects(() => incompatible.init(), {
-                    name: 'InternalServerError',
-                    message:
-                        'The stored migration content has a different or missing source identity. Re-run with resetContent: true to rebuild it.'
-                });
-            }
-
-            const refreshed = new MigrateContext({
-                dbPath: filePath,
-                resetContent: true,
-                contentIdentity: {
-                    ...contentIdentity,
-                    revision: 'sha256:source-v2'
-                }
-            });
-            await refreshed.init();
-            assert.equal(refreshed.hasContent(), false);
-            assert.notEqual(readStoredContentIdentity(refreshed), storedFingerprint);
-            await refreshed.close();
-            await rm(filePath, {force: true});
-        });
-
-        it('Rejects populated legacy databases without a stored content identity', async () => {
-            const filePath = join(tmpdir(), `mg-context-unidentified-${Date.now()}.sqlite`);
-            const original = new MigrateContext({dbPath: filePath, resetContent: true});
-            await original.init();
-            original.addLink('example.com/old/', '/new/');
-            await original.close();
-
-            const resumed = new MigrateContext({
-                dbPath: filePath,
-                contentIdentity: {source: 'source', revision: 'revision'}
-            });
-            await assert.rejects(() => resumed.init(), {
-                name: 'InternalServerError',
-                message:
-                    'The stored migration content has a different or missing source identity. Re-run with resetContent: true to rebuild it.'
-            });
-            await rm(filePath, {force: true});
-        });
-
-        it('Migrates the frozen v2 fixture transactionally and preserves its content', async () => {
-            const filePath = join(tmpdir(), `mg-context-v2-fixture-${Date.now()}.sqlite`);
-            const v2 = new DatabaseSync(filePath);
-            v2.exec(MG_CONTEXT_V2_SCHEMA);
-            v2.prepare('INSERT INTO Links (old_url, new_url) VALUES (?, ?)').run('example.com/old/', '/new/');
-            v2.prepare('INSERT INTO Fingerprints (name, value) VALUES (?, ?)').run(
-                'content',
-                fingerprintContentIdentity(TEST_CONTENT_IDENTITY)
-            );
-            v2.close();
-
-            const instance = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
-            await instance.init();
-
-            assert.equal(instance.schemaVersion, 4);
-            assert.equal(instance.findLink('example.com/old/'), '/new/');
-            assert.ok(
-                instance.db.db
-                    .prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'MigrationEvents'")
-                    .get()
-            );
-
-            await instance.close();
-            await rm(filePath, {force: true});
-        });
-
-        it('Migrates v3 source metadata without inventing missing raw content', async () => {
-            const filePath = join(tmpdir(), `mg-context-v3-fixture-${Date.now()}.sqlite`);
-            const oldDb = new DatabaseSync(filePath);
-            oldDb.exec(MG_CONTEXT_V2_SCHEMA);
-            oldDb.exec(`
-                CREATE TABLE MigrationEvents (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    type TEXT NOT NULL,
-                    post_id INTEGER,
-                    lookup_key TEXT,
-                    details TEXT NOT NULL DEFAULT '{}',
-                    created_at TEXT NOT NULL
-                );
-                PRAGMA user_version = 3;
-            `);
-            oldDb
-                .prepare('INSERT INTO Posts (data, source, meta, lookup_key) VALUES (?, ?, ?, ?)')
-                .run(
-                    JSON.stringify({title: 'Old mapped post'}),
-                    JSON.stringify({url: 'https://example.com/old'}),
-                    '{}',
-                    'old-post'
-                );
-            oldDb
-                .prepare('INSERT INTO Fingerprints (name, value) VALUES (?, ?)')
-                .run('content', fingerprintContentIdentity(TEST_CONTENT_IDENTITY));
-            oldDb.close();
-
-            const migrated = createDatabase(filePath);
-            const row = migrated.stmts.findPostByLookupKey.get('old-post') as any;
-            assert.equal(migrated.schemaVersion, 4);
-            assert.equal(row.source_content, null);
-            assert.deepEqual(JSON.parse(row.source_meta), {url: 'https://example.com/old'});
-            migrated.db.close();
-
-            const resume = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
-            await resume.init();
-            assert.equal((await resume.getAllPosts())[0].data.title, 'Old mapped post');
-            await resume.close();
-            const refresh = new MigrateContext({dbPath: filePath, resetContent: true});
-            await refresh.init();
-            assert.equal(refresh.hasContent(), false);
-            await refresh.close();
-            await rm(filePath, {force: true});
-        });
-
         it('Rejects databases older than the HTML-only compatibility baseline', async () => {
             const filePath = join(tmpdir(), `mg-context-v1-schema-test-${Date.now()}.sqlite`);
             const oldDb = new DatabaseSync(filePath);
@@ -610,10 +264,10 @@ describe('MigrateContext', () => {
             oldDb.exec('PRAGMA user_version = 1;');
             oldDb.close();
 
-            const instance = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
+            const instance = new MigrateContext({dbPath: filePath});
             await assert.rejects(() => instance.init(), {
                 name: 'InternalServerError',
-                message: `Database schema version 1 is older than the supported version ${MIGRATE_CONTEXT_SCHEMA_VERSION}. Recreate the database from source.`
+                message: `Incompatible database schema version 1; rebuild the database from source (requires ${MIGRATE_CONTEXT_SCHEMA_VERSION}).`
             });
 
             await rm(filePath, {force: true});
@@ -625,12 +279,30 @@ describe('MigrateContext', () => {
             oldDb.exec('CREATE TABLE Posts (id INTEGER PRIMARY KEY);');
             oldDb.close();
 
-            const instance = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
+            const instance = new MigrateContext({dbPath: filePath});
             await assert.rejects(() => instance.init(), {
                 name: 'InternalServerError',
-                message: 'Unversioned migration databases are not supported. Recreate the database from source.'
+                message: `Incompatible database schema version 0; rebuild the database from source (requires ${MIGRATE_CONTEXT_SCHEMA_VERSION}).`
             });
 
+            await rm(filePath, {force: true});
+        });
+
+        it('Rejects the frozen version-two schema without changing its original payloads', async () => {
+            const filePath = join(tmpdir(), `mg-context-v2-schema-test-${Date.now()}.sqlite`);
+            const oldDb = new DatabaseSync(filePath);
+            oldDb.exec(MG_CONTEXT_V2_SCHEMA);
+            oldDb.exec("INSERT INTO Posts(data, source) VALUES ('{}', '{\"original\":true}');");
+            oldDb.close();
+            const instance = new MigrateContext({dbPath: filePath});
+            await assert.rejects(() => instance.init(), /Incompatible database schema version 2; rebuild/);
+            const verified = new DatabaseSync(filePath);
+            assert.equal(
+                (verified.prepare('SELECT source FROM Posts').get() as {source: string}).source,
+                '{"original":true}'
+            );
+            assert.equal((verified.prepare('PRAGMA user_version').get() as {user_version: number}).user_version, 2);
+            verified.close();
             await rm(filePath, {force: true});
         });
 
@@ -640,10 +312,10 @@ describe('MigrateContext', () => {
             db.exec(`PRAGMA user_version = ${MIGRATE_CONTEXT_SCHEMA_VERSION + 1};`);
             db.close();
 
-            const instance = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
+            const instance = new MigrateContext({dbPath: filePath});
             await assert.rejects(() => instance.init(), {
                 name: 'InternalServerError',
-                message: `Database schema version ${MIGRATE_CONTEXT_SCHEMA_VERSION + 1} is newer than the supported version ${MIGRATE_CONTEXT_SCHEMA_VERSION}.`
+                message: `Incompatible database schema version ${MIGRATE_CONTEXT_SCHEMA_VERSION + 1}; rebuild the database from source (requires ${MIGRATE_CONTEXT_SCHEMA_VERSION}).`
             });
 
             await rm(filePath, {force: true});
@@ -652,10 +324,10 @@ describe('MigrateContext', () => {
 
     it('Can use file-based DB with dbPath', async () => {
         const filePath = join(tmpdir(), `mg-context-db-test-${Date.now()}.sqlite`);
-        const instance: any = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
+        const instance: any = new MigrateContext({dbPath: filePath});
         await instance.init();
 
-        const post = await instance.addPost({lookupKey: 'file-db-post', sourceContent: '<p>File DB Post</p>'});
+        const post = await instance.addPost({lookupKey: 'file-db-post'});
         post.set('title', 'File DB Post');
         post.set('slug', 'file-db-post');
         post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
@@ -959,11 +631,7 @@ describe('MigrateContext', () => {
             reusedInstance = new MigrateContext();
             await reusedInstance.init();
 
-            const reusedPost1 = await reusedInstance.addPost({
-                source: {
-                    url: 'https://example.com/blog/2023/11/26/test-post/'
-                }
-            });
+            const reusedPost1 = await reusedInstance.addPost({});
             reusedPost1.set('title', 'Test Post');
             reusedPost1.set('slug', 'test-post');
             reusedPost1.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
@@ -975,11 +643,7 @@ describe('MigrateContext', () => {
             reusedPost1.addAuthor({name: 'First Author', slug: 'first-author', email: 'first@example.com'});
             await reusedPost1.save(reusedInstance.db);
 
-            const reusedPost2 = await reusedInstance.addPost({
-                source: {
-                    url: 'https://example.com/blog/2023/11/26/another-post/'
-                }
-            });
+            const reusedPost2 = await reusedInstance.addPost({});
             reusedPost2.set('title', 'Another Post');
             reusedPost2.set('slug', 'another-post');
             reusedPost2.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
@@ -1012,18 +676,6 @@ describe('MigrateContext', () => {
 
             assert.equal(foundPosts.length, 1);
             assert.equal(foundPosts[0].data.title, 'Another Post');
-        });
-
-        it('Can find posts by source', async () => {
-            const foundPosts = await reusedInstance.findPosts({
-                sourceAttr: {
-                    key: 'url',
-                    value: 'https://example.com/blog/2023/11/26/test-post/'
-                }
-            });
-
-            assert.equal(foundPosts.length, 1);
-            assert.equal(foundPosts[0].data.title, 'Test Post');
         });
 
         it('Can find posts by tag slug', async () => {
@@ -1354,8 +1006,8 @@ describe('MigrateContext', () => {
             assert.equal(JSON.parse(await readFile(allTagFile.path, 'utf8')).data.tags.length, 2);
             assert.equal(referencedUsersJson.data.users.length, 1);
             assert.equal(JSON.parse(await readFile(allUserFile.path, 'utf8')).data.users.length, 2);
-            await assert.rejects(readFile(referencedTagFile.path), {code: 'ENOENT'});
-            await assert.rejects(readFile(referencedUserFile.path), {code: 'ENOENT'});
+            await readFile(referencedTagFile.path);
+            await readFile(referencedUserFile.path);
 
             await rm(directory, {recursive: true, force: true});
             await instance.close();
@@ -1516,9 +1168,7 @@ describe('MigrateContext', () => {
         const instance: any = new MigrateContext();
         await instance.init();
 
-        const post1 = await instance.addPost({
-            source: {url: 'https://example.com/blog/2023/11/26/test-post/'}
-        });
+        const post1 = await instance.addPost({});
         post1.set('title', 'Test Post');
         post1.set('slug', 'test-post');
         post1.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
@@ -1529,9 +1179,7 @@ describe('MigrateContext', () => {
         post1.addAuthor({name: 'Test Author', slug: 'test-author', email: 'test@example.com'});
         await post1.save(instance.db);
 
-        const post2 = await instance.addPost({
-            source: {url: 'https://example.com/blog/2023/11/26/another-post/'}
-        });
+        const post2 = await instance.addPost({});
         post2.set('title', 'Another Post');
         post2.set('slug', 'another-post');
         post2.set('created_at', new Date('2023-11-24T12:00:00.000Z'));
@@ -1733,85 +1381,40 @@ describe('MigrateContext', () => {
         await instance.close();
     });
 
-    it('Automatically removes only stale files owned by the previous export manifest', async () => {
-        const instance: any = new MigrateContext();
+    it('Leaves previous chunks and renamed exports for the consumer to remove', async () => {
+        const instance = new MigrateContext({storage: 'memory'});
         await instance.init();
-
         for (let i = 1; i <= 4; i += 1) {
             const post = await instance.addPost();
-            post.set('title', `Manifest Post ${i}`);
-            post.set('slug', `manifest-post-${i}`);
-            post.set('created_at', new Date('2023-11-23T12:00:00.000Z'));
-            await post.save(instance.db);
+            post.set('title', `Post ${i}`);
+            post.set('slug', `post-${i}`);
+            post.set('created_at', new Date('2026-01-01T00:00:00Z'));
+            post.save(instance.db);
         }
-
-        const dir = join(tmpdir(), `mg-context-manifest-test-${Date.now()}`);
-        const first = await instance.writeGhostJson(dir, {batchSize: 1, filename: 'manifest-test'});
-        assert.deepEqual(
-            first.map((file: WrittenFile) => file.name),
-            ['manifest-test-1.json', 'manifest-test-2.json', 'manifest-test-3.json', 'manifest-test-4.json']
-        );
-
-        const unrelatedPath = join(dir, 'manifest-test-not-generated.json');
-        await writeFile(unrelatedPath, 'not created by mg-context');
-
-        const withoutCleanup = await instance.writeGhostJson(dir, {batchSize: 2, filename: 'manifest-test'});
-        assert.deepEqual(
-            withoutCleanup.map((file: WrittenFile) => file.name),
-            ['manifest-test-1.json', 'manifest-test-2.json']
-        );
-        await assert.rejects(readFile(first[2].path), {code: 'ENOENT'});
-        await assert.rejects(readFile(first[3].path), {code: 'ENOENT'});
-
-        const second = await instance.writeGhostJson(dir, {
-            batchSize: 2,
-            filename: 'manifest-test',
-            replaceExisting: true
-        });
-        assert.deepEqual(
-            second.map((file: WrittenFile) => file.name),
-            ['manifest-test-1.json', 'manifest-test-2.json']
-        );
-        await assert.rejects(readFile(first[2].path), {code: 'ENOENT'});
-        await assert.rejects(readFile(first[3].path), {code: 'ENOENT'});
-        assert.equal(await readFile(unrelatedPath, 'utf8'), 'not created by mg-context');
-
-        const third = await instance.writeGhostJson(dir, {
-            batchSize: 10,
-            filename: 'manifest-test',
-            replaceExisting: true
-        });
-        assert.deepEqual(
-            third.map((file: WrittenFile) => file.name),
-            ['manifest-test.json']
-        );
-        await assert.rejects(readFile(second[0].path), {code: 'ENOENT'});
-        await assert.rejects(readFile(second[1].path), {code: 'ENOENT'});
-        assert.equal(await readFile(unrelatedPath, 'utf8'), 'not created by mg-context');
-
-        const fourth = await instance.writeGhostJson(dir, {
-            batchSize: 2,
-            filename: 'manifest-test',
-            replaceExisting: true
-        });
-        assert.deepEqual(
-            fourth.map((file: WrittenFile) => file.name),
-            ['manifest-test-1.json', 'manifest-test-2.json']
-        );
-        await assert.rejects(readFile(third[0].path), {code: 'ENOENT'});
-        assert.equal(await readFile(unrelatedPath, 'utf8'), 'not created by mg-context');
-
-        const renamed = await instance.writeGhostJson(dir, {batchSize: 10, filename: 'renamed-export'});
-        assert.equal(renamed[0].name, 'renamed-export.json');
-        await assert.rejects(readFile(fourth[0].path), {code: 'ENOENT'});
-        await assert.rejects(readFile(fourth[1].path), {code: 'ENOENT'});
-        assert.equal(await readFile(unrelatedPath, 'utf8'), 'not created by mg-context');
-
-        await rm(dir, {recursive: true, force: true});
-        await instance.close();
+        const directory = join(tmpdir(), `mg-context-consumer-output-${Date.now()}`);
+        try {
+            const first = await instance.writeGhostJson(directory, {batchSize: 1});
+            const previous = await readFile(first[3].path, 'utf8');
+            await instance.writeGhostJson(directory, {batchSize: 2});
+            assert.equal(await readFile(first[3].path, 'utf8'), previous);
+            const [single] = await instance.writeGhostJson(directory);
+            const singleContent = await readFile(single.path, 'utf8');
+            await instance.writeGhostJson(directory, {filename: 'renamed'});
+            assert.equal(await readFile(single.path, 'utf8'), singleContent);
+            for (const file of first) {
+                await readFile(file.path);
+            }
+            assert.equal(
+                (await readdir(directory)).some(name => name.startsWith('.mg-context-')),
+                false
+            );
+        } finally {
+            await rm(directory, {recursive: true, force: true});
+            await instance.close();
+        }
     });
 
-    it('Keeps the previous manifest and output set when generation is interrupted', async () => {
+    it('Keeps the previous output set when generation is interrupted', async () => {
         const instance = new MigrateContext({storage: 'memory'});
         await instance.init();
 
@@ -1825,8 +1428,7 @@ describe('MigrateContext', () => {
 
         const directory = join(tmpdir(), `mg-context-interrupted-export-${Date.now()}`);
         const previous = await instance.writeGhostJson(directory, {batchSize: 1, filename: 'previous'});
-        const manifestPath = join(directory, '.mg-context-export-manifest.json');
-        const previousManifest = await readFile(manifestPath, 'utf8');
+        const previousContents = await Promise.all(previous.map(file => readFile(file.path, 'utf8')));
         const originalToGhostPost = PostContext.toGhostPost;
         let calls = 0;
         const converter = mock.method(PostContext, 'toGhostPost', (row: any) => {
@@ -1842,7 +1444,7 @@ describe('MigrateContext', () => {
         });
         converter.mock.restore();
 
-        assert.equal(await readFile(manifestPath, 'utf8'), previousManifest);
+        assert.deepEqual(await Promise.all(previous.map(file => readFile(file.path, 'utf8'))), previousContents);
         await readFile(previous[0].path);
         await readFile(previous[1].path);
         await assert.rejects(readFile(join(directory, 'interrupted-1.json')), {code: 'ENOENT'});
@@ -1874,32 +1476,22 @@ describe('MigrateContext', () => {
         await instance.close();
     });
 
-    it('Refuses to clean output when the ownership manifest is invalid', async () => {
+    it('Ignores legacy ownership metadata in the consumer output folder', async () => {
         const instance = new MigrateContext({storage: 'memory'});
         await instance.init();
-        const directory = join(tmpdir(), `mg-context-invalid-manifest-${Date.now()}`);
+        const directory = join(tmpdir(), `mg-context-legacy-output-${Date.now()}`);
         await mkdir(directory, {recursive: true});
-        for (const invalid of [
-            {version: 99},
-            {version: 1},
-            {version: 1, exports: 'invalid'},
-            {version: 1, exports: []},
-            {version: 1, exports: {posts: 'invalid'}},
-            {version: 1, exports: {posts: [1]}},
-            {version: 1, exports: {posts: ['x']}},
-            {version: 1, exports: {posts: ['posts.txt']}},
-            {version: 1, exports: {posts: ['../posts.json']}},
-            {version: 1, exports: {posts: ['nested\\posts.json']}}
-        ]) {
-            await writeFile(join(directory, '.mg-context-export-manifest.json'), JSON.stringify(invalid));
-            await assert.rejects(() => instance.writeGhostJson(directory), {
-                name: 'InternalServerError',
-                message: 'Could not read .mg-context-export-manifest.json. Remove or repair it before exporting again.'
-            });
+        try {
+            const manifest = join(directory, '.mg-context-export-manifest.json');
+            await writeFile(manifest, 'consumer-owned metadata');
+            await writeFile(join(directory, 'previous.json'), 'previous export');
+            await instance.writeGhostJson(directory);
+            assert.equal(await readFile(manifest, 'utf8'), 'consumer-owned metadata');
+            assert.equal(await readFile(join(directory, 'previous.json'), 'utf8'), 'previous export');
+        } finally {
+            await rm(directory, {recursive: true, force: true});
+            await instance.close();
         }
-
-        await rm(directory, {recursive: true, force: true});
-        await instance.close();
     });
 
     it('Strips .json extension from filename option', async () => {
@@ -2070,14 +1662,11 @@ describe('MigrateContext', () => {
         it('Replaces transformed content from an earlier run when onDuplicate is replace', async () => {
             const filePath = join(tmpdir(), `mg-context-lookup-replace-${Date.now()}.sqlite`);
 
-            const firstRun: any = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
+            const firstRun: any = new MigrateContext({dbPath: filePath});
             await firstRun.init();
 
             const original = await firstRun.addPost({
-                lookupKey: 'https://example.com/refresh-me',
-                sourceContent: '<p>Original source</p>',
-                source: {parser: 'old'},
-                meta: {transform: 'old'}
+                lookupKey: 'https://example.com/refresh-me'
             });
             original.set('title', 'Old title');
             original.set('slug', 'old-slug');
@@ -2094,16 +1683,12 @@ describe('MigrateContext', () => {
 
             const secondRun: any = new MigrateContext({
                 dbPath: filePath,
-                contentIdentity: TEST_CONTENT_IDENTITY,
                 onDuplicate: 'replace'
             });
             await secondRun.init();
 
             const replacement = await secondRun.addPost({
-                lookupKey: 'https://example.com/refresh-me',
-                sourceContent: '<p>New source</p>',
-                source: {parser: 'new'},
-                meta: {transform: 'new'}
+                lookupKey: 'https://example.com/refresh-me'
             });
             replacement.set('title', 'New title');
             replacement.set('slug', 'new-slug');
@@ -2121,8 +1706,6 @@ describe('MigrateContext', () => {
             assert.equal(allPosts[0].data.title, 'New title');
             assert.equal(allPosts[0].data.slug, 'new-slug');
             assert.equal(allPosts[0].data.html, '<p>Fresh transformed content</p>');
-            assert.equal(allPosts[0].getSourceValue('parser'), 'new');
-            assert.equal(allPosts[0].getMetaValue('transform'), 'new');
             assert.deepEqual(
                 allPosts[0].data.tags.map((tag: TagContext) => tag.data.slug),
                 ['new-tag']
@@ -2607,8 +2190,6 @@ describe('MigrateContext', () => {
                     withTransaction(instance.db, () => {
                         instance.db.stmts.updatePost.run(
                             JSON.stringify({title: 'Rolled Back', slug: 'before-rollback'}),
-                            '{}',
-                            '{}',
                             null,
                             post.ghostId,
                             '2023-11-23T00:00:00.000Z',
@@ -2645,9 +2226,6 @@ describe('MigrateContext', () => {
                 withTransaction(instance.db, () => {
                     instance.db.stmts.updatePost.run(
                         JSON.stringify({title: 'Updated In Nested', slug: 'nested-tx'}),
-                        null,
-                        '{}',
-                        '{}',
                         null,
                         post.ghostId,
                         '2023-11-23T00:00:00.000Z',
@@ -2694,16 +2272,6 @@ describe('MigrateContext', () => {
         });
     });
 
-    describe('findPostsByIds', () => {
-        it('Returns empty array for empty ID list', async () => {
-            const instance: any = new MigrateContext();
-            await instance.init();
-            const result = findPostsByIds(instance.db, []);
-            assert.deepEqual(result, []);
-            await instance.close();
-        });
-    });
-
     describe('init guard', () => {
         it('Throws when init() is called twice without close()', async () => {
             const instance: any = new MigrateContext();
@@ -2717,12 +2285,12 @@ describe('MigrateContext', () => {
         });
     });
 
-    describe('Cache bypass paths', () => {
-        it('Tag existing.update branch when slug exists in DB but not cache', async () => {
+    describe('Database entity reuse', () => {
+        it('Reuses tags inserted directly into the database', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
-            // Insert tag directly into DB, bypassing the cache
+            // Insert a tag directly into the database
             instance.db.stmts.insertTag.run(
                 JSON.stringify({name: 'Pre-existing', slug: 'pre-tag'}),
                 'pre-tag',
@@ -2731,22 +2299,22 @@ describe('MigrateContext', () => {
             );
 
             // Save a TagContext with the same slug — should hit the existing.update branch
-            const tag = new TagContext({name: 'Updated Pre-existing', slug: 'pre-tag'});
+            const tag = new TagContext({name: 'Pre-existing', slug: 'pre-tag'});
             await tag.save(instance.db);
 
             assert.ok(tag.dbId);
             const found = await instance.findTags({slug: 'pre-tag', scope: 'all'});
             assert.equal(found!.length, 1);
-            assert.equal(found![0].data.name, 'Updated Pre-existing');
+            assert.equal(found![0].data.name, 'Pre-existing');
 
             await instance.close();
         });
 
-        it('Author existing.update branch when slug exists in DB but not cache', async () => {
+        it('Reuses authors inserted directly into the database', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
-            // Insert author directly into DB, bypassing the cache
+            // Insert an author directly into the database
             instance.db.stmts.insertAuthor.run(
                 JSON.stringify({name: 'Pre-existing', slug: 'pre-author', email: 'pre@example.com'}),
                 'pre-author',
@@ -2766,7 +2334,7 @@ describe('MigrateContext', () => {
             assert.ok(author.dbId);
             const found = await instance.findAuthors({slug: 'pre-author', scope: 'all'});
             assert.equal(found!.length, 1);
-            assert.equal(found![0].data.name, 'Updated Pre-existing');
+            assert.equal(found![0].data.name, 'Pre-existing');
 
             await instance.close();
         });
@@ -3009,7 +2577,7 @@ describe('MigrateContext', () => {
 
             await assert.rejects(() => instance.prepareForExport(), SyntaxError);
             assert.equal(instance.db.inTransaction, false);
-            assert.equal(instance.db.pendingEvents.length, 0);
+            assert.equal((instance.db.db.prepare('SELECT COUNT(*) AS n FROM PendingEvents').get() as any).n, 0);
 
             await instance.close();
         });
@@ -3958,19 +3526,19 @@ describe('MigrateContext', () => {
 
         it('Persists duplicate skips for later runs and emits their identity', async () => {
             const filePath = join(tmpdir(), `mg-context-report-${Date.now()}.sqlite`);
-            const firstRun = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
+            const firstRun = new MigrateContext({dbPath: filePath});
             await firstRun.init();
 
             const skipped: any[] = [];
             firstRun.on('post:skipped', event => skipped.push(event));
 
-            const original = await firstRun.addPost({lookupKey: 'same-source-id', sourceContent: 'Original'});
+            const original = await firstRun.addPost({lookupKey: 'same-source-id'});
             original.set('title', 'Original');
             original.set('slug', 'original');
             original.set('created_at', new Date('2026-01-01T00:00:00.000Z'));
             original.save(firstRun.db);
 
-            const duplicate = await firstRun.addPost({lookupKey: 'same-source-id', sourceContent: 'Duplicate'});
+            const duplicate = await firstRun.addPost({lookupKey: 'same-source-id'});
             duplicate.set('title', 'Duplicate');
             duplicate.set('slug', 'duplicate');
             duplicate.set('created_at', new Date('2026-01-02T00:00:00.000Z'));
@@ -3979,7 +3547,7 @@ describe('MigrateContext', () => {
             assert.deepEqual(skipped, [{lookupKey: 'same-source-id', existingPostId: original.dbId}]);
             await firstRun.close();
 
-            const secondRun = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
+            const secondRun = new MigrateContext({dbPath: filePath});
             await secondRun.init();
             const report = secondRun.getMigrationReport();
             assert.equal(report.summary['post:skipped'], 1);
@@ -3996,9 +3564,7 @@ describe('MigrateContext', () => {
             await instance.init();
 
             const original: any = await instance.addPost({
-                lookupKey: 'replace-me',
-                source: {url: 'https://example.com/old'},
-                meta: {revision: 1}
+                lookupKey: 'replace-me'
             });
             original.set('title', 'Old title');
             original.set('slug', 'replace-me');
@@ -4017,9 +3583,7 @@ describe('MigrateContext', () => {
             });
 
             const replacement: any = await instance.addPost({
-                lookupKey: 'replace-me',
-                source: {url: 'https://example.com/new'},
-                meta: {revision: 2}
+                lookupKey: 'replace-me'
             });
             replacement.set('title', 'New title');
             replacement.set('slug', 'replace-me');
@@ -4038,9 +3602,6 @@ describe('MigrateContext', () => {
             assert.equal(replacementEvent.current.data.html, '<p>New</p>');
             assert.equal(replacementEvent.current.data.tags[0].name, 'New tag');
             assert.equal(replacementEvent.current.data.authors[0].name, 'New author');
-            assert.deepEqual(replacementEvent.current.sourceMeta, {url: 'https://example.com/new'});
-            assert.equal(replacementEvent.current.sourceContent, null);
-            assert.deepEqual(replacementEvent.current.meta, {revision: 2});
 
             replacementEvent.current.data.title = 'Listener mutation';
             replacementEvent.current.data.tags[0].name = 'Listener tag mutation';
@@ -4184,13 +3745,11 @@ describe('MigrateContext', () => {
         it('Reports renames from an earlier run when resuming an existing dbPath', async () => {
             const filePath = join(tmpdir(), `mg-context-dedup-resume-${Date.now()}.sqlite`);
 
-            const firstRun: any = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
+            const firstRun: any = new MigrateContext({dbPath: filePath});
             await firstRun.init();
 
             const post1 = await firstRun.addPost({
-                lookupKey: 'blog/my-post',
-                sourceContent: 'First',
-                source: {url: 'https://example.com/blog/my-post'}
+                lookupKey: 'blog/my-post'
             });
             post1.set('title', 'First');
             post1.set('slug', 'my-post');
@@ -4198,9 +3757,7 @@ describe('MigrateContext', () => {
             await post1.save(firstRun.db);
 
             const post2 = await firstRun.addPost({
-                lookupKey: 'news/my-post',
-                sourceContent: 'Second',
-                source: {url: 'https://example.com/news/my-post'}
+                lookupKey: 'news/my-post'
             });
             post2.set('title', 'Second');
             post2.set('slug', 'my-post');
@@ -4210,20 +3767,20 @@ describe('MigrateContext', () => {
             await firstRun.close();
 
             // Resume keeps the stored slugs; the duplicate report is rebuilt from SQLite.
-            const secondRun: any = new MigrateContext({dbPath: filePath, contentIdentity: TEST_CONTENT_IDENTITY});
+            const secondRun: any = new MigrateContext({dbPath: filePath});
             await secondRun.init();
 
-            assert.equal(secondRun.db.slugRenames.length, 0);
+            assert.equal(secondRun.db.slugRenames.length, 1);
 
             const duplicates = await secondRun.deduplicateSlugs();
 
             assert.equal(duplicates.length, 2);
             assert.equal(duplicates[0].oldSlug, 'my-post');
             assert.equal(duplicates[0].newSlug, 'my-post');
-            assert.equal(duplicates[0].url, 'https://example.com/blog/my-post');
+            assert.equal(duplicates[0].url, '');
             assert.equal(duplicates[1].oldSlug, 'my-post');
             assert.equal(duplicates[1].newSlug, 'my-post-2');
-            assert.equal(duplicates[1].url, 'https://example.com/news/my-post');
+            assert.equal(duplicates[1].url, '');
 
             await secondRun.close();
             await unlink(filePath);
@@ -4276,14 +3833,14 @@ describe('MigrateContext', () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
-            const post1 = await instance.addPost({source: {url: 'https://example.com/blog/my-post'}});
+            const post1 = await instance.addPost({});
             post1.set('title', 'Older Post');
             post1.set('slug', 'my-post');
             post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
             post1.set('published_at', new Date('2023-01-01T00:00:00.000Z'));
             await post1.save(instance.db);
 
-            const post2 = await instance.addPost({source: {url: 'https://example.com/news/my-post'}});
+            const post2 = await instance.addPost({});
             post2.set('title', 'Newer Post');
             post2.set('slug', 'my-post');
             post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
@@ -4296,10 +3853,10 @@ describe('MigrateContext', () => {
             assert.equal(duplicates.length, 2);
             assert.equal(duplicates[0].oldSlug, 'my-post');
             assert.equal(duplicates[0].newSlug, 'my-post');
-            assert.equal(duplicates[0].url, 'https://example.com/blog/my-post');
+            assert.equal(duplicates[0].url, '');
             assert.equal(duplicates[1].oldSlug, 'my-post');
             assert.equal(duplicates[1].newSlug, 'my-post-2');
-            assert.equal(duplicates[1].url, 'https://example.com/news/my-post');
+            assert.equal(duplicates[1].url, '');
 
             // Verify DB was updated
             const posts = await instance.findPosts({slug: 'my-post'});
@@ -4394,18 +3951,18 @@ describe('MigrateContext', () => {
             await instance.close();
         });
 
-        it('Includes source URL for both retained and renamed entries', async () => {
+        it('Does not invent URLs for posts without canonical URLs', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
-            const post1 = await instance.addPost({source: {url: 'https://example.com/blog/my-post'}});
+            const post1 = await instance.addPost({});
             post1.set('title', 'First');
             post1.set('slug', 'my-post');
             post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
             post1.set('published_at', new Date('2023-01-01T00:00:00.000Z'));
             await post1.save(instance.db);
 
-            const post2 = await instance.addPost({source: {url: 'https://example.com/news/my-post'}});
+            const post2 = await instance.addPost({});
             post2.set('title', 'Second');
             post2.set('slug', 'my-post');
             post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
@@ -4415,13 +3972,13 @@ describe('MigrateContext', () => {
             const duplicates = await instance.deduplicateSlugs();
 
             assert.equal(duplicates.length, 2);
-            assert.equal(duplicates[0].url, 'https://example.com/blog/my-post');
-            assert.equal(duplicates[1].url, 'https://example.com/news/my-post');
+            assert.equal(duplicates[0].url, '');
+            assert.equal(duplicates[1].url, '');
 
             await instance.close();
         });
 
-        it('Falls back to canonical_url when source.url is absent', async () => {
+        it('Includes canonical URLs in slug reports', async () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
@@ -4531,14 +4088,14 @@ describe('MigrateContext', () => {
             const instance: any = new MigrateContext();
             await instance.init();
 
-            const post1 = await instance.addPost({source: {url: 'https://example.com/first'}});
+            const post1 = await instance.addPost({});
             post1.set('title', 'First');
             post1.set('slug', 'dupe');
             post1.set('created_at', new Date('2023-01-01T00:00:00.000Z'));
             post1.set('published_at', new Date('2023-01-01T00:00:00.000Z'));
             await post1.save(instance.db);
 
-            const post2 = await instance.addPost({source: {url: 'https://example.com/second'}});
+            const post2 = await instance.addPost({});
             post2.set('title', 'Second');
             post2.set('slug', 'dupe');
             post2.set('created_at', new Date('2023-06-01T00:00:00.000Z'));
@@ -4558,9 +4115,9 @@ describe('MigrateContext', () => {
             assert.equal(instance.duplicateSlugs.length, 2);
             assert.equal(instance.duplicateSlugs[0].oldSlug, 'dupe');
             assert.equal(instance.duplicateSlugs[0].newSlug, 'dupe');
-            assert.equal(instance.duplicateSlugs[0].url, 'https://example.com/first');
+            assert.equal(instance.duplicateSlugs[0].url, '');
             assert.equal(instance.duplicateSlugs[1].newSlug, 'dupe-2');
-            assert.equal(instance.duplicateSlugs[1].url, 'https://example.com/second');
+            assert.equal(instance.duplicateSlugs[1].url, '');
 
             await unlink(files[0].path);
             await instance.close();
@@ -4587,7 +4144,7 @@ describe('MigrateContext', () => {
             const first = await instance.deduplicateSlugs();
             assert.equal(first.length, 2);
 
-            // Second call returns cached result without modifying anything
+            // Repeated calls read the same persisted result without modifying anything
             const second = await instance.deduplicateSlugs();
             assert.equal(second.length, 2);
             assert.deepEqual(first, second);

@@ -4,7 +4,7 @@ import ghValidate from '@tryghost/validator';
 import {slugify} from '@tryghost/string';
 import MigrateBase from './MigrateBase.js';
 import {GHOST_FIELD_LIMITS} from './ghost-schema.js';
-import {recordSanitizedFields, type DatabaseModels} from './database.js';
+import {assertMappedWrite, recordSanitizedFields, type DatabaseModels, type SanitizedField} from './database.js';
 
 const PLACEHOLDER_EMAIL_DOMAIN = 'example.com';
 const AUTHOR_LIMITS = GHOST_FIELD_LIMITS.author;
@@ -105,18 +105,21 @@ export default class AuthorContext extends MigrateBase {
     }
 
     save(db: DatabaseModels) {
-        // Sanitize before the cache lookup below — the slug is the cache key
-        const sanitizedStart = db.sanitizedFields.length;
-        this.sanitize(db.sanitizedFields);
-        const sanitized = db.sanitizedFields.slice(sanitizedStart);
+        assertMappedWrite(db);
+        // Sanitize before looking up the canonical stored slug
+        const sanitized: SanitizedField[] = [];
+        this.sanitize(sanitized);
 
-        // Check slug cache first — avoids DB round-trip for already-known authors
-        if (!this.dbId && this.data.slug && db.authorCache.has(this.data.slug)) {
-            const cached = db.authorCache.get(this.data.slug)!;
-            this.dbId = cached.dbId;
-            this.ghostId = cached.ghostId;
-            recordSanitizedFields(db, sanitized);
-            return;
+        // Reuse the canonical stored row through its indexed slug.
+        if (!this.dbId && this.data.slug) {
+            const existing = db.stmts.findAuthorBySlug.get(this.data.slug) as any;
+            if (existing) {
+                this.dbId = existing.id;
+                this.ghostId = existing.ghost_id;
+                this.data = JSON.parse(existing.data);
+                recordSanitizedFields(db, sanitized);
+                return;
+            }
         }
 
         const authorData = JSON.stringify(this.data);
@@ -135,34 +138,14 @@ export default class AuthorContext extends MigrateBase {
                 this.dbId
             );
         } else {
-            const existing = this.data.slug ? (db.stmts.findAuthorBySlug.get(this.data.slug) as any) : null;
-
-            if (existing) {
-                this.dbId = existing.id as number;
-                this.ghostId = (existing.ghost_id as string) || this.ghostId;
-                db.stmts.updateAuthorById.run(
-                    authorData,
-                    this.data.slug,
-                    this.data.name,
-                    this.data.email,
-                    this.ghostId,
-                    this.dbId
-                );
-            } else {
-                const result = db.stmts.insertAuthor.run(
-                    authorData,
-                    this.data.slug,
-                    this.data.name,
-                    this.data.email,
-                    this.ghostId
-                );
-                this.dbId = Number(result.lastInsertRowid);
-            }
-        }
-
-        // Populate cache after successful save
-        if (this.data.slug && this.dbId && this.ghostId) {
-            db.authorCache.set(this.data.slug, {dbId: this.dbId, ghostId: this.ghostId});
+            const result = db.stmts.insertAuthor.run(
+                authorData,
+                this.data.slug,
+                this.data.name,
+                this.data.email,
+                this.ghostId
+            );
+            this.dbId = Number(result.lastInsertRowid);
         }
 
         recordSanitizedFields(db, sanitized);

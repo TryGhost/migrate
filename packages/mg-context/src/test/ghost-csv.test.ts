@@ -282,40 +282,31 @@ describe('writeGhostCSV', () => {
         });
     });
 
-    it('upgrades a v1 manifest, preserves JSON, and cleans only prior CSV output', async () => {
+    it('leaves previous CSV, JSON, and metadata files for the consumer to manage', async () => {
         await withContext(async (context, directory) => {
-            await addPost(context, 'Owned post', 'owned');
+            await addPost(context, 'Post', 'post');
             const manifestPath = join(directory, '.mg-context-export-manifest.json');
+            await writeFile(manifestPath, 'legacy metadata');
             await writeFile(join(directory, 'old.json'), 'existing JSON');
             await writeFile(join(directory, 'unrelated.csv'), 'user CSV');
-            await writeFile(manifestPath, JSON.stringify({version: 1, exports: {posts: ['old.json']}}));
-
             const first = await context.writeGhostCSV(directory, {filename: 'first.csv'});
-            let manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
-            assert.equal(manifest.version, 2);
-            assert.deepEqual(manifest.exports, {posts: ['old.json'], 'posts-csv': ['first.csv']});
-            assert.equal(await readFile(join(directory, 'old.json'), 'utf8'), 'existing JSON');
-
+            const original = await readFile(first.path, 'utf8');
             const second = await context.writeGhostCSV(directory, {filename: 'second'});
-            assert.equal(second.name, 'second.csv');
-            await assert.rejects(stat(first.path), {code: 'ENOENT'});
-            assert.equal(await readFile(join(directory, 'unrelated.csv'), 'utf8'), 'user CSV');
-
+            assert.equal(await readFile(first.path, 'utf8'), original);
             const [json] = await context.writeGhostJson(directory, {filename: 'new-json'});
             assert.ok(existsSync(second.path));
             assert.ok(existsSync(json.path));
-            manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
-            assert.deepEqual(manifest.exports, {posts: ['new-json.json'], 'posts-csv': ['second.csv']});
+            assert.equal(await readFile(join(directory, 'old.json'), 'utf8'), 'existing JSON');
+            assert.equal(await readFile(join(directory, 'unrelated.csv'), 'utf8'), 'user CSV');
+            assert.equal(await readFile(manifestPath, 'utf8'), 'legacy metadata');
         });
     });
 
-    it('keeps the previous CSV and manifest when streaming is interrupted', async () => {
+    it('keeps the previous CSV when streaming is interrupted', async () => {
         await withContext(async (context, directory) => {
             await addPost(context, 'Original', 'original');
             const previous = await context.writeGhostCSV(directory);
             const previousContent = await readFile(previous.path, 'utf8');
-            const manifestPath = join(directory, '.mg-context-export-manifest.json');
-            const previousManifest = await readFile(manifestPath, 'utf8');
             for (let i = 0; i < 200; i += 1) {
                 await addPost(context, 'Later ' + i, 'later-' + i);
             }
@@ -328,8 +319,7 @@ describe('writeGhostCSV', () => {
             await assert.rejects(() => context.writeGhostCSV(directory), {message: 'stop export'});
             context.off('progress', listener);
             assert.equal(await readFile(previous.path, 'utf8'), previousContent);
-            assert.equal(await readFile(manifestPath, 'utf8'), previousManifest);
-            assert.deepEqual((await readdir(directory)).sort(), ['.mg-context-export-manifest.json', 'posts.csv']);
+            assert.deepEqual((await readdir(directory)).sort(), ['posts.csv']);
         });
     });
 
@@ -340,9 +330,7 @@ describe('writeGhostCSV', () => {
             context.on('export:file-written', file => {
                 seen.push(file);
                 assert.ok(existsSync(file.path));
-                assert.ok(
-                    readFileSync(join(directory, '.mg-context-export-manifest.json'), 'utf8').includes('posts.csv')
-                );
+                assert.ok(readFileSync(file.path, 'utf8').includes('Event'));
                 throw new Error('listener failed');
             });
             await assert.rejects(() => context.writeGhostCSV(directory), {message: 'listener failed'});
@@ -352,27 +340,12 @@ describe('writeGhostCSV', () => {
         });
     });
 
-    it('rejects invalid filenames and malformed ownership manifests', async () => {
+    it('rejects invalid filenames', async () => {
         await withContext(async (context, directory) => {
             for (const filename of ['.csv', '', 'nested/file', 'nested\\file']) {
                 await assert.rejects(() => context.writeGhostCSV(directory, {filename}), {
                     name: 'BadRequestError',
                     message: 'Ghost CSV filename must be a non-empty base filename without path separators.'
-                });
-            }
-            const manifestPath = join(directory, '.mg-context-export-manifest.json');
-            for (const invalid of [
-                {version: 1, exports: {'posts-csv': ['old.csv']}},
-                {version: 2, exports: {'posts-csv': ['old.json']}},
-                {version: 2, exports: {'posts-csv': ['../old.csv']}},
-                {version: 2, exports: {'posts-csv': ['nested\\old.csv']}},
-                {version: 3, exports: {}}
-            ]) {
-                await writeFile(manifestPath, JSON.stringify(invalid));
-                await assert.rejects(() => context.writeGhostCSV(directory), {
-                    name: 'InternalServerError',
-                    message:
-                        'Could not read .mg-context-export-manifest.json. Remove or repair it before exporting again.'
                 });
             }
         });

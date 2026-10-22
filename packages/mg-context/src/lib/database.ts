@@ -1,15 +1,17 @@
 /* eslint-disable ghost/filenames/match-exported-class */
 import {DatabaseSync} from 'node:sqlite';
 import errors from '@tryghost/errors';
+import {SOURCE_SCHEMA} from './source-schema.js';
 
-export const MIGRATE_CONTEXT_SCHEMA_VERSION = 4;
+export const MIGRATE_CONTEXT_SCHEMA_VERSION = 5;
 
 export type MigrationEventType =
     | 'post:inserted'
     | 'post:skipped'
     | 'post:replaced'
     | 'field:sanitized'
-    | 'slug:renamed';
+    | 'slug:renamed'
+    | (string & {});
 
 export interface DatabaseEvent {
     type: string;
@@ -42,13 +44,11 @@ export interface DatabaseModels {
     db: DatabaseSync;
     stmts: PreparedStatements;
     schemaVersion: number;
-    requireSourceContent: boolean;
-    tagCache: Map<string, {dbId: number; ghostId: string}>;
-    authorCache: Map<string, {dbId: number; ghostId: string}>;
     slugRenames: SlugRename[];
     sanitizedFields: SanitizedField[];
     inTransaction: boolean;
-    pendingEvents: DatabaseEvent[];
+    ingestionActive: boolean;
+    hasListeners: (type: string) => boolean;
     emitEvent: (event: DatabaseEvent) => void;
 }
 
@@ -141,9 +141,6 @@ const SCHEMA = `
 CREATE TABLE IF NOT EXISTS Posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     data TEXT NOT NULL,
-    source_content TEXT,
-    source_meta TEXT NOT NULL DEFAULT '{}',
-    meta TEXT DEFAULT '{}',
     lookup_key TEXT,
     ghost_id TEXT,
     created_at TEXT,
@@ -217,9 +214,14 @@ CREATE TABLE IF NOT EXISTS MigrationEvents (
     post_id INTEGER,
     lookup_key TEXT,
     details TEXT NOT NULL DEFAULT '{}',
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    phase TEXT NOT NULL DEFAULT 'mapping',
+    ingestion_id INTEGER,
+    source_record_id INTEGER
 );
+CREATE INDEX IF NOT EXISTS idx_migrationevents_attempt ON MigrationEvents(phase, ingestion_id, id);
 CREATE INDEX IF NOT EXISTS idx_migrationevents_type ON MigrationEvents(type);
+${SOURCE_SCHEMA}
 `;
 
 function prepareStatements(db: DatabaseSync): PreparedStatements {
@@ -250,13 +252,13 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
 
         // Posts
         insertPost: db.prepare(
-            'INSERT INTO Posts (data, source_content, source_meta, meta, lookup_key, ghost_id, created_at, updated_at, published_at, original_slug, slug, webscrape_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO Posts (data, lookup_key, ghost_id, created_at, updated_at, published_at, original_slug, slug, webscrape_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
         ),
         updatePost: db.prepare(
-            'UPDATE Posts SET data = ?, source_content = ?, source_meta = ?, meta = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, slug = ?, webscrape_data = ? WHERE id = ?'
+            'UPDATE Posts SET data = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, slug = ?, webscrape_data = ? WHERE id = ?'
         ),
         replacePost: db.prepare(
-            'UPDATE Posts SET data = ?, source_content = ?, source_meta = ?, meta = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, original_slug = ?, slug = ?, webscrape_data = ? WHERE id = ?'
+            'UPDATE Posts SET data = ?, lookup_key = ?, ghost_id = ?, created_at = ?, updated_at = ?, published_at = ?, original_slug = ?, slug = ?, webscrape_data = ? WHERE id = ?'
         ),
         updatePostData: db.prepare('UPDATE Posts SET data = ? WHERE id = ?'),
         patchPostData: db.prepare(
@@ -268,7 +270,7 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
         findPostByLookupKey: db.prepare('SELECT * FROM Posts WHERE lookup_key = ?'),
         findPostsBySlug: db.prepare('SELECT * FROM Posts WHERE slug = ? ORDER BY id ASC'),
         findRenamedPosts: db.prepare(
-            'SELECT id, slug, original_slug, source_meta, data FROM Posts WHERE original_slug IS NOT NULL AND original_slug <> slug ORDER BY id ASC'
+            'SELECT id, slug, original_slug, data FROM Posts WHERE original_slug IS NOT NULL AND original_slug <> slug ORDER BY id ASC'
         ),
         slugExists: db.prepare('SELECT 1 FROM Posts WHERE slug = ? LIMIT 1'),
         slugExistsForOtherPost: db.prepare('SELECT 1 FROM Posts WHERE slug = ? AND id <> ? LIMIT 1'),
@@ -353,102 +355,139 @@ function prepareStatements(db: DatabaseSync): PreparedStatements {
     };
 }
 
+/** Check constraints, indexes, and triggers before changing an existing database. */
+function validateLayout(db: DatabaseSync): void {
+    const reference = new DatabaseSync(':memory:');
+    try {
+        reference.exec(SCHEMA);
+        const lookup = db.prepare('SELECT sql FROM sqlite_master WHERE type = ? AND name = ?');
+        const expected = reference.prepare('SELECT type, name, sql FROM sqlite_master WHERE sql IS NOT NULL');
+        for (const row of expected.iterate() as Iterable<{type: string; name: string; sql: string}>) {
+            const actual = lookup.get(row.type, row.name) as {sql: string} | undefined;
+            if (!actual || actual.sql.replace(/\s+/g, ' ').trim() !== row.sql.replace(/\s+/g, ' ').trim()) {
+                throw new errors.InternalServerError({
+                    message: 'Incompatible experimental database layout; rebuild the database from source.'
+                });
+            }
+        }
+    } finally {
+        reference.close();
+    }
+}
+
 export function createDatabase(dbPath: string): DatabaseModels {
     const db = new DatabaseSync(dbPath);
 
     const existingVersion = (db.prepare('PRAGMA user_version').get() as {user_version: number}).user_version;
     const hasExistingSchema = Boolean(
-        db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'Posts' LIMIT 1").get()
+        db.prepare("SELECT 1 FROM sqlite_master WHERE name NOT GLOB 'sqlite_*' LIMIT 1").get()
     );
 
-    // Version 2 is the first compatibility baseline.
-    if (existingVersion === 0 && hasExistingSchema) {
+    if (
+        (existingVersion !== 0 && existingVersion !== MIGRATE_CONTEXT_SCHEMA_VERSION) ||
+        (existingVersion === 0 && hasExistingSchema)
+    ) {
         db.close();
         throw new errors.InternalServerError({
-            message: `Unversioned migration databases are not supported. Recreate the database from source.`
+            message: `Incompatible database schema version ${existingVersion}; rebuild the database from source (requires ${MIGRATE_CONTEXT_SCHEMA_VERSION}).`
         });
     }
+    if (existingVersion !== 0) {
+        try {
+            validateLayout(db);
+        } catch (error) {
+            db.close();
+            throw error;
+        }
+    }
 
-    if (existingVersion > 0 && existingVersion < 2) {
+    try {
+        db.exec('PRAGMA journal_mode = WAL;');
+        db.exec('PRAGMA synchronous = NORMAL;');
+        db.exec('PRAGMA cache_size = -64000;');
+        db.exec('PRAGMA temp_store = FILE;');
+        db.exec('PRAGMA foreign_keys = ON;');
+
+        db.exec(SCHEMA);
+        db.exec(
+            'CREATE TEMP TABLE IterationPosts (iteration_id TEXT, post_id INTEGER, PRIMARY KEY(iteration_id, post_id));'
+        );
+        db.exec('DELETE FROM PendingEvents;');
+
+        if (existingVersion === 0) {
+            db.exec(`PRAGMA user_version = ${MIGRATE_CONTEXT_SCHEMA_VERSION};`);
+        }
+
+        const stmts = prepareStatements(db);
+
+        return {
+            db,
+            stmts,
+            schemaVersion: MIGRATE_CONTEXT_SCHEMA_VERSION,
+            get slugRenames() {
+                return (
+                    db
+                        .prepare("SELECT details FROM MigrationEvents WHERE type = 'slug:renamed' ORDER BY id")
+                        .all() as Array<{details: string}>
+                ).map(row => {
+                    const {oldSlug, newSlug, url} = JSON.parse(row.details);
+                    return {oldSlug, newSlug, url};
+                });
+            },
+            get sanitizedFields() {
+                return (
+                    db
+                        .prepare("SELECT details FROM MigrationEvents WHERE type = 'field:sanitized' ORDER BY id")
+                        .all() as Array<{details: string}>
+                ).map(row => JSON.parse(row.details));
+            },
+            inTransaction: false,
+            ingestionActive: false,
+            hasListeners: () => false,
+            /* c8 ignore next -- replaced by MigrateContext immediately after initialization */
+            emitEvent: () => {}
+        };
+    } catch (error) {
         db.close();
-        throw new errors.InternalServerError({
-            message: `Database schema version ${existingVersion} is older than the supported version ${MIGRATE_CONTEXT_SCHEMA_VERSION}. Recreate the database from source.`
-        });
+        throw error;
     }
+}
 
-    if (existingVersion > MIGRATE_CONTEXT_SCHEMA_VERSION) {
-        db.close();
-        throw new errors.InternalServerError({
-            message: `Database schema version ${existingVersion} is newer than the supported version ${MIGRATE_CONTEXT_SCHEMA_VERSION}.`
-        });
+export function assertMappedWrite(db: DatabaseModels): void {
+    if (db.ingestionActive) {
+        throw new errors.InternalServerError({message: 'Mapped writes cannot overlap source ingestion.'});
     }
-
-    db.exec('PRAGMA journal_mode = WAL;');
-    db.exec('PRAGMA synchronous = NORMAL;');
-    db.exec('PRAGMA cache_size = -64000;');
-    db.exec('PRAGMA temp_store = MEMORY;');
-
-    if (existingVersion === 2 || existingVersion === 3) {
-        db.exec(`
-            BEGIN;
-            ${
-                existingVersion === 2
-                    ? `
-            CREATE TABLE MigrationEvents (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                type TEXT NOT NULL,
-                post_id INTEGER,
-                lookup_key TEXT,
-                details TEXT NOT NULL DEFAULT '{}',
-                created_at TEXT NOT NULL
-            );
-            CREATE INDEX idx_migrationevents_type ON MigrationEvents(type);
-            `
-                    : ''
-            }
-            ALTER TABLE Posts RENAME COLUMN source TO source_meta;
-            ALTER TABLE Posts ADD COLUMN source_content TEXT;
-            PRAGMA user_version = 4;
-            COMMIT;
-        `);
-    }
-
-    db.exec(SCHEMA);
-
-    if (existingVersion === 0) {
-        db.exec(`PRAGMA user_version = ${MIGRATE_CONTEXT_SCHEMA_VERSION};`);
-    }
-
-    const stmts = prepareStatements(db);
-
-    return {
-        db,
-        stmts,
-        schemaVersion: MIGRATE_CONTEXT_SCHEMA_VERSION,
-        requireSourceContent: false,
-        tagCache: new Map(),
-        authorCache: new Map(),
-        slugRenames: [],
-        sanitizedFields: [],
-        inTransaction: false,
-        pendingEvents: [],
-        /* c8 ignore next -- replaced by MigrateContext immediately after initialization */
-        emitEvent: () => {}
-    };
 }
 
 export function queueDatabaseEvent(db: DatabaseModels, event: DatabaseEvent): void {
+    if (!db.hasListeners(event.type)) {
+        return;
+    }
     if (db.inTransaction) {
-        db.pendingEvents.push(event);
+        db.db
+            .prepare('INSERT INTO PendingEvents(type, payload) VALUES (?, ?)')
+            .run(event.type, JSON.stringify(event.payload));
         return;
     }
     db.emitEvent(event);
 }
 
 export function flushDatabaseEvents(db: DatabaseModels): void {
-    const events = db.pendingEvents.splice(0);
-    for (const event of events) {
-        db.emitEvent(event);
+    // Delete before invoking listeners, so reentrant writes cannot deliver an event twice.
+    while (true) {
+        const row = db.db.prepare('SELECT * FROM PendingEvents ORDER BY id LIMIT 1').get() as
+            | {id: number; type: string; payload: string}
+            | undefined;
+        if (!row) {
+            return;
+        }
+        db.db.prepare('DELETE FROM PendingEvents WHERE id = ?').run(row.id);
+        try {
+            db.emitEvent({type: row.type, payload: JSON.parse(row.payload)});
+        } catch (error) {
+            db.db.exec('DELETE FROM PendingEvents;');
+            throw error;
+        }
     }
 }
 

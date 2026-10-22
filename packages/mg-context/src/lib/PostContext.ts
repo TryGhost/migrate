@@ -5,7 +5,13 @@ import MigrateBase from './MigrateBase.js';
 import TagContext, {TagObject, TagDataObject} from './TagContext.js';
 import AuthorContext, {AuthorObject, AuthorDataObject} from './AuthorContext.js';
 import {GHOST_FIELD_LIMITS} from './ghost-schema.js';
-import {recordMigrationEvent, recordSanitizedFields, type DatabaseModels} from './database.js';
+import {
+    assertMappedWrite,
+    recordMigrationEvent,
+    recordSanitizedFields,
+    type DatabaseModels,
+    type SanitizedField
+} from './database.js';
 import {withTransaction} from './db-helpers.js';
 
 export type DuplicatePostAction = 'skip' | 'replace';
@@ -72,18 +78,10 @@ export interface PostSnapshot {
     ghostId: string | null;
     lookupKey: string | null;
     data: PostObject;
-    sourceContent: string | null;
-    sourceMeta: Record<string, unknown>;
-    meta: Record<string, unknown>;
     webscrapeData: unknown | null;
 }
 
 export type PostConstructorOptions = {
-    sourceContent?: string;
-    sourceMeta?: object;
-    /** @deprecated Use sourceMeta for structured source facts. */
-    source?: object;
-    meta?: object;
     lookupKey?: string;
     onDuplicate?: DuplicatePostPolicy;
 };
@@ -98,7 +96,7 @@ function changedSnapshotFields(previous: PostSnapshot, current: PostSnapshot): s
             JSON.stringify(current.data[field as keyof PostObject])
     );
 
-    for (const field of ['sourceContent', 'sourceMeta', 'meta', 'webscrapeData'] as const) {
+    for (const field of ['webscrapeData'] as const) {
         if (JSON.stringify(previous[field]) !== JSON.stringify(current[field])) {
             changed.push(field);
         }
@@ -122,9 +120,6 @@ export default class PostContext extends MigrateBase {
         super.applySanitizers();
     }
 
-    #sourceContent: string | null;
-    #sourceMeta: any;
-    #meta: any;
     #lookupKey: string | null = null;
     #onDuplicate: DuplicatePostPolicy;
     #warnOnLookupKeyDuplicate = false;
@@ -132,27 +127,13 @@ export default class PostContext extends MigrateBase {
     #webscrapeData: any = null;
     data: any = {};
 
-    constructor({
-        sourceContent,
-        sourceMeta,
-        source,
-        meta = {},
-        lookupKey,
-        onDuplicate = 'skip'
-    }: PostConstructorOptions = {}) {
+    constructor({lookupKey, onDuplicate = 'skip', ...removed}: PostConstructorOptions = {}) {
         super();
-
-        if (sourceContent !== undefined && typeof sourceContent !== 'string') {
-            throw new errors.BadRequestError({message: 'sourceContent must be a string.'});
+        if (Object.keys(removed).some(key => ['source', 'sourceContent', 'sourceMeta', 'meta'].includes(key))) {
+            throw new errors.BadRequestError({
+                message: 'Post source and meta options were removed; use context.sources for original input.'
+            });
         }
-        if (sourceMeta !== undefined && source !== undefined) {
-            throw new errors.BadRequestError({message: 'Pass sourceMeta or the deprecated source option, not both.'});
-        }
-        this.#sourceContent = sourceContent ?? null;
-        this.#sourceMeta = sourceMeta ?? source ?? {};
-
-        this.#meta = meta;
-
         this.#onDuplicate = onDuplicate;
 
         if (lookupKey) {
@@ -193,10 +174,6 @@ export default class PostContext extends MigrateBase {
         this.#warnOnLookupKeyDuplicate = value;
     }
 
-    get meta() {
-        return this.#meta;
-    }
-
     get webscrapeData(): any {
         return this.#webscrapeData;
     }
@@ -230,52 +207,6 @@ export default class PostContext extends MigrateBase {
         return result;
     }
 
-    setMeta(value: any) {
-        this.#meta = value;
-    }
-
-    getMetaValue(key: any) {
-        return this.#meta[key];
-    }
-
-    get sourceContent(): string | null {
-        return this.#sourceContent;
-    }
-
-    get sourceMeta(): Record<string, unknown> {
-        return this.#sourceMeta;
-    }
-
-    setSource(field: 'lookupKey' | 'content', value: string): this;
-    setSource(field: 'meta', value: Record<string, unknown>): this;
-    setSource(field: 'lookupKey' | 'content' | 'meta', value: string | Record<string, unknown>): this {
-        if (field === 'lookupKey') {
-            if (typeof value !== 'string' || !value.trim()) {
-                throw new errors.BadRequestError({message: 'Source lookupKey must be a non-empty string.'});
-            }
-            this.#lookupKey = value;
-        } else if (field === 'content') {
-            if (typeof value !== 'string') {
-                throw new errors.BadRequestError({message: 'Source content must be a string.'});
-            }
-            this.#sourceContent = value;
-        } else if (field === 'meta') {
-            if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-                throw new errors.BadRequestError({message: 'Source meta must be an object.'});
-            }
-            this.#sourceMeta = value;
-        } else {
-            throw new errors.BadRequestError({message: `Unknown source field: ${field}.`});
-        }
-
-        return this;
-    }
-
-    /** @deprecated Use sourceMeta. */
-    get source() {
-        return this.#sourceMeta;
-    }
-
     toSnapshot(): PostSnapshot {
         if (!this.dbId) {
             throw new errors.InternalServerError({message: 'Cannot snapshot a post before it is saved.'});
@@ -297,15 +228,8 @@ export default class PostContext extends MigrateBase {
             ghostId: this.ghostId,
             lookupKey: this.#lookupKey,
             data,
-            sourceContent: this.#sourceContent,
-            sourceMeta: JSON.parse(JSON.stringify(this.#sourceMeta)),
-            meta: JSON.parse(JSON.stringify(this.#meta)),
             webscrapeData: this.#webscrapeData === null ? null : JSON.parse(JSON.stringify(this.#webscrapeData))
         };
-    }
-
-    getSourceValue(key: string) {
-        return this.#sourceMeta[key];
     }
 
     hasTagSlug(tagSlug: string) {
@@ -435,17 +359,9 @@ export default class PostContext extends MigrateBase {
     }
 
     save(db: DatabaseModels): void {
+        assertMappedWrite(db);
         if (this.#duplicateSkipped) {
             return;
-        }
-
-        if (
-            db.requireSourceContent &&
-            (this.#sourceContent === null || typeof this.#lookupKey !== 'string' || !this.#lookupKey.trim())
-        ) {
-            throw new errors.BadRequestError({
-                message: 'Persistent posts require sourceContent and lookupKey.'
-            });
         }
 
         if (!db.inTransaction) {
@@ -492,15 +408,11 @@ export default class PostContext extends MigrateBase {
             }
         }
 
-        const sanitizedStart = db.sanitizedFields.length;
-        this.sanitize(db.sanitizedFields);
-        const sanitized = db.sanitizedFields.slice(sanitizedStart);
+        const sanitized: SanitizedField[] = [];
+        this.sanitize(sanitized);
 
         const isInsert = !this.dbId;
 
-        const serializedSourceContent = this.#sourceContent;
-        const serializedSourceMeta = JSON.stringify(this.#sourceMeta);
-        const serializedMeta = JSON.stringify(this.#meta);
         const serializedWebscrapeData = this.#webscrapeData ? JSON.stringify(this.#webscrapeData) : null;
         /* c8 ignore next 3 -- dates are always Date instances from set()/fromRow(); ternary is defensive */
         const createdAt =
@@ -527,21 +439,23 @@ export default class PostContext extends MigrateBase {
         // On insert or lookup-key replacement, deduplicate the slug if another post owns it
         let slugRename: {oldSlug: string; newSlug: string; url: string} | null = null;
         if (slugExists(slug)) {
-            let suffix = 2;
+            const counterKey = `slug:post:${originalSlug}`;
+            const counter = db.stmts.getFingerprint.get(counterKey) as {value: string} | undefined;
+            let suffix = replacingDuplicate ? 2 : Number(counter?.value ?? 1) + 1;
             let candidate = slugWithSuffix(originalSlug, suffix);
             while (slugExists(candidate)) {
                 suffix += 1;
                 candidate = slugWithSuffix(originalSlug, suffix);
             }
+            db.stmts.setFingerprint.run(counterKey, String(suffix));
             slug = candidate;
             this.data.slug = slug;
 
             slugRename = {
                 oldSlug: originalSlug,
                 newSlug: slug,
-                url: this.#sourceMeta.url || this.data.canonical_url || ''
+                url: this.data.canonical_url || ''
             };
-            db.slugRenames.push(slugRename);
         }
 
         // Serialize post data excluding tags and authors (after slug dedup)
@@ -557,9 +471,6 @@ export default class PostContext extends MigrateBase {
             if (replacingDuplicate) {
                 db.stmts.replacePost.run(
                     serializedData,
-                    serializedSourceContent,
-                    serializedSourceMeta,
-                    serializedMeta,
                     this.#lookupKey,
                     this.ghostId,
                     createdAt,
@@ -573,9 +484,6 @@ export default class PostContext extends MigrateBase {
             } else {
                 db.stmts.updatePost.run(
                     serializedData,
-                    serializedSourceContent,
-                    serializedSourceMeta,
-                    serializedMeta,
                     this.#lookupKey,
                     this.ghostId,
                     createdAt,
@@ -589,9 +497,6 @@ export default class PostContext extends MigrateBase {
         } else {
             const result = db.stmts.insertPost.run(
                 serializedData,
-                serializedSourceContent,
-                serializedSourceMeta,
-                serializedMeta,
                 this.#lookupKey,
                 this.ghostId,
                 createdAt,
@@ -717,9 +622,6 @@ export default class PostContext extends MigrateBase {
         {hydrateRelationships = true}: {hydrateRelationships?: boolean} = {}
     ): PostContext {
         const rawData = JSON.parse(row.data);
-        const sourceContent = row.source_content as string | null;
-        const sourceMeta = JSON.parse(row.source_meta);
-        const meta = JSON.parse(row.meta);
 
         // Convert date strings back to Date objects
         const dateFields = ['created_at', 'updated_at', 'published_at'];
@@ -731,9 +633,6 @@ export default class PostContext extends MigrateBase {
 
         const lookupKey = row.lookup_key as string | null;
         const post = new PostContext({
-            sourceContent: sourceContent ?? undefined,
-            sourceMeta,
-            meta,
             lookupKey: lookupKey ?? undefined
         });
         post.dbId = row.id as number;
