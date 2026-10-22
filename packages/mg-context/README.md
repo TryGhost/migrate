@@ -1,6 +1,6 @@
 # Migrate Context
 
-Build Ghost import JSON or post CSV from source posts. `@tryghost/mg-context` stores them in SQLite, checks Ghost's field rules, and writes exports without loading every post into memory.
+`@tryghost/mg-context` stores original source records and mapped Ghost content in SQLite. It supports bounded ingestion, rebuilding, processing, JSON/CSV export, and diagnostic reports.
 
 ## Install
 
@@ -8,120 +8,109 @@ Build Ghost import JSON or post CSV from source posts. `@tryghost/mg-context` st
 pnpm add @tryghost/mg-context
 ```
 
-## Export one post
+## Storage model and terminology
 
-Save this as `create-import.mjs`, then run `node create-import.mjs`. It creates a Ghost JSON file in `./output`.
+Original input lives in one shared `SourceRecords` table, separate from mapped posts, tags, and authors. Input may include attachments, author definitions, or other records that do not map directly to a post. Keeping originals separate avoids duplicating them across mapped entities and allows mapping changes to rebuild Ghost content from the same input.
 
-```js
-import {MigrateContext} from '@tryghost/mg-context';
+Each context holds one current logical source dataset. Callers choose record boundaries and decide when to ingest again; core tracks completion and safely replaces the stored data. Internal staging supports replacement, without exposing a public snapshot model or retaining historical source payloads.
 
-const context = new MigrateContext();
+| Term | Meaning |
+| --- | --- |
+| Source record | One caller-defined logical item of original input, before migration transformations. |
+| Completed source data | The current collection of originals whose ingestion finished successfully, including an intentionally empty collection. |
+| Ingestion attempt | One effort to collect initial or replacement input. A failed attempt preserves any previously completed data. |
+| Mapped entity | A derived Ghost post, tag, or author, produced from source records or created directly by a caller. |
+| Mapped lookup key | An optional caller-defined key for finding or reusing a mapped output, independent of its contributing source records' keys. |
 
-await context.init();
+## Ingest once, map on every run
 
-try {
-    const post = await context.addPost();
+The caller decides when to ingest. Core does not hash files, compare revisions, inspect command options, or fetch input. Use `sources.hasCompletedIngestion`, including when a completed ingestion contains zero records; mapped post counts are not an ingestion marker.
 
-    post.set('title', 'Hello world');
-    post.set('slug', 'hello-world');
-    post.set('status', 'published');
-    post.set('created_at', new Date('2025-01-15T10:00:00Z'));
-    post.set('published_at', new Date('2025-01-15T10:00:00Z'));
-    post.set('html', '<p>Welcome to the new site.</p>');
-    post.save(context.db);
-
-    await context.writeGhostJson('./output');
-} finally {
-    await context.close();
-}
-```
-
-`addPost()` creates a post; `post.save()` stores it. `writeGhostJson()` prepares titles and slugs, then exports the stored HTML. The default database is a temporary file, removed when you close the context. The JSON output remains.
-
-## Export posts as CSV
-
-In the example above, replace the JSON export call with:
-
-```js
-await context.writeGhostCSV('./output'); // Writes ./output/posts.csv
-```
-
-CSV exports one file with the stored HTML. It lists post authors and tags but does not create them: those authors and tags must already exist in the destination Ghost site. Their names must match the CSV names; commas in names become spaces and extra whitespace is collapsed. Use JSON export when you also need to import authors and tags. See the [large CSV example](examples/generate-large-csv-export.ts) or [CSV export options and columns](docs/api-reference.md#writeghostcsvoutputdir-options-promisewrittenfile).
-
-## Rerun a completed migration
-
-Give the database a path so it survives the first run. On later runs, the adapter can skip source ingestion and process the original records stored in SQLite again before export. `hasContent()` returns stored content counts, or `false` if the database is empty.
-
-When saving a post to a persistent database, both `post.setSource('lookupKey', ...)` and `post.setSource('content', ...)` are required. `content` holds the original source record, not the transformed Ghost HTML; `meta` is optional.
-
-This is an **adapter outline**, not a standalone program: your adapter supplies `sourceFileSha256`, `readSourceItems()`, and `parseSourceItem()`. See [how to calculate the source file hash](docs/api-reference.md#resume-refresh-and-content-identity).
+This runnable example uses synthetic input. A real runner supplies records from an adapter's streaming parser. The adapter's mapper then interprets the records read from the database.
 
 ```js
 import {MigrateContext} from '@tryghost/mg-context';
 
-// Usually supplied by your adapter's CLI; true discards and re-ingests source records.
-const refreshData = false;
-
-const context = new MigrateContext({
-    dbPath: './migration.sqlite',
-    contentIdentity: {
-        source: 'wordpress-example-com',
-        revision: sourceFileSha256
-    },
-    resetContent: refreshData
-});
+const context = new MigrateContext({dbPath: './migration.sqlite'});
+const rereadSource = process.argv.includes('--rereadSource');
 await context.init();
 
 try {
-    if (!context.hasContent() || refreshData) {
-        for await (const item of readSourceItems('./site.xml')) {
-            await context.addSourcePost((post) => {
-                post.setSource('lookupKey', item.id);
-                post.setSource('content', item.rawText);
-            });
-        }
+    if (!context.sources.hasCompletedIngestion || rereadSource) {
+        await context.sources.ingest({replace: rereadSource}, async (stage) => {
+            await stage.write([
+                {
+                    kind: 'post',
+                    key: 'original-1',
+                    format: 'json',
+                    content: JSON.stringify({title: 'Hello', slug: 'hello', html: '<p>Original HTML</p>'}),
+                    metadata: {file: 'example.json'}
+                }
+            ]);
+        });
     }
 
-    await context.forEachPost(async (post) => {
-        const source = parseSourceItem(post.sourceContent);
-        post.set('title', source.title);
-        post.set('slug', source.slug);
-        post.set('html', source.html);
-        post.set('created_at', new Date(source.createdAt));
+    await context.rebuildMappedContent(async () => {
+        for await (const record of context.sources.records({kind: 'post'})) {
+            const original = JSON.parse(record.content);
+            const post = await context.addPost({lookupKey: record.key ?? undefined});
+            post.set('title', original.title);
+            post.set('slug', original.slug);
+            post.set('html', original.html);
+            post.set('created_at', new Date('2026-01-01T00:00:00Z'));
+            post.save(context.db);
+            context.sources.link(record.id, {type: 'post', id: post.dbId});
+        }
     });
 
-    await context.writeGhostJson('./output');
+    for await (const file of context.writeGhostJsonStream('./output')) {
+        console.log(file.path);
+    }
+    await context.writeMigrationReport('./report.json', {status: 'success'});
 } finally {
     await context.close();
 }
 ```
 
-The first block saves the original source records only when needed. The second block processes every stored post on every run; `forEachPost()` saves each post after the callback, so no extra `post.save()` is needed. This lets mapping changes use the original content already in SQLite. Fields the callback does not set or remove keep their previous values. Set `refreshData` to `true` when the source records themselves change: `resetContent` clears the context database, and the caller ingests the source again. Separately managed asset caches are untouched.
+On the first run, mapping reads the newly stored originals. Subsequent runs reuse those originals and rebuild all mapped entities and relationships. Mapping-option changes therefore do not require fresh ingestion. Stable Ghost IDs are the adapter's responsibility; internal source-record IDs are not stable external identities.
 
-Persistent databases require `contentIdentity`: `source` is a stable name you choose, and `revision` identifies the source snapshot. A changed identity cannot reuse old content. The [identity guide](docs/api-reference.md#resume-refresh-and-content-identity) explains how to hash source files and when to use optional `options`.
+`replace: true` stages fresh input in committed batches while completed data remains readable. Successful ingestion atomically replaces the originals and clears mapped content. Failure preserves the previous originals and mapped content. Interrupted staging restarts from the beginning; failed-attempt diagnostics survive. Core exposes no snapshot or source-identity API.
 
-## What to expect
+## Source records and provenance
 
-- HTML is stored and exported without converting formats, though save-time sanitization may trim or limit fields.
-- Duplicate lookup keys are skipped by default; `getMigrationReport()` shows what was skipped.
-- Export prepares titles and slugs automatically. On a later export, it removes only stale files listed in its previous export manifest.
+A caller chooses each record's boundary: a post, an attachment, an author definition, a Markdown file, or another logical item. Content is opaque text with a caller-defined format label. Parsed XML/API records may be serialized as JSON; core does not require exact document bytes or validate the payload against its format.
 
-For bulk processing, filters, tags and authors, events, and all options, see the [API reference](docs/api-reference.md) and [runnable examples](examples/README.md).
+Completed source content and ingestion metadata cannot be changed through the public API. Keyed records are unique by kind/key within an ingestion. Duplicate keys throw unless the caller explicitly selects `keep` or `replace`; timestamp interpretation belongs to adapters. Unkeyed records remain available for diagnostics.
+
+One source record may contribute to several mapped entities, and each entity may have several source records. Use `sources.link()`, `recordsFor()`, and `entitiesFor()` to record and traverse these relationships. Core provides canonical lookups, not aliases. Direct construction of mapped entities without source records remains supported.
+
+## Processing and output
+
+- The default context uses a temporary file-backed database, removed on `close()`. Use `dbPath` for persistence or `storage: 'memory'` for small jobs.
+- `resetMappedContent()` preserves originals and ingestion diagnostics. `rebuildMappedContent()` performs an atomic reset and rebuild. `savepoint()` isolates a record's writes when the caller handles a known data error.
+- `reset()` clears all managed database state. `resetContent: true` does the same during initialization; use staged replacement for a safe reread.
+- Authors and tags reuse indexed database rows without application-level entity caches. Streaming APIs bound buffers; explicit array-returning APIs materialize their results.
+- `writeGhostJson()` and `writeGhostJsonStream()` share one batched JSON exporter. The first collects completed file descriptors into an array; the second yields them with bounded file tracking. Both default to 5,000 posts per file and the base name `posts`. HTML remains HTML.
+- `writeGhostCSV()` writes one Ghost post CSV; destination authors and tags must already exist. See the [CSV reference](docs/api-reference.md#writeghostcsvoutputdir-options-promisewrittenfile).
+- `streamDiagnostics()` and `writeMigrationReport()` avoid collecting report history in memory. The latter writes exactly the path supplied by the caller.
+- Consumers own output staging, publication, recovery, and cleanup. Export into a fresh staging directory and publish it only after the whole call or iteration succeeds. Core completes each file through a temporary write and rename, then yields its descriptor and emits its callback/event. A later failure leaves earlier completed files in place. There are no export manifests, backups, journals, or automatic recovery of previous runs.
+
+Scraping responses remain in `post.webscrapeData`; asset files and caches remain outside primary source storage. Source runners own scraping and delivery. Future scraper integrations must pass the original URL explicitly rather than requesting removed post-source fields.
+
+## Breaking changes and rollout
+
+Schema version 5 requires rebuilding older or incompatible experimental databases. Core rejects them without migrating or deleting data; even `resetContent: true` does not bypass layout validation.
+
+Post source/content/meta fields and helpers, `addSourcePost()`, source-attribute filtering, `ContentIdentity`, and constructor identity validation have been removed. Automatic cleanup of previous exports, ownership manifests, whole-export recovery, and the `replaceExisting` option have also been removed; consumers manage that lifecycle. Author/tag caches have been removed in favor of indexed database reuse. See the [migration guide](docs/source-records.md) and [API reference](docs/api-reference.md).
+
+This change delivers mg-context only. Existing adapters, the Ghost/WordPress runners, and the web scraper still need follow-up API changes; workspace-wide build and integration readiness are deferred. Adapters remain independently published npm packages with separate streaming parser and record-mapper entrypoints.
 
 ## Development
 
-From the repository root:
-
 ```bash
-pnpm install
-pnpm --filter @tryghost/mg-context test:local
-pnpm lint
+pnpm --dir packages/mg-context run build
+pnpm --dir packages/mg-context run test
+pnpm --dir packages/mg-context run test:stress
 ```
 
-The package requires the Node version declared by the repository. Schema limits are generated from Ghost; use the documented package scripts rather than editing the generated profile manually.
-
----
-
-# Copyright & License
-
-Copyright (c) 2013-2026 Ghost Foundation - Released under the [MIT license](LICENSE). Ghost and the Ghost Logo are trademarks of Ghost Foundation Ltd. Please see our [trademark policy](https://ghost.org/trademark/) for info on acceptable usage.
+Tests require 100% coverage. The stress test ingests, rebuilds, and exports 100,000 records with 10 KiB bodies under a 256 MiB JavaScript heap and requires RSS below 512 MiB. `MG_CONTEXT_STRESS_RECORDS` can select a smaller local pilot.

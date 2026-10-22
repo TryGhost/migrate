@@ -3,6 +3,7 @@
 Complete reference for `@tryghost/mg-context`. Start with the package [README](../README.md) for the normal ingest, transform, and export workflow.
 
 - [MigrateContext](#migratecontext)
+- [Source records](#source-records)
 - [PostContext](#postcontext)
 - [TagContext](#tagcontext)
 - [AuthorContext](#authorcontext)
@@ -21,7 +22,6 @@ new MigrateContext(options?)
 | -------------------- | ------------------------------------- | ------------- | --------------------------------------------------------- |
 | `dbPath`             | `string`                              | —             | Path to a SQLite file for persistent, resumable storage   |
 | `storage`            | `'temporary' \| 'memory'`             | `'temporary'` | Storage used when `dbPath` is absent                       |
-| `contentIdentity`    | `ContentIdentity`                     | —             | Required for persistent resume; identifies the raw source snapshot |
 | `resetContent`       | `boolean`                             | `false`       | Clear stored migration content during `init()`; the caller decides whether to ingest again |
 | `onDuplicate`        | `'skip' \| 'replace' \| resolver`     | `'skip'`      | Default lookup-key duplicate policy                       |
 | `ephemeral`          | `boolean`                             | —             | Deprecated compatibility alias for memory storage         |
@@ -34,20 +34,12 @@ const ctx = new MigrateContext();
 
 // Persistent and resumable
 const ctx = new MigrateContext({
-    dbPath: './migration.sqlite',
-    contentIdentity: {
-        source: 'wordpress-example-com',
-        revision: sourceFileSha256
-    }
+    dbPath: './migration.sqlite'
 });
 
 // Clear stored content before the caller ingests again; asset caches are untouched
 const ctx = new MigrateContext({
     dbPath: './migration.sqlite',
-    contentIdentity: {
-        source: 'wordpress-example-com',
-        revision: sourceFileSha256
-    },
     resetContent: true
 });
 
@@ -81,7 +73,7 @@ try {
 
 The version of the mg-context schema stored in the open SQLite database. The current version is also exported as `MIGRATE_CONTEXT_SCHEMA_VERSION`.
 
-Schema version 4 is current. `init()` transactionally migrates version 2 and 3 databases, marks new databases with the current version, and reopens databases already at that version. Existing mapped rows without raw source content remain readable, but must be reread before they can be saved under the current persistent-post requirements. It rejects unversioned, unsupported older, and newer databases.
+Schema version 5 is current. init() creates fresh databases or validates compatible version-five layouts. Other versions and incompatible experimental layouts are rejected with a rebuild instruction; existing files are not migrated or deleted.
 
 #### `databasePath: string`
 
@@ -98,13 +90,13 @@ if (stats) {
 }
 ```
 
-The returned object contains `posts`, `pages`, `users`, `tags`, `userAssociations`, `tagAssociations`, and `links`. Authors are reported as users because that is how they appear in the Ghost import. Stored source identity metadata does not count as content.
+The returned object contains `posts`, `pages`, `users`, `tags`, `userAssociations`, `tagAssociations`, and `links`. Authors are reported as users because that is how they appear in the Ghost import. Original source records do not count as mapped content; use sources.hasCompletedIngestion to check ingestion completion.
 
 #### `reset(): void`
 
-Atomically removes every post, tag, author, relationship, and link mapping and clears the related in-memory caches and reports. It resets row ID sequences but keeps the SQLite database file open; it does not remove the database, its WAL/SHM files, downloaded assets, or an asset scraper's separate database.
+Atomically removes every post, tag, author, relationship, and link mapping and clears the related reports. It resets row ID sequences but keeps the SQLite database file open; it does not remove the database, its WAL/SHM files, downloaded assets, or an asset scraper's separate database.
 
-The stored source identity is cleared with the content it describes.
+Original records, ingestion completion, attempt metadata, diagnostics, and provenance links are cleared too. Separately managed asset caches are untouched.
 
 ```js
 if (ctx.hasContent()) {
@@ -114,58 +106,17 @@ if (ctx.hasContent()) {
 
 Objects loaded before `reset()` should be discarded because their database IDs no longer refer to stored rows.
 
-#### Resume, refresh, and content identity
+#### `resetMappedContent(): void`
 
-On a persistent rerun, `init()` leaves stored posts unchanged. The adapter can check `hasContent()` and skip source ingestion when content is present, then process the stored source records again with `forEachPost()`. Set `resetContent: true` only when the source records need to be ingested again. The option clears mg-context content, reports, and source identity during `init()`; it does not read the source or touch separately managed asset files or databases.
+Clear posts, tags, authors, relationships, link mappings, mapping diagnostics, and derived counters, preserving completed originals and ingestion diagnostics.
 
-Persistent `resume` requires `contentIdentity`, including for a newly created database. There is no unsafe resume option. Each field has a distinct purpose:
+#### `rebuildMappedContent(callback): Promise<T>`
 
-| Field | Meaning | Example |
-| --- | --- | --- |
-| `source` | Any stable, nonblank identifier for the site, export, or collection. It need not be a path and is not a per-post `lookupKey`. | `'wordpress-example-com'` |
-| `revision` | A stable revision of the source content. Change it when the source changes; hash file bytes when the source has no revision ID. | `sourceFileSha256` |
-| `options` | Optional, JSON-compatible settings that change source selection or raw text retained. Mapping-only settings do not belong here. | `{includeDrafts: true}` |
+Atomically reset mapped content and execute the callback. Read originals through `sources.records()` and explicitly save newly mapped entities. Unexpected callback failure restores the previous mapped result. This is the runner's remapping step on every run, including the first.
 
-For a single XML file, calculate `sourceFileSha256` with a streaming SHA-256 hash:
+#### `savepoint(callback): Promise<T>`
 
-```js
-import {createHash} from 'node:crypto';
-import {createReadStream} from 'node:fs';
-
-const hash = createHash('sha256');
-for await (const chunk of createReadStream('./site.xml')) {
-    hash.update(chunk);
-}
-const sourceFileSha256 = hash.digest('hex');
-```
-
-For multiple files, hash selected file names and contents in a deterministic order. Avoid `Date.now()` or another per-run value. Do not put transformation settings such as feature-image handling or shortcode conversion in the identity; rerun the mapping pass over stored source records when those settings change. Options must contain only plain JSON values, not `undefined`, functions, `Date` objects, or cycles. Object key order does not matter, but array order does. Avoid secrets in identity fields; include a digest if a secret affects source selection.
-
-mg-context hashes the source identity. A changed identity rejects a populated database unless `resetContent: true` clears its old content first. Ghost schema and mapper changes do not alter this identity; callers can process stored source records again to apply mapping changes without re-ingesting them.
-
-```js
-const refreshData = cliOptions.refreshData;
-const ctx = new MigrateContext({
-    dbPath: './migration.sqlite',
-    resetContent: refreshData,
-    contentIdentity: {
-        source: 'wordpress-example-com',
-        revision: sourceFileSha256,
-        options: {includeDrafts}
-    }
-});
-await ctx.init();
-
-if (!ctx.hasContent() || refreshData) {
-    // The caller reads the original source and adds its posts here.
-}
-
-await ctx.forEachPost(async post => {
-    // The caller maps post.sourceContent to Ghost fields on every run.
-});
-```
-
-`init()` rejects a populated database with a missing or different source identity unless `resetContent` is true. Saving a persistent post requires raw source content and a lookup key. Resetting clears context content but not separately managed asset caches. A one-shot temporary or memory migration does not need an identity. For a live source without a revision, treat the first fetch as a frozen snapshot and use an explicit refresh flag when a newer snapshot is wanted. A mapping pass updates existing posts: fields and relationships it does not change retain their previous values.
+Isolate a record's writes inside an existing transaction, rolling them back if the callback throws. Outside a transaction this starts one. The caller decides which errors may be skipped; existing nested `transaction()` calls retain their flattened behavior.
 
 #### `db: DatabaseModels`
 
@@ -190,29 +141,9 @@ const post = await ctx.addPost({
     onDuplicate: 'replace'
 });
 
-// With original source text and related metadata (not exported)
-const post = await ctx.addPost({
-    lookupKey: '123',
-    sourceContent: '<item>...</item>',
-    sourceMeta: {originalId: 123}
-});
 ```
 
-When called with a `PostContext` instance, saves it immediately instead.
-
-Persistent posts require both `sourceContent` and `lookupKey`. `sourceContent` is the unmodified text of one source record, not mapped Ghost HTML. The deprecated `source` object option remains an alias for `sourceMeta` during the transition release.
-
-#### `addSourcePost(mapPost): Promise<PostContext>`
-
-Create and save one source record using the supplied callback. Set the source `lookupKey` and `content` in the callback before it returns; `meta` is optional and defaults to `{}`. You may map Ghost fields here or in a later `forEachPost()` pass. Set `post.onDuplicate` in the callback to override the context's duplicate policy for this post. The callback runs during ingestion only; a later run can process the stored raw content. Missing required source fields fail before saving.
-
-```js
-await ctx.addSourcePost((post) => {
-    post.setSource('lookupKey', item.id);
-    post.setSource('content', item.rawXml);
-    post.setSource('meta', {url: item.url});
-});
-```
+Mapped posts may be saved without source records or lookup keys. Optional lookup keys distinguish mapped outputs; they do not identify original input. The old source/meta constructor options throw explicitly.
 
 #### `addPost(postContext): Promise<PostContext>`
 
@@ -296,7 +227,6 @@ Find posts by various criteria. Only one criterion is used at a time (first matc
 |---------------|----------------|--------------------------------------------------|
 | `slug`        | `string`       | Match post slug                                  |
 | `title`       | `string`       | Match post title                                 |
-| `sourceAttr`  | `{key, value}` | Match a key/value pair in the post's source data |
 | `tagSlug`     | `string`       | Find posts with this tag slug                    |
 | `tagName`     | `string`       | Find posts with this tag name                    |
 | `authorSlug`  | `string`       | Find posts by this author slug                   |
@@ -306,7 +236,6 @@ Find posts by various criteria. Only one criterion is used at a time (first matc
 ```js
 const posts = await ctx.findPosts({tagSlug: 'news'});
 const posts = await ctx.findPosts({authorEmail: 'alice@example.com'});
-const posts = await ctx.findPosts({sourceAttr: {key: 'url', value: 'https://example.com/post'}});
 ```
 
 #### `findTags(options?): Promise<TagContext[] | null>`
@@ -460,7 +389,7 @@ Tag and author iteration accepts `batchSize` and `scope` instead of a post filte
 
 Unfiltered `forEachPost()`, `streamPosts()`, `forEachTag()`, `streamTags()`, `forEachAuthor()`, and `streamAuthors()` use keyset pagination. They retain only the current batch plus the highest database ID present when iteration starts, so memory use stays bounded and rows added later are left for the next iteration.
 
-Supplying a post `filter` with at least one criterion deliberately uses a different strategy: `forEachPost()` and `streamPosts()` snapshot every matching post ID before invoking the first callback or yielding the first post. This costs O(number of matches) memory, but it prevents a callback from skipping or duplicating posts when it saves changes to a date, tag, or author used by the filter.
+Supplying a post `filter` with at least one criterion deliberately uses a different strategy: `forEachPost()` and `streamPosts()` snapshot every matching post ID before invoking the first callback or yielding the first post. Matching IDs are staged in SQLite rather than a JavaScript array, preserving iteration membership without migration-sized memory use when callbacks change filtered fields.
 
 Progress is reported via the `progress` event (see [Events](#events)).
 
@@ -470,8 +399,8 @@ Progress is reported via the `progress` event (see [Events](#events)).
 
 Prepare all posts for export. Export methods call this automatically. Calling it directly is useful only when code needs to inspect prepared data before writing. This:
 
-1. Rebuilds the duplicate-slug report from the requested and final stored slugs
-2. Normalizes blank post titles to `(Untitled)`
+1. Normalizes blank post titles to `(Untitled)`
+2. Leaves duplicate-slug report materialization to an explicit getter/method call
 
 The method is idempotent.
 
@@ -492,8 +421,7 @@ Write posts, tags, authors, and junction tables to Ghost JSON files.
 | `batchSize`       | `number`                      | `5000`    | Posts per output file                                         |
 | `filename`        | `string`                      | `'posts'` | Base filename (without `.json`)                               |
 | `filter`          | `PostFilter`                  | —         | Filter criteria                                               |
-| `onWrite`         | `(file: WrittenFile) => void` | —         | Callback after each file is written                           |
-| `replaceExisting` | `boolean`                     | —         | Deprecated compatibility option; cleanup is automatic         |
+| `onWrite`         | `(file: WrittenFile) => void` | —         | Callback after each file is complete                           |
 
 Returns an array of `WrittenFile` objects:
 
@@ -504,7 +432,7 @@ Returns an array of `WrittenFile` objects:
 | `size`  | `number` | File size in bytes             |
 | `posts` | `number` | Number of posts in this file   |
 
-Export preparation is automatic. mg-context stores `.mg-context-export-manifest.json` beside the output and, after a later export succeeds, removes only obsolete files recorded for the same export. Files it does not own are untouched. The manifest is replaced only after output generation succeeds, so an interrupted export does not turn a partial file set into the recorded completed set.
+Export preparation is automatic. Consumers own the output directory and removal of previous exports. Core overwrites the requested target filenames but leaves old chunks and differently named exports untouched, including when an export shrinks or its base name changes. Use a fresh directory or remove prior files before exporting; returned descriptors identify files produced by this call. No ownership manifest is created, read, or updated. Each file is written to a temporary path and renamed only when complete. A failure preserves that file's previous target and may leave earlier completed batches in place. Consumers own whole-export staging, publication, cleanup, and recovery; publish a fresh staging directory only after the export succeeds.
 
 ```js
 const files = await ctx.writeGhostJson('./output/', {
@@ -533,7 +461,7 @@ const file = await ctx.writeGhostCSV('./output', {
 // file.name === 'selected-posts.csv'
 ```
 
-The return value is one `WrittenFile` with `path`, `name`, `size`, and `posts`. An empty selection still writes a header-only CSV. Preparation is automatic. Rows are read in bounded database batches and streamed to a temporary file; a completed file replaces the destination. A previous CSV is removed only when its filename changes and it is listed in the export manifest. CSV and JSON outputs are tracked separately, so exporting either format leaves the other intact.
+The return value is one `WrittenFile` with `path`, `name`, `size`, and `posts`. An empty selection still writes a header-only CSV. Preparation is automatic. Rows are read in bounded database batches and streamed to a temporary file; a completed file replaces the destination. A previous CSV with a different filename remains for the consumer to remove. CSV export creates no ownership metadata and leaves other files untouched.
 
 Columns follow Ghost's post CSV import order: `title`, `html`, `slug`, `custom_excerpt`, `type`, `status`, `visibility`, `featured`, `created_at`, `updated_at`, `published_at`, `feature_image`, `feature_image_alt`, `feature_image_caption`, `meta_title`, `meta_description`, `canonical_url`, `og_image`, `og_title`, `og_description`, `twitter_image`, `twitter_title`, `twitter_description`, `custom_template`, `codeinjection_head`, `codeinjection_foot`, `authors`, `author_emails`, `tags`. The optional `markdown`, `frontmatter`, and `show_title_and_feature_image` columns are omitted. Only stored HTML is exported.
 
@@ -543,11 +471,11 @@ Nulls become empty cells, dates use ISO timestamps, and booleans are `true` or `
 
 #### `writeGhostTagsJson(outputDir, options?): Promise<WrittenFile>`
 
-Export tags as a standalone JSON file. The default scope is `referenced`; pass `{scope: 'all'}` to include standalone tags. Preparation and manifest updates are automatic.
+Export tags as a standalone JSON file. The default scope is `referenced`; pass `{scope: 'all'}` to include standalone tags. Preparation is automatic. Consumers manage previous files; no ownership metadata is created.
 
 #### `writeGhostUsersJson(outputDir, options?): Promise<WrittenFile>`
 
-Export authors/users as a standalone JSON file. The default scope is `referenced`; pass `{scope: 'all'}` to include standalone authors. Preparation and manifest updates are automatic.
+Export authors/users as a standalone JSON file. The default scope is `referenced`; pass `{scope: 'all'}` to include standalone authors. Preparation is automatic. Consumers manage previous files; no ownership metadata is created.
 
 ```js
 await ctx.writeGhostTagsJson('./output/', {filename: 'my-tags'});
@@ -616,7 +544,7 @@ ctx.on('slug:renamed', ({oldSlug, newSlug, url}) => {
 
 `slug:renamed` is emitted only after suffixing and length enforcement, and never for a skipped duplicate that did not claim a slug. `oldSlug` is the requested slug and `newSlug` is the final persisted slug.
 
-`post:replaced` carries complete detached snapshots. Each snapshot contains `databaseId`, `ghostId`, `lookupKey`, `data`, `sourceContent`, `sourceMeta`, `meta`, and `webscrapeData`. Tags and authors inside `data` are plain values, not live context objects. Full HTML and relationships are included. Mutating a snapshot cannot change the stored post or a later event.
+`post:replaced` carries complete detached snapshots. Each snapshot contains databaseId, ghostId, lookupKey, data, and webscrapeData. Original source payloads are excluded. Tags and authors inside `data` are plain values, not live context objects. Full HTML and relationships are included. Mutating a snapshot cannot change the stored post or a later event.
 
 #### `getMigrationReport(): MigrationReport`
 
@@ -628,7 +556,7 @@ Replacement report rows contain changed field names and summary data rather than
 
 ## PostContext
 
-Represents a single post with validated properties, tag/author relationships, and source metadata.
+Represents a mapped post with validated properties, tag/author relationships, and optional scraping data.
 
 ### Properties
 
@@ -770,41 +698,9 @@ Reorder authors. The callback receives an array of `AuthorContext` instances and
 post.setAuthorOrder((authors) => [...authors].reverse());
 ```
 
-### Source & metadata
+### Source ownership
 
-#### `post.setSource(field, value): PostContext`
-
-Set a migration-only source field without adding it to the Ghost export data. `lookupKey` must be a nonblank string, `content` must be a string (an empty string is allowed), and `meta` must be an object. Invalid values fail immediately. For `addSourcePost()`, missing `lookupKey` or `content` fails after its callback completes, before the post is saved.
-
-```js
-post.setSource('lookupKey', item.id);
-post.setSource('content', item.rawXml);
-post.setSource('meta', {url: item.url}); // optional
-```
-
-#### `post.sourceContent`
-
-The original per-post source text, or `null` for older or temporary posts that did not provide it. Persistent posts must provide it. Reopening the database does not run a mapper automatically; the caller can use this value in a `forEachPost()` processing pass.
-
-#### `post.sourceMeta`
-
-Related source data stored as JSON, such as the original URL or ID. The deprecated `post.source` getter aliases this object for one transition release.
-
-#### `post.getSourceValue(key): any`
-
-Get a single value from `sourceMeta` (kept for web-scraper compatibility).
-
-#### `post.meta`
-
-Access the metadata object.
-
-#### `post.setMeta(value): void`
-
-Replace the metadata object.
-
-#### `post.getMetaValue(key): any`
-
-Get a single metadata value.
+Post source/meta fields and accessors have been removed. Original records belong to `context.sources`; provenance links identify their contributions. See the [migration guide](source-records.md).
 
 ### Web scrape data
 
@@ -812,7 +708,7 @@ Get a single metadata value.
 
 Get or set the raw web scrape response for this post. Stored as a JSON blob in a dedicated `webscrape_data` column on the Posts table. Defaults to `null`.
 
-This is set automatically by [mg-webscraper](../../mg-webscraper)'s `scrapePost` method, preserving the raw scraped response before any post-processing. Use it to access or reprocess scraped metadata in later pipeline steps without re-scraping.
+Retains optional scraped data before processing. The web scraper's integration is deferred: its next API must accept the chosen original URL explicitly, rather than requesting removed post-source accessors.
 
 ```js
 // Set during scraping (done automatically by scrapePost)
@@ -846,40 +742,18 @@ await dupe.save(ctx.db); // skipped
 Controls what `save()` does when `lookupKey` matches a stored post:
 
 - `skip` (default) leaves the stored post unchanged. This preserves the original retry-safe behavior.
-- `replace` overwrites the stored post with the newly transformed post while preserving its database ID and Ghost ID. Scalar fields, source metadata, post metadata, tags, and authors are replaced.
-- A resolver receives the stored and incoming `PostContext` objects and returns `skip` or `replace`. Resolvers are synchronous and can compare dates or other source-specific metadata without requiring a pre-indexing pass.
+- `replace` overwrites the stored post with the newly transformed post while preserving its database ID and Ghost ID. Mapped scalar fields, scraping data, tags, and authors are replaced.
+- A resolver receives the stored and incoming `PostContext` objects and returns `skip` or `replace`. Resolvers are synchronous and can compare mapped dates or other mapped fields. Resolve original source revisions during ingestion before mapping.
 
 Set a default for posts created by a context, or override it for one post:
 
 ```js
 const ctx = new MigrateContext({
     dbPath: './migration.sqlite',
-    contentIdentity: {source: 'example.xml', revision: sourceFileSha256},
-    onDuplicate: 'replace'
+    onDuplicate: 'skip'
 });
 
-const post = await ctx.addPost({
-    lookupKey: 'https://example.com/post-url',
-    onDuplicate: 'skip' // optional per-post override
-});
-```
-
-Use `replace` only when the rerun supplies a complete post. It intentionally replaces tags and authors as well as scalar content; it does not merge missing values from the stored row.
-
-For example, an adapter that can encounter multiple source revisions in any order can keep the newest one:
-
-```js
-const newestRevisionWins = (existing, incoming) => {
-    const existingUpdatedAt = existing.get('updated_at');
-    const incomingUpdatedAt = incoming.get('updated_at');
-
-    if (incomingUpdatedAt && (!existingUpdatedAt || incomingUpdatedAt > existingUpdatedAt)) {
-        return 'replace';
-    }
-    return 'skip';
-};
-
-const ctx = new MigrateContext({onDuplicate: newestRevisionWins});
+const post = await ctx.addPost({lookupKey: 'original-1', onDuplicate: 'replace'});
 ```
 
 The resolver must return `skip` or `replace`; any other result throws an `InternalServerError` without changing the stored row.
@@ -915,7 +789,7 @@ An invalid email cannot be trimmed into shape, so it is replaced with a recognis
 
 #### `sanitizedFields: SanitizedField[]`
 
-Getter listing every value changed during this run, so nothing is lost silently:
+Getter materializing persisted sanitization diagnostics for the current mapped result:
 
 ```js
 for (const entry of ctx.sanitizedFields) {
@@ -932,7 +806,7 @@ for (const entry of ctx.sanitizedFields) {
 | `oldValue` | `string` | The value before sanitization                                                      |
 | `newValue` | `string \| null` | The value that was stored                                                  |
 
-This getter is collected in memory as entities are saved, so it covers the current run only. The durable migration report retains compact `field:sanitized` entries across persistent database resumptions.
+This getter reads persisted `field:sanitized` diagnostics into an array on request. They survive reopening the database and are cleared with mapped content; use `streamDiagnostics()` for bounded reads.
 
 ### Slug deduplication
 
@@ -940,7 +814,7 @@ This getter is collected in memory as entities are saved, so it covers the curre
 
 Ghost requires unique slugs. Slugs are allocated when posts are saved: the first stored post keeps the requested slug, and later collisions receive `-2`, `-3`, and so on. This method rebuilds the resulting duplicate report; it does not defer slug allocation until export.
 
-Called automatically by export methods through `prepareForExport()`, so you typically don't need to call it directly. It only runs once — subsequent calls reuse the cached result.
+The report is read from the database on request. Export preparation does not collect this array; use streaming diagnostics when the full report would be too large.
 
 Renaming happens at insert time, and the slug a post originally wanted is stored alongside it. The results are rebuilt from the database, so resuming against an existing `dbPath` still reports every rename, including those made on an earlier run. A slug changed after its post was inserted is not a duplicate and is not reported.
 
@@ -957,13 +831,13 @@ for (const entry of ctx.duplicateSlugs) {
 
 #### `duplicateSlugs: DuplicateSlugEntry[]`
 
-Getter that returns the results of the most recent deduplication. Results are grouped by original slug. The first entry in each group is the retained post (`oldSlug === newSlug`), followed by the renamed ones.
+Getter that rebuilds the duplicate-slug report from persisted allocation diagnostics. Results are grouped by original slug. The first entry in each group is the retained post (`oldSlug === newSlug`), followed by the renamed ones.
 
 | Field     | Type     | Description                                                       |
 |-----------|----------|-------------------------------------------------------------------|
 | `oldSlug` | `string` | The original (duplicate) slug                                     |
 | `newSlug` | `string` | The final slug — same as `oldSlug` for the retained post          |
-| `url`     | `string` | Original URL from `sourceMeta.url` or `canonical_url` (empty if none) |
+| `url`     | `string` | Mapped canonical_url, or an empty string; resolve originals separately through provenance |
 
 Entries follow database insertion order. If a suffix like `-2` already belongs to a real post, allocation skips to `-3`, and so on. Adapters that can encounter several source revisions should use a duplicate resolver or preselect the revision they want before saving.
 
@@ -1046,3 +920,46 @@ new AuthorContext({name: 'Alice', slug: 'alice', email: 'alice@example.com'})
 | `meta_title`       | `string?` | 300  |                                                              |
 | `meta_description` | `string?` | 500  |                                                              |
 | `roles`            | `enum[]`  | —    | Defaults to `['Contributor']`. Each entry one of `Contributor`, `Author`, `Editor`, `Administrator` |
+
+
+## Source records
+
+`context.sources` requires an initialized context. Core stores one completed dataset and private staging generations; callers decide when to reuse or replace data. There is no identity comparison or public snapshot API.
+
+| Member | Behavior |
+| --- | --- |
+| `hasCompletedIngestion: boolean` | True even when completed ingestion contains zero records |
+| `currentIngestion: IngestionInfo | null` | ID, detached opaque metadata, start time, and completion time |
+| `count(kind?): number` | Count current records, optionally within one kind |
+| `get(kind, key): SourceRecord | null` | Indexed canonical lookup |
+| `getById(id): SourceRecord | null` | Lookup restricted to completed data |
+| `records({kind?, batchSize?})` | Async iterator, default batch size 25 |
+| `ingest({replace?, metadata?}, callback)` | Stage records, then atomically replace completed data and clear mapped content |
+| `link(recordId, {type, id})` | Idempotent many-to-many link; type is post, tag, or author |
+| `unlink(recordId, {type, id})` | Remove one provenance link |
+| `recordsFor({type, id}, {batchSize?})` | Iterate contributing source records |
+| `entitiesFor(recordId, {batchSize?})` | Iterate mapped entity references |
+
+`SourceRecordInput` contains `kind: string`, optional nullable `key: string`, `content: string`, `format: string`, and optional JSON-object `metadata`. Kind/format/key must be nonblank when supplied; content may be empty. Core never parses the payload. Returned `SourceRecord` adds an internal ID and detached metadata. Internal IDs are not stable destination IDs.
+
+The staging callback receives `SourceIngestion`:
+
+- `put(record, {onDuplicate?})` writes one record and returns its canonical stored representation.
+- `write(iterable, {onDuplicate?, batchSize?, maxBatchBytes?})` consumes synchronous or asynchronous input and returns its submitted record count. Defaults are 250 records and 4 MiB per transaction; oversized records are written alone. Counts include explicitly kept/replaced duplicates.
+- `onDuplicate` is `error` by default, or explicitly `keep`/`replace`. Core does not choose revisions or timestamps.
+- `get`, `getById`, `count`, and `records` read this staging generation only.
+- `recordDiagnostic(type, details?, sourceRecordId?)` persists ingestion diagnostics tied to this attempt.
+
+Await writes before returning. Completed data has no write API. Replacement requires `replace: true`; failed ingestion preserves previous originals and mapped data, deletes staged payloads, and retains attempt diagnostics. Interrupted staging is discarded on the next attempt. Public mapped writes cannot overlap ingestion. One migration owner writes each database.
+
+Provenance accepts existing mapped entities and completed originals. Entities may have no originals; one original may have multiple outputs, and one output multiple contributors. There is no primary-source role or alias index.
+
+## Streaming output and diagnostics
+
+`writeGhostJsonStream(outputDir, options?)` is an async generator of `WrittenFile`. Options match JSON export: batchSize defaults to 5000, filename to posts, with optional filters and onWrite. Both JSON APIs accept the existing nonempty filename bases without path separators and strip an optional `.json` extension, including Unicode and punctuation in base names. Events/callbacks run after each file completes, before later files are written. Both JSON APIs share batching and serialization. Consumers manage previous output files. No ownership manifest is created or consulted, and old chunks are retained. The generator yields each completed descriptor directly without a descriptor journal. Per-file temporary writes preserve incomplete targets; earlier completed files remain after a later failure. Consumers own whole-export publication and recovery, including discarding a partially completed staging directory. Core never scans old backups or journals.
+
+`streamDiagnostics({phase?, ingestionId?, batchSize?})` streams report entries; batchSize defaults to 25. Each entry includes phase (ingestion/mapping), nullable ingestionId/sourceRecordId, type, details, timestamps, and existing post references. `recordDiagnostic(type, details?, sourceRecordId?)` writes mapping diagnostics; source references must name completed records.
+
+`writeMigrationReport(path, summary?)` atomically writes the requested JSON path, merging supplied summary fields with diagnostic counts and streaming events. Reports are not automatically placed or uploaded by core.
+
+`getMigrationReport()`, `sanitizedFields`, and `duplicateSlugs` still explicitly materialize arrays. Authors and tags reuse indexed database rows without application-level caches. Transaction events are queued in SQLite until commit; rollback discards them, and listener failure after commit does not roll back committed content.
