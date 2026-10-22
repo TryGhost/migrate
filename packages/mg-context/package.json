@@ -25,7 +25,8 @@
     "sync:ghost-schema": "node scripts/sync-ghost-schema.mjs",
     "check:ghost-schema": "node scripts/sync-ghost-schema.mjs --check",
     "test": "c8 --src src --all --check-coverage --100 --reporter text --reporter cobertura node --test 'build/test/**/*.test.js'",
-    "test:local": "pnpm build && pnpm test"
+    "test:local": "pnpm build && pnpm test",
+    "test:stress": "pnpm build && node --max-old-space-size=256 test/stress.mjs"
   },
   "files": [
     "build"
