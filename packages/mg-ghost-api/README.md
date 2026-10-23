@@ -22,6 +22,12 @@ or
 `pnpm add @tryghost/mg-ghost-api`
 
 
+## Source storage and reruns
+
+The CLI stores original API records in `mg-context` and rebuilds mapped Ghost content on every run. Completed source data is reused until `--rereadSource` is requested. Replacement input is staged; a failed fetch preserves the previous originals and mapped result, along with downloaded assets. No source identities, hashes, or command options are compared automatically.
+
+API selection options such as post/page filters apply during ingestion. Request fresh input to change that selection; mapping changes can replay the stored originals without contacting the API. Direct `mapPost()` calls still support creating mapped posts without source storage. Fetch tasks can write originals through a caller-provided `sourceIngestion` handle.
+
 ## Usage
 
 To run a Ghost API migration, the required command is:

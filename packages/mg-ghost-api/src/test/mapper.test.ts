@@ -30,8 +30,9 @@ describe('mapPost', function () {
         assert.equal(post.get('status'), 'published');
         assert.equal(post.get('feature_image'), 'https://casper.ghost.org/v2.0.0/images/welcome-to-ghost.jpg');
         assert.equal(post.get('custom_excerpt'), "Welcome, it's great to have you here.");
-        assert.equal(post.sourceContent, JSON.stringify(fixture.posts[0]));
-        assert.equal(post.sourceMeta.id, fixture.posts[0].id);
+        assert.equal(post.lookupKey, fixture.posts[0].id);
+        assert.equal(post.ghostId, fixture.posts[0].id);
+        assert.equal(ctx.sources.count(), 0);
 
         const html = post.get('html');
         assert.equal(html, "<p>👋 Welcome, it's great to have you here.</p>");
@@ -73,4 +74,29 @@ describe('mapPost', function () {
         assert.equal(authors.length, 1);
         assert.equal(authors[0].data.profile_image, 'https://www.gravatar.com/avatar/abc123?s=3000');
     });
+});
+
+it('maps into an existing unsaved post and supplies defaults for sparse API objects', async () => {
+    const context = new MigrateContext({storage: 'memory'});
+    await context.init();
+    try {
+        const existing = await context.addPost();
+        const post = await mapPost(
+            {
+                title: 'Sparse',
+                html: null,
+                tags: [{slug: 'minimal'}, {}],
+                authors: [{slug: 'minimal', name: 'Minimal'}, {}]
+            } as any,
+            context,
+            existing
+        );
+        assert.equal(post, existing);
+        assert.equal(post.data.tags[0].data.name, undefined);
+        assert.equal(post.data.authors[0].data.slug, 'minimal');
+        const bare = await mapPost({title: 'Bare'} as any, context);
+        assert.equal(bare.get('title'), 'Bare');
+    } finally {
+        await context.close();
+    }
 });

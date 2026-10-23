@@ -1764,3 +1764,20 @@ describe('Asset Scraper', () => {
         });
     });
 });
+
+it('closes its asset cache idempotently', async () => {
+    const fileCache = new fsUtils.FileCache('assetscraper-close', {tmpPath});
+    const scraper = new AssetScraper(fileCache, {allowAllDomains: true});
+    try {
+        await scraper.init();
+        scraper.close();
+        scraper.close();
+        await assert.rejects(
+            scraper.downloadExtractSave('https://example.com/closed.jpg', ''),
+            /closed|open|finalized/i
+        );
+    } finally {
+        scraper.close();
+        await fileCache.emptyCurrentCacheDir();
+    }
+});

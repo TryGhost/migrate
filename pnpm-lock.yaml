@@ -632,6 +632,9 @@ importers:
       c8:
         specifier: 'catalog:'
         version: 12.0.0
+      nock:
+        specifier: 'catalog:'
+        version: 14.0.17
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

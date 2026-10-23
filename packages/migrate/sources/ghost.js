@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
-import ghostAPI from '@tryghost/mg-ghost-api';
+import ghostAPI, {mapPost} from '@tryghost/mg-ghost-api';
 import {MigrateContext} from '@tryghost/mg-context';
 import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import fsUtils from '@tryghost/mg-fs-utils';
@@ -31,24 +31,10 @@ const initialize = (options, {infoOnly = false} = {}) => {
 
             if (!infoOnly) {
                 ctx.migrateContext = new MigrateContext({
-                    dbPath: join(ctx.fileCache.tmpDir, 'mg-context.sqlite'),
-                    resetContent: Boolean(options.rereadSource),
-                    contentIdentity: {
-                        source: `ghost-api:${options.url}`,
-                        revision: 'live-api-snapshot',
-                        options: {
-                            batch: options.batch ?? 0,
-                            limit: options.batch > 0 ? (options.limit ?? 15) : null,
-                            posts: options.posts ?? true,
-                            pages: options.pages ?? true,
-                            postFilter: options.postFilter ?? null,
-                            pageFilter: options.pageFilter ?? null
-                        }
-                    }
+                    dbPath: join(ctx.fileCache.tmpDir, 'mg-context.sqlite')
                 });
                 await ctx.migrateContext.init();
-                const existing = ctx.migrateContext.hasContent();
-                ctx.hasStoredSource = Boolean(existing && existing.posts + existing.pages > 0);
+                ctx.hasStoredSource = ctx.migrateContext.sources.hasCompletedIngestion;
 
                 ctx.assetScraper = new MgAssetScraper(
                     ctx.fileCache,
@@ -97,43 +83,82 @@ const getFullTaskList = options => {
     return [
         initialize(options),
         {
-            title: 'Fetch Content from Ghost API',
+            title: 'Fetching content',
             skip: ctx => ctx.hasStoredSource && !options.rereadSource,
-            task: async ctx => {
+            task: async (ctx, task) => {
                 try {
-                    let tasks = await ghostAPI.fetch.tasks(options, ctx);
-
-                    if (options.batch !== 0) {
-                        let batchIndex = options.batch - 1;
-                        tasks = [tasks[batchIndex]];
-                    }
-
-                    return makeTaskRunner(tasks, options);
+                    task.output = 'Discovering content';
+                    await ctx.migrateContext.sources.ingest(
+                        {replace: Boolean(options.rereadSource), metadata: {adapter: 'ghost-api', url: options.url}},
+                        async stage => {
+                            const ingestionContext = {...ctx, sourceIngestion: stage};
+                            let tasks = await ghostAPI.fetch.tasks(options, ingestionContext);
+                            if (options.batch > 0) {
+                                tasks = [tasks[options.batch - 1]];
+                            }
+                            task.output = `Fetching ${tasks.length} content batches`;
+                            await makeTaskRunner(tasks, {
+                                ...options,
+                                exitOnError: true,
+                                renderer: 'silent',
+                                verbose: false
+                            }).run(ingestionContext);
+                        }
+                    );
+                    task.output = null;
                 } catch (error) {
+                    task.output = error.message;
                     ctx.errors.push({message: 'Failed to get content from Ghost API', error});
                     throw error;
                 }
             }
         },
         {
+            title: 'Map stored Ghost content',
+            task: async ctx => {
+                await ctx.migrateContext.rebuildMappedContent(async () => {
+                    for await (const record of ctx.migrateContext.sources.records()) {
+                        const post = await mapPost(
+                            {...JSON.parse(record.content), type: record.kind},
+                            ctx.migrateContext
+                        );
+                        post.save(ctx.migrateContext.db);
+                        ctx.migrateContext.sources.link(record.id, {type: 'post', id: post.dbId});
+                    }
+                });
+            }
+        },
+        {
             title: 'Fetch images via AssetScraper',
             skip: ctx => !ctx.allowScrape.assets,
-            task: async ctx => {
-                try {
-                    await ctx.migrateContext.forEachPost(async post => {
-                        await ctx.assetScraper.processAssets(post);
-                    });
-                    await ctx.migrateContext.forEachTag(async tag => {
-                        await ctx.assetScraper.processAssets(tag);
-                    });
-                    await ctx.migrateContext.forEachAuthor(async author => {
-                        await ctx.assetScraper.processAssets(author);
-                    });
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to fetch images via AssetScraper', error});
-                    throw error;
-                }
-            }
+            task: (ctx, task) =>
+                task.newListr(
+                    [
+                        ['Posts', 'forEachPost', 'countPosts'],
+                        ['Tags', 'forEachTag', 'countUsedTags'],
+                        ['Authors', 'forEachAuthor', 'countUsedAuthors']
+                    ].map(([title, iterate, count]) => ({
+                        title,
+                        task: async (_ctx, subtask) => {
+                            let processed = 0;
+                            try {
+                                const total = ctx.migrateContext.db.stmts[count].get().count;
+                                subtask.title = `${title} (${processed}/${total})`;
+                                await ctx.migrateContext[iterate](async entity => {
+                                    subtask.output =
+                                        entity.get('slug') || entity.data.title || entity.data.name || entity.ghostId;
+                                    await ctx.assetScraper.processAssets(entity);
+                                    subtask.title = `${title} (${++processed}/${total})`;
+                                });
+                                subtask.output = null;
+                            } catch (error) {
+                                ctx.errors.push({message: 'Failed to fetch images via AssetScraper', error});
+                                throw error;
+                            }
+                        }
+                    })),
+                    {concurrent: false, exitOnError: true}
+                )
         },
         {
             title: 'Write Ghost import JSON file(s)',
@@ -187,6 +212,7 @@ const getFullTaskList = options => {
             title: 'Close MigrateContext',
             task: async ctx => {
                 try {
+                    ctx.assetScraper.close();
                     await ctx.migrateContext.close();
                 } catch (error) {
                     ctx.errors.push({message: 'Failed to close MigrateContext', error});
@@ -217,7 +243,20 @@ const getTaskRunner = options => {
         tasks = getFullTaskList(options);
     }
 
-    return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
+    const runner = makeTaskRunner(tasks, {...options, topLevel: true});
+    const run = runner.run.bind(runner);
+    runner.run = async (context = {errors: [], warnings: []}) => {
+        try {
+            return await run(context);
+        } finally {
+            try {
+                context.assetScraper?.close();
+            } finally {
+                await context.migrateContext?.close();
+            }
+        }
+    };
+    return runner;
 };
 
 export default {

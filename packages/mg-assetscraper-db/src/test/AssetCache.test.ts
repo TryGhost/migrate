@@ -282,3 +282,12 @@ describe('AssetCache from scratch', () => {
 //         assert.equal(results.length, 2);
 //     });
 // });
+
+it('closes the asset database idempotently and releases its files', async () => {
+    const fileCache = new fsUtils.FileCache('assetcache-close', {tmpPath});
+    const cache = new AssetCache({fileCache});
+    cache.add('https://example.com/asset.png');
+    cache.close();
+    cache.close();
+    assert.throws(() => cache.getAll(), /closed|open|finalized/i);
+});

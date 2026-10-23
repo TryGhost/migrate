@@ -932,6 +932,10 @@ export default class AssetScraper {
         }
     }
 
+    close(): void {
+        this.#assetCache.close();
+    }
+
     get foundItems() {
         return this.#foundItems;
     }

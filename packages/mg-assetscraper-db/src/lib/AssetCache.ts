@@ -15,6 +15,7 @@ interface AssetAttributes {
 export default class AssetCache {
     #database: AssetCacheDatabase;
     #fileCache: FileCache;
+    #closed = false;
 
     constructor({fileCache}: {fileCache: FileCache}) {
         this.#fileCache = fileCache;
@@ -23,6 +24,13 @@ export default class AssetCache {
         mkdirSync(theCachePath, {recursive: true});
 
         this.#database = createAssetCacheDatabase(join(theCachePath, 'assets.db'));
+    }
+
+    close(): void {
+        if (!this.#closed) {
+            this.#database.db.close();
+            this.#closed = true;
+        }
     }
 
     init(): void {

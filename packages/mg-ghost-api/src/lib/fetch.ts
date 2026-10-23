@@ -1,7 +1,7 @@
 import GhostAdminAPI from '@tryghost/admin-api';
 import type {Post, BrowseResponse} from '@tryghost/admin-api';
 import errors from '@tryghost/errors';
-import type {MigrateContext} from '@tryghost/mg-context';
+import type {MigrateContext, SourceIngestion} from '@tryghost/mg-context';
 import {mapPost, type GhostApiPost} from './mapper.js';
 
 export interface BaseOptions {
@@ -42,6 +42,7 @@ export interface DiscoverResult {
 
 export interface TaskContext {
     migrateContext: MigrateContext;
+    sourceIngestion?: SourceIngestion;
     options: {limit: number | string};
 }
 
@@ -81,7 +82,7 @@ const discover = async (options: DiscoverOptions): Promise<DiscoverResult> => {
         ? await site.posts.browse({limit: options.limit, filter: options.postFilter ?? null})
         : null;
     const pages = options.pages
-        ? await site.pages.browse({limit: options.limit, filter: options.postFilter ?? null})
+        ? await site.pages.browse({limit: options.limit, filter: options.pageFilter ?? null})
         : null;
     const users = await site.users.browse({limit: options.limit});
 
@@ -124,26 +125,26 @@ const buildTasks = (tasks: ListrTask[], api: DiscoverResult, type: FetchType, op
             task: async ctx => {
                 try {
                     const response = await fetchPage(api, type, options, page);
-                    await ctx.migrateContext.transaction(async () => {
-                        for (const ghPost of response) {
-                            const sourcePost = ghPost as unknown as GhostApiPost;
-                            const post = await ctx.migrateContext.addPost({
-                                lookupKey: sourcePost.id,
-                                sourceContent: JSON.stringify(sourcePost),
-                                sourceMeta: {
-                                    id: sourcePost.id,
-                                    url: sourcePost.url,
-                                    type: type === 'posts' ? 'post' : 'page'
-                                }
-                            });
-                            await mapPost(
-                                {...sourcePost, type: type === 'posts' ? 'post' : 'page'},
-                                ctx.migrateContext,
-                                post
-                            );
-                            post.save(ctx.migrateContext.db);
-                        }
-                    });
+                    if (ctx.sourceIngestion) {
+                        await ctx.sourceIngestion.write(
+                            response.map(post => ({
+                                kind: type === 'posts' ? 'post' : 'page',
+                                key: post.id,
+                                content: JSON.stringify(post),
+                                format: 'json'
+                            }))
+                        );
+                    } else {
+                        await ctx.migrateContext.transaction(async () => {
+                            for (const ghPost of response) {
+                                const post = await mapPost(
+                                    {...ghPost, type: type === 'posts' ? 'post' : 'page'} as GhostApiPost,
+                                    ctx.migrateContext
+                                );
+                                post.save(ctx.migrateContext.db);
+                            }
+                        });
+                    }
                 } catch (error) {
                     console.error(`Failed to fetch ${type}, page ${page} of ${api.batches[type]}`, error); // eslint-disable-line no-console
                     throw error;

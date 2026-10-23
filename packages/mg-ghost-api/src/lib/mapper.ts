@@ -117,11 +117,11 @@ const upgradeGravatar = (url: string): string => {
 };
 
 const buildAuthorData = (ghAuthor: GhostApiAuthor) => {
-    const slug = ghAuthor.slug ?? '';
+    const slug = ghAuthor.slug!;
     const data: Record<string, unknown> = {
         name: ghAuthor.name,
         slug,
-        email: ghAuthor.email ?? `${slug || 'unknown'}@migrated.invalid`,
+        email: ghAuthor.email ?? `${slug}@migrated.invalid`,
         profile_image: ghAuthor.profile_image ?? null,
         cover_image: ghAuthor.cover_image ?? null,
         bio: ghAuthor.bio ?? null,
@@ -176,10 +176,12 @@ export async function mapPost(
     const post =
         existingPost ??
         (await migrateContext.addPost({
-            sourceContent: JSON.stringify(ghPost),
-            sourceMeta: {url: ghPost.url, id: ghPost.id, type: ghPost.type},
             lookupKey: ghPost.id
         }));
+
+    if (ghPost.id && /^[a-f0-9]{24}$/i.test(ghPost.id)) {
+        post.ghostId = ghPost.id;
+    }
 
     for (const field of POST_OBJECT_FIELDS) {
         const value = ghPost[field];
