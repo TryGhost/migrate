@@ -29,7 +29,7 @@
     "@tryghost/mg-utils": "workspace:*",
     "@tryghost/string": "catalog:",
     "escape-string-regexp": "catalog:",
-    "he": "1.2.0",
+    "he": "2.0.0",
     "html-entities": "catalog:",
     "simple-dom": "catalog:",
     "srcset": "5.0.3"
