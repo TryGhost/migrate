@@ -994,6 +994,9 @@ importers:
       linkedom:
         specifier: 0.18.13
         version: 0.18.13
+      saxes:
+        specifier: 6.0.0
+        version: 6.0.0
     devDependencies:
       '@tryghost/errors':
         specifier: 'catalog:'

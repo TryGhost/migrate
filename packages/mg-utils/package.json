@@ -42,6 +42,7 @@
   "dependencies": {
     "@tryghost/kg-default-cards": "catalog:",
     "fast-xml-parser": "catalog:",
-    "linkedom": "0.18.13"
+    "linkedom": "0.18.13",
+    "saxes": "6.0.0"
   }
 }

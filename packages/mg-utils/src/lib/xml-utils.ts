@@ -23,3 +23,6 @@ export async function parseXml(input: string, options?: Partial<X2jOptions>): Pr
     const parser = new XMLParser({...defaultOptions, ...options});
     return parser.parse(xml) as Record<string, unknown>;
 }
+
+export {streamXmlRecords} from './stream-xml.js';
+export type {XmlRecord} from './stream-xml.js';
