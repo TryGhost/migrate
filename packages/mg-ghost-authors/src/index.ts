@@ -85,3 +85,6 @@ export const createGhostUserTasks = (options: GhostUserTaskOptions) => {
         }
     ];
 };
+
+export {streamGhostUsers, GhostUserFetchError} from './lib/fetch-users.js';
+export type {StreamFetchUsersOptions} from './lib/fetch-users.js';

@@ -104,3 +104,73 @@ export async function fetchGhostUsers(options: FetchUsersOptions): Promise<Ghost
         return [];
     }
 }
+
+export interface StreamFetchUsersOptions {
+    apiUrl: string;
+    adminKey: string;
+    fileCache?: {
+        hasFile(filename: string, type: string): boolean;
+        readTmpJSONFile(filename: string): Promise<any>;
+        writeTmpFile(data: unknown, filename: string): Promise<unknown>;
+    };
+}
+
+export class GhostUserFetchError extends Error {}
+
+/** Paginated counterpart for adapters that must not retain every destination user. */
+export async function* streamGhostUsers({
+    apiUrl,
+    adminKey,
+    fileCache
+}: StreamFetchUsersOptions): AsyncGenerator<GhostUser> {
+    if (!apiUrl || !adminKey) {
+        return;
+    }
+    const {createHash} = await import('node:crypto');
+    const cacheKey = createHash('sha256')
+        .update(JSON.stringify([apiUrl, adminKey]))
+        .digest('hex');
+    let api: InstanceType<typeof GhostAdminAPI>;
+    try {
+        api = new GhostAdminAPI({url: apiUrl.replace(/\/$/, ''), key: adminKey, version: 'v5.0'});
+    } catch (cause) {
+        throw new GhostUserFetchError((cause as Error).message, {cause});
+    }
+    let page = 1;
+    while (true) {
+        const filename = `ghost-users-${cacheKey}-${page}.json`;
+        let stored: {users: GhostUser[]; next: boolean} | undefined;
+        if (fileCache?.hasFile(filename, 'tmp')) {
+            try {
+                const cached = await fileCache.readTmpJSONFile(filename);
+                if (Array.isArray(cached.users) && typeof cached.next === 'boolean') {
+                    stored = cached;
+                }
+            } catch {
+                // A damaged optional cache can be fetched again.
+            }
+        }
+        if (!stored) {
+            let response;
+            try {
+                response = await api.users.browse({limit: 100, page, include: 'roles'});
+            } catch (cause) {
+                throw new GhostUserFetchError((cause as Error).message, {cause});
+            }
+            stored = {
+                users: Array.isArray(response) ? response : [response],
+                next: page < (response.meta?.pagination?.pages ?? page)
+            };
+            if (fileCache) {
+                await fileCache.writeTmpFile(stored, filename);
+            }
+        }
+        for (const user of stored.users) {
+            yield user;
+        }
+        if (!stored.next) {
+            return;
+        }
+        page++;
+    }
+}

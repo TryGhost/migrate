@@ -26,7 +26,7 @@
     "dev": "echo \"Implement me!\"",
     "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",
     "build": "tsc --build --sourceMap",
-    "test": "c8 --src src --all --reporter text --reporter cobertura node --test 'build/test/**/*.test.js'",
+    "test": "c8 --src src --all --check-coverage --100 --reporter text --reporter cobertura node --test 'build/test/**/*.test.js'",
     "test:local": "pnpm build && pnpm test"
   },
   "publishConfig": {
@@ -41,6 +41,7 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "c8": "catalog:",
+    "nock": "catalog:",
     "typescript": "catalog:"
   },
   "dependencies": {
