@@ -3,19 +3,20 @@ import {describe, it} from 'node:test';
 import path from 'node:path';
 import {promises as fs} from 'node:fs';
 import {xmlUtils} from '@tryghost/mg-utils';
-import process, {processWPMeta} from '../lib/process.js';
-import {readFileOrFolder} from '../lib/read-file.js';
+import process from './helpers.js';
+import {processWPMeta} from '../lib/process.js';
+import {readFileOrFolder} from './helpers.js';
 
-const __dirname = new URL('.', import.meta.url).pathname;
+const __dirname = new URL('../../src/test/', import.meta.url).pathname;
 
-const readSync = async name => {
+const readSync = async (name: string) => {
     let fixtureFileName = path.join(__dirname, './', 'fixtures', name);
     return fs.readFile(fixtureFileName, {encoding: 'utf8'});
 };
 
 describe('Process', function () {
     it('Can get site URL from XML file', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {}
         };
         const input = await readSync('sample.xml');
@@ -25,7 +26,7 @@ describe('Process', function () {
     });
 
     it('Can convert a single published post', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -86,7 +87,7 @@ describe('Process', function () {
     });
 
     it('Can convert a single draft post', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -140,7 +141,7 @@ describe('Process', function () {
     });
 
     it('Can convert a published page', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -184,7 +185,7 @@ describe('Process', function () {
     });
 
     it('Can convert a custom post type', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: false,
                 pages: false,
@@ -240,7 +241,7 @@ describe('Process', function () {
         ];
 
         const tags = process.processTags(categories, {tags: true, customTaxonomies: ['country']});
-        const slugs = tags.map(t => t.data.slug);
+        const slugs = tags.map((t: any) => t.data.slug);
 
         assert.ok(slugs.includes('company-news'), 'should include category');
         assert.ok(slugs.includes('programming'), 'should include post_tag');
@@ -255,7 +256,7 @@ describe('Process', function () {
         ];
 
         const tags = process.processTags(categories, {tags: true});
-        const slugs = tags.map(t => t.data.slug);
+        const slugs = tags.map((t: any) => t.data.slug);
 
         assert.ok(slugs.includes('company-news'), 'should include category');
         assert.ok(!slugs.includes('czech-republic'), 'should not include custom taxonomy when not configured');
@@ -269,7 +270,7 @@ describe('Process', function () {
         ];
 
         const tags = process.processTags(categories, {tags: true, customTaxonomies: ['country', 'city']});
-        const slugs = tags.map(t => t.data.slug);
+        const slugs = tags.map((t: any) => t.data.slug);
 
         assert.equal(tags.length, 3);
         assert.ok(slugs.includes('news'));
@@ -278,7 +279,7 @@ describe('Process', function () {
     });
 
     it('Can extract featured image alt text and caption', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: false,
                 pages: false,
@@ -307,7 +308,7 @@ describe('Process', function () {
     });
 
     it('Uses the attachment description as the feature image caption by default', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -324,7 +325,7 @@ describe('Process', function () {
     });
 
     it('Uses the attachment description as the feature image caption when featureImageCaption is true', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -340,7 +341,7 @@ describe('Process', function () {
     });
 
     it('Has no feature image caption when featureImageCaption is false', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -358,7 +359,7 @@ describe('Process', function () {
     });
 
     it('Has no feature image caption when the attachment has no description', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -379,7 +380,7 @@ describe('Process', function () {
     });
 
     it('Has no feature image caption when the post has no feature image', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -396,7 +397,7 @@ describe('Process', function () {
     });
 
     it('Can handle empty post slugs', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -415,7 +416,7 @@ describe('Process', function () {
     });
 
     it('Can use excerpt selector and remove from content', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -437,7 +438,7 @@ describe('Process', function () {
     });
 
     it('Can use excerpt from WordPress XML', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -461,7 +462,7 @@ describe('Process', function () {
     });
 
     it('Does not filter posts by date of options not present', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 tags: true,
                 addTag: null,
@@ -481,7 +482,7 @@ describe('Process', function () {
     });
 
     it('Can filter by postsBefore', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 tags: true,
                 addTag: null,
@@ -503,7 +504,7 @@ describe('Process', function () {
     });
 
     it('Can filter by postsAfter', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 tags: true,
                 addTag: null,
@@ -526,7 +527,7 @@ describe('Process', function () {
     });
 
     it('Can filter by postsBefore and postsAfter', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 tags: true,
                 addTag: null,
@@ -549,7 +550,7 @@ describe('Process', function () {
     });
 
     it('Can get posts only', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 url: 'https://mysite.com/bloob',
                 pages: false,
@@ -566,7 +567,7 @@ describe('Process', function () {
     });
 
     it('Can get pages only', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 url: 'https://mysite.com/bloob',
                 pages: true,
@@ -583,7 +584,7 @@ describe('Process', function () {
     });
 
     it('Can get CPT only', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 url: 'https://mysite.com/bloob',
                 pages: false,
@@ -601,7 +602,7 @@ describe('Process', function () {
     });
 
     it('Can process a folder of multiple XML files', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -616,14 +617,14 @@ describe('Process', function () {
         // (the customcpt item and the attachment are excluded)
         assert.equal(processed.posts.length, 4);
 
-        const types = processed.posts.map(post => post.wpPostType);
-        assert.equal(types.filter(type => type === 'post').length, 3);
-        assert.equal(types.filter(type => type === 'page').length, 1);
+        const types = processed.posts.map((post: any) => post.wpPostType);
+        assert.equal(types.filter((type: any) => type === 'post').length, 3);
+        assert.equal(types.filter((type: any) => type === 'page').length, 1);
 
         // Authors appear in both posts-only.xml and pages-only.xml,
         // and are deduplicated by login when merging
         assert.equal(processed.users.length, 2);
-        const userSlugs = processed.users.map(user => user.data.slug);
+        const userSlugs = processed.users.map((user: any) => user.data.slug);
         assert.ok(userSlugs.includes('hermione-example-com'));
         assert.ok(userSlugs.includes('harry-example-com'));
 
@@ -632,7 +633,7 @@ describe('Process', function () {
 
         // The feature image comes from an attachment in a different file
         // than the post that references it
-        const withImage = processed.posts.filter(post => post.data.feature_image);
+        const withImage = processed.posts.filter((post: any) => post.data.feature_image);
         assert.equal(withImage.length, 2);
         assert.equal(
             withImage[0].data.feature_image,
@@ -642,7 +643,7 @@ describe('Process', function () {
 
     it('Can read post_meta', async function () {
         const input = await readSync('has-meta.xml');
-        const xml = await xmlUtils.parseXml(input);
+        const xml: any = await xmlUtils.parseXml(input);
 
         const items = xml?.rss?.channel?.item || [];
         const itemsArray = Array.isArray(items) ? items : [items];
@@ -747,7 +748,7 @@ describe('Process', function () {
     });
 
     it('Can extract Yoast SEO meta title and description', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -758,7 +759,7 @@ describe('Process', function () {
         const processed = await process.all(input, ctx);
 
         // Post with Yoast metadata
-        const yoastPost = processed.posts.find(p => p.data.slug === 'my-sample-post');
+        const yoastPost = processed.posts.find((p: any) => p.data.slug === 'my-sample-post');
         assert.equal(yoastPost.data.meta_title, 'My Custom SEO Title for Search Engines');
         assert.equal(
             yoastPost.data.meta_description,
@@ -766,13 +767,13 @@ describe('Process', function () {
         );
 
         // Post without Yoast metadata should not have meta_title or meta_description
-        const noYoastPost = processed.posts.find(p => p.data.slug === 'no-yoast');
-        assert.equal(noYoastPost.data.meta_title, undefined);
-        assert.equal(noYoastPost.data.meta_description, undefined);
+        const noYoastPost = processed.posts.find((p: any) => p.data.slug === 'no-yoast');
+        assert.equal(noYoastPost.data.meta_title, null);
+        assert.equal(noYoastPost.data.meta_description, null);
     });
 
     it('Can extract multiple authors from Co-Authors Plus format', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -796,7 +797,7 @@ describe('Process', function () {
     });
 
     it('Can extract three authors from Co-Authors Plus format', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -817,7 +818,7 @@ describe('Process', function () {
     });
 
     it('Uses single author field for single Co-Authors Plus entry', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -838,7 +839,7 @@ describe('Process', function () {
     });
 
     it('Deduplicates Co-Authors Plus author entries', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -858,7 +859,7 @@ describe('Process', function () {
     });
 
     it('Can convert audio enclosure metadata to audio card', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,
@@ -881,7 +882,7 @@ describe('Process', function () {
     });
 
     it('Does not prepend audio element when post contains a libsyn embed', async function () {
-        let ctx = {
+        let ctx: any = {
             options: {
                 drafts: true,
                 pages: true,

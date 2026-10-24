@@ -8,18 +8,25 @@
   },
   "author": "Ghost Foundation",
   "license": "MIT",
-  "main": "index.js",
+  "main": "build/index.js",
   "type": "module",
   "scripts": {
-    "dev": "echo \"Implement me!\"",
-    "test": "node --test 'test/**/*.test.js'"
+    "build": "tsc --build",
+    "test": "c8 --src src --all --check-coverage --100 --exclude '**/test/**' --exclude '**/*.d.ts' node --test 'build/test/**/*.test.js'",
+    "test:local": "pnpm build && pnpm test",
+    "test:stress": "node --max-old-space-size=256 test/stress.mjs"
   },
   "files": [
-    "index.js",
-    "lib"
+    "build"
   ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./build/index.d.ts",
+        "default": "./build/index.js"
+      }
+    }
   },
   "dependencies": {
     "@tryghost/errors": "catalog:",
@@ -28,6 +35,22 @@
     "@tryghost/mg-wp-api": "workspace:*",
     "fast-glob": "3.3.3",
     "markdown-it": "catalog:",
-    "php-serialize": "5.1.3"
+    "php-serialize": "5.1.3",
+    "@tryghost/mg-context": "workspace:*",
+    "@tryghost/mg-ghost-authors": "workspace:*",
+    "html-entities": "catalog:"
+  },
+  "types": "./build/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "source": "./src/index.ts",
+      "default": "./build/index.js"
+    }
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "c8": "catalog:",
+    "@types/node": "catalog:"
   }
 }

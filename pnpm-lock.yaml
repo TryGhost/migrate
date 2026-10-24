@@ -1108,6 +1108,12 @@ importers:
       '@tryghost/errors':
         specifier: 'catalog:'
         version: 3.4.2
+      '@tryghost/mg-context':
+        specifier: workspace:*
+        version: link:../mg-context
+      '@tryghost/mg-ghost-authors':
+        specifier: workspace:*
+        version: link:../mg-ghost-authors
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
@@ -1120,12 +1126,25 @@ importers:
       fast-glob:
         specifier: 3.3.3
         version: 3.3.3
+      html-entities:
+        specifier: 'catalog:'
+        version: 2.6.0
       markdown-it:
         specifier: 'catalog:'
         version: 15.0.3
       php-serialize:
         specifier: 5.1.3
         version: 5.1.3
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      c8:
+        specifier: 'catalog:'
+        version: 12.0.0
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   packages/migrate:
     dependencies:

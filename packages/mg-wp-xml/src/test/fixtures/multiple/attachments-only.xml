@@ -8,8 +8,8 @@
     <language>en-US</language>
     <wp:wxr_version>1.2</wp:wxr_version>
     <item>
-      <wp:attachment_url>https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1268&q=80</wp:attachment_url>
-      <link>https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1268&q=80</link>
+      <wp:attachment_url>https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=crop&amp;w=1268&amp;q=80</wp:attachment_url>
+      <link>https://images.unsplash.com/photo-1601276861758-2d9c5ca69a17?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=crop&amp;w=1268&amp;q=80</link>
       <title>miniature-green-pumpkin-on-white-table</title>
       <wp:post_name>Carmen-Thumbnail-jpg</wp:post_name>
       <wp:post_type>attachment</wp:post_type>

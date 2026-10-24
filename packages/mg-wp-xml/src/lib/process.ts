@@ -1,9 +1,16 @@
 import {URL} from 'node:url';
+import {decode} from 'html-entities';
+import {
+    RecordDataError,
+    type WordPressOptions,
+    type WordPressRecord,
+    type LegacyAuthor,
+    type MappedPost
+} from './types.js';
 import {slugify} from '@tryghost/string';
-import errors from '@tryghost/errors';
 import MarkdownIt from 'markdown-it';
 import MgWpAPI from '@tryghost/mg-wp-api';
-import {domUtils, xmlUtils, youtubeUtils, stringUtils} from '@tryghost/mg-utils';
+import {domUtils, youtubeUtils, stringUtils} from '@tryghost/mg-utils';
 import {isSerialized, unserialize} from 'php-serialize';
 
 /**
@@ -11,7 +18,7 @@ import {isSerialized, unserialize} from 'php-serialize';
  * by XML parsing (e.g. \r\n → \n normalization changes actual byte length
  * but the declared s:N: count still reflects the original).
  */
-const fixSerializedLengths = value => {
+const fixSerializedLengths = (value: string) => {
     return value.replace(/s:\d+:"([\s\S]*?)";/g, (match, content) => {
         const byteLength = Buffer.byteLength(content, 'utf8');
         return `s:${byteLength}:"${content}";`;
@@ -20,10 +27,9 @@ const fixSerializedLengths = value => {
 
 const {processFragment} = domUtils;
 const {getYouTubeID} = youtubeUtils;
-const {parseXml} = xmlUtils;
 
 // Helper to ensure value is always an array
-const ensureArray = value => {
+const ensureArray = (value: any): any[] => {
     if (!value) {
         return [];
     }
@@ -31,7 +37,7 @@ const ensureArray = value => {
 };
 
 // Helper to get text content from a node (handles both string and object with #text)
-const getText = node => {
+const getText = (node: any): string => {
     if (node === undefined || node === null) {
         return '';
     }
@@ -44,7 +50,7 @@ const getText = node => {
     return String(node);
 };
 
-const processUser = user => {
+const processUser = (user: WordPressRecord): LegacyAuthor => {
     const authorSlug = slugify(getText(user['wp:author_login']));
     const bio = getText(user['wp:author_description']) || '';
     const avatar = getText(user['wp:author_avatar']) || '';
@@ -61,14 +67,17 @@ const processUser = user => {
     };
 };
 
-const processWPMeta = async post => {
-    let metaData = {};
+const processWPMeta = async (
+    post: WordPressRecord,
+    onWarning?: WordPressOptions['onWarning']
+): Promise<Record<string, any>> => {
+    let metaData: Record<string, any> = {};
 
     const postMetas = ensureArray(post['wp:postmeta']);
 
     for (const meta of postMetas) {
         let key = getText(meta['wp:meta_key']);
-        let value = getText(meta['wp:meta_value']);
+        let value: any = getText(meta['wp:meta_value']);
 
         try {
             if (isSerialized(value)) {
@@ -80,10 +89,7 @@ const processWPMeta = async post => {
             try {
                 value = unserialize(fixSerializedLengths(value), {}, {strict: false});
             } catch (retryError) {
-                // If still failing, silently fail in prod, but log the error locally
-                if (process?.env?.NODE_ENV !== 'production') {
-                    console.log(key, value, retryError); // eslint-disable-line no-console
-                }
+                onWarning?.({key, reason: (retryError as Error).message});
             }
         }
 
@@ -98,8 +104,8 @@ const processWPMeta = async post => {
     return metaData;
 };
 
-const processEnclosureAudio = metaData => {
-    const enclosure = metaData?.enclosure;
+const processEnclosureAudio = (metaData: Record<string, any>) => {
+    const enclosure = metaData.enclosure;
     if (!enclosure || typeof enclosure !== 'string') {
         return null;
     }
@@ -123,7 +129,7 @@ const processEnclosureAudio = metaData => {
 
 // The feature images is not "connected" to the post, other than it's located
 // in the sibling `<item>` node.
-const processFeatureImage = (post, attachments) => {
+const processFeatureImage = (post: WordPressRecord, attachments: any[] = []) => {
     let thumbnailId = null;
 
     const postMetas = ensureArray(post['wp:postmeta']);
@@ -133,7 +139,7 @@ const processFeatureImage = (post, attachments) => {
         const val = getText(meta['wp:meta_value']);
 
         if (key === '_thumbnail_id') {
-            thumbnailId = val;
+            thumbnailId = val.trim();
         }
     }
 
@@ -146,9 +152,9 @@ const processFeatureImage = (post, attachments) => {
     return attachmentData;
 };
 
-const processTags = (categories, options = {}) => {
-    const categoriesOutput = [];
-    const tags = [];
+const processTags = (categories: any, options: WordPressOptions = {}) => {
+    const categoriesOutput: any[] = [];
+    const tags: any[] = [];
 
     // If options.tags is false, skip post_tag (only import categories)
     const includeTags = options.tags !== false;
@@ -163,24 +169,26 @@ const processTags = (categories, options = {}) => {
 
     for (const taxonomy of categoriesArray) {
         const domain = taxonomy['@_domain'];
-        const nicename = taxonomy['@_nicename'];
+        const nicename = taxonomy['@_nicename'] || slugify(getText(taxonomy));
         const name = getText(taxonomy);
 
         // `category` takes priority and is use as the primary tag, so gets added to the list first
         if (domain === 'category') {
             categoriesOutput.push({
                 url: `/tag/${nicename}`,
+                sourceKey: `${domain}:${nicename}`,
                 data: {
-                    slug: nicename.substring(0, 190),
-                    name: name.replace('&amp;', '&').substring(0, 190)
+                    slug: nicename,
+                    name: decode(name)
                 }
             });
         } else if (includeTags && allowedTerms.includes(domain)) {
             tags.push({
                 url: `/tag/${nicename}`,
+                sourceKey: `${domain}:${nicename}`,
                 data: {
-                    slug: nicename.substring(0, 190),
-                    name: name.replace('&amp;', '&').substring(0, 190)
+                    slug: nicename,
+                    name: decode(name)
                 }
             });
         }
@@ -191,7 +199,7 @@ const processTags = (categories, options = {}) => {
 
 const {stripHtml} = stringUtils;
 
-const preProcessContent = async ({html, options}) => {
+const preProcessContent = async ({html, options = {}}: {html: string; options?: WordPressOptions}) => {
     // eslint-disable-line no-shadow
     // Drafts can have empty post bodies
     if (!html) {
@@ -239,7 +247,7 @@ const preProcessContent = async ({html, options}) => {
     return html;
 };
 
-const processHTMLContent = async args => {
+const processHTMLContent = async (args: any) => {
     // If rawHtml is set, don't process the HTML and wrap content in a HTML card
     if (args?.options?.rawHtml) {
         return `<!--kg-card-begin: html-->${args.html}<!--kg-card-end: html-->`;
@@ -255,7 +263,14 @@ const processHTMLContent = async args => {
     });
 };
 
-const processPost = async (post, users, options, fileCache) => {
+const mdParser = new MarkdownIt({html: true, breaks: true});
+
+const processPost = async (
+    post: WordPressRecord,
+    users: LegacyAuthor[],
+    options: WordPressOptions,
+    fileCache?: any
+): Promise<MappedPost> => {
     const {addTag, url, excerpt, excerptSelector, featureImageCaption} = options;
     const postTypeVal = getText(post['wp:post_type']);
     const postType = postTypeVal === 'page' ? 'page' : 'post';
@@ -272,7 +287,7 @@ const processPost = async (post, users, options, fileCache) => {
 
     // Extract authors from Co-Authors Plus format: <category domain="author" nicename="slug">Name</category>
     // This is the most common multi-author plugin for WordPress
-    const coAuthors = [];
+    const coAuthors: LegacyAuthor[] = [];
     const seenSlugs = new Set();
 
     const categories = ensureArray(post.category);
@@ -293,6 +308,7 @@ const processPost = async (post, users, options, fileCache) => {
                     // Create author entry from the category data
                     coAuthors.push({
                         url: authorSlug,
+                        sourceKey: `login:${authorSlug}`,
                         data: {
                             slug: authorSlug,
                             name: authorName
@@ -307,12 +323,12 @@ const processPost = async (post, users, options, fileCache) => {
     // For single-author posts, we use the `author` field for backwards compatibility
     const authors = coAuthors.length > 1 ? coAuthors : [];
 
-    const postObj = {
+    const postObj: MappedPost = {
         url: postUrl,
         wpPostType: postTypeVal,
         data: {
             slug: getText(post['wp:post_name']).replace(/(\.html)/i, ''),
-            title: stripHtml(getText(post.title).substring(0, 255)),
+            title: decode(stripHtml(getText(post.title))),
             comment_id: getText(post['wp:post_id']) || null,
             status: getText(post['wp:status']) === 'publish' ? 'published' : 'draft',
             published_at: postDate,
@@ -329,16 +345,14 @@ const processPost = async (post, users, options, fileCache) => {
                 authors.length === 0
                     ? coAuthors.length === 1
                         ? coAuthors[0]
-                        : users
-                          ? users.find(user => user.data.slug === dcCreatorSlug)
-                          : null
+                        : users.find(user => user.data.slug === dcCreatorSlug)
                     : undefined,
             tags: []
         }
     };
 
     if (postObj.data.slug.trim().length === 0) {
-        postObj.data.slug = slugify(postObj.data.title).substring(0, 185);
+        postObj.data.slug = slugify(postObj.data.title);
     }
 
     postObj.data.html = await preProcessContent({
@@ -346,10 +360,6 @@ const processPost = async (post, users, options, fileCache) => {
         options
     });
 
-    const mdParser = new MarkdownIt({
-        html: true,
-        breaks: true
-    });
     postObj.data.html = mdParser.render(postObj.data.html);
 
     if (excerpt && !excerptSelector) {
@@ -369,7 +379,7 @@ const processPost = async (post, users, options, fileCache) => {
     });
 
     // Check for audio enclosure in post metadata and prepend audio card
-    const metaData = await processWPMeta(post);
+    const metaData = await processWPMeta(post, options.onWarning);
     const audioCardHTML = processEnclosureAudio(metaData);
     const hasLibsynEmbed = processFragment(postObj.data.html, p => p.$('iframe[src*="libsyn.com"]').length > 0);
     if (audioCardHTML && !hasLibsynEmbed) {
@@ -377,12 +387,17 @@ const processPost = async (post, users, options, fileCache) => {
     }
 
     // Extract Yoast SEO meta title and description
+    for (const field of ['_yoast_wpseo_title', '_yoast_wpseo_metadesc']) {
+        if (metaData[field] !== undefined && typeof metaData[field] !== 'string') {
+            throw new RecordDataError(`WordPress metadata ${field} must be text`);
+        }
+    }
     if (metaData._yoast_wpseo_title) {
-        postObj.data.meta_title = metaData._yoast_wpseo_title.substring(0, 300);
+        postObj.data.meta_title = metaData._yoast_wpseo_title;
     }
 
     if (metaData._yoast_wpseo_metadesc) {
-        postObj.data.meta_description = metaData._yoast_wpseo_metadesc.substring(0, 500);
+        postObj.data.meta_description = metaData._yoast_wpseo_metadesc;
     }
 
     if (categories.length >= 1) {
@@ -422,6 +437,7 @@ const processPost = async (post, users, options, fileCache) => {
         if (post['dc:creator']) {
             postObj.data.author = {
                 url: dcCreatorSlug,
+                sourceKey: `login:${getText(post['dc:creator'])}`,
                 data: {
                     slug: dcCreatorSlug
                 }
@@ -439,40 +455,8 @@ const processPost = async (post, users, options, fileCache) => {
     return postObj;
 };
 
-const processPosts = async (xml, users, options, fileCache) => {
-    let postsOutput = [];
-
-    const items = xml?.rss?.channel?.item;
-    const itemsArray = ensureArray(items);
-
-    let allowedTypes = ['post', 'page'];
-
-    if (options.cpt) {
-        allowedTypes = allowedTypes.concat(options.cpt);
-    }
-
-    for (let i = 0; i < itemsArray.length; i++) {
-        const post = itemsArray[i];
-        const postType = getText(post['wp:post_type']);
-
-        if (allowedTypes.includes(postType)) {
-            postsOutput.push(await processPost(post, users, options, fileCache));
-        }
-
-        // Null out the source item to free its content:encoded HTML from memory
-        itemsArray[i] = null;
-    }
-
-    // Clear the original items reference on the XML object
-    if (xml?.rss?.channel) {
-        xml.rss.channel.item = null;
-    }
-
-    return postsOutput;
-};
-
-const processAttachment = async post => {
-    let attachmentKey = getText(post['wp:post_id']);
+const processAttachment = async (post: WordPressRecord) => {
+    let attachmentKey = getText(post['wp:post_id']).trim();
     let attachmentUrl = getText(post['wp:attachment_url']) || null;
     let attachmentDesc = getText(post['content:encoded']) || null;
     let attachmentTitle = getText(post.title) || null;
@@ -496,179 +480,20 @@ const processAttachment = async post => {
         description: attachmentDesc,
         title: attachmentTitle,
         alt: attachmentAlt,
-        width: meta?._wp_attachment_metadata?.width,
-        height: meta?._wp_attachment_metadata?.height
+        width: meta._wp_attachment_metadata?.width,
+        height: meta._wp_attachment_metadata?.height
     };
 };
 
-const processAttachments = async xml => {
-    let attachmentsOutput = [];
-
-    const items = ensureArray(xml?.rss?.channel?.item);
-
-    for (const post of items) {
-        const postType = getText(post['wp:post_type']);
-
-        if (postType === 'attachment') {
-            attachmentsOutput.push(await processAttachment(post));
-        }
-    }
-
-    return attachmentsOutput;
-};
-
-const processUsers = xml => {
-    const usersOutput = [];
-
-    const authors = ensureArray(xml?.rss?.channel?.['wp:author']);
-
-    for (const user of authors) {
-        usersOutput.push(processUser(user));
-    }
-
-    return usersOutput;
-};
-
-// Parse one or more XML export strings and merge them into a single
-// `{rss: {channel}}` structure. WordPress exports split over multiple files
-// each contain a complete document, so items are combined and authors are
-// deduplicated across all channels
-const parseAndMergeInputs = async input => {
-    const inputs = Array.isArray(input) ? input : [input];
-
-    const channels = [];
-
-    for (const raw of inputs) {
-        // Skip empty documents, which parseXml would treat as a file path
-        if (!raw || !raw.trim()) {
-            continue;
-        }
-
-        const xml = await parseXml(raw);
-
-        // If a string contains multiple concatenated documents, `rss` is
-        // parsed as an array of documents rather than a single object
-        for (const rss of ensureArray(xml?.rss)) {
-            channels.push(...ensureArray(rss?.channel));
-        }
-    }
-
-    if (channels.length <= 1) {
-        return {rss: {channel: channels[0] ?? null}};
-    }
-
-    const mergedChannel = {...channels[0]};
-
-    mergedChannel.item = channels.flatMap(channel => ensureArray(channel.item));
-
-    const seenAuthorLogins = new Set();
-    mergedChannel['wp:author'] = channels
-        .flatMap(channel => ensureArray(channel['wp:author']))
-        .filter(author => {
-            const login = getText(author['wp:author_login']);
-            if (seenAuthorLogins.has(login)) {
-                return false;
-            }
-            seenAuthorLogins.add(login);
-            return true;
-        });
-
-    if (!mergedChannel.link) {
-        mergedChannel.link = channels.find(channel => channel.link)?.link;
-    }
-
-    return {rss: {channel: mergedChannel}};
-};
-
-const all = async (input, {options, fileCache}) => {
-    const {drafts, pages, posts} = options;
-    const output = {
-        posts: [],
-        users: []
-    };
-
-    if (input.length < 1) {
-        return new errors.NoContentError({message: 'Input file is empty'});
-    }
-
-    const xml = await parseAndMergeInputs(input);
-
-    // Release the raw XML string(s) now that they're parsed
-    input = null; // eslint-disable-line no-param-reassign
-
-    // grab the URL of the site we're importing
-    options.url = getText(xml?.rss?.channel?.link);
-
-    // process users first, as we're using this information
-    // to populate the author data for posts
-    output.users = processUsers(xml);
-
-    options.attachments = await processAttachments(xml);
-    output.posts = await processPosts(xml, output.users, options, fileCache);
-
-    if (options.postsBefore && options.postsAfter) {
-        const startDate = new Date(options.postsAfter);
-        const endDate = new Date(options.postsBefore).setDate(new Date(options.postsBefore).getDate() + 1);
-
-        output.posts = output.posts.filter(post => {
-            if (new Date(post.data.published_at) > startDate && new Date(post.data.published_at) < endDate) {
-                return post;
-            } else {
-                return false;
-            }
-        });
-    } else if (options.postsAfter) {
-        const startDate = new Date(options.postsAfter);
-
-        output.posts = output.posts.filter(post => {
-            if (new Date(post.data.published_at) > startDate) {
-                return post;
-            } else {
-                return false;
-            }
-        });
-    } else if (options.postsBefore) {
-        const endDate = new Date(options.postsBefore).setDate(new Date(options.postsBefore).getDate() + 1);
-
-        output.posts = output.posts.filter(post => {
-            if (new Date(post.data.published_at) < endDate) {
-                return post;
-            } else {
-                return false;
-            }
-        });
-    }
-
-    if (!drafts) {
-        // remove draft posts
-        output.posts = output.posts.filter(post => post.data.status !== 'draft');
-    }
-
-    if (!pages) {
-        // remove pages
-        output.posts = output.posts.filter(post => post.wpPostType !== 'page');
-    }
-
-    if (!posts) {
-        // remove posts
-        output.posts = output.posts.filter(post => post.wpPostType !== 'post');
-    }
-
-    return output;
-};
-
-export default {
+export {
+    ensureArray,
+    getText,
     processUser,
+    processPost,
+    processWPMeta,
+    processAttachment,
     processFeatureImage,
     processTags,
     preProcessContent,
-    processHTMLContent,
-    processPost,
-    processPosts,
-    processAttachment,
-    processAttachments,
-    processUsers,
-    all
+    processHTMLContent
 };
-
-export {processWPMeta};

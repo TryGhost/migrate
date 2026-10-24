@@ -1,4 +1,3 @@
-import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import wpXml from '../sources/wp-xml.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
@@ -105,12 +104,6 @@ const options = [
         desc: "Don't process HTML and wrap in a HTML card"
     },
     {
-        type: 'boolean',
-        flags: '--fallBackHTMLCard',
-        defaultValue: true,
-        desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
-    },
-    {
         type: 'array',
         flags: '--cpt',
         defaultValue: null,
@@ -151,6 +144,18 @@ const options = [
         flags: '--convertLibsynEmbed',
         defaultValue: false,
         desc: 'Convert Libsyn iframe embeds to audio cards'
+    },
+    {
+        type: 'boolean',
+        flags: '--rereadSource',
+        defaultValue: false,
+        desc: 'Replace the stored XML source snapshot while preserving downloaded assets'
+    },
+    {
+        type: 'number',
+        flags: '--postsPerFile',
+        defaultValue: 2000,
+        desc: 'Maximum posts written per Ghost import JSON file'
     },
     {
         type: 'boolean',
@@ -207,15 +212,12 @@ const run = async argv => {
         // Run the migration
         await migrate.run(context);
 
-        if (argv.verbose && context.result) {
-            ui.log.info('Done');
-        }
-
-        if (argv.veryVerbose && context.result) {
-            ui.log.info(inspect(context.result.data, false, 2));
-        }
+        ui.log.info(
+            `${context.summary.imported} imported, ${context.summary.skipped} skipped, ${context.warningCount} warnings. Report: ${context.reportFile.path}`
+        );
     } catch (error) {
         ui.log.error(error);
+        process.exitCode = 1;
     }
 };
 
