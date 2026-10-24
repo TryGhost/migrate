@@ -517,3 +517,41 @@ describe('hydrate', function () {
         assert.ok(ctx.errors[0].message.includes('https://example.com/post/'));
     });
 });
+
+it('uses an exposed schema to skip unknown fields while propagating real setter errors', async () => {
+    const scraper = new WebScraper(makeMockFileCache(), mockConfig);
+    scraper.scrape = mock.fn(async () => ({responseData: {meta_title: 'Updated', unknown: 'Ignored'}})) as any;
+    const fields: Record<string, unknown> = {};
+    const post = {
+        schema: {shape: {meta_title: {}}},
+        getSourceValue: () => mockUrl,
+        webscrapeData: null as any,
+        set(key: string, value: unknown) {
+            fields[key] = value;
+        }
+    };
+    await scraper.scrapePost(post);
+    assert.deepEqual(fields, {meta_title: 'Updated'});
+    post.set = () => {
+        throw new Error('validation failed');
+    };
+    await assert.rejects(scraper.scrapePost(post), /validation failed/);
+});
+
+it('accepts an explicit URL for context posts without embedded originals', async () => {
+    const scraper = new WebScraper(makeMockFileCache(), mockConfig);
+    const scrape = mock.fn(async () => ({responseData: {meta_title: 'Explicit URL'}}));
+    scraper.scrape = scrape as any;
+    const fields: Record<string, unknown> = {};
+    const post = {
+        schema: {shape: {meta_title: {}}},
+        webscrapeData: null as any,
+        set(key: string, value: unknown) {
+            fields[key] = value;
+        }
+    };
+    await scraper.scrapePost(post);
+    assert.equal(scrape.mock.callCount(), 0);
+    await scraper.scrapePost(post, {url: mockUrl});
+    assert.deepEqual(fields, {meta_title: 'Explicit URL'});
+});

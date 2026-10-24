@@ -20,9 +20,10 @@ export interface ScrapeResponse {
 }
 
 export interface ScrapePostTarget {
-    getSourceValue(key: string): any;
+    getSourceValue?(key: string): any;
     set(key: string, value: any): any;
     webscrapeData: any;
+    schema?: {shape: Record<string, unknown>};
 }
 
 export type PostProcessor = (scrapedData: any, data: any, options: any) => any;
@@ -185,16 +186,17 @@ export default class WebScraper {
 
     /**
      * Scrape metadata for a single post and set the results via post.set().
-     * The post is duck-typed — it needs getSourceValue(key), set(key, value),
+     * The caller supplies its chosen URL. Legacy targets may expose getSourceValue(key).
+     * The post is duck-typed — it needs set(key, value),
      * and a webscrapeData setter. Fields not in the post's schema are silently skipped.
      * The raw scraped response is stored on post.webscrapeData for later use.
      */
-    async scrapePost(post: ScrapePostTarget, options: {wait_after_scrape?: number} = {}): Promise<void> {
+    async scrapePost(post: ScrapePostTarget, options: {url?: string; wait_after_scrape?: number} = {}): Promise<void> {
         if (!this.config.posts) {
             return;
         }
 
-        const url = post.getSourceValue('url');
+        const url = options.url ?? post.getSourceValue?.('url');
         if (!url) {
             return;
         }
@@ -211,10 +213,16 @@ export default class WebScraper {
         const processed = this.postProcessor(responseData, null, options);
         for (const [key, value] of Object.entries(processed)) {
             if (value !== null && value !== undefined && value !== '') {
-                try {
-                    post.set(key, value);
-                } catch {
-                    // skip fields not in schema
+                if (post.schema) {
+                    if (key in post.schema.shape) {
+                        post.set(key, value);
+                    }
+                } else {
+                    try {
+                        post.set(key, value);
+                    } catch {
+                        // Legacy duck-typed targets do not expose their schema.
+                    }
                 }
             }
         }
