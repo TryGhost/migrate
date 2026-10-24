@@ -476,3 +476,20 @@ describe('fixPost', function () {
         assert.ok(post.getData().html.includes('<a href="/my-post/">click</a>'));
     });
 });
+
+it('fixes HTML-only context targets without requesting Lexical fields', async () => {
+    const fixer = new linkFixer();
+    const values = {html: '<p><a href="https://example.com/old/">Link</a></p>'};
+    const post = {
+        schema: {shape: {html: {}}},
+        get(field) {
+            assert.equal(field, 'html');
+            return values[field];
+        },
+        set(field, value) {
+            values[field] = value;
+        }
+    };
+    await fixer.fixPost(post, url => (url === 'example.com/old/' ? '/new/' : null));
+    assert.ok(values.html.includes('href="/new/"'));
+});

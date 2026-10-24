@@ -218,6 +218,9 @@ export default class LinkFixer {
         }
 
         for (const field of lexicalFields) {
+            if (post.schema?.shape && !(field in post.schema.shape)) {
+                continue;
+            }
             const value = post.get(field);
             if (!value) {
                 continue;
