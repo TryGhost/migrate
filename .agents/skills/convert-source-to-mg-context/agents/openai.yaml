@@ -1,0 +1,4 @@
+interface:
+  display_name: "Convert sources to mg-context"
+  short_description: "Port source adapters and runners to mg-context"
+  default_prompt: "Use $convert-source-to-mg-context to convert this source adapter and runner to the current mg-context lifecycle."
