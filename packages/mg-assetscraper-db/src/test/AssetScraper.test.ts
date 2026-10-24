@@ -1781,3 +1781,50 @@ it('closes its asset cache idempotently', async () => {
         await fileCache.emptyCurrentCacheDir();
     }
 });
+
+it('can report failures without retaining an unbounded download history', async () => {
+    const fileCache = new fsUtils.FileCache('bounded-assets', {tmpPath});
+    const failures: unknown[] = [];
+    const scraper = new AssetScraper(fileCache, {
+        allowAllDomains: true,
+        retainFailures: false,
+        onFailure: failure => failures.push(failure)
+    });
+    try {
+        await scraper.init();
+        nock('https://example.com').get('/missing').reply(404, 'missing');
+        await scraper.downloadExtractSave('https://example.com/missing', 'https://example.com/missing');
+        assert.equal(failures.length, 1);
+        assert.equal(scraper.failedDownloads.length, 0);
+    } finally {
+        scraper.close();
+        scraper.close();
+        await fileCache.emptyCurrentCacheDir();
+    }
+});
+
+it('can propagate local storage errors while keeping download failures optional', async () => {
+    const fileCache = new fsUtils.FileCache('strict-assets', {tmpPath});
+    fileCache.writeContentFile = async () => {
+        throw new Error('disk full');
+    };
+    const scraper = new AssetScraper(fileCache, {allowAllDomains: true, strictErrors: true, retainFailures: false});
+    try {
+        await scraper.init();
+        const bytes = await readFile(join(fixturesPath, 'image.jpg'));
+        nock('https://example.com').get('/storage.jpg').reply(200, bytes);
+        await assert.rejects(
+            scraper.downloadExtractSave('https://example.com/storage.jpg', 'https://example.com/storage.jpg'),
+            /disk full/
+        );
+        nock('https://example.com').get('/optional.jpg').reply(404, 'missing');
+        const result = await scraper.downloadExtractSave(
+            'https://example.com/optional.jpg',
+            'https://example.com/optional.jpg'
+        );
+        assert.equal(result.path, 'https://example.com/optional.jpg');
+    } finally {
+        scraper.close();
+        await fileCache.emptyCurrentCacheDir();
+    }
+});

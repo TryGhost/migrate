@@ -32,6 +32,10 @@ export interface FileCache {
 
 export interface AssetScraperOptions {
     optimize?: boolean;
+    retainFailures?: boolean;
+    /** Propagate storage/processing errors while keeping remote download failures optional. */
+    strictErrors?: boolean;
+    onFailure?: (failure: FailedDownload) => void;
     baseUrl?: string;
     findOnlyMode?: boolean;
     domains?: string[];

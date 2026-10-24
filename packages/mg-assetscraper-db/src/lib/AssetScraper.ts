@@ -69,6 +69,9 @@ export default class AssetScraper {
     #originalExport: Record<string, unknown> | undefined;
     #foundItems: string[];
     #failedDownloads: FailedDownload[];
+    #retainFailures: boolean;
+    #strictErrors: boolean;
+    #onFailure?: (failure: FailedDownload) => void;
 
     constructor(
         fileCache: FileCache,
@@ -76,6 +79,9 @@ export default class AssetScraper {
         ctxOrJsonPath: AssetScraperContext | string = {}
     ) {
         this.#fileCache = fileCache;
+        this.#retainFailures = options.retainFailures ?? true;
+        this.#strictErrors = options.strictErrors ?? false;
+        this.#onFailure = options.onFailure;
 
         this.#defaultOptions = {
             optimize: options.optimize ?? true
@@ -481,14 +487,16 @@ export default class AssetScraper {
             };
         }
 
+        let downloading = true;
         try {
             // Get the file
             const response = await this.getRemoteMedia(src);
+            downloading = false;
 
             if (!response) {
                 // logging.warn(`Failed to download remote media: ${src}`);
                 await this.#assetCache.update(cacheId, 'skip', 'no response');
-                this.#failedDownloads.push({url: src, error: 'No response from server'});
+                this.#recordFailure({url: src, error: 'No response from server'});
                 return {
                     path: src,
                     content
@@ -504,7 +512,7 @@ export default class AssetScraper {
             const filePath = await this.storeMediaLocally(src, fileData);
             if (!filePath) {
                 await this.#assetCache.update(cacheId, 'skip', 'no storage found');
-                this.#failedDownloads.push({url: src, error: 'Failed to store media locally'});
+                this.#recordFailure({url: src, error: 'Failed to store media locally'});
                 // logging.warn(`Failed to store media locally: ${src}`);
                 return {
                     path: src,
@@ -520,10 +528,13 @@ export default class AssetScraper {
                 content
             };
         } catch (error: any) {
+            if (this.#strictErrors && !downloading) {
+                throw error;
+            }
             // Log the error and continue with other assets
             const errorMessage = error?.message || 'Unknown error';
             await this.#assetCache.update(cacheId, 'skip', errorMessage);
-            this.#failedDownloads.push({url: src, error: errorMessage});
+            this.#recordFailure({url: src, error: errorMessage});
 
             // Return original src so the content remains valid
             return {
@@ -934,6 +945,13 @@ export default class AssetScraper {
 
     close(): void {
         this.#assetCache.close();
+    }
+
+    #recordFailure(failure: FailedDownload): void {
+        if (this.#retainFailures) {
+            this.#failedDownloads.push(failure);
+        }
+        this.#onFailure?.(failure);
     }
 
     get foundItems() {
