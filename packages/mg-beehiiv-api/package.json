@@ -41,7 +41,7 @@
   "dependencies": {
     "@tryghost/errors": "catalog:",
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/string": "0.3.7",
+    "@tryghost/string": "0.3.8",
     "simple-dom": "catalog:"
   }
 }
