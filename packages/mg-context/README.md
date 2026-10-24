@@ -103,7 +103,7 @@ Schema version 5 requires rebuilding older or incompatible experimental database
 
 Post source/content/meta fields and helpers, `addSourcePost()`, source-attribute filtering, `ContentIdentity`, and constructor identity validation have been removed. Automatic cleanup of previous exports, ownership manifests, whole-export recovery, and the `replaceExisting` option have also been removed; consumers manage that lifecycle. Author/tag caches have been removed in favor of indexed database reuse. See the [migration guide](docs/source-records.md) and [API reference](docs/api-reference.md).
 
-This change delivers mg-context only. Existing adapters, the Ghost/WordPress runners, and the web scraper still need follow-up API changes; workspace-wide build and integration readiness are deferred. Adapters remain independently published npm packages with separate streaming parser and record-mapper entrypoints.
+The WordPress XML and Ghost API runners use this source-record lifecycle. The web scraper accepts an explicit URL chosen by its caller. Source adapters remain independently published npm packages; parsing input, mapping originals, and orchestrating runs are separate responsibilities.
 
 ## Development
 

@@ -42,9 +42,9 @@ Ingestion diagnostics survive remapping. Mapping diagnostics do not. Explicit `g
 
 All incompatible existing databases must be rebuilt. Rejection leaves their contents untouched; an operator or runner must explicitly replace the database. Downloaded assets are managed separately and need not be deleted.
 
-Existing adapters and runners are deliberately not ported in this delivery. In particular, `mg-ghost-api` still supplies removed constructor/post options, the Ghost runner still derives reuse from mapped counts, and `mg-webscraper` still requests `getSourceValue()`. These are follow-up integration changes. The stashed WordPress work must be adapted to the new parser/mapper boundary rather than restored wholesale.
+The WordPress XML and Ghost API runners use completed source records for reuse and rebuild mapped content on every run. `mg-webscraper.scrapePost()` accepts the URL chosen by its caller, while retaining support for older duck-typed targets. Adapters remain independent packages; source-specific parsing and mapping do not belong in core.
 
-Core's streaming export/report APIs produce local files and descriptors only. ZIP creation, remote upload streams, report placement, CLI flags, and complete WordPress integration remain runner work.
+Core's streaming export/report APIs produce local files and descriptors only. ZIP creation, remote upload streams, report placement, CLI flags, and orchestration belong to runners.
 
 ## Output ownership
 
