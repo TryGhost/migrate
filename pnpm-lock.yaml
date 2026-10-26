@@ -234,8 +234,8 @@ catalogs:
       specifier: 1.4.0
       version: 1.4.0
     transliteration:
-      specifier: 2.6.1
-      version: 2.6.1
+      specifier: 2.7.0
+      version: 2.7.0
     typescript:
       specifier: 7.0.2
       version: 7.0.2
@@ -330,7 +330,7 @@ importers:
         version: 0.35.5(@types/node@24.19.2)
       transliteration:
         specifier: 'catalog:'
-        version: 2.6.1
+        version: 2.7.0
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -608,7 +608,7 @@ importers:
         version: 0.35.5(@types/node@24.19.2)
       transliteration:
         specifier: 'catalog:'
-        version: 2.6.1
+        version: 2.7.0
     devDependencies:
       c8:
         specifier: 'catalog:'
@@ -6180,8 +6180,8 @@ packages:
     resolution: {integrity: sha512-BcDSDW+SIGWVOns1Zm6Yg91q9AEj7eaID0QDY9oIqJD1A8dscNwMcl9Sms2DeuWCNov1X0/oXanHGYQBSLwZsg==}
     engines: {node: ^22.14.0 || >=24.0.0}
 
-  transliteration@2.6.1:
-    resolution: {integrity: sha512-hJ9BhrQAOnNTbpOr1MxsNjZISkn7ppvF5TKUeFmTE1mG4ZPD/XVxF0L0LUoIUCWmQyxH0gJpVtfYLAWf298U9w==}
+  transliteration@2.7.0:
+    resolution: {integrity: sha512-rCVoWvYXlRMKdwymthS6IR25z2XQnV3Iad3mQPpC+CEdvF7Q8yhq4a3HRPCIDf42nij2v5w7lItxn6cwqcSKiw==}
     engines: {node: '>=20.0.0'}
     hasBin: true
 
@@ -11635,7 +11635,7 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  transliteration@2.6.1: {}
+  transliteration@2.7.0: {}
 
   trim-trailing-lines@1.1.4: {}
 
