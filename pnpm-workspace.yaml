@@ -29,7 +29,7 @@ catalog:
   "listr2": "11.1.1"
   "log-update": "8.0.0"
   "markdown-it": "15.0.3"
-  "nock": "14.0.17"
+  "nock": "15.0.5"
   "node-fetch": "3.3.2"
   "sanitize-html": "2.18.1"
   "sharp": "0.35.5"
