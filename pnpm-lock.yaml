@@ -174,11 +174,11 @@ catalogs:
       specifier: 3.4.2
       version: 3.4.2
     '@tryghost/kg-default-cards':
-      specifier: 10.3.7
-      version: 10.3.7
+      specifier: 10.3.9
+      version: 10.3.9
     '@tryghost/kg-html-to-lexical':
-      specifier: 1.4.1
-      version: 1.4.1
+      specifier: 1.4.3
+      version: 1.4.3
     '@tryghost/pretty-cli':
       specifier: 3.3.16
       version: 3.3.16
@@ -668,7 +668,7 @@ importers:
         version: 3.4.2
       '@tryghost/kg-html-to-lexical':
         specifier: 'catalog:'
-        version: 1.4.1(@lexical/selection@0.13.1(lexical@0.13.1))(@lexical/utils@0.13.1(lexical@0.13.1))
+        version: 1.4.3(@lexical/selection@0.13.1(lexical@0.13.1))(@lexical/utils@0.13.1(lexical@0.13.1))
     devDependencies:
       '@tryghost/listr-smart-renderer':
         specifier: workspace:*
@@ -990,7 +990,7 @@ importers:
     dependencies:
       '@tryghost/kg-default-cards':
         specifier: 'catalog:'
-        version: 10.3.7
+        version: 10.3.9
       fast-xml-parser:
         specifier: 'catalog:'
         version: 5.11.2
@@ -1049,7 +1049,7 @@ importers:
         version: 3.4.2
       '@tryghost/kg-default-cards':
         specifier: 'catalog:'
-        version: 10.3.7
+        version: 10.3.9
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
@@ -3873,8 +3873,8 @@ packages:
     resolution: {integrity: sha512-O4TLY2nZ0djSh1sGE3ifNCjntmkdH8Mvm7INPk0dwNJZ/w4a+NRIdtqBcbuSulj6NA9nVCMtB9kmg3U180PZwg==}
     engines: {node: ^22.13.1 || ^24.0.0}
 
-  '@tryghost/kg-default-cards@10.3.7':
-    resolution: {integrity: sha512-2cTNnzLqGLqIinIZZyu7ufW4m0kdnQl9r6eLvfMfcvDUa+Ts5Tvc8BuDNd4XFpL08NxTunD+4ZleQqeoFXRWug==}
+  '@tryghost/kg-default-cards@10.3.9':
+    resolution: {integrity: sha512-zkojvfs8t1/GVrkxczsN8OIm11khMXZ/lZ0VqG7cmQFIEvHx2RicGDI2VwbYvwqXCETax2DvgY4hEha2G/iKFw==}
     engines: {node: ^22.13.1 || ^24.0.0}
 
   '@tryghost/kg-default-nodes@2.2.5':
@@ -3884,8 +3884,8 @@ packages:
   '@tryghost/kg-default-transforms@1.3.8':
     resolution: {integrity: sha512-2iDuP8PEmeB7rZuh6DHX7/B9WoNVjBWbrgXqLP/MfmxW+7uOGvEIdrPg68aukM+j9HTYTz+tM+AnpnAJbo7HTA==}
 
-  '@tryghost/kg-html-to-lexical@1.4.1':
-    resolution: {integrity: sha512-OvTMY6wnQOFyplY6bMryN3FCfTBeEAK2iyAk3sMpPi0JOiBVa/LGmXR+aHeL/G4KriqPvSrwKA+uGR8Ui6exMQ==}
+  '@tryghost/kg-html-to-lexical@1.4.3':
+    resolution: {integrity: sha512-f1oqTjXSOfLxHGlAvh5g8RVUhxToSf5YzjCQcQ3vSBDql2fsBOumTbTLPI/ZM9EVKkWQMJONbyBKH8mU86CsUw==}
     engines: {node: ^22.22.2 || ^24.15.0}
 
   '@tryghost/kg-markdown-html-renderer@7.2.9':
@@ -3901,17 +3901,17 @@ packages:
   '@tryghost/root-utils@2.3.18':
     resolution: {integrity: sha512-4BPotmr+7+IGwqbvgCSKpO4/JUNci1YjSMJx22XjgWa38lM+coeNwr/uToGkcBbdxfaZBmFSig086FkCwlvDMg==}
 
-  '@tryghost/string@0.3.6':
-    resolution: {integrity: sha512-aYlvmvicb4nj3QtvkIr8JsQqKks1mphlCWJVirNMAyxzKIHY6rJC1g4FjCOlTHUCtNDhJyxxUaT6UznVndY0ZQ==}
-
   '@tryghost/string@0.3.7':
     resolution: {integrity: sha512-IOffwVz3OD8JYbLhuWSm8433R0aKT2sbcVyOy50T41Ii3y+zs8qr4KwEDxD542hR9VsP7Y2RB/whPsSDoy4MMQ==}
+
+  '@tryghost/string@0.3.8':
+    resolution: {integrity: sha512-Q73QaW9mTgfeuL3554SnUvu9gM1ISowKb683knajTamy1zZsuk3AjDSiEiEGi9BfzjW2RxBQ4rKnlFD9S2oqLg==}
 
   '@tryghost/tpl@2.3.18':
     resolution: {integrity: sha512-AYLYxqKx06AFmFqXLLgiEQRXFxQNeV0R0RxdzUAvR5peTn8lXGmTXtodxfZuRmkTmWesqWuRcb6bk0ygD1dbqw==}
 
-  '@tryghost/url-utils@5.4.0':
-    resolution: {integrity: sha512-XEYx0kKnm7rYo8NG82MtWlJnI/eBNsxMLYR/1Anv+j6snTJskHpQYPje8Q5iuRQA3Rtt/3seVkHZlumwmhcG7w==}
+  '@tryghost/url-utils@5.4.1':
+    resolution: {integrity: sha512-njtdXgfJt4iMawUZG6vgaqNSUL+g/pVRpFb+3ZVWCzHENDnjXnYeoz1FgGmSXWNi8hzSjjZ/dhr11Gxwy8D2og==}
 
   '@tryghost/validator@3.2.17':
     resolution: {integrity: sha512-GUki6g7XrTF+YKTgMT5Ta8Q5MxQitLgcZvHbzKNCiaKRn5C3XjusXdw4xvKnDomwY+o9ExSFqiyprPj15FMF+A==}
@@ -4960,8 +4960,8 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
-  handlebars@4.7.9:
-    resolution: {integrity: sha512-4E71E0rpOaQuJR2A3xDZ+GM1HyWYv1clR58tC8emQNeQe3RH7MAzSbat+V0wG78LQBo6m6bzSG/L4pBuCsgnUQ==}
+  handlebars@4.7.10:
+    resolution: {integrity: sha512-P5VJMVM7qgBn6vjXMw8WG9uVI+ncf2pi72j4de4yz5ZULLj2RGqLYaKOYGsgyrViQ0tePOVlN1tDCCXXtFqXKg==}
     engines: {node: '>=0.4.7'}
     hasBin: true
 
@@ -5502,8 +5502,8 @@ packages:
   moment-timezone@0.5.48:
     resolution: {integrity: sha512-f22b8LV1gbTO2ms2j2z13MuPogNoh5UzxL3nzNAYKGraILnbGc9NEE6dyiiiLv46DGRb8A4kg8UKWLjPthxBHw==}
 
-  moment-timezone@0.6.4:
-    resolution: {integrity: sha512-JHUK8Mgheach4uMQmIV/pIfrv0ubPiDCPPqc7Mi604je1UblP6Gbm+FfV+Oh88KP03rZqGCZG3t0wmpfdlDv+w==}
+  moment-timezone@0.6.5:
+    resolution: {integrity: sha512-KKzZAxGv2Qx4cnk6eSlvf4C+DLFW52vmMY5MN7UARY7GONbozkutylQG3DrrtmLCTXdQ5XZrqao9cI16bLFzXA==}
 
   moment@2.31.0:
     resolution: {integrity: sha512-0acOTfMiWOheYS4eoWb80yYMb/JLvVv9SHbs2PehaDzfUG0Bw855SKyk0IKTnPGa5+U2bmi3W68l1+sGLX/pvw==}
@@ -9037,13 +9037,13 @@ snapshots:
 
   '@tryghost/kg-clean-basic-html@4.3.8': {}
 
-  '@tryghost/kg-default-cards@10.3.7':
+  '@tryghost/kg-default-cards@10.3.9':
     dependencies:
       '@tryghost/kg-markdown-html-renderer': 7.2.9
       '@tryghost/kg-utils': 1.1.8
-      '@tryghost/string': 0.3.6
-      '@tryghost/url-utils': 5.4.0
-      handlebars: 4.7.9
+      '@tryghost/string': 0.3.8
+      '@tryghost/url-utils': 5.4.1
+      handlebars: 4.7.10
       juice: 11.1.1
       luxon: 3.7.2
 
@@ -9073,7 +9073,7 @@ snapshots:
       - '@lexical/clipboard'
       - '@lexical/selection'
 
-  '@tryghost/kg-html-to-lexical@1.4.1(@lexical/selection@0.13.1(lexical@0.13.1))(@lexical/utils@0.13.1(lexical@0.13.1))':
+  '@tryghost/kg-html-to-lexical@1.4.3(@lexical/selection@0.13.1(lexical@0.13.1))(@lexical/utils@0.13.1(lexical@0.13.1))':
     dependencies:
       '@lexical/clipboard': 0.13.1(lexical@0.13.1)
       '@lexical/headless': 0.13.1(lexical@0.13.1)
@@ -9117,23 +9117,23 @@ snapshots:
       caller: 1.1.0
       find-root: 1.1.0
 
-  '@tryghost/string@0.3.6':
+  '@tryghost/string@0.3.7':
     dependencies:
       unidecode: 1.1.0
 
-  '@tryghost/string@0.3.7':
+  '@tryghost/string@0.3.8':
     dependencies:
       unidecode: 1.1.0
 
   '@tryghost/tpl@2.3.18': {}
 
-  '@tryghost/url-utils@5.4.0':
+  '@tryghost/url-utils@5.4.1':
     dependencies:
       cheerio: 1.2.0
       lodash: 4.18.1
       lru-cache: 11.5.3
       moment: 2.31.0
-      moment-timezone: 0.6.4
+      moment-timezone: 0.6.5
       remark: 11.0.2
       remark-footnotes: 1.0.0
       unist-util-visit: 2.0.3
@@ -10207,7 +10207,7 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
-  handlebars@4.7.9:
+  handlebars@4.7.10:
     dependencies:
       minimist: 1.2.8
       neo-async: 2.6.2
@@ -10712,7 +10712,7 @@ snapshots:
     dependencies:
       moment: 2.31.0
 
-  moment-timezone@0.6.4:
+  moment-timezone@0.6.5:
     dependencies:
       moment: 2.31.0
 
