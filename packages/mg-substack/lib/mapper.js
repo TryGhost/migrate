@@ -1,7 +1,7 @@
 import errors from '@tryghost/errors';
 import {slugify} from '@tryghost/string';
 import {_base as debugFactory} from '@tryghost/debug';
-import he from 'he';
+import {decode} from 'he';
 
 const debug = debugFactory('migrate:substack:mapper');
 
@@ -27,7 +27,7 @@ const mapConfig = (data, options) => {
             updated_at: data.post_date || dateNow,
             created_at: data.post_date || dateNow,
             title: data.title || slug,
-            custom_excerpt: data.subtitle ? he.decode(data.subtitle) : null,
+            custom_excerpt: data.subtitle ? decode(data.subtitle) : null,
             type: contentType,
             html: data.html || null,
             status: data.is_published.toLowerCase() === `true` ? 'published' : 'draft',
