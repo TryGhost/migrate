@@ -569,7 +569,10 @@ describe('Asset Scraper', () => {
 
     describe('Fetching methods', () => {
         it('getRemoteMedia', async () => {
-            const requestMock = nock('https://example.com').get('/image.jpg').replyWithError('a bad thing happened');
+            const requestMock = nock('https://example.com')
+                .get('/image.jpg')
+                .twice()
+                .replyWithError('a bad thing happened');
 
             const assetScraper = await createScraper({});
 
@@ -1160,6 +1163,7 @@ describe('Asset Scraper', () => {
                 .get('/working-image.jpg')
                 .reply(200, jpgImageBuffer)
                 .get('/failing-image.jpg')
+                .twice()
                 .replyWithError('Network error: Connection timeout')
                 .get('/another-working.jpg')
                 .reply(200, jpgImageBuffer);
@@ -1183,10 +1187,13 @@ describe('Asset Scraper', () => {
         it('handles all images failing gracefully', async () => {
             const requestMock = nock('https://example.com')
                 .get('/image1.jpg')
+                .twice()
                 .replyWithError('Network error')
                 .get('/image2.jpg')
+                .twice()
                 .replyWithError('Network error')
                 .get('/image3.jpg')
+                .twice()
                 .replyWithError('Network error');
 
             const postObj = {
@@ -1229,6 +1236,7 @@ describe('Asset Scraper', () => {
         it('handles feature image failure without affecting other properties', async () => {
             const requestMock = nock('https://example.com')
                 .get('/feature.jpg')
+                .twice()
                 .replyWithError('Connection refused')
                 .get('/content-image.jpg')
                 .reply(200, jpgImageBuffer);
@@ -1249,7 +1257,10 @@ describe('Asset Scraper', () => {
         });
 
         it('uses cache for previously failed downloads', async () => {
-            const requestMock = nock('https://example.com').get('/cached-fail.jpg').replyWithError('First failure');
+            const requestMock = nock('https://example.com')
+                .get('/cached-fail.jpg')
+                .twice()
+                .replyWithError('First failure');
 
             const assetScraper = await createScraper();
 
