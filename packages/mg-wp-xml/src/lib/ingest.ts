@@ -2,7 +2,7 @@ import type {MigrateContext, SourceRecordInput} from '@tryghost/mg-context';
 import {xmlUtils} from '@tryghost/mg-utils';
 import type {WordPressInput} from './input.js';
 import {inspectSource} from './input.js';
-import {getText} from './process.js';
+import {getText, wordpressDate} from './process.js';
 
 export function canonicalSite(value: string): string {
     const url = new URL(value);
@@ -26,10 +26,9 @@ export function sourceUrl(value: string, base: string): string | undefined {
 
 function revision(item: Record<string, any>): number | undefined {
     for (const field of ['wp:post_modified_gmt', 'wp:post_modified']) {
-        const value = getText(item[field]);
-        const parsed = Date.parse(value.replace(' ', 'T') + (/Z$|[+-]\d\d:?\d\d$/.test(value) ? '' : 'Z'));
-        if (Number.isFinite(parsed)) {
-            return parsed;
+        const date = wordpressDate(getText(item[field]));
+        if (date) {
+            return date.getTime();
         }
     }
     return undefined;
