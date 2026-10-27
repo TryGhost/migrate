@@ -112,7 +112,6 @@ describe('Substack E2E Migration', function () {
             noSubscribeButtons: false,
             comments: true,
             commentLink: '#ghost-comments-root',
-            fallBackHTMLCard: true,
             postsBefore: null,
             postsAfter: null,
             email: null,
@@ -218,11 +217,11 @@ describe('Substack E2E Migration', function () {
 
     it('extracts tags from scripts and adds platform/type/access tags', function () {
         const published = ghostImport.data.posts.find(p => p.slug === 'plain-text');
-        const postTags = ghostImport.data.posts_tags.filter(pt => pt.post_id === published.id);
-        const allTags = ghostImport.data.tags;
-
-        const tagIds = postTags.map(pt => pt.tag_id);
-        const tagNames = allTags.filter(t => tagIds.includes(t.id)).map(t => t.name);
+        // The post's own tag order; the top-level tags array lists tags in the order they were created.
+        const postTags = ghostImport.data.posts_tags
+            .filter(pt => pt.post_id === published.id)
+            .sort((a, b) => a.sort_order - b.sort_order);
+        const tagNames = postTags.map(pt => ghostImport.data.tags.find(t => t.id === pt.tag_id).name);
 
         assert.deepEqual(tagNames, [
             'Tech', // section tag from _analyticsConfig
@@ -234,95 +233,20 @@ describe('Substack E2E Migration', function () {
         ]);
     });
 
-    it('converts HTML to valid Lexical JSON', function () {
+    it('exports converted HTML for Ghost to convert on import', function () {
         const published = ghostImport.data.posts.find(p => p.slug === 'plain-text');
-        const lexical = JSON.parse(published.lexical);
 
-        assert.deepEqual(lexical, {
-            root: {
-                children: [
-                    {
-                        children: [
-                            {
-                                detail: 0,
-                                format: 0,
-                                mode: 'normal',
-                                style: '',
-                                text: 'Hello World',
-                                type: 'extended-text',
-                                version: 1
-                            }
-                        ],
-                        direction: null,
-                        format: '',
-                        indent: 0,
-                        type: 'extended-heading',
-                        version: 1,
-                        tag: 'h2'
-                    },
-                    {
-                        children: [
-                            {
-                                detail: 0,
-                                format: 0,
-                                mode: 'normal',
-                                style: '',
-                                text: 'This is a test post with an image.',
-                                type: 'extended-text',
-                                version: 1
-                            }
-                        ],
-                        direction: null,
-                        format: '',
-                        indent: 0,
-                        type: 'paragraph',
-                        version: 1
-                    },
-                    {
-                        type: 'image',
-                        version: 1,
-                        src: '__GHOST_URL__/content/images/substack-post-media-s3-amazonaws-com/public/images/test-image.jpg',
-                        width: null,
-                        height: null,
-                        title: '',
-                        alt: 'Test image',
-                        caption: '',
-                        cardWidth: 'regular',
-                        href: ''
-                    },
-                    {
-                        type: 'button',
-                        version: 1,
-                        buttonText: 'Subscribe',
-                        alignment: 'center',
-                        buttonUrl: '#/portal/signup'
-                    },
-                    {
-                        children: [
-                            {
-                                detail: 0,
-                                format: 0,
-                                mode: 'normal',
-                                style: '',
-                                text: 'End of post.',
-                                type: 'extended-text',
-                                version: 1
-                            }
-                        ],
-                        direction: null,
-                        format: '',
-                        indent: 0,
-                        type: 'paragraph',
-                        version: 1
-                    }
-                ],
-                direction: null,
-                format: '',
-                indent: 0,
-                type: 'root',
-                version: 1
-            }
-        });
+        assert.equal(published.lexical, undefined);
+        assert.equal(
+            published.html,
+            [
+                '<h2>Hello World</h2>',
+                '<p>This is a test post with an image.</p>',
+                '<img src="__GHOST_URL__/content/images/substack-post-media-s3-amazonaws-com/public/images/test-image.jpg" alt="Test image">',
+                '<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>',
+                '<p>End of post.</p>'
+            ].join('\n')
+        );
     });
 
     it('downloads assets and includes them in the output zip', function () {
@@ -360,7 +284,7 @@ describe('Substack E2E Migration', function () {
 
         // The original subscribe button URL should have been replaced
         assert.ok(
-            !published.lexical.includes('https://example.substack.com/subscribe?'),
+            !published.html.includes('https://example.substack.com/subscribe?'),
             'subscribe button URL should be rewritten'
         );
     });
