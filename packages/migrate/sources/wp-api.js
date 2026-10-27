@@ -305,13 +305,32 @@ const getFullTaskRunner = suppliedOptions => {
         {
             title: 'Fetch images via AssetScraper',
             skip: ctx => !ctx.allowScrape.assets,
-            task: async ctx => {
-                await ctx.migrateContext.forEachPost(post => ctx.assetScraper.processAssets(post), {batchSize: 25});
-                await ctx.migrateContext.forEachTag(tag => ctx.assetScraper.processAssets(tag), {batchSize: 25});
-                await ctx.migrateContext.forEachAuthor(author => ctx.assetScraper.processAssets(author), {
-                    batchSize: 25
-                });
-            }
+            task: (ctx, task) =>
+                task.newListr(
+                    [
+                        ['Posts', 'forEachPost', 'countPosts'],
+                        ['Tags', 'forEachTag', 'countUsedTags'],
+                        ['Authors', 'forEachAuthor', 'countUsedAuthors']
+                    ].map(([title, iterate, count]) => ({
+                        title,
+                        task: async (_ctx, subtask) => {
+                            let processed = 0;
+                            const total = ctx.migrateContext.db.stmts[count].get().count;
+                            subtask.title = `${title} (${processed}/${total})`;
+                            await ctx.migrateContext[iterate](
+                                async entity => {
+                                    subtask.output =
+                                        entity.get('slug') || entity.data.title || entity.data.name || entity.ghostId;
+                                    await ctx.assetScraper.processAssets(entity);
+                                    subtask.title = `${title} (${++processed}/${total})`;
+                                },
+                                {batchSize: 25}
+                            );
+                            subtask.output = null;
+                        }
+                    })),
+                    {concurrent: false, exitOnError: true}
+                )
         },
         {
             title: 'Update links in HTML via LinkFixer',

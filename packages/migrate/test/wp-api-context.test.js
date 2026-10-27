@@ -258,6 +258,39 @@ describe('WordPress API context pipeline', () => {
         }
     });
 
+    it('downloads assets with Posts, Tags and Authors progress', async () => {
+        const fx = await setup();
+        try {
+            wordpress({
+                posts: [post(1, {content: {rendered: `<p><img src="${SITE}/image.jpg"></p>`}})],
+                users: [user]
+            });
+            const imageBytes = await readFile(
+                new URL('../../mg-assetscraper-db/src/test/fixtures/image.jpg', import.meta.url)
+            );
+            const image = nock(SITE).get('/image.jpg').reply(200, imageBytes, {'Content-Type': 'image/jpeg'});
+            const context = {};
+            const runner = source.getTaskRunner({...fx.options, zip: false, scrape: ['assets']});
+            await runner.run(context);
+            assert.ok(image.isDone());
+            const assets = runner.tasks.find(task => task.title === 'Fetch images via AssetScraper');
+            assert.deepEqual(
+                assets.subtasks.map(subtask => [subtask.title, subtask.output]),
+                [
+                    ['Posts (1/1)', null],
+                    // News plus the #wp tag the mapper adds
+                    ['Tags (2/2)', null],
+                    ['Authors (1/1)', null]
+                ]
+            );
+            const result = JSON.parse(await readFile(join(context.importDirectory, 'ghost-import.json'), 'utf8'));
+            assert.ok(result.data.posts[0].html.includes('/content/images/'));
+            closed(context);
+        } finally {
+            await rm(fx.directory, {recursive: true, force: true});
+        }
+    });
+
     it('reports content totals with --info', async () => {
         wordpress({posts: [post(1), post(2)], pages: [post(3, {type: 'page'})], users: [user]});
         const context = {errors: []};

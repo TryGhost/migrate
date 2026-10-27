@@ -191,6 +191,17 @@ describe('WordPress context pipeline', () => {
                 scraping.subtasks.map(subtask => [subtask.title, subtask.output]),
                 [['Posts (2/2)', null]]
             );
+            const assets = runner.tasks.find(task => task.title === 'Fetch images via AssetScraper');
+            assert.deepEqual(
+                assets.subtasks.map(subtask => subtask.title.replace(/ \(.*/, '')),
+                ['Posts', 'Tags', 'Authors']
+            );
+            for (const subtask of assets.subtasks) {
+                const [, done, total] = subtask.title.match(/\((\d+)\/(\d+)\)$/);
+                assert.equal(done, total);
+                assert.equal(subtask.output, null);
+            }
+            assert.equal(assets.subtasks[0].title, 'Posts (2/2)');
             const result = JSON.parse(await readFile(join(context.importDirectory, 'ghost-import.json'), 'utf8'));
             const meta = result.data.posts_meta.find(row => row.post_id === result.data.posts[0].id);
             assert.equal(meta.meta_title, 'Scraped title');
