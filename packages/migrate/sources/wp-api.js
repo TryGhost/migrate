@@ -1,13 +1,15 @@
-import wpAPI from '@tryghost/mg-wp-api';
-import {toGhostJSON} from '@tryghost/mg-json';
-import mgHtmlLexical from '@tryghost/mg-html-lexical';
+import {createReadStream} from 'node:fs';
+import {stat, rename, rm, mkdir, mkdtemp, opendir} from 'node:fs/promises';
+import {join, resolve, basename} from 'node:path';
+import {randomUUID} from 'node:crypto';
+import {MigrateContext} from '@tryghost/mg-context';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
-import {createGhostUserTasks} from '@tryghost/mg-ghost-authors';
-import prettyMilliseconds from 'pretty-ms';
+import {discover, ingest, map, wpCDNToLocal} from '@tryghost/mg-wp-api';
+import {streamGhostUsers, GhostUserFetchError} from '@tryghost/mg-ghost-authors';
 
 const scrapeConfig = {
     posts: {
@@ -40,7 +42,7 @@ const scrapeConfig = {
             selector: 'meta[property="og:image"]',
             attr: 'content',
             convert: x => {
-                return wpAPI.process.wpCDNToLocal(x);
+                return wpCDNToLocal(x);
             }
         },
         og_title: {
@@ -61,7 +63,7 @@ const scrapeConfig = {
             selector: 'meta[name="twitter:image"], meta[name="twitter:image:src"]',
             attr: 'content',
             convert: x => {
-                return wpAPI.process.wpCDNToLocal(x);
+                return wpCDNToLocal(x);
             }
         },
         twitter_title: {
@@ -112,57 +114,18 @@ const postProcessor = (scrapedData, data, options) => {
     return scrapedData;
 };
 
-const initialize = options => {
-    return {
-        title: 'Initializing Workspace',
-        task: async (ctx, task) => {
-            ctx.options = options;
-
-            ctx.allowScrape = {
-                all: ctx.options.scrape.includes('all'),
-                assets:
-                    ctx.options.scrape.includes('all') ||
-                    ctx.options.scrape.includes('assets') ||
-                    ctx.options.scrape.includes('img') ||
-                    ctx.options.scrape.includes('media') ||
-                    ctx.options.scrape.includes('files'),
-                web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
-            };
-
-            // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-            ctx.fileCache = new fsUtils.FileCache(options.url, {
-                tmpPath: options.tmpPath,
-                batchName: options.batch
-            });
-            ctx.wpScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
-            ctx.assetScraper = new MgAssetScraper(
-                ctx.fileCache,
-                {
-                    allowAllDomains: true
-                },
-                ctx
-            );
-            await ctx.assetScraper.init();
-
-            ctx.linkFixer = new MgLinkFixer();
-
-            task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
-
-            if (options.batch > 0) {
-                task.title += ` batch ${ctx.fileCache.batchName}`;
-            }
-        }
-    };
-};
-
 const getInfoTaskList = options => {
     return [
-        initialize(options),
         {
             title: 'Fetch Content Info from WP API',
             task: async ctx => {
+                ctx.options = options;
                 try {
-                    ctx.info = await wpAPI.fetch.discover(options.url, ctx);
+                    ctx.info = await discover(options.url, {
+                        ...options,
+                        apiUser: ctx.apiUser,
+                        usersJSON: ctx.usersJSON
+                    });
                 } catch (error) {
                     ctx.errors.push({message: 'Failed to fetch content from WP API', error});
                     throw error;
@@ -172,185 +135,295 @@ const getInfoTaskList = options => {
     ];
 };
 
-/**
- * getFullTaskList: Full Steps to Migrate from WP
- *
- * Wiring of the steps to migrate from WP.
- *
- * @param {String} pathToZip
- * @param {Object} options
- */
-const getFullTaskList = options => {
-    return [
-        initialize(options),
+const getFullTaskRunner = suppliedOptions => {
+    const options = {scrape: ['all'], zip: true, cache: true, postsPerFile: 2000, batch: 0, ...suppliedOptions};
+    const tasks = [
         {
-            title: 'Fetch Content from WP API',
-            task: async ctx => {
-                // 1. Read all content from the API
+            title: 'Initializing',
+            task: async (ctx, task) => {
+                if (!Number.isSafeInteger(options.postsPerFile) || options.postsPerFile < 1) {
+                    throw new Error('--postsPerFile must be a positive integer');
+                }
+                ctx.options = options;
+                // Without --cacheName the workspace is keyed by the full site URL.
+                ctx.fileCache = new fsUtils.FileCache(options.cacheName ? `wp-api-${options.cacheName}` : options.url, {
+                    tmpPath: options.tmpPath,
+                    batchName: options.batch
+                });
+                const selected = new Set(options.scrape);
+                ctx.allowScrape = {
+                    web: selected.has('all') || selected.has('web'),
+                    assets: ['all', 'assets', 'img', 'media', 'files'].some(value => selected.has(value))
+                };
+                ctx.outputName = ctx.fileCache.defaultZipFileName;
+                const reportName = ctx.outputName.replace(/\.zip$/, '.report.json');
+                ctx.reportFile = {
+                    path: options.zip
+                        ? resolve(options.outputPath || process.cwd(), reportName)
+                        : join(ctx.fileCache.cacheDir, reportName)
+                };
+                // Each batch stores only its own pages, so it keeps its own source database.
+                const database = options.batch > 0 ? `mg-context-batch-${options.batch}.sqlite` : 'mg-context.sqlite';
+                ctx.migrateContext = new MigrateContext({dbPath: join(ctx.fileCache.tmpDir, database)});
+                await ctx.migrateContext.init();
+                ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
+                if (ctx.allowScrape.assets) {
+                    ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
+                        allowAllDomains: true,
+                        retainFailures: false,
+                        strictErrors: true,
+                        onFailure: failure => ctx.migrateContext.recordDiagnostic('operation:warning', failure)
+                    });
+                    await ctx.assetScraper.init();
+                }
+                ctx.linkFixer = new MgLinkFixer();
+                if (options.batch > 0) {
+                    task.title += ` batch ${ctx.fileCache.batchName}`;
+                }
+            }
+        },
+        {
+            title: 'Fetching content',
+            task: async (ctx, task) => {
                 try {
-                    let tasks = await wpAPI.fetch.tasks(options.url, ctx);
-
-                    if (options.batch !== 0) {
-                        let batchIndex = options.batch - 1;
-                        tasks = [tasks[batchIndex]];
+                    if (!ctx.migrateContext.sources.hasCompletedIngestion || options.rereadSource) {
+                        task.output = `Discovering content at ${options.url}`;
+                        await ingest(options.url, ctx.migrateContext, {
+                            replace: Boolean(options.rereadSource),
+                            batch: options.batch,
+                            limit: options.limit,
+                            cpt: options.cpt,
+                            postsBefore: options.postsBefore,
+                            postsAfter: options.postsAfter,
+                            maxPosts: options.maxPosts,
+                            trustSelfSignedCert: options.trustSelfSignedCert,
+                            apiUser: ctx.apiUser,
+                            usersJSON: ctx.usersJSON,
+                            onProgress: title => {
+                                task.output = title;
+                            }
+                        });
+                    } else {
+                        task.output = 'Reading stored WordPress content';
                     }
-
-                    return makeTaskRunner(tasks, options);
+                    task.output = null;
                 } catch (error) {
-                    ctx.errors.push({message: 'Failed to fetch content from WP API', error});
+                    task.output = error.message;
                     throw error;
                 }
             }
         },
         {
-            title: 'Process WP API JSON',
-            task: async ctx => {
-                // 2. Convert WP API JSON into a format that the migrate tools understand
-                try {
-                    ctx.result = await wpAPI.process.all(ctx);
-                    await ctx.fileCache.writeTmpFile(ctx.result, 'wp-processed-data.json');
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to Process WP API JSON', error});
-                    throw error;
+            title: 'Map WordPress content',
+            task: async (ctx, task) => {
+                async function* users() {
+                    if (options.ghostApiUrl && options.ghostAdminKey) {
+                        try {
+                            yield* streamGhostUsers({
+                                apiUrl: options.ghostApiUrl,
+                                adminKey: options.ghostAdminKey,
+                                fileCache: ctx.fileCache
+                            });
+                        } catch (error) {
+                            if (!(error instanceof GhostUserFetchError)) {
+                                throw error;
+                            }
+                            ctx.migrateContext.recordDiagnostic('operation:warning', {
+                                operation: 'Ghost author matching',
+                                reason: error.message
+                            });
+                        }
+                    }
+                }
+                ctx.summary = await map(options, ctx.migrateContext, {fileCache: ctx.fileCache, ghostUsers: users()});
+                task.output = `${ctx.summary.imported} imported, ${ctx.summary.skipped} skipped`;
+                if (ctx.summary.skipped > 0 && ctx.summary.imported === 0) {
+                    throw new Error('Every selected WordPress item was invalid. See the migration report.');
                 }
             }
         },
-        ...createGhostUserTasks(options),
         {
-            title: 'Fetch missing metadata via WebScraper',
+            title: 'Fetch missing data via WebScraper',
             skip: ctx => !ctx.allowScrape.web,
-            task: ctx => {
-                // 3. Pass the results through the web scraper to get any missing data
-                let tasks = ctx.wpScraper.hydrate(ctx);
-                return makeTaskRunner(tasks, options);
-            }
-        },
-        {
-            title: 'Build Link Map',
             task: async ctx => {
-                // 4. Create a map of all known links for use later
-                try {
-                    ctx.linkFixer.buildMap(ctx);
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to build link map', error});
-                    throw error;
-                }
+                await ctx.migrateContext.forEachPost(
+                    async post => {
+                        if (post.get('status') === 'draft') {
+                            return;
+                        }
+                        // Fetch failures are optional; setter/processor errors are not.
+                        const url = JSON.parse(ctx.migrateContext.sources.get('content', post.lookupKey).content).link;
+                        let response;
+                        try {
+                            response = await ctx.webScraper.scrapeUrl(
+                                url,
+                                scrapeConfig.posts,
+                                post.ghostId,
+                                options.wait_after_scrape || 100
+                            );
+                        } catch (error) {
+                            if (error.errorType !== 'ScrapeError') throw error;
+                            ctx.migrateContext.recordDiagnostic('operation:warning', {
+                                operation: 'Web scraping',
+                                url,
+                                reason: error.message
+                            });
+                            return;
+                        }
+                        post.webscrapeData = response.responseData;
+                        const processed = postProcessor({...response.responseData}, {html: post.get('html')}, options);
+                        for (const [field, value] of Object.entries(processed)) {
+                            if (field in post.schema.shape && value !== null && value !== undefined && value !== '') {
+                                post.set(field, value);
+                            }
+                        }
+                    },
+                    {batchSize: 25}
+                );
             }
         },
         {
-            title: 'Format data as Ghost JSON',
-            task: async ctx => {
-                // 5. Format the data as a valid Ghost JSON file
-                try {
-                    ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to format data as Ghost JSON', error});
-                    throw error;
-                }
-            }
-        },
-        {
-            title: 'Fetch assets via AssetScraper',
+            title: 'Fetch images via AssetScraper',
             skip: ctx => !ctx.allowScrape.assets,
             task: async ctx => {
-                // 6. Format the data as a valid Ghost JSON file
-                let tasks = ctx.assetScraper.getTasks();
-                return makeTaskRunner(tasks, {
-                    verbose: options.verbose,
-                    exitOnError: false,
-                    concurrent: false
+                await ctx.migrateContext.forEachPost(post => ctx.assetScraper.processAssets(post), {batchSize: 25});
+                await ctx.migrateContext.forEachTag(tag => ctx.assetScraper.processAssets(tag), {batchSize: 25});
+                await ctx.migrateContext.forEachAuthor(author => ctx.assetScraper.processAssets(author), {
+                    batchSize: 25
                 });
             }
         },
         {
-            title: 'Update links in content via LinkFixer',
-            task: async (ctx, task) => {
-                // 7. Process the content looking for known links, and update them to new links
-                let tasks = ctx.linkFixer.fix(ctx, task);
-                return makeTaskRunner(tasks, options);
-            }
+            title: 'Update links in HTML via LinkFixer',
+            task: async ctx =>
+                ctx.migrateContext.forEachPost(
+                    post => ctx.linkFixer.fixPost(post, url => ctx.migrateContext.findLink(url)),
+                    {batchSize: 25}
+                )
         },
         {
-            // @TODO don't duplicate this with the utils json file
-            title: 'Convert HTML -> Lexical',
-            task: ctx => {
-                // 8. Convert post HTML -> Lexical
-                try {
-                    let tasks = mgHtmlLexical.convert(ctx);
-                    return makeTaskRunner(tasks, {
-                        verbose: options.verbose,
-                        exitOnError: false,
-                        concurrent: false
-                    });
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to convert HTML -> Lexical', error});
-                    throw error;
-                }
-            }
-        },
-        {
-            title: 'Write Ghost import JSON File',
+            title: 'Write Ghost import JSON files',
             task: async ctx => {
-                // 9. Write a valid Ghost import zip
-                try {
-                    await ctx.fileCache.writeGhostImportFile(ctx.result);
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to write Ghost import JSON File', error});
-                    throw error;
+                ctx.exportedFiles = 0;
+                ctx.exportStaging = await mkdtemp(join(ctx.fileCache.tmpDir, 'export-'));
+                for await (const _file of ctx.migrateContext.writeGhostJsonStream(ctx.exportStaging, {
+                    batchSize: options.postsPerFile,
+                    filename: 'ghost-import'
+                })) {
+                    ctx.exportedFiles++;
+                    ctx.importDirectory = ctx.fileCache.zipDir;
                 }
+                ctx.warningCount = ctx.migrateContext.countWarnings();
+                await ctx.migrateContext.writeMigrationReport(ctx.reportFile.path, {
+                    ...ctx.summary,
+                    warnings: ctx.warningCount,
+                    status: 'complete',
+                    files: ctx.exportedFiles
+                });
+                ctx.reportFile.size = (await stat(ctx.reportFile.path)).size;
+                // The runner owns these filenames; publish only after every chunk and report succeeds.
+                for await (const entry of await opendir(ctx.fileCache.zipDir)) {
+                    if (entry.isFile() && /^ghost-import(?:-\d+)?\.json$/.test(entry.name)) {
+                        await rm(join(ctx.fileCache.zipDir, entry.name));
+                    }
+                }
+                for await (const entry of await opendir(ctx.exportStaging)) {
+                    await rename(join(ctx.exportStaging, entry.name), join(ctx.fileCache.zipDir, entry.name));
+                }
+                await rm(ctx.exportStaging, {recursive: true});
+                ctx.exportStaging = undefined;
+                if (!options.zip) ctx.outputFile = {path: ctx.importDirectory, type: 'directory'};
             }
         },
         {
-            title: 'Write Ghost import zip',
+            title: 'Write Ghost import ZIP',
             skip: () => !options.zip,
-            task: async (ctx, task) => {
-                // 10. Write a valid Ghost import zip
-                try {
-                    let timer = Date.now();
-                    ctx.outputFile = await fsUtils.zip.write(
-                        process.cwd(),
-                        ctx.fileCache.zipDir,
-                        ctx.fileCache.defaultZipFileName
-                    );
-                    task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to write Ghost import zip', error});
-                    throw error;
-                }
-            }
-        },
-        {
-            title: 'Clearing cached files',
-            enabled: () => !options.cache && options.zip,
             task: async ctx => {
-                // 11. Write a valid Ghost import zip
+                const outputDir = resolve(options.outputPath || process.cwd());
+                await mkdir(outputDir, {recursive: true});
+                const finalPath = join(outputDir, ctx.outputName);
+                const temporaryName = `.${randomUUID()}.zip`;
+                const temporaryPath = join(outputDir, temporaryName);
                 try {
-                    await ctx.fileCache.emptyCurrentCacheDir();
+                    await fsUtils.zip.write(outputDir, ctx.fileCache.zipDir, temporaryName);
+                    if (options.outputStorage && typeof options.outputStorage === 'object') {
+                        const upload = async (path, fileName) => {
+                            const body = createReadStream(path);
+                            try {
+                                const remotePath = await options.outputStorage.upload({
+                                    body,
+                                    fileName,
+                                    size: (await stat(path)).size
+                                });
+                                if (!body.readableEnded) {
+                                    throw new Error(
+                                        'outputStorage.upload must consume the readable body before resolving'
+                                    );
+                                }
+                                return remotePath;
+                            } finally {
+                                body.destroy();
+                            }
+                        };
+                        const remoteZip = await upload(temporaryPath, basename(finalPath));
+                        const remoteReport = await upload(ctx.reportFile.path, basename(ctx.reportFile.path));
+                        ctx.outputFile = {path: remoteZip, size: (await stat(temporaryPath)).size};
+                        ctx.reportFile = {...ctx.reportFile, path: remoteReport};
+                        await rm(temporaryPath);
+                    } else {
+                        await rename(temporaryPath, finalPath);
+                        ctx.outputFile = {path: finalPath, size: (await stat(finalPath)).size};
+                    }
                 } catch (error) {
-                    ctx.errors.push({message: 'Failed to clear temporary cached files', error});
+                    // Failed uploads retain the local ZIP for recovery.
+                    ctx.recoveryFile = temporaryPath;
                     throw error;
                 }
             }
         }
     ];
+    const runner = makeTaskRunner(tasks, {...options, topLevel: true});
+    const run = runner.run.bind(runner);
+    runner.run = async (context = {errors: [], warnings: []}) => {
+        let succeeded = false;
+        try {
+            const result = await run(context);
+            succeeded = true;
+            return result;
+        } catch (error) {
+            if (context.reportFile && context.migrateContext) {
+                try {
+                    context.migrateContext.recordDiagnostic('operation:failed', {reason: error.message});
+                    const failurePath = context.reportFile.path.replace(/\.report\.json$/, '.failed-report.json');
+                    await context.migrateContext.writeMigrationReport(failurePath, {
+                        ...context.summary,
+                        status: 'failed'
+                    });
+                    context.failedReport = failurePath;
+                } catch {
+                    // Preserve the original failure if initialization/report writing failed too.
+                }
+            }
+            throw error;
+        } finally {
+            try {
+                context.assetScraper?.close();
+            } finally {
+                await context.migrateContext?.close();
+            }
+            if (succeeded && !options.cache && options.zip) {
+                await context.fileCache.emptyCurrentCacheDir();
+            }
+        }
+    };
+    return runner;
 };
 
 const getTaskRunner = options => {
-    let tasks = [];
-
     if (options.info) {
-        tasks = getInfoTaskList(options);
-    } else {
-        tasks = getFullTaskList(options);
+        return makeTaskRunner(getInfoTaskList(options), {...options, topLevel: true});
     }
-
-    // Configure a new Listr task manager, we can use different renderers for different configs
-    return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
+    return getFullTaskRunner(options);
 };
 
-export default {
-    initialize,
-    getInfoTaskList,
-    getFullTaskList,
-    getTaskRunner
-};
+export default {getInfoTaskList, getTaskRunner};

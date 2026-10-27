@@ -112,9 +112,6 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--rawHtml`** 
     - Don't process HTML and wrap in a HTML card
     - bool - default: `false`
-- **`--fallBackHTMLCard`** 
-    - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
-    - bool - default: `true`
 - **`--removeSelectors`**
     - `Pass in a string of CSS selectors for elements that will be removed, e.g. '.ads, script[src*="adnetwork.com"]'`
     - string - default: `null`
@@ -124,9 +121,18 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--trustSelfSignedCert`** 
     - Trust self-signed certificates (such as for local installs)
     - bool - default: `false`
+- **`--rereadSource`**
+    - Fetch the WordPress API again, replacing the stored source while preserving downloaded assets
+    - bool - default: `false`
+- **`--postsPerFile`**
+    - Maximum posts written per Ghost import JSON file
+    - number - default: `2000`
 - **`--cache`** 
     - Persist local cache after migration is complete (Only if `--zip` is `true`)
     - bool - default: `true`
+- **`--cacheName`**
+    - Provide a unique name for the cache directory
+    - string - default: the site URL
 
 A more realistic command for a WordPress migration looks like this:
 
@@ -157,7 +163,15 @@ https://example.com/2023/03/01/another-article
 ```
 
 
+## Output
+
+The import contains HTML; Ghost's importer converts it. `--fallBackHTMLCard` has been removed. A small migration writes `ghost-import.json`, and larger ones write `ghost-import-1.json`, `ghost-import-2.json` and so on, `--postsPerFile` posts each. A `.report.json` beside the ZIP lists imported and skipped counts with diagnostics for source conflicts, skipped records, field changes, slug changes and optional scraping failures. When every selected item is invalid, or the run fails, a `.failed-report.json` is written instead.
+
+
 ## Source storage
+
+The first run stores the API responses; later runs map the stored responses again without fetching. Use `--rereadSource` to fetch again.
+
 
 The API responses are stored as JSON source records in an `mg-context` SQLite database, then mapped into Ghost posts, pages, tags and authors on every run. Posts, pages and custom post types are `content` records and users are `user` records, each keyed `<type>:id:<n>` (for example `post:id:12` or `user:id:3`). A users file supplied with `--users` replaces the users endpoint; its users are keyed by ID, falling back to `user:slug:<slug>`. When paging returns the same object twice, the most recently modified version is kept and a `source:conflict` diagnostic records the replacement.
 
