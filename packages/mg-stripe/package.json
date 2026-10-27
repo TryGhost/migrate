@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@types/sinon": "22.0.1",
+    "@types/sinon": "22.0.2",
     "c8": "catalog:",
     "dotenv": "catalog:",
     "sinon": "22.1.0",
