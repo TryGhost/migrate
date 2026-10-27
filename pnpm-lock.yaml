@@ -1072,12 +1072,18 @@ importers:
 
   packages/mg-wp-api:
     dependencies:
-      '@tryghost/debug':
+      '@tryghost/errors':
         specifier: 'catalog:'
-        version: 2.3.18(supports-color@7.2.0)
+        version: 3.4.4
+      '@tryghost/mg-context':
+        specifier: workspace:*
+        version: link:../mg-context
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
+      '@tryghost/mg-ghost-authors':
+        specifier: workspace:*
+        version: link:../mg-ghost-authors
       '@tryghost/mg-shortcodes':
         specifier: workspace:*
         version: link:../mg-shortcodes
@@ -1102,6 +1108,19 @@ importers:
       wpapi:
         specifier: 1.2.2
         version: 1.2.2(supports-color@7.2.0)
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      c8:
+        specifier: 'catalog:'
+        version: 12.0.0
+      nock:
+        specifier: 'catalog:'
+        version: 15.0.5(supports-color@7.2.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   packages/mg-wp-xml:
     dependencies:

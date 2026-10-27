@@ -1,14 +1,12 @@
-import {readFileSync} from 'node:fs';
 import {basename} from 'node:path';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import Shortcodes from '@tryghost/mg-shortcodes';
 import {slugify} from '@tryghost/string';
-import MgFsUtils from '@tryghost/mg-fs-utils';
 import {htmlToText} from 'html-to-text';
-import {_base as debugFactory} from '@tryghost/debug';
 import SimpleDom from 'simple-dom';
 import {domUtils, youtubeUtils, stringUtils, cardUtils} from '@tryghost/mg-utils';
 import {matchEmbedUrl, buildEmbedHtml} from './embed-utils.js';
+import type {LegacyAuthor, LegacyTag, MappedPost, WpApiOptions, WpApiRecord} from './types.js';
 
 const {unescapeHTML, stripHtml} = stringUtils;
 
@@ -29,21 +27,21 @@ const {
 const {getYouTubeID} = youtubeUtils;
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
+const serialize = (node: unknown): string => serializer.serialize(node as any);
 
-const debug = debugFactory('migrate:wp-api:processor');
 const galleryCard = cardUtils.getCard('gallery');
 const imageCard = cardUtils.getCard('image');
 const bookmarkCard = cardUtils.getCard('bookmark');
 
-const chunkArray = (arr, size) => {
-    const chunks = [];
+const chunkArray = <T>(arr: T[], size: number): T[][] => {
+    const chunks: T[][] = [];
     for (let i = 0; i < arr.length; i += size) {
         chunks.push(arr.slice(i, i + size));
     }
     return chunks;
 };
 
-const wpCDNToLocal = imgUrl => {
+const wpCDNToLocal = (imgUrl: any): any => {
     if (!imgUrl) {
         return imgUrl;
     }
@@ -62,7 +60,7 @@ const wpCDNToLocal = imgUrl => {
     return updatedUrl;
 };
 
-const largerSrc = imageSrc => {
+const largerSrc = (imageSrc: any): any => {
     if (!imageSrc) {
         return imageSrc;
     }
@@ -79,8 +77,8 @@ const largerSrc = imageSrc => {
     return newSrc;
 };
 
-const processAuthor = wpAuthor => {
-    let authorObject = {
+const processAuthor = (wpAuthor: WpApiRecord): LegacyAuthor => {
+    const authorObject: LegacyAuthor = {
         url: wpAuthor.link,
         data: {
             id: wpAuthor.id,
@@ -120,7 +118,7 @@ const processAuthor = wpAuthor => {
     return authorObject;
 };
 
-const processTerm = wpTerm => {
+const processTerm = (wpTerm: WpApiRecord): LegacyTag => {
     return {
         url: wpTerm.link,
         data: {
@@ -130,10 +128,14 @@ const processTerm = wpTerm => {
     };
 };
 
-const processTerms = (wpTerms, fetchTags, customTaxonomies) => {
-    let categories = [];
-    let tags = [];
-    let customTerms = [];
+const processTerms = (
+    wpTerms: WpApiRecord[][],
+    fetchTags?: boolean,
+    customTaxonomies?: string[] | null
+): LegacyTag[] => {
+    let categories: LegacyTag[] = [];
+    let tags: LegacyTag[] = [];
+    let customTerms: LegacyTag[] = [];
 
     const allowedCustomTaxonomies = customTaxonomies || [];
 
@@ -158,15 +160,15 @@ const processTerms = (wpTerms, fetchTags, customTaxonomies) => {
 
 // Extract co-authors from wp:term data (used by Co-Authors Plus and PublishPress Authors plugins)
 // These plugins store authors as a custom taxonomy with taxonomy === 'author'
-const processCoAuthors = (wpTerms, users) => {
-    const coAuthors = [];
-    const seenSlugs = new Set();
+const processCoAuthors = (wpTerms: any, users?: LegacyAuthor[] | null): LegacyAuthor[] => {
+    const coAuthors: LegacyAuthor[] = [];
+    const seenSlugs = new Set<string>();
 
     if (!wpTerms || !Array.isArray(wpTerms)) {
         return coAuthors;
     }
 
-    wpTerms.forEach(taxonomy => {
+    wpTerms.forEach((taxonomy: any) => {
         if (!Array.isArray(taxonomy)) {
             return;
         }
@@ -199,7 +201,10 @@ const processCoAuthors = (wpTerms, users) => {
 
 // Sometimes, the custom excerpt can be part of the post content. If the flag with an selector for the
 // custom excerpt class is passed, we use this one to populate the custom excerpt and remove it from the post content
-const processExcerpt = (html, excerptSelector = false) => {
+const processExcerpt = (
+    html: string | null | undefined,
+    excerptSelector: string | false | null = false
+): string | null => {
     if (!html) {
         return '';
     }
@@ -208,7 +213,7 @@ const processExcerpt = (html, excerptSelector = false) => {
         return '';
     }
 
-    let excerptText;
+    let excerptText: string;
 
     // Set the text to convert to either be the supplied string or found text in the supplied HTML chunk
     if (excerptSelector) {
@@ -242,15 +247,22 @@ const processExcerpt = (html, excerptSelector = false) => {
     }
 };
 
-const processShortcodes = async ({html, options}) => {
+interface ShortcodeArgs {
+    attrs: Record<string, any>;
+    content: string;
+}
+
+const processShortcodes = async ({html, options}: {html: string; options?: WpApiOptions | null}): Promise<string> => {
+    // mg-shortcodes always passes an attrs object, possibly empty.
     const shortcodes = new Shortcodes();
     const attachments = options?.attachments ?? null;
 
-    shortcodes.add('vc_btn', ({attrs}) => {
-        let buttonHref = attrs?.link ?? false;
+    shortcodes.add('vc_btn', ({attrs}: ShortcodeArgs) => {
+        let buttonHref = attrs.link ?? false;
 
+        // A handler that returns nothing leaves the literal text "undefined" in the post.
         if (!buttonHref) {
-            return;
+            return '';
         }
 
         // Sometimes URLs have a `url:` prefix which we don't want
@@ -263,11 +275,11 @@ const processShortcodes = async ({html, options}) => {
         return `<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="${buttonHref}">${attrs.title}</a></div></div>`;
     });
 
-    shortcodes.add('vc_cta', ({attrs}) => {
-        let buttonHref = attrs?.btn_link ?? false;
+    shortcodes.add('vc_cta', ({attrs}: ShortcodeArgs) => {
+        let buttonHref = attrs.btn_link ?? false;
 
         if (!buttonHref) {
-            return;
+            return '';
         }
 
         // Sometimes URLs have a `url:` prefix which we don't want
@@ -280,7 +292,7 @@ const processShortcodes = async ({html, options}) => {
         return `<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link" href="${buttonHref}">${attrs.btn_title}</a></div></div>`;
     });
 
-    shortcodes.add('caption', ({content}) => {
+    shortcodes.add('caption', ({content}: ShortcodeArgs) => {
         if (!content) {
             return '';
         }
@@ -301,7 +313,7 @@ const processShortcodes = async ({html, options}) => {
 
             let theCaption = parsed.text().trim();
 
-            let cardOpts = {
+            const cardOpts: any = {
                 env: {dom: new SimpleDom.Document()},
                 payload: {
                     src: theImageSrc,
@@ -316,7 +328,7 @@ const processShortcodes = async ({html, options}) => {
                 cardOpts.payload.caption = theCaption;
             }
 
-            return serializer.serialize(imageCard.render(cardOpts));
+            return serialize(imageCard.render(cardOpts));
         });
     });
 
@@ -328,7 +340,7 @@ const processShortcodes = async ({html, options}) => {
         return '';
     });
 
-    shortcodes.add('et_pb_text', ({content}) => {
+    shortcodes.add('et_pb_text', ({content}: ShortcodeArgs) => {
         // CASE: Divi Blog Extras uses these shortcodes for settings with text wrapped in `@ET-DC@..==@`, which should be removed if found
         // Else return the contents
         if (/^@ET-DC@.*==@$/.exec(content)) {
@@ -338,12 +350,12 @@ const processShortcodes = async ({html, options}) => {
         }
     });
 
-    shortcodes.add('et_pb_divider', ({content}) => {
+    shortcodes.add('et_pb_divider', ({content}: ShortcodeArgs) => {
         return '<hr>';
     });
 
-    shortcodes.add('et_pb_image', ({attrs}) => {
-        let cardOpts = {
+    shortcodes.add('et_pb_image', ({attrs}: ShortcodeArgs) => {
+        const cardOpts: any = {
             env: {dom: new SimpleDom.Document()},
             payload: {
                 src: attrs.src,
@@ -352,25 +364,25 @@ const processShortcodes = async ({html, options}) => {
             }
         };
 
-        return serializer.serialize(imageCard.render(cardOpts));
+        return serialize(imageCard.render(cardOpts));
     });
 
-    shortcodes.add('advanced_iframe', ({attrs}) => {
+    shortcodes.add('advanced_iframe', ({attrs}: ShortcodeArgs) => {
         return `<iframe src="${attrs.src}" height="${attrs.height}" style="border:0; width: 100%;" loading="lazy"></iframe>`;
     });
 
     if (attachments && attachments.length) {
-        shortcodes.add('gallery', ({attrs}) => {
+        shortcodes.add('gallery', ({attrs}: ShortcodeArgs) => {
             // Convert `ids` param to array of images
-            let images = [];
+            let images: any[] = [];
 
-            if (attrs?.ids) {
+            if (attrs.ids) {
                 // Coerce attrs.ids to string if it isnt a string already
                 if (typeof attrs.ids !== 'string') {
                     attrs.ids = attrs.ids.toString();
                 }
 
-                images = attrs.ids.split(',').map(i => {
+                images = attrs.ids.split(',').map((i: string) => {
                     let idInt = parseInt(i.trim());
                     let foundAttachment = attachments.find(item => parseInt(item.id) === idInt);
                     return foundAttachment;
@@ -384,10 +396,10 @@ const processShortcodes = async ({html, options}) => {
 
             const imageChunks = chunkArray(images, 9);
 
-            let galleryHtmlChunks = [];
+            const galleryHtmlChunks: string[] = [];
 
             imageChunks.forEach(chunk => {
-                let items = [];
+                let items: any[] = [];
 
                 chunk.forEach(item => {
                     items.push({
@@ -406,81 +418,83 @@ const processShortcodes = async ({html, options}) => {
                     };
                 });
 
-                let cardOpts = {
+                const cardOpts: any = {
                     env: {dom: new SimpleDom.Document()},
                     payload: {
                         images: items
                     }
                 };
 
-                galleryHtmlChunks.push(serializer.serialize(galleryCard.render(cardOpts)));
+                galleryHtmlChunks.push(serialize(galleryCard.render(cardOpts)));
             });
 
             return galleryHtmlChunks.join('');
         });
     }
 
-    shortcodes.add('sourcecode', ({attrs, content}) => {
-        let captionString = attrs?.title ? `<figcaption>${attrs.title}</figcaption>` : '';
-        let classString = attrs?.language ? `language-${attrs.language}` : '';
+    shortcodes.add('sourcecode', ({attrs, content}: ShortcodeArgs) => {
+        let captionString = attrs.title ? `<figcaption>${attrs.title}</figcaption>` : '';
+        let classString = attrs.language ? `language-${attrs.language}` : '';
         let theContent = content.trim();
         return `<figure><pre class="${classString}"><code>${theContent}</code></pre>${captionString}</figure>`;
     });
 
-    shortcodes.add('audio', ({attrs}) => {
-        const sourceSrc = attrs?.src ?? null;
-        const sourceMp3 = attrs?.mp3 ?? null;
-        const sourceM4a = attrs?.m4a ?? null;
-        const sourceOgg = attrs?.ogg ?? null;
-        const sourceWav = attrs?.wav ?? null;
-        const sourceWma = attrs?.wma ?? null;
+    shortcodes.add('audio', ({attrs}: ShortcodeArgs) => {
+        const sourceSrc = attrs.src ?? null;
+        const sourceMp3 = attrs.mp3 ?? null;
+        const sourceM4a = attrs.m4a ?? null;
+        const sourceOgg = attrs.ogg ?? null;
+        const sourceWav = attrs.wav ?? null;
+        const sourceWma = attrs.wma ?? null;
 
         const firstAudioSrc = sourceSrc || sourceMp3 || sourceM4a || sourceOgg || sourceWav || sourceWma;
 
         if (firstAudioSrc) {
             return `<!--kg-card-begin: html--><audio controls src="${firstAudioSrc}" preload="metadata"></audio><!--kg-card-end: html-->`;
         }
+        return '';
     });
 
-    shortcodes.add('code', ({attrs, content}) => {
-        let captionString = attrs?.title ? `<figcaption>${attrs.title}</figcaption>` : '';
-        let classString = attrs?.language ? `language-${attrs.language}` : '';
+    shortcodes.add('code', ({attrs, content}: ShortcodeArgs) => {
+        let captionString = attrs.title ? `<figcaption>${attrs.title}</figcaption>` : '';
+        let classString = attrs.language ? `language-${attrs.language}` : '';
         let theContent = content?.trim();
         return `<figure><pre class="${classString}"><code>${theContent}</code></pre>${captionString}</figure>`;
     });
 
-    shortcodes.add('vc_custom_heading', ({attrs}) => {
-        if (attrs?.font_container?.includes('tag:h1')) {
+    shortcodes.add('vc_custom_heading', ({attrs}: ShortcodeArgs) => {
+        if (attrs.font_container?.includes('tag:h1')) {
             return `<h1>${attrs.text}</h1>`;
-        } else if (attrs?.font_container?.includes('tag:h2')) {
+        } else if (attrs.font_container?.includes('tag:h2')) {
             return `<h2>${attrs.text}</h2>`;
-        } else if (attrs?.font_container?.includes('tag:h3')) {
+        } else if (attrs.font_container?.includes('tag:h3')) {
             return `<h3>${attrs.text}</h3>`;
         }
+        return '';
     });
 
     shortcodes.add('vc_empty_space', () => {
         return `<br></br>`;
     });
 
-    shortcodes.add('youtube', ({attrs}) => {
-        const videoID = attrs?.id;
+    shortcodes.add('youtube', ({attrs}: ShortcodeArgs) => {
+        const videoID = attrs.id;
         if (!videoID) {
             return '';
         }
         return `<iframe loading="lazy" title="" width="160" height="90" src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>`;
     });
 
-    shortcodes.add('button', ({attrs, content}) => {
-        const href = attrs?.href;
+    shortcodes.add('button', ({attrs, content}: ShortcodeArgs) => {
+        const href = attrs.href;
         if (!href) {
             return content || '';
         }
-        const positionClass = attrs?.centered === true ? 'kg-align-center' : 'kg-align-left';
+        const positionClass = attrs.centered === true ? 'kg-align-center' : 'kg-align-left';
         return `<div class="kg-card kg-button-card ${positionClass}"><a href="${href}" class="kg-btn kg-btn-accent">${content || ''}</a></div>`;
     });
 
-    shortcodes.add('embed', ({content}) => {
+    shortcodes.add('embed', ({content}: ShortcodeArgs) => {
         const embedUrl = content?.trim();
         if (!embedUrl) {
             return '';
@@ -520,14 +534,18 @@ const processShortcodes = async ({html, options}) => {
 const SHORTCODE_OPEN_REGEX = /\[([a-zA-Z_][\w-]*)(\s[^\]]{0,2000})?\]/g;
 const SINGLE_URL_REGEX = /^https?:\/\/\S+$/;
 
-const buildShortcodeReplacement = (fullMatch, attrsString, content) => {
+const buildShortcodeReplacement = (
+    fullMatch: string,
+    attrsString: string | undefined,
+    content: string | undefined
+): string => {
     // Check content first — must be a single URL (no surrounding text)
     if (content) {
         const trimmed = content.trim();
         if (SINGLE_URL_REGEX.test(trimmed)) {
             const match = matchEmbedUrl(trimmed);
             if (match) {
-                return buildEmbedHtml(match);
+                return buildEmbedHtml(match)!;
             }
         }
     }
@@ -538,7 +556,7 @@ const buildShortcodeReplacement = (fullMatch, attrsString, content) => {
         for (const value of attrValues) {
             const match = matchEmbedUrl(value);
             if (match) {
-                return buildEmbedHtml(match);
+                return buildEmbedHtml(match)!;
             }
         }
     }
@@ -546,14 +564,14 @@ const buildShortcodeReplacement = (fullMatch, attrsString, content) => {
     return fullMatch;
 };
 
-const processUnknownEmbedShortcodes = html => {
+const processUnknownEmbedShortcodes = (html: string): string => {
     if (!html) {
         return html;
     }
 
     let result = '';
     let lastIndex = 0;
-    let open;
+    let open: RegExpExecArray | null;
     SHORTCODE_OPEN_REGEX.lastIndex = 0;
 
     while ((open = SHORTCODE_OPEN_REGEX.exec(html)) !== null) {
@@ -567,8 +585,8 @@ const processUnknownEmbedShortcodes = html => {
         const closeTag = `[/${name}]`;
         const closeIndex = html.indexOf(closeTag, openEnd);
 
-        let content;
-        let matchEnd;
+        let content: string | undefined;
+        let matchEnd: number;
         if (closeIndex === -1) {
             content = undefined;
             matchEnd = openEnd;
@@ -587,11 +605,11 @@ const processUnknownEmbedShortcodes = html => {
     return result;
 };
 
-const extractAttrValues = attrsString => {
-    const values = [];
+const extractAttrValues = (attrsString: string): string[] => {
+    const values: string[] = [];
     // Match quoted values: key="value" or key='value'
     const quotedRegex = /[\w-]+\s*=\s*"([^"]*?)"|[\w-]+\s*=\s*'([^']*?)'/g;
-    let match;
+    let match: RegExpExecArray | null;
 
     while ((match = quotedRegex.exec(attrsString)) !== null) {
         const value = match[1] ?? match[2];
@@ -624,9 +642,23 @@ const extractAttrValues = attrsString => {
  * In some cases, transformation isn't needed as the parser handles it correctly.
  * In other cases, we need to *do* change the HTML structure, and this is where that happens.
  */
-const processContent = async ({html, excerptSelector, featureImageSrc = false, fileCache = false, options = {}}) => {
-    // eslint-disable-line no-shadow
-    let webScraper = new MgWebScraper(fileCache);
+export interface ProcessContentArgs {
+    html: string;
+    excerptSelector?: string | false | null;
+    featureImageSrc?: string | false | null;
+    fileCache?: any;
+    postUrl?: string;
+    options?: WpApiOptions;
+}
+
+const processContent = async ({
+    html,
+    excerptSelector,
+    featureImageSrc = false,
+    fileCache = false,
+    options = {}
+}: ProcessContentArgs): Promise<string> => {
+    let webScraper = new MgWebScraper(fileCache, {});
 
     let allowRemoteScraping = !options?.scrape?.includes('none');
 
@@ -655,8 +687,8 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             let hasImg = firstElement.querySelector('img');
 
             if (isImg || hasImg) {
-                let theElementItself = isImg ? firstElement : firstElement.querySelector('img');
-                let imgSrc = theElementItself ? theElementItself.getAttribute('src') : null;
+                let theElementItself = isImg ? firstElement : hasImg!;
+                let imgSrc = theElementItself.getAttribute('src');
 
                 if (imgSrc) {
                     // Match largerSrc: strip WordPress size suffix (e.g. -100x100 or -10000x5000) and normalise protocol
@@ -762,7 +794,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         const hasCaption = !!captionEl;
         const imgCaption = hasCaption ? captionEl.textContent : '';
 
-        let cardOpts = {
+        const cardOpts: any = {
             env: {dom: new SimpleDom.Document()},
             payload: {
                 src: imgSrc,
@@ -775,7 +807,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             cardOpts.payload.caption = imgCaption;
         }
 
-        replaceWith(el, serializer.serialize(imageCard.render(cardOpts)));
+        replaceWith(el, serialize(imageCard.render(cardOpts)));
     }
 
     for (const img of parsed.$('img')) {
@@ -806,14 +838,14 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     for (const gif of parsed.$('img[data-gif]')) {
         let gifSrc = gif.getAttribute('data-gif');
         gif.removeAttribute('data-gif');
-        gif.setAttribute('src', gifSrc);
+        gif.setAttribute('src', gifSrc!);
     }
 
     // Likewise some images are lazy-loaded using JavaScript & `data-src` attributes
     for (const img of parsed.$('img[data-src]')) {
         let dataSrc = img.getAttribute('data-src');
         img.removeAttribute('data-src');
-        img.setAttribute('src', dataSrc);
+        img.setAttribute('src', dataSrc!);
     }
 
     if (options?.convertLibsynEmbed) {
@@ -824,8 +856,8 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
             let iframeSrc = el.getAttribute('src');
             let libsynIdRegex = new RegExp('/id/([0-9]{1,})/');
-            let matches = iframeSrc.match(libsynIdRegex);
-            let showId = matches[1];
+            let matches = iframeSrc!.match(libsynIdRegex);
+            let showId = matches![1];
 
             let newReqURL = `https://oembed.libsyn.com/embed?item_id=${showId}`;
 
@@ -841,7 +873,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
                 duration: {
                     selector: 'meta[property="music:duration"]',
                     attr: 'content',
-                    convert: data => {
+                    convert: (data: any) => {
                         return (data - (data %= 60)) / 60 + (9 < data ? ':' : ':0') + data;
                     }
                 },
@@ -936,9 +968,9 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             };
 
             let filename = bookmarkHref.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-            let {responseData} = await webScraper.scrapeUrl(iframeHref, scrapeConfig, filename);
+            let {responseData} = await webScraper.scrapeUrl(iframeHref!, scrapeConfig, filename);
 
-            let cardOpts = {
+            const cardOpts: any = {
                 env: {dom: new SimpleDom.Document()},
                 payload: {
                     url: bookmarkHref,
@@ -965,7 +997,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
                 cardOpts.payload.metadata.description = stripHtml(responseData.description);
             }
 
-            const bookmarkHtml = serializer.serialize(bookmarkCard.render(cardOpts));
+            const bookmarkHtml = serialize(bookmarkCard.render(cardOpts));
 
             replaceWith(el, `<!--kg-card-begin: html-->${bookmarkHtml}<!--kg-card-end: html-->`);
         } catch (err) {
@@ -1138,7 +1170,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     // Handle button elements
     for (const el of parsed.$('.wp-block-buttons')) {
-        let buttons = [];
+        const buttons: string[] = [];
         let isCentered = el.classList.contains('is-content-justification-center');
         let positionClass = isCentered ? 'kg-align-center' : 'kg-align-left';
 
@@ -1180,7 +1212,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
 
     // Handle list-based galleries
     for (const el of parsed.$('.wp-block-gallery')) {
-        let cardOpts = {
+        const cardOpts: any = {
             env: {dom: new SimpleDom.Document()},
             payload: {
                 images: []
@@ -1193,7 +1225,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             if (img && img.getAttribute('src')) {
                 cardOpts.payload.images.push({
                     row: 0,
-                    fileName: basename(img.getAttribute('src')),
+                    fileName: basename(img.getAttribute('src')!),
                     src: img.getAttribute('data-full') || img.getAttribute('src'),
                     width: img.getAttribute('width'),
                     height: img.getAttribute('height')
@@ -1201,15 +1233,9 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
             }
         }
 
-        const galleryHtml = serializer.serialize(galleryCard.render(cardOpts));
+        const galleryHtml = serialize(galleryCard.render(cardOpts));
 
         replaceWith(el, galleryHtml);
-    }
-
-    // Unwrap WP gallery blocks
-    // Case: WP gallery blocks have figures in figures which trips up the HTML conversion
-    for (const el of parsed.$('.wp-block-gallery')) {
-        replaceWith(el, el.innerHTML);
     }
 
     // Wrap inline styled tags in HTML card
@@ -1266,7 +1292,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         const parent = el.parentElement;
         const isInFigure = parent && parent.tagName.toLowerCase() === 'figure';
 
-        setStyle(el, 'width', '100%');
+        setStyle(el as HTMLElement, 'width', '100%');
 
         if (isInFigure) {
             insertBefore(parent, '<!--kg-card-begin: html-->');
@@ -1281,7 +1307,7 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
         const parent = el.parentElement;
         const isInFigure = parent && parent.tagName.toLowerCase() === 'figure';
 
-        setStyle(el, 'width', '100%');
+        setStyle(el as HTMLElement, 'width', '100%');
 
         if (isInFigure) {
             insertBefore(parent, '<!--kg-card-begin: html-->');
@@ -1303,16 +1329,14 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     // Promote standalone linked images out of paragraphs so HTML-to-Lexical
     // converts them to block-level image nodes rather than inline link children.
     for (const img of parsed.$('p > a > img')) {
-        const link = img.parentElement;
-        const paragraph = link ? link.parentElement : null;
-        const parentFigure = paragraph ? lastParent(paragraph, 'figure') : null;
+        // The selector guarantees both parents exist.
+        const link = img.parentElement!;
+        const paragraph = link.parentElement!;
+        const parentFigure = lastParent(paragraph, 'figure');
         const isStandaloneLink =
-            link && link.children.length === 1 && link.children[0] === img && link.textContent.trim() === '';
+            link.children.length === 1 && link.children[0] === img && link.textContent.trim() === '';
         const isStandaloneParagraph =
-            paragraph &&
-            paragraph.children.length === 1 &&
-            paragraph.children[0] === link &&
-            paragraph.textContent.trim() === '';
+            paragraph.children.length === 1 && paragraph.children[0] === link && paragraph.textContent.trim() === '';
 
         if (!isStandaloneLink || !isStandaloneParagraph || parentFigure || !paragraph.parentNode) {
             continue;
@@ -1330,18 +1354,9 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
     // TODO: add more classes that are used within WordPress to determine full-width images
     for (const img of parsed.$('img.full.size-full')) {
         // Ignore images, that are already wrapped in a figure tag or are linked
-        const parent = img.parentElement;
-        const parentTag = parent ? parent.tagName.toLowerCase() : '';
+        const parentTag = img.parentElement!.tagName.toLowerCase();
         if (parentTag !== 'figure' && parentTag !== 'a') {
             img.classList.add('kg-image');
-
-            if (img.getAttribute('srcset')) {
-                img.removeAttribute('width');
-                img.removeAttribute('height');
-                img.removeAttribute('srcset');
-                img.removeAttribute('sizes');
-            }
-
             wrap(img, '<figure class="kg-card kg-image-card kg-width-wide"></figure>');
         }
     }
@@ -1366,15 +1381,19 @@ const processContent = async ({html, excerptSelector, featureImageSrc = false, f
  *   ]
  * }
  */
-const processPost = async (wpPost, users, options = {}, errors, fileCache) => {
-    // eslint-disable-line no-shadow
+const processPost = async (
+    wpPost: WpApiRecord,
+    users: LegacyAuthor[] | null | undefined,
+    options: WpApiOptions = {},
+    fileCache?: any
+): Promise<MappedPost> => {
     let {tags: fetchTags, addTag, excerptSelector, excerpt, featureImageCaption, customTaxonomies} = options;
 
     let slug = wpPost.slug;
     let titleText = processFragment(wpPost.title.rendered, parsed => parsed.text());
 
     // @note: we don't copy excerpts because WP generated excerpts aren't better than Ghost ones but are often too long.
-    const post = {
+    const post: MappedPost = {
         url: wpPost.link,
         data: {
             slug: slug,
@@ -1414,7 +1433,7 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => {
 
     // Handle author assignment based on co-authors
     if (wpPost?.parsely?.meta?.author && wpPost.parsely.meta.author.length > 0) {
-        wpPost.parsely.meta.author.forEach(author => {
+        wpPost.parsely.meta.author.forEach((author: WpApiRecord) => {
             post.data.author = processAuthor({name: author.name});
         });
     } else if (coAuthors.length > 1) {
@@ -1507,75 +1526,8 @@ const processPost = async (wpPost, users, options = {}, errors, fileCache) => {
     return post;
 };
 
-const processPosts = async (posts, users, options, errors, fileCache) => {
-    // eslint-disable-line no-shadow
-    if (options.onlyURLs) {
-        const onlyURLsContent = readFileSync(options.onlyURLs, {encoding: 'utf8'});
-        const onlyURLsObj = MgFsUtils.csv.parseString(onlyURLsContent);
-
-        // Filter…
-        let foundPosts = [];
-        onlyURLsObj.forEach(urlObj => {
-            let foundPost = posts.find(post => post.link === urlObj.url);
-
-            if (foundPost) {
-                foundPosts.push(foundPost);
-            } else {
-                debug(`No post found for ${urlObj.url}`);
-            }
-        });
-
-        posts = foundPosts;
-    }
-
-    const results = [];
-
-    for (let i = 0; i < posts.length; i++) {
-        const post = posts[i];
-        if (post) {
-            results.push(await processPost(post, users, options, errors, fileCache));
-        }
-    }
-
-    return results;
-};
-
-const processAuthors = authors => {
+const processAuthors = (authors: WpApiRecord[]): LegacyAuthor[] => {
     return authors.map(author => processAuthor(author));
-};
-
-const all = async ctx => {
-    let {result: input, usersJSON, options, errors, fileCache} = ctx; // eslint-disable-line no-shadow
-
-    if (usersJSON) {
-        const mergedUsers = [];
-        try {
-            let passedUsers = usersJSON;
-            console.log(`Passed a users file with ${passedUsers.length} entries, processing now!`); // eslint-disable-line no-console
-            await passedUsers.map(passedUser => {
-                // eslint-disable-line array-callback-return
-                const matchedUser = input.users.find(fetchedUser => {
-                    return (
-                        (fetchedUser.id && passedUser.id && fetchedUser.id === passedUser.id) ||
-                        (fetchedUser.slug && passedUser.slug && fetchedUser.slug === passedUser.slug) ||
-                        (fetchedUser.name && passedUser.name && fetchedUser.name === passedUser.name)
-                    );
-                });
-                mergedUsers.push(Object.assign({}, passedUser, matchedUser));
-            });
-        } catch (error) {
-            throw new errors.InternalServerError({message: 'Unable to process passed users file'});
-        }
-        input.users = mergedUsers;
-    }
-
-    const output = {
-        users: processAuthors(input.users)
-    };
-
-    output.posts = await processPosts(input.posts, output.users, options, errors, fileCache);
-
-    return output;
 };
 
 export default {
@@ -1589,7 +1541,19 @@ export default {
     processUnknownEmbedShortcodes,
     processContent,
     processPost,
-    processPosts,
-    processAuthors,
-    all
+    processAuthors
+};
+
+export {
+    wpCDNToLocal,
+    processAuthor,
+    processTerm,
+    processTerms,
+    processCoAuthors,
+    processExcerpt,
+    processShortcodes,
+    processUnknownEmbedShortcodes,
+    processContent,
+    processPost,
+    processAuthors
 };

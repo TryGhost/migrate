@@ -1,17 +1,17 @@
 import {parse} from 'tldts';
 
-const makeInlinerUrls = ({domain}) => {
-    const inlineDomains = [];
+const makeInlinerUrls = ({domain}: {domain: string}): string[] => {
+    const inlineDomains: string[] = [];
 
     const parsedDomain = parse(domain);
 
-    inlineDomains.push(parsedDomain.domain);
+    inlineDomains.push(parsedDomain.domain!);
 
     if (parsedDomain.domain !== parsedDomain.hostname) {
-        inlineDomains.push(parsedDomain.hostname);
+        inlineDomains.push(parsedDomain.hostname!);
     }
 
-    const withProtocol = [];
+    const withProtocol: string[] = [];
 
     inlineDomains.forEach(item => {
         withProtocol.push(`http://${item}`);

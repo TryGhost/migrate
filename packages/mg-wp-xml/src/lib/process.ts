@@ -9,7 +9,7 @@ import {
 } from './types.js';
 import {slugify} from '@tryghost/string';
 import MarkdownIt from 'markdown-it';
-import MgWpAPI from '@tryghost/mg-wp-api';
+import {processShortcodes, processContent, processExcerpt} from '@tryghost/mg-wp-api';
 import {domUtils, youtubeUtils, stringUtils} from '@tryghost/mg-utils';
 import {isSerialized, unserialize} from 'php-serialize';
 
@@ -242,7 +242,7 @@ const preProcessContent = async ({html, options = {}}: {html: string; options?: 
     });
 
     // Convert shortcodes here to that they don't accidently get wrapped in <p> tags by MarkdownIt
-    html = await MgWpAPI.process.processShortcodes({html, options});
+    html = await processShortcodes({html, options});
 
     return html;
 };
@@ -253,7 +253,7 @@ const processHTMLContent = async (args: any) => {
         return `<!--kg-card-begin: html-->${args.html}<!--kg-card-end: html-->`;
     }
 
-    return await MgWpAPI.process.processContent({
+    return await processContent({
         html: args.html,
         excerptSelector: args.excerptSelector,
         postUrl: args.postUrl,
@@ -364,9 +364,9 @@ const processPost = async (
 
     if (excerpt && !excerptSelector) {
         const excerptText = getText(post['excerpt:encoded']);
-        postObj.data.custom_excerpt = MgWpAPI.process.processExcerpt(excerptText);
+        postObj.data.custom_excerpt = processExcerpt(excerptText);
     } else if (!excerpt && excerptSelector) {
-        postObj.data.custom_excerpt = MgWpAPI.process.processExcerpt(postObj.data.html, excerptSelector);
+        postObj.data.custom_excerpt = processExcerpt(postObj.data.html, excerptSelector);
     }
 
     postObj.data.html = await processHTMLContent({

@@ -57,7 +57,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - number - default: `0`
     - Batch number to run (defaults to running all)
 - **`-l` `--limit`**
-    - number - default: `15`
+    - number - default: `100`
     - Number of items fetched in a batch i.e. batch size
 - **`--maxPosts`**
     - number - default: `0`
@@ -107,7 +107,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Only migrate posts after and including a given date e.g. 'August 16 2023'
     - string - default: `null`
 - **`--cpt`** 
-    - A comma-separated list of custom post type slugs e.g. `resources,newsletters`
+    - A comma-separated list of custom post type REST routes e.g. `resources,newsletters`
     - array - default: `null`
 - **`--rawHtml`** 
     - Don't process HTML and wrap in a HTML card
@@ -134,7 +134,7 @@ A more realistic command for a WordPress migration looks like this:
 migrate wp-api --url https://example.com --auth person:pa55w0rd --addTag 'From old site' --limit 10 --batch 5
 ```
 
-This will fetch the newest 50 posts, in 5 batches of 10, collect real author data including email addresses), and add the tag 'From old site'.
+This will fetch the fifth page of 10 posts, with every user (including email addresses when authenticated), and add the tag 'From old site'.
 
 ```sh
 migrate wp-api --url https://example.com --scrape web
@@ -157,6 +157,57 @@ https://example.com/2023/03/01/another-article
 ```
 
 
+## Source storage
+
+The API responses are stored as JSON source records in an `mg-context` SQLite database, then mapped into Ghost posts, pages, tags and authors on every run. Posts, pages and custom post types are `content` records and users are `user` records, each keyed `<type>:id:<n>` (for example `post:id:12` or `user:id:3`). A users file supplied with `--users` replaces the users endpoint; its users are keyed by ID, falling back to `user:slug:<slug>`. When paging returns the same object twice, the most recently modified version is kept and a `source:conflict` diagnostic records the replacement.
+
+What is fetched and what is mapped are separate:
+
+- **The fetch** always requests posts, pages and users, plus the `--cpt` routes. `--postsBefore` and `--postsAfter` are sent to the API, and `--maxPosts` and `--batch` fetch only the pages they need. With `--batch`, each posts, pages or custom post type page is one batch, and every user page is always fetched so authors stay complete.
+- **The map** applies `--posts`, `--pages`, `--cpt`, `--maxPosts`, `--onlyURLs`, `--addTag` and every content option to the stored records, so changing them needs no new fetch. Narrowing works on stored data; widening a fetch option (a later `--postsAfter`, a larger `--maxPosts`, another `--cpt` route) needs the source fetched again.
+
+Ghost IDs derive from the site, entity kind and source key, so they stay the same across remapping. Tags are identified by their WordPress taxonomy and term ID; distinct terms that want the same slug get deterministic suffixes. Authors are identified by WordPress user ID, or by co-author term slug or Parse.ly name when no user exists. Authors whose email matches an existing Ghost user keep that user's Ghost ID.
+
+
+## Programmatic API
+
+The package exports `parse`, `ingest` and `map` for use with `@tryghost/mg-context`. The caller owns the context, scraping, export and closure:
+
+```js
+import {MigrateContext} from '@tryghost/mg-context';
+import {ingest, map} from '@tryghost/mg-wp-api';
+
+const context = new MigrateContext({dbPath: './migration.sqlite'});
+const refetch = process.argv.includes('--rereadSource');
+await context.init();
+try {
+    if (!context.sources.hasCompletedIngestion || refetch) {
+        await ingest('https://example.com', context, {
+            replace: refetch,
+            limit: 100,
+            onProgress: title => console.log(title)
+        });
+    }
+    const summary = await map({posts: true, pages: true, tags: true}, context);
+    for await (const file of context.writeGhostJsonStream('./output', {filename: 'ghost-import'})) {
+        // Consume one file descriptor at a time.
+    }
+    await context.writeMigrationReport('./migration.report.json', summary);
+} finally {
+    await context.close();
+}
+```
+
+- `ingest(url, context, options)` fetches the API one page at a time inside `context.sources.ingest()`. Options are `replace`, `batch`, `limit`, `cpt`, `postsBefore`, `postsAfter`, `maxPosts`, `apiUser` (`{username, password}`), `usersJSON`, `trustSelfSignedCert` and `onProgress(title)`. Explicit `replace: true` is required when completed source data exists.
+- `parse(url, options)` yields the same records as `SourceRecordInput` values, page by page, without storing them.
+- `map(options, context, {fileCache?, ghostUsers?})` rebuilds mapped content and returns `{selected, imported, skipped}`. `ghostUsers` may be an iterable or async iterable of existing Ghost users to match by email. Records with invalid dates or URLs, or more than 500 tags or authors, are skipped with a `record:skipped` diagnostic.
+- `sourceSite(context)` returns the stored site URL.
+- `fetch.tasks(url, ctx)` returns one task per API page for callers that run their own task list. Each task writes into `ctx.sourceIngestion`, so run them inside `context.sources.ingest()`.
+- `fetch.discover(url, options)` returns the totals and page counts that `--info` reports.
+
+`processShortcodes`, `processContent` and `processExcerpt` are also exported and are shared with `@tryghost/mg-wp-xml`.
+
+
 ## Develop
 
 This is a mono repository, managed with [Nx](https://nx.dev/) and pnpm workspaces.
@@ -177,7 +228,7 @@ pnpm dev wp-api <url>
 
 ## Test
 
-- `pnpm test` runs the package tests
+- `pnpm test:local` builds the package and runs its tests with 100% coverage
 - Linting and formatting are run from the repo root (`pnpm lint`, `pnpm format`)
 
 

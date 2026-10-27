@@ -1,8 +1,8 @@
-const escapeHtmlAttr = str => {
+const escapeHtmlAttr = (str: string): string => {
     return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 };
 
-const sanitizeUrl = url => {
+const sanitizeUrl = (url: string): string | null => {
     try {
         const parsed = new URL(url);
         if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
@@ -14,7 +14,22 @@ const sanitizeUrl = url => {
     }
 };
 
-const EMBED_SERVICES = [
+export interface EmbedService {
+    name: string;
+    patterns: RegExp[];
+    buildEmbedHtml(id: string, groups: string[], originalUrl: string): string;
+    extractId?(url: string): string | {id: string; groups: string[]} | null;
+}
+
+export interface EmbedMatch {
+    service: string;
+    id: string;
+    groups: string[];
+    url: string;
+    buildEmbedHtml(id: string, groups: string[], originalUrl: string): string;
+}
+
+const EMBED_SERVICES: EmbedService[] = [
     {
         name: 'youtube',
         patterns: [
@@ -25,10 +40,10 @@ const EMBED_SERVICES = [
             /(?:https?:\/\/)?youtu\.be\/([\w-]+)/i,
             /(?:https?:\/\/)?(?:www\.)?youtube-nocookie\.com\/embed\/([\w-]+)/i
         ],
-        buildEmbedHtml(id) {
+        buildEmbedHtml(id: string) {
             return `<figure class="kg-card kg-embed-card"><iframe src="https://www.youtube.com/embed/${id}?feature=oembed" width="160" height="90" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></figure>`;
         },
-        extractId(url) {
+        extractId(url: string) {
             for (const pattern of this.patterns) {
                 const match = url.match(pattern);
                 if (match && match[1]) {
@@ -41,7 +56,7 @@ const EMBED_SERVICES = [
     {
         name: 'vimeo',
         patterns: [/(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(\d+)/i, /(?:https?:\/\/)?player\.vimeo\.com\/video\/(\d+)/i],
-        buildEmbedHtml(id) {
+        buildEmbedHtml(id: string) {
             return `<figure class="kg-card kg-embed-card"><iframe src="https://player.vimeo.com/video/${id}" width="160" height="90" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></figure>`;
         }
     },
@@ -51,12 +66,12 @@ const EMBED_SERVICES = [
             /(?:https?:\/\/)?open\.spotify\.com\/(track|album|playlist|episode|show)\/([\w]+)/i,
             /(?:https?:\/\/)?open\.spotify\.com\/embed\/(track|album|playlist|episode|show)\/([\w]+)/i
         ],
-        buildEmbedHtml(id, groups) {
+        buildEmbedHtml(_id: string, groups: string[]) {
             const type = groups[0];
             const trackId = groups[1];
             return `<figure class="kg-card kg-embed-card"><iframe src="https://open.spotify.com/embed/${type}/${trackId}" width="100%" height="352" frameborder="0" allow="encrypted-media" allowfullscreen></iframe></figure>`;
         },
-        extractId(url) {
+        extractId(url: string) {
             for (const pattern of this.patterns) {
                 const match = url.match(pattern);
                 if (match) {
@@ -73,7 +88,7 @@ const EMBED_SERVICES = [
             /(?:https?:\/\/)?(?:www\.)?dailymotion\.com\/embed\/video\/([\w]+)/i,
             /(?:https?:\/\/)?dai\.ly\/([\w]+)/i
         ],
-        buildEmbedHtml(id) {
+        buildEmbedHtml(id: string) {
             return `<figure class="kg-card kg-embed-card"><iframe src="https://www.dailymotion.com/embed/video/${id}" width="160" height="90" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></figure>`;
         }
     },
@@ -83,14 +98,14 @@ const EMBED_SERVICES = [
             /(?:https?:\/\/)?(?:www\.)?soundcloud\.com\/([\w-]+)\/([\w-]+)/i,
             /(?:https?:\/\/)?w\.soundcloud\.com\/player\/\?url=/i
         ],
-        buildEmbedHtml(_id, _groups, originalUrl) {
+        buildEmbedHtml(_id: string, _groups: string[], originalUrl: string) {
             const safe = sanitizeUrl(originalUrl);
             if (!safe) {
                 return '';
             }
             return `<figure class="kg-card kg-embed-card"><iframe src="${safe}" width="100%" height="166" frameborder="0" allow="autoplay"></iframe></figure>`;
         },
-        extractId(url) {
+        extractId(url: string) {
             for (const pattern of this.patterns) {
                 const match = url.match(pattern);
                 if (match) {
@@ -106,7 +121,7 @@ const EMBED_SERVICES = [
             /(?:https?:\/\/)?(?:www\.)?twitter\.com\/\w+\/status\/(\d+)/i,
             /(?:https?:\/\/)?(?:www\.)?x\.com\/\w+\/status\/(\d+)/i
         ],
-        buildEmbedHtml(_id, _groups, originalUrl) {
+        buildEmbedHtml(_id: string, _groups: string[], originalUrl: string) {
             const safe = sanitizeUrl(originalUrl);
             if (!safe) {
                 return '';
@@ -120,7 +135,7 @@ const EMBED_SERVICES = [
             /(?:https?:\/\/)?(?:www\.)?instagram\.com\/p\/([\w-]+)/i,
             /(?:https?:\/\/)?(?:www\.)?instagram\.com\/reel\/([\w-]+)/i
         ],
-        buildEmbedHtml(_id, _groups, originalUrl) {
+        buildEmbedHtml(_id: string, _groups: string[], originalUrl: string) {
             const safe = sanitizeUrl(originalUrl);
             if (!safe) {
                 return '';
@@ -131,7 +146,7 @@ const EMBED_SERVICES = [
     {
         name: 'bluesky',
         patterns: [/(?:https?:\/\/)?bsky\.app\/profile\/[\w.:-]+\/post\/([\w]+)/i],
-        buildEmbedHtml(_id, _groups, originalUrl) {
+        buildEmbedHtml(_id: string, _groups: string[], originalUrl: string) {
             const safe = sanitizeUrl(originalUrl);
             if (!safe) {
                 return '';
@@ -142,7 +157,7 @@ const EMBED_SERVICES = [
     {
         name: 'tiktok',
         patterns: [/(?:https?:\/\/)?(?:www\.)?tiktok\.com\/@[\w.-]+\/video\/(\d+)/i],
-        buildEmbedHtml(_id, _groups, originalUrl) {
+        buildEmbedHtml(_id: string, _groups: string[], originalUrl: string) {
             const safe = sanitizeUrl(originalUrl);
             if (!safe) {
                 return '';
@@ -156,7 +171,7 @@ const EMBED_SERVICES = [
  * Test a URL string against all known embed service patterns.
  * Returns {service, id, groups, url} on match, or null.
  */
-const matchEmbedUrl = url => {
+const matchEmbedUrl = (url: unknown): EmbedMatch | null => {
     if (!url || typeof url !== 'string') {
         return null;
     }
@@ -204,7 +219,7 @@ const matchEmbedUrl = url => {
 /**
  * Given a match result from matchEmbedUrl, produce the Ghost embed HTML.
  */
-const buildEmbedHtml = match => {
+const buildEmbedHtml = (match: EmbedMatch | null): string | null => {
     if (!match) {
         return null;
     }
