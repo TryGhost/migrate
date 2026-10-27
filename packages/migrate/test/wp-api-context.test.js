@@ -63,6 +63,7 @@ async function setup() {
             cacheName: 'test',
             scrape: ['none'],
             limit: 100,
+            report: true,
             renderer: 'silent'
         }
     };
@@ -93,7 +94,30 @@ describe('WordPress API context pipeline', () => {
         assert.equal(command.defaults.rereadSource, false);
         assert.equal(command.defaults.postsPerFile, 2000);
         assert.equal(command.defaults.cacheName, null);
+        assert.equal(command.defaults.report, false);
         assert.equal('fallBackHTMLCard' in command.defaults, false);
+    });
+
+    it('writes no report or failed report unless asked', async () => {
+        const fx = await setup();
+        try {
+            wordpress({posts: [post(1)], users: [user]});
+            const context = {};
+            await source.getTaskRunner({...fx.options, report: false}).run(context);
+            assert.equal(context.reportFile, undefined);
+            assert.equal(context.summary.imported, 1);
+            nock.cleanAll();
+            nock(SITE).get(/.*/).reply(500, {code: 'error', message: 'Server down'});
+            const failed = {};
+            await assert.rejects(source.getTaskRunner({...fx.options, report: false, rereadSource: true}).run(failed));
+            assert.equal(failed.failedReport, undefined);
+            assert.deepEqual(
+                (await readdir(fx.directory)).filter(name => name.endsWith('.json')),
+                []
+            );
+        } finally {
+            await rm(fx.directory, {recursive: true, force: true});
+        }
     });
 
     it('writes linked HTML chunks, a report and a ZIP, then remaps stored records without fetching', async () => {

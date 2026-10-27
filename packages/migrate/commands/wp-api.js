@@ -46,6 +46,12 @@ const options = [
         desc: 'Create a zip file (set to false to skip)'
     },
     {
+        type: 'boolean',
+        flags: '--report',
+        defaultValue: false,
+        desc: 'Write a .report.json migration report beside the import, or a .failed-report.json if the run fails'
+    },
+    {
         type: 'string',
         flags: '--onlyURLs',
         defaultValue: null,
@@ -317,7 +323,7 @@ const run = async argv => {
             );
         } else {
             ui.log.info(
-                `${context.summary.imported} imported, ${context.summary.skipped} skipped, ${context.warningCount} warnings. Report: ${context.reportFile.path}`
+                `${context.summary.imported} imported, ${context.summary.skipped} skipped, ${context.warningCount} warnings.${context.reportFile ? ` Report: ${context.reportFile.path}` : ''}`
             );
         }
     } catch (error) {
