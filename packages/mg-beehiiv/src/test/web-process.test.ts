@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {getYouTubeID, isURL, processHTML, removeDuplicateFeatureImage} from '../lib/process.js';
+import {getYouTubeID, isURL, processWebHTML, removeDuplicateFeatureImage} from '../lib/process.js';
 
-describe('beehiiv API processor', () => {
+describe('beehiiv web HTML processor', () => {
     describe('isURL', () => {
         it('returns true for valid HTTP URL', () => {
             assert.equal(isURL('https://example.com'), true);
@@ -57,10 +57,10 @@ describe('beehiiv API processor', () => {
         });
     });
 
-    describe('processHTML', () => {
+    describe('processWebHTML', () => {
         it('handles post with undefined html by using empty string', () => {
-            // When post.data.html is undefined, it falls back to empty string via ??
-            const result = processHTML({post: {url: 'test', data: {}} as any});
+            // Undefined HTML falls back to an empty string
+            const result = processWebHTML({url: 'test'});
             // Should return empty string without throwing
             assert.equal(result, '');
         });
@@ -68,64 +68,65 @@ describe('beehiiv API processor', () => {
         it('handles html without content-blocks element', () => {
             // When there's no #content-blocks element, contentBlocksHtml falls back to ''
             const html = '<div><p>No content blocks here</p></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '');
         });
 
         it('replaces beehiiv subscriber_id variable with a space', () => {
             const html = '<div id="content-blocks"><p>Hello {{subscriber_id}}</p></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '<p>Hello  </p>');
         });
 
         it('replaces beehiiv rp_refer_url variable with #', () => {
             const html = '<div id="content-blocks"><a href="{{rp_refer_url}}">Link</a></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '<a href="#">Link</a>');
         });
 
         it('replaces beehiiv rp_refer_url_no_params variable with #', () => {
             const html = '<div id="content-blocks"><a href="{{rp_refer_url_no_params}}">Link</a></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '<a href="#">Link</a>');
         });
 
         it('converts empty divs with border-top to HR', () => {
             const html = '<div id="content-blocks"><div style="border-top: 1px solid black"></div></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '<hr>');
         });
 
         it('does not convert divs with content to HR', () => {
             const html = '<div id="content-blocks"><div style="border-top: 1px solid black">content</div></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, 'content');
         });
 
         it('converts nested padding-left divs to blockquote with paragraph content', () => {
             const html = `<div id="content-blocks"><div style="padding-left:19px;"><div style="padding-left:40px;"><div> ❝ </div><div><p>Quote text here.</p></div><div><small>Author Name</small></div></div></div></div>`;
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '<blockquote><p>Quote text here.</p><cite>Author Name</cite></blockquote>');
         });
 
         it('converts nested padding-left divs to blockquote without citation when small is empty', () => {
             const html = `<div id="content-blocks"><div style="padding-left:19px;"><div style="padding-left:40px;"><div> ❝ </div><div><p>Quote text here.</p></div><div><small></small></div></div></div></div>`;
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '<blockquote><p>Quote text here.</p></blockquote>');
         });
 
         it('does not convert nested padding-left divs without paragraphs', () => {
             const html =
                 '<div id="content-blocks"><div style="padding-left: 20px"><div style="padding-left: 10px">plain text</div></div></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '<div>plain text</div>');
         });
 
         it('converts subscribe button wrapper to Portal signup button', () => {
             const html =
                 '<div id="content-blocks"><div style="padding-bottom:12px;padding-left:15px;padding-right:15px;padding-top:12px;text-align:center;width:100%;word-break:break-word;"><a target="_blank" rel="noopener nofollow noreferrer" href="https://example.beehiiv.com/subscribe"><button style="background-color:#030712;" type="button"> Subscribe </button></a></div></div>';
-            const result = processHTML({
-                post: {url: 'test', data: {html}} as any,
+            const result = processWebHTML({
+                html,
+                url: 'test',
                 options: {subscribeLink: '/#/portal/signup'}
             });
             assert.equal(
@@ -137,8 +138,9 @@ describe('beehiiv API processor', () => {
         it('converts subscribe button without wrapper div to Portal signup', () => {
             const html =
                 '<div id="content-blocks"><a href="https://example.beehiiv.com/subscribe"><button>Subscribe</button></a></div>';
-            const result = processHTML({
-                post: {url: 'test', data: {html}} as any,
+            const result = processWebHTML({
+                html,
+                url: 'test',
                 options: {subscribeLink: '/#/portal/signup'}
             });
             assert.equal(
@@ -150,8 +152,9 @@ describe('beehiiv API processor', () => {
         it('rewrites comment links when comments enabled', () => {
             const html =
                 '<div id="content-blocks"><p>Hello <a href="https://example.beehiiv.com/p/post-slug?comments=true" target="_blank" rel="noopener">Leave a comment</a></p></div>';
-            const result = processHTML({
-                post: {url: 'https://example.beehiiv.com/p/post-slug', data: {html}} as any,
+            const result = processWebHTML({
+                html,
+                url: 'https://example.beehiiv.com/p/post-slug',
                 options: {comments: true, commentLink: '#ghost-comments-root'}
             });
             assert.equal(result, '<p>Hello <a href="#ghost-comments-root">Leave a comment</a></p>');
@@ -160,8 +163,9 @@ describe('beehiiv API processor', () => {
         it('removes comment links when comments disabled', () => {
             const html =
                 '<div id="content-blocks"><p>Hello <a href="https://example.beehiiv.com/p/post-slug?comments=true" target="_blank" rel="noopener">Leave a comment</a></p></div>';
-            const result = processHTML({
-                post: {url: 'https://example.beehiiv.com/p/post-slug', data: {html}} as any,
+            const result = processWebHTML({
+                html,
+                url: 'https://example.beehiiv.com/p/post-slug',
                 options: {comments: false}
             });
             assert.equal(result, '<p>Hello </p>');
@@ -170,8 +174,9 @@ describe('beehiiv API processor', () => {
         it('leaves comment links from other domains untouched when comments enabled', () => {
             const html =
                 '<div id="content-blocks"><p><a href="https://other.beehiiv.com/p/other?comments=true">Comment</a></p></div>';
-            const result = processHTML({
-                post: {url: 'https://example.beehiiv.com/p/post-slug', data: {html}} as any,
+            const result = processWebHTML({
+                html,
+                url: 'https://example.beehiiv.com/p/post-slug',
                 options: {comments: true, commentLink: '#ghost-comments-root'}
             });
             assert.equal(result, '<p><a href="https://other.beehiiv.com/p/other?comments=true">Comment</a></p>');
@@ -180,8 +185,9 @@ describe('beehiiv API processor', () => {
         it('leaves comment links from other domains untouched when comments disabled', () => {
             const html =
                 '<div id="content-blocks"><p><a href="https://other.beehiiv.com/p/other?comments=true">Comment</a></p></div>';
-            const result = processHTML({
-                post: {url: 'https://example.beehiiv.com/p/post-slug', data: {html}} as any,
+            const result = processWebHTML({
+                html,
+                url: 'https://example.beehiiv.com/p/post-slug',
                 options: {comments: false}
             });
             assert.equal(result, '<p><a href="https://other.beehiiv.com/p/other?comments=true">Comment</a></p>');
@@ -189,7 +195,7 @@ describe('beehiiv API processor', () => {
 
         it('converts buttons inside anchors to Ghost buttons', () => {
             const html = '<div id="content-blocks"><a href="https://example.com"><button>Click me</button></a></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(
                 result,
                 '<div class="kg-card kg-button-card kg-align-center"><a href="https://example.com" class="kg-btn kg-btn-accent">Click me</a></div>'
@@ -199,7 +205,7 @@ describe('beehiiv API processor', () => {
         it('converts generic embeds to bookmark cards', () => {
             const html =
                 '<div id="content-blocks"><div class="generic-embed--root"><a href="https://example.com">Link</a><div class="generic-embed--title"><p>Title</p></div><div class="generic-embed--description"><p>Description</p></div><div class="generic-embed--image"><img src="https://example.com/image.jpg" /></div></div></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(
                 result,
                 '<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://example.com"><div class="kg-bookmark-content"><div class="kg-bookmark-title">Title</div><div class="kg-bookmark-description">Description</div><div class="kg-bookmark-metadata"></div></div><div class="kg-bookmark-thumbnail"><img src="https://example.com/image.jpg" alt></div></a></figure>'
@@ -208,21 +214,21 @@ describe('beehiiv API processor', () => {
 
         it('handles generic embeds with missing sub-elements without crashing', () => {
             const html = '<div id="content-blocks"><div class="generic-embed--root"></div></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '');
         });
 
         it('unwraps audio iframes from tables', () => {
             const html =
                 '<div id="content-blocks"><table><tr><td><iframe src="https://audio.beehiiv.com/audio123"></iframe></td></tr></table></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '<iframe src="https://audio.beehiiv.com/audio123"></iframe>');
         });
 
         it('converts YouTube iframes to embed cards', () => {
             const html =
                 '<div id="content-blocks"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(
                 result,
                 '<figure class="kg-card kg-embed-card"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen width="160" height="90"></iframe></figure>'
@@ -231,7 +237,7 @@ describe('beehiiv API processor', () => {
 
         it('converts youtu.be iframes to embed cards', () => {
             const html = '<div id="content-blocks"><iframe src="https://youtu.be/FdeioVndUhs"></iframe></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(
                 result,
                 '<figure class="kg-card kg-embed-card"><iframe src="https://www.youtube.com/embed/FdeioVndUhs?feature=oembed" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen width="160" height="90"></iframe></figure>'
@@ -241,14 +247,14 @@ describe('beehiiv API processor', () => {
         it('converts subscriber breaks to Ghost paywall cards', () => {
             const html =
                 '<div id="content-blocks"><p>Public content</p><div id="subscriber-break"></div><p>Premium content</p></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '<p>Public content</p><!--members-only--><p>Premium content</p>');
         });
 
         it('converts image with caption to Ghost image card', () => {
             const html =
                 '<div id="content-blocks"><div style="padding-left:15px;padding-right:15px;"><div style="padding-bottom:20px;padding-top:20px;"><img alt="" src="https://media.beehiiv.com/image.jpg" /><div style="text-align:center;"><small style="font-style:italic;"><p>Caption text here</p></small></div></div></div></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(
                 result,
                 '<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://media.beehiiv.com/image.jpg" class="kg-image" alt loading="lazy"><figcaption>Caption text here</figcaption></figure>'
@@ -258,7 +264,7 @@ describe('beehiiv API processor', () => {
         it('converts image without caption to Ghost image card', () => {
             const html =
                 '<div id="content-blocks"><div style="padding-left:15px;"><div style="padding-bottom:20px;"><img alt="Test" src="https://media.beehiiv.com/photo.jpg" /></div></div></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(
                 result,
                 '<figure class="kg-card kg-image-card"><img src="https://media.beehiiv.com/photo.jpg" class="kg-image" alt="Test" loading="lazy"></figure>'
@@ -268,7 +274,7 @@ describe('beehiiv API processor', () => {
         it('converts image in single div wrapper to Ghost image card', () => {
             const html =
                 '<div id="content-blocks"><div><img alt="" src="https://media.beehiiv.com/single.jpg" /></div></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(
                 result,
                 '<figure class="kg-card kg-image-card"><img src="https://media.beehiiv.com/single.jpg" class="kg-image" alt loading="lazy"></figure>'
@@ -278,7 +284,7 @@ describe('beehiiv API processor', () => {
         it('converts image inside non-div wrapper and places card after parent', () => {
             const html =
                 '<div id="content-blocks"><p>Text <img alt="" src="https://example.com/img.jpg" /> more text</p></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(
                 result,
                 '<p>Text  more text</p><figure class="kg-card kg-image-card"><img src="https://example.com/img.jpg" class="kg-image" alt loading="lazy"></figure>'
@@ -288,7 +294,7 @@ describe('beehiiv API processor', () => {
         it('replaces anchor-wrapped image with image card without leaving empty anchor', () => {
             const html =
                 '<div id="content-blocks"><a href="https://example.com/full.jpg"><img src="https://example.com/img.jpg" alt="Photo" /></a></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(
                 result,
                 '<figure class="kg-card kg-image-card"><img src="https://example.com/img.jpg" class="kg-image" alt="Photo" loading="lazy"></figure>'
@@ -297,7 +303,7 @@ describe('beehiiv API processor', () => {
 
         it('converts sponsored content tables to Ghost HTML cards with text in p tags', () => {
             const html = `<div id="content-blocks"><div style="padding: 8px 5px 8px 5px;"><table bgcolor="#1A4D3A" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:25px 0; border-radius:20px;"><tbody><tr><td align="center" style="padding: 50px 30px;"><div style="color:#1A4D3A; font-size:12px; font-weight:bold; background:#FFFFFF; padding:5px 12px; border-radius:15px; display:inline-block; margin-bottom:20px;"> Sponsored Content </div><br><br><h2 style="color:#FEFEFE;"> Ad Heading </h2><br><br><div style="text-align: center;"><a href="https://example.com"><img src="https://example.com/ad.jpg" alt="Ad image" style="width: 400px;"></a></div><br><br><div style="font-size:20px; line-height:1.6; text-align: left; color: #FEFEFE;"> Some ad text </div><a href="https://example.com" style="display:inline-block; background:#F9FFF6; color:#1A4D3A;">Learn more</a></td></tr></tbody></table></div></div>`;
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.ok(
                 result.startsWith('<!--kg-card-begin: html--><div class="mg-sponsored" data-mg-skip="image-card">')
             );
@@ -312,7 +318,7 @@ describe('beehiiv API processor', () => {
 
         it('converts sponsored content tables without wrapper div', () => {
             const html = `<div id="content-blocks"><table><tbody><tr><td><div> Sponsored Content </div><p>Ad text</p></td></tr></tbody></table></div>`;
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.ok(
                 result.startsWith('<!--kg-card-begin: html--><div class="mg-sponsored" data-mg-skip="image-card">')
             );
@@ -322,14 +328,14 @@ describe('beehiiv API processor', () => {
 
         it('removes empty divs and preserves image divs in sponsored content', () => {
             const html = `<div id="content-blocks"><table><tbody><tr><td><div> Sponsored Content </div><div></div><div style="text-align:center"><a href="https://example.com"><img src="https://example.com/ad.jpg" alt="Ad"></a></div></td></tr></tbody></table></div>`;
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.ok(result.includes('<img src="https://example.com/ad.jpg"'), 'image preserved in div');
             assert.ok(result.includes('<p> Sponsored Content </p>'), 'text div converted to p');
         });
 
         it('handles sponsored content table without td element', () => {
             const html = `<div id="content-blocks"><table><tbody><tr><th> Sponsored Content </th></tr></tbody></table></div>`;
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.ok(
                 result.startsWith('<!--kg-card-begin: html--><div class="mg-sponsored" data-mg-skip="image-card">')
             );
@@ -338,31 +344,31 @@ describe('beehiiv API processor', () => {
 
         it('removes empty paragraphs', () => {
             const html = '<div id="content-blocks"><p></p><p>   </p><p>Content</p></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '<p>Content</p>');
         });
 
         it('removes style tags', () => {
             const html = '<div id="content-blocks"><style>.foo { color: red; }</style><p>Content</p></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '<p>Content</p>');
         });
 
         it('removes mobile ad elements', () => {
             const html = '<div id="content-blocks"><div id="pad-mobile">Ad content</div><p>Content</p></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '<p>Content</p>');
         });
 
         it('removes b and strong tags from headings', () => {
             const html = '<div id="content-blocks"><h2><strong>Bold Heading</strong></h2></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '<h2>Bold Heading</h2>');
         });
 
         it('removes style attributes', () => {
             const html = '<div id="content-blocks"><p style="color: red;">Content</p></div>';
-            const result = processHTML({post: {url: 'test', data: {html}} as any});
+            const result = processWebHTML({html, url: 'test'});
             assert.equal(result, '<p>Content</p>');
         });
     });
@@ -409,6 +415,13 @@ describe('beehiiv API processor', () => {
             const featureSrc = '';
             const result = removeDuplicateFeatureImage({html, featureSrc});
             assert.equal(result, '<img src="https://example.com/image.jpg">');
+        });
+
+        it('keeps an image without a source', () => {
+            const html = '<img alt="No source"><p>Hi</p>';
+            const featureSrc = 'https://cdn.example.com/uploads/asset/file/123/image.jpg';
+            const result = removeDuplicateFeatureImage({html, featureSrc});
+            assert.equal(result, '<img alt="No source"><p>Hi</p>');
         });
 
         it('keeps image when URLs have different asset paths', () => {

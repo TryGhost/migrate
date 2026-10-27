@@ -2,22 +2,7 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {getYouTubeID, processHTML, removeDuplicateFeatureImage} from '../lib/process.js';
 
-const mappedObject: mappedDataObject = {
-    url: 'https://example.beehiiv.com/p/lorem-ipsum',
-    data: {
-        slug: '',
-        published_at: '',
-        updated_at: '',
-        created_at: '',
-        title: 'Example Post',
-        type: '',
-        html: '',
-        status: 'published',
-        custom_excerpt: '',
-        visibility: 'public',
-        tags: []
-    }
-};
+const title = 'Example Post';
 
 describe('beehiiv Processor', () => {
     describe('YouTube ID Extractor', () => {
@@ -114,7 +99,7 @@ describe('beehiiv Processor', () => {
         // Remove hidden elements
         it('Remove hidden elements', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><div style="display:none">Hide 1</div><div style="display: none">Hide 2</div><div style="display: none ">Hide 3</div><div style="display: none;">Hide 4</div><div style="display:none; color: red;">Hide 5</div><p>Visible</p></tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(processed, '<p>Visible</p>');
         });
@@ -122,7 +107,7 @@ describe('beehiiv Processor', () => {
         // Remove the share links at the top
         it('Remove the share links at the top', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><table class="mob-block"><tr><td>Big bunch of links</td></tr></table><p>Real content</p></tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(processed, '<p>Real content</p>');
         });
@@ -130,7 +115,7 @@ describe('beehiiv Processor', () => {
         // Remove the open tracking pixel element
         it('Remove the open tracking pixel element', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><table><tr><td style="height:0px;width:0px;"><div style="height:1px;" data-open-tracking="true"> {{OPEN_TRACKING_PIXEL}} </div></td></tr></table><p>Real content</p></tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(processed, '<p>Real content</p>');
         });
@@ -138,7 +123,7 @@ describe('beehiiv Processor', () => {
         // Remove unsubscribe links, social links, & email footer
         it('Remove unsubscribe links, social links, & email footer', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><table><tr><td class="b">Big bunch of links</td></tr></table><p>Real content</p></tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(processed, '<p>Real content</p>');
         });
@@ -146,7 +131,7 @@ describe('beehiiv Processor', () => {
         // Remove the 'Read online' link
         it('Remove the "Read online" link', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><table><tr><td class="f"><p> July 10, 2023 &nbsp; | &nbsp; <a href="https://example.beehiiv.com/p/news-premium-subscribers">Read Online</a></p></td></tr></table><p>Real content</p></tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(processed, '<p>Real content</p>');
         });
@@ -163,7 +148,7 @@ describe('beehiiv Processor', () => {
                 </table>
                 <p>Real content</p>
             </td></tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(processed, '<p>Real content</p>');
         });
@@ -171,7 +156,7 @@ describe('beehiiv Processor', () => {
         it('Keeps headings that do not match the post title', () => {
             const htmlContent =
                 '<body><table><tr id="content-blocks"><h1>Another heading</h1><p>Real content</p></tr></table></body>';
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(processed, '<h1>Another heading</h1><p>Real content</p>');
         });
@@ -192,7 +177,7 @@ describe('beehiiv Processor', () => {
                 </table>
                 <p>Real content</p>
             </td></tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(processed, '<p>Real content</p>');
         });
@@ -270,7 +255,7 @@ describe('beehiiv Processor', () => {
                 </table>
                 <p>Real content</p>
             </td></tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(processed, '<p>Real content</p>');
         });
@@ -278,7 +263,7 @@ describe('beehiiv Processor', () => {
         it('Removes personalized text outside a table', () => {
             const htmlContent =
                 '<body><table><tr id="content-blocks"><p>{{rp_personalized_text}}</p><p>Real content</p></tr></table></body>';
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(processed, '<p>Real content</p>');
         });
@@ -299,7 +284,7 @@ describe('beehiiv Processor', () => {
                 </table>
                 <iframe src="https://example.com" width="600" height="400" style="border:none;"></iframe><p>Real content</p>
             </td></tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(
                 processed,
@@ -358,7 +343,7 @@ describe('beehiiv Processor', () => {
                     </tr>
                 </table><p>Real content</p>
             </td></tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(
                 processed,
@@ -369,7 +354,7 @@ describe('beehiiv Processor', () => {
         // Convert '...' to <hr />
         it('Convert ... to <hr />', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><p>...</p><p>…</p><p>&hellip;</p></tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(processed, '<hr /><hr /><hr />');
         });
@@ -398,7 +383,7 @@ describe('beehiiv Processor', () => {
                 </a>
                 <p><a href="https://youtu.be/1234ABCD123">Regular YouTube link</a></p>
             </tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(
                 processed,
@@ -436,7 +421,7 @@ describe('beehiiv Processor', () => {
                 </a>
                 <p><a href="https://youtube.com/watch?v=1234ABCD123">Regular YouTube link</a></p>
             </tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(
                 processed,
@@ -486,7 +471,7 @@ describe('beehiiv Processor', () => {
 
             const processed = processHTML({
                 html: htmlContent,
-                postData: mappedObject,
+                title,
                 options: {
                     url: 'https://example.beehiiv.com'
                 }
@@ -525,7 +510,7 @@ describe('beehiiv Processor', () => {
 
             const processed = processHTML({
                 html: htmlContent,
-                postData: mappedObject,
+                title,
                 options: {
                     url: 'https://example.beehiiv.com'
                 }
@@ -541,7 +526,7 @@ describe('beehiiv Processor', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><p>Stay updated! Be sure to <a class="link" href="https://example.beehiiv.com/subscribe?utm_source=example.beehiiv.com&utm_medium=newsletter" target="_blank" rel="noopener noreferrer nofollow">subscribe to our newsletter</a>.</p></tr></table></body>`;
             const processed = processHTML({
                 html: htmlContent,
-                postData: mappedObject,
+                title,
                 options: {
                     url: 'https://example.beehiiv.com',
                     subscribeLink: '#/portal/signup'
@@ -558,7 +543,7 @@ describe('beehiiv Processor', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><p>Hello <a href="https://example.beehiiv.com/p/post-slug?comments=true">Make a comment</a></p></tr></table></body>`;
             const processed = processHTML({
                 html: htmlContent,
-                postData: mappedObject,
+                title,
                 options: {
                     url: 'https://example.beehiiv.com',
                     comments: true,
@@ -573,7 +558,7 @@ describe('beehiiv Processor', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><p>Hello <a href="https://example.beehiiv.com/p/post-slug?comments=true">Make a comment</a></p></tr></table></body>`;
             const processed = processHTML({
                 html: htmlContent,
-                postData: mappedObject,
+                title,
                 options: {
                     url: 'https://example.beehiiv.com',
                     comments: false
@@ -593,7 +578,7 @@ describe('beehiiv Processor', () => {
                 </table>
             </td>
         </tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(
                 processed,
@@ -611,7 +596,7 @@ describe('beehiiv Processor', () => {
                 </table>
             </td>
         </tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.match(
                 processed,
@@ -634,7 +619,7 @@ describe('beehiiv Processor', () => {
                 </table>
             </td>
         </tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(
                 processed,
@@ -657,7 +642,7 @@ describe('beehiiv Processor', () => {
                 </table>
             </td>
         </tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(
                 processed,
@@ -676,7 +661,7 @@ describe('beehiiv Processor', () => {
                 </table>
             </td>
         </tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(
                 processed,
@@ -710,7 +695,7 @@ describe('beehiiv Processor', () => {
                 </table>
             </td>
         </tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(
                 processed,
@@ -793,7 +778,7 @@ describe('beehiiv Processor', () => {
                     </table>
                 </td>
             </tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(
                 processed,
@@ -811,7 +796,7 @@ describe('beehiiv Processor', () => {
                 </table>
             </td>
         </tr></table></body>`;
-            const processed = processHTML({html: htmlContent, postData: mappedObject});
+            const processed = processHTML({html: htmlContent, title});
 
             assert.equal(
                 processed,
@@ -823,7 +808,7 @@ describe('beehiiv Processor', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><a href="https://www.example.com/p/post-slug?utm_source=www.example.com&utm_medium=newsletter&utm_campaign=lorem-ipsum-dolor-simet-1234&last_resource_guid=Post%3Aabcd1234-c74e-427a-83f3-3f8c0bad81e6">Article</a></tr></table></body>`;
             const processed = processHTML({
                 html: htmlContent,
-                postData: mappedObject,
+                title,
                 options: {
                     url: 'https://www.example.com'
                 }
@@ -836,7 +821,7 @@ describe('beehiiv Processor', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><a href="https://www.example.com/upgrade?hello=world">Upgrade</a></tr></table></body>`;
             const processed = processHTML({
                 html: htmlContent,
-                postData: mappedObject,
+                title,
                 options: {
                     url: 'https://www.example.com'
                 }
@@ -849,7 +834,7 @@ describe('beehiiv Processor', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><a href="https://www.another.com/p/another-post-slug?utm_source=www.another.com&utm_medium=newsletter&utm_campaign=lorem-ipsum-dolor-simet-1234&last_resource_guid=Post%3Aabcd1234-c74e-427a-83f3-3f8c0bad81e6">Another Article</a></tr></table></body>`;
             const processed = processHTML({
                 html: htmlContent,
-                postData: mappedObject,
+                title,
                 options: {
                     url: 'https://www.example.com'
                 }
@@ -862,7 +847,7 @@ describe('beehiiv Processor', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><a>Upgrade</a></tr></table></body>`;
             const processed = processHTML({
                 html: htmlContent,
-                postData: mappedObject,
+                title,
                 options: {
                     url: 'https://www.example.com'
                 }
@@ -875,7 +860,7 @@ describe('beehiiv Processor', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><a href="{{not_a_url}}">Upgrade</a></tr></table></body>`;
             const processed = processHTML({
                 html: htmlContent,
-                postData: mappedObject,
+                title,
                 options: {
                     url: 'https://www.example.com'
                 }
@@ -919,7 +904,7 @@ describe('beehiiv Processor', () => {
                 featureSrc: 'https://example.com/the-target.png'
             });
 
-            assert.equal(newHtml, '<figure></figure><p>Hi</p>');
+            assert.equal(newHtml, '<p>Hi</p>');
         });
 
         it('Does remove first image if it is a match 3', () => {
@@ -928,7 +913,7 @@ describe('beehiiv Processor', () => {
                 featureSrc: 'https://example.com/the-target.png'
             });
 
-            assert.equal(newHtml, '<div><figure></figure></div><p>Hi</p>');
+            assert.equal(newHtml, '<p>Hi</p>');
         });
 
         it('Does remove first image if it is a match 4', () => {
@@ -937,7 +922,7 @@ describe('beehiiv Processor', () => {
                 featureSrc: 'https://media.beehiiv.com/cdn-cgi/image/quality=100/uploads/asset/file/12345678/image.png'
             });
 
-            assert.equal(newHtml, '<div><figure></figure></div><p>Hi</p>');
+            assert.equal(newHtml, '<p>Hi</p>');
         });
 
         it('Does remove first image if it is a match 5', () => {
@@ -947,7 +932,7 @@ describe('beehiiv Processor', () => {
                     'https://beehiiv-images-production.s3.amazonaws.com/uploads/asset/file/12345678-1234-5678-abcd-fc76ef777f64/photo.png?t=1234994175'
             });
 
-            assert.equal(newHtml, '<div><figure></figure></div><p>Hi</p>');
+            assert.equal(newHtml, '<p>Hi</p>');
         });
 
         it('Changes image size & quality attributes', () => {
@@ -956,7 +941,7 @@ describe('beehiiv Processor', () => {
                 featureSrc: 'https://media.beehiiv.com/cdn-cgi/image/quality=100/uploads/asset/file/12345678/image.png'
             });
 
-            assert.equal(newHtml, '<div><figure></figure></div><p>Hi</p>');
+            assert.equal(newHtml, '<p>Hi</p>');
         });
     });
 });

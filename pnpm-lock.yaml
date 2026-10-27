@@ -350,9 +350,15 @@ importers:
 
   packages/mg-beehiiv:
     dependencies:
+      '@tryghost/mg-context':
+        specifier: workspace:*
+        version: link:../mg-context
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
+      '@tryghost/mg-ghost-authors':
+        specifier: workspace:*
+        version: link:../mg-ghost-authors
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
@@ -381,15 +387,21 @@ importers:
       '@tryghost/errors':
         specifier: 'catalog:'
         version: 3.4.4
+      '@tryghost/mg-beehiiv':
+        specifier: workspace:*
+        version: link:../mg-beehiiv
+      '@tryghost/mg-context':
+        specifier: workspace:*
+        version: link:../mg-context
+      '@tryghost/mg-ghost-authors':
+        specifier: workspace:*
+        version: link:../mg-ghost-authors
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
-        specifier: 0.3.8
-        version: 0.3.8
-      simple-dom:
         specifier: 'catalog:'
-        version: 1.4.0
+        version: 0.3.8
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -397,6 +409,9 @@ importers:
       c8:
         specifier: 'catalog:'
         version: 12.0.0
+      nock:
+        specifier: 'catalog:'
+        version: 15.0.5(supports-color@7.2.0)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
