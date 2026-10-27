@@ -1,11 +1,15 @@
-import {readFileSync} from 'node:fs';
-import {join} from 'node:path';
+import {createReadStream} from 'node:fs';
+import {stat, rename, rm, mkdir, mkdtemp, opendir} from 'node:fs/promises';
+import {join, resolve, basename} from 'node:path';
+import {randomUUID} from 'node:crypto';
 import ghostAPI, {mapPost} from '@tryghost/mg-ghost-api';
 import {MigrateContext} from '@tryghost/mg-context';
 import MgAssetScraper from '@tryghost/mg-assetscraper-db';
+import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
-import prettyMilliseconds from 'pretty-ms';
+
+const defaultOptions = {zip: true, cache: true, postsPerFile: 2000};
 
 const initialize = (options, {infoOnly = false} = {}) => {
     return {
@@ -13,14 +17,10 @@ const initialize = (options, {infoOnly = false} = {}) => {
         task: async (ctx, task) => {
             ctx.options = options;
 
+            const selected = new Set(ctx.options.scrape);
             ctx.allowScrape = {
-                all: ctx.options.scrape.includes('all'),
-                assets:
-                    ctx.options.scrape.includes('all') ||
-                    ctx.options.scrape.includes('assets') ||
-                    ctx.options.scrape.includes('img') ||
-                    ctx.options.scrape.includes('media') ||
-                    ctx.options.scrape.includes('files')
+                all: selected.has('all'),
+                assets: ['all', 'assets', 'img', 'media', 'files'].some(value => selected.has(value))
             };
 
             ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(ctx.options.url);
@@ -30,20 +30,32 @@ const initialize = (options, {infoOnly = false} = {}) => {
             });
 
             if (!infoOnly) {
+                if (!Number.isSafeInteger(options.postsPerFile) || options.postsPerFile < 1) {
+                    throw new Error('--postsPerFile must be a positive integer');
+                }
+                ctx.outputName = ctx.fileCache.defaultZipFileName;
+                const reportName = ctx.outputName.replace(/\.zip$/, '.report.json');
+                ctx.reportFile = {
+                    path: options.zip
+                        ? resolve(options.outputPath || process.cwd(), reportName)
+                        : join(ctx.fileCache.cacheDir, reportName)
+                };
                 ctx.migrateContext = new MigrateContext({
                     dbPath: join(ctx.fileCache.tmpDir, 'mg-context.sqlite')
                 });
                 await ctx.migrateContext.init();
                 ctx.hasStoredSource = ctx.migrateContext.sources.hasCompletedIngestion;
 
-                ctx.assetScraper = new MgAssetScraper(
-                    ctx.fileCache,
-                    {
-                        allowAllDomains: true
-                    },
-                    ctx
-                );
-                await ctx.assetScraper.init();
+                if (ctx.allowScrape.assets) {
+                    ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
+                        allowAllDomains: true,
+                        retainFailures: false,
+                        strictErrors: true,
+                        onFailure: failure => ctx.migrateContext.recordDiagnostic('operation:warning', failure)
+                    });
+                    await ctx.assetScraper.init();
+                }
+                ctx.linkFixer = new MgLinkFixer();
             }
 
             task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
@@ -53,6 +65,22 @@ const initialize = (options, {infoOnly = false} = {}) => {
             }
         }
     };
+};
+
+// Point absolute links to the source site at the same path on the destination site.
+const addSourceLink = (migrateContext, url, slug, newSlug) => {
+    let parsed;
+    try {
+        parsed = new URL(url);
+    } catch {
+        return;
+    }
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+        return;
+    }
+    const path =
+        slug && newSlug && slug !== newSlug ? parsed.pathname.replace(`/${slug}/`, `/${newSlug}/`) : parsed.pathname;
+    migrateContext.addLink(MgLinkFixer.cleanURL(url), path);
 };
 
 const getInfoTaskList = options => {
@@ -76,10 +104,10 @@ const getInfoTaskList = options => {
  *
  * Wiring of the steps to migrate from Ghost.
  *
- * @param {String} pathToZip
- * @param {Object} options
+ * @param {Object} suppliedOptions
  */
-const getFullTaskList = options => {
+const getFullTaskList = suppliedOptions => {
+    const options = {...defaultOptions, ...suppliedOptions};
     return [
         initialize(options),
         {
@@ -115,17 +143,27 @@ const getFullTaskList = options => {
         },
         {
             title: 'Map stored Ghost content',
-            task: async ctx => {
+            task: async (ctx, task) => {
+                let imported = 0;
                 await ctx.migrateContext.rebuildMappedContent(async () => {
                     for await (const record of ctx.migrateContext.sources.records()) {
-                        const post = await mapPost(
-                            {...JSON.parse(record.content), type: record.kind},
-                            ctx.migrateContext
-                        );
+                        const source = JSON.parse(record.content);
+                        const post = await mapPost({...source, type: record.kind}, ctx.migrateContext);
                         post.save(ctx.migrateContext.db);
                         ctx.migrateContext.sources.link(record.id, {type: 'post', id: post.dbId});
+                        if (source.url) {
+                            addSourceLink(ctx.migrateContext, source.url, source.slug, post.get('slug'));
+                        }
+                        for (const entity of [...(source.tags || []), ...(source.authors || [])]) {
+                            if (entity.url) {
+                                addSourceLink(ctx.migrateContext, entity.url);
+                            }
+                        }
+                        imported++;
                     }
                 });
+                ctx.summary = {selected: imported, imported, skipped: 0};
+                task.output = `${imported} imported`;
             }
         },
         {
@@ -161,72 +199,105 @@ const getFullTaskList = options => {
                 )
         },
         {
+            title: 'Update links in HTML via LinkFixer',
+            task: async ctx =>
+                ctx.migrateContext.forEachPost(
+                    post => ctx.linkFixer.fixPost(post, url => ctx.migrateContext.findLink(url)),
+                    {batchSize: 25}
+                )
+        },
+        {
             title: 'Write Ghost import JSON file(s)',
             task: async ctx => {
-                try {
-                    await ctx.migrateContext.writeGhostJson(ctx.fileCache.zipDir, {
-                        batchSize: options.postsPerFile
-                    });
-                    await ctx.fileCache.writeErrorJSONFile(ctx.errors);
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to write Ghost import JSON file', error});
-                    throw error;
+                ctx.exportedFiles = 0;
+                ctx.exportStaging = await mkdtemp(join(ctx.fileCache.tmpDir, 'export-'));
+                for await (const _file of ctx.migrateContext.writeGhostJsonStream(ctx.exportStaging, {
+                    batchSize: options.postsPerFile,
+                    filename: 'ghost-import'
+                })) {
+                    ctx.exportedFiles++;
+                    ctx.importDirectory = ctx.fileCache.zipDir;
                 }
+                ctx.warningCount = ctx.migrateContext.db.stmts.countMigrationEventsByType
+                    .all()
+                    .filter(row =>
+                        [
+                            'source:conflict',
+                            'operation:warning',
+                            'field:sanitized',
+                            'slug:renamed',
+                            'record:skipped'
+                        ].includes(row.type)
+                    )
+                    .reduce((count, row) => count + row.count, 0);
+                await ctx.migrateContext.writeMigrationReport(ctx.reportFile.path, {
+                    ...ctx.summary,
+                    warnings: ctx.warningCount,
+                    status: 'complete',
+                    files: ctx.exportedFiles
+                });
+                ctx.reportFile.size = (await stat(ctx.reportFile.path)).size;
+                // The runner owns these filenames; publish only after every chunk and report succeeds.
+                const entries = await opendir(ctx.fileCache.zipDir);
+                for await (const entry of entries) {
+                    if (
+                        entry.isFile() &&
+                        (entry.name === '.mg-context-export-manifest.json' ||
+                            /^(?:ghost-import|posts)(?:-\d+)?\.json$/.test(entry.name))
+                    ) {
+                        await rm(join(ctx.fileCache.zipDir, entry.name));
+                    }
+                }
+                for await (const entry of await opendir(ctx.exportStaging)) {
+                    await rename(join(ctx.exportStaging, entry.name), join(ctx.fileCache.zipDir, entry.name));
+                }
+                await rm(ctx.exportStaging, {recursive: true});
+                ctx.exportStaging = undefined;
+                if (!options.zip) ctx.outputFile = {path: ctx.importDirectory, type: 'directory'};
             }
         },
         {
             title: 'Write Ghost import zip',
             skip: () => !options.zip,
-            task: async (ctx, task) => {
-                const isStorage = (options?.outputStorage && typeof options.outputStorage === 'object') ?? false;
-
+            task: async ctx => {
+                const outputDir = resolve(options.outputPath || process.cwd());
+                await mkdir(outputDir, {recursive: true});
+                const finalPath = join(outputDir, ctx.outputName);
+                const temporaryName = `.${randomUUID()}.zip`;
+                const temporaryPath = join(outputDir, temporaryName);
                 try {
-                    let timer = Date.now();
-                    const zipFinalPath = options.outputPath || process.cwd();
-                    ctx.outputFile = await fsUtils.zip.write(
-                        zipFinalPath,
-                        ctx.fileCache.zipDir,
-                        ctx.fileCache.defaultZipFileName
-                    );
-
-                    if (isStorage) {
-                        const storage = options.outputStorage;
-                        const localFilePath = ctx.outputFile.path;
-
-                        const fileBuffer = await readFileSync(ctx.outputFile.path);
-                        ctx.outputFile.path = await storage.upload({
-                            body: fileBuffer,
-                            fileName: `gh-ghost-${ctx.options.cacheName}.zip`
-                        });
-                        await fsUtils.zip.deleteFile(localFilePath);
+                    await fsUtils.zip.write(outputDir, ctx.fileCache.zipDir, temporaryName);
+                    if (options.outputStorage && typeof options.outputStorage === 'object') {
+                        const upload = async (path, fileName) => {
+                            const body = createReadStream(path);
+                            try {
+                                const remotePath = await options.outputStorage.upload({
+                                    body,
+                                    fileName,
+                                    size: (await stat(path)).size
+                                });
+                                if (!body.readableEnded) {
+                                    throw new Error(
+                                        'outputStorage.upload must consume the readable body before resolving'
+                                    );
+                                }
+                                return remotePath;
+                            } finally {
+                                body.destroy();
+                            }
+                        };
+                        const remoteZip = await upload(temporaryPath, basename(finalPath));
+                        const remoteReport = await upload(ctx.reportFile.path, basename(ctx.reportFile.path));
+                        ctx.outputFile = {path: remoteZip, size: (await stat(temporaryPath)).size};
+                        ctx.reportFile = {...ctx.reportFile, path: remoteReport};
+                        await rm(temporaryPath);
+                    } else {
+                        await rename(temporaryPath, finalPath);
+                        ctx.outputFile = {path: finalPath, size: (await stat(finalPath)).size};
                     }
-
-                    task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
                 } catch (error) {
-                    ctx.errors.push({message: 'Failed to write and upload ZIP file', error});
-                    throw error;
-                }
-            }
-        },
-        {
-            title: 'Close MigrateContext',
-            task: async ctx => {
-                try {
-                    ctx.assetScraper.close();
-                    await ctx.migrateContext.close();
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to close MigrateContext', error});
-                }
-            }
-        },
-        {
-            title: 'Clearing cached files',
-            enabled: () => !options.cache && options.zip,
-            task: async ctx => {
-                try {
-                    await ctx.fileCache.emptyCurrentCacheDir();
-                } catch (error) {
-                    ctx.errors.push('Failed to clear cache', error);
+                    // Failed uploads retain the local ZIP for recovery.
+                    ctx.recoveryFile = temporaryPath;
                     throw error;
                 }
             }
@@ -234,7 +305,8 @@ const getFullTaskList = options => {
     ];
 };
 
-const getTaskRunner = options => {
+const getTaskRunner = suppliedOptions => {
+    const options = {...defaultOptions, ...suppliedOptions};
     let tasks = [];
 
     if (options.info) {
@@ -246,13 +318,34 @@ const getTaskRunner = options => {
     const runner = makeTaskRunner(tasks, {...options, topLevel: true});
     const run = runner.run.bind(runner);
     runner.run = async (context = {errors: [], warnings: []}) => {
+        let succeeded = false;
         try {
-            return await run(context);
+            const result = await run(context);
+            succeeded = true;
+            return result;
+        } catch (error) {
+            if (context.reportFile && context.migrateContext) {
+                try {
+                    context.migrateContext.recordDiagnostic('operation:failed', {reason: error.message});
+                    const failurePath = context.reportFile.path.replace(/\.report\.json$/, '.failed-report.json');
+                    await context.migrateContext.writeMigrationReport(failurePath, {
+                        ...context.summary,
+                        status: 'failed'
+                    });
+                    context.failedReport = failurePath;
+                } catch {
+                    // Preserve the original failure if initialization/report writing failed too.
+                }
+            }
+            throw error;
         } finally {
             try {
                 context.assetScraper?.close();
             } finally {
                 await context.migrateContext?.close();
+            }
+            if (succeeded && !options.info && !options.cache && options.zip) {
+                await context.fileCache.emptyCurrentCacheDir();
             }
         }
     };
