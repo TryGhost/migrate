@@ -80,7 +80,7 @@ On the first run, mapping reads the newly stored originals. Subsequent runs reus
 
 A caller chooses each record's boundary: a post, an attachment, an author definition, a Markdown file, or another logical item. Content is opaque text with a caller-defined format label. Parsed XML/API records may be serialized as JSON; core does not require exact document bytes or validate the payload against its format.
 
-Completed source content and ingestion metadata cannot be changed through the public API. Keyed records are unique by kind/key within an ingestion. Duplicate keys throw unless the caller explicitly selects `keep` or `replace`; timestamp interpretation belongs to adapters. Unkeyed records remain available for diagnostics.
+Completed source content and ingestion metadata cannot be changed through the public API. Keyed records are unique by kind/key within an ingestion. Duplicate keys throw unless the caller explicitly selects `keep` or `replace`; timestamp interpretation belongs to adapters. `stage.reconcile()` lets an adapter choose between two versions and records a `source:conflict` diagnostic when they differ. Unkeyed records remain available for diagnostics.
 
 One source record may contribute to several mapped entities, and each entity may have several source records. Use `sources.link()`, `recordsFor()`, and `entitiesFor()` to record and traverse these relationships. Core provides canonical lookups, not aliases. Direct construction of mapped entities without source records remains supported.
 
@@ -88,6 +88,8 @@ One source record may contribute to several mapped entities, and each entity may
 
 - The default context uses a temporary file-backed database, removed on `close()`. Use `dbPath` for persistence or `storage: 'memory'` for small jobs.
 - `resetMappedContent()` preserves originals and ingestion diagnostics. `rebuildMappedContent()` performs an atomic reset and rebuild. `savepoint()` isolates a record's writes when the caller handles a known data error.
+- `mapRecords()` maps records one at a time inside savepoints, turning a `RecordDataError` into a `record:skipped` diagnostic, and returns `{selected, imported, skipped}`. `countWarnings()` counts the diagnostic types in `WARNING_EVENT_TYPES` for a run summary.
+- Adapters share mapping helpers rather than copying them: `ghostId()` for deterministic destination IDs, and `MappingState` for disk-backed lookups, source-key → entity bindings, and author/tag slug de-duplication during one mapping run.
 - `reset()` clears all managed database state. `resetContent: true` does the same during initialization; use staged replacement for a safe reread.
 - Authors and tags reuse indexed database rows without application-level entity caches. Streaming APIs bound buffers; explicit array-returning APIs materialize their results.
 - `writeGhostJson()` and `writeGhostJsonStream()` share one batched JSON exporter. The first collects completed file descriptors into an array; the second yields them with bounded file tracking. Both default to 5,000 posts per file and the base name `posts`. HTML remains HTML.

@@ -254,18 +254,7 @@ const getTaskRunner = suppliedOptions => {
                     ctx.exportedFiles++;
                     ctx.importDirectory = ctx.fileCache.zipDir;
                 }
-                ctx.warningCount = ctx.migrateContext.db.stmts.countMigrationEventsByType
-                    .all()
-                    .filter(row =>
-                        [
-                            'source:conflict',
-                            'operation:warning',
-                            'field:sanitized',
-                            'slug:renamed',
-                            'record:skipped'
-                        ].includes(row.type)
-                    )
-                    .reduce((count, row) => count + row.count, 0);
+                ctx.warningCount = ctx.migrateContext.countWarnings();
                 await ctx.migrateContext.writeMigrationReport(ctx.reportFile.path, {
                     ...ctx.summary,
                     warnings: ctx.warningCount,

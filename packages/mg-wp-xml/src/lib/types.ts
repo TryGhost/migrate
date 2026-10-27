@@ -32,4 +32,4 @@ export interface MappedPost {
     data: Record<string, any>;
 }
 
-export class RecordDataError extends Error {}
+export {RecordDataError} from '@tryghost/mg-context';

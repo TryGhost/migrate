@@ -1,52 +1,29 @@
-import {createHash} from 'node:crypto';
-import {MigrateContext, PostContext, AuthorContext, TagContext, GHOST_FIELD_LIMITS} from '@tryghost/mg-context';
+import {
+    MigrateContext,
+    PostContext,
+    AuthorContext,
+    TagContext,
+    RecordDataError,
+    ghostId as coreGhostId
+} from '@tryghost/mg-context';
+import type {MappingSummary} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
 import {stringUtils} from '@tryghost/mg-utils';
 import {ensureArray, getText, processUser, processAttachment, processPost} from './process.js';
 import {sourceUrl} from './ingest.js';
-import {RecordDataError} from './types.js';
 import {MappingState, sourceSite, indexSources} from './mapping-state.js';
 import type {WordPressOptions, LegacyAuthor} from './types.js';
 
-export interface MappingSummary {
-    selected: number;
-    imported: number;
-    skipped: number;
-}
+export type {MappingSummary};
 export interface MappingServices {
     fileCache?: any;
     ghostUsers?: Iterable<GhostUser> | AsyncIterable<GhostUser>;
 }
 
 export function ghostId(site: string, kind: string, key: string): string {
-    return createHash('sha256')
-        .update(JSON.stringify(['mg-wp-xml:1', site, kind, key]))
-        .digest('hex')
-        .slice(0, 24);
-}
-
-function uniqueSlug(state: MappingState, kind: 'author' | 'tag', desired: string, ownerId?: string): string {
-    const context = state.context;
-    const limit = GHOST_FIELD_LIMITS[kind].slug;
-    const base = (desired.trim() || kind).slice(0, limit).trim().replace(/-+$/, '') || kind;
-    const find = kind === 'author' ? context.db.stmts.findAuthorBySlug : context.db.stmts.findTagBySlug;
-    let candidate = base;
-    let suffix = state.get(`slug:${kind}`, base) ?? 1;
-    const occupied = (value: string) => {
-        const reserved = kind === 'author' ? state.get('ghost-slug', value) : undefined;
-        return find.get(value) || Boolean(reserved && reserved !== ownerId);
-    };
-    while (occupied(candidate)) {
-        const tail = `-${++suffix}`;
-        candidate = base.slice(0, limit - tail.length).replace(/-+$/, '') + tail;
-    }
-    state.set(`slug:${kind}`, base, suffix);
-    if (candidate !== base) {
-        context.recordDiagnostic('slug:renamed', {entityKind: kind, oldSlug: base, newSlug: candidate});
-    }
-    return candidate;
+    return coreGhostId('mg-wp-xml:1', site, kind, key);
 }
 
 function mappedAuthor(state: MappingState, author: LegacyAuthor, site: string): AuthorContext {
@@ -86,7 +63,7 @@ function mappedAuthor(state: MappingState, author: LegacyAuthor, site: string): 
             data.roles = ['Contributor'];
         }
     }
-    data.slug = uniqueSlug(state, 'author', data.slug, id);
+    data.slug = state.uniqueSlug('author', data.slug, id);
     const entity = new AuthorContext();
     for (const [field, value] of Object.entries(data)) {
         if (value !== undefined) {
@@ -127,7 +104,7 @@ function mappedTag(state: MappingState, tag: any, site: string): TagContext {
     }
     const entity = new TagContext();
     entity.set('name', name);
-    entity.set('slug', uniqueSlug(state, 'tag', slug));
+    entity.set('slug', state.uniqueSlug('tag', slug));
     entity.ghostId = ghostId(site, 'tag', key);
     entity.save(context.db);
     state.bind('tag', key, entity.dbId!);
@@ -172,135 +149,114 @@ export async function map(
         await indexSources(state);
         if (services.ghostUsers) {
             for await (const user of services.ghostUsers) {
-                state.set('ghost-slug', user.slug, user.id);
+                state.reserveSlug('author', user.slug, user.id);
                 if (user.email) {
                     state.set('ghost-user', user.email.toLowerCase(), user);
                 }
             }
         }
-        const summary: MappingSummary = {selected: 0, imported: 0, skipped: 0};
         options = {...options, url: siteUrl};
-        for await (const record of context.sources.records({kind: 'item'})) {
+        return context.mapRecords(context.sources.records({kind: 'item'}), async record => {
             const item = JSON.parse(record.content);
             if (!selected(item, options)) {
-                continue;
+                return false;
             }
-            summary.selected++;
-            try {
-                await context.savepoint(async () => {
-                    const date = new Date(getText(item.pubdate || item.pubDate));
-                    if (!Number.isFinite(date.getTime())) {
-                        throw new RecordDataError('Invalid WordPress publication date');
-                    }
-                    if (options.postsAfter && date <= new Date(options.postsAfter)) {
-                        summary.selected--;
-                        return;
-                    }
-                    if (options.postsBefore) {
-                        const end = new Date(options.postsBefore);
-                        end.setDate(end.getDate() + 1);
-                        if (date >= end) {
-                            summary.selected--;
-                            return;
-                        }
-                    }
-                    if (!record.key) {
-                        throw new RecordDataError('Item has neither a WordPress ID nor a usable source URL');
-                    }
-                    const rawUrl = getText(item.link);
-                    const url = sourceUrl(rawUrl, siteUrl);
-                    if (rawUrl.trim() && !url) {
-                        throw new RecordDataError('Invalid WordPress post URL');
-                    }
-                    const users: LegacyAuthor[] = [];
-                    const logins = [
-                        getText(item['dc:creator']),
-                        ...ensureArray(item.category)
-                            .filter(category => category['@_domain'] === 'author')
-                            .map(category => category['@_nicename'])
-                    ];
-                    for (const login of new Set<string>(logins)) {
-                        const raw = state.author(login);
-                        if (raw) {
-                            const profile = processUser(JSON.parse(raw.content));
-                            users.push({
-                                ...profile,
-                                url: slugify(login),
-                                data: {...profile.data, slug: slugify(login)},
-                                sourceKey: raw.key!
-                            });
-                        }
-                    }
-                    const thumbnail = ensureArray(item['wp:postmeta']).find(
-                        meta => getText(meta['wp:meta_key']) === '_thumbnail_id'
-                    );
-                    const attachment = thumbnail
-                        ? context.sources.get('item', `id:${getText(thumbnail['wp:meta_value']).trim()}`)
-                        : undefined;
-                    const attachments = attachment ? [await processAttachment(JSON.parse(attachment.content))] : [];
-                    const output = await processPost(
-                        item,
-                        users,
-                        {
-                            ...options,
-                            attachments,
-                            onWarning: details =>
-                                context.recordDiagnostic('operation:warning', {...record.metadata, details}, record.id)
-                        },
-                        services.fileCache
-                    );
-                    const post = new PostContext({lookupKey: record.key!});
-                    post.ghostId = ghostId(site, 'post', record.key!);
-                    for (const [field, value] of Object.entries(output.data)) {
-                        if (!['tags', 'authors', 'author'].includes(field) && value !== undefined) {
-                            post.set(field, value);
-                        }
-                    }
-                    const authors = output.data.authors || [output.data.author];
-                    const tags = output.data.tags.filter((tag: any) => getText(tag.data.name).trim());
-                    if (
-                        !post.schema.shape.authors.safeParse(authors).success ||
-                        !post.schema.shape.tags.safeParse(tags).success
-                    ) {
-                        throw new RecordDataError('Post exceeds Ghost author/tag relationship limits');
-                    }
-                    for (const author of authors) {
-                        const entity = mappedAuthor(state, author, site);
-                        post.addAuthor(entity);
-                        context.sources.link(record.id, {type: 'author', id: entity.dbId!});
-                    }
-                    tags.sort(
-                        (a: any, b: any) => Number(a.data.name.startsWith('#')) - Number(b.data.name.startsWith('#'))
-                    );
-                    for (const tag of tags) {
-                        const entity = mappedTag(state, tag, site);
-                        post.addTag(entity);
-                        context.sources.link(record.id, {type: 'tag', id: entity.dbId!});
-                    }
-                    post.save(context.db);
-                    context.sources.link(record.id, {type: 'post', id: post.dbId!});
-                    const path = url ? new URL(url).pathname : '';
-                    const dated = options.datedPermalinks?.includes('yyyy/mm/dd')
-                        ? path.match(/(?:^|\/)(\d{4}\/\d{2}\/\d{2})\//)
-                        : options.datedPermalinks?.includes('yyyy/mm')
-                          ? path.match(/(?:^|\/)(\d{4}\/\d{2})\//)
-                          : null;
-                    if (url) {
-                        context.addLink(
-                            stringUtils.cleanURL(url),
-                            `/${dated ? dated[1] + '/' : ''}${post.get('slug')}/`
-                        );
-                    }
-                    summary.imported++;
-                });
-            } catch (error) {
-                if (!(error instanceof RecordDataError)) {
-                    throw error;
+            const date = new Date(getText(item.pubdate || item.pubDate));
+            if (!Number.isFinite(date.getTime())) {
+                throw new RecordDataError('Invalid WordPress publication date');
+            }
+            if (options.postsAfter && date <= new Date(options.postsAfter)) {
+                return false;
+            }
+            if (options.postsBefore) {
+                const end = new Date(options.postsBefore);
+                end.setDate(end.getDate() + 1);
+                if (date >= end) {
+                    return false;
                 }
-                summary.skipped++;
-                context.recordDiagnostic('record:skipped', {...record.metadata, reason: error.message}, record.id);
             }
-        }
-        return summary;
+            if (!record.key) {
+                throw new RecordDataError('Item has neither a WordPress ID nor a usable source URL');
+            }
+            const rawUrl = getText(item.link);
+            const url = sourceUrl(rawUrl, siteUrl);
+            if (rawUrl.trim() && !url) {
+                throw new RecordDataError('Invalid WordPress post URL');
+            }
+            const users: LegacyAuthor[] = [];
+            const logins = [
+                getText(item['dc:creator']),
+                ...ensureArray(item.category)
+                    .filter(category => category['@_domain'] === 'author')
+                    .map(category => category['@_nicename'])
+            ];
+            for (const login of new Set<string>(logins)) {
+                const raw = state.author(login);
+                if (raw) {
+                    const profile = processUser(JSON.parse(raw.content));
+                    users.push({
+                        ...profile,
+                        url: slugify(login),
+                        data: {...profile.data, slug: slugify(login)},
+                        sourceKey: raw.key!
+                    });
+                }
+            }
+            const thumbnail = ensureArray(item['wp:postmeta']).find(
+                meta => getText(meta['wp:meta_key']) === '_thumbnail_id'
+            );
+            const attachment = thumbnail
+                ? context.sources.get('item', `id:${getText(thumbnail['wp:meta_value']).trim()}`)
+                : undefined;
+            const attachments = attachment ? [await processAttachment(JSON.parse(attachment.content))] : [];
+            const output = await processPost(
+                item,
+                users,
+                {
+                    ...options,
+                    attachments,
+                    onWarning: details =>
+                        context.recordDiagnostic('operation:warning', {...record.metadata, details}, record.id)
+                },
+                services.fileCache
+            );
+            const post = new PostContext({lookupKey: record.key!});
+            post.ghostId = ghostId(site, 'post', record.key!);
+            for (const [field, value] of Object.entries(output.data)) {
+                if (!['tags', 'authors', 'author'].includes(field) && value !== undefined) {
+                    post.set(field, value);
+                }
+            }
+            const authors = output.data.authors || [output.data.author];
+            const tags = output.data.tags.filter((tag: any) => getText(tag.data.name).trim());
+            if (
+                !post.schema.shape.authors.safeParse(authors).success ||
+                !post.schema.shape.tags.safeParse(tags).success
+            ) {
+                throw new RecordDataError('Post exceeds Ghost author/tag relationship limits');
+            }
+            for (const author of authors) {
+                const entity = mappedAuthor(state, author, site);
+                post.addAuthor(entity);
+                context.sources.link(record.id, {type: 'author', id: entity.dbId!});
+            }
+            tags.sort((a: any, b: any) => Number(a.data.name.startsWith('#')) - Number(b.data.name.startsWith('#')));
+            for (const tag of tags) {
+                const entity = mappedTag(state, tag, site);
+                post.addTag(entity);
+                context.sources.link(record.id, {type: 'tag', id: entity.dbId!});
+            }
+            post.save(context.db);
+            context.sources.link(record.id, {type: 'post', id: post.dbId!});
+            const path = url ? new URL(url).pathname : '';
+            const dated = options.datedPermalinks?.includes('yyyy/mm/dd')
+                ? path.match(/(?:^|\/)(\d{4}\/\d{2}\/\d{2})\//)
+                : options.datedPermalinks?.includes('yyyy/mm')
+                  ? path.match(/(?:^|\/)(\d{4}\/\d{2})\//)
+                  : null;
+            if (url) {
+                context.addLink(stringUtils.cleanURL(url), `/${dated ? dated[1] + '/' : ''}${post.get('slug')}/`);
+            }
+        });
     });
 }

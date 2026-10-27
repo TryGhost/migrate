@@ -3,10 +3,13 @@ import MigrateContext from './lib/MigrateContext.js';
 import PostContext, {normalizeTitle} from './lib/PostContext.js';
 import TagContext from './lib/TagContext.js';
 import AuthorContext from './lib/AuthorContext.js';
+import MappingState from './lib/MappingState.js';
 
 export default MigrateContext;
 
-export {MigrateBase, MigrateContext, PostContext, TagContext, AuthorContext, normalizeTitle};
+export {MigrateBase, MigrateContext, PostContext, TagContext, AuthorContext, MappingState, normalizeTitle};
+export {ghostId, RecordDataError, WARNING_EVENT_TYPES} from './lib/mapping.js';
+export type {MappingSummary, RecordMapper} from './lib/mapping.js';
 export {MIGRATE_CONTEXT_SCHEMA_VERSION} from './lib/database.js';
 export {GHOST_FIELD_LIMITS, GHOST_SCHEMA_SOURCE, GHOST_SCHEMA_VERSION} from './lib/ghost-schema.js';
 export type {JsonValue, JsonObject} from './lib/json.js';
@@ -19,7 +22,9 @@ export type {
     SourceWriteOptions,
     SourceBatchOptions,
     IngestOptions,
-    IngestionInfo
+    IngestionInfo,
+    ReconcileOptions,
+    ReconcileResult
 } from './lib/SourceRecords.js';
 
 export type {

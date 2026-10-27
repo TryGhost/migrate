@@ -51,6 +51,21 @@ export interface SourceEntity {
     id: number;
 }
 
+export interface ReconcileOptions {
+    /** Choose the canonical version when the key is already staged. Defaults to keeping the earlier record. */
+    choose?: (existing: SourceRecord, incoming: SourceRecordInput) => 'keep' | 'replace';
+    /** Also report duplicates whose content is identical. */
+    reportIdentical?: boolean;
+}
+
+export interface ReconcileResult {
+    /** The canonical stored record. */
+    record: SourceRecord;
+    /** The record already staged under this key, if any. */
+    previous: SourceRecord | null;
+    replaced: boolean;
+}
+
 type Row = Record<string, any>;
 
 function positive(value: number): void {
@@ -229,6 +244,34 @@ export class SourceIngestion extends RecordReader {
         this.#assertOpen();
         const record = prepareRecord(input);
         return withTransaction(this.models, () => this.#put(record, options));
+    }
+
+    /**
+     * Put a record whose key may already be staged, choosing which version to keep. A resolved duplicate
+     * records a `source:conflict` diagnostic against the stored record when the two versions differ.
+     */
+    reconcile(input: SourceRecordInput, {choose, reportIdentical = false}: ReconcileOptions = {}): ReconcileResult {
+        this.#assertOpen();
+        const prepared = prepareRecord(input);
+        const previous = prepared.key === null ? null : this.get(prepared.kind, prepared.key);
+        const replaced = previous !== null && choose?.(previous, input) === 'replace';
+        const record = withTransaction(this.models, () =>
+            this.#put(prepared, {onDuplicate: replaced ? 'replace' : 'keep'})
+        );
+        if (previous && (reportIdentical || previous.content !== prepared.content)) {
+            this.recordDiagnostic(
+                'source:conflict',
+                {
+                    ...input.metadata,
+                    kind: prepared.kind,
+                    key: prepared.key!,
+                    reason: replaced ? 'Later record replaced the earlier one' : 'Earlier record retained',
+                    retained: replaced ? record.metadata : previous.metadata
+                },
+                previous.id
+            );
+        }
+        return {record, previous, replaced};
     }
 
     async write(
