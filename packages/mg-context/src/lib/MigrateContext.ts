@@ -9,7 +9,8 @@ import {pipeline} from 'node:stream/promises';
 import errors from '@tryghost/errors';
 
 import MigrateBase from './MigrateBase.js';
-import SourceRecords from './SourceRecords.js';
+import SourceRecords, {type SourceRecord} from './SourceRecords.js';
+import {RecordDataError, WARNING_EVENT_TYPES, type MappingSummary, type RecordMapper} from './mapping.js';
 import {writeGhostJson} from './ghost-json.js';
 import {writeMigrationReport} from './migration-report.js';
 import {exportBaseFilename} from './export-filename.js';
@@ -448,6 +449,45 @@ export default class MigrateContext extends MigrateBase {
             this.db.db.exec(`ROLLBACK TO ${name}; RELEASE ${name}`);
             throw error;
         }
+    }
+
+    /**
+     * Map records one at a time, each inside its own savepoint. A `RecordDataError` rolls back that record's
+     * writes and records a `record:skipped` diagnostic; any other error fails the whole mapping. A mapper that
+     * returns `false` leaves the record unselected.
+     */
+    async mapRecords(
+        records: AsyncIterable<SourceRecord> | Iterable<SourceRecord>,
+        mapper: RecordMapper
+    ): Promise<MappingSummary> {
+        const summary: MappingSummary = {selected: 0, imported: 0, skipped: 0};
+        for await (const record of records) {
+            try {
+                if ((await this.savepoint(() => mapper(record))) === false) {
+                    continue;
+                }
+                summary.imported++;
+            } catch (error) {
+                if (!(error instanceof RecordDataError)) {
+                    throw error;
+                }
+                summary.skipped++;
+                this.recordDiagnostic('record:skipped', {...record.metadata, reason: error.message}, record.id);
+            }
+            summary.selected++;
+        }
+        return summary;
+    }
+
+    /** Count diagnostics of the `WARNING_EVENT_TYPES` from both ingestion and mapping. */
+    countWarnings(): number {
+        let count = 0;
+        for (const row of this.db.stmts.countMigrationEventsByType.all() as Array<{type: string; count: number}>) {
+            if (WARNING_EVENT_TYPES.includes(row.type)) {
+                count += row.count;
+            }
+        }
+        return count;
     }
 
     recordDiagnostic(type: string, details: JsonObject = {}, sourceRecordId?: number): void {

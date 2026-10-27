@@ -4,6 +4,7 @@ Complete reference for `@tryghost/mg-context`. Start with the package [README](.
 
 - [MigrateContext](#migratecontext)
 - [Source records](#source-records)
+- [Mapping utilities](#mapping-utilities)
 - [PostContext](#postcontext)
 - [TagContext](#tagcontext)
 - [AuthorContext](#authorcontext)
@@ -117,6 +118,34 @@ Atomically reset mapped content and execute the callback. Read originals through
 #### `savepoint(callback): Promise<T>`
 
 Isolate a record's writes inside an existing transaction, rolling them back if the callback throws. Outside a transaction this starts one. The caller decides which errors may be skipped; existing nested `transaction()` calls retain their flattened behavior.
+
+#### `mapRecords(records, mapper): Promise<MappingSummary>`
+
+Run `mapper(record)` for each record of a sync or async iterable, each inside its own `savepoint()`. Call it from inside `rebuildMappedContent()`. Returns `{selected, imported, skipped}`:
+
+- A mapper that returns `false` leaves the record unselected; it is not counted.
+- Any other return value counts the record as selected and imported.
+- A thrown `RecordDataError` rolls back that record's writes, counts it as selected and skipped, and records a `record:skipped` diagnostic with the record's metadata, the error message as `reason`, and the record's ID.
+- Any other error propagates. Core never classifies or skips other mapper exceptions.
+
+```js
+const summary = await context.rebuildMappedContent(() =>
+    context.mapRecords(context.sources.records({kind: 'item'}), async record => {
+        const item = JSON.parse(record.content);
+        if (item.type === 'attachment') {
+            return false;
+        }
+        if (!item.date) {
+            throw new RecordDataError('Missing publication date');
+        }
+        // build, save, and link entities
+    })
+);
+```
+
+#### `countWarnings(): number`
+
+Count stored diagnostics, from both ingestion and mapping, whose type is in `WARNING_EVENT_TYPES`. Runners report this as the `warnings` summary field.
 
 #### `db: DatabaseModels`
 
@@ -948,11 +977,43 @@ The staging callback receives `SourceIngestion`:
 - `write(iterable, {onDuplicate?, batchSize?, maxBatchBytes?})` consumes synchronous or asynchronous input and returns its submitted record count. Defaults are 250 records and 4 MiB per transaction; oversized records are written alone. Counts include explicitly kept/replaced duplicates.
 - `onDuplicate` is `error` by default, or explicitly `keep`/`replace`. Core does not choose revisions or timestamps.
 - `get`, `getById`, `count`, and `records` read this staging generation only.
+- `reconcile(record, {choose?, reportIdentical?})` puts a record whose key may already be staged and returns `{record, previous, replaced}`. `choose(existing, incoming)` returns `keep` or `replace`; the default keeps the earlier record. When a duplicate's content differs, or always with `reportIdentical: true`, it records a `source:conflict` diagnostic against the stored record. The details are the incoming metadata plus `kind`, `key`, `reason`, and the `retained` record's metadata. Unkeyed records are always inserted.
 - `recordDiagnostic(type, details?, sourceRecordId?)` persists ingestion diagnostics tied to this attempt.
 
 Await writes before returning. Completed data has no write API. Replacement requires `replace: true`; failed ingestion preserves previous originals and mapped data, deletes staged payloads, and retains attempt diagnostics. Interrupted staging is discarded on the next attempt. Public mapped writes cannot overlap ingestion. One migration owner writes each database.
 
 Provenance accepts existing mapped entities and completed originals. Entities may have no originals; one original may have multiple outputs, and one output multiple contributors. There is no primary-source role or alias index.
+
+## Mapping utilities
+
+Helpers shared by source adapters. Source-specific parsing and mapping stay in the adapters.
+
+#### `ghostId(namespace, site, kind, key): string`
+
+A deterministic 24-character hex ID: the first 24 characters of the SHA-256 of `JSON.stringify([namespace, site, kind, key])`. Use a namespace that names the adapter and its ID scheme version, such as `mg-wp-xml:1`, so the same source item keeps its Ghost ID across runs.
+
+#### `RecordDataError`
+
+An `Error` subclass for known problems with one source record. `mapRecords()` skips and reports it.
+
+#### `WARNING_EVENT_TYPES: readonly string[]`
+
+The frozen list of diagnostic types counted by `countWarnings()`: `source:conflict`, `operation:warning`, `field:sanitized`, `slug:renamed`, and `record:skipped`.
+
+#### `MappingState`
+
+`new MappingState(context, name)` creates disk-backed scratch state for one mapping run in SQLite temp tables. Creating a state clears earlier state with the same name; states with different names are independent. Adapters may subclass it to add source-specific lookups.
+
+| Member | Behavior |
+| --- | --- |
+| `get(namespace, key)` / `set(namespace, key, value)` | JSON key-value store |
+| `bind(kind, key, id)` / `getBinding(kind, key)` | Remember the mapped entity database ID a source key produced |
+| `index(kind, key, recordId)` | Index a completed source record under a lookup key; one key may index several records |
+| `find(kind, key, limit = 2)` | Indexed records, oldest first. Two results are enough to detect an ambiguous lookup |
+| `reserveSlug(kind, slug, ownerId)` | Hold an author or tag slug for one owner, such as a matched Ghost user |
+| `uniqueSlug(kind, desired, ownerId?)` | An author or tag slug not used by a saved row or another owner's reservation |
+
+`uniqueSlug()` clamps the slug to Ghost's length limit, falls back to the kind name for a blank slug, and appends `-2`, `-3`, and so on. A changed slug records a `slug:renamed` diagnostic with `entityKind`, `oldSlug`, and `newSlug`. Post slugs are de-duplicated by `post.save()`; saving a tag or author instead reuses any row with the same slug, so distinct source entities that share a slug need `uniqueSlug()` first.
 
 ## Streaming output and diagnostics
 

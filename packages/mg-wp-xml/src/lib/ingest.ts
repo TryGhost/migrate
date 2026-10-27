@@ -104,32 +104,18 @@ export async function ingest(
 ): Promise<void> {
     await context.sources.ingest({replace, metadata: {adapter: 'wp-xml'}}, async stage => {
         for await (const record of parse(input)) {
-            const existing = record.key ? stage.get(record.kind, record.key) : null;
-            let keep = false;
-            if (existing) {
-                const modified = record.kind === 'item' ? revision(JSON.parse(record.content)) : undefined;
-                const previous = record.kind === 'item' ? revision(JSON.parse(existing.content)) : undefined;
-                keep = !(modified !== undefined && previous !== undefined && modified > previous);
-                if (existing.content !== record.content || record.kind === 'item') {
-                    stage.recordDiagnostic(
-                        'source:conflict',
-                        {
-                            ...record.metadata,
-                            kind: record.kind,
-                            key: record.key!,
-                            reason: keep
-                                ? 'First definition or earlier revision retained'
-                                : 'Newest revision replaced earlier record',
-                            retainedFile: keep ? existing.metadata.file : record.metadata!.file
-                        },
-                        existing.id
-                    );
-                }
-            }
-            if (keep && record.kind === 'author' && existing!.content !== record.content) {
+            const {previous, replaced} = stage.reconcile(record, {
+                // Items keep their newest revision; everything else keeps its first definition.
+                choose: (existing, incoming) => {
+                    const modified = incoming.kind === 'item' ? revision(JSON.parse(incoming.content)) : undefined;
+                    const earlier = incoming.kind === 'item' ? revision(JSON.parse(existing.content)) : undefined;
+                    return modified !== undefined && earlier !== undefined && modified > earlier ? 'replace' : 'keep';
+                },
+                reportIdentical: record.kind === 'item'
+            });
+            if (previous && !replaced && record.kind === 'author' && previous.content !== record.content) {
                 stage.put({...record, key: undefined, metadata: {...record.metadata, canonicalKey: record.key!}});
             }
-            stage.put(record, {onDuplicate: keep ? 'keep' : 'replace'});
         }
     });
 }
