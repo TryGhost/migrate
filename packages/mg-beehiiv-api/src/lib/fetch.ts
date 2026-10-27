@@ -1,6 +1,26 @@
 import errors from '@tryghost/errors';
+import type {SourceIngestion, SourceRecordInput} from '@tryghost/mg-context';
 
 const API_LIMIT = 10;
+
+/** The publication to fetch and the API key to fetch it with. */
+export interface FetchOptions {
+    key: string;
+    id: string;
+}
+
+export interface TaskContext {
+    sourceIngestion?: SourceIngestion;
+}
+
+export interface FetchTask {
+    title: string;
+    page: number;
+    /** Fetch this page's records without storing them. */
+    records: () => Promise<SourceRecordInput[]>;
+    /** Fetch this page and write its records into `ctx.sourceIngestion`. */
+    task: (ctx: TaskContext) => Promise<void>;
+}
 
 const authedClient = async (apiKey: string, theUrl: URL) => {
     return fetch(theUrl, {
@@ -11,97 +31,87 @@ const authedClient = async (apiKey: string, theUrl: URL) => {
     });
 };
 
-const discover = async (key: string, pubId: string) => {
-    const url = new URL(`https://api.beehiiv.com/v2/publications/${pubId}/posts`);
-    url.searchParams.append('limit', '1');
-
+const getJSON = async (key: string, url: URL): Promise<any> => {
     const response = await authedClient(key, url);
 
     if (!response.ok) {
         throw new errors.InternalServerError({message: `Request failed: ${response.status} ${response.statusText}`});
     }
 
-    const data = await response.json();
-
-    return data.total_results;
+    return response.json();
 };
 
-const cachedFetch = async ({
-    fileCache,
-    key,
-    pubId,
-    limit = API_LIMIT,
-    page
-}: {
-    fileCache: any;
-    key: string;
-    pubId: string;
-    limit?: number;
-    page: number;
-}) => {
-    let filename = `beehiiv_api_${limit}_${page}.json`;
-
-    if (fileCache.hasFile(filename, 'tmp')) {
-        return await fileCache.readTmpJSONFile(filename);
+const postsURL = (id: string, params: [string, string][]): URL => {
+    const url = new URL(`https://api.beehiiv.com/v2/publications/${id}/posts`);
+    for (const [name, value] of params) {
+        url.searchParams.append(name, value);
     }
-
-    const url = new URL(`https://api.beehiiv.com/v2/publications/${pubId}/posts`);
-    url.searchParams.append('limit', limit.toString());
-    url.searchParams.append('expand', 'free_web_content');
-    url.searchParams.append('expand', 'premium_web_content');
-    url.searchParams.append('page', page.toString());
-
-    const response = await authedClient(key, url);
-
-    if (!response.ok) {
-        throw new errors.InternalServerError({message: `Request failed: ${response.status} ${response.statusText}`});
-    }
-
-    const data = await response.json();
-
-    await fileCache.writeTmpFile(data, filename);
-
-    return data;
+    return url;
 };
 
-export const fetchTasks = async (options: any, ctx: any) => {
-    const numberOfPosts = await discover(options.key, options.id);
-    const totalPages = Math.ceil(numberOfPosts / API_LIMIT);
+/** The number of posts in a publication, and of pages to fetch them in. */
+const discover = async ({key, id}: FetchOptions): Promise<{total: number; pages: number}> => {
+    const data = await getJSON(key, postsURL(id, [['limit', '1']]));
+    const total = Number(data.total_results) || 0;
+    return {total, pages: Math.ceil(total / API_LIMIT)};
+};
 
-    let tasks = [];
+/** One page of posts with their free and premium web content. */
+const fetchPage = async ({key, id}: FetchOptions, page: number): Promise<any[]> => {
+    const url = postsURL(id, [
+        ['limit', String(API_LIMIT)],
+        ['expand', 'free_web_content'],
+        ['expand', 'premium_web_content'],
+        ['page', String(page)]
+    ]);
+    const data = await getJSON(key, url);
+    return data.data ?? [];
+};
 
-    for (let page = 1; page <= totalPages; page++) {
-        tasks.push({
-            title: `Fetching posts page ${page} of ${totalPages}`,
-            task: async (_: any, task: any) => {
-                try {
-                    let response = await cachedFetch({
-                        fileCache: ctx.fileCache,
-                        key: options.key,
-                        pubId: options.id,
-                        page: page
-                    });
+/** Source records for one page of posts, keyed by post ID. */
+const pageRecords = (posts: any[], page: number): SourceRecordInput[] =>
+    posts.map(post => ({
+        kind: 'post',
+        key: post.id || null,
+        content: JSON.stringify(post),
+        format: 'json',
+        metadata: {page}
+    }));
 
-                    ctx.result.posts = ctx.result.posts.concat(response.data);
+const stageFor = (ctx: TaskContext): SourceIngestion => {
+    if (!ctx.sourceIngestion) {
+        throw new errors.IncorrectUsageError({
+            message:
+                'mg-beehiiv-api fetch tasks write into ctx.sourceIngestion; run them inside context.sources.ingest()'
+        });
+    }
+    return ctx.sourceIngestion;
+};
 
-                    if (options.postsAfter) {
-                        const afterTimestamp = new Date(options.postsAfter).getTime() / 1000;
-                        ctx.result.posts = ctx.result.posts.filter((post: any) => post.publish_date >= afterTimestamp);
-                    }
-                    if (options.postsBefore) {
-                        const beforeTimestamp = new Date(options.postsBefore).getTime() / 1000;
-                        ctx.result.posts = ctx.result.posts.filter((post: any) => post.publish_date <= beforeTimestamp);
-                    }
-                } catch (error) {
-                    const errorMessage = error instanceof Error ? error.message : String(error);
-                    task.output = errorMessage;
-                    throw error;
+/**
+ * One task per page of the publication's posts, in page order. Each task writes its page into
+ * `ctx.sourceIngestion` as `post` records; a post returned twice while paging keeps its first version.
+ */
+const tasks = async (options: FetchOptions): Promise<FetchTask[]> => {
+    const {pages} = await discover(options);
+    const list: FetchTask[] = [];
+
+    for (let page = 1; page <= pages; page++) {
+        const records = async () => pageRecords(await fetchPage(options, page), page);
+        list.push({
+            title: `Fetching posts page ${page} of ${pages}`,
+            page,
+            records,
+            task: async ctx => {
+                const stage = stageFor(ctx);
+                for (const record of await records()) {
+                    stage.reconcile(record);
                 }
             }
         });
     }
 
-    return tasks;
+    return list;
 };
 
-export {authedClient};
+export {authedClient, discover, tasks, pageRecords};

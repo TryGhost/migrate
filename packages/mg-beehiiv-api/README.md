@@ -57,10 +57,8 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Configure scraping tasks
     - string - default: `all`
     - Choices: `all`, `web`, `assets`, `none`
-        - `all`: Scrape web metadata and download assets
-        - `web`: Only scrape metadata from web pages
-        - `assets`: Only download assets (images, media, files)
-        - `none`: Skip all scraping tasks
+        - `all`, `assets`: Download assets (images, media, files)
+        - `web`, `none`: Skip downloading assets; this source does not scrape web pages
 - **`--subscribeLink`**
     - Provide a path that existing `/subscribe` anchors will link to e.g. `/join-us` or `#/portal/signup` (`#` characters need to be escaped with a `\`)
     - string - default: `#/portal/signup`
@@ -73,6 +71,12 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--addTag`**
     - Provide a tag name which should be added to every post in this migration (wrap in single quotes if the name has spaces, e.g. `'From beehiiv'`)
     - string - default: `null`
+- **`--rereadSource`**
+    - Fetch every post from the API again, replacing the stored source while preserving downloaded assets
+    - bool - default: `false`
+- **`--postsPerFile`**
+    - Maximum posts written per Ghost import JSON file
+    - number - default: `2000`
 - **`--cache`**
     - Persist local cache after migration is complete (Only if `--zip` is `true`)
     - bool - default: `true`
@@ -83,14 +87,20 @@ It's possible to pass more options, in order to achieve a better migration file 
     - Specify the full path where the final zip file will be saved to (Defaults to CWD)
     - string - default: `null`
 - **`--cacheName`**
-    - Provide a unique name for the cache directory (defaults to a UUID)
-    - string - default: `null`
+    - Provide a unique name for the cache directory
+    - string - default: one based on the publication ID
 - **`-V` `--verbose`**
     - Show verbose output
     - bool - default: `false`
 - **`--zip`**
     - Create a zip file (set to false to skip)
     - bool - default: `true`
+- **`--report`**
+    - Write a `.report.json` migration report beside the import, or a `.failed-report.json` if the run fails
+    - bool - default: `false`
+- **`--ghostApiUrl`**, **`--ghostAdminKey`**
+    - Match authors to existing Ghost users by email
+    - string - default: `null`
 
 A more complex migration command could look like this:
 
@@ -101,9 +111,61 @@ migrate beehiiv-api --key 1234abcd --id pub_abcd1234 --postsAfter 2024-01-01 --p
 This will migrate only posts published in 2024, and show all available output in the console.
 
 
+## Output
+
+The import contains HTML; Ghost's importer converts it. A small migration writes `ghost-import.json`, and larger ones write `ghost-import-1.json`, `ghost-import-2.json` and so on, `--postsPerFile` posts each. With `--report`, a `.report.json` beside the ZIP (or in the workspace when `--zip false`) lists imported and skipped counts with diagnostics for repeated posts, skipped posts, field changes and slug changes. Posts without an ID, without any valid date, or with more than 500 authors or tags are skipped and reported. When every selected post is invalid, or the run fails, `--report` writes a `.failed-report.json` instead. An intentionally empty selection succeeds.
+
+Each post gets its content tags, `--addTag` and `#beehiiv`, with internal `#` tags last, and its beehiiv authors, identified by name with a `<slug>@example.com` email that `--ghostApiUrl`/`--ghostAdminKey` can match to an existing Ghost user. Posts that were never published are dated when they were created.
+
+
+## Source storage
+
+The first run fetches every post of the publication, ten per page with their free and premium web content, and stores them in an `mg-context` SQLite database in the workspace; later runs map the stored posts again without calling the API. Use `--rereadSource` to fetch them again. Without `--cacheName`, the workspace is keyed by the publication ID. The API key is never stored.
+
+Each post is stored as a `post` record keyed by its ID. A post returned twice while paging keeps its first copy and reports a `source:conflict`.
+
+`--postsAfter`, `--postsBefore`, `--addTag` and the content options apply when the stored posts are mapped, so changing them needs no new fetch. Ghost IDs derive from the publication ID and the post ID, tag slug or author slug, so they stay the same across runs.
+
+
+## Programmatic API
+
+The package exports `parse`, `ingest` and `map` for use with `@tryghost/mg-context`, and `listPublications`. The caller owns the context, export and closure:
+
+```js
+import {MigrateContext} from '@tryghost/mg-context';
+import {ingest, map} from '@tryghost/mg-beehiiv-api';
+
+const context = new MigrateContext({dbPath: './migration.sqlite'});
+const rereadSource = process.argv.includes('--rereadSource');
+await context.init();
+try {
+    if (!context.sources.hasCompletedIngestion || rereadSource) {
+        await ingest('pub_abcd1234', context, {key: process.env.BEEHIIV_API_KEY, replace: rereadSource});
+    }
+    const summary = await map({postsAfter: '2024-01-01', addTag: 'From beehiiv'}, context);
+    for await (const file of context.writeGhostJsonStream('./output', {filename: 'ghost-import'})) {
+        // Consume one file descriptor at a time.
+    }
+    await context.writeMigrationReport('./migration.report.json', summary);
+} finally {
+    await context.close();
+}
+```
+
+- `ingest(id, context, {key, replace, onProgress})` fetches the publication's posts into `context.sources` inside `context.sources.ingest()`, calling `onProgress(title)` before each page. Explicit `replace: true` is required when completed source data exists; a failed fetch keeps the previous data.
+- `parse(id, {key, onProgress})` yields the same records as `SourceRecordInput` values, one page at a time, without storing them.
+- `tasks({key, id})` returns one task per page; each task's `task(ctx)` writes its page into `ctx.sourceIngestion`, and `records()` fetches it without storing. `discover({key, id})` returns the post and page counts.
+- `map(options, context, {ghostUsers?})` rebuilds mapped content and returns `{selected, imported, skipped}`. `options` takes `postsAfter`, `postsBefore`, `addTag`, `subscribeLink`, `comments` and `commentLink`, without the CLI's defaults. `ghostUsers` may be an iterable or async iterable of existing Ghost users; an author whose email matches keeps that user's Ghost ID.
+- `listPublications(key)` lists the publications the key can read.
+
+The previous default export (`fetchTasks` and `mapPostsTasks`, which built an array of posts in memory, and cached each page as a JSON file in the workspace) has been removed.
+
+The CLI's programmatic `outputStorage.upload({body, fileName, size})` receives a Node readable stream as `body`, for the ZIP and, with `--report`, the report, and must consume it before resolving to the remote path. The uploaded ZIP is named like the local one, such as `gh-beehiiv-api-pub-abcd1234-1700000000000.zip`.
+
+
 ## HTML Processing
 
-The `processHTML` function transforms beehiiv email HTML into clean, Ghost-compatible HTML. It applies the following transformations in order:
+Post content is converted with `processWebHTML` from `@tryghost/mg-beehiiv`, which shares it with the CSV migration's `processHTML` and `removeDuplicateFeatureImage`. It transforms beehiiv's web HTML into clean, Ghost-compatible HTML, applying the following transformations in order:
 
 1. **Variable replacement** — Removes beehiiv template variables (`{{subscriber_id}}`, `{{rp_refer_url}}`, etc.)
 2. **Content extraction** — Extracts content from `#content-blocks`

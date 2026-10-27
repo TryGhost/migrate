@@ -19,7 +19,7 @@
     "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",
     "build": "tsc --build --sourceMap",
     "test:local": "pnpm build && pnpm test",
-    "test": "c8 --src src --all --check-coverage --100 --reporter text --reporter cobertura node --test build/test/*.test.js"
+    "test": "c8 --src src --all --check-coverage --100 --exclude '**/test/**' --exclude '**/*.d.ts' --reporter text --reporter cobertura node --test 'build/test/**/*.test.js'"
   },
   "files": [
     "build"
@@ -36,12 +36,15 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "c8": "catalog:",
+    "nock": "catalog:",
     "typescript": "catalog:"
   },
   "dependencies": {
     "@tryghost/errors": "catalog:",
+    "@tryghost/mg-beehiiv": "workspace:*",
+    "@tryghost/mg-context": "workspace:*",
+    "@tryghost/mg-ghost-authors": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/string": "0.3.8",
-    "simple-dom": "catalog:"
+    "@tryghost/string": "catalog:"
   }
 }

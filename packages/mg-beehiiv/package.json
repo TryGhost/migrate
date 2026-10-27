@@ -22,7 +22,7 @@
     "dev": "echo \"Implement me!\"",
     "build:watch": "tsc --watch --preserveWatchOutput --sourceMap",
     "build": "tsc --build --sourceMap",
-    "test": "c8 --src src --all --check-coverage --100 --reporter text --reporter cobertura node --test 'build/test/**/*.test.js'",
+    "test": "c8 --src src --all --check-coverage --100 --exclude '**/test/**' --exclude '**/*.d.ts' --reporter text --reporter cobertura node --test 'build/test/**/*.test.js'",
     "test:local": "pnpm build && pnpm test"
   },
   "files": [
@@ -43,7 +43,9 @@
     "typescript": "catalog:"
   },
   "dependencies": {
+    "@tryghost/mg-context": "workspace:*",
     "@tryghost/mg-fs-utils": "workspace:*",
+    "@tryghost/mg-ghost-authors": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
     "@tryghost/string": "catalog:",
     "sanitize-html": "catalog:",

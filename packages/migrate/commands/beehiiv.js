@@ -1,4 +1,3 @@
-import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import beehiiv from '../sources/beehiiv.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
@@ -70,9 +69,15 @@ const options = [
     },
     {
         type: 'boolean',
-        flags: '--fallBackHTMLCard',
-        defaultValue: true,
-        desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
+        flags: '--rereadSource',
+        defaultValue: false,
+        desc: 'Read the posts CSV again, replacing the stored source while preserving downloaded assets'
+    },
+    {
+        type: 'number',
+        flags: '--postsPerFile',
+        defaultValue: 2000,
+        desc: 'Maximum posts written per Ghost import JSON file'
     },
     {
         type: 'boolean',
@@ -96,7 +101,7 @@ const options = [
         type: 'string',
         flags: '--cacheName',
         defaultValue: null,
-        desc: 'Provide a unique name for the cache directory (defaults to a UUID)'
+        desc: 'Provide a unique name for the cache directory (defaults to one based on the CSV path)'
     },
     {
         type: 'boolean',
@@ -115,6 +120,12 @@ const options = [
         flags: '--zip',
         defaultValue: true,
         desc: 'Create a zip file (set to false to skip)'
+    },
+    {
+        type: 'boolean',
+        flags: '--report',
+        defaultValue: false,
+        desc: 'Write a .report.json migration report beside the import, or a .failed-report.json if the run fails'
     },
     ...ghostAuthOptions
 ];
@@ -148,15 +159,16 @@ const run = async argv => {
         // Run the migration
         await migrate.run(context);
 
-        if (argv.verbose && context.result) {
-            ui.log.info('Done');
-        }
-
-        if (argv.veryVerbose && context.result) {
-            ui.log.info(inspect(context.result.data, false, 2));
-        }
+        ui.log.info(
+            `${context.summary.imported} imported, ${context.summary.skipped} skipped, ${context.warningCount} warnings.${context.reportFile ? ` Report: ${context.reportFile.path}` : ''}`
+        );
     } catch (error) {
         ui.log.error(error);
+        process.exitCode = 1;
+    }
+
+    if (argv.verbose && context.fileCache) {
+        ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
     }
 };
 
