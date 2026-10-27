@@ -1,15 +1,16 @@
-import {readFileSync} from 'node:fs';
-import {toGhostJSON} from '@tryghost/mg-json';
-import mgHtmlLexical from '@tryghost/mg-html-lexical';
+import {createReadStream} from 'node:fs';
+import {stat, rename, rm, mkdir, mkdtemp, opendir} from 'node:fs/promises';
+import {join, resolve, basename, dirname} from 'node:path';
+import {randomUUID} from 'node:crypto';
+import {MigrateContext} from '@tryghost/mg-context';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
-import zipIngest from '@tryghost/mg-substack';
+import {ingest, map, applyScrapedData, postUrl} from '@tryghost/mg-substack';
 import {slugify} from '@tryghost/string';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
-import {createGhostUserTasks} from '@tryghost/mg-ghost-authors';
-import prettyMilliseconds from 'pretty-ms';
+import {streamGhostUsers, GhostUserFetchError} from '@tryghost/mg-ghost-authors';
 
 const scrapeConfig = {
     posts: {
@@ -74,6 +75,7 @@ const scrapeConfig = {
     }
 };
 
+/** Read the section and post tags, and the ld+json authors, from a scraped post page's scripts. */
 const postProcessor = (scrapedData, data, options) => {
     if (scrapedData.scripts) {
         let tags = [];
@@ -98,12 +100,20 @@ const postProcessor = (scrapedData, data, options) => {
                 } catch (error) {
                     console.log('Error parsing tags', script.content, error); // eslint-disable-line no-console
                 }
-            } else if (script.content.trim().startsWith('window._preloads')) {
+            } else if (
+                /^window\._preloads\s*=\s*JSON\.parse\("/.test(script.content.trim()) ||
+                (script.content.trim().startsWith('{') && script.content.includes('"postTags"'))
+            ) {
+                // Older pages inline the preloads as a JSON string; newer pages load them from a
+                // `script#preloads-json` element, whose content is the JSON itself.
                 try {
                     let theContent = script.content.trim();
-                    theContent = theContent.replace(/^window\._preloads[ ]+=[ ]+JSON\.parse\(/, '');
-                    theContent = theContent.replace(/\)$/, '');
-                    theContent = JSON.parse(JSON.parse(theContent));
+                    if (theContent.startsWith('window._preloads')) {
+                        theContent = theContent.replace(/^window\._preloads[ ]+=[ ]+JSON\.parse\(/, '');
+                        theContent = theContent.replace(/\)$/, '');
+                        theContent = JSON.parse(theContent);
+                    }
+                    theContent = JSON.parse(theContent);
 
                     theContent.post.postTags.forEach(tag => {
                         tags.push({
@@ -118,7 +128,7 @@ const postProcessor = (scrapedData, data, options) => {
                     console.log('Error parsing tags', script.content, error); // eslint-disable-line no-console
                 }
             } else if (
-                options?.useMetaAuthor &&
+                options?.useMetaAuthor !== false &&
                 (script.content.trim().includes('"@type": "NewsArticle"') ||
                     script.content.trim().includes('"@type":"NewsArticle"'))
             ) {
@@ -162,15 +172,12 @@ const postProcessor = (scrapedData, data, options) => {
             }
         });
 
-        scrapedData.tags = tags;
-
         // If the tags array has a section tag, move it to the top of the array
         if (tags.some(tag => tag.url.includes('/substack-section/'))) {
-            tags = tags.sort((a, b) => {
-                // eslint-disable-line no-unused-vars
-                return a.url.includes('/substack-section/') ? -1 : 1;
-            });
+            tags = tags.sort(a => (a.url.includes('/substack-section/') ? -1 : 1));
         }
+
+        scrapedData.tags = tags;
 
         delete scrapedData.scripts;
     }
@@ -190,234 +197,327 @@ const postProcessor = (scrapedData, data, options) => {
     return scrapedData;
 };
 
-const skipScrape = post => {
-    return post.data.status === 'draft';
-};
-
-/**
- * getTasks: Steps to Migrate from Medium
- *
- * Wiring of the steps to migrate from medium.
- *
- * @param {Object} options
- */
-const getTaskRunner = options => {
-    let runnerTasks = [
+const getTaskRunner = suppliedOptions => {
+    const options = {scrape: ['all'], zip: true, cache: true, report: false, postsPerFile: 2000, ...suppliedOptions};
+    const tasks = [
         {
             title: 'Initializing',
-            task: async (ctx, task) => {
-                ctx.options = options;
-
-                ctx.allowScrape = {
-                    all: ctx.options.scrape.includes('all'),
-                    assets:
-                        ctx.options.scrape.includes('all') ||
-                        ctx.options.scrape.includes('assets') ||
-                        ctx.options.scrape.includes('img') ||
-                        ctx.options.scrape.includes('media') ||
-                        ctx.options.scrape.includes('files'),
-                    web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
-                };
-
-                // Delete the authors meta field if the option is not enabled (this data is fetched regardless of options passed)
-                if (!options.useMetaAuthor) {
-                    delete scrapeConfig.posts.authors;
+            task: async ctx => {
+                if (!Number.isSafeInteger(options.postsPerFile) || options.postsPerFile < 1) {
+                    throw new Error('--postsPerFile must be a positive integer');
                 }
-
-                // 0. Prep a file cache, scrapers, etc, to prepare for the work we are about to do.
-                ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(options.pathToZip);
-                ctx.fileCache = new fsUtils.FileCache(`substack-${ctx.options.cacheName}`, {
-                    tmpPath: ctx.options.tmpPath
-                });
-                ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor, skipScrape);
-                ctx.assetScraper = new MgAssetScraper(
-                    ctx.fileCache,
-                    {
+                ctx.options = options;
+                // Without --cacheName the workspace is keyed by the export's full path, so exports that share a
+                // file name never share stored source data.
+                const source = resolve(options.pathToZip);
+                ctx.fileCache = new fsUtils.FileCache(
+                    options.cacheName
+                        ? `substack-${options.cacheName}`
+                        : join(dirname(source), `substack-${basename(source)}`),
+                    {tmpPath: options.tmpPath}
+                );
+                const selected = new Set(options.scrape);
+                ctx.allowScrape = {
+                    web: selected.has('all') || selected.has('web'),
+                    assets: ['all', 'assets', 'img', 'media', 'files'].some(value => selected.has(value))
+                };
+                ctx.outputName = ctx.fileCache.defaultZipFileName;
+                if (options.report) {
+                    const reportName = ctx.outputName.replace(/\.zip$/, '.report.json');
+                    ctx.reportFile = {
+                        path: options.zip
+                            ? resolve(options.outputPath || process.cwd(), reportName)
+                            : join(ctx.fileCache.cacheDir, reportName)
+                    };
+                }
+                ctx.migrateContext = new MigrateContext({dbPath: join(ctx.fileCache.tmpDir, 'mg-context.sqlite')});
+                await ctx.migrateContext.init();
+                ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
+                if (ctx.allowScrape.assets) {
+                    ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
                         domains: [
                             'https://cdn.substack.com',
                             'https://substackcdn.com',
                             'https://substack-post-media.s3.amazonaws.com',
                             'https://api.substack.com'
-                        ]
-                    },
-                    ctx
-                );
-                await ctx.assetScraper.init();
+                        ],
+                        retainFailures: false,
+                        strictErrors: true,
+                        onFailure: failure => ctx.migrateContext.recordDiagnostic('operation:warning', failure)
+                    });
+                    await ctx.assetScraper.init();
+                }
                 ctx.linkFixer = new MgLinkFixer();
-
-                task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
             }
         },
         {
-            title: 'Read csv file',
-            task: async ctx => {
-                // 1. Read the csv file
+            title: 'Fetching content',
+            task: async (ctx, task) => {
                 try {
-                    ctx.result = await zipIngest.ingest(ctx);
-                    await ctx.fileCache.writeTmpFile(ctx.result, 'zip-export-mapped.json');
+                    if (!ctx.migrateContext.sources.hasCompletedIngestion || options.rereadSource) {
+                        task.output = `Reading ${options.pathToZip}`;
+                        await ingest(options.pathToZip, ctx.migrateContext, {replace: Boolean(options.rereadSource)});
+                    } else {
+                        task.output = 'Reading stored Substack content';
+                    }
+                    task.output = null;
                 } catch (error) {
-                    ctx.errors.push({message: 'Failed to read CSV', error});
+                    task.output = error.message;
                     throw error;
                 }
             }
         },
-        ...createGhostUserTasks(options),
+        {
+            title: 'Map Substack content',
+            task: async (ctx, task) => {
+                async function* users() {
+                    if (options.ghostApiUrl && options.ghostAdminKey) {
+                        try {
+                            yield* streamGhostUsers({
+                                apiUrl: options.ghostApiUrl,
+                                adminKey: options.ghostAdminKey,
+                                fileCache: ctx.fileCache
+                            });
+                        } catch (error) {
+                            if (!(error instanceof GhostUserFetchError)) {
+                                throw error;
+                            }
+                            ctx.migrateContext.recordDiagnostic('operation:warning', {
+                                operation: 'Ghost author matching',
+                                reason: error.message
+                            });
+                        }
+                    }
+                }
+                ctx.summary = await map(options, ctx.migrateContext, {ghostUsers: users()});
+                task.output = `${ctx.summary.imported} imported, ${ctx.summary.skipped} skipped`;
+                if (ctx.summary.skipped > 0 && ctx.summary.imported === 0) {
+                    throw new Error('Every selected Substack post was invalid. See the migration report.');
+                }
+            }
+        },
         {
             title: 'Fetch missing data via WebScraper',
             skip: ctx => !ctx.allowScrape.web,
-            task: ctx => {
-                // 2. Pass the results through the web scraper to get any missing data
-                let tasks = ctx.webScraper.hydrate(ctx);
-
-                let webScraperOptions = options;
-                webScraperOptions.concurrent = 1;
-                return makeTaskRunner(tasks, webScraperOptions);
-            }
-        },
-        {
-            title: 'Process content',
-            task: async ctx => {
-                // 3. Pass the results through the processor to change the HTML structure
-                try {
-                    ctx.result = await zipIngest.process(ctx.result, ctx);
-                    await ctx.fileCache.writeTmpFile(ctx.result, 'csv-export-data.json');
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to process content', error});
-                    throw error;
-                }
-            }
-        },
-        {
-            title: 'Build Link Map',
-            task: async ctx => {
-                // 4. Create a map of all known links for use later
-                try {
-                    ctx.linkFixer.buildMap(ctx);
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to build link map', error});
-                    throw error;
-                }
-            }
-        },
-        {
-            title: 'Format data as Ghost JSON',
-            task: async ctx => {
-                // 5. Format the data as a valid Ghost JSON file
-                try {
-                    ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to format data as Ghost JSON', error});
-                    throw error;
-                }
+            task: (ctx, task) => {
+                const scrape = async (post, subtask) => {
+                    if (post.get('status') === 'draft') {
+                        return;
+                    }
+                    // Fetch failures are optional; setter/processor errors are not.
+                    const url = postUrl(
+                        JSON.parse(ctx.migrateContext.sources.get('post', post.lookupKey).content),
+                        options.url
+                    );
+                    subtask.output = url;
+                    let response;
+                    try {
+                        response = await ctx.webScraper.scrapeUrl(
+                            url,
+                            scrapeConfig.posts,
+                            post.ghostId,
+                            options.wait_after_scrape || 100
+                        );
+                    } catch (error) {
+                        if (error.errorType !== 'ScrapeError') throw error;
+                        ctx.migrateContext.recordDiagnostic('operation:warning', {
+                            operation: 'Web scraping',
+                            url,
+                            reason: error.message
+                        });
+                        return;
+                    }
+                    // The page scripts can be large; the scrape cache keeps them, the post keeps the rest.
+                    const {scripts: _scripts, ...stored} = response.responseData;
+                    post.webscrapeData = stored;
+                    // Section and post tags, and authors, come from the post processor and are set on the post here.
+                    const processed = postProcessor({...response.responseData}, {html: post.get('html')}, options);
+                    applyScrapedData(post, processed, ctx.migrateContext, options);
+                };
+                // One counted sub-task rather than one per post, so memory does not grow with the site.
+                return task.newListr(
+                    [
+                        {
+                            title: 'Posts',
+                            task: async (_ctx, subtask) => {
+                                let processed = 0;
+                                const total = ctx.migrateContext.db.stmts.countPosts.get().count;
+                                subtask.title = `Posts (${processed}/${total})`;
+                                await ctx.migrateContext.forEachPost(
+                                    async post => {
+                                        await scrape(post, subtask);
+                                        subtask.title = `Posts (${++processed}/${total})`;
+                                    },
+                                    {batchSize: 25}
+                                );
+                                subtask.output = null;
+                            }
+                        }
+                    ],
+                    {concurrent: false, exitOnError: true}
+                );
             }
         },
         {
             title: 'Fetch images via AssetScraper',
             skip: ctx => !ctx.allowScrape.assets,
+            task: (ctx, task) =>
+                task.newListr(
+                    [
+                        ['Posts', 'forEachPost', 'countPosts'],
+                        ['Tags', 'forEachTag', 'countUsedTags'],
+                        ['Authors', 'forEachAuthor', 'countUsedAuthors']
+                    ].map(([title, iterate, count]) => ({
+                        title,
+                        task: async (_ctx, subtask) => {
+                            let processed = 0;
+                            const total = ctx.migrateContext.db.stmts[count].get().count;
+                            subtask.title = `${title} (${processed}/${total})`;
+                            await ctx.migrateContext[iterate](
+                                async entity => {
+                                    subtask.output =
+                                        entity.get('slug') || entity.data.title || entity.data.name || entity.ghostId;
+                                    await ctx.assetScraper.processAssets(entity);
+                                    subtask.title = `${title} (${++processed}/${total})`;
+                                },
+                                {batchSize: 25}
+                            );
+                            subtask.output = null;
+                        }
+                    })),
+                    {concurrent: false, exitOnError: true}
+                )
+        },
+        {
+            title: 'Update links in HTML via LinkFixer',
+            task: async ctx =>
+                ctx.migrateContext.forEachPost(
+                    post => ctx.linkFixer.fixPost(post, url => ctx.migrateContext.findLink(url)),
+                    {batchSize: 25}
+                )
+        },
+        {
+            title: 'Write Ghost import JSON files',
             task: async ctx => {
-                // 6. Format the data as a valid Ghost JSON file
-                let tasks = ctx.assetScraper.getTasks();
-                return makeTaskRunner(tasks, {
-                    verbose: options.verbose,
-                    exitOnError: false,
-                    concurrent: false
-                });
-            }
-        },
-        {
-            title: 'Update links in content via LinkFixer',
-            task: async (ctx, task) => {
-                // 7. Process the content looking for known links, and update them to new links
-                let tasks = ctx.linkFixer.fix(ctx, task); // eslint-disable-line no-shadow
-                return makeTaskRunner(tasks, options);
-            }
-        },
-        {
-            // @TODO don't duplicate this with the utils json file
-            title: 'Convert HTML -> Lexical',
-            task: ctx => {
-                // 8. Convert post HTML -> Lexical
-                try {
-                    let tasks = mgHtmlLexical.convert(ctx); // eslint-disable-line no-shadow
-                    return makeTaskRunner(tasks, options);
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to convert HTML to Lexical', error});
-                    throw error;
+                ctx.exportedFiles = 0;
+                ctx.exportStaging = await mkdtemp(join(ctx.fileCache.tmpDir, 'export-'));
+                for await (const _file of ctx.migrateContext.writeGhostJsonStream(ctx.exportStaging, {
+                    batchSize: options.postsPerFile,
+                    filename: 'ghost-import'
+                })) {
+                    ctx.exportedFiles++;
+                    ctx.importDirectory = ctx.fileCache.zipDir;
                 }
-            }
-        },
-        {
-            title: 'Write Ghost import JSON File',
-            task: async ctx => {
-                // 9. Write a valid Ghost import zip
-                try {
-                    await ctx.fileCache.writeGhostImportFile(ctx.result);
-                    await ctx.fileCache.writeErrorJSONFile(ctx.errors);
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to write Ghost import JSON file', error});
-                    throw error;
+                ctx.warningCount = ctx.migrateContext.countWarnings();
+                if (ctx.reportFile) {
+                    await ctx.migrateContext.writeMigrationReport(ctx.reportFile.path, {
+                        ...ctx.summary,
+                        warnings: ctx.warningCount,
+                        status: 'complete',
+                        files: ctx.exportedFiles
+                    });
+                    ctx.reportFile.size = (await stat(ctx.reportFile.path)).size;
                 }
-            }
-        },
-        {
-            title: 'Write Ghost import zip',
-            skip: () => !options.zip,
-            task: async (ctx, task) => {
-                // 10. Write a valid Ghost import zip
-                const isStorage = (options?.outputStorage && typeof options.outputStorage === 'object') ?? false;
-
-                try {
-                    let timer = Date.now();
-                    const zipFinalPath = options.outputPath || process.cwd();
-                    // zip the file and save it temporarily
-                    ctx.outputFile = await fsUtils.zip.write(
-                        zipFinalPath,
-                        ctx.fileCache.zipDir,
-                        ctx.fileCache.defaultZipFileName
-                    );
-
-                    if (isStorage) {
-                        const storage = options.outputStorage;
-                        const localFilePath = ctx.outputFile.path;
-
-                        // read the file buffer
-                        const fileBuffer = await readFileSync(ctx.outputFile.path);
-                        // Upload the file to the storage
-                        ctx.outputFile.path = await storage.upload({
-                            body: fileBuffer,
-                            fileName: `gh-substack-${ctx.options.cacheName}.zip`
-                        });
-                        // now that the file is uploaded to the storage, delete the local zip file
-                        await fsUtils.zip.deleteFile(localFilePath);
+                // The runner owns these filenames; publish only after every chunk and report succeeds.
+                for await (const entry of await opendir(ctx.fileCache.zipDir)) {
+                    if (entry.isFile() && /^ghost-import(?:-\d+)?\.json$/.test(entry.name)) {
+                        await rm(join(ctx.fileCache.zipDir, entry.name));
                     }
-
-                    task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
-                } catch (error) {
-                    ctx.errors.push({message: 'Failed to write and upload ZIP file', error});
-                    throw error;
                 }
+                for await (const entry of await opendir(ctx.exportStaging)) {
+                    await rename(join(ctx.exportStaging, entry.name), join(ctx.fileCache.zipDir, entry.name));
+                }
+                await rm(ctx.exportStaging, {recursive: true});
+                ctx.exportStaging = undefined;
+                if (!options.zip) ctx.outputFile = {path: ctx.importDirectory, type: 'directory'};
             }
         },
         {
-            title: 'Clearing cached files',
-            enabled: () => !options.cache && options.zip,
+            title: 'Write Ghost import ZIP',
+            skip: () => !options.zip,
             task: async ctx => {
+                const outputDir = resolve(options.outputPath || process.cwd());
+                await mkdir(outputDir, {recursive: true});
+                const finalPath = join(outputDir, ctx.outputName);
+                const temporaryName = `.${randomUUID()}.zip`;
+                const temporaryPath = join(outputDir, temporaryName);
                 try {
-                    await ctx.fileCache.emptyCurrentCacheDir();
+                    await fsUtils.zip.write(outputDir, ctx.fileCache.zipDir, temporaryName);
+                    if (options.outputStorage && typeof options.outputStorage === 'object') {
+                        const upload = async (path, fileName) => {
+                            const body = createReadStream(path);
+                            try {
+                                const remotePath = await options.outputStorage.upload({
+                                    body,
+                                    fileName,
+                                    size: (await stat(path)).size
+                                });
+                                if (!body.readableEnded) {
+                                    throw new Error(
+                                        'outputStorage.upload must consume the readable body before resolving'
+                                    );
+                                }
+                                return remotePath;
+                            } finally {
+                                body.destroy();
+                            }
+                        };
+                        const remoteZip = await upload(temporaryPath, basename(finalPath));
+                        if (ctx.reportFile) {
+                            const remoteReport = await upload(ctx.reportFile.path, basename(ctx.reportFile.path));
+                            ctx.reportFile = {...ctx.reportFile, path: remoteReport};
+                        }
+                        ctx.outputFile = {path: remoteZip, size: (await stat(temporaryPath)).size};
+                        await rm(temporaryPath);
+                    } else {
+                        await rename(temporaryPath, finalPath);
+                        ctx.outputFile = {path: finalPath, size: (await stat(finalPath)).size};
+                    }
                 } catch (error) {
-                    ctx.errors.push('Failed to clear cache', error);
+                    // Failed uploads retain the local ZIP for recovery.
+                    ctx.recoveryFile = temporaryPath;
                     throw error;
                 }
             }
         }
     ];
-
-    // Configure a new Listr task manager, we can use different renderers for different configs
-    return makeTaskRunner(runnerTasks, Object.assign({topLevel: true}, options));
+    const runner = makeTaskRunner(tasks, {...options, topLevel: true});
+    const run = runner.run.bind(runner);
+    runner.run = async (context = {errors: [], warnings: []}) => {
+        let succeeded = false;
+        try {
+            const result = await run(context);
+            succeeded = true;
+            return result;
+        } catch (error) {
+            if (context.reportFile && context.migrateContext) {
+                try {
+                    context.migrateContext.recordDiagnostic('operation:failed', {reason: error.message});
+                    const failurePath = context.reportFile.path.replace(/\.report\.json$/, '.failed-report.json');
+                    await context.migrateContext.writeMigrationReport(failurePath, {
+                        ...context.summary,
+                        status: 'failed'
+                    });
+                    context.failedReport = failurePath;
+                } catch {
+                    // Preserve the original failure if initialization/report writing failed too.
+                }
+            }
+            throw error;
+        } finally {
+            try {
+                context.assetScraper?.close();
+            } finally {
+                await context.migrateContext?.close();
+            }
+            if (succeeded && !options.cache && options.zip) {
+                await context.fileCache.emptyCurrentCacheDir();
+            }
+        }
+    };
+    return runner;
 };
 
-export default {
-    getTaskRunner
-};
+export default {getTaskRunner};
 
-export {scrapeConfig, postProcessor, skipScrape};
+export {scrapeConfig, postProcessor};

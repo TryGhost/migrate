@@ -1,681 +1,6 @@
 import assert from 'node:assert/strict';
-import {describe, it, before, after, beforeEach, mock} from 'node:test';
-import {URL} from 'node:url';
-import {unlink, readdirSync, readFileSync} from 'node:fs';
-import {resolve, join} from 'node:path';
-import {execFileSync} from 'node:child_process';
-import csv from '@tryghost/mg-fs-utils/lib/csv.js';
-import processZip from '../index.js';
-import map from '../lib/mapper.js';
-import process, {processContent, getImageDimensions, largeImageUrl} from '../lib/process.js';
-
-const __dirname = new URL('.', import.meta.url).pathname;
-
-const inputPath = join(__dirname, '/fixtures/');
-const inputZipPath = join(__dirname, '/fixtures/posts.zip');
-const inputCSVPath = join(__dirname, '/fixtures/posts.csv');
-const inputPostsPath = join(__dirname, '/fixtures/posts');
-
-describe('Process Substack ZIP file', function () {
-    before(function () {
-        // Zip the fixture files without a shell: list entries explicitly (excluding
-        // dotfiles, to match shell `*`) and pass them as an argv array so no path is
-        // interpolated into a command (js/shell-command-injection-from-environment).
-        const filesToZip = readdirSync(inputPath).filter(name => !name.startsWith('.'));
-        execFileSync('zip', ['-r', inputZipPath, ...filesToZip], {
-            cwd: inputPath
-        });
-    });
-
-    after(function () {
-        unlink(inputZipPath, err => {
-            if (err) {
-                throw err;
-            }
-        });
-    });
-
-    it('Reads ZIP and generates Ghost JSON', async function () {
-        const processed = await processZip.ingest({
-            options: {
-                pathToZip: inputZipPath,
-                posts: true,
-                podcasts: true,
-                drafts: true,
-                pages: true,
-                url: 'https://example.substack.com',
-                email: 'exampleuser@email.com'
-            }
-        });
-
-        assert.equal(processed.posts.length, 4);
-
-        assert.equal(processed.posts[0].url, 'https://example.substack.com/p/plain-text');
-        assert.equal(processed.posts[0].substackId, '123401.plain-text');
-        assert.equal(processed.posts[0].substackPodcastURL, false);
-        assert.equal(processed.posts[0].data.slug, 'plain-text');
-        assert.equal(processed.posts[0].data.type, 'post');
-
-        assert.equal(processed.posts[1].url, 'https://example.substack.com/p/podcast');
-        assert.equal(processed.posts[1].substackId, '123402.podcast');
-        assert.equal(processed.posts[1].substackPodcastURL, 'https://example.com/my-audio/file.mp3');
-        assert.equal(processed.posts[1].data.slug, 'podcast');
-        assert.equal(processed.posts[1].data.type, 'post');
-
-        assert.equal(processed.posts[2].url, 'https://example.substack.com/p/draft-text');
-        assert.equal(processed.posts[2].substackId, '123404.draft-text');
-        assert.equal(processed.posts[2].substackPodcastURL, false);
-        assert.equal(processed.posts[2].data.slug, 'draft-text');
-        assert.equal(processed.posts[2].data.type, 'post');
-
-        assert.equal(processed.posts[3].url, 'https://example.substack.com/p/about-us');
-        assert.equal(processed.posts[3].substackId, '123405.about-us');
-        assert.equal(processed.posts[3].substackPodcastURL, false);
-        assert.equal(processed.posts[3].data.slug, 'about-us');
-        assert.equal(processed.posts[3].data.type, 'page');
-    });
-});
-
-describe('Process unpacked data from a Substack ZIP to Ghost JSON', function () {
-    let postDataFromFixtures = null;
-
-    beforeEach(function () {
-        const inputCSVString = readFileSync(inputCSVPath, {encoding: 'utf8'});
-        const inputCSV = csv.parseString(inputCSVString);
-
-        let input = {
-            meta: inputCSV,
-            posts: []
-        };
-
-        readdirSync(inputPostsPath).forEach(file => {
-            let theHtml = readFileSync(resolve(inputPostsPath, file), {encoding: 'utf8'});
-
-            input.posts.push({
-                name: file,
-                html: theHtml
-            });
-        });
-
-        postDataFromFixtures = input;
-    });
-
-    it('Reads CSV and converts to JSON', async function () {
-        const ctx = {
-            options: {
-                posts: true,
-                podcasts: true,
-                drafts: true,
-                pages: false,
-                url: 'https://example.substack.com',
-                email: 'exampleuser@email.com',
-                addPlatformTag: true,
-                addTypeTag: true,
-                addAccessTag: true
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-
-        // This attribute gets stripped out in process(), so check it now
-        assert.equal(mapped.posts[0].substackId, '123401.plain-text');
-
-        const processed = await process(mapped, ctx);
-
-        const post = processed.posts[0];
-        assert.ok(typeof post === 'object' && post !== null);
-
-        assert.equal(post.url, 'https://example.substack.com/p/plain-text');
-
-        const data = post.data;
-        assert.ok(typeof data === 'object' && data !== null);
-
-        assert.equal(data.slug, 'plain-text');
-        assert.equal(data.comment_id, '123401');
-        assert.equal(data.published_at, '2019-07-26T20:48:19.814Z');
-        assert.equal(data.updated_at, '2019-07-26T20:48:19.814Z');
-        assert.equal(data.created_at, '2019-07-26T20:48:19.814Z');
-        assert.equal(data.title, 'Plain Text');
-        assert.equal(data.custom_excerpt, '“This quote’s rather short”');
-        assert.equal(data.type, 'post');
-        assert.equal(data.status, 'published');
-        assert.equal(data.visibility, 'public');
-
-        assert.equal(data.tags.length, 4);
-
-        const tag1 = data.tags[0];
-        assert.equal(tag1.url, 'https://example.substack.com/tag/newsletter');
-        assert.equal(tag1.data.name, 'Newsletter');
-
-        const tag2 = data.tags[1];
-        assert.equal(tag2.url, 'migrator-added-tag');
-        assert.equal(tag2.data.name, '#substack');
-
-        const tag3 = data.tags[2];
-        assert.equal(tag3.url, 'migrator-added-tag-substack-type-newsletter');
-        assert.equal(tag3.data.name, '#substack-type-newsletter');
-
-        const tag4 = data.tags[3];
-        assert.equal(tag4.url, 'migrator-added-tag-substack-access-everyone');
-        assert.equal(tag4.data.name, '#substack-access-everyone');
-
-        const author = data.author;
-        assert.equal(author.url, 'https://example.substack.com/author/exampleuser');
-        assert.equal(author.data.email, 'exampleuser@email.com');
-        assert.equal(author.data.slug, 'exampleuser');
-    });
-
-    it('Can add a tag based on the post type', async function () {
-        const ctx = {
-            options: {
-                posts: true,
-                podcasts: true,
-                drafts: true,
-                pages: false,
-                url: 'https://example.substack.com',
-                addPlatformTag: true,
-                addTypeTag: true,
-                addAccessTag: true
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-        const processed = await process(mapped, ctx);
-
-        // The 2nd post is a podcast
-        const post = processed.posts[1];
-        const data = post.data;
-
-        assert.equal(data.tags.length, 4);
-
-        const tag1 = data.tags[0];
-        assert.equal(tag1.url, 'https://example.substack.com/tag/podcast');
-        assert.equal(tag1.data.name, 'Podcast');
-
-        const tag2 = data.tags[1];
-        assert.equal(tag2.url, 'migrator-added-tag');
-        assert.equal(tag2.data.name, '#substack');
-
-        const tag3 = data.tags[2];
-        assert.equal(tag3.url, 'migrator-added-tag-substack-type-podcast');
-        assert.equal(tag3.data.name, '#substack-type-podcast');
-
-        const tag4 = data.tags[3];
-        assert.equal(tag4.url, 'migrator-added-tag-substack-access-everyone');
-        assert.equal(tag4.data.name, '#substack-access-everyone');
-    });
-
-    it('Can convert a draft podcast post', async function () {
-        const ctx = {
-            options: {
-                posts: true,
-                podcasts: true,
-                drafts: true,
-                pages: false,
-                url: 'https://example.substack.com',
-                email: 'exampleuser@email.com'
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-        const processed = await process(mapped, ctx);
-
-        // The 3rd processed post is a draft podcast
-        const post = processed.posts[2];
-
-        assert.equal(post.data.status, 'draft');
-        assert.equal(post.data.tags[0].data.name, 'Newsletter');
-    });
-
-    it('Can migrate posts before a given date', async function () {
-        const ctx = {
-            options: {
-                posts: true,
-                podcasts: true,
-                drafts: true,
-                pages: false,
-                url: 'https://example.substack.com',
-                email: 'exampleuser@email.com',
-                postsBefore: 'January 20, 2021'
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-        const processed = await process(mapped, ctx);
-
-        assert.equal(processed.posts.length, 1);
-    });
-
-    it('Can migrate posts between 2 given dates', async function () {
-        const ctx = {
-            options: {
-                posts: true,
-                podcasts: true,
-                drafts: true,
-                pages: false,
-                url: 'https://example.substack.com',
-                email: 'exampleuser@email.com',
-                postsAfter: 'January 20, 2019',
-                postsBefore: 'August 12, 2022'
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-        const processed = await process(mapped, ctx);
-
-        assert.equal(processed.posts.length, 2);
-    });
-
-    it('Can migrate posts after a given date', async function () {
-        const ctx = {
-            options: {
-                posts: true,
-                podcasts: true,
-                drafts: true,
-                pages: false,
-                url: 'https://example.substack.com',
-                email: 'exampleuser@email.com',
-                postsAfter: 'August 12, 2022'
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-        const processed = await process(mapped, ctx);
-
-        assert.equal(processed.posts.length, 2);
-    });
-
-    it('Can optionally include thread posts', async function () {
-        const ctx = {
-            options: {
-                posts: true,
-                podcasts: true,
-                drafts: true,
-                pages: false,
-                threads: true,
-                url: 'https://example.substack.com',
-                email: 'exampleuser@email.com'
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-
-        assert.equal(mapped.posts.length, 4);
-    });
-
-    it('Can use scraped tags', async function () {
-        const ctx = {
-            options: {
-                url: 'https://example.substack.com',
-                addTag: 'Hello World',
-                posts: true,
-                podcasts: true,
-                pages: false,
-                addPlatformTag: false,
-                addTypeTag: false,
-                addAccessTag: false
-            }
-        };
-
-        const mapped = await map(postDataFromFixtures, ctx.options);
-
-        // Simulate the data added by scraping
-        mapped.posts[0].data.tags = [
-            {
-                url: '/scraped-tag/season-1',
-                data: {
-                    name: 'Season #1',
-                    slug: 'season-1'
-                }
-            },
-            {
-                url: '/scraped-tag/exclusive',
-                data: {
-                    name: 'Exclusive',
-                    slug: 'exclusive'
-                }
-            }
-        ];
-
-        const processed = await process(mapped, ctx);
-
-        const post = processed.posts[0];
-
-        const tags = post.data.tags;
-
-        assert.equal(tags.length, 4);
-
-        const tag1 = tags[0];
-        assert.equal(tag1.url, '/scraped-tag/season-1');
-        assert.equal(tag1.data.name, 'Season #1');
-        assert.equal(tag1.data.slug, 'season-1');
-
-        const tag2 = tags[1];
-        assert.equal(tag2.url, '/scraped-tag/exclusive');
-        assert.equal(tag2.data.name, 'Exclusive');
-        assert.equal(tag2.data.slug, 'exclusive');
-
-        const tag3 = tags[2];
-        assert.equal(tag3.url, 'https://example.substack.com/tag/newsletter');
-        assert.equal(tag3.data.name, 'Newsletter');
-        assert.equal(tag3.data.slug, 'newsletter');
-
-        const tag4 = tags[3];
-        assert.equal(tag4.url, 'https://example.substack.com/tag/hello-world');
-        assert.equal(tag4.data.name, 'Hello World');
-        assert.equal(tag4.data.slug, 'hello-world');
-    });
-
-    it('Can optionally add custom tag', async function () {
-        const ctx = {
-            options: {
-                url: 'https://example.substack.com',
-                addTag: 'Hello World',
-                posts: true,
-                podcasts: true,
-                pages: false,
-                addPlatformTag: true,
-                addTypeTag: true,
-                addAccessTag: true
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-        const processed = await process(mapped, ctx);
-
-        const post = processed.posts[0];
-
-        const tag1 = post.data.tags[0];
-        assert.equal(tag1.url, 'https://example.substack.com/tag/newsletter');
-        assert.equal(tag1.data.name, 'Newsletter');
-        assert.equal(tag1.data.slug, 'newsletter');
-
-        const tag2 = post.data.tags[1];
-        assert.equal(tag2.url, 'https://example.substack.com/tag/hello-world');
-        assert.equal(tag2.data.name, 'Hello World');
-        assert.equal(tag2.data.slug, 'hello-world');
-
-        const tag3 = post.data.tags[2];
-        assert.equal(tag3.url, 'migrator-added-tag');
-        assert.equal(tag3.data.name, '#substack');
-        assert.equal(tag3.data.slug, 'hash-substack');
-    });
-
-    it('Can skip platform tag', async function () {
-        const ctx = {
-            options: {
-                url: 'https://example.substack.com',
-                posts: true,
-                podcasts: true,
-                pages: false,
-                addPlatformTag: false,
-                addTypeTag: true,
-                addAccessTag: true
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-        const processed = await process(mapped, ctx);
-
-        const post = processed.posts[0];
-
-        const tag1 = post.data.tags[0];
-        assert.equal(tag1.url, 'https://example.substack.com/tag/newsletter');
-        assert.equal(tag1.data.name, 'Newsletter');
-        assert.equal(tag1.data.slug, 'newsletter');
-
-        const tag2 = post.data.tags[1];
-        assert.equal(tag2.url, 'migrator-added-tag-substack-type-newsletter');
-        assert.equal(tag2.data.name, '#substack-type-newsletter');
-        assert.equal(tag2.data.slug, 'hash-substack-type-newsletter');
-
-        const tag3 = post.data.tags[2];
-        assert.equal(tag3.url, 'migrator-added-tag-substack-access-everyone');
-        assert.equal(tag3.data.name, '#substack-access-everyone');
-        assert.equal(tag3.data.slug, 'hash-substack-access-everyone');
-    });
-
-    it('Can skip type tag', async function () {
-        const ctx = {
-            options: {
-                url: 'https://example.substack.com',
-                posts: true,
-                podcasts: true,
-                pages: false,
-                addPlatformTag: true,
-                addTypeTag: false,
-                addAccessTag: true
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-        const processed = await process(mapped, ctx);
-
-        const post = processed.posts[0];
-
-        const tag1 = post.data.tags[0];
-        assert.equal(tag1.url, 'https://example.substack.com/tag/newsletter');
-        assert.equal(tag1.data.name, 'Newsletter');
-        assert.equal(tag1.data.slug, 'newsletter');
-
-        const tag2 = post.data.tags[1];
-        assert.equal(tag2.url, 'migrator-added-tag');
-        assert.equal(tag2.data.name, '#substack');
-        assert.equal(tag2.data.slug, 'hash-substack');
-
-        const tag3 = post.data.tags[2];
-        assert.equal(tag3.url, 'migrator-added-tag-substack-access-everyone');
-        assert.equal(tag3.data.name, '#substack-access-everyone');
-        assert.equal(tag3.data.slug, 'hash-substack-access-everyone');
-    });
-
-    it('Can skip access tag', async function () {
-        const ctx = {
-            options: {
-                url: 'https://example.substack.com',
-                posts: true,
-                podcasts: true,
-                pages: false,
-                addPlatformTag: true,
-                addTypeTag: true,
-                addAccessTag: false
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-        const processed = await process(mapped, ctx);
-
-        const post = processed.posts[0];
-
-        const tag1 = post.data.tags[0];
-        assert.equal(tag1.url, 'https://example.substack.com/tag/newsletter');
-        assert.equal(tag1.data.name, 'Newsletter');
-        assert.equal(tag1.data.slug, 'newsletter');
-
-        const tag2 = post.data.tags[1];
-        assert.equal(tag2.url, 'migrator-added-tag');
-        assert.equal(tag2.data.name, '#substack');
-        assert.equal(tag2.data.slug, 'hash-substack');
-
-        const tag3 = post.data.tags[2];
-        assert.equal(tag3.url, 'migrator-added-tag-substack-type-newsletter');
-        assert.equal(tag3.data.name, '#substack-type-newsletter');
-        assert.equal(tag3.data.slug, 'hash-substack-type-newsletter');
-    });
-
-    it('Can skip all platform, type & access tags', async function () {
-        const ctx = {
-            options: {
-                url: 'https://example.substack.com',
-                posts: true,
-                podcasts: true,
-                pages: false,
-                addPlatformTag: false,
-                addTypeTag: false,
-                addAccessTag: false
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-        const processed = await process(mapped, ctx);
-
-        const post = processed.posts[0];
-
-        const tag1 = post.data.tags[0];
-        assert.equal(tag1.url, 'https://example.substack.com/tag/newsletter');
-        assert.equal(tag1.data.name, 'Newsletter');
-        assert.equal(tag1.data.slug, 'newsletter');
-    });
-
-    it('Can migrate only posts', async function () {
-        const ctx = {
-            options: {
-                url: 'https://example.substack.com',
-                posts: true,
-                podcasts: false,
-                threads: false,
-                pages: false
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-
-        assert.equal(mapped.posts.length, 1);
-        assert.equal(mapped.posts[0].data.type, 'post');
-    });
-
-    it('Can migrate only pages', async function () {
-        const ctx = {
-            options: {
-                url: 'https://example.substack.com',
-                posts: false,
-                podcasts: false,
-                threads: false,
-                pages: true
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-
-        assert.equal(mapped.posts.length, 1);
-        assert.equal(mapped.posts[0].data.type, 'page');
-    });
-
-    it('Can migrate only threads', async function () {
-        const ctx = {
-            options: {
-                url: 'https://example.substack.com',
-                posts: false,
-                podcasts: false,
-                threads: true,
-                pages: false
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-
-        assert.equal(mapped.posts.length, 1);
-        assert.equal(mapped.posts[0].data.type, 'post');
-        assert.equal(mapped.posts[0].substackId, '123403.thread');
-    });
-
-    it('Excludes CSV rows that have no corresponding HTML file', async function () {
-        const inputCSVString = readFileSync(inputCSVPath, {encoding: 'utf8'});
-        const inputCSV = csv.parseString(inputCSVString);
-
-        // Add rows without matching HTML files
-        inputCSV.push({
-            post_id: '999901.no-html-post',
-            post_date: '2024-01-01T00:00:00.000Z',
-            is_published: 'TRUE',
-            email_sent_at: '',
-            type: 'newsletter',
-            audience: 'everyone',
-            title: 'Post Without HTML',
-            subtitle: '',
-            podcast_url: ''
-        });
-        inputCSV.push({
-            post_id: '999902.also-no-html',
-            post_date: '2024-02-01T00:00:00.000Z',
-            is_published: 'TRUE',
-            email_sent_at: '',
-            type: 'newsletter',
-            audience: 'everyone',
-            title: 'Another Post Without HTML',
-            subtitle: '',
-            podcast_url: ''
-        });
-
-        let input = {
-            meta: inputCSV,
-            posts: []
-        };
-
-        readdirSync(inputPostsPath).forEach(file => {
-            let theHtml = readFileSync(resolve(inputPostsPath, file), {encoding: 'utf8'});
-            input.posts.push({name: file, html: theHtml});
-        });
-
-        const ctx = {
-            options: {
-                posts: true,
-                podcasts: true,
-                drafts: true,
-                pages: true,
-                threads: true,
-                url: 'https://example.substack.com',
-                email: 'exampleuser@email.com'
-            }
-        };
-
-        const warnSpy = mock.method(console, 'warn', () => {});
-        let mapped;
-        try {
-            mapped = await map(input, ctx.options);
-        } finally {
-            warnSpy.mock.restore();
-        }
-
-        // Only the 5 posts with HTML files should be included, not the 2 extras
-        assert.equal(mapped.posts.length, 5);
-
-        const ids = mapped.posts.map(p => p.substackId);
-        assert.ok(!ids.includes('999901.no-html-post'));
-        assert.ok(!ids.includes('999902.also-no-html'));
-
-        // The 2 skipped posts should be surfaced as a warning, without stopping the migration
-        assert.equal(warnSpy.mock.callCount(), 1);
-        const warning = warnSpy.mock.calls[0].arguments[0];
-        assert.match(warning, /2 of 7 posts in the CSV have no matching HTML file/);
-        assert.match(warning, /will be skipped/);
-    });
-
-    it('Does not warn when every CSV row has a matching HTML file', async function () {
-        const ctx = {
-            options: {
-                posts: true,
-                podcasts: true,
-                drafts: true,
-                pages: true,
-                threads: true,
-                url: 'https://example.substack.com',
-                email: 'exampleuser@email.com'
-            }
-        };
-
-        const warnSpy = mock.method(console, 'warn', () => {});
-        try {
-            await map(postDataFromFixtures, ctx.options);
-        } finally {
-            warnSpy.mock.restore();
-        }
-
-        assert.equal(warnSpy.mock.callCount(), 0);
-    });
-
-    it('Can migrate only podcast', async function () {
-        const ctx = {
-            options: {
-                url: 'https://example.substack.com',
-                posts: false,
-                podcasts: true,
-                threads: false,
-                pages: false
-            }
-        };
-        const mapped = await map(postDataFromFixtures, ctx.options);
-
-        assert.equal(mapped.posts.length, 1);
-        assert.equal(mapped.posts[0].data.type, 'post');
-        assert.equal(mapped.posts[0].substackId, '123402.podcast');
-    });
-});
+import {describe, it} from 'node:test';
+import {processContent, getImageDimensions, largeImageUrl} from '../index.js';
 
 describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
     it('Returns post object if no HTML present', async function () {
@@ -736,9 +61,9 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.ok(!processed.data.html.includes('subscribe'));
-        assert.ok(!processed.data.html.includes('Sign up now'));
-        assert.ok(processed.data.html.includes('Keep this paragraph.'));
+        assert.ok(!processed.data.html!.includes('subscribe'));
+        assert.ok(!processed.data.html!.includes('Sign up now'));
+        assert.ok(processed.data.html!.includes('Keep this paragraph.'));
     });
 
     it('Removes subscription widget when noSubscribeButtons is true', async function () {
@@ -754,9 +79,9 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.ok(processed.data.html.includes('<p>Before</p>'));
-        assert.ok(processed.data.html.includes('<p>After</p>'));
-        assert.ok(!processed.data.html.includes('subscription-widget-wrap'));
+        assert.ok(processed.data.html!.includes('<p>Before</p>'));
+        assert.ok(processed.data.html!.includes('<p>After</p>'));
+        assert.ok(!processed.data.html!.includes('subscription-widget-wrap'));
     });
 
     it('Can transform comment buttons with custom defined URL', async function () {
@@ -1129,13 +454,15 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.ok(processed.data.html.startsWith('<div class="kg-card kg-audio-card">'));
-        assert.ok(processed.data.html.includes('<div class="kg-audio-player-container">'));
+        assert.ok(processed.data.html!.startsWith('<div class="kg-card kg-audio-card">'));
+        assert.ok(processed.data.html!.includes('<div class="kg-audio-player-container">'));
         assert.ok(
-            processed.data.html.includes('<audio src="https://example.com/files/audio.mp3" preload="metadata"></audio>')
+            processed.data.html!.includes(
+                '<audio src="https://example.com/files/audio.mp3" preload="metadata"></audio>'
+            )
         );
-        assert.ok(processed.data.html.includes('<div class="kg-audio-title">My Podcast Episode #1</div>'));
-        assert.ok(processed.data.html.includes('<p>Hello</p>'));
+        assert.ok(processed.data.html!.includes('<div class="kg-audio-title">My Podcast Episode #1</div>'));
+        assert.ok(processed.data.html!.includes('<p>Hello</p>'));
     });
 
     it('Scraped audio`', async function () {
@@ -1152,13 +479,13 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.ok(processed.data.html.startsWith('<div class="kg-card kg-audio-card">'));
+        assert.ok(processed.data.html!.startsWith('<div class="kg-card kg-audio-card">'));
         assert.ok(
-            processed.data.html.includes(
+            processed.data.html!.includes(
                 '<audio src="https://api.substack.com/api/v1/audio/upload/1234abcd-1234-abcd-5678-123456abcdef/src"'
             )
         );
-        assert.ok(processed.data.html.includes('<p>My content</p>'));
+        assert.ok(processed.data.html!.includes('<p>My content</p>'));
     });
 
     it('Can remove the first image if it is the same as `og:image`', async function () {
@@ -1328,12 +655,12 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const processed = await processContent(post, url, options);
 
         assert.ok(
-            !processed.data.html.includes(
+            !processed.data.html!.includes(
                 '<figure class="frontend-components-ImageGallery-module__imageGallery--shoTe">'
             )
         );
         assert.ok(
-            processed.data.html.includes(
+            processed.data.html!.includes(
                 '<figure class="kg-card kg-gallery-card kg-width-wide kg-card-hascaption"><div class="kg-gallery-container"><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-2021-4a0e-b815-90b9ae74d5a0_7008x4672.jpeg" width="7008" height="4672" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abc1235-6563-4aa8-bde7-e5b3ddcd2729_4000x6000.jpeg" width="4000" height="6000" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1236-c233-4e0d-87c0-6a0d128bc07d_3600x2025.jpeg" width="3600" height="2025" loading="lazy" alt></div></div><div class="kg-gallery-row"><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1237-2469-4db8-874b-36ad8733bd97_8048x5368.jpeg" width="8048" height="5368" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1238-2236-442c-9d9a-b0387c946a18_4032x3024.jpeg" width="4032" height="3024" loading="lazy" alt></div><div class="kg-gallery-image"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1239-e31d-401c-b94f-ceae393d95f6_9504x6336.jpeg" width="9504" height="6336" loading="lazy" alt></div></div></div><figcaption>My caption</figcaption></figure>'
             )
         );
@@ -1469,9 +796,9 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
 
         const processed = await processContent(post, url, options);
 
-        assert.ok(!processed.data.html.includes('<div class="digest-post-embed"'));
+        assert.ok(!processed.data.html!.includes('<div class="digest-post-embed"'));
         assert.ok(
-            processed.data.html.includes(
+            processed.data.html!.includes(
                 '<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://www.exampe.com/p/the-link"><div class="kg-bookmark-content"><div class="kg-bookmark-title">The Title</div><div class="kg-bookmark-description">The caption</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-9772-40c8-bc77-0ae3e6ec4774_205x205.png" alt><span class="kg-bookmark-author">Pub Name</span><span class="kg-bookmark-publisher">Author Name</span></div></div><div class="kg-bookmark-thumbnail"><img src="https://substack-post-media.s3.amazonaws.com/public/images/abcd1234-1a48-4dd3-ac53-06900dc9a92d_1200x800.jpeg" alt></div></a></figure>'
             )
         );
@@ -1522,12 +849,12 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         const processed = await processContent(post, url, options);
 
         assert.ok(
-            processed.data.html.includes(
+            processed.data.html!.includes(
                 '<a class="kg-file-card-container" href="https://example.com/api/v1/file/1234-abcd.pdf" title="Download" download>'
             )
         );
         assert.ok(
-            !processed.data.html.includes(
+            !processed.data.html!.includes(
                 '<a class="file-embed-button wide" href="https://example.com/api/v1/file/1234-abcd.pdf"><span class="file-embed-button-text">Download</span></a>'
             )
         );
@@ -1699,5 +1026,152 @@ describe('Image handling', function () {
             larger,
             'https://substack-post-media.s3.amazonaws.com/public/images/db9ef48f-933f-48f0-a6c4-1234567891234_4368x2151.png'
         );
+    });
+});
+
+describe('Converting less common Substack HTML', function () {
+    const convert = (html: string, options = {}) =>
+        processContent({data: {html, title: 'T', slug: 's'}}, 'https://example.com', options).data as {
+            html: string;
+            [key: string]: unknown;
+        };
+
+    it('uses an image that is the first element as the feature image', function () {
+        assert.deepEqual(convert('<img src="https://example.com/a.jpg"><p>Text</p>', {useFirstImage: true}), {
+            html: '<p>Text</p>',
+            title: 'T',
+            slug: 's',
+            feature_image: 'https://example.com/a.jpg'
+        });
+    });
+
+    it('keeps a first image without a usable source in the content', function () {
+        for (const src of ['', 'https://substackcdn.com/image/fetch/']) {
+            const data = convert(`<img src="${src}"><p>Text</p>`, {useFirstImage: true});
+            assert.equal(data.html, '<img src><p>Text</p>');
+            assert.equal(data.feature_image, undefined);
+        }
+    });
+
+    it('removes video and poll embeds, comments and styles inside links', function () {
+        assert.equal(
+            convert(
+                '<p>A</p><div class="native-video-embed">v</div><div class="poll-embed">p</div><div class="comment">c</div><a href="https://x.com"><style>.a{}</style>Link</a>'
+            ).html,
+            '<p>A</p><a href="https://x.com">Link</a>'
+        );
+    });
+
+    it('converts image3 blocks to image cards', function () {
+        assert.equal(
+            convert(
+                `<div class="image3" data-attrs='{"src":"https://substackcdn.com/image/fetch/w_1456/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fa.png","title":"Title"}'></div>`
+            ).html,
+            '<figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://substack-post-media.s3.amazonaws.com/public/images/a.png" class="kg-image" alt="Title" loading="lazy"><figcaption>Title</figcaption></figure>'
+        );
+    });
+
+    it('converts a tweet with only its text', function () {
+        assert.equal(
+            convert(
+                '<div class="tweet"><a href="https://twitter.com/x/status/1?s=20"></a><div class="tweet-text">Hello</div></div>'
+            ).html,
+            '<figure class="kg-card kg-embed-card"><blockquote class="twitter-tweet"><p lang="en" dir="ltr">Hello</p> — <a href="https://twitter.com/x/status/1"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></figure>'
+        );
+    });
+
+    it('sizes gallery images without dimensions in their names as 100×100', function () {
+        const gallery = convert(
+            `<div class="image-gallery-embed" data-attrs='{"gallery":{"images":[{"src":"https://example.com/a.jpg"},{"src":"https://example.com/b_200x100.jpg"}],"caption":"Cap"}}'></div>`
+        ).html;
+        assert.ok(gallery.includes('<img src="https://example.com/a.jpg" width="100" height="100"'));
+        assert.ok(gallery.includes('<img src="https://example.com/b_200x100.jpg" width="200" height="100"'));
+        assert.ok(gallery.includes('<figcaption>Cap</figcaption>'));
+
+        const moduleGallery = convert(
+            '<div class="ImageGallery-module__imageGallery"><div class="ImageGallery-module__imageRow"><picture><img src="https://example.com/a.jpg"></picture></div></div>'
+        ).html;
+        assert.ok(moduleGallery.includes('<img src="https://example.com/a.jpg" width="100" height="100"'));
+        assert.ok(!moduleGallery.includes('figcaption'));
+    });
+
+    it('converts images without alt text, links or captions', function () {
+        const expected =
+            '<figure class="kg-card kg-image-card"><img src="https://example.com/a.jpg" class="kg-image" alt loading="lazy"></figure>';
+        assert.equal(
+            convert('<div class="captioned-image-container"><img src="https://example.com/a.jpg"></div>').html,
+            expected
+        );
+        assert.equal(
+            convert('<a class="image-link" href="https://ghost.org"><img src="https://example.com/a.jpg"></a>').html,
+            expected
+        );
+    });
+
+    it('converts a file embed without a title or size', function () {
+        const html = convert(
+            '<div class="file-embed-wrapper"><a class="file-embed-button" href="https://example.com/f.pdf">Download</a></div>'
+        ).html;
+        assert.ok(html.includes('href="https://example.com/f.pdf"'));
+        assert.ok(html.includes('<div class="kg-file-card-filesize">0 Byte</div>'));
+    });
+
+    it('leaves mentions with invalid data and embedded posts without data unchanged', function () {
+        const mention = '<p><span class="mention-wrap" data-attrs="not json">@x</span></p>';
+        assert.equal(convert(mention).html, mention);
+        assert.equal(
+            convert('<div class="embedded-post-wrap">x</div>').html,
+            '<div class="embedded-post-wrap">x</div>'
+        );
+    });
+
+    it('converts a digest post embed without bylines', function () {
+        assert.equal(
+            convert(
+                `<div class="digest-post-embed" data-attrs='{"canonical_url":"https://a.com/p/x","title":"T","caption":"C","cover_image":"https://a.com/c.jpg","publication_logo_url":"https://a.com/l.png","publishedBylines":[],"publication_name":"Pub"}'></div>`
+            ).html,
+            '<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="https://a.com/p/x"><div class="kg-bookmark-content"><div class="kg-bookmark-title">T</div><div class="kg-bookmark-description">C</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="https://a.com/l.png" alt><span class="kg-bookmark-author">Pub</span></div></div><div class="kg-bookmark-thumbnail"><img src="https://a.com/c.jpg" alt></div></a></figure>'
+        );
+    });
+
+    it('points subscribe buttons at Portal by default', function () {
+        assert.equal(
+            convert(
+                '<p class="button-wrapper"><a class="button primary" href="https://example.com/subscribe?"><span>Subscribe</span></a></p>'
+            ).html,
+            '<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent">Subscribe</a></div>'
+        );
+    });
+
+    it('wraps nested lists in an HTML card', function () {
+        assert.equal(
+            convert('<ul><li>One<ul><li>Two</li></ul></li></ul>').html,
+            '<!--kg-card-begin: html--><ul><li>One<ul><li>Two</li></ul></li></ul><!--kg-card-end: html-->'
+        );
+    });
+
+    it('replaces subscribe links and forms, skipping anchors without a link', function () {
+        const options = {subscribeLink: '#/portal/signup'};
+        assert.equal(
+            convert('<p><a name="x">Anchor</a> <a href="/subscribe">Sub</a></p>', options).html,
+            '<p><a name="x">Anchor</a> <a href="#/portal/signup">Sub</a></p>'
+        );
+        assert.equal(
+            convert('<div class="subscription-widget-wrap"><form><input type="email"></form></div>', options).html,
+            '<div class="kg-card kg-button-card kg-align-center"><a href="#/portal/signup" class="kg-btn kg-btn-accent"></a></div>'
+        );
+    });
+
+    it('embeds Instagram links without a trailing slash, and leaves embeds without a link', function () {
+        assert.ok(
+            convert(
+                '<div class="instagram"><a class="instagram-image" href="https://instagram.com/p/ABC/?utm=1"></a></div>'
+            ).html.includes('src="https://instagram.com/p/ABC/embed/captioned/"')
+        );
+        assert.equal(convert('<div class="instagram"><p>x</p></div>').html, '<div class="instagram"><p>x</p></div>');
+    });
+
+    it('returns no dimensions for an image name without a size', function () {
+        assert.equal(getImageDimensions('https://example.com/a.jpg'), false);
     });
 });

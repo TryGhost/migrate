@@ -1,20 +1,17 @@
-import {promises as fs} from 'node:fs';
-import {join, basename} from 'node:path';
+import {basename} from 'node:path';
 import url from 'node:url';
-import {domUtils, stringUtils, cardUtils} from '@tryghost/mg-utils';
-import errors from '@tryghost/errors';
+import {domUtils, cardUtils} from '@tryghost/mg-utils';
 import SimpleDom from 'simple-dom';
 import {decode} from 'html-entities';
 import {parseSrcset} from 'srcset';
 import {_base as debugFactory} from '@tryghost/debug';
-import {slugify} from '@tryghost/string';
 import escapeStringRegexp from 'escape-string-regexp';
+import type {ContentOptions, ContentPost} from './types.js';
 
 const {parseFragment, serializeChildren, replaceWith, insertBefore, insertAfter, attr, parents} = domUtils;
 
-const {startCase} = stringUtils;
-
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
+const serialize = (node: unknown): string => serializer.serialize(node as any);
 const debug = debugFactory('migrate:substack:process');
 const imageCard = cardUtils.getCard('image');
 const audioCard = cardUtils.getCard('audio');
@@ -22,31 +19,10 @@ const galleryCard = cardUtils.getCard('gallery');
 const bookmarkCard = cardUtils.getCard('bookmark');
 const fileCard = cardUtils.getCard('file');
 
-const getFiles = async filePath => {
-    let filenames = await fs.readdir(filePath);
-
-    return filenames.filter(filename => filename.match(/\.html/));
-};
-
-const readContent = async filePath => {
-    return fs.readFile(filePath, 'utf-8');
-};
-
-const readFiles = async (files, postsDir) => {
-    const postContent = {};
-    for (const file of files) {
-        const substackId = file.replace(/\.html/, '');
-
-        postContent[substackId] = await readContent(join(postsDir, file));
-    }
-
-    return postContent;
-};
-
-const largeImageUrl = path => {
+const largeImageUrl = (path: string): string => {
     const substackCdnUrl = URL.parse(path);
     if (substackCdnUrl?.hostname === 'substackcdn.com' && substackCdnUrl.pathname.startsWith('/image/fetch/')) {
-        path = decodeURIComponent(path.split('/').pop());
+        path = decodeURIComponent(path.split('/').pop()!);
     }
 
     const bucketeerUrl = URL.parse(path);
@@ -57,7 +33,7 @@ const largeImageUrl = path => {
     return path;
 };
 
-const getUnsizedImageName = str => {
+const getUnsizedImageName = (str: string): string => {
     // Match the size suffix (e.g. `_1200x800.jpg`) directly rather than with a
     // leading `(.*)` capture, which is vulnerable to polynomial backtracking.
     const sizeSuffixRegex = /_[0-9]{1,4}x[0-9]{1,4}.[a-z]{2,4}/gi;
@@ -65,7 +41,7 @@ const getUnsizedImageName = str => {
     let last = srcParts.slice(-1)[0];
 
     // Greedy `(.*)` settled on the last occurrence, so mirror that here
-    let lastMatch = null;
+    let lastMatch: RegExpExecArray | null = null;
     for (const match of last.matchAll(sizeSuffixRegex)) {
         lastMatch = match;
     }
@@ -77,11 +53,11 @@ const getUnsizedImageName = str => {
     }
 };
 
-const getImageDimensions = str => {
+const getImageDimensions = (str: string): {width: number; height: number} | false => {
     const imageSizeRegexp = /_([0-9]{2,5})x([0-9]{2,5}).[a-zA-Z]{2,4}/;
     const matches = str.match(imageSizeRegexp);
 
-    if (matches && matches[1] && matches[2]) {
+    if (matches) {
         return {
             width: parseInt(matches[1]),
             height: parseInt(matches[2])
@@ -91,11 +67,11 @@ const getImageDimensions = str => {
     }
 };
 
-const largestSrc = imageElem => {
+const largestSrc = (imageElem: Element | null): string => {
     const src = attr(imageElem, 'src');
     const srcset = attr(imageElem, 'srcset');
 
-    if (!src || !src.length) {
+    if (!src) {
         return '';
     }
 
@@ -104,7 +80,7 @@ const largestSrc = imageElem => {
     if (srcset) {
         const parsedSrcset = parseSrcset(srcset);
 
-        if (parsedSrcset && parsedSrcset.length > 0) {
+        if (parsedSrcset.length > 0) {
             srcToUse = parsedSrcset[0].url;
         }
     }
@@ -115,11 +91,25 @@ const largestSrc = imageElem => {
     return srcToUse;
 };
 
-const processContent = (post, siteUrl, options) => {
+/** Strip the query string from a URL, as the legacy `url.format()` round trip does. */
+const withoutSearch = (src: string): string => {
+    const parsedUrl = url.parse(src);
+    parsedUrl.search = null;
+    return url.format(parsedUrl);
+};
+
+/**
+ * Convert Substack's export HTML into Ghost-compatible HTML, in place on `post.data`.
+ *
+ * Reads `post.data.html`, the optional scraped `og_image` and `podcast_audio_src`, and `post.substackPodcastURL`
+ * (from `posts.csv`). Writes `post.data.html`, and `feature_image`/`feature_image_caption` when the first image
+ * becomes the feature image.
+ */
+const processContent = (post: ContentPost, siteUrl: string, options: ContentOptions): ContentPost => {
     const {substackPodcastURL} = post;
     const {useMetaImage, useFirstImage} = options;
 
-    let html = post.data?.html;
+    let html = post.data.html;
 
     // If there's no HTML, exit & return an empty string to avoid errors
     if (!html) {
@@ -167,8 +157,7 @@ const processContent = (post, siteUrl, options) => {
     });
 
     parsed.$('.image3').forEach(el => {
-        const attrs = attr(el, 'data-attrs');
-        const attrsObj = JSON.parse(attrs);
+        const attrsObj = JSON.parse(attr(el, 'data-attrs')!);
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
@@ -179,11 +168,11 @@ const processContent = (post, siteUrl, options) => {
             }
         };
 
-        replaceWith(el, serializer.serialize(imageCard.render(cardOpts)));
+        replaceWith(el, serialize(imageCard.render(cardOpts)));
     });
 
     // We use the `'og:image` as the feature image. If the first item in the content is an image and is the same as the `og:image`, remove it
-    if (post.data?.og_image) {
+    if (post.data.og_image) {
         if (useMetaImage) {
             post.data.feature_image = largeImageUrl(post.data.og_image);
         }
@@ -196,7 +185,7 @@ const processContent = (post, siteUrl, options) => {
 
             if (isImg || hasImg) {
                 let theElementItself = isImg ? firstElement : parsed.$('img', firstElement)[0];
-                let firstImgSrc = attr(theElementItself, 'src');
+                let firstImgSrc = attr(theElementItself, 'src')!;
 
                 if (firstImgSrc.length > 0) {
                     let unsizedFirstSrc = getUnsizedImageName(firstImgSrc);
@@ -227,22 +216,18 @@ const processContent = (post, siteUrl, options) => {
 
             if (isImg || hasImg) {
                 let theElementItself = isImg ? firstElement : parsed.$('img', firstElement)[0];
-                let firstImgSrc = attr(theElementItself, 'src');
+                let firstImgSrc = attr(theElementItself, 'src')!;
 
-                if (firstImgSrc.length > 0) {
-                    let unsizedFirstSrc = largeImageUrl(firstImgSrc);
+                const unsizedFirstSrc = firstImgSrc.length > 0 ? largeImageUrl(firstImgSrc) : '';
 
-                    if (unsizedFirstSrc) {
-                        post.data.feature_image = unsizedFirstSrc;
+                if (unsizedFirstSrc) {
+                    post.data.feature_image = unsizedFirstSrc;
 
-                        if (parsed.$('figcaption', firstElement).length) {
-                            post.data.feature_image_caption = serializeChildren(
-                                parsed.$('figcaption', firstElement)[0]
-                            );
-                        }
-
-                        firstElement.remove();
+                    if (parsed.$('figcaption', firstElement).length) {
+                        post.data.feature_image_caption = serializeChildren(parsed.$('figcaption', firstElement)[0]);
                     }
+
+                    firstElement.remove();
                 }
             }
         }
@@ -250,44 +235,27 @@ const processContent = (post, siteUrl, options) => {
 
     // If we have a podcast URL `posts.csv`, embed an audio card at the start of the document
     // Else, if we have scraped a podcast URL, embed that instead
-    if (substackPodcastURL || post.data?.podcast_audio_src) {
-        let audioSrc = '';
+    const audioSrc = substackPodcastURL || post.data.podcast_audio_src;
+    if (audioSrc) {
+        debug(`Post ${post.data.slug} has podcast episode from ${substackPodcastURL ? 'CSV' : 'scrape'}`);
 
-        if (substackPodcastURL) {
-            debug(`Post ${post.data.slug} has podcast episode from CSV`);
-            audioSrc = substackPodcastURL;
-        } else if (post.data?.podcast_audio_src) {
-            debug(`Post ${post.data.slug} has podcast episode from scrape`);
-            audioSrc = post.data.podcast_audio_src;
-        }
+        let cardOpts = {
+            env: {dom: new SimpleDom.Document()},
+            payload: {
+                src: audioSrc,
+                title: post.data.title
+            }
+        };
 
-        if (audioSrc && audioSrc.length > 0) {
-            let cardOpts = {
-                env: {dom: new SimpleDom.Document()},
-                payload: {
-                    src: audioSrc,
-                    title: post.data.title
-                }
-            };
+        const cardHTML = audioCard.render(cardOpts).nodeValue!;
 
-            const buildCard = audioCard.render(cardOpts);
-            const cardHTML = buildCard.nodeValue;
-
-            const wrapper = parsed.$('.migrate-substack-wrapper')[0];
-            wrapper.insertAdjacentHTML('afterbegin', cardHTML);
-        }
+        const wrapper = parsed.$('.migrate-substack-wrapper')[0];
+        wrapper.insertAdjacentHTML('afterbegin', cardHTML);
     }
 
     parsed.$('div.tweet').forEach(el => {
         let childAnchors = parsed.$(':scope > a', el);
-        let src = attr(childAnchors[0], 'href');
-        let parsedUrl = url.parse(src);
-
-        if (parsedUrl.search) {
-            // remove possible query params
-            parsedUrl.search = null;
-        }
-        src = url.format(parsedUrl, {search: false});
+        let src = withoutSearch(attr(childAnchors[0], 'href')!);
 
         const tweetTextEl = parsed.$('.tweet-text', el)[0];
         let tweetText = tweetTextEl ? serializeChildren(tweetTextEl).replace(/(?:\r\n|\r|\n)/g, '<br>') : false;
@@ -296,7 +264,7 @@ const processContent = (post, siteUrl, options) => {
         const tweetAuthorHandleEl = parsed.$('.tweet-author-handle', el)[0];
         let tweetAuthorHandle = tweetAuthorHandleEl ? serializeChildren(tweetAuthorHandleEl).trim() : false;
         const tweetDateTimeEl = parsed.$('.tweet-date', el)[0];
-        let tweetDateTime = tweetDateTimeEl ? (tweetDateTimeEl.textContent || '').trim() : false;
+        let tweetDateTime = tweetDateTimeEl ? tweetDateTimeEl.textContent!.trim() : false;
         const tweetLinkEl = parsed.$('.tweet-link-top', el)[0];
         let tweetURL = tweetLinkEl ? attr(tweetLinkEl, 'href') : false;
 
@@ -331,25 +299,16 @@ const processContent = (post, siteUrl, options) => {
     });
 
     parsed.$('.image-gallery-embed').forEach(el => {
-        const attrs = attr(el, 'data-attrs');
-        const attrsObj = JSON.parse(attrs);
+        const attrsObj = JSON.parse(attr(el, 'data-attrs')!);
 
-        let items = [];
-
-        attrsObj.gallery.images.forEach(item => {
+        const items = attrsObj.gallery.images.map((item: {src: string}, index: number) => {
             const dimensions = getImageDimensions(item.src);
 
-            items.push({
+            return {
                 fileName: basename(item.src),
                 src: largeImageUrl(item.src),
                 width: dimensions ? dimensions.width : '100',
-                height: dimensions ? dimensions.height : '100'
-            });
-        });
-
-        items = items.map((item, index) => {
-            return {
-                ...item,
+                height: dimensions ? dimensions.height : '100',
                 row: Math.floor(index / 3)
             };
         });
@@ -362,7 +321,7 @@ const processContent = (post, siteUrl, options) => {
             }
         };
 
-        replaceWith(el, serializer.serialize(galleryCard.render(cardOpts)));
+        replaceWith(el, serialize(galleryCard.render(cardOpts)));
     });
 
     parsed.$('[class*="ImageGallery-module__imageGallery"]').forEach(el => {
@@ -370,30 +329,21 @@ const processContent = (post, siteUrl, options) => {
         const figcaptionEl = parsed.$('figcaption', el)[0];
         const caption = figcaptionEl ? serializeChildren(figcaptionEl) : null;
 
-        let items = [];
+        const items: Record<string, unknown>[] = [];
 
         rows.forEach(row => {
-            const pictures = parsed.$('picture', row);
-
-            pictures.forEach(picture => {
-                const img = parsed.$('img', picture)[0];
-                const src = largestSrc(img);
+            parsed.$('picture', row).forEach(picture => {
+                const src = largestSrc(parsed.$('img', picture)[0]);
                 const dimensions = getImageDimensions(src);
 
                 items.push({
                     fileName: basename(src),
                     src: src,
                     width: dimensions ? dimensions.width : '100',
-                    height: dimensions ? dimensions.height : '100'
+                    height: dimensions ? dimensions.height : '100',
+                    row: Math.floor(items.length / 3)
                 });
             });
-        });
-
-        items = items.map((item, index) => {
-            return {
-                ...item,
-                row: Math.floor(index / 3)
-            };
         });
 
         let cardOpts = {
@@ -404,7 +354,7 @@ const processContent = (post, siteUrl, options) => {
             }
         };
 
-        replaceWith(el, serializer.serialize(galleryCard.render(cardOpts)));
+        replaceWith(el, serialize(galleryCard.render(cardOpts)));
     });
 
     parsed.$('.captioned-image-container').forEach(div => {
@@ -423,20 +373,20 @@ const processContent = (post, siteUrl, options) => {
                 src: imageSrc,
                 alt: imgAlt,
                 caption: imgCaption
-            }
+            } as Record<string, unknown>
         };
 
         if (imageSrc !== linkHref) {
             cardOpts.payload.href = linkHref;
         }
 
-        replaceWith(div, serializer.serialize(imageCard.render(cardOpts)));
+        replaceWith(div, serialize(imageCard.render(cardOpts)));
     });
 
     parsed.$('.image-link').forEach(anchor => {
         const imgAltEl = parsed.$('img[alt]', anchor)[0];
         const imgAlt = imgAltEl ? attr(imgAltEl, 'alt') : '';
-        const linkHref = attr(anchor, 'href');
+        const linkHref = attr(anchor, 'href')!;
         const imgEl = parsed.$('img', anchor)[0];
         const imageSrc = largestSrc(imgEl);
 
@@ -445,7 +395,7 @@ const processContent = (post, siteUrl, options) => {
             payload: {
                 src: imageSrc,
                 alt: imgAlt
-            }
+            } as Record<string, unknown>
         };
 
         // If the anchor links to the image itself
@@ -454,7 +404,7 @@ const processContent = (post, siteUrl, options) => {
             cardOpts.payload.href = linkHref;
         }
 
-        replaceWith(anchor, serializer.serialize(imageCard.render(cardOpts)));
+        replaceWith(anchor, serialize(imageCard.render(cardOpts)));
     });
 
     parsed.$('.file-embed-wrapper').forEach(el => {
@@ -463,7 +413,7 @@ const processContent = (post, siteUrl, options) => {
         const fileTitleEl = parsed.$('.file-embed-details-h1', el)[0];
         const fileTitle = fileTitleEl ? fileTitleEl.textContent : '';
         const fileDetailsEl = parsed.$('.file-embed-details-h2', el)[0];
-        const fileDetails = fileDetailsEl ? fileDetailsEl.textContent : '';
+        const fileDetails = fileDetailsEl ? fileDetailsEl.textContent! : '';
 
         const fileSizeMatch = fileDetails.match(/([\d.]+)([KMGT]B)/i);
         let fileSizeBytes = 0;
@@ -471,23 +421,9 @@ const processContent = (post, siteUrl, options) => {
         if (fileSizeMatch) {
             const size = parseFloat(fileSizeMatch[1]);
             const unit = fileSizeMatch[2].toUpperCase();
+            const powers: Record<string, number> = {KB: 1, MB: 2, GB: 3, TB: 4};
 
-            switch (unit) {
-                case 'KB':
-                    fileSizeBytes = size * 1024;
-                    break;
-                case 'MB':
-                    fileSizeBytes = size * 1024 * 1024;
-                    break;
-                case 'GB':
-                    fileSizeBytes = size * 1024 * 1024 * 1024;
-                    break;
-                case 'TB':
-                    fileSizeBytes = size * 1024 * 1024 * 1024 * 1024;
-                    break;
-                default:
-                    fileSizeBytes = size;
-            }
+            fileSizeBytes = size * 1024 ** powers[unit];
         }
 
         const cardOpts = {
@@ -500,7 +436,7 @@ const processContent = (post, siteUrl, options) => {
             }
         };
 
-        replaceWith(el, serializer.serialize(fileCard.render(cardOpts)));
+        replaceWith(el, serialize(fileCard.render(cardOpts)));
     });
 
     parsed.$('.comment').forEach(el => {
@@ -508,13 +444,11 @@ const processContent = (post, siteUrl, options) => {
     });
 
     parsed.$('.mention-wrap').forEach(el => {
-        const attrsRaw = attr(el, 'data-attrs');
-
         let attrs;
 
         try {
-            attrs = JSON.parse(attrsRaw);
-        } catch (error) {
+            attrs = JSON.parse(attr(el, 'data-attrs')!);
+        } catch {
             return;
         }
 
@@ -527,24 +461,16 @@ const processContent = (post, siteUrl, options) => {
     });
 
     parsed.$('.digest-post-embed').forEach(el => {
-        const attrsRaw = attr(el, 'data-attrs');
-
         let attrs;
 
         // Return early if JSON is invalid
         try {
-            attrs = JSON.parse(attrsRaw);
-        } catch (error) {
+            attrs = JSON.parse(attr(el, 'data-attrs')!);
+        } catch {
             return;
         }
 
         const postUrl = attrs.canonical_url;
-        const postTitle = attrs.title;
-        const postCaption = attrs.caption;
-        const postImage = attrs.cover_image;
-        const postIcon = attrs.publication_logo_url;
-        const postAuthor = attrs?.publishedBylines[0]?.name ?? null;
-        const postPubName = attrs.publication_name;
 
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
@@ -552,20 +478,18 @@ const processContent = (post, siteUrl, options) => {
                 url: postUrl,
                 metadata: {
                     url: postUrl,
-                    title: postTitle,
-                    description: postCaption,
-                    icon: largeImageUrl(postIcon),
-                    thumbnail: postImage,
-                    publisher: postPubName,
-                    author: postAuthor
+                    title: attrs.title,
+                    description: attrs.caption,
+                    icon: largeImageUrl(attrs.publication_logo_url),
+                    thumbnail: attrs.cover_image,
+                    publisher: attrs.publication_name,
+                    author: attrs?.publishedBylines[0]?.name ?? null
                 },
                 caption: null
             }
         };
 
-        const bookmarkHtml = serializer.serialize(bookmarkCard.render(cardOpts));
-
-        replaceWith(el, bookmarkHtml);
+        replaceWith(el, serialize(bookmarkCard.render(cardOpts)));
     });
 
     parsed.$('a > style').forEach(style => {
@@ -583,20 +507,11 @@ const processContent = (post, siteUrl, options) => {
     parsed.$('p.button-wrapper').forEach(button => {
         let shareLinks = parsed.$(':scope > a.button', button);
         if (shareLinks.length === 1 && siteUrl) {
-            let shareLink = shareLinks[0];
-            let src = attr(shareLink, 'href');
-            let parsedUrl = url.parse(src);
+            let search = url.parse(attr(shareLinks[0], 'href')!).search;
 
-            // If it's a share button, there's no use for it and completely remove the button
-            if (parsedUrl.search && parsedUrl.search.indexOf('action=share') >= 0) {
+            // If it's a share or gift button, there's no use for it, so completely remove the button
+            if (search && (search.indexOf('action=share') >= 0 || search.indexOf('gift=true') >= 0)) {
                 button.remove();
-                return;
-            }
-
-            // If it's a gift button, there's no use for it and completely remove the button
-            if (parsedUrl.search && parsedUrl.search.indexOf('gift=true') >= 0) {
-                button.remove();
-                return;
             }
         }
     });
@@ -610,14 +525,8 @@ const processContent = (post, siteUrl, options) => {
                 'gi'
             );
             let buttonLink = buttons[0];
-            let buttonHref = attr(buttonLink, 'href');
             let buttonText = buttonLink.textContent;
-            let parsedUrl = url.parse(buttonHref);
-
-            // remove possible query params
-            parsedUrl.search = null;
-
-            buttonHref = url.format(parsedUrl, {search: false});
+            let buttonHref = withoutSearch(attr(buttonLink, 'href')!);
 
             if (buttonHref.match(siteRegex)) {
                 buttonHref = buttonHref.replace(siteRegex, '/$1/');
@@ -655,20 +564,17 @@ const processContent = (post, siteUrl, options) => {
     // Wrap nested lists in HTML card
     parsed.$('ul li ul, ol li ol, ol li ul, ul li ol').forEach(nestedList => {
         const parentList = parents(nestedList, 'ul, ol')[0];
-        if (parentList) {
-            insertBefore(parentList, '<!--kg-card-begin: html-->');
-            insertAfter(parentList, '<!--kg-card-end: html-->');
-        }
+        insertBefore(parentList, '<!--kg-card-begin: html-->');
+        insertAfter(parentList, '<!--kg-card-end: html-->');
     });
 
     // Handle footnotes
-    let footnotesItems = [];
-    let footnotesCount = 0;
+    let footnotesItems: string[] = [];
     parsed.$('.footnote').forEach(el => {
         const footnoteAnchor = parsed.$('a', el)[0];
         let footnoteBodyAnchor = attr(footnoteAnchor, 'href');
 
-        let footnoteID = attr(el, 'id') || attr(footnoteAnchor, 'id');
+        let footnoteID = attr(el, 'id') || attr(footnoteAnchor, 'id')!;
 
         let footnoteNumber = footnoteID.replace('footnote-', '');
         let footnoteContent = parsed.$('.footnote-content', el)[0];
@@ -684,11 +590,9 @@ const processContent = (post, siteUrl, options) => {
 
         footnotesItems.push(`<li id="${footnoteID}">${serializeChildren(footnoteContent)}</li>`);
         el.remove();
-
-        footnotesCount = footnotesCount + 1;
     });
 
-    if (footnotesCount > 0) {
+    if (footnotesItems.length > 0) {
         let footnotedHTML = `<div class="footnotes"><hr><ol>${footnotesItems.join('')}</ol></div>`;
         const wrapper = parsed.$('.migrate-substack-wrapper')[0];
         wrapper.insertAdjacentHTML('beforeend', `<!--kg-card-begin: html-->${footnotedHTML}<!--kg-card-end: html-->`);
@@ -703,7 +607,7 @@ const processContent = (post, siteUrl, options) => {
     });
 
     // Remove or replace subscribe links on the same domain
-    if (options.noSubscribeButtons) {
+    if (options.noSubscribeButtons || options.subscribeLink) {
         parsed.$('a').forEach(anchor => {
             let href = attr(anchor, 'href');
             let linkRegex = new RegExp(`^(${escapeStringRegexp(siteUrl)})?(/subscribe)(.*)`, 'gi');
@@ -715,22 +619,11 @@ const processContent = (post, siteUrl, options) => {
             let matches = href.replace(linkRegex, '$2');
 
             if (matches === '/subscribe') {
-                anchor.remove();
-            }
-        });
-    } else if (options.subscribeLink) {
-        parsed.$('a').forEach(anchor => {
-            let href = attr(anchor, 'href');
-            let linkRegex = new RegExp(`^(${escapeStringRegexp(siteUrl)})?(/subscribe)(.*)`, 'gi');
-
-            if (!href) {
-                return;
-            }
-
-            let matches = href.replace(linkRegex, '$2');
-
-            if (matches === '/subscribe') {
-                attr(anchor, 'href', options.subscribeLink);
+                if (options.noSubscribeButtons) {
+                    anchor.remove();
+                } else {
+                    attr(anchor, 'href', options.subscribeLink!);
+                }
             }
         });
     }
@@ -746,12 +639,12 @@ const processContent = (post, siteUrl, options) => {
 
             if (hasForm.length) {
                 const submitEl = parsed.$('form input[type="submit"]', div)[0];
-                const buttonText = submitEl ? attr(submitEl, 'value') : '';
+                const buttonText = submitEl ? attr(submitEl, 'value')! : '';
                 const card = parsed.document.createElement('div');
                 card.className = 'kg-card kg-button-card kg-align-center';
                 const link = parsed.document.createElement('a');
                 link.className = 'kg-btn kg-btn-accent';
-                link.setAttribute('href', options.subscribeLink);
+                link.setAttribute('href', options.subscribeLink!);
                 link.textContent = buttonText;
                 card.appendChild(link);
                 replaceWith(div, card);
@@ -760,7 +653,7 @@ const processContent = (post, siteUrl, options) => {
     }
 
     parsed.$('.embedded-post-wrap').forEach(div => {
-        const attrs = attr(div, 'data-attrs') || false;
+        const attrs = attr(div, 'data-attrs');
 
         if (!attrs) {
             return;
@@ -788,13 +681,7 @@ const processContent = (post, siteUrl, options) => {
             return;
         }
 
-        let parsedUrl = url.parse(src);
-
-        if (parsedUrl.search) {
-            // remove possible query params
-            parsedUrl.search = null;
-        }
-        src = url.format(parsedUrl, {search: false});
+        src = withoutSearch(src);
 
         // Trim the trailing slash from src if it exists
         if (src.endsWith('/')) {
@@ -830,109 +717,6 @@ const processContent = (post, siteUrl, options) => {
     post.data.html = html.trim();
 
     return post;
-};
-
-const processPost = (post, siteUrl, options) => {
-    // Add tags to the post
-    const typeSlug = slugify(post.substackData.type);
-    const visibilitySlug = slugify(post.substackData.audience);
-    const {addTag, addPlatformTag, addTypeTag, addAccessTag} = options;
-
-    // Add a type tag, e.g. Newsletter, Podcast, etc.
-    const typeSlugSlugify = slugify(typeSlug);
-    post.data.tags.push({
-        url: `${siteUrl}/tag/${typeSlugSlugify}`,
-        data: {
-            slug: typeSlugSlugify,
-            name: startCase(typeSlug)
-        }
-    });
-
-    // Add a custom tag if one is provided
-    if (addTag) {
-        let trimmedTag = addTag.trim();
-        let trimmedTagSlug = slugify(trimmedTag);
-        post.data.tags.push({
-            url: `${siteUrl}/tag/${trimmedTagSlug}`,
-            data: {
-                slug: trimmedTagSlug,
-                name: trimmedTag
-            }
-        });
-    }
-
-    // Add a platform tag
-    if (addPlatformTag) {
-        post.data.tags.push({
-            url: `migrator-added-tag`,
-            data: {
-                slug: `hash-substack`,
-                name: `#substack`
-            }
-        });
-    }
-
-    // Add an internal tag based on the type of post
-    if (addTypeTag) {
-        post.data.tags.push({
-            url: `migrator-added-tag-substack-type-${typeSlug}`,
-            data: {
-                slug: `hash-substack-type-${typeSlug}`,
-                name: `#substack-type-${typeSlug}`
-            }
-        });
-    }
-
-    // Add tags based on post visibility
-    if (addAccessTag) {
-        post.data.tags.push({
-            url: `migrator-added-tag-substack-access-${visibilitySlug}`,
-            data: {
-                slug: `hash-substack-access-${visibilitySlug}`,
-                name: `#substack-access-${visibilitySlug}`
-            }
-        });
-    }
-
-    // And now process the HTML
-    post = processContent(post, siteUrl, options);
-
-    return post;
-};
-
-export default async (input, ctx) => {
-    let {postsDir, options} = ctx;
-    let {url: siteUrl} = options;
-    const output = {};
-
-    // console.log('in default');
-    // console.log(input.posts);
-
-    if (postsDir) {
-        try {
-            let postFiles = await getFiles(postsDir);
-            let postContent = await readFiles(postFiles, postsDir);
-
-            input.posts.map(post => {
-                // eslint-disable-line array-callback-return
-                post.data.html = postContent[post.substackId];
-            });
-        } catch (error) {
-            return new errors.InternalServerError({message: "Couldn't read post files"});
-        }
-    }
-
-    if (input.posts && input.posts.length > 0) {
-        output.posts = [];
-        for (let i = 0; i < input.posts.length; i++) {
-            const post = input.posts[i];
-            if (post) {
-                output.posts.push(processPost(post, siteUrl, options));
-            }
-        }
-    }
-
-    return output;
 };
 
 export {processContent, getImageDimensions, largeImageUrl};

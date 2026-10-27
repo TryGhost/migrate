@@ -31,7 +31,7 @@ migrate substack --pathToZip /path/to/my-export.zip --url https://example.com
 A more complex command for a Substack migration looks like this:
 
 ```sh
-migrate substack --pathToZip /path/to/my-export.zip --url https://example.com --email 'person@example.com' --drafts false
+migrate substack --pathToZip /path/to/my-export.zip --url https://example.com --email 'person@example.com' --useMetaAuthor false --drafts false
 ```
 
 ```sh
@@ -52,6 +52,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--zip`** 
     - Create a zip file
     - bool - default: `true`
+- **`--report`**
+    - Write a `.report.json` migration report beside the import, or a `.failed-report.json` if the run fails
+    - bool - default: `false`
 - **`-s` `--scrape`** 
     - Configure scraping tasks
     - string - default: `all` 
@@ -61,8 +64,8 @@ It's possible to pass more options, in order to achieve a better migration file 
         - `assets`: Only download assets (images, media, files)
         - `none`: Skip all scraping tasks
 - **`-e` `--email`** 
-    - Provide an email domain for users e.g. `person@example.com` (Is ignored if `--useMetaAuthor` is provided)
-    - bool/string - default: `false`
+    - Provide an email for users e.g. `person@example.com` to create a general user with slug `person` (Is ignored unless `--useMetaAuthor false` is provided)
+    - string - default: `null`
 - **`--addTag`**
     - string - default: `null`
     - Provide a tag name which should be added to every post in this migration (Wrap in single quotes if tag name has spaces `'Like This'`)
@@ -117,14 +120,85 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--postsAfter`** 
     - Only migrate posts after and including a given date e.g. 'August 16 2023'
     - string - default: `null`
-- **`--fallBackHTMLCard`** 
-    - Fall back to convert to HTMLCard, if standard Mobiledoc convert fails
-    - bool - default: `true`      
+- **`--wait_after_scrape`**
+    - Time in ms to wait after a URL is scraped
+    - number - default: `2000`
+- **`--rereadSource`**
+    - Read the export zip again, replacing the stored source while preserving downloaded assets
+    - bool - default: `false`
+- **`--postsPerFile`**
+    - Maximum posts written per Ghost import JSON file
+    - number - default: `2000`
 - **`--cache`** 
     - Persist local cache after migration is complete (Only if `--zip` is `true`)
     - bool - default: `true`
+- **`--tmpPath`**
+    - Specify the full path where the temporary files will be stored (Defaults a hidden tmp dir)
+    - string - default: `null`
+- **`--outputPath`**
+    - Specify the full path where the final zip file will be saved to (Defaults to CWD)
+    - string - default: `null`
+- **`--cacheName`**
+    - Provide a unique name for the cache directory
+    - string - default: one based on the export's full path
+- **`--ghostApiUrl`**, **`--ghostAdminKey`**
+    - Match the `--email` author to an existing Ghost user by email
+    - string - default: `null`
 
 **Note**: You can combine `--postsBefore` and `--postsAfter` to migrate posts between 2 dates.
+
+
+## Output
+
+The import contains HTML; Ghost's importer converts it. `--fallBackHTMLCard` has been removed. A small migration writes `ghost-import.json`, and larger ones write `ghost-import-1.json`, `ghost-import-2.json` and so on, `--postsPerFile` posts each. With `--report`, a `.report.json` beside the ZIP (or in the workspace when `--zip false`) lists imported and skipped counts with diagnostics for duplicate rows, skipped posts, field changes, slug changes and optional scraping failures. Posts with an invalid date, or without an HTML file in the export, are skipped and reported. When every selected post is invalid, or the run fails, `--report` writes a `.failed-report.json` instead. An intentionally empty selection succeeds.
+
+
+## Source storage
+
+The first run stores the export in an `mg-context` SQLite database in the workspace; later runs map the stored export again without reading the zip, even if it has moved. Use `--rereadSource` to read it again. Without `--cacheName`, the workspace is keyed by the export's full path, so exports that share a file name do not share stored data.
+
+Each row of `posts.csv` is stored as a `post` record keyed by its `post_id` (such as `123401.plain-text`), and each `posts/*.html` file as an `html` record keyed by its file name. The zip is read one entry at a time, and may hold its files inside a single top-level directory. A `post_id` or file name that appears twice keeps its first record and reports a `source:conflict`.
+
+Every option applies when the stored records are mapped, so changing a filter, tag, author or content option needs no new read. Mapping joins each row to its HTML file and follows the order of `posts.csv`. Ghost IDs derive from `--url` and the `post_id`, tag slug or author, so they stay the same across runs. Posts that were never given a date are dated when the export was read, so their dates also stay the same across runs.
+
+Web scraping happens after mapping. For each published post, the scraped metadata, the section and post tags (placed before the other tags) and, with `--useMetaAuthor`, the ld+json authors are applied to the mapped post, and its HTML is converted again from the stored export with the scraped `og:image` and podcast audio. Scraped pages are cached in the workspace.
+
+
+## Programmatic API
+
+The package exports `parse`, `ingest`, `map` and `applyScrapedData` for use with `@tryghost/mg-context`. The caller owns the context, scraping, export and closure:
+
+```js
+import {MigrateContext} from '@tryghost/mg-context';
+import {ingest, map} from '@tryghost/mg-substack';
+
+const context = new MigrateContext({dbPath: './migration.sqlite'});
+const rereadSource = process.argv.includes('--rereadSource');
+await context.init();
+try {
+    if (!context.sources.hasCompletedIngestion || rereadSource) {
+        await ingest('/path/to/export.zip', context, {replace: rereadSource});
+    }
+    const summary = await map({url: 'https://example.substack.com', drafts: false}, context);
+    for await (const file of context.writeGhostJsonStream('./output', {filename: 'ghost-import'})) {
+        // Consume one file descriptor at a time.
+    }
+    await context.writeMigrationReport('./migration.report.json', summary);
+} finally {
+    await context.close();
+}
+```
+
+- `ingest(pathToZip, context, {replace})` reads the export into `context.sources` inside `context.sources.ingest()`. Explicit `replace: true` is required when completed source data exists; a failed read keeps the previous data. An export without `posts.csv` is rejected.
+- `parse(pathToZip)` yields the same records as `SourceRecordInput` values, one at a time, without storing them.
+- `map(options, context, {ghostUsers?})` rebuilds mapped content and returns `{selected, imported, skipped}`. `options.url` is required; the other options are the CLI's, with the CLI's defaults. `ghostUsers` may be an iterable or async iterable of existing Ghost users; an `email` author whose email matches keeps that user's Ghost ID.
+- `applyScrapedData(post, scraped, context, options)` applies post-processed scrape results to a mapped post, as the CLI's scrape step does. The caller saves the post.
+- `postUrl(row, url)` returns a `posts.csv` row's public URL, and `contentStats(pathToZip)` counts the export's post HTML files.
+- `processContent`, `getImageDimensions` and `largeImageUrl` convert Substack HTML and image URLs.
+
+The previous default export (`ingest(ctx)` and `process(input, ctx)`, which built arrays of posts in memory) has been removed.
+
+The CLI's programmatic `outputStorage.upload({body, fileName, size})` receives a Node readable stream as `body`, for the ZIP and, with `--report`, the report, and must consume it before resolving to the remote path. The uploaded ZIP is named like the local one, such as `gh-substack-my-export-1700000000000.zip`.
 
 
 ## Develop
@@ -147,7 +221,7 @@ pnpm dev substack <pathToZip>
 
 ## Test
 
-- `pnpm test` runs the package tests
+- `pnpm test:local` builds the package and runs its tests with 100% coverage
 - Linting and formatting are run from the repo root (`pnpm lint`, `pnpm format`)
 
 

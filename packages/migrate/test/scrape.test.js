@@ -4,7 +4,7 @@ import {describe, it, mock} from 'node:test';
 import nock from 'nock';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
-import {scrapeConfig, postProcessor, skipScrape} from '../sources/substack.js';
+import {scrapeConfig, postProcessor} from '../sources/substack.js';
 
 // Create a mock FileCache with only the methods needed for this test
 const mockFileCache = {
@@ -43,7 +43,7 @@ describe('Web Scrap Config & Post Processor', function () {
             }
         };
 
-        const webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor, skipScrape);
+        const webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
 
         const tasks = webScraper.hydrate(ctx);
         const runner = makeTaskRunner(tasks, {
@@ -118,7 +118,7 @@ describe('Web Scrap Config & Post Processor', function () {
             }
         };
 
-        const webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor, skipScrape);
+        const webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
 
         const tasks = webScraper.hydrate(ctx);
         const runner = makeTaskRunner(tasks, {
@@ -194,7 +194,7 @@ describe('Web Scrap Config & Post Processor', function () {
             }
         };
 
-        const webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor, skipScrape);
+        const webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
 
         const tasks = webScraper.hydrate(ctx);
         const runner = makeTaskRunner(tasks, {
@@ -228,5 +228,50 @@ describe('Web Scrap Config & Post Processor', function () {
             scrapedData.podcast_audio_src,
             'https://api.substack.com/api/v1/audio/upload/92883946-10da-4958-93e3-0dcddb733b51/src?token=462fde6a-20c4-4eb6-af74-0c2461536ad7'
         );
+    });
+});
+
+describe('Substack post processor', function () {
+    it('reads post tags from a preloads-json script and ignores the script that loads it', function () {
+        const log = mock.method(console, 'log', () => {});
+        try {
+            const processed = postProcessor(
+                {
+                    scripts: [
+                        {
+                            content:
+                                'window._preloads        = JSON.parse(document.querySelector(\'script#preloads-json[type="application/json"]\').textContent)'
+                        },
+                        {
+                            content: JSON.stringify({
+                                isEU: true,
+                                post: {
+                                    postTags: [
+                                        {name: ' News ', slug: 'news'},
+                                        {name: 'Blogging', slug: 'blogging'}
+                                    ]
+                                }
+                            })
+                        },
+                        {
+                            content:
+                                'window._analyticsConfig = JSON.parse("{\\"properties\\":{\\"section_name\\":\\"Tech\\",\\"section_slug\\":\\"tech\\"}}")'
+                        }
+                    ]
+                },
+                null,
+                {useMetaAuthor: true}
+            );
+
+            assert.deepEqual(processed.tags, [
+                {url: '/substack-section/tech', data: {name: 'Tech', slug: 'tech'}},
+                {url: '/substack-tag/news', data: {name: 'News', slug: 'news'}},
+                {url: '/substack-tag/blogging', data: {name: 'Blogging', slug: 'blogging'}}
+            ]);
+            assert.equal(processed.scripts, undefined);
+            assert.equal(log.mock.callCount(), 0);
+        } finally {
+            log.mock.restore();
+        }
     });
 });
