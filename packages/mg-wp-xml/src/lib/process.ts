@@ -50,6 +50,27 @@ const getText = (node: any): string => {
     return String(node);
 };
 
+const validDate = (date: Date): Date | undefined => (Number.isFinite(date.getTime()) ? date : undefined);
+
+// WordPress `Y-m-d H:i:s` fields carry no zone; read them as UTC, never as the machine's local time.
+// Never-published drafts use `0000-00-00 00:00:00`, which is invalid.
+const wordpressDate = (value: string): Date | undefined => {
+    const iso = value.trim().replace(' ', 'T');
+    return validDate(new Date(/Z$|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`));
+};
+
+/**
+ * Never-published drafts have an empty (or `-0001`) pubDate and a zeroed post_date_gmt. They fall back to
+ * post_date, which is site-local time read as UTC because exports don't record the site's timezone.
+ */
+const postDates = (item: WordPressRecord): {published?: Date; modified?: Date} => {
+    const published =
+        wordpressDate(getText(item['wp:post_date_gmt'])) ??
+        validDate(new Date(getText(item.pubdate || item.pubDate))) ??
+        wordpressDate(getText(item['wp:post_date']));
+    return {published, modified: wordpressDate(getText(item['wp:post_modified_gmt'])) ?? published};
+};
+
 const processUser = (user: WordPressRecord): LegacyAuthor => {
     const authorSlug = slugify(getText(user['wp:author_login']));
     const bio = getText(user['wp:author_description']) || '';
@@ -277,8 +298,7 @@ const processPost = async (
     const featureImage = processFeatureImage(post, options.attachments);
     const dcCreatorSlug = slugify(getText(post['dc:creator']));
 
-    // WP XML only provides a published date, we let's use that all dates Ghost expects
-    const postDate = new Date(getText(post.pubdate || post.pubDate));
+    const {published, modified} = postDates(post);
 
     // This should result in an absolute URL addressable in a browser
     let postUrl = getText(post.link);
@@ -331,9 +351,9 @@ const processPost = async (
             title: decode(stripHtml(getText(post.title))),
             comment_id: getText(post['wp:post_id']) || null,
             status: getText(post['wp:status']) === 'publish' ? 'published' : 'draft',
-            published_at: postDate,
-            created_at: postDate,
-            updated_at: postDate,
+            published_at: published,
+            created_at: published,
+            updated_at: modified,
             feature_image: featureImage?.url ?? null,
             feature_image_alt: featureImage?.alt ?? null,
             feature_image_caption: featureImageCaption !== false ? (featureImage?.description ?? null) : null,
@@ -488,6 +508,8 @@ const processAttachment = async (post: WordPressRecord) => {
 export {
     ensureArray,
     getText,
+    wordpressDate,
+    postDates,
     processUser,
     processPost,
     processWPMeta,

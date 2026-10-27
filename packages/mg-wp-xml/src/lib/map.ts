@@ -11,7 +11,7 @@ import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
 import {stringUtils} from '@tryghost/mg-utils';
-import {ensureArray, getText, processUser, processAttachment, processPost} from './process.js';
+import {ensureArray, getText, postDates, processUser, processAttachment, processPost} from './process.js';
 import {sourceUrl} from './ingest.js';
 import {MappingState, sourceSite, indexSources} from './mapping-state.js';
 import type {WordPressOptions, LegacyAuthor} from './types.js';
@@ -161,8 +161,8 @@ export async function map(
             if (!selected(item, options)) {
                 return false;
             }
-            const date = new Date(getText(item.pubdate || item.pubDate));
-            if (!Number.isFinite(date.getTime())) {
+            const date = postDates(item).published;
+            if (!date) {
                 throw new RecordDataError('Invalid WordPress publication date');
             }
             if (options.postsAfter && date <= new Date(options.postsAfter)) {
