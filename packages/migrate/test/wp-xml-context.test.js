@@ -183,8 +183,14 @@ describe('WordPress context pipeline', () => {
             .reply(200, imageBytes, {'Content-Type': 'image/jpeg'});
         try {
             const context = {};
-            await source.getTaskRunner({...fx.options, zip: false, scrape: ['all']}).run(context);
+            const runner = source.getTaskRunner({...fx.options, zip: false, scrape: ['all']});
+            await runner.run(context);
             assert.ok(web.isDone());
+            const scraping = runner.tasks.find(task => task.title === 'Fetch missing data via WebScraper');
+            assert.deepEqual(
+                scraping.subtasks.map(subtask => [subtask.title, subtask.output]),
+                [['Posts (2/2)', null]]
+            );
             const result = JSON.parse(await readFile(join(context.importDirectory, 'ghost-import.json'), 'utf8'));
             const meta = result.data.posts_meta.find(row => row.post_id === result.data.posts[0].id);
             assert.equal(meta.meta_title, 'Scraped title');

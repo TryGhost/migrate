@@ -241,8 +241,14 @@ describe('WordPress API context pipeline', () => {
                     '<html><head><title>Scraped title</title><meta name="description" content="Scraped description"></head><body></body></html>'
                 );
             const context = {};
-            await source.getTaskRunner({...fx.options, zip: false, scrape: ['web']}).run(context);
+            const runner = source.getTaskRunner({...fx.options, zip: false, scrape: ['web']});
+            await runner.run(context);
             assert.ok(page.isDone());
+            const scraping = runner.tasks.find(task => task.title === 'Fetch missing data via WebScraper');
+            assert.deepEqual(
+                scraping.subtasks.map(subtask => [subtask.title, subtask.output]),
+                [['Posts (1/1)', null]]
+            );
             const result = JSON.parse(await readFile(join(context.importDirectory, 'ghost-import.json'), 'utf8'));
             const meta = result.data.posts_meta.find(row => row.post_id === result.data.posts[0].id);
             assert.equal(meta.meta_title, 'Scraped title');
