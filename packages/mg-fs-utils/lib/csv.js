@@ -2,6 +2,7 @@ import {join} from 'path';
 import {parse} from 'csv-parse';
 import {parse as parseSync} from 'csv-parse/sync';
 import {createReadStream} from 'node:fs';
+import {pipeline} from 'node:stream';
 import {outputFile, ensureDirSync} from 'fs-extra/esm';
 import errors from '@tryghost/errors';
 
@@ -48,6 +49,23 @@ const parseString = (
 
     return data;
 };
+
+/**
+ * Parse a CSV file or readable stream one row at a time
+ * @param {String|import('node:stream').Readable} input - path to a CSV file, or a readable stream of CSV data
+ * @param {Object} options - optional options to pass to `csv-parse`
+ */
+async function* streamRows(
+    input,
+    options = {skip_lines_with_error: true, columns: true, skip_empty_lines: true, trim: true}
+) {
+    const source = typeof input === 'string' ? createReadStream(input) : input;
+    // pipeline() destroys both streams when either fails or the caller stops early; errors surface while iterating.
+    const parser = pipeline(source, parse(options), () => {});
+    for await (const row of parser) {
+        yield row;
+    }
+}
 
 /**
  * Convert a JSON file into a CSV format
@@ -133,6 +151,7 @@ const hasKeys = async ({filePath, required = [], blocked = []}) => {
 export default {
     parseCSV,
     parseString,
+    streamRows,
     jsonToCSV,
     writeCSV,
     hasKeys

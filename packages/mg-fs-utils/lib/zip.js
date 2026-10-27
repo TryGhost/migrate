@@ -1,5 +1,10 @@
 import {join} from 'node:path';
+import {tmpdir} from 'node:os';
+import {createWriteStream} from 'node:fs';
+import {mkdtemp, rm} from 'node:fs/promises';
+import {pipeline} from 'node:stream/promises';
 import AdmZip from 'adm-zip';
+import yauzl from 'yauzl';
 import {ensureDirSync, remove, ensureFileSync} from 'fs-extra';
 import zip from '@tryghost/zip';
 import errors from '@tryghost/errors';
@@ -9,6 +14,114 @@ const _private = {};
 _private.openZipForRead = zipPath => {
     return AdmZip(zipPath);
 };
+
+const isJunk = name => /^__MACOSX(?:\/|$)/.test(name) || /(?:^|\/)\.DS_Store$/.test(name);
+
+const openZip = async zipPath => {
+    try {
+        return await yauzl.openPromise(zipPath, {autoClose: false});
+    } catch (error) {
+        throw new errors.InternalServerError({message: `Unable to read zip file ${zipPath}: ${error}`});
+    }
+};
+
+/**
+ * Scan the central directory (names only, no file data) for the layout `read()` normalises:
+ * a single top-level directory to strip, or a single nested zip to read instead.
+ */
+const scanLayout = async (zipfile, unwrap) => {
+    let count = 0;
+    let only = null;
+    let prefix;
+    for await (const entry of zipfile.eachEntry()) {
+        const name = entry.fileName;
+        if (isJunk(name)) {
+            continue;
+        }
+        count += 1;
+        only = count === 1 ? entry : null;
+        const slash = name.indexOf('/');
+        const directory = slash > 0 ? name.slice(0, slash + 1) : null;
+        prefix = prefix === undefined || prefix === directory ? directory : null;
+    }
+    if (unwrap && only && /\.zip$/i.test(only.fileName)) {
+        return {nested: only};
+    }
+    return {prefix: prefix ?? ''};
+};
+
+async function* readEntries(zipPath, filter, unwrap) {
+    let layout;
+    const scan = await openZip(zipPath);
+    let nestedDir;
+    try {
+        layout = await scanLayout(scan, unwrap);
+        if (layout.nested) {
+            // A zip holding only another zip is read as that inner zip, extracted to a temporary file.
+            nestedDir = await mkdtemp(join(tmpdir(), 'mg-fs-utils-zip-'));
+            await pipeline(
+                await scan.openReadStreamPromise(layout.nested),
+                createWriteStream(join(nestedDir, 'nested.zip'))
+            );
+        }
+    } finally {
+        scan.close();
+    }
+    if (nestedDir) {
+        try {
+            yield* readEntries(join(nestedDir, 'nested.zip'), filter, false);
+        } finally {
+            await rm(nestedDir, {recursive: true, force: true});
+        }
+        return;
+    }
+
+    const zipfile = await openZip(zipPath);
+    try {
+        for await (const raw of zipfile.eachEntry()) {
+            const name = raw.fileName.slice(layout.prefix.length);
+            if (isJunk(raw.fileName) || !name) {
+                continue;
+            }
+            const stream = () => zipfile.openReadStreamPromise(raw);
+            const entry = {
+                name,
+                path: raw.fileName,
+                isDirectory: raw.fileName.endsWith('/'),
+                size: raw.uncompressedSize,
+                stream,
+                read: async () => {
+                    const chunks = [];
+                    for await (const chunk of await stream()) {
+                        chunks.push(chunk);
+                    }
+                    return Buffer.concat(chunks);
+                }
+            };
+            if (!filter || filter(entry)) {
+                yield entry;
+            }
+        }
+    } finally {
+        zipfile.close();
+    }
+}
+
+/**
+ * Stream the entries of a zip one at a time, without expanding the archive in memory.
+ *
+ * Names are normalised much as `read()` does: `__MACOSX` and `.DS_Store` entries are skipped, a top-level
+ * directory that holds every entry is removed from names (whether or not the archive lists the directory itself),
+ * and a zip that holds only another zip is read as that inner zip.
+ * Each entry is `{name, path, isDirectory, size, read(), stream()}`, where `path` is the unmodified name in the
+ * archive, `read()` resolves to the entry's contents as a Buffer and `stream()` to a Readable of them. Call
+ * `read()` or `stream()` before the iteration finishes; the archive is closed when it does.
+ *
+ * @param {String} zipPath - path to the zip file
+ * @param {Object} [options]
+ * @param {Function} [options.filter] - called with each entry; return false to skip it
+ */
+const entries = (zipPath, {filter} = {}) => readEntries(zipPath, filter, true);
 
 /**
  * Read a Zip File
@@ -71,6 +184,7 @@ const deleteFile = async fileToDelete => {
 
 export default {
     read,
+    entries,
     write,
     _private,
     deleteFile

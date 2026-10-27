@@ -34,6 +34,7 @@
     "dotenv": "catalog:",
     "fs-extra": "catalog:",
     "sharp": "catalog:",
-    "transliteration": "catalog:"
+    "transliteration": "catalog:",
+    "yauzl": "3.4.0"
   }
 }

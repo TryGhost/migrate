@@ -4,6 +4,7 @@ import {URL} from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
+import {Readable} from 'node:stream';
 import csv from '../lib/csv.js';
 
 const __dirname = new URL('.', import.meta.url).pathname;
@@ -64,6 +65,79 @@ describe('Parse CSV', function () {
             assert.ok(err.message);
             return true;
         });
+    });
+});
+
+describe('Stream CSV rows', function () {
+    it('Yields the rows of a file with the default options', async function () {
+        const rows = [];
+        for await (const row of csv.streamRows(path.join(__dirname, '/fixtures/example.csv'))) {
+            rows.push(row);
+        }
+
+        assert.deepEqual(
+            rows.map(row => row.Username),
+            ['booker12', 'grey07', 'johnson81', 'jenkins46', 'smith79']
+        );
+        assert.equal(rows[0]['First name'], 'Rachel');
+    });
+
+    it('Yields the rows of a readable stream with custom options', async function () {
+        const rows = [];
+        for await (const row of csv.streamRows(Readable.from(['name,email\n  Alice  ,a@example.com\n']), {
+            columns: false
+        })) {
+            rows.push(row);
+        }
+
+        assert.deepEqual(rows, [
+            ['name', 'email'],
+            ['  Alice  ', 'a@example.com']
+        ]);
+    });
+
+    it('Decodes characters split across chunks', async function () {
+        const bytes = Buffer.from('title\nCafé “quoted”\n');
+        const chunks = [...bytes].map(byte => Buffer.from([byte]));
+        const rows = [];
+        for await (const row of csv.streamRows(Readable.from(chunks))) {
+            rows.push(row);
+        }
+
+        assert.deepEqual(rows, [{title: 'Café “quoted”'}]);
+    });
+
+    it('Destroys the input when the caller stops early', async function () {
+        const source = fs.createReadStream(path.join(__dirname, '/fixtures/example.csv'));
+        for await (const row of csv.streamRows(source)) {
+            assert.equal(row.Username, 'booker12');
+            break;
+        }
+
+        await new Promise(resolve => setImmediate(resolve));
+        assert.equal(source.destroyed, true);
+    });
+
+    it('Rejects when the file does not exist', async function () {
+        await assert.rejects(
+            async () => {
+                for await (const row of csv.streamRows('/nonexistent/path/file.csv')) {
+                    assert.fail(`Unexpected row ${row}`);
+                }
+            },
+            {code: 'ENOENT'}
+        );
+    });
+
+    it('Rejects parse errors when skip_lines_with_error is false', async function () {
+        await assert.rejects(async () => {
+            for await (const row of csv.streamRows(path.join(__dirname, '/fixtures/malformed.csv'), {
+                columns: true,
+                skip_lines_with_error: false
+            })) {
+                assert.fail(`Unexpected row ${row}`);
+            }
+        }, /Invalid Record Length/);
     });
 });
 
