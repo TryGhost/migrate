@@ -1,5 +1,4 @@
 import {extname} from 'node:path';
-import {inspect} from 'node:util';
 import {readFileSync} from 'node:fs';
 import {readJSON} from 'fs-extra/esm';
 import {ui} from '@tryghost/pretty-cli';
@@ -115,12 +114,6 @@ const options = [
     },
     {
         type: 'boolean',
-        flags: '--fallBackHTMLCard',
-        defaultValue: true,
-        desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
-    },
-    {
-        type: 'boolean',
         flags: '--tags',
         defaultValue: true,
         desc: "Set to false if you don't want to import WordPress tags, only categories"
@@ -206,6 +199,18 @@ const options = [
         desc: 'Trust self-signed certificates (such as for local installs)'
     },
     {
+        type: 'boolean',
+        flags: '--rereadSource',
+        defaultValue: false,
+        desc: 'Fetch the WordPress API again, replacing the stored source while preserving downloaded assets'
+    },
+    {
+        type: 'number',
+        flags: '--postsPerFile',
+        defaultValue: 2000,
+        desc: 'Maximum posts written per Ghost import JSON file'
+    },
+    {
         type: 'string',
         flags: '--tmpPath',
         defaultValue: null,
@@ -216,6 +221,12 @@ const options = [
         flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
+    },
+    {
+        type: 'string',
+        flags: '--cacheName',
+        defaultValue: null,
+        desc: 'Provide a unique name for the cache directory (defaults to the site URL)'
     },
     ...ghostAuthOptions
 ];
@@ -299,22 +310,19 @@ const run = async argv => {
         // Run the migration
         await migrate.run(context);
 
-        if (argv.info && context.info) {
+        if (argv.info) {
             let batches = context.info.batches.posts + context.info.batches.pages;
             ui.log.info(
                 `Batch info: ${context.info.totals.posts} posts, ${context.info.totals.pages} pages, ${batches} batches.`
             );
-        }
-
-        if (argv.verbose && context.result) {
-            ui.log.info('Done');
-        }
-
-        if (argv.veryVerbose && context.result) {
-            ui.log.info(inspect(context.result.data, false, 2));
+        } else {
+            ui.log.info(
+                `${context.summary.imported} imported, ${context.summary.skipped} skipped, ${context.warningCount} warnings. Report: ${context.reportFile.path}`
+            );
         }
     } catch (error) {
         ui.log.error(error);
+        process.exitCode = 1;
     }
 };
 
