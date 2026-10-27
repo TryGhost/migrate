@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
+import {mkdtemp, readdir, readFile, rm, stat, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
-import {join} from 'node:path';
+import {dirname, join} from 'node:path';
 import ghostSource from '../sources/ghost.js';
 import nock from 'nock';
 
@@ -11,7 +11,7 @@ describe('Ghost API context lifecycle', function () {
         const tmpPath = await mkdtemp(join(tmpdir(), 'mg-ghost-context-test-'));
         const options = {
             url: 'https://example.com',
-            scrape: [],
+            scrape: ['assets'],
             batch: 0,
             tmpPath,
             cacheName: 'test-ghost-source'
@@ -43,7 +43,7 @@ describe('Ghost API context lifecycle', function () {
             await ghostSource
                 .getFullTaskList(options)
                 .find(step => step.title === 'Map stored Ghost content')
-                .task(first);
+                .task(first, {});
             first.migrateContext.addLink('example.com/old/', '/new/');
             const cacheMarker = join(first.fileCache.tmpDir, 'assets-cache', 'marker.txt');
             await writeFile(cacheMarker, 'cached asset');
@@ -67,7 +67,7 @@ describe('Ghost API context lifecycle', function () {
             await ghostSource
                 .getFullTaskList(options)
                 .find(step => step.title === 'Map stored Ghost content')
-                .task(second);
+                .task(second, {});
             assert.equal((await second.migrateContext.getAllPosts())[0].data.title, 'Original Ghost post');
             second.assetScraper.close();
             await second.migrateContext.close();
@@ -126,16 +126,96 @@ it('ingests Ghost API records once and remaps stored content without more API re
         await ghostSource.getTaskRunner(options).run(first);
         assert.ok(scope.isDone());
         assert.throws(() => first.migrateContext.db, /not initialized/);
-        first.assetScraper.close();
-        const initial = JSON.parse(await readFile(join(first.fileCache.zipDir, 'posts.json'), 'utf8'));
+        assert.equal(first.assetScraper, undefined);
+        const initial = JSON.parse(await readFile(join(first.fileCache.zipDir, 'ghost-import.json'), 'utf8'));
         assert.equal(initial.data.posts[0].id, post.id);
         const second = {errors: [], warnings: []};
         await ghostSource.getTaskRunner(options).run(second);
         assert.equal(second.hasStoredSource, true);
-        const replayed = JSON.parse(await readFile(join(second.fileCache.zipDir, 'posts.json'), 'utf8'));
+        const replayed = JSON.parse(await readFile(join(second.fileCache.zipDir, 'ghost-import.json'), 'utf8'));
         assert.equal(replayed.data.posts[0].id, post.id);
         assert.equal(replayed.data.posts[0].html, post.html);
         assert.throws(() => second.migrateContext.db, /not initialized/);
+    } finally {
+        nock.cleanAll();
+        await rm(tmpPath, {recursive: true, force: true});
+    }
+});
+
+it('rewrites source links, publishes a ZIP with a report, and writes a failed report when a reread fails', async () => {
+    const tmpPath = await mkdtemp(join(tmpdir(), 'mg-ghost-output-'));
+    const url = 'https://ghost-source.example';
+    const options = {
+        url,
+        apikey: '0123456789abcdef01234567:' + 'ab'.repeat(32),
+        scrape: [],
+        batch: 0,
+        limit: 2,
+        posts: true,
+        pages: false,
+        tmpPath,
+        outputPath: tmpPath,
+        cacheName: 'output',
+        renderer: 'silent'
+    };
+    const posts = [
+        {
+            id: '0123456789abcdef01234567',
+            url: `${url}/blog/first/`,
+            title: 'First',
+            slug: 'first',
+            html: `<p><a href="${url}/blog/second/">Second</a> <a href="https://elsewhere.example/">Away</a></p>`,
+            created_at: '2024-01-01T00:00:00Z'
+        },
+        {
+            id: '0123456789abcdef01234568',
+            url: `${url}/blog/second/`,
+            title: 'Second',
+            slug: 'second',
+            html: '<p>Second</p>',
+            created_at: '2024-01-02T00:00:00Z'
+        }
+    ];
+    const scope = nock(url)
+        .get('/ghost/api/admin/posts/')
+        .query(true)
+        .reply(200, {posts, meta: {pagination: {pages: 1, total: 2}}})
+        .get('/ghost/api/admin/users/')
+        .query(true)
+        .reply(200, {users: []})
+        .get('/ghost/api/admin/posts/')
+        .query(true)
+        .reply(200, {posts, meta: {pagination: {pages: 1, total: 2}}});
+    try {
+        const first = {errors: [], warnings: []};
+        await ghostSource.getTaskRunner(options).run(first);
+        assert.ok(scope.isDone());
+        assert.deepEqual(first.summary, {selected: 2, imported: 2, skipped: 0});
+        assert.equal(first.exportedFiles, 1);
+        assert.equal(first.outputFile.path, join(tmpPath, first.outputName));
+        assert.ok((await stat(first.outputFile.path)).size > 0);
+        const report = JSON.parse(await readFile(first.reportFile.path, 'utf8'));
+        assert.equal(report.summary.status, 'complete');
+        assert.equal(report.summary.imported, 2);
+        const exported = JSON.parse(await readFile(join(first.fileCache.zipDir, 'ghost-import.json'), 'utf8'));
+        const html = exported.data.posts.find(post => post.slug === 'first').html;
+        assert.match(html, /href="\/blog\/second\/"/);
+        assert.match(html, /href="https:\/\/elsewhere\.example\/"/);
+        assert.deepEqual(
+            (await readdir(first.fileCache.zipDir)).filter(name => name.endsWith('.json')),
+            ['ghost-import.json']
+        );
+
+        nock(url)
+            .get('/ghost/api/admin/posts/')
+            .query(true)
+            .reply(500, {errors: [{message: 'Down'}]});
+        const failed = {errors: [], warnings: []};
+        await assert.rejects(ghostSource.getTaskRunner({...options, rereadSource: true}).run(failed));
+        assert.equal(dirname(failed.failedReport), tmpPath);
+        assert.match(failed.failedReport, /\.failed-report\.json$/);
+        assert.equal(JSON.parse(await readFile(failed.failedReport, 'utf8')).summary.status, 'failed');
+        assert.throws(() => failed.migrateContext.db, /not initialized/);
     } finally {
         nock.cleanAll();
         await rm(tmpPath, {recursive: true, force: true});

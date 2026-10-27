@@ -1,4 +1,3 @@
-import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import ghost from '../sources/ghost.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
@@ -174,15 +173,14 @@ const run = async argv => {
             ui.log.info(`Batch info: ${context.info.totals.posts} posts ${batches} batches.`);
         }
 
-        if (argv.verbose && context.result) {
-            ui.log.info('Done');
-        }
-
-        if (argv.veryVerbose && context.result) {
-            ui.log.info(inspect(context.result.data, false, 2));
+        if (!argv.info) {
+            ui.log.info(
+                `${context.summary.imported} imported, ${context.warningCount} warnings. Report: ${context.reportFile.path}`
+            );
         }
     } catch (error) {
         ui.log.error(error);
+        process.exitCode = 1;
     }
 };
 
