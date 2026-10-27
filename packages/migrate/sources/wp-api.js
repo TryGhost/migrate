@@ -245,40 +245,60 @@ const getFullTaskRunner = suppliedOptions => {
         {
             title: 'Fetch missing data via WebScraper',
             skip: ctx => !ctx.allowScrape.web,
-            task: async ctx => {
-                await ctx.migrateContext.forEachPost(
-                    async post => {
-                        if (post.get('status') === 'draft') {
-                            return;
+            task: (ctx, task) => {
+                const scrape = async (post, subtask) => {
+                    if (post.get('status') === 'draft') {
+                        return;
+                    }
+                    // Fetch failures are optional; setter/processor errors are not.
+                    const url = JSON.parse(ctx.migrateContext.sources.get('content', post.lookupKey).content).link;
+                    subtask.output = url;
+                    let response;
+                    try {
+                        response = await ctx.webScraper.scrapeUrl(
+                            url,
+                            scrapeConfig.posts,
+                            post.ghostId,
+                            options.wait_after_scrape || 100
+                        );
+                    } catch (error) {
+                        if (error.errorType !== 'ScrapeError') throw error;
+                        ctx.migrateContext.recordDiagnostic('operation:warning', {
+                            operation: 'Web scraping',
+                            url,
+                            reason: error.message
+                        });
+                        return;
+                    }
+                    post.webscrapeData = response.responseData;
+                    const processed = postProcessor({...response.responseData}, {html: post.get('html')}, options);
+                    for (const [field, value] of Object.entries(processed)) {
+                        if (field in post.schema.shape && value !== null && value !== undefined && value !== '') {
+                            post.set(field, value);
                         }
-                        // Fetch failures are optional; setter/processor errors are not.
-                        const url = JSON.parse(ctx.migrateContext.sources.get('content', post.lookupKey).content).link;
-                        let response;
-                        try {
-                            response = await ctx.webScraper.scrapeUrl(
-                                url,
-                                scrapeConfig.posts,
-                                post.ghostId,
-                                options.wait_after_scrape || 100
-                            );
-                        } catch (error) {
-                            if (error.errorType !== 'ScrapeError') throw error;
-                            ctx.migrateContext.recordDiagnostic('operation:warning', {
-                                operation: 'Web scraping',
-                                url,
-                                reason: error.message
-                            });
-                            return;
-                        }
-                        post.webscrapeData = response.responseData;
-                        const processed = postProcessor({...response.responseData}, {html: post.get('html')}, options);
-                        for (const [field, value] of Object.entries(processed)) {
-                            if (field in post.schema.shape && value !== null && value !== undefined && value !== '') {
-                                post.set(field, value);
+                    }
+                };
+                // One counted sub-task rather than one per post, so memory does not grow with the site.
+                return task.newListr(
+                    [
+                        {
+                            title: 'Posts',
+                            task: async (_ctx, subtask) => {
+                                let processed = 0;
+                                const total = ctx.migrateContext.db.stmts.countPosts.get().count;
+                                subtask.title = `Posts (${processed}/${total})`;
+                                await ctx.migrateContext.forEachPost(
+                                    async post => {
+                                        await scrape(post, subtask);
+                                        subtask.title = `Posts (${++processed}/${total})`;
+                                    },
+                                    {batchSize: 25}
+                                );
+                                subtask.output = null;
                             }
                         }
-                    },
-                    {batchSize: 25}
+                    ],
+                    {concurrent: false, exitOnError: true}
                 );
             }
         },
