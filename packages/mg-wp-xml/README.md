@@ -27,9 +27,9 @@ Post and attachment identity uses WordPress ID, falling back to absolute source 
 
 `--postsPerFile` defaults to **2000**. A small migration writes `ghost-import.json`; larger migrations write `ghost-import-1.json`, `ghost-import-2.json`, and so on. The ZIP contains these files and assets. With `--zip false`, the unpacked import stays in the workspace import directory.
 
-A durable `.report.json` file is written beside the final ZIP, or beside the unpacked import directory when ZIP creation is disabled. It contains imported/skipped counts and streamed diagnostics for source conflicts, skipped records, field normalization, slug changes, and optional scraping failures. It survives `--cache false`.
+With `--report`, a durable `.report.json` file is written beside the final ZIP, or beside the unpacked import directory when ZIP creation is disabled. It contains imported/skipped counts and streamed diagnostics for source conflicts, skipped records, field normalization, slug changes, and optional scraping failures. It survives `--cache false`.
 
-Known record-data errors are skipped and reported. A partially successful import succeeds with warning counts; an import where every selected record is invalid fails and writes a `.failed-report.json`. An intentionally empty selection succeeds. XML structure errors, unexpected code errors, and storage/export failures abort the migration. Failed runs retain their workspace and recovery files.
+Known record-data errors are skipped and reported. A partially successful import succeeds with warning counts; an import where every selected record is invalid fails, and with `--report` writes a `.failed-report.json`. An intentionally empty selection succeeds. XML structure errors, unexpected code errors, and storage/export failures abort the migration. Failed runs retain their workspace and recovery files.
 
 HTML replaces the old Lexical output stage. `--fallBackHTMLCard` has been removed; `--rawHtml` remains available. Ghost schema limits and normalization come from `mg-context`.
 
@@ -41,6 +41,7 @@ HTML replaces the old Lexical output stage. `--fallBackHTMLCard` has been remove
 | `--rereadSource` | `false` | Ingest replacement source data |
 | `--postsPerFile` | `2000` | Positive maximum posts per import JSON file |
 | `--zip` | `true` | Create a Ghost import ZIP |
+| `--report` | `false` | Write a `.report.json`, or a `.failed-report.json` if the run fails |
 | `--scrape` | `all` | `all`, `web`, `assets`, or `none`; legacy `img`, `media`, and `files` aliases remain |
 | `--drafts`, `--pages`, `--posts`, `--tags` | `true` | Select content; disabling tags retains categories |
 | `--cpt` | unset | Additional WordPress post types |
@@ -89,7 +90,7 @@ try {
 
 `map(options, context, {fileCache?, ghostUsers?})` accepts optional migration services. `ghostUsers` may be an iterable or async iterable; destination users are indexed on disk. `contentStats(pathOrInput)` streams counts of WordPress posts and pages. `inspectSource(path)` discovers sorted XML files without reading or hashing their contents. `parse(pathOrInput)` yields original parsed records as `SourceRecordInput` values for callers that manage ingestion themselves; `ingest` handles WordPress duplicate selection inside `context.sources.ingest`. Explicit replacement is required when completed data exists. Originals and ingestion metadata remain immutable after completion.
 
-The CLI's programmatic `outputStorage.upload({body, fileName, size})` now requires a Node readable stream as `body`, for both ZIP and report. It must consume that stream before resolving to the remote path string. Both local files remain available until both uploads succeed. If the report upload fails after ZIP upload, the remote ZIP may already exist; the local files remain available for retry. The runner exposes separate `outputFile` and `reportFile` descriptors, plus `recoveryFile` on upload failure. With ZIP disabled, `outputFile` describes the import directory. The runner owns `ghost-import*.json` and legacy WordPress JSON filenames in that directory; it stages each export and replaces those files only after the complete JSON export and report succeed. Other files and downloaded assets are retained.
+The CLI's programmatic `outputStorage.upload({body, fileName, size})` now requires a Node readable stream as `body`, for the ZIP and, with `--report`, the report. It must consume that stream before resolving to the remote path string. Both local files remain available until both uploads succeed. If the report upload fails after ZIP upload, the remote ZIP may already exist; the local files remain available for retry. The runner exposes separate `outputFile` and `reportFile` descriptors, plus `recoveryFile` on upload failure. With ZIP disabled, `outputFile` describes the import directory. The runner owns `ghost-import*.json` and legacy WordPress JSON filenames in that directory; it stages each export and replaces those files only after the complete JSON export and report succeed. Other files and downloaded assets are retained.
 
 ## Development
 

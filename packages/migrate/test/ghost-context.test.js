@@ -156,6 +156,7 @@ it('rewrites source links, publishes a ZIP with a report, and writes a failed re
         tmpPath,
         outputPath: tmpPath,
         cacheName: 'output',
+        report: true,
         renderer: 'silent'
     };
     const posts = [
@@ -216,6 +217,24 @@ it('rewrites source links, publishes a ZIP with a report, and writes a failed re
         assert.match(failed.failedReport, /\.failed-report\.json$/);
         assert.equal(JSON.parse(await readFile(failed.failedReport, 'utf8')).summary.status, 'failed');
         assert.throws(() => failed.migrateContext.db, /not initialized/);
+
+        // Without --report, neither a report nor a failed report is written.
+        const reports = async () => (await readdir(tmpPath)).filter(name => name.endsWith('.json')).sort();
+        const before = await reports();
+        const quiet = {errors: [], warnings: []};
+        await ghostSource.getTaskRunner({...options, report: false}).run(quiet);
+        assert.equal(quiet.reportFile, undefined);
+        assert.equal(quiet.summary.imported, 2);
+        nock(url)
+            .get('/ghost/api/admin/posts/')
+            .query(true)
+            .reply(500, {errors: [{message: 'Down'}]});
+        const quietFailure = {errors: [], warnings: []};
+        await assert.rejects(
+            ghostSource.getTaskRunner({...options, report: false, rereadSource: true}).run(quietFailure)
+        );
+        assert.equal(quietFailure.failedReport, undefined);
+        assert.deepEqual(await reports(), before);
     } finally {
         nock.cleanAll();
         await rm(tmpPath, {recursive: true, force: true});

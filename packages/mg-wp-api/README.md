@@ -39,6 +39,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--zip`** 
     - Create a zip file
     - bool - default: `true`
+- **`--report`**
+    - Write a `.report.json` migration report beside the import, or a `.failed-report.json` if the run fails
+    - bool - default: `false`
 - **`--onlyURLs`**
     - Path to a CSV file of post URLs that will be the only migrated posts
     - string - default: `null`
@@ -165,7 +168,7 @@ https://example.com/2023/03/01/another-article
 
 ## Output
 
-The import contains HTML; Ghost's importer converts it. `--fallBackHTMLCard` has been removed. A small migration writes `ghost-import.json`, and larger ones write `ghost-import-1.json`, `ghost-import-2.json` and so on, `--postsPerFile` posts each. A `.report.json` beside the ZIP lists imported and skipped counts with diagnostics for source conflicts, skipped records, field changes, slug changes and optional scraping failures. When every selected item is invalid, or the run fails, a `.failed-report.json` is written instead.
+The import contains HTML; Ghost's importer converts it. `--fallBackHTMLCard` has been removed. A small migration writes `ghost-import.json`, and larger ones write `ghost-import-1.json`, `ghost-import-2.json` and so on, `--postsPerFile` posts each. With `--report`, a `.report.json` beside the ZIP lists imported and skipped counts with diagnostics for source conflicts, skipped records, field changes, slug changes and optional scraping failures. When every selected item is invalid, or the run fails, `--report` writes a `.failed-report.json` instead.
 
 
 ## Source storage

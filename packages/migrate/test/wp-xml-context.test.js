@@ -27,6 +27,7 @@ async function setup(content) {
             outputPath: directory,
             cacheName: 'test',
             scrape: ['none'],
+            report: true,
             renderer: 'silent'
         }
     };
@@ -40,7 +41,47 @@ describe('WordPress context pipeline', () => {
     it('registers HTML output, refresh, and chunk defaults', () => {
         assert.equal(command.defaults.postsPerFile, 2000);
         assert.equal(command.defaults.rereadSource, false);
+        assert.equal(command.defaults.report, false);
         assert.equal('fallBackHTMLCard' in command.defaults, false);
+    });
+
+    it('writes no report or failed report unless asked, and uploads only the ZIP', async () => {
+        const fx = await setup(xml(item('1')));
+        const uploaded = [];
+        try {
+            const context = {};
+            await source
+                .getTaskRunner({
+                    ...fx.options,
+                    report: undefined,
+                    outputStorage: {
+                        async upload({body, fileName}) {
+                            for await (const chunk of body) {
+                                assert.ok(chunk.length);
+                            }
+                            uploaded.push(fileName);
+                            return `https://storage.example/${fileName}`;
+                        }
+                    }
+                })
+                .run(context);
+            assert.equal(context.reportFile, undefined);
+            assert.equal(context.warningCount, 0);
+            assert.deepEqual(uploaded, [context.outputName]);
+            await writeFile(fx.options.pathToFile, xml(item('2', 'bad')));
+            const failed = {};
+            await assert.rejects(
+                source.getTaskRunner({...fx.options, report: false, rereadSource: true}).run(failed),
+                /Every selected/
+            );
+            assert.equal(failed.failedReport, undefined);
+            assert.deepEqual(
+                (await readdir(fx.directory)).filter(name => name.endsWith('.json')),
+                []
+            );
+        } finally {
+            await rm(fx.directory, {recursive: true, force: true});
+        }
     });
 
     it('writes linked HTML chunks, durable reports and a ZIP; replays source and cleans obsolete chunks', async () => {

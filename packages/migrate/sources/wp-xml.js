@@ -90,7 +90,7 @@ const postProcessor = (scrapedData, data, options) => {
 };
 
 const getTaskRunner = suppliedOptions => {
-    const options = {scrape: ['all'], zip: true, cache: true, postsPerFile: 2000, ...suppliedOptions};
+    const options = {scrape: ['all'], zip: true, cache: true, report: false, postsPerFile: 2000, ...suppliedOptions};
     const tasks = [
         {
             title: 'Initializing',
@@ -109,12 +109,14 @@ const getTaskRunner = suppliedOptions => {
                     assets: ['all', 'assets', 'img', 'media', 'files'].some(value => selected.has(value))
                 };
                 ctx.outputName = ctx.fileCache.defaultZipFileName;
-                const reportName = ctx.outputName.replace(/\.zip$/, '.report.json');
-                ctx.reportFile = {
-                    path: options.zip
-                        ? resolve(options.outputPath || process.cwd(), reportName)
-                        : join(ctx.fileCache.cacheDir, reportName)
-                };
+                if (options.report) {
+                    const reportName = ctx.outputName.replace(/\.zip$/, '.report.json');
+                    ctx.reportFile = {
+                        path: options.zip
+                            ? resolve(options.outputPath || process.cwd(), reportName)
+                            : join(ctx.fileCache.cacheDir, reportName)
+                    };
+                }
                 ctx.migrateContext = new MigrateContext({dbPath: join(ctx.fileCache.tmpDir, 'mg-context.sqlite')});
                 await ctx.migrateContext.init();
                 ctx.webScraper = new MgWebScraper(ctx.fileCache, scrapeConfig, postProcessor);
@@ -294,13 +296,15 @@ const getTaskRunner = suppliedOptions => {
                     ctx.importDirectory = ctx.fileCache.zipDir;
                 }
                 ctx.warningCount = ctx.migrateContext.countWarnings();
-                await ctx.migrateContext.writeMigrationReport(ctx.reportFile.path, {
-                    ...ctx.summary,
-                    warnings: ctx.warningCount,
-                    status: 'complete',
-                    files: ctx.exportedFiles
-                });
-                ctx.reportFile.size = (await stat(ctx.reportFile.path)).size;
+                if (ctx.reportFile) {
+                    await ctx.migrateContext.writeMigrationReport(ctx.reportFile.path, {
+                        ...ctx.summary,
+                        warnings: ctx.warningCount,
+                        status: 'complete',
+                        files: ctx.exportedFiles
+                    });
+                    ctx.reportFile.size = (await stat(ctx.reportFile.path)).size;
+                }
                 // The runner owns these filenames; publish only after every chunk and report succeeds.
                 const entries = await opendir(ctx.fileCache.zipDir);
                 for await (const entry of entries) {
@@ -351,9 +355,11 @@ const getTaskRunner = suppliedOptions => {
                             }
                         };
                         const remoteZip = await upload(temporaryPath, basename(finalPath));
-                        const remoteReport = await upload(ctx.reportFile.path, basename(ctx.reportFile.path));
+                        if (ctx.reportFile) {
+                            const remoteReport = await upload(ctx.reportFile.path, basename(ctx.reportFile.path));
+                            ctx.reportFile = {...ctx.reportFile, path: remoteReport};
+                        }
                         ctx.outputFile = {path: remoteZip, size: (await stat(temporaryPath)).size};
-                        ctx.reportFile = {...ctx.reportFile, path: remoteReport};
                         await rm(temporaryPath);
                     } else {
                         await rename(temporaryPath, finalPath);

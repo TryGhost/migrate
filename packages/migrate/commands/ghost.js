@@ -49,6 +49,12 @@ const options = [
         desc: 'Create a zip file (set to false to skip)'
     },
     {
+        type: 'boolean',
+        flags: '--report',
+        defaultValue: false,
+        desc: 'Write a .report.json migration report beside the import, or a .failed-report.json if the run fails'
+    },
+    {
         type: 'array',
         flags: '-s --scrape',
         choices: ['all', 'assets', 'none', 'img', 'media', 'files'],
@@ -175,7 +181,7 @@ const run = async argv => {
 
         if (!argv.info) {
             ui.log.info(
-                `${context.summary.imported} imported, ${context.warningCount} warnings. Report: ${context.reportFile.path}`
+                `${context.summary.imported} imported, ${context.warningCount} warnings.${context.reportFile ? ` Report: ${context.reportFile.path}` : ''}`
             );
         }
     } catch (error) {
