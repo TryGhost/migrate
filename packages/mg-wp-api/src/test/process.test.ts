@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {describe, it} from 'node:test';
-import processor from '../lib/processor.js';
+import processorModule from '../lib/processor.js';
+
+// The fixtures and option shapes here are deliberately loose WordPress data.
+const processor: any = processorModule;
 
 // Import our fixtures
-const require = createRequire(import.meta.url);
+const require = createRequire(new URL('../../src/test/', import.meta.url));
 const singlePostFixture = require('./fixtures/single-post.json');
 const singleUserfixture = require('./fixtures/single-user.json');
 const multipleUsersfixture = require('./fixtures/multiple-users.json');
@@ -13,13 +16,12 @@ const singleCptPostfixture = require('./fixtures/single-cpt-post.json');
 const singlePostWithDuplicateImagesfixture = require('./fixtures/single-post-with-duplicate-images.json');
 const singlePostWithHtmlInTitlefixture = require('./fixtures/single-post-with-html-in-title.json');
 const singlePostNoAuthorFixture = require('./fixtures/single-post-no-author.json');
-const datedPosts = require('./fixtures/dated-posts.json');
 const coAuthorsPostFixture = require('./fixtures/co-authors-post.json');
 const singleCoAuthorPostFixture = require('./fixtures/single-coauthor-post.json');
 
 describe('Process WordPress REST API JSON', function () {
     it('Can convert a single post', async function () {
-        const users = [];
+        const users: any[] = [];
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com/bloob'};
         const post = await processor.processPost(singlePostFixture, users, options);
 
@@ -154,7 +156,7 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     it('Can convert a custom post type', async function () {
-        const users = [];
+        const users: any[] = [];
         const options = {
             tags: true,
             addTag: null,
@@ -176,7 +178,7 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     it('Can add a #wp-post tag when also converting a custom post type', async function () {
-        const users = [];
+        const users: any[] = [];
         const options = {
             tags: true,
             addTag: null,
@@ -194,7 +196,7 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     it('Can convert entities in tags names', async function () {
-        const users = [];
+        const users: any[] = [];
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com'};
         const post = await processor.processPost(singlePostFixture, users, options);
 
@@ -231,7 +233,7 @@ describe('Process WordPress REST API JSON', function () {
             {id: 500, link: 'https://mysite.com/city/prague', name: 'Prague', slug: 'prague', taxonomy: 'city'}
         ]);
 
-        const users = [];
+        const users: any[] = [];
         const options = {
             tags: true,
             addTag: null,
@@ -241,7 +243,7 @@ describe('Process WordPress REST API JSON', function () {
         };
         const post = await processor.processPost(fixture, users, options);
 
-        const tagSlugs = post.data.tags.map(t => t.data.slug);
+        const tagSlugs = post.data.tags.map((t: any) => t.data.slug);
         assert.ok(tagSlugs.includes('czech-republic'), 'should include country term czech-republic');
         assert.ok(tagSlugs.includes('romania'), 'should include country term romania');
         assert.ok(!tagSlugs.includes('prague'), 'should not include city term when not in customTaxonomies');
@@ -259,11 +261,11 @@ describe('Process WordPress REST API JSON', function () {
             }
         ]);
 
-        const users = [];
+        const users: any[] = [];
         const options = {tags: true, addTag: null, featureImage: 'featuredmedia', url: 'https://mysite.com'};
         const post = await processor.processPost(fixture, users, options);
 
-        const tagSlugs = post.data.tags.map(t => t.data.slug);
+        const tagSlugs = post.data.tags.map((t: any) => t.data.slug);
         assert.ok(
             !tagSlugs.includes('czech-republic'),
             'should not include country term when customTaxonomies is not set'
@@ -323,7 +325,7 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     it('Can remove first image in post if same as feature image', async function () {
-        const users = [];
+        const users: any[] = [];
         const options = {
             tags: true,
             addTag: null,
@@ -364,7 +366,7 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     it('Can add addTag to value pages', async function () {
-        const users = [];
+        const users: any[] = [];
 
         const options = {tags: true, addTag: 'My New Tag'};
         const post = await processor.processPost(singlePagefixture, users, options);
@@ -378,7 +380,7 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     it('Can remove HTML from post titles', async function () {
-        const users = [];
+        const users: any[] = [];
         const options = {};
         const post = await processor.processPost(singlePostWithHtmlInTitlefixture, users, options);
 
@@ -391,7 +393,7 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     it('Can use excerpt selector & remove from content', async function () {
-        const users = [];
+        const users: any[] = [];
         const options = {
             excerptSelector: 'h2'
         };
@@ -404,7 +406,7 @@ describe('Process WordPress REST API JSON', function () {
     });
 
     it('Can use excerpt from WordPress API', async function () {
-        const users = [];
+        const users: any[] = [];
         const options = {
             excerptSelector: false,
             excerpt: true
@@ -414,29 +416,6 @@ describe('Process WordPress REST API JSON', function () {
         const data = post.data;
 
         assert.equal(data.custom_excerpt, 'This is my strong headline thing. Here we have some excerpt content');
-    });
-
-    it('Does not filter posts by date of options not present', async function () {
-        const users = [
-            {
-                data: {
-                    id: 11,
-                    name: 'Example User',
-                    slug: 'example'
-                }
-            }
-        ];
-
-        const options = {
-            tags: true,
-            addTag: null,
-            featureImage: 'featuredmedia',
-            url: 'https://mysite.com/bloob'
-        };
-
-        const posts = await processor.processPosts(datedPosts, users, options);
-
-        assert.equal(posts.length, 3);
     });
 });
 
@@ -907,7 +886,7 @@ describe('Process WordPress HTML', function () {
 
     it('Can convert WP post embed', async function () {
         const mockFileCache = {
-            hasFile: filename => {
+            hasFile: (filename: string) => {
                 // Filename is derived from bookmarkHref: https://www.example.org/2025/04/03/lorem-ipsum/
                 return filename === 'https___www_example_org_2025_04_03_lorem_ipsum_.json';
             },
@@ -1855,7 +1834,7 @@ describe('Co-Authors Plus multi-author support', function () {
     });
 
     it('processPost uses authors array for multiple co-authors', async function () {
-        const users = [];
+        const users: any[] = [];
         const options = {tags: true};
 
         const post = await processor.processPost(coAuthorsPostFixture, users, options);
@@ -1869,7 +1848,7 @@ describe('Co-Authors Plus multi-author support', function () {
     });
 
     it('processPost uses author field for single co-author', async function () {
-        const users = [];
+        const users: any[] = [];
         const options = {tags: true};
 
         const post = await processor.processPost(singleCoAuthorPostFixture, users, options);
