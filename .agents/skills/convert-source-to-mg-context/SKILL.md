@@ -5,22 +5,35 @@ description: Convert a source adapter and its migration runner in this Ghost mig
 
 # Convert a source to mg-context
 
-Keep the adapter independently usable as an npm package. The runner owns ingestion policy, workspace selection, processing, delivery, and resource closure. Core stores originals and mapped Ghost content; it does not interpret source formats or decide when input changed.
+Keep the adapter independently usable as an npm package. The runner owns ingestion policy, workspace selection, processing, delivery, and resource closure. Core stores originals and mapped Ghost content and provides shared mapping helpers; it does not interpret source formats or decide when input changed.
 
 ## Read the current contracts
 
 Resolve repository paths from this skill's directory with `../../../`. Follow the repository's `AGENTS.md`; use the implementation when an older example or API-reference paragraph disagrees with it.
 
-- Start with the [source-record migration guide](../../../packages/mg-context/docs/source-records.md), [core README](../../../packages/mg-context/README.md), and [source API types](../../../packages/mg-context/src/lib/SourceRecords.ts).
+- Start with the [source-record migration guide](../../../packages/mg-context/docs/source-records.md), [core README](../../../packages/mg-context/README.md), the [API reference](../../../packages/mg-context/docs/api-reference.md) (especially "Mapping utilities"), and the [source API types](../../../packages/mg-context/src/lib/SourceRecords.ts).
 - Read the target adapter, its runner under `packages/migrate/sources/`, CLI options, fixtures, and existing tests before changing behavior.
-- Use [WordPress ingestion](../../../packages/mg-wp-xml/src/lib/ingest.ts), [mapping](../../../packages/mg-wp-xml/src/lib/map.ts), and its [runner](../../../packages/migrate/sources/wp-xml.js) for the complete streaming pipeline. Its [integration tests](../../../packages/migrate/test/wp-xml-context.test.js) cover delivery and failures.
-- For paginated APIs, read [Ghost fetch tasks](../../../packages/mg-ghost-api/src/lib/fetch.ts) and the [Ghost runner](../../../packages/migrate/sources/ghost.js). Ghost preserves some older convenience/delivery behavior; its buffer-based ZIP upload is not a streaming-upload template.
+- File-based template: WordPress XML [ingestion](../../../packages/mg-wp-xml/src/lib/ingest.ts), [mapping](../../../packages/mg-wp-xml/src/lib/map.ts), [mapping state](../../../packages/mg-wp-xml/src/lib/mapping-state.ts), and [runner](../../../packages/migrate/sources/wp-xml.js). Its [runner tests](../../../packages/migrate/test/wp-xml-context.test.js) cover delivery and failures.
+- Paginated-API template: WordPress API [fetch tasks](../../../packages/mg-wp-api/src/lib/fetch.ts), [ingestion](../../../packages/mg-wp-api/src/lib/ingest.ts), [mapping](../../../packages/mg-wp-api/src/lib/map.ts), [runner](../../../packages/migrate/sources/wp-api.js), and nock-based [runner tests](../../../packages/migrate/test/wp-api-context.test.js). The [Ghost fetch tasks](../../../packages/mg-ghost-api/src/lib/fetch.ts) and [Ghost runner](../../../packages/migrate/sources/ghost.js) follow the same lifecycle.
+
+## Plan the change set
+
+Each source keeps its own complete task runner in `packages/migrate/sources/<source>.js`, written out in full. Do not create a shared runner helper module; copy the generic steps from `wp-xml.js` or `wp-api.js` and adapt them in place.
+
+Put shared code where it belongs, and split the work into commits that each build and pass on their own, in this order:
+
+1. **`mg-fs-utils`, only if needed:** any new or changed way of reading input files, with tests, before an adapter uses it. Source-specific formats (such as a WordPress users file) stay in the adapter or command. XML parsing stays in `mg-utils`.
+2. **`mg-context`, only if needed:** a utility that a second adapter needs and that is not source-specific. Switch every existing adapter to the core version in the same commit so nothing stays duplicated, keep core at 100% coverage, and update the API reference. Source-specific parsing and mapping never go into core.
+3. **Adapter:** the TypeScript port, `parse`/`ingest`/`map`, tests, and README.
+4. **Runner:** `sources/<source>.js`, `commands/<source>.js`, `test/<source>-context.test.js`, and the runner's name in the "uses this lifecycle" sentence of `mg-context/README.md` and `docs/source-records.md`.
+
+Commit only when the user requests it.
 
 ## Establish the source contract
 
-Inventory the behavior to preserve: record types, content transformations, filters, author fallbacks, tag ordering, custom types/taxonomies, image metadata, author matching, links, output options, and public entrypoints. Existing fixtures are the behavior baseline, not just examples to replace.
+Inventory the behavior to preserve: record types, content transformations, filters, author fallbacks, tag ordering, custom types/taxonomies, image metadata, author matching, links, output options, and public entrypoints. Existing fixtures are the behavior baseline, not just examples to replace. Find other packages that import the adapter (for example, `mg-wp-xml` imports `processShortcodes`, `processContent` and `processExcerpt` from `mg-wp-api`) and keep those exports working and typed.
 
-Resolve source-specific decisions from the code and tests first. Ask focused questions when record boundaries, canonical duplicate selection, stable identities, or public API compatibility remain unclear. A conversion does not authorize changing those semantics or porting unrelated sources.
+Resolve source-specific decisions from the code and tests first. Ask focused questions when record boundaries, canonical duplicate selection, stable identities, or public API compatibility remain unclear. A conversion does not authorize changing those semantics or porting unrelated sources. Fix clear bugs found while covering the code, and list each behavior change in your report.
 
 Use these terms consistently:
 
@@ -33,18 +46,21 @@ Callers choose the workspace/database for a dataset. Reuse policy belongs to the
 
 ## Separate parsing, ingestion, and mapping
 
-Expose typed parsing and record-mapping entrypoints, with ingestion and whole-dataset mapping orchestration as appropriate. For a replacement API, the WordPress shape is `parse(input)`, `ingest(input, context, options)`, and `map(options, context, services)`. The caller owns and closes the context. Keep a compatibility API only if the task requires one; do not add a wrapper by default.
+Expose typed `parse(input)`, `ingest(input, context, options)`, and `map(options, context, services)`. The caller owns and closes the context. Keep a compatibility API only if the task requires one; do not add a wrapper by default. Remove the old in-memory entrypoints (such as a `process.all(ctx)` that fills `ctx.result`) once the runner no longer uses them.
 
-Keep parsing streaming: yield one logical original at a time, paginate API requests, and discover files without reading all bodies. Bound in-flight requests and scheduled task lists, not just response pages. Use `mg-utils` for parsing; XML already has `xmlUtils.streamXmlRecords()`. Keep source-specific discovery and validation in the adapter. Do not move file discovery, API fetching, or format parsing into core.
+Keep parsing streaming: yield one logical original at a time, paginate API requests, and discover files without reading all bodies. Use `mg-utils` for parsing; XML already has `xmlUtils.streamXmlRecords()`. Keep source-specific discovery and validation in the adapter.
 
-Store originals before migration transformations and retain supporting records needed by later passes: authors, taxonomy definitions, attachments, channel/site metadata, and currently excluded content. Apply replayable selection options during mapping. If an API filter necessarily limits ingestion, document that changing it requires fresh input.
+Store originals before migration transformations and retain supporting records needed by later passes: authors, taxonomy definitions, attachments, channel/site metadata, and currently excluded content. Key records by stable source IDs, such as `id:<n>`, `<type>:id:<n>`, a URL, or a zip path.
+
+Apply replayable selection options (`posts`, `pages`, `drafts`, custom types, `maxPosts`, `onlyURLs`, `addTag`) in `map()`, so changing them needs no new read. For API sources, fetch the full replayable set and let mapping filter. Options that must narrow the fetch for cost or correctness (server-side date bounds, `maxPosts` page limits, `--batch`, extra endpoints) also apply at map time, and the docs must say that widening them needs `--rereadSource`. Select by how a record was fetched (for example, its endpoint in ingestion metadata) when an option names endpoints rather than types.
 
 Use `context.sources.ingest({replace, metadata}, callback)`:
 
-- `stage.write(iterable)` provides committed batches of 250 records or 4 MiB by default, allowing one oversized record alone. Await writes before the callback returns. Do not wrap ingestion in a long transaction spanning input/network waits.
-- Use `stage.put()` and staged lookups when canonical duplicate selection needs source-specific logic. Keys are unique within a kind. The default duplicate policy is an error; explicitly choose `keep` or `replace`. Interpret timestamps in the adapter.
-- Ordinary source reads see completed originals; the ingestion handle alone sees staging. Keep mapped writes out of ingestion. Completion publishes staged records atomically and clears derived content. Failed replacement preserves the previous originals and mapped result; interrupted staging restarts rather than resumes.
-- Completed content and ingestion metadata are immutable. Metadata records ingestion provenance, not mutable mapper state. Unkeyed records can remain available for diagnostics; choose their mapping policy explicitly without inventing stable identities from array positions or internal database IDs.
+- For API sources, have `ingest()` drive the paged fetch. Return one task per page from `fetch.tasks(url, ctx)`, with each task writing into `ctx.sourceIngestion`, as `mg-ghost-api` and `mg-wp-api` do. Apply `--batch` by selecting tasks inside the callback, and report each page through an `onProgress(title)` callback so the runner can show it. Fetch pages in a deterministic order: record order decides which entity keeps a contested slug.
+- Use `stage.reconcile(record, {choose, reportIdentical})` when the same key can arrive more than once. `choose(existing, incoming)` returns `keep` or `replace` (for example, newest `modified_gmt`), and core records a `source:conflict` diagnostic when the versions differ. Use plain `stage.put()`/`stage.write()` only when keys are guaranteed unique; their default duplicate policy is an error.
+- `stage.write(iterable)` commits batches of 250 records or 4 MiB by default, allowing one oversized record alone. Await writes before the callback returns. Do not wrap ingestion in a long transaction spanning input/network waits.
+- Ordinary source reads see completed originals; only the ingestion handle sees staging. Keep mapped writes out of ingestion. Completion publishes staged records atomically and clears derived content. Failed replacement preserves the previous originals and mapped result; interrupted staging restarts rather than resumes.
+- Completed content and ingestion metadata are immutable. Record fetch scope (URL, limits, date bounds, batch) in ingestion metadata, not mutable mapper state. Unkeyed records can remain available for diagnostics; choose their mapping policy explicitly without inventing stable identities from array positions or internal database IDs.
 
 Do not restore removed APIs: `contentIdentity`, `addSourcePost()`, post constructor `sourceContent`/`sourceMeta`/`source`/`meta`, `setSource()`, `getSourceValue()`, or source-attribute post filtering. Do not use a full `reset()` to implement safe rereading. Incompatible older databases require an explicit rebuild; do not silently delete them or downloaded assets.
 
@@ -52,65 +68,81 @@ Do not restore removed APIs: `contentIdentity`, `addSourcePost()`, post construc
 
 Have one layer own `context.rebuildMappedContent(callback)` per mapping pass. It resets mapped entities, relationships, links, diagnostics, and counters, preserving originals and ingestion diagnostics. An unexpected callback failure restores the preceding mapped result. Avoid wrapping a mapper that already owns rebuilding in a second rebuild.
 
-Iterate `context.sources.records()` and look up related originals with indexed canonical queries. Handle references to records appearing later by staging the complete input before mapping. Use `context.savepoint()` for an individual record when known record-data errors may be skipped; existing nested `transaction()` calls do not provide that isolation.
-
-The mapper's per-record structure should be equivalent to:
+Inside it, map records with `context.mapRecords(records, mapper)`. Each record gets its own savepoint. A mapper that returns `false` leaves the record unselected. A thrown `RecordDataError` (from `@tryghost/mg-context`) rolls back that record and records a `record:skipped` diagnostic. Any other error fails the mapping. It returns `{selected, imported, skipped}`:
 
 ```ts
-for await (const record of context.sources.records({kind: 'post'})) {
-    try {
-        await context.savepoint(async () => {
-            const post = await mapRecord(record, context, options);
-            // mapRecord supplies complete scalar fields and relationships.
-            post.save(context.db);
-            context.sources.link(record.id, {type: 'post', id: post.dbId!});
-        });
-    } catch (error) {
-        if (!(error instanceof RecordDataError)) throw error;
-        context.recordDiagnostic('record:skipped', {reason: error.message}, record.id);
-    }
-}
+return context.rebuildMappedContent(() =>
+    context.mapRecords(context.sources.records({kind: 'content'}), async record => {
+        const item = JSON.parse(record.content);
+        if (!selected(record, item, options)) {
+            return false;
+        }
+        const post = await mapRecord(record, item, state, options); // throws RecordDataError for bad data
+        post.save(context.db);
+        context.sources.link(record.id, {type: 'post', id: post.dbId!});
+    })
+);
 ```
 
-Adapt the kind, selection, mapper, and known-error class to the source. Record a skipped diagnostic after its savepoint rolls back. Do not turn storage, programming, or malformed-document errors into skippable data errors. Keep summary counters consistent with committed per-record work.
+Throw `RecordDataError` only for classified data problems, such as an invalid date or URL, or more than 500 tags or authors. Do not turn storage, programming, or malformed-document errors into skippable data errors. Look up related originals with indexed canonical queries; stage the complete input before mapping so references to later records resolve.
 
-Construct the complete post before its first `save()`, so slug allocation sees its final title/slug. Use core schema normalization and limits rather than copying sanitization rules into adapters. Preserve existing title decoding, dates, author fallbacks, public-before-internal tag ordering, and `hash-` internal-tag conventions where the source already supports them.
+Construct the complete post before its first `save()`, so slug allocation sees its final title/slug. Use core schema normalization and limits rather than copying sanitization rules into adapters. Convert legacy field shapes to the schema: date fields need `Date` objects, and `comment_id` is a string. Preserve existing title decoding, author fallbacks, public-before-internal tag ordering (sort `#` tags last), and `hash-` internal-tag conventions where the source already supports them.
 
-Assign stable Ghost IDs from source-defined stable identity when the adapter promises stable IDs; preserve valid existing Ghost IDs and matched destination-author IDs. Generated Ghost IDs are 24-character hexadecimal strings; namespace their inputs by adapter, logical dataset/site, entity kind, and stable source key. Core source-record IDs are not stable destination IDs. Distinct authors or terms must not merge just because their desired or normalized slugs collide. Resolve identity separately, allocate deterministic suffixes within schema limits, and reuse saved entities through indexed database lookups. Destination-user lookup already has `streamGhostUsers()` in `mg-ghost-authors`.
+Parse dates explicitly. `new Date('2018-07-23 00:57:23')` uses the machine's timezone, so append `Z` to zoneless timestamps (WordPress `*_gmt` fields, and site-local fields when no timezone is known). Prefer the most authoritative field and fall back before skipping. WordPress drafts that were never published have an empty or `-0001` `pubDate` and a zeroed `post_date_gmt`, so use `post_date_gmt`, then `pubDate`, then `post_date`. Take `updated_at` from the modified date when one exists.
 
-Link saved entities to all contributing originals with `sources.link(record.id, {type, id: entity.dbId})`; the ID here is the internal mapped database ID, not `ghostId`. Provenance is optional and many-to-many, with no primary source. Direct mapped creation without originals remains supported.
+Assign stable Ghost IDs with `ghostId(namespace, site, kind, key)` from `@tryghost/mg-context`. Use a namespace that names the adapter and ID scheme version (`mg-wp-xml:1`, `mg-wp-api:1`) and a stable source key. Preserve valid existing Ghost IDs and matched destination-author IDs. Core source-record IDs are not stable destination IDs.
 
-Keep per-run mapper state local. If canonical lookup is insufficient for secondary names, bindings, or destination matches, use a narrowly scoped adapter-owned database index rebuilt each pass, as in [WordPress mapping state](../../../packages/mg-wp-xml/src/lib/mapping-state.ts). Do not add a generic mutable metadata bag or alias API to core. Avoid whole-migration maps/sets; database reuse must work without an application entity cache.
+Use `new MappingState(context, name)` from core for per-run lookups: a disk-backed key-value store, `index`/`find` from lookup keys to source records, `bind`/`getBinding` from source keys to mapped database IDs, and `reserveSlug`/`uniqueSlug`. Subclass it for source-specific lookups, as [WordPress mapping state](../../../packages/mg-wp-xml/src/lib/mapping-state.ts) does. Distinct authors or terms must not merge just because their slugs collide: `post.save()` de-duplicates post slugs, but saving a tag or author reuses any row with the same slug, so call `state.uniqueSlug()` first. Avoid whole-migration maps/sets and application entity caches.
+
+For destination authors, stream users with `streamGhostUsers()` from `mg-ghost-authors`, `reserveSlug()` each Ghost slug, index users by lowercase email, and merge matches with `mergeUsersWithGhost()`. Replace unsupported roles with supported Ghost roles and record an `operation:warning`. Delete any source-native user ID before saving; only a matched Ghost user supplies an author ID.
+
+Link saved entities to all contributing originals with `sources.link(record.id, {type, id: entity.dbId})`; the ID is the internal mapped database ID, not `ghostId`. Register old URLs with `context.addLink(stringUtils.cleanURL(oldUrl), newPath)` for posts (keeping any dated-permalink prefix), tags, and authors, using final saved slugs. This replaces `LinkFixer.buildMap()`.
 
 ## Process and deliver without collecting the migration
 
-Use bounded source/entity iterators and database filters. `forEachPost()`/`forEachTag()`/`forEachAuthor()` save callback changes; `streamPosts()` is useful for explicit iteration. Tag/author iteration defaults to referenced entities; use `scope: 'all'` only when unused entities should be processed too. Array-returning convenience APIs remain available for deliberate small callers, but do not use them to drive a large migration.
+Copy the runner's steps from `wp-xml.js` or `wp-api.js`: initialize, fetch/ingest, map, web scrape, assets, link fixing, staged export and report, ZIP and upload, all inside the same `run` wrapper. Drop `toGhostJSON`, `mgHtmlLexical.convert(ctx)`, `assetScraper.getTasks()`, `linkFixer.buildMap/fix`, and `webScraper.hydrate()`. Keep any `getInfoTaskList` the runner had, passing CLI options (not `ctx`) to discovery.
 
-- Process scraping per record with bounded concurrency, supplying the original URL explicitly. Retain scraped responses on `post.webscrapeData`. Preserve draft-scraping skips and the precedence of nonempty scraped metadata where supported. Store binary assets outside primary source storage.
-- Use AssetScraper's `retainFailures: false` and `onFailure` for persisted diagnostics instead of an expanding failure array. `strictErrors: true` distinguishes local processing/storage failures from optional download failures. Catch only the documented remote failure class; do not catch all scraper errors as warnings.
-- Map HTML into the current post schema. Do not pass HTML-only context objects through a legacy Lexical hydration stage. `mg-linkfixer.fixPost()` supports HTML-only targets and database-backed link resolution. Build links from final saved slugs after destination-author matching, then fix HTML links.
-- Reuse `writeGhostJsonStream()` and `writeMigrationReport()`. They extend the existing JSON exporter; do not add a competing exporter, descriptor journal, or core ownership manifest. Avoid collecting output descriptors, sanitization/slug reports, or diagnostics into arrays. Use `streamDiagnostics()` for bounded reporting.
+Choose the workspace carefully:
 
-The runner owns output filenames, chunk limits, publication, and obsolete-file cleanup. Stage a whole export before replacing owned output, and clean only that source's owned files after successful replacement. Core provides per-file atomic writes, not whole-export rollback. Preserve the adapter's established output contract; WordPress's `ghost-import`/2,000-post defaults are a source-specific reference.
+- Name the `FileCache` so different inputs never share a workspace. `cacheNameFromPath('https://example.com')` and `cacheNameFromPath('https://example.org')` both give `example`. Use `--cacheName` when given, otherwise something unique, such as the full URL.
+- Put the database at `join(fileCache.tmpDir, 'mg-context.sqlite')`. With `--batch`, use `mg-context-batch-<n>.sqlite`: `FileCache` batch names don't change the cache directory, so batches sharing one database would reuse batch 1's stored source.
 
-For a streaming delivery conversion, ZIP and report uploads receive readable bodies with filenames and sizes, and must consume the stream before resolving. Keep local recovery files until both uploads succeed; expose output and report descriptors separately. Put durable reports beside the ZIP or unpacked import folder so successful cache cleanup does not delete them.
+Use bounded entity iterators. `forEachPost()`/`forEachTag()`/`forEachAuthor()` save callback changes; tag/author iteration defaults to referenced entities.
 
-Skip and report only classified record-data errors. Partial valid output can succeed with visible warning counts; intentionally empty selection succeeds. If the runner skips invalid records and every selected item is invalid, write the report and fail. Failed runs retain caches and do not publish a new import artifact.
+- Scrape per post with `webScraper.scrapeUrl(url, scrapeConfig.posts, post.ghostId, wait)`, reading the original URL from the post's source record. Skip drafts and catch only `errorType === 'ScrapeError'` as an `operation:warning`. Store the response on `post.webscrapeData`, then run the post processor on a copy; pass `{html: post.get('html')}` as its data argument if it uses the post body. Set only schema fields with nonempty values.
+- Use AssetScraper with `retainFailures: false`, `strictErrors: true`, and `onFailure` writing an `operation:warning` diagnostic.
+- Fix links with `linkFixer.fixPost(post, url => context.findLink(url))`. Export HTML; Ghost's importer converts it, so remove `--fallBackHTMLCard`.
+- Show progress as counted sub-tasks, not one listr task per item. Listr tasks for every post hold memory until the step ends. Return `task.newListr([...], {concurrent: false, exitOnError: true})` with a `Posts (n/total)` sub-task for scraping and `Posts`/`Tags`/`Authors` sub-tasks for assets. Take totals from `db.stmts.countPosts`/`countUsedTags`/`countUsedAuthors`, set the item being processed as `subtask.output`, and clear it with `null` on success. Don't push to `ctx.errors` in runners that don't create it.
 
-Wrap the entire runner, including initialization, in `finally`. Close resources that were initialized, use idempotent closure, and close before successful cache cleanup. For Listr progress, clear `task.output` with `null` only on success; retain useful failure output. Keep progress state bounded.
+Export with `writeGhostJsonStream()` into a `mkdtemp` staging directory under the cache's `tmpDir` (`filename: 'ghost-import'`, `batchSize: options.postsPerFile`, default 2,000). After it succeeds, remove only the source's own stale `ghost-import*.json` files from `zipDir` and move the staged files in. Set `ctx.warningCount = context.countWarnings()`.
+
+Reports are opt-in: `--report` defaults to `false`. Only when it is set, plan `ctx.reportFile` beside the ZIP (or in the cache directory when `--zip false`). Write it with `writeMigrationReport()`, upload it after the ZIP, and write a `.failed-report.json` from the `run` wrapper on failure. When it is off, write nothing and leave the `Report:` path out of the command's summary line.
+
+Write the ZIP to a temporary name and rename it into place. Streaming uploads to `outputStorage.upload({body, fileName, size})` pass readable bodies that must be consumed before resolving. Keep local recovery files until every upload succeeds, and set `ctx.outputFile` only after them.
+
+If every selected item is invalid, fail the run; an intentionally empty selection succeeds. The `run` wrapper closes the asset scraper and context in `finally`, and empties the cache only after success with `--cache false` and `--zip`.
+
+Add `--rereadSource`, `--postsPerFile`, `--cacheName`, and `--report` to the command, matching `commands/wp-xml.js`.
+
+## Port the adapter to TypeScript
+
+- Use the `AGENTS.md` package and tsconfig template and the c8 command from `mg-wp-xml/package.json` (`--all --100`, excluding tests and `.d.ts`). `git mv` existing files into `src/` so history follows them, and move tests to `src/test/*.test.ts`.
+- Tests run from `build/`, so read fixtures relative to `new URL('../../src/test/', import.meta.url)`.
+- Declare untyped dependencies in `src/types.d.ts`. Remove a consumer's `declare module` shim once the adapter ships its own types.
+- Wrap interface-only modules in `/* c8 ignore start */` and `/* c8 ignore stop */`, as `mg-assetscraper-db/src/lib/types.ts` does. Otherwise `--all` counts them as uncovered.
+- Reach 100% with targeted tests, and delete branches that cannot run rather than ignoring them.
+- Mock HTTP with nock. In nock 15, a reply callback receives a Fetch `Request` (`request.url`, `request.headers`), not a URI string, and `this.req` is unavailable. Use `nock(site, {reqheaders})` to require credentials.
 
 ## Verify the port and document the boundary
 
-Follow repository TypeScript build/package-export conventions, including `.js` relative imports and the development `source` condition with published exports pointing only to `build`. Preserve independently published adapter packages. Use existing shared utilities before adding dependencies or core abstractions.
-
 Port the source's baseline tests and cover the behavior introduced by the conversion:
 
-- Completed-empty versus absent ingestion; failed replacement; interrupted staging cleanup; ordinary reuse without reading the source; explicit rereading; changed mapping options replaying stored originals.
-- Stable IDs; duplicate selection; unkeyed/invalid records; cross-record/file references; distinct entities with colliding slugs; author matching; fresh relationships and links on every rebuild.
-- Known record errors versus unexpected failures; savepoint and whole-rebuild rollback; optional scraping failures; resource closure after initialization, mapping, export, and upload failures.
-- Streaming JSON chunks/reports, owned-file cleanup, output publication failure, durable reports with cache cleanup, and stream-consuming remote storage.
-- Existing nonconverted public callers when shared packages change, including array-returning and Lexical consumers.
+- Completed-empty versus absent ingestion; failed replacement; reuse without reading the source; explicit rereading; changed mapping options replaying stored originals; per-batch databases.
+- Stable IDs; duplicate selection and conflict diagnostics; unkeyed/invalid records; cross-record references; distinct entities with colliding slugs; author matching; date fallbacks; links on every rebuild.
+- Known record errors versus unexpected failures; optional scraping failures; resource closure after initialization, mapping, export, and upload failures.
+- JSON chunks, owned-file cleanup, reports with and without `--report`, failed reports, stream-consuming uploads, and progress sub-task titles.
+- Existing callers of shared packages, such as `mg-wp-xml` using `mg-wp-api` exports.
 
-Run package build/tests with 100% coverage for touched TypeScript packages, relevant runner integration tests, and repository lint/format checks. Run workspace build/tests when shared API changes affect downstream packages. For a full bounded-memory conversion, exercise the complete pipeline at scale; the [WordPress stress test](../../../packages/mg-wp-xml/test/stress.mjs) uses 100,000 records with 10 KiB bodies, a 256 MiB heap, peak RSS below 512 MiB, and stream-consuming uploads. Adapt the generator to the target source and report measured results.
+Run package tests with 100% coverage for each touched TypeScript package, the runner tests, `pnpm test` in `packages/migrate`, and `pnpm lint` at the root. Then run the CLI on a real export or site with `--scrape none --zip false --tmpPath <scratch dir>`. Run it a second time without `--rereadSource` and confirm it skips the fetch and writes identical `ghost-import.json`. For a full bounded-memory conversion, exercise the pipeline at scale; the [WordPress stress test](../../../packages/mg-wp-xml/test/stress.mjs) uses 100,000 records with 10 KiB bodies, a 256 MiB heap, and peak RSS below 512 MiB.
 
-Document the replacement API, caller-owned reuse/reread policy, ingestion-only versus replayable options, database rebuilding, output format, streaming storage requirements, report locations, and breaking changes in the package's existing docs. Keep context terminology in `mg-context`'s maintained documentation rather than introducing duplicate glossaries or ADRs for this conversion. Report any downstream incompatibilities explicitly. Commit only when the user requests it.
+Document the `parse`/`ingest`/`map` API, caller-owned reuse and reread policy, which options narrow the fetch and which apply at map time, output format, `--report`, streaming storage requirements, and breaking changes in the adapter README. Keep context terminology in `mg-context`'s maintained documentation rather than introducing duplicate glossaries or ADRs for this conversion. Report any downstream incompatibilities and behavior changes explicitly.
