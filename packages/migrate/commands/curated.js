@@ -1,4 +1,3 @@
-import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import curated from '../sources/curated.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
@@ -62,15 +61,45 @@ const options = [
     },
     {
         type: 'boolean',
-        flags: '--fallBackHTMLCard',
-        defaultValue: true,
-        desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
+        flags: '--rereadSource',
+        defaultValue: false,
+        desc: 'Read the export zip again, replacing the stored source and rewriting its images'
+    },
+    {
+        type: 'number',
+        flags: '--postsPerFile',
+        defaultValue: 2000,
+        desc: 'Maximum posts written per Ghost import JSON file'
     },
     {
         type: 'boolean',
         flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
+    },
+    {
+        type: 'string',
+        flags: '--tmpPath',
+        defaultValue: null,
+        desc: 'Specify the full path where the temporary files will be stored (Defaults a hidden tmp dir)'
+    },
+    {
+        type: 'string',
+        flags: '--outputPath',
+        defaultValue: null,
+        desc: 'Specify the full path where the final zip file will be saved to (Defaults to CWD)'
+    },
+    {
+        type: 'string',
+        flags: '--cacheName',
+        defaultValue: null,
+        desc: 'Provide a unique name for the cache directory (defaults to one based on the export path)'
+    },
+    {
+        type: 'boolean',
+        flags: '--report',
+        defaultValue: false,
+        desc: 'Write a .report.json migration report beside the import, or a .failed-report.json if the run fails'
     },
     ...ghostAuthOptions
 ];
@@ -92,11 +121,6 @@ const run = async argv => {
         argv.verbose = true;
     }
 
-    // Remove trailing slash from URL
-    if (argv.url.endsWith('/')) {
-        argv.url = argv.url.slice(0, -1);
-    }
-
     if (argv.verbose) {
         ui.log.info(`Migrating from export at ${argv.pathToZip}`);
     }
@@ -108,19 +132,16 @@ const run = async argv => {
         // Run the migration
         await migrate.run(context);
 
-        if (argv.verbose && context.result) {
-            ui.log.info('Done');
-        }
-
-        if (argv.veryVerbose && context.result) {
-            ui.log.info(inspect(context.result.data, false, 2));
-        }
+        ui.log.info(
+            `${context.summary.imported} imported, ${context.summary.skipped} skipped, ${context.warningCount} warnings.${context.reportFile ? ` Report: ${context.reportFile.path}` : ''}`
+        );
     } catch (error) {
-        ui.log.info('Done with errors', context.errors);
+        ui.log.error(error);
+        process.exitCode = 1;
     }
 
-    if (context.warnings.length > 0) {
-        ui.log.warn(context.warnings);
+    if (argv.verbose && context.fileCache) {
+        ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
     }
 };
 
