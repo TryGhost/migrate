@@ -5,20 +5,11 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {MigrateContext} from '@tryghost/mg-context';
 import {inspectSource, ingest, map} from '../index.js';
-import {wordpressDate, postDates} from '../lib/process.js';
+import {postDates} from '../lib/process.js';
 
 const iso = (date: Date | undefined) => date?.toISOString();
 
 describe('WordPress dates', () => {
-    it('reads zoneless WordPress dates as UTC and rejects zeroed or empty ones', () => {
-        assert.equal(iso(wordpressDate('2025-07-27 03:37:40')), '2025-07-27T03:37:40.000Z');
-        assert.equal(iso(wordpressDate(' 2025-07-27T03:37:40 ')), '2025-07-27T03:37:40.000Z');
-        assert.equal(iso(wordpressDate('2024-01-01T00:00:00Z')), '2024-01-01T00:00:00.000Z');
-        assert.equal(iso(wordpressDate('2024-01-01T00:00:00+02:00')), '2023-12-31T22:00:00.000Z');
-        assert.equal(wordpressDate('0000-00-00 00:00:00'), undefined);
-        assert.equal(wordpressDate(''), undefined);
-    });
-
     it('prefers post_date_gmt, then pubDate, then post_date, and uses post_modified_gmt for updates', () => {
         const published = {
             'wp:post_date': '2025-07-26 23:37:40',

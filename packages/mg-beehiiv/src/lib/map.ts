@@ -9,7 +9,7 @@ import {
 import type {MappingSummary} from '@tryghost/mg-context';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, stringUtils} from '@tryghost/mg-utils';
 import {processHTML, removeDuplicateFeatureImage} from './process.js';
 import {namedAuthor, namedTag, publicFirst, rememberGhostUsers} from './entities.js';
 import type {IdFor} from './entities.js';
@@ -62,10 +62,8 @@ export function fullImageURL(path: string): string {
 
 /** beehiiv writes zoneless timestamps such as `2023-01-18 21:25:27`; they are read as UTC. */
 function rowDate(row: BeehiivRow): Date {
-    const value = (row.created_at ?? '').trim();
-    const zoneless = /^\d{4}-\d\d-\d\d[T ]\d\d:\d\d(?::\d\d(?:\.\d+)?)?$/.test(value);
-    const date = new Date(zoneless ? `${value.replace(' ', 'T')}Z` : value);
-    if (!value || !Number.isFinite(date.getTime())) {
+    const date = dateUtils.parseDate(row.created_at);
+    if (!date) {
         throw new RecordDataError('Invalid beehiiv post date');
     }
     return date;

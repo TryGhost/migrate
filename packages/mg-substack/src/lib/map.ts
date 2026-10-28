@@ -11,7 +11,7 @@ import type {MappingSummary} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, stringUtils} from '@tryghost/mg-utils';
 import {decode} from 'he';
 import {processContent} from './process.js';
 import type {ContentPost, ScrapedData, ScrapedRelation, SubstackOptions, SubstackRow} from './types.js';
@@ -87,12 +87,11 @@ export function postUrl(row: SubstackRow, url: string): string {
 
 /** Substack writes ISO dates in UTC; a zoneless timestamp is read as UTC too. */
 function rowDate(row: SubstackRow): Date | undefined {
-    const value = (row.post_date ?? '').trim();
-    if (!value) {
+    if (!row.post_date?.trim()) {
         return undefined;
     }
-    const date = new Date(/^\d{4}-\d\d-\d\d[T ]\d\d:\d\d(?::\d\d(?:\.\d+)?)?$/.test(value) ? `${value}Z` : value);
-    if (!Number.isFinite(date.getTime())) {
+    const date = dateUtils.parseDate(row.post_date);
+    if (!date) {
         throw new RecordDataError('Invalid Substack post date');
     }
     return date;

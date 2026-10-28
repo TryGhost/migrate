@@ -1,4 +1,5 @@
 import {slugify} from '@tryghost/string';
+import {dateUtils} from '@tryghost/mg-utils';
 import {richContentToHtml} from './rich-content.js';
 import {wixImageUriToUrl} from './wix-image.js';
 import type {WixOptions, WixRow} from './types.js';
@@ -37,17 +38,6 @@ export interface ProcessedRow {
 
 /** The internal tag added to every post. */
 export const WIX_TAG: WixTag = {name: '#wix', slug: 'hash-wix'};
-
-/** Wix writes ISO timestamps such as `2025-10-01T10:00:00Z`; a zoneless timestamp is read as UTC. */
-export function parseDate(value?: string | null): Date | null {
-    const text = value?.trim().replace(/^(\d{4}-\d\d-\d\d) (?=\d)/, '$1T');
-    if (!text) {
-        return null;
-    }
-    const zoneless = /^\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d(?:\.\d+)?)?$/.test(text);
-    const date = new Date(zoneless ? `${text}Z` : text);
-    return Number.isFinite(date.getTime()) ? date : null;
-}
 
 export function parseBoolean(value?: string): boolean {
     return typeof value === 'string' && value.toLowerCase() === 'true';
@@ -138,7 +128,7 @@ export function createSlug({slug, title}: {slug?: string; title?: string}): stri
  * are parsed but not checked.
  */
 export function processRow(row: WixRow, options: WixOptions = {}): ProcessedRow {
-    const published = parseDate(row['Published Date']);
+    const published = dateUtils.parseDate(row['Published Date']) ?? null;
     const slug = createSlug({slug: row.Slug, title: row.Title});
 
     return {
@@ -157,7 +147,7 @@ export function processRow(row: WixRow, options: WixOptions = {}): ProcessedRow 
         },
         url: buildPostUrl({url: options.url, path: row['Post Page URL']}),
         published,
-        lastPublished: parseDate(row['Last Published Date']),
+        lastPublished: dateUtils.parseDate(row['Last Published Date']) ?? null,
         tags: rowTags(row, options),
         author: authorName(row, options)
     };

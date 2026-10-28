@@ -153,7 +153,7 @@ try {
 - `parse(input)` yields the same records as `SourceRecordInput` values, one at a time, without storing them.
 - `map({url}, context, {ghostUsers?})` rebuilds mapped content and returns `{selected, imported, skipped}`. `url` is required. `ghostUsers` may be an iterable or async iterable of existing Ghost users; when one has an author's email, posts keep that user's Ghost ID, slug and roles, and Ghost users' slugs are reserved for them.
 - `sourceUrl({url}, record)` gives a stored item's URL on the live site, or `null`. `ghostId(site, kind, key)` gives the stable Ghost ID `map()` uses.
-- `processArticle()`, `processNewsletter()`, `processNewsletterContent()`, `articleTags()`, `personAuthor()`, `emailAuthor()` and `parseDate()` convert one item's parts. `jsonToHtml(blocks, {onUnhandled})` converts content blocks to HTML, calling `onUnhandled(reason, block)` for each block it leaves out, and the `Entry*` functions convert one block each.
+- `processArticle()`, `processNewsletter()`, `processNewsletterContent()`, `articleTags()`, `personAuthor()` and `emailAuthor()` convert one item's parts. `jsonToHtml(blocks, {onUnhandled})` converts content blocks to HTML, calling `onUnhandled(reason, block)` for each block it leaves out, and the `Entry*` functions convert one block each.
 
 The previous default export (`({options})`, which read every file into memory and returned `{posts}` for `toGhostJSON`) and `mapContent()`/`mapPostPageConfig()` have been removed.
 

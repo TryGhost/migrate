@@ -1,6 +1,6 @@
 import {MigrateContext, PostContext, TagContext, RecordDataError, ghostId as coreGhostId} from '@tryghost/mg-context';
 import type {MappingSummary} from '@tryghost/mg-context';
-import {stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, stringUtils} from '@tryghost/mg-utils';
 import {processHTML} from './process.js';
 import type {ButtondownEmail, ButtondownOptions} from './types.js';
 
@@ -27,12 +27,8 @@ function canonicalSite(url: string): string {
 
 /** Buttondown writes `2023-01-02 16:55:00+00:00`; a zoneless timestamp is read as UTC. */
 function publishDate(email: ButtondownEmail): Date {
-    const value = String(email.publish_date ?? '')
-        .trim()
-        .replace(/^(\d{4}-\d\d-\d\d) (?=\d)/, '$1T');
-    const zoneless = /^\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d(?:\.\d+)?)?$/.test(value);
-    const date = new Date(zoneless ? `${value}Z` : value);
-    if (!value || !Number.isFinite(date.getTime())) {
+    const date = dateUtils.parseDate(email.publish_date);
+    if (!date) {
         throw new RecordDataError('Invalid Buttondown publish date');
     }
     return date;

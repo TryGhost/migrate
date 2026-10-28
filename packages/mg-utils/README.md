@@ -111,6 +111,23 @@ const data = await parseXml('/path/to/file.xml');
 const data = await parseXml(xmlString, {attributeNamePrefix: ''});
 ```
 
+### Date Utilities
+
+Parse dates from source data without depending on the machine's timezone:
+
+```js
+import {dateUtils} from '@tryghost/mg-utils';
+
+const {parseDate} = dateUtils;
+
+parseDate('2025-07-27 03:37:40'); // 2025-07-27T03:37:40.000Z: no zone, so read as UTC
+parseDate('2025-07-27T03:37:40+02:00'); // 2025-07-27T01:37:40.000Z
+parseDate('Mon, 30 Nov 2020 10:00:00 GMT'); // RFC 2822 is parsed as given
+parseDate('0000-00-00 00:00:00'); // undefined
+```
+
+A `YYYY-MM-DD HH:MM[:SS[.fff]]` timestamp without a zone designator, with a space or `T` separator, is read as UTC. Anything else is passed to `new Date()` as given. Non-strings, blank strings and invalid dates return `undefined`, so callers decide whether to fall back to another field or skip the record.
+
 
 ## Develop
 

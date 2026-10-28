@@ -11,7 +11,7 @@ import type {MappingSummary} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, stringUtils} from '@tryghost/mg-utils';
 import {processPost, type LetterdropTag} from './processor.js';
 import type {LetterdropOptions, LetterdropPost} from './types.js';
 
@@ -39,16 +39,6 @@ function siteUrl(value: unknown): URL {
         throw new Error('Letterdrop migrations need the site URL (--url) as an HTTP or HTTPS URL.');
     }
     return url;
-}
-
-/** An ISO 8601 date, read as UTC when it has no offset, or `null` when it is missing or invalid. */
-function parseDate(value: unknown): Date | null {
-    if (typeof value !== 'string' || !value.trim()) {
-        return null;
-    }
-    const zoned = /(?:Z|[+-]\d\d:?\d\d)$/i.test(value.trim()) ? value : `${value}Z`;
-    const date = new Date(zoned);
-    return Number.isNaN(date.getTime()) ? null : date;
 }
 
 const placeholderEmail = (slug: string) => `${slug.slice(0, 50).replace(/-+$/, '')}@example.com`;
@@ -149,7 +139,7 @@ export async function map(
             if (!record.key) {
                 throw new RecordDataError('Post has no ID');
             }
-            const published = parseDate(item.publishedOn) ?? parseDate(item.updated);
+            const published = dateUtils.parseDate(item.publishedOn) ?? dateUtils.parseDate(item.updated);
             if (!published) {
                 throw new RecordDataError('Invalid Letterdrop post dates');
             }
@@ -167,7 +157,7 @@ export async function map(
             post.set('type', 'post');
             post.set('created_at', published);
             post.set('published_at', published);
-            post.set('updated_at', parseDate(item.updated) ?? published);
+            post.set('updated_at', dateUtils.parseDate(item.updated) ?? published);
             post.set('html', data.html);
             for (const field of ['custom_excerpt', 'meta_title', 'meta_description', 'feature_image'] as const) {
                 if (data[field]) {

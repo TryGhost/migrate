@@ -12,7 +12,7 @@ import type {MappingSummary, SourceRecord} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, stringUtils} from '@tryghost/mg-utils';
 import {processAuthor, processPost} from './processor.js';
 import {sourceSite} from './ingest.js';
 import type {LegacyAuthor, LegacyTag, WpApiOptions, WpApiRecord} from './types.js';
@@ -28,11 +28,6 @@ const ROLES = ['Contributor', 'Author', 'Editor', 'Administrator'];
 
 export function ghostId(site: string, kind: string, key: string): string {
     return coreGhostId('mg-wp-api:1', site, kind, key);
-}
-
-/** WordPress `*_gmt` values are UTC without a zone designator. */
-function utcDate(value: string): Date {
-    return new Date(/Z$|[+-]\d\d:?\d\d$/.test(value) ? value : `${value}Z`);
 }
 
 function authorKey({data}: LegacyAuthor): string {
@@ -204,7 +199,8 @@ export async function map(
                 }
                 posts++;
             }
-            if (!Number.isFinite(utcDate(String(wpPost.date_gmt)).getTime())) {
+            // WordPress `*_gmt` values are UTC without a zone designator.
+            if (!dateUtils.parseDate(wpPost.date_gmt)) {
                 throw new RecordDataError('Invalid WordPress publication date');
             }
             if (!URL.canParse(wpPost.link)) {
@@ -218,7 +214,7 @@ export async function map(
                     continue;
                 }
                 if (['created_at', 'published_at', 'updated_at'].includes(field)) {
-                    post.set(field, value ? utcDate(value) : null);
+                    post.set(field, dateUtils.parseDate(value) ?? null);
                 } else if (field === 'comment_id') {
                     post.set(field, String(value));
                 } else {

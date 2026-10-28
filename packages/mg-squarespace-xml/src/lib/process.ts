@@ -1,5 +1,5 @@
 import {extname} from 'node:path';
-import {domUtils, cardUtils, stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, domUtils, cardUtils, stringUtils} from '@tryghost/mg-utils';
 import {slugify} from '@tryghost/string';
 import SimpleDom from 'simple-dom';
 import {decode} from 'html-entities';
@@ -26,28 +26,18 @@ export const getText = (node: any): string => {
     return String(node);
 };
 
-const validDate = (date: Date): Date | undefined => (Number.isFinite(date.getTime()) ? date : undefined);
-
-/**
- * WordPress-style `Y-m-d H:i:s` fields carry no zone; read them as UTC, never as the machine's local time.
- * Never-published drafts use `0000-00-00 00:00:00`, which is invalid.
- */
-export const wxrDate = (value: string): Date | undefined => {
-    const iso = value.trim().replace(' ', 'T');
-    return validDate(new Date(/Z$|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`));
-};
-
 /**
  * The publication and modification dates of an item, as `mg-wp-xml` reads them: `post_date_gmt`, then `pubDate`,
  * then `post_date` read as UTC, because never-published drafts have an empty `pubDate` and a zeroed
- * `post_date_gmt`. Squarespace pages have only a `pubDate`.
+ * `post_date_gmt`. WordPress-style `Y-m-d H:i:s` fields carry no zone and are read as UTC. Squarespace pages have
+ * only a `pubDate`.
  */
 export const postDates = (item: SquarespaceRecord): {published?: Date; modified?: Date} => {
     const published =
-        wxrDate(getText(item['wp:post_date_gmt'])) ??
-        validDate(new Date(getText(item.pubDate))) ??
-        wxrDate(getText(item['wp:post_date']));
-    return {published, modified: wxrDate(getText(item['wp:post_modified_gmt'])) ?? published};
+        dateUtils.parseDate(getText(item['wp:post_date_gmt'])) ??
+        dateUtils.parseDate(getText(item.pubDate)) ??
+        dateUtils.parseDate(getText(item['wp:post_date']));
+    return {published, modified: dateUtils.parseDate(getText(item['wp:post_modified_gmt'])) ?? published};
 };
 
 /** Plain text of `html`, cut back to whole words when it is longer than `max` characters. */
