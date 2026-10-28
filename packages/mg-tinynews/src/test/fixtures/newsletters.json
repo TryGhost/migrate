@@ -1,0 +1,24 @@
+{
+    "data": {
+        "newsletter_editions": [
+            {
+                "id": 3,
+                "slug": "weekly-roundup-1",
+                "headline": "Weekly roundup #1",
+                "subheadline": "The week's news",
+                "content": "<div><h2>Top stories</h2><p>Story one</p><p><br></p><div>More text</div><p><a href=\"https://letterhead.example\">Made with Letterhead</a></p><script>alert(1)</script></div>",
+                "newsletter_published_at": "2023-05-01T09:00:00+00:00",
+                "newsletter_created_at": "2023-04-30T15:00:00+00:00"
+            },
+            {
+                "id": 4,
+                "slug": "weekly-roundup-2",
+                "headline": "Weekly roundup #2",
+                "subheadline": null,
+                "content": "<p>Second edition with <a href=\"https://demo-site.example.com/articles/community/images\">a link</a>.</p>",
+                "newsletter_published_at": "2023-05-08T09:00:00+00:00",
+                "newsletter_created_at": "2023-05-07T15:00:00+00:00"
+            }
+        ]
+    }
+}

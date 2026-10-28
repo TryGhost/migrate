@@ -1,4 +1,3 @@
-import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import tinynews from '../sources/tinynews.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
@@ -35,21 +34,21 @@ const options = [
         type: 'string',
         flags: '--newsletters',
         defaultValue: null,
-        desc: 'Path to newsletters JSON file',
+        desc: 'Path to newsletters JSON file (editions in data.newsletter_editions)',
         required: false
     },
     {
         type: 'string',
         flags: '--authors',
         defaultValue: null,
-        desc: 'Path to authors JSON file',
+        desc: 'Path to authors JSON file (authors in data.authors)',
         required: false
     },
     {
         type: 'string',
         flags: '--url',
         defaultValue: null,
-        desc: 'URL to live site',
+        desc: 'URL to live site (scopes the stable Ghost IDs and gives newsletters their old URLs)',
         required: true
     },
     {
@@ -71,6 +70,12 @@ const options = [
         desc: 'Create a zip file (set to false to skip)'
     },
     {
+        type: 'boolean',
+        flags: '--report',
+        defaultValue: false,
+        desc: 'Write a .report.json migration report beside the import, or a .failed-report.json if the run fails'
+    },
+    {
         type: 'array',
         flags: '--scrape',
         choices: ['all', 'web', 'assets', 'none', 'img', 'media', 'files'],
@@ -85,9 +90,15 @@ const options = [
     },
     {
         type: 'boolean',
-        flags: '--fallBackHTMLCard',
-        defaultValue: true,
-        desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
+        flags: '--rereadSource',
+        defaultValue: false,
+        desc: 'Read the JSON files again, replacing the stored source'
+    },
+    {
+        type: 'number',
+        flags: '--postsPerFile',
+        defaultValue: 2000,
+        desc: 'Maximum posts written per Ghost import JSON file'
     },
     {
         type: 'boolean',
@@ -111,7 +122,7 @@ const options = [
         type: 'string',
         flags: '--cacheName',
         defaultValue: null,
-        desc: 'Provide a unique name for the cache directory (defaults to a UUID)'
+        desc: 'Provide a unique name for the cache directory (defaults to one based on the input file paths)'
     },
     ...ghostAuthOptions
 ];
@@ -138,6 +149,10 @@ const run = async argv => {
         argv.url = argv.url.slice(0, -1);
     }
 
+    if (argv.verbose) {
+        ui.log.info(`Migrating from Tiny News articles at ${argv.articles}`);
+    }
+
     try {
         // Fetch the tasks, configured correctly according to the options passed in
         let migrate = tinynews.getTaskRunner(argv);
@@ -145,15 +160,16 @@ const run = async argv => {
         // Run the migration
         await migrate.run(context);
 
-        if (argv.verbose && context.result) {
-            ui.log.info('Done');
-        }
-
-        if (argv.veryVerbose && context.result) {
-            ui.log.info(inspect(context.result.data, false, 2));
-        }
+        ui.log.info(
+            `${context.summary.imported} imported, ${context.summary.skipped} skipped, ${context.warningCount} warnings.${context.reportFile ? ` Report: ${context.reportFile.path}` : ''}`
+        );
     } catch (error) {
         ui.log.error(error);
+        process.exitCode = 1;
+    }
+
+    if (argv.verbose && context.fileCache) {
+        ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
     }
 };
 
