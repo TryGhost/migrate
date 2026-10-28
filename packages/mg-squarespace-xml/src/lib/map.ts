@@ -11,13 +11,11 @@ import type {MappingSummary, SourceRecord} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {stringUtils} from '@tryghost/mg-utils';
+import {stringUtils, xmlUtils} from '@tryghost/mg-utils';
 import {decode} from 'html-entities';
 import {sourceSite, sourceUrl} from './ingest.js';
 import {
-    ensureArray,
     featureImageUrl,
-    getText,
     htmlToTextTrimmed,
     postDates,
     postSlug,
@@ -26,6 +24,8 @@ import {
     processUser
 } from './process.js';
 import type {SquarespaceOptions, SquarespaceRecord} from './types.js';
+
+const {ensureArray, getText} = xmlUtils;
 
 export type {MappingSummary};
 

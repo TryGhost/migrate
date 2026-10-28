@@ -2,6 +2,7 @@ import {mkdtemp, writeFile, rm, readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {MigrateContext} from '@tryghost/mg-context';
+import {xmlUtils} from '@tryghost/mg-utils';
 import * as transforms from '../lib/process.js';
 import {inspectSource, ingest, map, sourceSite, sourceUrl} from '../index.js';
 
@@ -37,8 +38,8 @@ async function all(input: string | string[], ctx: any): Promise<any> {
             data.authors = authors.length > 1 ? authors : undefined;
             const original = JSON.parse(context.sources.get('item', post.lookupKey!)!.content);
             posts.push({
-                url: sourceUrl(transforms.getText(original.link), ctx.options.url),
-                wpPostType: transforms.getText(original['wp:post_type']),
+                url: sourceUrl(xmlUtils.getText(original.link), ctx.options.url),
+                wpPostType: xmlUtils.getText(original['wp:post_type']),
                 data
             });
         }

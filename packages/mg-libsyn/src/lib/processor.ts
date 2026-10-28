@@ -1,8 +1,9 @@
-import {domUtils, cardUtils} from '@tryghost/mg-utils';
+import {domUtils, cardUtils, xmlUtils} from '@tryghost/mg-utils';
 import {slugify, stripInvisibleChars} from '@tryghost/string';
 import SimpleDom from 'simple-dom';
 import type {LibsynChannel, LibsynItem, XmlValue} from './types.js';
 
+const {ensureArray, getText} = xmlUtils;
 const {serializeChildren, replaceWith, insertBefore, insertAfter, isComment, getCommentData} = domUtils;
 const audioCard = cardUtils.getCard('audio');
 
@@ -46,17 +47,6 @@ export interface ProcessedChannel {
     image: string;
 }
 
-/** The text of a parsed XML value: a string, an element's `#text`, or the first of a repeated element. */
-export function getText(value: XmlValue | undefined): string {
-    if (Array.isArray(value)) {
-        return getText(value[0]);
-    }
-    if (typeof value === 'object') {
-        return getText(value['#text']);
-    }
-    return value ?? '';
-}
-
 /** A child or `@_` attribute of a parsed XML element, or of the first of a repeated element. */
 export function getChild(value: XmlValue | undefined, name: string): XmlValue | undefined {
     if (Array.isArray(value)) {
@@ -68,9 +58,6 @@ export function getChild(value: XmlValue | undefined, name: string): XmlValue | 
 /** The text of an element's attribute. */
 export const getAttribute = (value: XmlValue | undefined, name: string): string =>
     getText(getChild(value, `@_${name}`));
-
-const asArray = (value: XmlValue | undefined): XmlValue[] =>
-    value === undefined ? [] : Array.isArray(value) ? value : [value];
 
 const escapeAttribute = (value: string): string =>
     value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -244,9 +231,9 @@ export function processChannel(channel: LibsynChannel): ProcessedChannel {
     const email = getText(getChild(owner, 'itunes:email')).trim();
 
     const categories: string[] = [];
-    for (const category of asArray(channel['itunes:category'])) {
+    for (const category of ensureArray(channel['itunes:category'])) {
         categories.push(getAttribute(category, 'text'));
-        for (const subcategory of asArray(getChild(category, 'itunes:category'))) {
+        for (const subcategory of ensureArray(getChild(category, 'itunes:category'))) {
             categories.push(getAttribute(subcategory, 'text'));
         }
     }

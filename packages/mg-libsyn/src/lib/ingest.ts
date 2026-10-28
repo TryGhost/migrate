@@ -1,6 +1,9 @@
 import type {MigrateContext, SourceRecord, SourceRecordInput} from '@tryghost/mg-context';
+import {xmlUtils} from '@tryghost/mg-utils';
 import {feedUrl, parse} from './fetch.js';
-import {getText, parseDate} from './processor.js';
+import {parseDate} from './processor.js';
+
+const {getText} = xmlUtils;
 
 export interface IngestOptions {
     /** Replace completed source data. Without it, ingesting into a context that has source data throws. */

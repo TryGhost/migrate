@@ -1,30 +1,12 @@
 import {extname} from 'node:path';
-import {dateUtils, domUtils, cardUtils, stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, domUtils, cardUtils, stringUtils, xmlUtils} from '@tryghost/mg-utils';
 import {slugify} from '@tryghost/string';
 import SimpleDom from 'simple-dom';
 import {decode} from 'html-entities';
 import type {ContentOptions, SquarespaceRecord, SquarespaceTag, SquarespaceUser} from './types.js';
 
 const audioCard = cardUtils.getCard('audio');
-
-/** Repeated elements parse as an array and single ones as a value; normalise both to an array. */
-export const ensureArray = (value: any): any[] => {
-    if (!value) {
-        return [];
-    }
-    return Array.isArray(value) ? value : [value];
-};
-
-/** The text of a parsed node: a string, or an element with attributes whose text is in `#text`. */
-export const getText = (node: any): string => {
-    if (node === undefined || node === null) {
-        return '';
-    }
-    if (typeof node === 'object') {
-        return node['#text'] === undefined ? '' : String(node['#text']);
-    }
-    return String(node);
-};
+const {ensureArray, getText} = xmlUtils;
 
 /**
  * The publication and modification dates of an item, as `mg-wp-xml` reads them: `post_date_gmt`, then `pubDate`,

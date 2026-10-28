@@ -10,7 +10,7 @@ import {
 import {slugify} from '@tryghost/string';
 import MarkdownIt from 'markdown-it';
 import {processShortcodes, processContent, processExcerpt} from '@tryghost/mg-wp-api';
-import {dateUtils, domUtils, youtubeUtils, stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, domUtils, youtubeUtils, stringUtils, xmlUtils} from '@tryghost/mg-utils';
 import {isSerialized, unserialize} from 'php-serialize';
 
 /**
@@ -27,28 +27,7 @@ const fixSerializedLengths = (value: string) => {
 
 const {processFragment} = domUtils;
 const {getYouTubeID} = youtubeUtils;
-
-// Helper to ensure value is always an array
-const ensureArray = (value: any): any[] => {
-    if (!value) {
-        return [];
-    }
-    return Array.isArray(value) ? value : [value];
-};
-
-// Helper to get text content from a node (handles both string and object with #text)
-const getText = (node: any): string => {
-    if (node === undefined || node === null) {
-        return '';
-    }
-    if (typeof node === 'string') {
-        return node;
-    }
-    if (typeof node === 'object' && node['#text'] !== undefined) {
-        return String(node['#text']);
-    }
-    return String(node);
-};
+const {ensureArray, getText} = xmlUtils;
 
 /**
  * WordPress `Y-m-d H:i:s` fields carry no zone and are read as UTC. Never-published drafts have an empty (or `-0001`)
@@ -498,8 +477,6 @@ const processAttachment = async (post: WordPressRecord) => {
 };
 
 export {
-    ensureArray,
-    getText,
     postDates,
     processUser,
     processPost,

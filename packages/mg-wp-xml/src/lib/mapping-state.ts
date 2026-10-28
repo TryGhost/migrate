@@ -1,8 +1,10 @@
 import {MappingState as CoreMappingState, RecordDataError} from '@tryghost/mg-context';
 import type {MigrateContext, SourceRecord} from '@tryghost/mg-context';
 import {slugify} from '@tryghost/string';
-import {getText} from './process.js';
+import {xmlUtils} from '@tryghost/mg-utils';
 import {canonicalSite} from './ingest.js';
+
+const {getText} = xmlUtils;
 
 /** Disk-backed WordPress indexes rebuilt from originals for each mapping. */
 export class MappingState extends CoreMappingState {
