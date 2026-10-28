@@ -1,4 +1,3 @@
-import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import chorus from '../sources/chorus.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
@@ -21,14 +20,14 @@ const options = [
         type: 'array',
         flags: '--entries',
         defaultValue: null,
-        desc: 'Path(s) to Chorus exports ZIPs',
+        desc: 'Path(s) to Chorus export zips, or directories of Entry:<id>.json files',
         required: true
     },
     {
         type: 'string',
         flags: '--url',
         defaultValue: null,
-        desc: 'URL to live site',
+        desc: 'URL to live site (scopes the stable Ghost IDs)',
         required: true
     },
     {
@@ -50,11 +49,17 @@ const options = [
         desc: 'Create a zip file (set to false to skip)'
     },
     {
+        type: 'boolean',
+        flags: '--report',
+        defaultValue: false,
+        desc: 'Write a .report.json migration report beside the import, or a .failed-report.json if the run fails'
+    },
+    {
         type: 'array',
         flags: '--scrape',
-        choices: ['web'],
+        choices: ['all', 'web', 'none'],
         defaultValue: ['all'],
-        desc: 'Configure scraping tasks'
+        desc: 'Configure scraping tasks (all and web scrape post metadata, none skips scraping)'
     },
     {
         type: 'string',
@@ -70,9 +75,15 @@ const options = [
     },
     {
         type: 'boolean',
-        flags: '--fallBackHTMLCard',
-        defaultValue: true,
-        desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
+        flags: '--rereadSource',
+        defaultValue: false,
+        desc: 'Read the exports again, replacing the stored source'
+    },
+    {
+        type: 'number',
+        flags: '--postsPerFile',
+        defaultValue: 2000,
+        desc: 'Maximum posts written per Ghost import JSON file'
     },
     {
         type: 'boolean',
@@ -96,7 +107,7 @@ const options = [
         type: 'string',
         flags: '--cacheName',
         defaultValue: null,
-        desc: 'Provide a unique name for the cache directory (defaults to a UUID)'
+        desc: 'Provide a unique name for the cache directory (defaults to one based on the export paths)'
     },
     ...ghostAuthOptions
 ];
@@ -126,6 +137,10 @@ const run = async argv => {
     // Remove empty array items from argv.entries
     argv.entries = argv.entries.filter(str => str !== '');
 
+    if (argv.verbose) {
+        ui.log.info(`Migrating from Chorus exports at ${argv.entries.join(', ')}`);
+    }
+
     try {
         // Fetch the tasks, configured correctly according to the options passed in
         let migrate = chorus.getTaskRunner(argv);
@@ -133,19 +148,16 @@ const run = async argv => {
         // Run the migration
         await migrate.run(context);
 
-        if (argv.info && context.info) {
-            ui.log.info(`Fetched ${context.info.totals.posts} posts.`);
-        }
-
-        if (argv.verbose && context.result) {
-            ui.log.info('Done');
-        }
-
-        if (argv.veryVerbose && context.result) {
-            ui.log.info(inspect(context.result.data, false, 2));
-        }
+        ui.log.info(
+            `${context.summary.imported} imported, ${context.summary.skipped} skipped, ${context.warningCount} warnings.${context.reportFile ? ` Report: ${context.reportFile.path}` : ''}`
+        );
     } catch (error) {
         ui.log.error(error);
+        process.exitCode = 1;
+    }
+
+    if (argv.verbose && context.fileCache) {
+        ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
     }
 };
 
