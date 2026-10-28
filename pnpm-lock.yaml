@@ -499,9 +499,9 @@ importers:
 
   packages/mg-buttondown:
     dependencies:
-      '@tryghost/errors':
-        specifier: 'catalog:'
-        version: 3.4.4
+      '@tryghost/mg-context':
+        specifier: workspace:*
+        version: link:../mg-context
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils

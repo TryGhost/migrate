@@ -4,16 +4,23 @@ import {domUtils} from '@tryghost/mg-utils';
 
 const {serializeChildren, replaceWith, insertBefore, insertAfter, wrap, createElement} = domUtils;
 
-const processHTML = ({postData}: {postData?: mappedDataObject}) => {
+const MEDIA = 'img, picture, video, audio, iframe, embed, object, svg';
+
+/**
+ * Convert an email body from a Buttondown export, Markdown that may hold HTML, to Ghost HTML: comments are removed,
+ * embedded tweets become embed cards, footnotes become an HTML card, and `{{ subscribe_form }}` and empty
+ * paragraphs are removed.
+ */
+const processHTML = (markdown: string): string => {
     const md = new MarkdownIt({
         html: true
     }).use(MarkdownItFootnote);
 
-    if (!postData?.data?.html) {
+    if (!markdown) {
         return '';
     }
 
-    let html = postData.data.html;
+    let html = markdown;
 
     // Strip HTML comments. `.` doesn't match newlines and a single pass can
     // leave `<!--` behind on nested comments, so match across lines and loop.
@@ -61,8 +68,9 @@ const processHTML = ({postData}: {postData?: mappedDataObject}) => {
             }
         });
 
+        // Remove empty paragraphs, but keep those that only hold media, such as a Markdown image.
         parsed.$('p').forEach(el => {
-            if ((el.textContent || '').trim().length === 0) {
+            if ((el.textContent || '').trim().length === 0 && !el.querySelector(MEDIA)) {
                 el.remove();
             }
         });

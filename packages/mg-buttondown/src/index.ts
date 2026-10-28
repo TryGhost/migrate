@@ -1,13 +1,5 @@
-import {mapContent} from './lib/mapper.js';
-import {contentStats, readZip} from './lib/read-zip.js';
-
-export default async (args: any) => {
-    const theZip = await readZip(args.options.pathToZip);
-    args.posts = theZip.posts;
-    args.json = theZip.json;
-
-    const result = await mapContent(args);
-    return result;
-};
-
-export {contentStats, readZip};
+export {contentStats, ingest, parse} from './lib/ingest.js';
+export {ghostId, map} from './lib/map.js';
+export {processHTML} from './lib/process.js';
+export type {MappingSummary} from './lib/map.js';
+export type {ButtondownEmail, ButtondownOptions} from './lib/types.js';
