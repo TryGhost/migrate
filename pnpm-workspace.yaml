@@ -11,13 +11,13 @@ overrides:
   "js-yaml@3": "5.5.0"
 
 catalog:
-  "@tryghost/admin-api": "1.14.13"
-  "@tryghost/debug": "2.3.16"
-  "@tryghost/errors": "3.4.2"
+  "@tryghost/admin-api": "1.14.14"
+  "@tryghost/debug": "2.3.18"
+  "@tryghost/errors": "3.4.4"
   "@tryghost/kg-default-cards": "10.3.9"
   "@tryghost/kg-html-to-lexical": "1.4.3"
-  "@tryghost/pretty-cli": "3.3.16"
-  "@tryghost/string": "0.3.7"
+  "@tryghost/pretty-cli": "3.4.0"
+  "@tryghost/string": "0.3.8"
   "@types/node": "24.19.2"
   "c8": "12.0.0"
   "chalk": "6.0.1"
