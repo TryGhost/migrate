@@ -2,8 +2,6 @@ import {basename} from 'node:path';
 import {domUtils, cardUtils} from '@tryghost/mg-utils';
 import autop from 'autop';
 import sanitizeHtml from 'sanitize-html';
-import {slugify} from '@tryghost/string';
-import errors from '@tryghost/errors';
 import SimpleDom from 'simple-dom';
 
 const {serializeChildren, replaceWith, wrap} = domUtils;
@@ -11,7 +9,20 @@ const {serializeChildren, replaceWith, wrap} = domUtils;
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 const imageCard = cardUtils.getCard('image');
 
-const cleanExcerpt = htmlContent => {
+export interface ProcessedContent {
+    html?: string;
+    feature_image?: string | null;
+    [key: string]: unknown;
+}
+
+export interface ProcessHTMLArgs {
+    /** Fields to add `html` (and `feature_image`) to. */
+    postData: ProcessedContent;
+    html: string;
+    options?: {firstImageAsFeatured?: boolean} | null;
+}
+
+const cleanExcerpt = (htmlContent: string): string => {
     // Convert to text only
     const cleanedContent = sanitizeHtml(htmlContent, {
         allowedTags: ['b', 'i', 'em', 'strong', 'a'],
@@ -23,11 +34,11 @@ const cleanExcerpt = htmlContent => {
     return cleanedContent.trim();
 };
 
-const slugFromURL = url => {
-    return url.split('/').pop().replace('.html', '');
+const slugFromURL = (url: string): string => {
+    return url.split('/').pop()!.replace('.html', '');
 };
 
-const increaseImageSize = src => {
+const increaseImageSize = (src: string): string => {
     // Increases the image size and removes special flags
     // https://developers.google.com/photos/library/guides/access-media-items
     let updatedSrc = src.replace(/\/s[0-9]{2,5}(-[a-z0-9#,*]{1,4})?/g, '/s2000');
@@ -37,52 +48,34 @@ const increaseImageSize = src => {
     return updatedSrc;
 };
 
-const handleFirstImage = args => {
-    let {postData, html} = args;
+/** A Blogger image file name without its size segment, such as `-s320` or `=w640-h480`. */
+const withoutSize = (name: string): string =>
+    name.replace(/(.*)((-=|-|=)w[0-9]{2,5}-h[0-9]{2,5}|(-=|-|=)s[0-9]{2,5})/, '$1');
 
+/**
+ * Use a leading image as the feature image and remove it from the content: an `<img>` that is the first element, or
+ * a first element with no text whose image is unlinked or links to the same image at another size.
+ */
+const handleFirstImage = ({postData, html}: {postData: ProcessedContent; html: string}): ProcessedContent => {
     return domUtils.processFragment(html, parsed => {
         const firstContentElement = parsed.body.children[0];
 
-        if (!firstContentElement) {
-            postData.html = parsed.html().trim();
-            return postData;
-        }
-
-        if (firstContentElement.tagName === 'IMG') {
+        if (firstContentElement?.tagName === 'IMG') {
             postData.feature_image = firstContentElement.getAttribute('src');
             firstContentElement.remove();
-        } else if ((firstContentElement.textContent || '').trim() === '') {
-            const img = firstContentElement.querySelector('img');
-            const a = firstContentElement.querySelector('a');
-            const firstContentElementImgSrc = img?.getAttribute('src') ?? null;
-            const firstContentElementImgBasename = firstContentElementImgSrc
-                ? basename(firstContentElementImgSrc)
-                : null;
-            const firstContentElementAHref = a?.getAttribute('href') ?? null;
-            const firstContentElementAHrefBasename = firstContentElementAHref
-                ? basename(firstContentElementAHref)
-                : null;
+        } else if (firstContentElement && (firstContentElement.textContent || '').trim() === '') {
+            const imgSrc = firstContentElement.querySelector('img')?.getAttribute('src');
+            const aHref = firstContentElement.querySelector('a')?.getAttribute('href');
 
-            if (firstContentElementImgBasename === firstContentElementAHrefBasename) {
+            // A first element without an image, such as an embed, stays in the content.
+            if (
+                imgSrc &&
+                (!aHref ||
+                    basename(imgSrc) === basename(aHref) ||
+                    withoutSize(basename(imgSrc)) === withoutSize(basename(aHref)))
+            ) {
                 firstContentElement.remove();
-                postData.feature_image = firstContentElementImgSrc;
-            } else if (firstContentElementImgSrc && !firstContentElementAHref) {
-                firstContentElement.remove();
-                postData.feature_image = firstContentElementImgSrc;
-            } else {
-                const firstContentElementImgBasenameNoSize = firstContentElementImgBasename.replace(
-                    /(.*)((-=|-|=)w[0-9]{2,5}-h[0-9]{2,5}|(-=|-|=)s[0-9]{2,5})/,
-                    '$1'
-                );
-                const firstContentElementAHrefBasenameNoSize = firstContentElementAHrefBasename.replace(
-                    /(.*)((-=|-|=)w[0-9]{2,5}-h[0-9]{2,5}|(-=|-|=)s[0-9]{2,5})/,
-                    '$1'
-                );
-
-                if (firstContentElementImgBasenameNoSize === firstContentElementAHrefBasenameNoSize) {
-                    firstContentElement.remove();
-                    postData.feature_image = firstContentElementImgSrc;
-                }
+                postData.feature_image = imgSrc;
             }
         }
 
@@ -91,9 +84,7 @@ const handleFirstImage = args => {
     });
 };
 
-const processHTMLContent = async args => {
-    let {postData, html, options} = args;
-
+const processHTMLContent = async ({postData, html, options}: ProcessHTMLArgs): Promise<ProcessedContent> => {
     html = autop(html);
 
     html = domUtils.processFragment(html, parsed => {
@@ -101,9 +92,8 @@ const processHTMLContent = async args => {
             replaceWith(el, `<hr><div>${serializeChildren(el).trim()}</div>`);
         });
 
-        parsed.$('img').forEach(el => {
-            const imgSrc = el.getAttribute('src');
-            const largerSrc = increaseImageSize(imgSrc);
+        parsed.$('img[src]').forEach(el => {
+            const largerSrc = increaseImageSize(el.getAttribute('src')!);
 
             el.setAttribute('src', largerSrc);
             el.removeAttribute('width');
@@ -113,21 +103,20 @@ const processHTMLContent = async args => {
         parsed.$('.tr-caption-container').forEach(el => {
             const img = el.querySelector('img');
             const imgParentA = img?.closest('a');
-            const hasLink = !!imgParentA;
-            const href = hasLink ? imgParentA.getAttribute('href') : null;
-            const imgSrc = img?.getAttribute('src') ?? null;
+            const href = imgParentA?.getAttribute('href');
+            const imgSrc = img?.getAttribute('src');
             const captionEl = el.querySelector('.tr-caption');
             const caption = captionEl ? serializeChildren(captionEl) : '';
             const cleanedExcerpt = cleanExcerpt(caption);
 
-            if (!imgSrc || imgSrc.length === 0) {
+            if (!imgSrc) {
                 return;
             }
 
             // Update image size so we get the biggest image
             const updatedImgSrc = increaseImageSize(imgSrc);
 
-            let cardOpts = {
+            const cardOpts: any = {
                 env: {dom: new SimpleDom.Document()},
                 payload: {
                     src: updatedImgSrc,
@@ -135,37 +124,26 @@ const processHTMLContent = async args => {
                 }
             };
 
-            if (hasLink) {
-                const updatedHref = increaseImageSize(href);
-
-                if (updatedImgSrc !== updatedHref) {
-                    cardOpts.payload.href = href;
-                }
+            if (href && updatedImgSrc !== increaseImageSize(href)) {
+                cardOpts.payload.href = href;
             }
 
-            const newCard = serializer.serialize(imageCard.render(cardOpts));
+            const newCard = serializer.serialize(imageCard.render(cardOpts) as any);
 
             replaceWith(el, newCard);
         });
 
-        parsed.$('a > img').forEach(el => {
-            const parentA = el.parentElement;
-            if (!parentA || parentA.tagName !== 'A') {
-                return;
-            }
-
-            const aHref = parentA.getAttribute('href');
-            const imgSrc = el.getAttribute('src');
-
-            const updatedaHref = increaseImageSize(aHref);
-            const updatedImgSrc = increaseImageSize(imgSrc);
+        parsed.$('a[href] > img[src]').forEach(el => {
+            const parentA = el.parentElement!;
+            const aHref = parentA.getAttribute('href')!;
+            const imgSrc = el.getAttribute('src')!;
 
             // Don't touch Koenig cards
             if (parentA.getAttribute('class')?.includes('kg-') || el.getAttribute('class')?.includes('kg-')) {
                 return;
             }
 
-            if (updatedaHref === updatedImgSrc) {
+            if (increaseImageSize(aHref) === increaseImageSize(imgSrc)) {
                 replaceWith(parentA, `<img src="${imgSrc}">`);
             }
         });
@@ -178,7 +156,7 @@ const processHTMLContent = async args => {
             }
 
             const parentHTML = serializeChildren(parentDiv);
-            if (parentHTML.includes('•') || parentHTML.includes('&#x2022;')) {
+            if (parentHTML.includes('•')) {
                 // Change div to li by replacing with a new li element
                 const newLi = parsed.document.createElement('li');
                 // Move the div's child nodes into the li. The div is replaced
@@ -195,14 +173,14 @@ const processHTMLContent = async args => {
                 // Only ASCII whitespace is trimmed (matching String.trim over the
                 // serialized HTML); non-breaking spaces are left untouched.
                 newLi.normalize();
-                const firstChild = newLi.firstChild;
+                const firstChild = newLi.firstChild as Text | null;
                 if (firstChild && firstChild.nodeType === 3) {
                     firstChild.data = firstChild.data.replace(/^[ \t\n\r\f\v]+/, '');
                     if (firstChild.data === '') {
                         firstChild.remove();
                     }
                 }
-                const lastChild = newLi.lastChild;
+                const lastChild = newLi.lastChild as Text | null;
                 if (lastChild && lastChild.nodeType === 3) {
                     lastChild.data = lastChild.data.replace(/[ \t\n\r\f\v]+$/, '');
                     if (lastChild.data === '') {
@@ -258,8 +236,6 @@ const processHTMLContent = async args => {
 
             if (serializeChildren(el).trim() === '' && attrs.length === 0) {
                 el.remove();
-            } else if (serializeChildren(el) === '&#xA0;') {
-                el.remove();
             } else if (attrs.length === 0 && children.length === 1 && children[0].tagName === 'IMG') {
                 replaceWith(el, serializeChildren(el).trim());
             }
@@ -267,7 +243,7 @@ const processHTMLContent = async args => {
 
         parsed.$('p').forEach(el => {
             const innerHtml = serializeChildren(el);
-            if (innerHtml.trim() === '' || innerHtml === '&#xA0;' || innerHtml.trim() === '&nbsp;') {
+            if (innerHtml.trim() === '' || innerHtml.trim() === '&nbsp;') {
                 el.remove();
             }
         });
@@ -311,124 +287,4 @@ const processHTMLContent = async args => {
     return postData;
 };
 
-const processPost = async (postData, options) => {
-    const {addTag} = options;
-
-    const post = {
-        url: postData.url,
-        data: {
-            slug: slugFromURL(postData.url),
-            title: postData.title,
-            status: 'published',
-            published_at: new Date(postData.published),
-            created_at: new Date(postData.published),
-            updated_at: new Date(postData.updated),
-            type: 'post',
-            tags: []
-        }
-    };
-
-    post.data = await processHTMLContent({
-        postData: post.data,
-        html: postData.content,
-        options
-    });
-
-    if (postData.author) {
-        const authorName = postData.author.displayName.replace('&amp;', '&');
-        const authorSlug = slugify(authorName);
-
-        post.data.author = {
-            url: `migrator-added-author-${authorSlug}`,
-            data: {
-                slug: authorSlug,
-                email: `${authorSlug}@example.com`,
-                name: authorName
-            }
-        };
-    }
-
-    if (postData.labels) {
-        postData.labels.forEach(label => {
-            const cleanedLabel = label.replace('&amp;', '&');
-            const labelSlug = slugify(cleanedLabel);
-
-            post.data.tags.push({
-                url: `migrator-added-tag-${labelSlug}`,
-                data: {
-                    slug: labelSlug,
-                    name: cleanedLabel
-                }
-            });
-        });
-    }
-
-    if (addTag) {
-        const addTagSlug = slugify(addTag);
-
-        post.data.tags.push({
-            url: `migrator-added-tag-${addTagSlug}`,
-            data: {
-                slug: addTagSlug,
-                name: addTag
-            }
-        });
-    }
-
-    if (postData?.blog?.id) {
-        post.data.tags.push({
-            url: `migrator-added-tag-site-id${postData.blog.id}`,
-            data: {
-                slug: `hash-blogger-site-${postData.blog.id}`,
-                name: `#blogger-site-${postData.blog.id}`
-            }
-        });
-    }
-
-    post.data.tags.push({
-        url: 'migrator-added-tag',
-        data: {
-            slug: 'hash-blogger',
-            name: '#blogger'
-        }
-    });
-
-    return post;
-};
-
-const processPosts = async (posts, options) => {
-    // Filter out falsy items in the post list
-    posts = posts.filter(i => i);
-
-    const results = [];
-
-    for (let i = 0; i < posts.length; i++) {
-        results.push(await processPost(posts[i], options));
-    }
-
-    return results;
-};
-
-const all = async (input, {options}) => {
-    const output = {
-        posts: [],
-        users: []
-    };
-
-    if (input.length < 1) {
-        return new errors.NoContentError({message: 'Input file is empty'});
-    }
-
-    output.posts = await processPosts(input.posts, options);
-
-    return output;
-};
-
-export default {
-    processHTMLContent,
-    processPost,
-    processPosts,
-    all
-};
-
-export {cleanExcerpt, slugFromURL, increaseImageSize};
+export {cleanExcerpt, slugFromURL, increaseImageSize, processHTMLContent};
