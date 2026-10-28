@@ -1,27 +1,21 @@
 import type {MigrateContext, SourceRecordInput} from '@tryghost/mg-context';
-import {dateUtils, xmlUtils} from '@tryghost/mg-utils';
+import {dateUtils, urlUtils, xmlUtils} from '@tryghost/mg-utils';
 import type {WordPressInput} from './input.js';
 import {inspectSource} from './input.js';
 import {getText} from './process.js';
 
+/** The host and path that scope stable Ghost IDs to one site. */
 export function canonicalSite(value: string): string {
-    const url = new URL(value);
-    if (!['http:', 'https:'].includes(url.protocol)) {
+    const url = urlUtils.httpUrl(value);
+    if (!url) {
         throw new Error('WordPress site URLs must use HTTP or HTTPS.');
     }
-    return url.host.toLowerCase() + url.pathname.replace(/\/+$/, '');
+    return urlUtils.canonicalSite(url);
 }
 
+/** An item's link resolved against the site URL, or `undefined` when it is blank or not an HTTP(S) URL. */
 export function sourceUrl(value: string, base: string): string | undefined {
-    if (!value.trim()) {
-        return undefined;
-    }
-    try {
-        const url = new URL(value, base);
-        return ['http:', 'https:'].includes(url.protocol) ? url.href : undefined;
-    } catch {
-        return undefined;
-    }
+    return urlUtils.httpUrl(value, base)?.href;
 }
 
 function revision(item: Record<string, any>): number | undefined {

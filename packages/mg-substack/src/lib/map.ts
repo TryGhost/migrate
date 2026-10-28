@@ -11,7 +11,7 @@ import type {MappingSummary} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {dateUtils, stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, stringUtils, urlUtils} from '@tryghost/mg-utils';
 import {decode} from 'he';
 import {processContent} from './process.js';
 import type {ContentPost, ScrapedData, ScrapedRelation, SubstackOptions, SubstackRow} from './types.js';
@@ -48,11 +48,10 @@ type ResolvedOptions = SubstackOptions & typeof DEFAULTS;
 
 /** The site URL without trailing slashes. */
 function siteUrl(value: unknown): string {
-    const url = typeof value === 'string' ? URL.parse(value) : null;
-    if (!url || !['http:', 'https:'].includes(url.protocol)) {
+    if (!urlUtils.httpUrl(value)) {
         throw new Error('Substack migrations need the site URL (--url) as an HTTP or HTTPS URL.');
     }
-    return (value as string).replace(/\/+$/, '');
+    return (value as string).trim().replace(/\/+$/, '');
 }
 
 function resolveOptions(options: SubstackOptions): ResolvedOptions {
@@ -64,12 +63,6 @@ function resolveOptions(options: SubstackOptions): ResolvedOptions {
     }
     resolved.url = siteUrl(options.url);
     return resolved as ResolvedOptions;
-}
-
-/** The host and path that scope stable Ghost IDs to one site. */
-function canonicalSite(url: string): string {
-    const parsed = new URL(url);
-    return parsed.host.toLowerCase() + parsed.pathname.replace(/\/+$/, '');
 }
 
 export function ghostId(site: string, kind: string, key: string): string {
@@ -229,7 +222,7 @@ export async function map(
             throw new Error(`Invalid ${name} date: ${resolved[name]}`);
         }
     }
-    const site = canonicalSite(resolved.url);
+    const site = urlUtils.canonicalSite(resolved.url);
     // Posts never given a date are dated when the export was read, so remapping keeps their dates.
     const readAt = new Date(context.sources.currentIngestion!.completedAt);
     const state = new MappingState(context, 'mg-substack');
@@ -320,7 +313,7 @@ export function applyScrapedData(
     options: SubstackOptions
 ): void {
     const resolved = resolveOptions(options);
-    const site = canonicalSite(resolved.url);
+    const site = urlUtils.canonicalSite(resolved.url);
     for (const [field, value] of Object.entries(scraped)) {
         if (
             field !== 'tags' &&

@@ -10,12 +10,11 @@ import {
 import type {MappingSummary, SourceRecord} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
-import {stringUtils} from '@tryghost/mg-utils';
+import {stringUtils, urlUtils} from '@tryghost/mg-utils';
 import {
     DEFAULT_AUTHOR,
     NEWSLETTER_AUTHOR,
     emailAuthor,
-    httpUrl,
     newsletterUrl,
     personAuthor,
     processArticle,
@@ -46,12 +45,11 @@ export function ghostId(site: string, kind: string, key: string): string {
 
 /** The live site's URL without a trailing slash, and its host and path, which scope stable Ghost IDs to one site. */
 function site(value: unknown): {url: string; scope: string} {
-    const url = httpUrl(value);
+    const url = urlUtils.httpUrl(value);
     if (!url) {
         throw new Error('Tiny News migrations need the site URL (--url) as an HTTP or HTTPS URL.');
     }
-    const {host, pathname} = new URL(url);
-    return {url: url.replace(/\/+$/, ''), scope: host.toLowerCase() + pathname.replace(/\/+$/, '')};
+    return {url: url.href.replace(/\/+$/, ''), scope: urlUtils.canonicalSite(url)};
 }
 
 /**
@@ -60,7 +58,9 @@ function site(value: unknown): {url: string; scope: string} {
  */
 export function sourceUrl(options: TinyNewsOptions, record: SourceRecord): string | null {
     const item = JSON.parse(record.content);
-    return record.metadata.type === 'newsletter' ? newsletterUrl(site(options.url).url, item) : httpUrl(item.live_url);
+    return record.metadata.type === 'newsletter'
+        ? newsletterUrl(site(options.url).url, item)
+        : (urlUtils.httpUrl(item.live_url)?.href ?? null);
 }
 
 /** Authors in the authors file are matched to an article's author by first names and last name. */

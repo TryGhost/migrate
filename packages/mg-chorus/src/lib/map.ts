@@ -11,7 +11,7 @@ import type {MappingSummary} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {dateUtils, stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, stringUtils, urlUtils} from '@tryghost/mg-utils';
 import jsonToHtml from './json-to-html.js';
 import type {ChorusEntry, ChorusOptions} from './types.js';
 
@@ -31,17 +31,16 @@ export function ghostId(site: string, kind: string, key: string): string {
 
 /** The host and path of the live site's URL, which scope stable Ghost IDs to one site. */
 function siteScope(value: unknown): string {
-    const url = typeof value === 'string' ? URL.parse(value) : null;
-    if (!url || !['http:', 'https:'].includes(url.protocol)) {
+    const url = urlUtils.httpUrl(value);
+    if (!url) {
         throw new Error('Chorus migrations need the site URL (--url) as an HTTP or HTTPS URL.');
     }
-    return url.host.toLowerCase() + url.pathname.replace(/\/+$/, '');
+    return urlUtils.canonicalSite(url);
 }
 
 /** An entry's URL on the live site, or `null` when it has no HTTP or HTTPS URL. */
 export function entryUrl(entry: ChorusEntry): string | null {
-    const url = typeof entry.url === 'string' ? URL.parse(entry.url.trim()) : null;
-    return url && ['http:', 'https:'].includes(url.protocol) ? url.href : null;
+    return urlUtils.httpUrl(entry.url)?.href ?? null;
 }
 
 /** The decoded last segment of a URL's path, as a slug: `my-article` for `https://example.com/2019/9/26/1/my-article`. */
