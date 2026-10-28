@@ -11,7 +11,7 @@ import type {MappingSummary} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {stringUtils} from '@tryghost/mg-utils';
+import {stringUtils, urlUtils} from '@tryghost/mg-utils';
 import {processPost, readPost} from './process-post.js';
 import type {JekyllOptions, JekyllPost, JekyllTag} from './types.js';
 
@@ -30,8 +30,8 @@ export function ghostId(site: string, kind: string, key: string): string {
 }
 
 function siteUrl(value: unknown): URL {
-    const url = typeof value === 'string' ? URL.parse(value.trim()) : null;
-    if (!url || !['http:', 'https:'].includes(url.protocol)) {
+    const url = urlUtils.httpUrl(value);
+    if (!url) {
         throw new Error('Jekyll migrations need the site URL (--url) as an HTTP or HTTPS URL.');
     }
     return url;
@@ -146,7 +146,7 @@ export async function map(
         throw new Error('Ingest a complete Jekyll export before mapping.');
     }
     const url = siteUrl(options.url);
-    const site = url.host.toLowerCase() + url.pathname.replace(/\/+$/, '');
+    const site = urlUtils.canonicalSite(url);
     const domain = (typeof options.email === 'string' && options.email.trim()) || 'example.com';
     const readAt = new Date(context.sources.currentIngestion!.completedAt);
     const state = new MappingState(context, 'mg-jekyll-export');

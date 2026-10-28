@@ -11,7 +11,7 @@ import type {MappingSummary, SourceRecord} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {stringUtils} from '@tryghost/mg-utils';
+import {stringUtils, urlUtils} from '@tryghost/mg-utils';
 import {siteUrl} from './fetch.js';
 import {getText, parseDate, processChannel, processPost, type LibsynTag, type ProcessedChannel} from './processor.js';
 import type {LibsynItem, LibsynOptions} from './types.js';
@@ -110,7 +110,7 @@ export async function map(
         throw new Error('Ingest complete Libsyn source data before mapping.');
     }
     const url = siteUrl(options.url);
-    const site = url.host.toLowerCase() + url.pathname.replace(/\/+$/, '');
+    const site = urlUtils.canonicalSite(url);
     const base = url.href.replace(/\/+$/, '');
     const channel = context.sources.get('channel', 'channel');
     if (!channel) {

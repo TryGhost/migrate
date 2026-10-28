@@ -128,6 +128,24 @@ parseDate('0000-00-00 00:00:00'); // undefined
 
 A `YYYY-MM-DD HH:MM[:SS[.fff]]` timestamp without a zone designator, with a space or `T` separator, is read as UTC. Anything else is passed to `new Date()` as given. Non-strings, blank strings and invalid dates return `undefined`, so callers decide whether to fall back to another field or skip the record.
 
+### URL Utilities
+
+Validate URLs from source data or options, and identify a site by its URL:
+
+```js
+import {urlUtils} from '@tryghost/mg-utils';
+
+const {httpUrl, canonicalSite} = urlUtils;
+
+httpUrl(' https://example.com/blog/ ')?.href; // 'https://example.com/blog/'
+httpUrl('/2024/01/post/', 'https://example.com')?.href; // 'https://example.com/2024/01/post/'
+httpUrl('mailto:hello@example.com'); // undefined
+
+canonicalSite('https://Example.com/blog/'); // 'example.com/blog'
+```
+
+`httpUrl` trims a string and returns a `URL` only for `http:` and `https:`. Non-strings, blank strings, invalid URLs and other protocols return `undefined`, so callers choose their own error. `canonicalSite` returns the lowercased host and path without trailing slashes, which scopes stable IDs to one site whatever its protocol, query or trailing slash.
+
 
 ## Develop
 

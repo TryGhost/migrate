@@ -1,22 +1,21 @@
 import {basename} from 'node:path';
 import type {JsonObject, MigrateContext, SourceRecordInput} from '@tryghost/mg-context';
-import {dateUtils, xmlUtils} from '@tryghost/mg-utils';
+import {dateUtils, urlUtils, xmlUtils} from '@tryghost/mg-utils';
 import {getText} from './process.js';
 import type {SquarespaceRecord} from './types.js';
 
 /** The host and path that scope stable Ghost IDs to one site. */
 export function canonicalSite(value: string): string {
-    const url = URL.parse(value);
-    if (!url || !['http:', 'https:'].includes(url.protocol)) {
+    const url = urlUtils.httpUrl(value);
+    if (!url) {
         throw new Error(`Squarespace site URLs must use HTTP or HTTPS: ${value}`);
     }
-    return url.host.toLowerCase() + url.pathname.replace(/\/+$/, '');
+    return urlUtils.canonicalSite(url);
 }
 
 /** An item's link resolved against the site URL, or `undefined` when it is blank or not an HTTP(S) URL. */
 export function sourceUrl(value: string, base: string): string | undefined {
-    const url = value.trim() ? URL.parse(value, base || undefined) : null;
-    return url && ['http:', 'https:'].includes(url.protocol) ? url.href : undefined;
+    return urlUtils.httpUrl(value, base)?.href;
 }
 
 /** The export's site URL, from the channel `link` of the completed source data. */

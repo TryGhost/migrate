@@ -9,7 +9,7 @@ import {
 import type {MappingSummary} from '@tryghost/mg-context';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {dateUtils, stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, stringUtils, urlUtils} from '@tryghost/mg-utils';
 import {processHTML, removeDuplicateFeatureImage} from './process.js';
 import {namedAuthor, namedTag, publicFirst, rememberGhostUsers} from './entities.js';
 import type {IdFor} from './entities.js';
@@ -31,17 +31,10 @@ export function ghostId(site: string, kind: string, key: string): string {
 
 /** The site URL without trailing slashes. */
 function siteUrl(value: unknown): string {
-    const url = typeof value === 'string' ? URL.parse(value) : null;
-    if (!url || !['http:', 'https:'].includes(url.protocol)) {
+    if (!urlUtils.httpUrl(value)) {
         throw new Error('beehiiv migrations need the site URL (--url) as an HTTP or HTTPS URL.');
     }
-    return (value as string).replace(/\/+$/, '');
-}
-
-/** The host and path that scope stable Ghost IDs to one site. */
-function canonicalSite(url: string): string {
-    const parsed = new URL(url);
-    return parsed.host.toLowerCase() + parsed.pathname.replace(/\/+$/, '');
+    return (value as string).trim().replace(/\/+$/, '');
 }
 
 /** The slug in a beehiiv post URL (`/p/<slug>`), or the title's slug when there is no URL. */
@@ -112,7 +105,7 @@ export async function map(
         throw new Error('Ingest a complete beehiiv posts CSV before mapping.');
     }
     const resolved = {...options, url: siteUrl(options.url)};
-    const site = canonicalSite(resolved.url);
+    const site = urlUtils.canonicalSite(resolved.url);
     const idFor: IdFor = (kind, key) => ghostId(site, kind, key);
     const state = new MappingState(context, 'mg-beehiiv');
     return context.rebuildMappedContent(async () => {
@@ -169,7 +162,7 @@ export async function map(
  * page's authors, identified by slug as mapped authors are. The caller saves the post.
  */
 export function applyScrapedData(post: PostContext, scraped: ScrapedData, options: BeehiivOptions): void {
-    const site = canonicalSite(siteUrl(options.url));
+    const site = urlUtils.canonicalSite(siteUrl(options.url));
     for (const [field, value] of Object.entries(scraped)) {
         if (
             field !== 'authors' &&

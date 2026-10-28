@@ -1,13 +1,13 @@
 import errors from '@tryghost/errors';
 import type {SourceRecordInput} from '@tryghost/mg-context';
-import {xmlUtils} from '@tryghost/mg-utils';
+import {urlUtils, xmlUtils} from '@tryghost/mg-utils';
 import {getText} from './processor.js';
 import type {LibsynItem, XmlObject, XmlValue} from './types.js';
 
 /** The site's URL. Throws unless it is an HTTP(S) URL. */
 export function siteUrl(value: unknown): URL {
-    const url = typeof value === 'string' ? URL.parse(value.trim()) : null;
-    if (!url || !['http:', 'https:'].includes(url.protocol)) {
+    const url = urlUtils.httpUrl(value);
+    if (!url) {
         throw new errors.IncorrectUsageError({
             message: 'Libsyn migrations need the site URL (--url) as an HTTP or HTTPS URL.'
         });

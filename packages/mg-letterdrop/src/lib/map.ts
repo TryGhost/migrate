@@ -11,7 +11,7 @@ import type {MappingSummary} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {dateUtils, stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, stringUtils, urlUtils} from '@tryghost/mg-utils';
 import {processPost, type LetterdropTag} from './processor.js';
 import type {LetterdropOptions, LetterdropPost} from './types.js';
 
@@ -34,8 +34,8 @@ export function ghostId(site: string, kind: string, key: string): string {
 
 /** The live site's URL without a trailing slash. Throws unless it is an HTTP(S) URL. */
 function siteUrl(value: unknown): URL {
-    const url = typeof value === 'string' ? URL.parse(value.trim()) : null;
-    if (!url || !['http:', 'https:'].includes(url.protocol)) {
+    const url = urlUtils.httpUrl(value);
+    if (!url) {
         throw new Error('Letterdrop migrations need the site URL (--url) as an HTTP or HTTPS URL.');
     }
     return url;
@@ -119,7 +119,7 @@ export async function map(
         throw new Error('Ingest complete Letterdrop source data before mapping.');
     }
     const url = siteUrl(options.url);
-    const site = url.host.toLowerCase() + url.pathname.replace(/\/+$/, '');
+    const site = urlUtils.canonicalSite(url);
     const processOptions = {
         url: url.href.replace(/\/+$/, ''),
         subscribeLink: options.subscribeLink ?? '#/portal/signup',

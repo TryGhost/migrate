@@ -10,7 +10,7 @@ import {
 import type {MappingSummary} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
-import {stringUtils} from '@tryghost/mg-utils';
+import {stringUtils, urlUtils} from '@tryghost/mg-utils';
 import {slugify} from '@tryghost/string';
 import {processRow} from './process.js';
 import type {WixTag} from './process.js';
@@ -35,14 +35,11 @@ export function ghostId(site: string, kind: string, key: string): string {
 
 /** The live site's URL without trailing slashes, and its host and path, which scope stable Ghost IDs. */
 function site(value: unknown): {url: string; scope: string} {
-    const url = typeof value === 'string' ? URL.parse(value) : null;
-    if (!url || !['http:', 'https:'].includes(url.protocol)) {
+    const url = urlUtils.httpUrl(value);
+    if (!url) {
         throw new Error('Wix migrations need the site URL (--url) as an HTTP or HTTPS URL.');
     }
-    return {
-        url: (value as string).replace(/\/+$/, ''),
-        scope: url.host.toLowerCase() + url.pathname.replace(/\/+$/, '')
-    };
+    return {url: (value as string).trim().replace(/\/+$/, ''), scope: urlUtils.canonicalSite(url)};
 }
 
 /**

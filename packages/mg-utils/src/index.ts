@@ -4,5 +4,6 @@ import * as xmlUtils from './lib/xml-utils.js';
 import * as stringUtils from './lib/string-utils.js';
 import * as cardUtils from './lib/card-utils.js';
 import * as dateUtils from './lib/date-utils.js';
+import * as urlUtils from './lib/url-utils.js';
 
-export {domUtils, youtubeUtils, xmlUtils, stringUtils, cardUtils, dateUtils};
+export {domUtils, youtubeUtils, xmlUtils, stringUtils, cardUtils, dateUtils, urlUtils};

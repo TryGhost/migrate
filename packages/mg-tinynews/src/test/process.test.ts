@@ -12,7 +12,7 @@ import {
     processNewsletterContent,
     textOnly
 } from '../index.js';
-import {httpUrl, text} from '../lib/process.js';
+import {text} from '../lib/process.js';
 import type {TinyNewsArticle, TinyNewsNewsletter} from '../index.js';
 import {fixture} from './helpers.js';
 
@@ -343,14 +343,10 @@ describe('Authors', function () {
 });
 
 describe('Helpers', function () {
-    it('Reads text and URLs', function () {
+    it('Reads text', function () {
         assert.equal(text('  a  '), 'a');
         assert.equal(text(' '), undefined);
         assert.equal(text(1), undefined);
         assert.equal(textOnly('<p>Some <em>text</em></p> '), 'Some text');
-        assert.equal(httpUrl(' https://example.com/a '), 'https://example.com/a');
-        assert.equal(httpUrl('ftp://example.com/a'), null);
-        assert.equal(httpUrl('not a url'), null);
-        assert.equal(httpUrl(null), null);
     });
 });

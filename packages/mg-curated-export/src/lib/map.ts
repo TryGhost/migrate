@@ -11,7 +11,7 @@ import type {MappingSummary} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {dateUtils, stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, stringUtils, urlUtils} from '@tryghost/mg-utils';
 import {decode} from 'html-entities';
 import processContent from './process-content.js';
 import type {CuratedIssue, CuratedOptions} from './types.js';
@@ -100,8 +100,8 @@ function tagEntity(state: MappingState, name: string): TagContext {
 
 /** The issue's URL, which gives the post its slug and old address. */
 function issueUrl(issue: CuratedIssue): URL {
-    const url = typeof issue.url === 'string' ? URL.parse(issue.url.trim()) : null;
-    if (!url || !['http:', 'https:'].includes(url.protocol)) {
+    const url = urlUtils.httpUrl(issue.url);
+    if (!url) {
         throw new RecordDataError('Issue has no valid URL');
     }
     return url;

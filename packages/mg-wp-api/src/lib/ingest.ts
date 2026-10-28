@@ -1,4 +1,5 @@
 import type {MigrateContext, SourceRecordInput} from '@tryghost/mg-context';
+import {urlUtils} from '@tryghost/mg-utils';
 import {tasks, selectBatch, type ApiUser, type FetchOptions, type TaskContext} from './fetch.js';
 
 export interface IngestOptions extends FetchOptions {
@@ -13,12 +14,13 @@ export interface IngestOptions extends FetchOptions {
     onProgress?: (title: string) => void;
 }
 
+/** The host and path that scope stable Ghost IDs to one site. */
 export function canonicalSite(value: string): string {
-    const url = new URL(value);
-    if (!['http:', 'https:'].includes(url.protocol)) {
+    const url = urlUtils.httpUrl(value);
+    if (!url) {
         throw new Error('WordPress site URLs must use HTTP or HTTPS.');
     }
-    return url.host.toLowerCase() + url.pathname.replace(/\/+$/, '');
+    return urlUtils.canonicalSite(url);
 }
 
 /** Yield the source records for every selected API page, one page at a time, without storing them. */

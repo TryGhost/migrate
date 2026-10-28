@@ -1,6 +1,6 @@
 import {MigrateContext, PostContext, TagContext, RecordDataError, ghostId as coreGhostId} from '@tryghost/mg-context';
 import type {MappingSummary} from '@tryghost/mg-context';
-import {dateUtils, stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, stringUtils, urlUtils} from '@tryghost/mg-utils';
 import {processHTML} from './process.js';
 import type {ButtondownEmail, ButtondownOptions} from './types.js';
 
@@ -12,17 +12,10 @@ export function ghostId(site: string, kind: string, key: string): string {
 
 /** The site URL without trailing slashes. */
 function siteUrl(value: unknown): string {
-    const url = typeof value === 'string' ? URL.parse(value) : null;
-    if (!url || !['http:', 'https:'].includes(url.protocol)) {
+    if (!urlUtils.httpUrl(value)) {
         throw new Error('Buttondown migrations need the site URL (--url) as an HTTP or HTTPS URL.');
     }
-    return (value as string).replace(/\/+$/, '');
-}
-
-/** The host and path that scope stable Ghost IDs to one site. */
-function canonicalSite(url: string): string {
-    const parsed = new URL(url);
-    return parsed.host.toLowerCase() + parsed.pathname.replace(/\/+$/, '');
+    return (value as string).trim().replace(/\/+$/, '');
 }
 
 /** Buttondown writes `2023-01-02 16:55:00+00:00`; a zoneless timestamp is read as UTC. */
@@ -45,7 +38,7 @@ export async function map(options: ButtondownOptions, context: MigrateContext): 
         throw new Error('Ingest a complete Buttondown export before mapping.');
     }
     const url = siteUrl(options.url);
-    const site = canonicalSite(url);
+    const site = urlUtils.canonicalSite(url);
     return context.rebuildMappedContent(() =>
         context.mapRecords(context.sources.records({kind: 'email'}), async record => {
             if (!record.key) {

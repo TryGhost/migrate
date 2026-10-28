@@ -1,6 +1,6 @@
 import sanitizeHtml from 'sanitize-html';
 import {RecordDataError} from '@tryghost/mg-context';
-import {dateUtils, domUtils} from '@tryghost/mg-utils';
+import {dateUtils, domUtils, urlUtils} from '@tryghost/mg-utils';
 import {slugify} from '@tryghost/string';
 import {jsonToHtml, type JsonToHtmlOptions} from './json-to-html.js';
 import type {TinyNewsArticle, TinyNewsAuthor, TinyNewsNewsletter, TinyNewsTag} from './types.js';
@@ -73,12 +73,6 @@ export function text(value: unknown): string | undefined {
 /** The text of an HTML string, trimmed. */
 export function textOnly(html: string): string {
     return sanitizeHtml(html, {allowedTags: [], allowedAttributes: {}}).trim();
-}
-
-/** An HTTP or HTTPS URL, or `null`. */
-export function httpUrl(value: unknown): string | null {
-    const url = URL.parse(text(value) ?? '');
-    return url && ['http:', 'https:'].includes(url.protocol) ? url.href : null;
 }
 
 /** Public tags first, then internal (`#`) tags, keeping their order otherwise and the first tag for each slug. */
@@ -173,7 +167,7 @@ export function processArticle(
         null;
     return {
         fields,
-        url: httpUrl(item.live_url),
+        url: urlUtils.httpUrl(item.live_url)?.href ?? null,
         published,
         updated: dateUtils.parseDate(translation.last_published_at) ?? published,
         created: published,
