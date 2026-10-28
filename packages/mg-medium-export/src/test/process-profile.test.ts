@@ -2,13 +2,13 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
-import processProfile from '../lib/process-profile.js';
+import {fileURLToPath} from 'node:url';
+import {processProfile} from '../index.js';
 
-const __dirname = new URL('.', import.meta.url).pathname;
+const fixtures = fileURLToPath(new URL('../../src/test/fixtures/export/profile/', import.meta.url));
 
-const readSync = name => {
-    let fixtureFileName = join(__dirname, './', 'fixtures', 'export', 'profile', name);
-    return readFileSync(fixtureFileName, {encoding: 'utf8'});
+const readSync = (name: string) => {
+    return readFileSync(join(fixtures, name), {encoding: 'utf8'});
 };
 
 describe('Process Profile', function () {
@@ -75,5 +75,12 @@ describe('Process Profile', function () {
 
         assert.equal(profile.data.email, 'test@example.com');
         assert.equal(profile.data['unknown field'], undefined);
+    });
+
+    it('Can handle profile without a URL or photo', function () {
+        const profile = processProfile({html: '<section class="h-card"><h3 class="p-name">Test</h3></section>'});
+
+        assert.equal(profile.url, undefined);
+        assert.equal(profile.data.profile_image, undefined);
     });
 });
