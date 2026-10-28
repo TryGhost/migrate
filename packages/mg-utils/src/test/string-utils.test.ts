@@ -2,7 +2,26 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {stringUtils} from '../index.js';
 
-const {unescapeHTML, startCase, kebabCase, stripHtml, cleanURL} = stringUtils;
+const {escapeHTML, unescapeHTML, startCase, kebabCase, stripHtml, cleanURL} = stringUtils;
+
+describe('escapeHTML', function () {
+    it('Escapes HTML special characters', function () {
+        assert.equal(escapeHTML('& < > " \''), '&amp; &lt; &gt; &quot; &#39;');
+        assert.equal(
+            escapeHTML('<a href="?a=1&b=2">Tom\'s</a>'),
+            '&lt;a href=&quot;?a=1&amp;b=2&quot;&gt;Tom&#39;s&lt;/a&gt;'
+        );
+    });
+
+    it('Escapes ampersands that are already part of entities', function () {
+        assert.equal(escapeHTML('&amp;'), '&amp;amp;');
+    });
+
+    it('Is reversed by unescapeHTML', function () {
+        const value = '<p class="x">Fish & chips, \'n\' peas</p>';
+        assert.equal(unescapeHTML(escapeHTML(value)), value);
+    });
+});
 
 describe('unescapeHTML', function () {
     it('Unescapes HTML entities', function () {

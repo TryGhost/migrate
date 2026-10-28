@@ -1,6 +1,4 @@
-const escapeHtmlAttr = (str: string): string => {
-    return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-};
+import {stringUtils} from '@tryghost/mg-utils';
 
 const sanitizeUrl = (url: string): string | null => {
     try {
@@ -8,7 +6,7 @@ const sanitizeUrl = (url: string): string | null => {
         if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
             return null;
         }
-        return escapeHtmlAttr(parsed.href);
+        return stringUtils.escapeHTML(parsed.href);
     } catch {
         return null;
     }

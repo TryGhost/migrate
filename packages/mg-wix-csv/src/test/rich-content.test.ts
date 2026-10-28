@@ -1,17 +1,9 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {
-    escapeHtml,
-    htmlCard,
-    paragraphsFromPlainText,
-    renderNode,
-    richContentToHtml,
-    sanitizeHref
-} from '../lib/rich-content.js';
+import {htmlCard, paragraphsFromPlainText, renderNode, richContentToHtml, sanitizeHref} from '../lib/rich-content.js';
 
 describe('Wix rich content converter', () => {
-    it('escapes HTML and wraps HTML cards', () => {
-        assert.equal(escapeHtml('<a href="x">It\'s</a>'), '&lt;a href=&quot;x&quot;&gt;It&#39;s&lt;/a&gt;');
+    it('wraps HTML cards', () => {
         assert.equal(
             htmlCard('<p>Body</p>'),
             '<!--kg-card-begin: html-->\n<div class="mg-html-card">\n<p>Body</p>\n</div>\n<!--kg-card-end: html-->'
