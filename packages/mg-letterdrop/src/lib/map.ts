@@ -121,7 +121,7 @@ export async function map(
     const url = siteUrl(options.url);
     const site = urlUtils.canonicalSite(url);
     const processOptions = {
-        url: url.href.replace(/\/+$/, ''),
+        url: urlUtils.trimTrailingSlashes(url.href),
         subscribeLink: options.subscribeLink ?? '#/portal/signup',
         subscribeText: options.subscribeText ?? 'Subscribe',
         addPrimaryTag: options.addPrimaryTag

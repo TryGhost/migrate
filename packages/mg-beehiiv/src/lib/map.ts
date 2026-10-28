@@ -34,7 +34,7 @@ function siteUrl(value: unknown): string {
     if (!urlUtils.httpUrl(value)) {
         throw new Error('beehiiv migrations need the site URL (--url) as an HTTP or HTTPS URL.');
     }
-    return (value as string).trim().replace(/\/+$/, '');
+    return urlUtils.trimTrailingSlashes((value as string).trim());
 }
 
 /** The slug in a beehiiv post URL (`/p/<slug>`), or the title's slug when there is no URL. */

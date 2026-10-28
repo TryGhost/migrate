@@ -18,7 +18,7 @@ export function siteUrl(value: unknown): URL {
 
 /** The site's RSS feed with Libsyn's item IDs, such as `https://example.com/rss/?include-libsyn-metadata=true`. */
 export function feedUrl(url: string): string {
-    return `${siteUrl(url).href.replace(/\/+$/, '')}/rss/?include-libsyn-metadata=true`;
+    return `${urlUtils.trimTrailingSlashes(siteUrl(url).href)}/rss/?include-libsyn-metadata=true`;
 }
 
 /** The source key of an item: its GUID, or its link when it has none. `null` when it has neither. */

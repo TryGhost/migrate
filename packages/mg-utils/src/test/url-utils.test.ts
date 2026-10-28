@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {urlUtils} from '../index.js';
 
-const {httpUrl, canonicalSite} = urlUtils;
+const {httpUrl, trimTrailingSlashes, canonicalSite} = urlUtils;
 
 describe('httpUrl', function () {
     it('Parses trimmed HTTP and HTTPS URLs', function () {
@@ -39,6 +39,20 @@ describe('httpUrl', function () {
 
     it('Does not resolve a blank value to the base', function () {
         assert.equal(httpUrl('', 'https://example.com'), undefined);
+    });
+});
+
+describe('trimTrailingSlashes', function () {
+    it('Removes every trailing slash and nothing else', function () {
+        assert.equal(trimTrailingSlashes('https://example.com/blog//'), 'https://example.com/blog');
+        assert.equal(trimTrailingSlashes('/a/b'), '/a/b');
+        assert.equal(trimTrailingSlashes('///'), '');
+        assert.equal(trimTrailingSlashes(''), '');
+    });
+
+    it('Handles long runs of slashes quickly', function () {
+        const value = `${'/'.repeat(100_000)}x${'/'.repeat(100_000)}`;
+        assert.equal(trimTrailingSlashes(value), `${'/'.repeat(100_000)}x`);
     });
 });
 

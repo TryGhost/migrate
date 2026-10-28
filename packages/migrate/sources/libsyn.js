@@ -6,6 +6,7 @@ import {MigrateContext} from '@tryghost/mg-context';
 import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
+import {urlUtils} from '@tryghost/mg-utils';
 import {ingest, map, siteUrl} from '@tryghost/mg-libsyn';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
 import {streamGhostUsers, GhostUserFetchError} from '@tryghost/mg-ghost-authors';
@@ -23,7 +24,7 @@ const getFullTaskRunner = suppliedOptions => {
                 ctx.options = options;
                 // Without --cacheName the workspace is keyed by the full site URL, so sites that share a name
                 // (example.com and example.org) never share stored source data.
-                const site = `${url.host.toLowerCase()}${url.pathname.replace(/\/+$/, '')}`.replace(/\//g, '-');
+                const site = urlUtils.canonicalSite(url).replace(/\//g, '-');
                 ctx.fileCache = new fsUtils.FileCache(`libsyn-${options.cacheName || site}`, {
                     tmpPath: options.tmpPath
                 });
