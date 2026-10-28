@@ -1,4 +1,3 @@
-import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import jekyll from '../sources/jekyll.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
@@ -21,7 +20,14 @@ const options = [
         type: 'string',
         flags: '--pathToZip',
         defaultValue: null,
-        desc: 'Path to a jekyll export zip',
+        desc: 'Path to a Jekyll site zip, or the site directory, holding _posts/ and _drafts/',
+        required: true
+    },
+    {
+        type: 'string',
+        flags: '-u --url',
+        defaultValue: null,
+        desc: 'URL to the live site (gives posts their old URLs and scopes the stable Ghost IDs)',
         required: true
     },
     {
@@ -43,17 +49,17 @@ const options = [
         desc: 'Create a zip file (set to false to skip)'
     },
     {
+        type: 'boolean',
+        flags: '--report',
+        defaultValue: false,
+        desc: 'Write a .report.json migration report beside the import, or a .failed-report.json if the run fails'
+    },
+    {
         type: 'array',
         flags: '-s --scrape',
         choices: ['all', 'web', 'assets', 'none', 'img', 'media', 'files'],
-        defaultValue: 'all',
+        defaultValue: ['all'],
         desc: 'Configure scraping tasks (all = web + assets, web = metadata only, assets = download assets only). Legacy aliases for assets: img, media, files'
-    },
-    {
-        type: 'string',
-        flags: '-u --url',
-        defaultValue: false,
-        desc: 'Provide a URL (without trailing slash) to the hosted source site'
     },
     {
         type: 'string',
@@ -72,19 +78,43 @@ const options = [
         flags: '--datedPermalinks',
         choices: ['none', '/yyyy/mm/', '/yyyy/mm/dd/'],
         defaultValue: 'none',
-        desc: 'Set the dated permalink structure (e.g. /yyyy/mm/dd/)'
+        desc: 'Set the dated permalink structure of the live site (e.g. /yyyy/mm/dd/), kept when rewriting links'
     },
     {
         type: 'boolean',
-        flags: '--fallBackHTMLCard',
-        defaultValue: true,
-        desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
+        flags: '--rereadSource',
+        defaultValue: false,
+        desc: 'Read the export again, replacing the stored source while preserving downloaded assets'
+    },
+    {
+        type: 'number',
+        flags: '--postsPerFile',
+        defaultValue: 2000,
+        desc: 'Maximum posts written per Ghost import JSON file'
     },
     {
         type: 'boolean',
         flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
+    },
+    {
+        type: 'string',
+        flags: '--tmpPath',
+        defaultValue: null,
+        desc: 'Specify the full path where the temporary files will be stored (Defaults a hidden tmp dir)'
+    },
+    {
+        type: 'string',
+        flags: '--outputPath',
+        defaultValue: null,
+        desc: 'Specify the full path where the final zip file will be saved to (Defaults to CWD)'
+    },
+    {
+        type: 'string',
+        flags: '--cacheName',
+        defaultValue: null,
+        desc: 'Provide a unique name for the cache directory (defaults to one based on the export path)'
     },
     ...ghostAuthOptions
 ];
@@ -107,7 +137,7 @@ const run = async argv => {
     }
 
     // Remove trailing slash from URL
-    if (argv.url.endsWith('/')) {
+    if (argv.url && argv.url.endsWith('/')) {
         argv.url = argv.url.slice(0, -1);
     }
 
@@ -122,19 +152,16 @@ const run = async argv => {
         // Run the migration
         await migrate.run(context);
 
-        if (argv.verbose && context.result) {
-            ui.log.info('Done');
-        }
-
-        if (argv.veryVerbose && context.result) {
-            ui.log.info(inspect(context.result.data, false, 2));
-        }
+        ui.log.info(
+            `${context.summary.imported} imported, ${context.summary.skipped} skipped, ${context.warningCount} warnings.${context.reportFile ? ` Report: ${context.reportFile.path}` : ''}`
+        );
     } catch (error) {
-        ui.log.info('Done with errors', context.errors);
+        ui.log.error(error);
+        process.exitCode = 1;
     }
 
-    if (context.warnings.length > 0) {
-        ui.log.warn(context.warnings);
+    if (argv.verbose && context.fileCache) {
+        ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
     }
 };
 

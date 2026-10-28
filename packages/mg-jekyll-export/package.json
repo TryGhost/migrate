@@ -1,7 +1,7 @@
 {
   "name": "@tryghost/mg-jekyll-export",
   "version": "0.13.8-0",
-  "description": "tbc",
+  "description": "Migrate content from a Jekyll site export to Ghost",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TryGhost/migrate.git",
@@ -9,25 +9,43 @@
   },
   "author": "Ghost Foundation",
   "license": "MIT",
-  "main": "index.js",
+  "main": "build/index.js",
   "type": "module",
+  "types": "./build/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "source": "./src/index.ts",
+      "default": "./build/index.js"
+    }
+  },
   "scripts": {
-    "dev": "echo \"Implement me!\"",
-    "test": "node --test 'test/**/*.test.js'"
+    "build": "tsc --build",
+    "test": "c8 --src src --all --check-coverage --100 --exclude '**/test/**' --exclude '**/*.d.ts' node --test 'build/test/**/*.test.js'",
+    "test:local": "pnpm build && pnpm test"
   },
   "files": [
-    "index.js",
-    "lib"
+    "build"
   ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./build/index.d.ts",
+        "default": "./build/index.js"
+      }
+    }
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "c8": "catalog:",
+    "typescript": "catalog:"
+  },
   "dependencies": {
-    "@tryghost/errors": "catalog:",
+    "@tryghost/mg-context": "workspace:*",
     "@tryghost/mg-fs-utils": "workspace:*",
+    "@tryghost/mg-ghost-authors": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
-    "@tryghost/pretty-cli": "catalog:",
     "@tryghost/string": "catalog:",
     "js-yaml": "5.5.0",
     "markdown-it": "catalog:"
