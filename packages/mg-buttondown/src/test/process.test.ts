@@ -88,6 +88,12 @@ describe('Buttondown Processor', () => {
         );
     });
 
+    it('Removes multi-line and nested comments and keeps an unclosed one', function () {
+        assert.equal(processHTML('One<!-- a\nb -->Two'), '<p>OneTwo</p>\n');
+        assert.equal(processHTML('One<!<!-- a -->-- b -->Two'), '<p>OneTwo</p>\n');
+        assert.equal(processHTML('One<!-- open'), '<p>One&lt;!-- open</p>\n');
+    });
+
     it('Processes HTML', async function () {
         const fancyMd = readFileSync(join(fixturesPath, '/emails/fancy-post.md'), 'utf8');
 

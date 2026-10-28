@@ -237,7 +237,7 @@ export function processNewsletterContent(html: string): string {
 /** A newsletter edition's URL on the live site, `<site>/newsletters/<slug>`, or `null` when it has no slug. */
 export function newsletterUrl(site: string, item: TinyNewsNewsletter): string | null {
     const slug = text(item.slug);
-    return slug ? `${site.replace(/\/+$/, '')}/newsletters/${slug}` : null;
+    return slug ? `${urlUtils.trimTrailingSlashes(site)}/newsletters/${slug}` : null;
 }
 
 /** A newsletter edition as a published post tagged `#newsletter` and `#tinynews`. */

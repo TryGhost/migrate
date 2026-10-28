@@ -21,7 +21,7 @@ describe('Process Profile', function () {
         assert.equal(profile.url, 'https://medium.com/@username');
 
         assert.equal(profile.data.name, 'User Name');
-        assert.ok(profile.data.profile_image.includes('medium.com'));
+        assert.equal(new URL(profile.data.profile_image).hostname, 'cdn-images-1.medium.com');
         assert.deepEqual(profile.data.roles, ['Contributor']);
 
         assert.equal(profile.data.email, 'name@email.com');

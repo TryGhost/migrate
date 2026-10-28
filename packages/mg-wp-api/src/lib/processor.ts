@@ -607,8 +607,9 @@ const processUnknownEmbedShortcodes = (html: string): string => {
 
 const extractAttrValues = (attrsString: string): string[] => {
     const values: string[] = [];
-    // Match quoted values: key="value" or key='value'
-    const quotedRegex = /[\w-]+\s*=\s*"([^"]*?)"|[\w-]+\s*=\s*'([^']*?)'/g;
+    // Match quoted values: key="value" or key='value'. Each key starts the string or follows whitespace, so a long
+    // run of key characters is scanned once rather than from every position in it (ReDoS).
+    const quotedRegex = /(?:^|\s)[\w-]+\s*=\s*"([^"]*?)"|(?:^|\s)[\w-]+\s*=\s*'([^']*?)'/g;
     let match: RegExpExecArray | null;
 
     while ((match = quotedRegex.exec(attrsString)) !== null) {
@@ -619,7 +620,7 @@ const extractAttrValues = (attrsString: string): string[] => {
     }
 
     // Match unquoted values: key=value (no spaces in value)
-    const unquotedRegex = /[\w-]+\s*=\s*([^\s"'][^\s]*)/g;
+    const unquotedRegex = /(?:^|\s)[\w-]+\s*=\s*([^\s"'][^\s]*)/g;
     while ((match = unquotedRegex.exec(attrsString)) !== null) {
         if (match[1]) {
             values.push(match[1]);

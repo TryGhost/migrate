@@ -7,6 +7,24 @@ const {serializeChildren, replaceWith, insertBefore, insertAfter, wrap, createEl
 const MEDIA = 'img, picture, video, audio, iframe, embed, object, svg';
 
 /**
+ * `html` without comments, including multi-line ones. A `<!--` with no `-->` after it is kept. Removing a comment can
+ * join the text around it into a new `<!--`, so the search resumes just before the removed comment.
+ */
+const stripComments = (html: string): string => {
+    let result = html;
+    let start = result.indexOf('<!--');
+    while (start !== -1) {
+        const end = result.indexOf('-->', start + 4);
+        if (end === -1) {
+            break;
+        }
+        result = result.slice(0, start) + result.slice(end + 3);
+        start = result.indexOf('<!--', Math.max(0, start - 3));
+    }
+    return result;
+};
+
+/**
  * Convert an email body from a Buttondown export, Markdown that may hold HTML, to Ghost HTML: comments are removed,
  * embedded tweets become embed cards, footnotes become an HTML card, and `{{ subscribe_form }}` and empty
  * paragraphs are removed.
@@ -20,17 +38,7 @@ const processHTML = (markdown: string): string => {
         return '';
     }
 
-    let html = markdown;
-
-    // Strip HTML comments. `.` doesn't match newlines and a single pass can
-    // leave `<!--` behind on nested comments, so match across lines and loop.
-    let previousHtml;
-    do {
-        previousHtml = html;
-        html = html.replace(/<!--[\s\S]*?-->/g, '');
-    } while (html !== previousHtml);
-
-    let renderedHtml = md.render(html);
+    let renderedHtml = md.render(stripComments(markdown));
 
     let finalHtml = domUtils.processFragment(renderedHtml, parsed => {
         // Handle embedded tweets

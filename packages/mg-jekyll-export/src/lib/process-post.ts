@@ -1,6 +1,7 @@
 import MarkdownIt from 'markdown-it';
 import {slugify} from '@tryghost/string';
 import {RecordDataError} from '@tryghost/mg-context';
+import {urlUtils} from '@tryghost/mg-utils';
 import {load, Schema, timestampTag, YAML11_SCHEMA} from 'js-yaml';
 import processHtml from './process-html.js';
 import type {JekyllOptions, JekyllPost, JekyllTag} from './types.js';
@@ -101,7 +102,7 @@ function readMeta(path: string, attributes: Record<string, unknown>) {
     const [, year, month, day, name] = file;
     const directory = path.split('/').slice(-2, -1)[0];
     // `basename` in the front matter overrides the slug from the file name.
-    const sourceSlug = (text(attributes.basename) ?? name).replace(/^\/+|\/+$/g, '');
+    const sourceSlug = urlUtils.trimTrailingSlashes((text(attributes.basename) ?? name).replace(/^\/+/, ''));
     const fileDate = year ? utcDate(+year, +month, +day) : null;
     return {
         sourceSlug,

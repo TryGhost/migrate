@@ -15,7 +15,7 @@ function siteUrl(value: unknown): string {
     if (!urlUtils.httpUrl(value)) {
         throw new Error('Buttondown migrations need the site URL (--url) as an HTTP or HTTPS URL.');
     }
-    return (value as string).trim().replace(/\/+$/, '');
+    return urlUtils.trimTrailingSlashes((value as string).trim());
 }
 
 /** Buttondown writes `2023-01-02 16:55:00+00:00`; a zoneless timestamp is read as UTC. */

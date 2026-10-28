@@ -112,10 +112,9 @@ const renderChildren = (node: WixNode) => {
 const renderText = (node: WixNode, options: {stripBold?: boolean} = {}) => {
     const rawText = node.textData?.text || '';
     const decorations = node.textData?.decorations || [];
-    const textParts = rawText.match(/^(\s*)(.*?)(\s*)$/s);
-    const leadingWhitespace = textParts?.[1] || '';
-    const linkText = textParts?.[2] || '';
-    const trailingWhitespace = textParts?.[3] || '';
+    const linkText = rawText.trim();
+    const leadingWhitespace = rawText.slice(0, rawText.length - rawText.trimStart().length);
+    const trailingWhitespace = rawText.slice(leadingWhitespace.length + linkText.length);
     let text = escapeHTML(linkText);
     const linkUrl = sanitizeHref(decorations.find(decoration => decoration.type === 'LINK')?.linkData?.link?.url);
 

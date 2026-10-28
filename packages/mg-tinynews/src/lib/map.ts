@@ -49,7 +49,7 @@ function site(value: unknown): {url: string; scope: string} {
     if (!url) {
         throw new Error('Tiny News migrations need the site URL (--url) as an HTTP or HTTPS URL.');
     }
-    return {url: url.href.replace(/\/+$/, ''), scope: urlUtils.canonicalSite(url)};
+    return {url: urlUtils.trimTrailingSlashes(url.href), scope: urlUtils.canonicalSite(url)};
 }
 
 /**

@@ -39,7 +39,7 @@ function site(value: unknown): {url: string; scope: string} {
     if (!url) {
         throw new Error('Wix migrations need the site URL (--url) as an HTTP or HTTPS URL.');
     }
-    return {url: (value as string).trim().replace(/\/+$/, ''), scope: urlUtils.canonicalSite(url)};
+    return {url: urlUtils.trimTrailingSlashes((value as string).trim()), scope: urlUtils.canonicalSite(url)};
 }
 
 /**

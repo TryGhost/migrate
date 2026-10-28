@@ -172,9 +172,10 @@ httpUrl('/2024/01/post/', 'https://example.com')?.href; // 'https://example.com/
 httpUrl('mailto:hello@example.com'); // undefined
 
 canonicalSite('https://Example.com/blog/'); // 'example.com/blog'
+trimTrailingSlashes('https://example.com/blog//'); // 'https://example.com/blog'
 ```
 
-`httpUrl` trims a string and returns a `URL` only for `http:` and `https:`. Non-strings, blank strings, invalid URLs and other protocols return `undefined`, so callers choose their own error. `canonicalSite` returns the lowercased host and path without trailing slashes, which scopes stable IDs to one site whatever its protocol, query or trailing slash.
+`httpUrl` trims a string and returns a `URL` only for `http:` and `https:`. Non-strings, blank strings, invalid URLs and other protocols return `undefined`, so callers choose their own error. `canonicalSite` returns the lowercased host and path without trailing slashes, which scopes stable IDs to one site whatever its protocol, query or trailing slash. `trimTrailingSlashes` removes trailing slashes without a regular expression, so long runs of slashes can't make it slow.
 
 
 ## Develop

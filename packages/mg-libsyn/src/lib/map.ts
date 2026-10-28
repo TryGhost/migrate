@@ -113,7 +113,7 @@ export async function map(
     }
     const url = siteUrl(options.url);
     const site = urlUtils.canonicalSite(url);
-    const base = url.href.replace(/\/+$/, '');
+    const base = urlUtils.trimTrailingSlashes(url.href);
     const channel = context.sources.get('channel', 'channel');
     if (!channel) {
         throw new Error('Completed Libsyn source data has no channel record.');

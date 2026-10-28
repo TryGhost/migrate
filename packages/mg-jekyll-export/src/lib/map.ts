@@ -57,7 +57,7 @@ export function postUrl(
     options: Pick<JekyllOptions, 'url' | 'datedPermalinks'>,
     post: Pick<JekyllPost, 'sourceSlug' | 'date'>
 ) {
-    const base = siteUrl(options.url).href.replace(/\/+$/, '');
+    const base = urlUtils.trimTrailingSlashes(siteUrl(options.url).href);
     return `${base}/${datedPrefix(post.date, options.datedPermalinks)}${post.sourceSlug}`;
 }
 

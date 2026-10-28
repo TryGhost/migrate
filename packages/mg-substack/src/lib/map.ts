@@ -51,7 +51,7 @@ function siteUrl(value: unknown): string {
     if (!urlUtils.httpUrl(value)) {
         throw new Error('Substack migrations need the site URL (--url) as an HTTP or HTTPS URL.');
     }
-    return (value as string).trim().replace(/\/+$/, '');
+    return urlUtils.trimTrailingSlashes((value as string).trim());
 }
 
 function resolveOptions(options: SubstackOptions): ResolvedOptions {

@@ -11,6 +11,19 @@ export const httpUrl = (value: unknown, base?: string): URL | undefined => {
 };
 
 /**
+ * A URL or path without trailing slashes, such as `https://example.com/blog` for `https://example.com/blog//`.
+ *
+ * It scans from the end rather than using `/\/+$/`, which backtracks quadratically on long runs of slashes.
+ */
+export const trimTrailingSlashes = (value: string): string => {
+    let end = value.length;
+    while (end > 0 && value[end - 1] === '/') {
+        end -= 1;
+    }
+    return value.slice(0, end);
+};
+
+/**
  * The lowercased host and path of a site's URL, without trailing slashes, such as `example.com/blog`.
  *
  * It identifies one site regardless of protocol, query or a trailing slash, so it can scope stable IDs to a site and
@@ -19,5 +32,5 @@ export const httpUrl = (value: unknown, base?: string): URL | undefined => {
  */
 export const canonicalSite = (url: URL | string): string => {
     const {host, pathname} = typeof url === 'string' ? new URL(url) : url;
-    return host.toLowerCase() + pathname.replace(/\/+$/, '');
+    return host.toLowerCase() + trimTrailingSlashes(pathname);
 };
