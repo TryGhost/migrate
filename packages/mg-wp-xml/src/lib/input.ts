@@ -1,6 +1,5 @@
-import {stat} from 'node:fs/promises';
-import {basename, relative, resolve} from 'node:path';
-import fg from 'fast-glob';
+import {resolve} from 'node:path';
+import fsUtils from '@tryghost/mg-fs-utils';
 import errors from '@tryghost/errors';
 
 export interface SourceFile {
@@ -12,17 +11,9 @@ export interface WordPressInput {
 }
 
 export async function inspectSource(input: string): Promise<WordPressInput> {
-    const path = resolve(input);
-    const directory = (await stat(path)).isDirectory();
-    const paths = directory ? await fg('**/*.xml', {cwd: path, absolute: true, dot: false}) : [path];
-    paths.sort();
-    if (!paths.length) {
-        throw new errors.NoContentError({message: `No XML files found in ${path}`});
-    }
-    const files: SourceFile[] = [];
-    for (const file of paths) {
-        const name = directory ? relative(path, file).split('\\').join('/') : basename(file);
-        files.push({path: file, name});
+    const files: SourceFile[] = await fsUtils.listInputFiles(input, '**/*.xml');
+    if (!files.length) {
+        throw new errors.NoContentError({message: `No XML files found in ${resolve(input)}`});
     }
     return {files};
 }
