@@ -527,15 +527,31 @@ importers:
 
   packages/mg-chorus:
     dependencies:
-      '@tryghost/debug':
-        specifier: 'catalog:'
-        version: 2.3.18(supports-color@7.2.0)
+      '@tryghost/mg-context':
+        specifier: workspace:*
+        version: link:../mg-context
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
+      '@tryghost/mg-ghost-authors':
+        specifier: workspace:*
+        version: link:../mg-ghost-authors
+      '@tryghost/mg-utils':
+        specifier: workspace:*
+        version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
         version: 0.3.8
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      c8:
+        specifier: 'catalog:'
+        version: 12.0.0
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   packages/mg-clean-html:
     dependencies:
