@@ -1,7 +1,13 @@
 import {join} from 'node:path';
 
+const htmlEscapeMap: Record<string, string> = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'};
 const htmlUnescapeMap: Record<string, string> = {'&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'"};
 const htmlUnescapeRegex = /&(?:amp|lt|gt|quot|#39);/g;
+
+/**
+ * Escape `&`, `<`, `>`, `"` and `'` as HTML entities, so text is safe in element content and in quoted attributes.
+ */
+export const escapeHTML = (str: string): string => str.replace(/[&<>"']/g, match => htmlEscapeMap[match]);
 
 /**
  * Unescape HTML entities (&amp; &lt; &gt; &quot; &#39;) back to literal characters.

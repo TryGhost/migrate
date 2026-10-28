@@ -124,6 +124,23 @@ getText(undefined); // ''
 ensureArray(item.category); // [] when missing, [category] when single, or the array as parsed
 ```
 
+### String Utilities
+
+```js
+import {stringUtils} from '@tryghost/mg-utils';
+
+const {escapeHTML, unescapeHTML} = stringUtils;
+
+`<img alt="${escapeHTML(title)}">`; // escapes & < > " ' for element content and quoted attributes
+unescapeHTML('Fish &amp; chips'); // 'Fish & chips'
+```
+
+- **`escapeHTML(str)`** / **`unescapeHTML(str)`** — escape and unescape `&`, `<`, `>`, `"` and `'`
+- **`startCase(str)`** — `'hello-world'` → `'Hello World'`
+- **`kebabCase(str)`** — `'Hello World'` → `'hello-world'`
+- **`stripHtml(html)`** — remove tags and line breaks
+- **`cleanURL(url)`** — host and path without protocol or query
+
 ### Date Utilities
 
 Parse dates from source data without depending on the machine's timezone:

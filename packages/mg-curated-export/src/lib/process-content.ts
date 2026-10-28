@@ -1,14 +1,10 @@
-import {domUtils} from '@tryghost/mg-utils';
+import {domUtils, stringUtils} from '@tryghost/mg-utils';
 import type {CuratedIssue, CuratedItem} from './types.js';
 
 /** The path an item's image is served from in Ghost, or `null` to leave the image out. */
 export type ImageSource = (filename: string) => string | null;
 
-/** A value for a double-quoted HTML attribute. */
-const attribute = (value: unknown) => String(value ?? '').replace(/"/g, '&quot;');
-
-/** Text for HTML element content. */
-const text = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const {escapeHTML} = stringUtils;
 
 /** The item's image, as an image card linking to the item's URL when it has one. */
 function imageHtml(item: CuratedItem, imageSource: ImageSource): string {
@@ -16,10 +12,11 @@ function imageHtml(item: CuratedItem, imageSource: ImageSource): string {
     if (!src) {
         return '';
     }
+    const image = `src="${escapeHTML(src)}" alt="${escapeHTML(item.title ?? '')}"`;
     if (item.url) {
-        return `<!--kg-card-begin: html--><a class="kg-card kg-image-card" href="${attribute(item.url)}"><img class="kg-image" src="${attribute(src)}" alt="${attribute(item.title)}" /></a><!--kg-card-end: html-->`;
+        return `<!--kg-card-begin: html--><a class="kg-card kg-image-card" href="${escapeHTML(item.url)}"><img class="kg-image" ${image} /></a><!--kg-card-end: html-->`;
     }
-    return `<img src="${attribute(src)}" alt="${attribute(item.title)}" />`;
+    return `<img ${image} />`;
 }
 
 /** A `Text` item: its image, title, description and footer text. */
@@ -29,13 +26,13 @@ function textItemHtml(item: CuratedItem, imageSource: ImageSource): string {
         imageHtml(item, imageSource),
         `<h3>${item.title}</h3>`,
         item.description,
-        `<p><i>${text(footer)}</i></p>`
+        `<p><i>${escapeHTML(footer)}</i></p>`
     ].join('');
 }
 
 /** A `Link` item: its image, linked title, description and linked domain. */
 function linkItemHtml(item: CuratedItem, imageSource: ImageSource): string {
-    const href = attribute(item.url);
+    const href = escapeHTML(item.url ?? '');
     return [
         imageHtml(item, imageSource),
         `<h3><a href="${href}">${item.title}</a></h3>`,

@@ -81,7 +81,8 @@ describe('processContent', function () {
                                 description: '<p>Body</p>',
                                 footer: '<p>Tom &amp; Jerry &lt;script&gt;</p>'
                             },
-                            {type: 'Text', image_original_filename: 'untitled.png'}
+                            {type: 'Text', image_original_filename: 'untitled.png'},
+                            {type: 'Link', title: 'No URL'}
                         ]
                     }
                 ]
@@ -91,7 +92,7 @@ describe('processContent', function () {
 
         assert.equal(
             html,
-            '<h2>Quotes</h2><!--kg-card-begin: html--><a class="kg-card kg-image-card" href="https://example.com/?a=1&b=&quot;2&quot;"><img class="kg-image" src="/content/images/12/quote.png" alt="The &quot;best&quot; one" /></a><!--kg-card-end: html--><h3>The "best" one</h3><p>Body</p><p><i>Tom &amp; Jerry &lt;script&gt;</i></p><hr><img src="/content/images/12/untitled.png" alt="" /><h3>undefined</h3><p><i></i></p>'
+            '<h2>Quotes</h2><!--kg-card-begin: html--><a class="kg-card kg-image-card" href="https://example.com/?a=1&amp;b=&quot;2&quot;"><img class="kg-image" src="/content/images/12/quote.png" alt="The &quot;best&quot; one" /></a><!--kg-card-end: html--><h3>The "best" one</h3><p>Body</p><p><i>Tom &amp; Jerry &lt;script&gt;</i></p><hr><img src="/content/images/12/untitled.png" alt="" /><h3>undefined</h3><p><i></i></p><hr><h3><a href="">No URL</a></h3><p><i><a href="">undefined</a></i></p>'
         );
     });
 

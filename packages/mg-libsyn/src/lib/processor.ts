@@ -1,9 +1,10 @@
-import {domUtils, cardUtils, xmlUtils} from '@tryghost/mg-utils';
+import {domUtils, cardUtils, stringUtils, xmlUtils} from '@tryghost/mg-utils';
 import {slugify, stripInvisibleChars} from '@tryghost/string';
 import SimpleDom from 'simple-dom';
 import type {LibsynChannel, LibsynItem, XmlValue} from './types.js';
 
 const {ensureArray, getText} = xmlUtils;
+const {escapeHTML} = stringUtils;
 const {serializeChildren, replaceWith, insertBefore, insertAfter, isComment, getCommentData} = domUtils;
 const audioCard = cardUtils.getCard('audio');
 
@@ -58,9 +59,6 @@ export function getChild(value: XmlValue | undefined, name: string): XmlValue | 
 /** The text of an element's attribute. */
 export const getAttribute = (value: XmlValue | undefined, name: string): string =>
     getText(getChild(value, `@_${name}`));
-
-const escapeAttribute = (value: string): string =>
-    value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
@@ -133,7 +131,7 @@ export function processContent(item: LibsynItem, {useEmbed = true, image = ''}: 
 
     let player: string;
     if (useEmbed && id) {
-        player = `<!--kg-card-begin: html--><iframe id="embed_${escapeAttribute(id)}" title="${escapeAttribute(title)}" style="border: none" src="//html5-player.libsyn.com/embed/episode/id/${escapeAttribute(id)}/custom-color/000000/" height="90" width="100%" scrolling="no" allowfullscreen="" webkitallowfullscreen="" mozallowfullscreen="" oallowfullscreen="" msallowfullscreen=""></iframe><!--kg-card-end: html-->`;
+        player = `<!--kg-card-begin: html--><iframe id="embed_${escapeHTML(id)}" title="${escapeHTML(title)}" style="border: none" src="//html5-player.libsyn.com/embed/episode/id/${escapeHTML(id)}/custom-color/000000/" height="90" width="100%" scrolling="no" allowfullscreen="" webkitallowfullscreen="" mozallowfullscreen="" oallowfullscreen="" msallowfullscreen=""></iframe><!--kg-card-end: html-->`;
     } else {
         const card = audioCard.render({
             env: {dom: new SimpleDom.Document()},

@@ -1,4 +1,5 @@
 import {createRequire} from 'node:module';
+import {stringUtils} from '@tryghost/mg-utils';
 import SimpleDom from 'simple-dom';
 import {wixMediaIdToUrl} from './wix-image.js';
 
@@ -63,14 +64,7 @@ type WixNode = {
     };
 };
 
-const escapeHtml = (value: string) => {
-    return value
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-};
+const {escapeHTML} = stringUtils;
 
 const htmlCard = (html: string) => {
     return [
@@ -107,7 +101,7 @@ const paragraphsFromPlainText = (plainText?: string) => {
         .split(/\n{2,}/)
         .map(part => part.trim())
         .filter(Boolean)
-        .map(part => `<p>${escapeHtml(part).replace(/\n/g, '<br>')}</p>`)
+        .map(part => `<p>${escapeHTML(part).replace(/\n/g, '<br>')}</p>`)
         .join('\n');
 };
 
@@ -122,7 +116,7 @@ const renderText = (node: WixNode, options: {stripBold?: boolean} = {}) => {
     const leadingWhitespace = textParts?.[1] || '';
     const linkText = textParts?.[2] || '';
     const trailingWhitespace = textParts?.[3] || '';
-    let text = escapeHtml(linkText);
+    let text = escapeHTML(linkText);
     const linkUrl = sanitizeHref(decorations.find(decoration => decoration.type === 'LINK')?.linkData?.link?.url);
 
     for (const decoration of decorations) {
@@ -138,10 +132,10 @@ const renderText = (node: WixNode, options: {stripBold?: boolean} = {}) => {
     }
 
     if (linkUrl && linkText.length > 0) {
-        text = `<a href="${escapeHtml(linkUrl)}">${text}</a>`;
+        text = `<a href="${escapeHTML(linkUrl)}">${text}</a>`;
     }
 
-    return `${escapeHtml(leadingWhitespace)}${text}${escapeHtml(trailingWhitespace)}`;
+    return `${escapeHTML(leadingWhitespace)}${text}${escapeHTML(trailingWhitespace)}`;
 };
 
 const renderHeadingChildren = (node: WixNode): string => {
@@ -165,7 +159,7 @@ const renderImage = (node: WixNode) => {
     });
 
     if (!src) {
-        return htmlCard(`<pre>${escapeHtml(JSON.stringify(node, null, 2))}</pre>`);
+        return htmlCard(`<pre>${escapeHTML(JSON.stringify(node, null, 2))}</pre>`);
     }
 
     const cardOpts = {
@@ -180,7 +174,7 @@ const renderImage = (node: WixNode) => {
 };
 
 const renderButton = (node: WixNode) => {
-    const text = escapeHtml(node.buttonData?.text || '');
+    const text = escapeHTML(node.buttonData?.text || '');
     const url = sanitizeHref(node.buttonData?.link?.url);
     const alignment = (node.buttonData?.containerData?.alignment || 'CENTER').toLowerCase();
     const alignmentClass = ['left', 'center', 'right'].includes(alignment)
@@ -195,7 +189,7 @@ const renderButton = (node: WixNode) => {
         return `<p>${text}</p>`;
     }
 
-    return `<div class="kg-card kg-button-card ${alignmentClass}"><a href="${escapeHtml(url)}" class="kg-btn kg-btn-accent">${text}</a></div>`;
+    return `<div class="kg-card kg-button-card ${alignmentClass}"><a href="${escapeHTML(url)}" class="kg-btn kg-btn-accent">${text}</a></div>`;
 };
 
 const renderTableCell = (node: WixNode) => {
@@ -219,7 +213,7 @@ const renderUnknownNode = (node: WixNode) => {
         return htmlCard(renderChildren(node));
     }
 
-    return htmlCard(`<pre>${escapeHtml(JSON.stringify(node, null, 2))}</pre>`);
+    return htmlCard(`<pre>${escapeHTML(JSON.stringify(node, null, 2))}</pre>`);
 };
 
 const renderNode = (node: WixNode): string => {
@@ -281,4 +275,4 @@ const richContentToHtml = ({richContent, plainContent}: {richContent?: string; p
     }
 };
 
-export {escapeHtml, htmlCard, paragraphsFromPlainText, renderNode, richContentToHtml, sanitizeHref};
+export {htmlCard, paragraphsFromPlainText, renderNode, richContentToHtml, sanitizeHref};
