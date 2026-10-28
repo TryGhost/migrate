@@ -8,24 +8,41 @@
   },
   "author": "Ghost Foundation",
   "license": "MIT",
-  "main": "index.js",
+  "main": "build/index.js",
   "type": "module",
+  "types": "./build/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "source": "./src/index.ts",
+      "default": "./build/index.js"
+    }
+  },
   "scripts": {
-    "dev": "echo \"Implement me!\"",
-    "test": "c8 --check-coverage --lines 100 --branches 100 --functions 100 --statements 100 node --test 'test/**/*.test.js'"
+    "build": "tsc --build",
+    "test": "c8 --src src --all --check-coverage --100 --exclude '**/test/**' --exclude '**/*.d.ts' node --test 'build/test/**/*.test.js'",
+    "test:local": "pnpm build && pnpm test"
   },
   "files": [
-    "index.js",
-    "lib"
+    "build"
   ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./build/index.d.ts",
+        "default": "./build/index.js"
+      }
+    }
   },
   "devDependencies": {
-    "c8": "catalog:"
+    "@types/node": "catalog:",
+    "c8": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
-    "@tryghost/errors": "catalog:",
+    "@tryghost/mg-context": "workspace:*",
+    "@tryghost/mg-ghost-authors": "workspace:*",
     "@tryghost/mg-utils": "workspace:*",
     "@tryghost/string": "catalog:",
     "html-entities": "catalog:",
