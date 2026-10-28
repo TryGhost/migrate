@@ -592,18 +592,34 @@ importers:
 
   packages/mg-curated-export:
     dependencies:
+      '@tryghost/mg-context':
+        specifier: workspace:*
+        version: link:../mg-context
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
+      '@tryghost/mg-ghost-authors':
+        specifier: workspace:*
+        version: link:../mg-ghost-authors
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
-      '@tryghost/pretty-cli':
-        specifier: 'catalog:'
-        version: 3.4.0
       '@tryghost/string':
         specifier: 'catalog:'
         version: 0.3.8
+      html-entities:
+        specifier: 'catalog:'
+        version: 2.6.0
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      c8:
+        specifier: 'catalog:'
+        version: 12.0.0
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   packages/mg-curated-members-csv:
     dependencies:
