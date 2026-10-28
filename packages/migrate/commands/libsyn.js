@@ -1,4 +1,3 @@
-import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import libsyn from '../sources/libsyn.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
@@ -43,6 +42,12 @@ const options = [
         desc: 'Create a zip file (set to false to skip)'
     },
     {
+        type: 'boolean',
+        flags: '--report',
+        defaultValue: false,
+        desc: 'Write a .report.json migration report beside the import, or a .failed-report.json if the run fails'
+    },
+    {
         type: 'string',
         flags: '--addTag',
         defaultValue: null,
@@ -75,15 +80,39 @@ const options = [
     },
     {
         type: 'boolean',
-        flags: '--fallBackHTMLCard',
-        defaultValue: true,
-        desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
+        flags: '--rereadSource',
+        defaultValue: false,
+        desc: 'Fetch the RSS feed again, replacing the stored source while preserving downloaded assets'
+    },
+    {
+        type: 'number',
+        flags: '--postsPerFile',
+        defaultValue: 2000,
+        desc: 'Maximum posts written per Ghost import JSON file'
     },
     {
         type: 'boolean',
         flags: '--cache',
         defaultValue: true,
         desc: 'Persist local cache after migration is complete (Only if `--zip` is `true`)'
+    },
+    {
+        type: 'string',
+        flags: '--tmpPath',
+        defaultValue: null,
+        desc: 'Specify the full path where the temporary files will be stored (Defaults a hidden tmp dir)'
+    },
+    {
+        type: 'string',
+        flags: '--outputPath',
+        defaultValue: null,
+        desc: 'Specify the full path where the final zip file will be saved to (Defaults to CWD)'
+    },
+    {
+        type: 'string',
+        flags: '--cacheName',
+        defaultValue: null,
+        desc: 'Provide a unique name for the cache directory (defaults to one based on --url)'
     },
     ...ghostAuthOptions
 ];
@@ -111,7 +140,7 @@ const run = async argv => {
     }
 
     if (argv.verbose) {
-        ui.log.info(`${argv.info ? 'Fetching info' : 'Migrating'} from Libsyn site`);
+        ui.log.info('Migrating from Libsyn site');
     }
 
     try {
@@ -121,19 +150,16 @@ const run = async argv => {
         // Run the migration
         await migrate.run(context);
 
-        if (argv.verbose && context.result) {
-            ui.log.info('Done');
-        }
-
-        if (argv.veryVerbose && context.result) {
-            ui.log.info(inspect(context.result.data, false, 2));
-        }
+        ui.log.info(
+            `${context.summary.imported} imported, ${context.summary.skipped} skipped, ${context.warningCount} warnings.${context.reportFile ? ` Report: ${context.reportFile.path}` : ''}`
+        );
     } catch (error) {
-        ui.log.info('Done with errors', context.errors);
+        ui.log.error(error);
+        process.exitCode = 1;
     }
 
-    if (context.warnings.length > 0) {
-        ui.log.warn(context.warnings);
+    if (argv.verbose && context.fileCache) {
+        ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
     }
 };
 

@@ -221,9 +221,6 @@ catalogs:
     nock:
       specifier: 15.0.5
       version: 15.0.5
-    node-fetch:
-      specifier: 3.3.2
-      version: 3.3.2
     sanitize-html:
       specifier: 2.18.1
       version: 2.18.1
@@ -846,18 +843,34 @@ importers:
       '@tryghost/errors':
         specifier: 'catalog:'
         version: 3.4.4
+      '@tryghost/mg-context':
+        specifier: workspace:*
+        version: link:../mg-context
+      '@tryghost/mg-ghost-authors':
+        specifier: workspace:*
+        version: link:../mg-ghost-authors
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
         version: 0.3.8
-      node-fetch:
-        specifier: 'catalog:'
-        version: 3.3.2
       simple-dom:
         specifier: 'catalog:'
         version: 1.4.0
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      c8:
+        specifier: 'catalog:'
+        version: 12.0.0
+      nock:
+        specifier: 'catalog:'
+        version: 15.0.5(supports-color@7.2.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   packages/mg-linkfixer:
     dependencies:
@@ -4667,10 +4680,6 @@ packages:
   csv-parse@7.0.3:
     resolution: {integrity: sha512-YFd3QM/yo17vH91L1IOZuvl09zM0zEEtdfTcOCKWcMdM++MNaQSyp09slXyFCLaPXvHstQFx/xC8myiFHSMUvw==}
 
-  data-uri-to-buffer@4.0.1:
-    resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
-    engines: {node: '>= 12'}
-
   data-urls@7.0.0:
     resolution: {integrity: sha512-23XHcCF+coGYevirZceTVD7NdJOqVn+49IHyxgszm+JIiHLoB2TkmPtsYkNWT1pvRSGkc35L6NHs0yHkN2SumA==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
@@ -4944,10 +4953,6 @@ packages:
       picomatch:
         optional: true
 
-  fetch-blob@3.2.0:
-    resolution: {integrity: sha512-7yAQpD2UMJzLi1Dqv7qFYnPbaPx7ZfFK6PiIxQ4PfkGPyNyl2Ugx+a/umUonmKqjhM4DnfbMvdX6otXq83soQQ==}
-    engines: {node: ^12.20 || >= 14.13}
-
   figures@3.2.0:
     resolution: {integrity: sha512-yaduQFRKLXYOGgEn6AZau90j3ggSOyiqXU0F9JZfeXYhNa+Jk4X+s45A2zg5jns87GAFa34BBm2kXw4XpNcbdg==}
     engines: {node: '>=8'}
@@ -4988,10 +4993,6 @@ packages:
     resolution: {integrity: sha512-TeCC10lP8KCgoX+Fe5lryILIT0/Dy+nP0OSVnsuB5CwXoLuOdqxCYlPFF1inR8S/zTy1ec7TjhS2TeRKWzzImA==}
     engines: {node: '>=18.14.0'}
     hasBin: true
-
-  formdata-polyfill@4.0.10:
-    resolution: {integrity: sha512-buewHzMvYL29jdeQTVILecSaZKnt/RJWjoZCF5OW60Z67/GmSLBkOFM7qh1PI3zFNtJbaZL5eQu1vLfazOwj4g==}
-    engines: {node: '>=12.20.0'}
 
   formidable@1.2.6:
     resolution: {integrity: sha512-KcpbcpuLNOwrEjnbpMC0gS+X8ciDoZE1kkqzat4a8vrprf+s9pKNQ/QIwWfbfs4ltgmFl3MD177SNTkve3BwGQ==}
@@ -5620,18 +5621,9 @@ packages:
     resolution: {integrity: sha512-nVeuZGS2we1PyvqbW082Qj0EB4bd//6pZk/zOPDlaTPU72qcWrqfHg3kx9JcBcH1fJxwJHjmsfuQ4mss42su4w==}
     engines: {node: '>=22.20.0'}
 
-  node-domexception@1.0.0:
-    resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
-    engines: {node: '>=10.5.0'}
-    deprecated: Use your platform's native DOMException instead
-
   node-email-verifier@4.0.0:
     resolution: {integrity: sha512-W3ktpVPscUx43WSTm1Vf797cMQMsGwp0JO08ksRaZG8A8wcRUd/XAihL78FwYl2rfABa1m1nIsBtqOMxY9uekA==}
     engines: {node: '>=20.0.0'}
-
-  node-fetch@3.3.2:
-    resolution: {integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   node-releases@2.0.60:
     resolution: {integrity: sha512-OmO8+GM1JUZqXET720VrJCwkjUCXmCMQm0Z3UDDRbfNLHS4NEAvY60j5jiFv0tkKw2PNNlqOLhahVmwJIOLDIQ==}
@@ -6452,10 +6444,6 @@ packages:
   web-resource-inliner@8.0.0:
     resolution: {integrity: sha512-Ezr98sqXW/+OCGoUEXuOKVR+oVFlSdn1tIySEEJdiSAw4IjrW8hQkwARSSBJTSB5Us5dnytDgL0ZDliAYBhaNA==}
     engines: {node: '>=10.0.0'}
-
-  web-streams-polyfill@3.3.3:
-    resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
-    engines: {node: '>= 8'}
 
   webidl-conversions@8.0.1:
     resolution: {integrity: sha512-BMhLD/Sw+GbJC21C/UgyaZX41nPt8bUTg+jWyDeg7e7YN4xOM05YPSIXceACnXVtqyEw/LMClUQMtMZ+PGGpqQ==}
@@ -9827,8 +9815,6 @@ snapshots:
 
   csv-parse@7.0.3: {}
 
-  data-uri-to-buffer@4.0.1: {}
-
   data-urls@7.0.0:
     dependencies:
       whatwg-mimetype: 5.0.0
@@ -10105,11 +10091,6 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.4
 
-  fetch-blob@3.2.0:
-    dependencies:
-      node-domexception: 1.0.0
-      web-streams-polyfill: 3.3.3
-
   figures@3.2.0:
     dependencies:
       escape-string-regexp: 1.0.5
@@ -10155,10 +10136,6 @@ snapshots:
     dependencies:
       fd-package-json: 2.0.0
       package-manager-detector: 1.9.0
-
-  formdata-polyfill@4.0.10:
-    dependencies:
-      fetch-blob: 3.2.0
 
   formidable@1.2.6: {}
 
@@ -10752,18 +10729,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  node-domexception@1.0.0: {}
-
   node-email-verifier@4.0.0:
     dependencies:
       ms: 2.1.3
       validator: 13.15.35
-
-  node-fetch@3.3.2:
-    dependencies:
-      data-uri-to-buffer: 4.0.1
-      fetch-blob: 3.2.0
-      formdata-polyfill: 4.0.10
 
   node-releases@2.0.60: {}
 
@@ -11847,8 +11816,6 @@ snapshots:
       htmlparser2: 9.1.0
       mime: 2.6.0
       valid-data-url: 3.0.1
-
-  web-streams-polyfill@3.3.3: {}
 
   webidl-conversions@8.0.1: {}
 
