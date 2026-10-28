@@ -1,6 +1,5 @@
 import type {WordPressInput} from './lib/input.js';
 import {xmlUtils} from '@tryghost/mg-utils';
-import {getText} from './lib/process.js';
 import {inspectSource} from './lib/input.js';
 
 export {inspectSource};
@@ -17,7 +16,7 @@ export async function contentStats(input: string | WordPressInput): Promise<{pos
     const result = {posts: 0, pages: 0};
     for (const file of snapshot.files) {
         for await (const record of xmlUtils.streamXmlRecords(file.path, {paths: ['rss/channel/item']})) {
-            const type = getText(record.value['wp:post_type']);
+            const type = xmlUtils.getText(record.value['wp:post_type']);
             if (type === 'post' || type === 'page') {
                 result[type === 'post' ? 'posts' : 'pages']++;
             }

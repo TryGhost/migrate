@@ -2,7 +2,8 @@ import type {MigrateContext, SourceRecordInput} from '@tryghost/mg-context';
 import {dateUtils, urlUtils, xmlUtils} from '@tryghost/mg-utils';
 import type {WordPressInput} from './input.js';
 import {inspectSource} from './input.js';
-import {getText} from './process.js';
+
+const {getText} = xmlUtils;
 
 /** The host and path that scope stable Ghost IDs to one site. */
 export function canonicalSite(value: string): string {

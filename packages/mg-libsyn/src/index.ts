@@ -7,7 +7,6 @@ export {
     durationToSeconds,
     getAttribute,
     getChild,
-    getText,
     parseDate,
     processChannel,
     processContent,

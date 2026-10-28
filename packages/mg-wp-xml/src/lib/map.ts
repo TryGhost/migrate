@@ -10,11 +10,13 @@ import type {MappingSummary} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {stringUtils} from '@tryghost/mg-utils';
-import {ensureArray, getText, postDates, processUser, processAttachment, processPost} from './process.js';
+import {stringUtils, xmlUtils} from '@tryghost/mg-utils';
+import {postDates, processUser, processAttachment, processPost} from './process.js';
 import {sourceUrl} from './ingest.js';
 import {MappingState, sourceSite, indexSources} from './mapping-state.js';
 import type {WordPressOptions, LegacyAuthor} from './types.js';
+
+const {ensureArray, getText} = xmlUtils;
 
 export type {MappingSummary};
 export interface MappingServices {

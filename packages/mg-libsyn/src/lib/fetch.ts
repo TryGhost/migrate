@@ -1,8 +1,9 @@
 import errors from '@tryghost/errors';
 import type {SourceRecordInput} from '@tryghost/mg-context';
 import {urlUtils, xmlUtils} from '@tryghost/mg-utils';
-import {getText} from './processor.js';
 import type {LibsynItem, XmlObject, XmlValue} from './types.js';
+
+const {getText} = xmlUtils;
 
 /** The site's URL. Throws unless it is an HTTP(S) URL. */
 export function siteUrl(value: unknown): URL {

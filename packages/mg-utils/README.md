@@ -111,6 +111,19 @@ const data = await parseXml('/path/to/file.xml');
 const data = await parseXml(xmlString, {attributeNamePrefix: ''});
 ```
 
+Read values from the parsed object, whether an element appears once, many times, or with attributes:
+
+```js
+const {getText, ensureArray} = xmlUtils;
+
+getText('Hello'); // 'Hello'
+getText({'@_domain': 'category', '#text': 'News'}); // 'News'
+getText(['First', 'Second']); // 'First'
+getText(undefined); // ''
+
+ensureArray(item.category); // [] when missing, [category] when single, or the array as parsed
+```
+
 ### Date Utilities
 
 Parse dates from source data without depending on the machine's timezone:

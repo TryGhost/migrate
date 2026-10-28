@@ -4,7 +4,6 @@ import {
     durationToSeconds,
     getAttribute,
     getChild,
-    getText,
     parseDate,
     processChannel,
     processContent,
@@ -102,12 +101,7 @@ describe('parseDate', function () {
 });
 
 describe('XML values', function () {
-    it('reads text, children and attributes from strings, elements and repeated elements', function () {
-        assert.equal(getText('text'), 'text');
-        assert.equal(getText({'#text': 'text', '@_a': 'b'}), 'text');
-        assert.equal(getText({'@_a': 'b'}), '');
-        assert.equal(getText(['first', 'second']), 'first');
-        assert.equal(getText(undefined), '');
+    it('reads children and attributes from strings, elements and repeated elements', function () {
         assert.equal(getChild([{name: 'first'}, {name: 'second'}], 'name'), 'first');
         assert.equal(getChild('text', 'name'), undefined);
         assert.equal(getAttribute({'@_href': 'https://example.com/'}, 'href'), 'https://example.com/');

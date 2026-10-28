@@ -1,15 +1,7 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {processContent} from '../index.js';
-import {
-    featureImageUrl,
-    getText,
-    htmlToTextTrimmed,
-    postDates,
-    postSlug,
-    processTags,
-    processUser
-} from '../lib/process.js';
+import {featureImageUrl, htmlToTextTrimmed, postDates, postSlug, processTags, processUser} from '../lib/process.js';
 
 describe('processContent', function () {
     it('Can convert audio block to audio card', function () {
@@ -212,14 +204,6 @@ describe('featureImageUrl', function () {
 });
 
 describe('Field helpers', function () {
-    it('getText reads strings, element text and missing values', function () {
-        assert.equal(getText('text'), 'text');
-        assert.equal(getText({'@_domain': 'category', '#text': 'Name'}), 'Name');
-        assert.equal(getText({'@_domain': 'category'}), '');
-        assert.equal(getText(undefined), '');
-        assert.equal(getText(null), '');
-    });
-
     it('postDates prefers post_date_gmt, then pubDate, then post_date, and uses the modified date', function () {
         const gmt = postDates({
             'wp:post_date_gmt': '2020-01-02 03:04:05',

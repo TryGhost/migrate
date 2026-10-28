@@ -3,7 +3,7 @@ import {describe, it} from 'node:test';
 import {writeFile, unlink, mkdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
-import {parseXml} from '../lib/xml-utils.js';
+import {ensureArray, getText, parseXml} from '../lib/xml-utils.js';
 
 describe('parseXml', function () {
     it('parses XML from a string', async function () {
@@ -51,5 +51,50 @@ describe('parseXml', function () {
                 return true;
             }
         );
+    });
+});
+
+describe('getText', function () {
+    it('Reads strings and numbers as given', function () {
+        assert.equal(getText('text'), 'text');
+        assert.equal(getText('  spaced  '), '  spaced  ');
+        assert.equal(getText(42), '42');
+    });
+
+    it('Reads the text of an element with attributes', function () {
+        assert.equal(getText({'@_domain': 'category', '#text': 'Name'}), 'Name');
+        assert.equal(getText({'#text': 2024}), '2024');
+    });
+
+    it('Reads the first of a repeated element', function () {
+        assert.equal(getText(['first', 'second']), 'first');
+        assert.equal(getText([{'#text': 'first'}, 'second']), 'first');
+    });
+
+    it('Gives an empty string for missing values and elements without text', function () {
+        for (const value of [undefined, null, [], {'@_domain': 'category'}, {}]) {
+            assert.equal(getText(value), '', JSON.stringify(value));
+        }
+    });
+
+    it('Reads values from parseXml', async function () {
+        const {rss} = (await parseXml('<rss><category domain="tag">News</category><title>Hello</title></rss>')) as any;
+        assert.equal(getText(rss.category), 'News');
+        assert.equal(getText(rss.title), 'Hello');
+        assert.equal(getText(rss.missing), '');
+    });
+});
+
+describe('ensureArray', function () {
+    it('Wraps a single value and keeps an array', function () {
+        assert.deepEqual(ensureArray('one'), ['one']);
+        assert.deepEqual(ensureArray({'#text': 'one'}), [{'#text': 'one'}]);
+        assert.deepEqual(ensureArray(['one', 'two']), ['one', 'two']);
+    });
+
+    it('Gives an empty array for missing and empty values', function () {
+        for (const value of [undefined, null, '']) {
+            assert.deepEqual(ensureArray(value), [], String(value));
+        }
     });
 });

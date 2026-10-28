@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {MigrateContext} from '@tryghost/mg-context';
 import {inspectSource, ingest, map} from '../index.js';
-import {getText, processWPMeta, processAttachment, preProcessContent} from '../lib/process.js';
+import {processWPMeta, processAttachment, preProcessContent} from '../lib/process.js';
 
 it('preserves malformed PHP metadata and reports retry failures without console output', async () => {
     const value = 'a:1:{s:3:"bad";garbage;}';
@@ -21,8 +21,6 @@ it('handles empty bodies, strips empty anchors, and preserves attachment metadat
     const html = await preProcessContent({html: '<a id="empty"></a><a href="/real">Real</a>'});
     assert.ok(!html.includes('empty'));
     assert.ok(html.includes('Real'));
-    assert.equal(getText(null), '');
-    assert.equal(getText(42), '42');
     const attachment = await processAttachment({
         'wp:postmeta': {
             'wp:meta_key': '_wp_attachment_metadata',

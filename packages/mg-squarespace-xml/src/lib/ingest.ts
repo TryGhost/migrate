@@ -1,8 +1,9 @@
 import {basename} from 'node:path';
 import type {JsonObject, MigrateContext, SourceRecordInput} from '@tryghost/mg-context';
 import {dateUtils, urlUtils, xmlUtils} from '@tryghost/mg-utils';
-import {getText} from './process.js';
 import type {SquarespaceRecord} from './types.js';
+
+const {getText} = xmlUtils;
 
 /** The host and path that scope stable Ghost IDs to one site. */
 export function canonicalSite(value: string): string {

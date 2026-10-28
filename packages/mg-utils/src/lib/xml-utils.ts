@@ -24,5 +24,33 @@ export async function parseXml(input: string, options?: Partial<X2jOptions>): Pr
     return parser.parse(xml) as Record<string, unknown>;
 }
 
+/**
+ * The text of a value parsed from XML: a string or number as given, an element's `#text` when it also has attributes,
+ * or the text of the first of a repeated element. Missing values and elements without text give `''`.
+ */
+export function getText(node: unknown): string {
+    if (Array.isArray(node)) {
+        return getText(node[0]);
+    }
+    if (node === undefined || node === null) {
+        return '';
+    }
+    if (typeof node === 'object') {
+        return getText((node as Record<string, unknown>)['#text']);
+    }
+    return String(node);
+}
+
+/**
+ * A value parsed from XML as an array. A repeated element parses as an array and a single one as a value; a missing or
+ * empty one gives `[]`.
+ */
+export function ensureArray<T>(value: T | T[] | null | undefined): T[] {
+    if (!value) {
+        return [];
+    }
+    return Array.isArray(value) ? value : [value];
+}
+
 export {streamXmlRecords} from './stream-xml.js';
 export type {XmlRecord} from './stream-xml.js';
