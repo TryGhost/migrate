@@ -1,195 +1,245 @@
-import {readFileSync} from 'node:fs';
-import buttondownIngest from '@tryghost/mg-buttondown';
-import {toGhostJSON} from '@tryghost/mg-json';
-import mgHtmlLexical from '@tryghost/mg-html-lexical';
+import {createReadStream} from 'node:fs';
+import {stat, rename, rm, mkdir, mkdtemp, opendir} from 'node:fs/promises';
+import {join, resolve, basename, dirname} from 'node:path';
+import {randomUUID} from 'node:crypto';
+import {MigrateContext} from '@tryghost/mg-context';
 import MgAssetScraper from '@tryghost/mg-assetscraper-db';
 import MgLinkFixer from '@tryghost/mg-linkfixer';
 import fsUtils from '@tryghost/mg-fs-utils';
+import {ingest, map} from '@tryghost/mg-buttondown';
 import {makeTaskRunner} from '@tryghost/listr-smart-renderer';
-import {createGhostUserTasks} from '@tryghost/mg-ghost-authors';
-import prettyMilliseconds from 'pretty-ms';
 
-const initialize = options => {
-    return {
-        title: 'Initializing Workspace',
-        task: async (ctx, task) => {
-            ctx.options = options;
-            ctx.allowScrape = {
-                all: ctx.options.scrape.includes('all'),
-                assets:
-                    ctx.options.scrape.includes('all') ||
-                    ctx.options.scrape.includes('assets') ||
-                    ctx.options.scrape.includes('img') ||
-                    ctx.options.scrape.includes('media') ||
-                    ctx.options.scrape.includes('files'),
-                web: ctx.options.scrape.includes('web') || ctx.options.scrape.includes('all')
-            };
-
-            ctx.options.cacheName = options.cacheName || fsUtils.utils.cacheNameFromPath(ctx.options.url);
-            ctx.fileCache = new fsUtils.FileCache(`buttondown-${ctx.options.cacheName}`, {
-                tmpPath: ctx.options.tmpPath
-            });
-            ctx.assetScraper = new MgAssetScraper(
-                ctx.fileCache,
-                {
-                    domains: ['https://assets.buttondown.email', 'https://buttondown-attachments.s3.amazonaws.com']
-                },
-                ctx
-            );
-            await ctx.assetScraper.init();
-            ctx.linkFixer = new MgLinkFixer();
-
-            task.output = `Workspace initialized at ${ctx.fileCache.cacheDir}`;
-        }
-    };
-};
-
-const getFullTaskList = options => {
-    return [
-        initialize(options),
+const getTaskRunner = suppliedOptions => {
+    const options = {scrape: ['all'], zip: true, cache: true, report: false, postsPerFile: 2000, ...suppliedOptions};
+    const tasks = [
         {
-            title: 'Read Buttondown content',
+            title: 'Initializing',
             task: async ctx => {
-                try {
-                    ctx.result = await buttondownIngest({
-                        options
+                if (!Number.isSafeInteger(options.postsPerFile) || options.postsPerFile < 1) {
+                    throw new Error('--postsPerFile must be a positive integer');
+                }
+                ctx.options = options;
+                // Without --cacheName the workspace is keyed by the export's full path, so exports that share a
+                // file name never share stored source data.
+                const source = resolve(options.pathToZip);
+                ctx.fileCache = new fsUtils.FileCache(
+                    options.cacheName
+                        ? `buttondown-${options.cacheName}`
+                        : join(dirname(source), `buttondown-${basename(source)}`),
+                    {tmpPath: options.tmpPath}
+                );
+                const selected = new Set(options.scrape);
+                ctx.allowScrape = {
+                    assets: ['all', 'assets', 'img', 'media', 'files'].some(value => selected.has(value))
+                };
+                ctx.outputName = ctx.fileCache.defaultZipFileName;
+                if (options.report) {
+                    const reportName = ctx.outputName.replace(/\.zip$/, '.report.json');
+                    ctx.reportFile = {
+                        path: options.zip
+                            ? resolve(options.outputPath || process.cwd(), reportName)
+                            : join(ctx.fileCache.cacheDir, reportName)
+                    };
+                }
+                ctx.migrateContext = new MigrateContext({dbPath: join(ctx.fileCache.tmpDir, 'mg-context.sqlite')});
+                await ctx.migrateContext.init();
+                if (ctx.allowScrape.assets) {
+                    ctx.assetScraper = new MgAssetScraper(ctx.fileCache, {
+                        domains: ['https://assets.buttondown.email', 'https://buttondown-attachments.s3.amazonaws.com'],
+                        retainFailures: false,
+                        strictErrors: true,
+                        onFailure: failure => ctx.migrateContext.recordDiagnostic('operation:warning', failure)
                     });
-                    await ctx.fileCache.writeTmpFile(ctx.result, 'buttondown-export-data.json');
+                    await ctx.assetScraper.init();
+                }
+                ctx.linkFixer = new MgLinkFixer();
+            }
+        },
+        {
+            title: 'Fetching content',
+            task: async (ctx, task) => {
+                try {
+                    if (!ctx.migrateContext.sources.hasCompletedIngestion || options.rereadSource) {
+                        task.output = `Reading ${options.pathToZip}`;
+                        await ingest(options.pathToZip, ctx.migrateContext, {replace: Boolean(options.rereadSource)});
+                    } else {
+                        task.output = 'Reading stored Buttondown content';
+                    }
+                    task.output = null;
                 } catch (error) {
-                    ctx.errors.push('Failed to read Buttondown content', error); // eslint-disable-line no-console
+                    task.output = error.message;
                     throw error;
                 }
             }
         },
-        ...createGhostUserTasks(options),
         {
-            title: 'Build Link Map',
-            task: async ctx => {
-                try {
-                    ctx.linkFixer.buildMap(ctx);
-                } catch (error) {
-                    ctx.errors.push('Failed to build link map', error); // eslint-disable-line no-console
-                    throw error;
-                }
-            }
-        },
-        {
-            title: 'Format data as Ghost JSON',
-            task: async ctx => {
-                try {
-                    ctx.result = await toGhostJSON(ctx.result, ctx.options, ctx);
-                } catch (error) {
-                    ctx.errors.push('Failed to format data as Ghost JSON', error); // eslint-disable-line no-console
-                    throw error;
+            title: 'Map Buttondown content',
+            task: async (ctx, task) => {
+                ctx.summary = await map(options, ctx.migrateContext);
+                task.output = `${ctx.summary.imported} imported, ${ctx.summary.skipped} skipped`;
+                if (ctx.summary.skipped > 0 && ctx.summary.imported === 0) {
+                    throw new Error('Every selected Buttondown email was invalid. See the migration report.');
                 }
             }
         },
         {
             title: 'Fetch images via AssetScraper',
             skip: ctx => !ctx.allowScrape.assets,
+            task: (ctx, task) =>
+                task.newListr(
+                    [
+                        ['Posts', 'forEachPost', 'countPosts'],
+                        ['Tags', 'forEachTag', 'countUsedTags'],
+                        ['Authors', 'forEachAuthor', 'countUsedAuthors']
+                    ].map(([title, iterate, count]) => ({
+                        title,
+                        task: async (_ctx, subtask) => {
+                            let processed = 0;
+                            const total = ctx.migrateContext.db.stmts[count].get().count;
+                            subtask.title = `${title} (${processed}/${total})`;
+                            await ctx.migrateContext[iterate](
+                                async entity => {
+                                    subtask.output =
+                                        entity.get('slug') || entity.data.title || entity.data.name || entity.ghostId;
+                                    await ctx.assetScraper.processAssets(entity);
+                                    subtask.title = `${title} (${++processed}/${total})`;
+                                },
+                                {batchSize: 25}
+                            );
+                            subtask.output = null;
+                        }
+                    })),
+                    {concurrent: false, exitOnError: true}
+                )
+        },
+        {
+            title: 'Update links in HTML via LinkFixer',
+            task: async ctx =>
+                ctx.migrateContext.forEachPost(
+                    post => ctx.linkFixer.fixPost(post, url => ctx.migrateContext.findLink(url)),
+                    {batchSize: 25}
+                )
+        },
+        {
+            title: 'Write Ghost import JSON files',
             task: async ctx => {
-                let tasks = ctx.assetScraper.getTasks();
-                return makeTaskRunner(tasks, {
-                    verbose: options.verbose,
-                    exitOnError: false,
-                    concurrent: false
-                });
-            }
-        },
-        {
-            title: 'Update links in content via LinkFixer',
-            task: async (ctx, task) => {
-                let tasks = ctx.linkFixer.fix(ctx, task);
-                return makeTaskRunner(tasks, options);
-            }
-        },
-        {
-            title: 'Convert HTML -> Lexical',
-            task: ctx => {
-                try {
-                    let tasks = mgHtmlLexical.convert(ctx);
-                    return makeTaskRunner(tasks, options);
-                } catch (error) {
-                    ctx.errors.push('Failed to convert HTML -> Lexical', error); // eslint-disable-line no-console
-                    throw error;
+                ctx.exportedFiles = 0;
+                ctx.exportStaging = await mkdtemp(join(ctx.fileCache.tmpDir, 'export-'));
+                for await (const _file of ctx.migrateContext.writeGhostJsonStream(ctx.exportStaging, {
+                    batchSize: options.postsPerFile,
+                    filename: 'ghost-import'
+                })) {
+                    ctx.exportedFiles++;
+                    ctx.importDirectory = ctx.fileCache.zipDir;
                 }
-            }
-        },
-        {
-            title: 'Write Ghost import JSON File',
-            task: async ctx => {
-                try {
-                    await ctx.fileCache.writeGhostImportFile(ctx.result);
-                } catch (error) {
-                    ctx.errors.push('Failed to write Ghost import JSON File', error); // eslint-disable-line no-console
-                    throw error;
+                ctx.warningCount = ctx.migrateContext.countWarnings();
+                if (ctx.reportFile) {
+                    await ctx.migrateContext.writeMigrationReport(ctx.reportFile.path, {
+                        ...ctx.summary,
+                        warnings: ctx.warningCount,
+                        status: 'complete',
+                        files: ctx.exportedFiles
+                    });
+                    ctx.reportFile.size = (await stat(ctx.reportFile.path)).size;
                 }
-            }
-        },
-        {
-            title: 'Write Ghost import zip',
-            skip: () => !options.zip,
-            task: async (ctx, task) => {
-                const isStorage = (options?.outputStorage && typeof options.outputStorage === 'object') ?? false;
-
-                try {
-                    let timer = Date.now();
-                    const zipFinalPath = options.outputPath || process.cwd();
-                    // zip the file and save it temporarily
-                    ctx.outputFile = await fsUtils.zip.write(
-                        zipFinalPath,
-                        ctx.fileCache.zipDir,
-                        ctx.fileCache.defaultZipFileName
-                    );
-
-                    if (isStorage) {
-                        const storage = options.outputStorage;
-                        const localFilePath = ctx.outputFile.path;
-
-                        // read the file buffer
-                        const fileBuffer = await readFileSync(ctx.outputFile.path);
-                        // Upload the file to the storage
-                        ctx.outputFile.path = await storage.upload({
-                            body: fileBuffer,
-                            fileName: `gh-buttondown-${ctx.options.cacheName}.zip`
-                        });
-                        // now that the file is uploaded to the storage, delete the local zip file
-                        await fsUtils.zip.deleteFile(localFilePath);
+                // The runner owns these filenames; publish only after every chunk and report succeeds.
+                for await (const entry of await opendir(ctx.fileCache.zipDir)) {
+                    if (entry.isFile() && /^ghost-import(?:-\d+)?\.json$/.test(entry.name)) {
+                        await rm(join(ctx.fileCache.zipDir, entry.name));
                     }
-
-                    task.output = `Successfully written zip to ${ctx.outputFile.path} in ${prettyMilliseconds(Date.now() - timer)}`;
-                } catch (error) {
-                    ctx.errors.push('Failed to write and upload ZIP file', error); // eslint-disable-line no-console
-                    throw error;
                 }
+                for await (const entry of await opendir(ctx.exportStaging)) {
+                    await rename(join(ctx.exportStaging, entry.name), join(ctx.fileCache.zipDir, entry.name));
+                }
+                await rm(ctx.exportStaging, {recursive: true});
+                ctx.exportStaging = undefined;
+                if (!options.zip) ctx.outputFile = {path: ctx.importDirectory, type: 'directory'};
             }
         },
         {
-            title: 'Clearing cached files',
-            enabled: () => !options.cache && options.zip,
+            title: 'Write Ghost import ZIP',
+            skip: () => !options.zip,
             task: async ctx => {
+                const outputDir = resolve(options.outputPath || process.cwd());
+                await mkdir(outputDir, {recursive: true});
+                const finalPath = join(outputDir, ctx.outputName);
+                const temporaryName = `.${randomUUID()}.zip`;
+                const temporaryPath = join(outputDir, temporaryName);
                 try {
-                    await ctx.fileCache.emptyCurrentCacheDir();
+                    await fsUtils.zip.write(outputDir, ctx.fileCache.zipDir, temporaryName);
+                    if (options.outputStorage && typeof options.outputStorage === 'object') {
+                        const upload = async (path, fileName) => {
+                            const body = createReadStream(path);
+                            try {
+                                const remotePath = await options.outputStorage.upload({
+                                    body,
+                                    fileName,
+                                    size: (await stat(path)).size
+                                });
+                                if (!body.readableEnded) {
+                                    throw new Error(
+                                        'outputStorage.upload must consume the readable body before resolving'
+                                    );
+                                }
+                                return remotePath;
+                            } finally {
+                                body.destroy();
+                            }
+                        };
+                        const remoteZip = await upload(temporaryPath, basename(finalPath));
+                        if (ctx.reportFile) {
+                            const remoteReport = await upload(ctx.reportFile.path, basename(ctx.reportFile.path));
+                            ctx.reportFile = {...ctx.reportFile, path: remoteReport};
+                        }
+                        ctx.outputFile = {path: remoteZip, size: (await stat(temporaryPath)).size};
+                        await rm(temporaryPath);
+                    } else {
+                        await rename(temporaryPath, finalPath);
+                        ctx.outputFile = {path: finalPath, size: (await stat(finalPath)).size};
+                    }
                 } catch (error) {
-                    ctx.errors.push('Failed to clear temporary cached files', error); // eslint-disable-line no-console
+                    // Failed uploads retain the local ZIP for recovery.
+                    ctx.recoveryFile = temporaryPath;
                     throw error;
                 }
             }
         }
     ];
+    const runner = makeTaskRunner(tasks, {...options, topLevel: true});
+    const run = runner.run.bind(runner);
+    runner.run = async (context = {errors: [], warnings: []}) => {
+        let succeeded = false;
+        try {
+            const result = await run(context);
+            succeeded = true;
+            return result;
+        } catch (error) {
+            if (context.reportFile && context.migrateContext) {
+                try {
+                    context.migrateContext.recordDiagnostic('operation:failed', {reason: error.message});
+                    const failurePath = context.reportFile.path.replace(/\.report\.json$/, '.failed-report.json');
+                    await context.migrateContext.writeMigrationReport(failurePath, {
+                        ...context.summary,
+                        status: 'failed'
+                    });
+                    context.failedReport = failurePath;
+                } catch {
+                    // Preserve the original failure if initialization/report writing failed too.
+                }
+            }
+            throw error;
+        } finally {
+            try {
+                context.assetScraper?.close();
+            } finally {
+                await context.migrateContext?.close();
+            }
+            if (succeeded && !options.cache && options.zip) {
+                await context.fileCache.emptyCurrentCacheDir();
+            }
+        }
+    };
+    return runner;
 };
 
-const getTaskRunner = options => {
-    let tasks = [];
-
-    tasks = getFullTaskList(options);
-
-    // Configure a new Listr task manager, we can use different renderers for different configs
-    return makeTaskRunner(tasks, Object.assign({topLevel: true}, options));
-};
-
-export default {
-    initialize,
-    getFullTaskList,
-    getTaskRunner
-};
+export default {getTaskRunner};
