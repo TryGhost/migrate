@@ -459,6 +459,12 @@ importers:
       '@tryghost/errors':
         specifier: 'catalog:'
         version: 3.4.4
+      '@tryghost/mg-context':
+        specifier: workspace:*
+        version: link:../mg-context
+      '@tryghost/mg-ghost-authors':
+        specifier: workspace:*
+        version: link:../mg-ghost-authors
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
@@ -468,15 +474,28 @@ importers:
       autop:
         specifier: 1.0.1
         version: 1.0.1
-      node-fetch:
+      html-entities:
         specifier: 'catalog:'
-        version: 3.3.2
+        version: 2.6.0
       sanitize-html:
         specifier: 'catalog:'
         version: 2.18.1
       simple-dom:
         specifier: 'catalog:'
         version: 1.4.0
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
+      c8:
+        specifier: 'catalog:'
+        version: 12.0.0
+      nock:
+        specifier: 'catalog:'
+        version: 15.0.5(supports-color@7.2.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   packages/mg-buttondown:
     dependencies:

@@ -1,10 +1,6 @@
-import {createRequire} from 'node:module';
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import process, {cleanExcerpt, slugFromURL, increaseImageSize} from '../lib/process.js';
-
-const require = createRequire(import.meta.url);
-const response = require('./fixtures/response.json');
+import {cleanExcerpt, slugFromURL, increaseImageSize, processHTMLContent} from '../lib/process.js';
 
 describe('Utils', function () {
     it('cleanExcerpt', function () {
@@ -41,88 +37,9 @@ describe('Utils', function () {
     });
 });
 
-describe('Process JSON', function () {
-    it('Can process API response into compatible objects', async function () {
-        const processed = await process.processPosts(response, {});
-        const firstPost = processed[0];
-
-        assert.equal(processed.length, 3);
-
-        for (const key of ['url', 'data']) {
-            assert.ok(key in firstPost);
-        }
-        for (const key of [
-            'slug',
-            'title',
-            'status',
-            'published_at',
-            'created_at',
-            'updated_at',
-            'type',
-            'author',
-            'tags',
-            'html'
-        ]) {
-            assert.ok(key in firstPost.data);
-        }
-    });
-
-    it('Can create tags', async function () {
-        const post = await process.processPost(response[0], {});
-        const tags = post.data.tags;
-
-        assert.equal(tags.length, 5);
-
-        for (const key of ['url', 'data']) {
-            assert.ok(key in tags[0]);
-        }
-        for (const key of ['slug', 'name']) {
-            assert.ok(key in tags[0].data);
-        }
-
-        assert.equal(tags[0].url, 'migrator-added-tag-books');
-        assert.equal(tags[0].data.slug, 'books');
-        assert.equal(tags[0].data.name, 'books');
-
-        assert.equal(tags[1].url, 'migrator-added-tag-this-that');
-        assert.equal(tags[1].data.slug, 'this-that');
-        assert.equal(tags[1].data.name, 'This & That');
-
-        assert.equal(tags[2].url, 'migrator-added-tag-good-bad');
-        assert.equal(tags[2].data.slug, 'good-bad');
-        assert.equal(tags[2].data.name, 'Good & Bad');
-
-        assert.equal(tags[3].url, 'migrator-added-tag-site-id12345678');
-        assert.equal(tags[3].data.slug, 'hash-blogger-site-12345678');
-        assert.equal(tags[3].data.name, '#blogger-site-12345678');
-
-        assert.equal(tags[4].url, 'migrator-added-tag');
-        assert.equal(tags[4].data.slug, 'hash-blogger');
-        assert.equal(tags[4].data.name, '#blogger');
-    });
-
-    it('Can create author', async function () {
-        const post = await process.processPost(response[0], {});
-
-        const author = post.data.author;
-
-        for (const key of ['url', 'data']) {
-            assert.ok(key in author);
-        }
-        for (const key of ['slug', 'email', 'name']) {
-            assert.ok(key in author.data);
-        }
-
-        assert.equal(author.url, 'migrator-added-author-important-author-co');
-        assert.equal(author.data.slug, 'important-author-co');
-        assert.equal(author.data.email, 'important-author-co@example.com');
-        assert.equal(author.data.name, 'Important Author & Co.');
-    });
-});
-
 describe('Process HTML', function () {
     it('Can increase image sizes', async function () {
-        const processed = await process.processHTMLContent({
+        const processed = await processHTMLContent({
             postData: {},
             options: {},
             html: '<img src="http://1.bp.blogspot.com/_-abcdNGLDs4/abcdNoxb7NI/AAAAAAAAAaU/PA-oWpq0Iug/s1600-h/photo.jpg">'
@@ -135,7 +52,7 @@ describe('Process HTML', function () {
     });
 
     it('Can change divs to paragraphs', async function () {
-        const processed = await process.processHTMLContent({
+        const processed = await processHTMLContent({
             postData: {},
             options: {},
             html: '<div style="color: #232d32; font-family: Lato, sans-serif; font-size: 16px; line-height: 1.5; white-space: pre-line;">\nLorem ipsum dolor sit amet, consectetur adipiscing elit</div>'
@@ -145,7 +62,7 @@ describe('Process HTML', function () {
     });
 
     it('Remove empty divs with no attributes', async function () {
-        const processed = await process.processHTMLContent({
+        const processed = await processHTMLContent({
             postData: {},
             options: {},
             html: '<div></div><div>  </div><div class="hello"></div><div class="hello">   </div>'
@@ -155,7 +72,7 @@ describe('Process HTML', function () {
     });
 
     it('Can remove anchors that link to direct child image', async function () {
-        const processed = await process.processHTMLContent({
+        const processed = await processHTMLContent({
             postData: {},
             options: {},
             html: '<a href="https://3.bp.blogspot.com/my-image.jpg"><img src="https://3.bp.blogspot.com/my-image.jpg"></a>'
@@ -165,13 +82,13 @@ describe('Process HTML', function () {
     });
 
     it('Can remove the first element if a <hr>', async function () {
-        const processed = await process.processHTMLContent({postData: {}, options: {}, html: '<hr><p>My text</p>'});
+        const processed = await processHTMLContent({postData: {}, options: {}, html: '<hr><p>My text</p>'});
 
         assert.equal(processed.html, '<p>My text</p>');
     });
 
     it('Can remove the first elements if multiple <hr>', async function () {
-        const processed = await process.processHTMLContent({
+        const processed = await processHTMLContent({
             postData: {},
             options: {},
             html: '<hr><hr><hr><p>My text</p>'
@@ -181,7 +98,7 @@ describe('Process HTML', function () {
     });
 
     it('Can convert to unordered list', async function () {
-        const processed = await process.processHTMLContent({
+        const processed = await processHTMLContent({
             postData: {},
             options: {},
             html: `<div>My text</div><li>Lorem</li><li>Ipsum</li><li>Dolor</li><div><br /></div><div>My other text</div><div><br /></div>`
@@ -194,7 +111,7 @@ describe('Process HTML', function () {
     });
 
     it('Can unwrap linked image tables', async function () {
-        const processed = await process.processHTMLContent({
+        const processed = await processHTMLContent({
             postData: {},
             options: {},
             html: '<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto;"><tbody><tr><td style="text-align: center;"><a href="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s1280/image.png" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" data-original-height="640" data-original-width="1280" src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s320/image.png" width="320" /></a></td></tr><tr><td class="tr-caption" style="text-align: center;">Image caption</td></tr></tbody></table>'
@@ -207,7 +124,7 @@ describe('Process HTML', function () {
     });
 
     it('Can unwrap unlinked image tables', async function () {
-        const processed = await process.processHTMLContent({
+        const processed = await processHTMLContent({
             postData: {},
             options: {},
             html: '<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto; text-align: center;"><tbody><tr><td style="text-align: center;"><img border="0" data-original-height="572" data-original-width="1000" height="227" src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s320/image.png" style="margin-left: auto; margin-right: auto;" width="400" /></td></tr><tr><td class="tr-caption" style="text-align: center;"><div style="text-align: center;">Image caption</div></td></tr></tbody></table>'
@@ -220,7 +137,7 @@ describe('Process HTML', function () {
     });
 
     it('Can unwrap image tables & maintain links', async function () {
-        const processed = await process.processHTMLContent({
+        const processed = await processHTMLContent({
             postData: {},
             options: {},
             html: '<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto;"><tbody><tr><td style="text-align: center;"><a href="https://ghost.org" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" data-original-height="640" data-original-width="1280" src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s320/image.png" width="320" /></a></td></tr><tr><td class="tr-caption" style="text-align: center;">Image caption</td></tr></tbody></table>'
@@ -233,7 +150,7 @@ describe('Process HTML', function () {
     });
 
     it('Can use first image as featured image (type 1)', async function () {
-        const processed = await process.processHTMLContent({
+        const processed = await processHTMLContent({
             postData: {},
             options: {firstImageAsFeatured: true},
             html: `<p style="text-align: center;">&nbsp;</p><div class="separator" style="clear: both; text-align: center;"><a href="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s1000/image.png" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="720" data-original-width="1280" height="301" src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s320/image.png" width="481" /></a></div><br /><p></p><h3 style="text-align: left;"><b>My headline</b></h3>`
@@ -247,7 +164,7 @@ describe('Process HTML', function () {
     });
 
     it('Can use first image as featured image (type 2)', async function () {
-        const processed = await process.processHTMLContent({
+        const processed = await processHTMLContent({
             postData: {},
             options: {firstImageAsFeatured: true},
             html: `<p style="text-align: center;"><br /></p><div class="separator" style="clear: both; text-align: center;"><a href="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s1000/image.png" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="900" data-original-width="1200" height="382" src="https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s320/image.png" width="509" /></a></div><p></p><h2 style="text-align: left;">Headline</h2>`
@@ -258,5 +175,161 @@ describe('Process HTML', function () {
             'https://1.bp.blogspot.com/-12345678Um0/abcdo6O6gMI/qwertyAABuk/1234abcdZ5w7EHoyg9jIAupZIXYLQj42gCLcBGAsYHQ/s2000/image.png'
         );
         assert.equal(processed.html, '<h2>Headline</h2>');
+    });
+
+    it('Leaves images without a source alone', async function () {
+        const processed = await processHTMLContent({postData: {}, html: '<p>Text <img alt="x"></p>'});
+
+        assert.equal(processed.html, 'Text <img alt="x">');
+    });
+
+    it('Leaves caption tables without an image alone', async function () {
+        const processed = await processHTMLContent({
+            postData: {},
+            html: '<table class="tr-caption-container"><tbody><tr><td class="tr-caption">Only a caption</td></tr></tbody></table>'
+        });
+
+        assert.equal(
+            processed.html,
+            '<table class="tr-caption-container">\n<tbody>\n<tr>\n<td class="tr-caption">Only a caption</td>\n</tr>\n</tbody>\n</table>'
+        );
+    });
+
+    it('Unwraps caption tables without a caption or a link target', async function () {
+        const processed = await processHTMLContent({
+            postData: {},
+            html: '<table class="tr-caption-container"><tbody><tr><td><a name="x"><img src="https://1.bp.blogspot.com/a/s320/i.png"></a></td></tr></tbody></table>'
+        });
+
+        assert.equal(
+            processed.html,
+            '<figure class="kg-card kg-image-card"><img src="https://1.bp.blogspot.com/a/s2000/i.png" class="kg-image" alt loading="lazy"></figure>'
+        );
+    });
+
+    it('Keeps image links to other pages and Koenig cards', async function () {
+        const html =
+            '<a href="https://x.com/i.jpg" class="kg-image"><img src="https://x.com/i.jpg"></a><a href="https://x.com/j.jpg"><img class="kg-image" src="https://x.com/j.jpg"></a><a href="https://ghost.org"><img src="https://x.com/k.jpg"></a>';
+        const processed = await processHTMLContent({postData: {}, html});
+
+        assert.equal(processed.html, `<p>${html}</p>`);
+    });
+
+    it('Converts bulleted pre-formatted divs to list items', async function () {
+        const processed = await processHTMLContent({
+            postData: {},
+            html: '<div><span style="white-space: pre">\t</span>• One </div><div><span style="white-space: pre"> </span>Two</div><span style="white-space: pre">x</span><div> <b>a</b>•<span style="white-space: pre"> </span></div><div><b>b</b>• Three<span style="white-space: pre"> </span> <i>z</i></div>'
+        });
+
+        assert.equal(
+            processed.html,
+            '<ul><li>• One</li></ul>\n<div><span style="white-space: pre"> </span>Two</div>\n<p><span style="white-space: pre">x</span>\n</p><ul><li><b>a</b>•</li><li><b>b</b>• Three <i>z</i></li></ul>'
+        );
+    });
+
+    it('Trims whitespace around list item text', async function () {
+        const processed = await processHTMLContent({
+            postData: {},
+            html: '<div>  <span style="white-space: pre">\t</span>• One<b>x</b>  </div>'
+        });
+
+        assert.equal(processed.html, '<ul><li>• One<b>x</b></li></ul>');
+    });
+
+    it('Converts styled spans and centred divs to paragraphs and cleans headings', async function () {
+        const processed = await processHTMLContent({
+            postData: {},
+            html: '<span style="background-color: #fff; color: #000; font-family: Arial; font-size: 11pt; white-space: pre-line;">Styled</span><div style="text-align: center;">Centred</div><h2 style="text-align: left;">Left</h2><h2 style="color: red;">Red</h2><h3><b>Bold</b> heading</h3>'
+        });
+
+        assert.equal(
+            processed.html,
+            '<p><p>Styled</p>\n</p><p>Centred</p>\n<h2>Left</h2>\n<h2 style="color: red;">Red</h2>\n<h3>Bold heading</h3>'
+        );
+    });
+
+    it('Unwraps divs holding only an image', async function () {
+        const processed = await processHTMLContent({postData: {}, html: '<div><img src="https://x.com/a.jpg"></div>'});
+
+        assert.equal(processed.html, '<img src="https://x.com/a.jpg">');
+    });
+
+    it('Removes non-breaking space paragraphs and keeps styled ones', async function () {
+        const processed = await processHTMLContent({
+            postData: {},
+            html: '<p class="x">&nbsp;</p><div>&nbsp;</div><p>&nbsp; </p><div class="a">&nbsp;</div>'
+        });
+
+        assert.equal(processed.html, '<p>&nbsp;</p>\n\n<div class="a">&nbsp;</div>');
+    });
+
+    it('Resizes YouTube embeds', async function () {
+        const processed = await processHTMLContent({
+            postData: {},
+            html: '<iframe src="https://www.youtube.com/embed/abc" width="560" height="315"></iframe>'
+        });
+
+        assert.equal(
+            processed.html,
+            '<p><iframe src="https://www.youtube.com/embed/abc" width="160" height="90"></iframe></p>'
+        );
+    });
+
+    describe('First image as featured image', function () {
+        const featured = (html: string) =>
+            processHTMLContent({postData: {}, html, options: {firstImageAsFeatured: true}});
+
+        it('handles empty content', async function () {
+            assert.deepEqual(await featured(''), {html: ''});
+        });
+
+        it('uses a leading image', async function () {
+            assert.deepEqual(await featured('<img src="https://x.com/a.jpg"><p>Text</p>'), {
+                html: '<p>Text</p>',
+                feature_image: 'https://x.com/a.jpg'
+            });
+        });
+
+        it('ignores images after text', async function () {
+            assert.deepEqual(await featured('<p>Text first</p><img src="https://x.com/a.jpg">'), {
+                html: '<p>Text first</p>\n<img src="https://x.com/a.jpg">'
+            });
+        });
+
+        it('uses an unlinked image in an empty first element', async function () {
+            for (const html of [
+                '<div class="separator"><img src="https://x.com/a.jpg"></div><p>Text</p>',
+                '<div class="separator"><a name="x"><img src="https://x.com/a.jpg"></a></div><p>Text</p>'
+            ]) {
+                assert.deepEqual(await featured(html), {html: '<p>Text</p>', feature_image: 'https://x.com/a.jpg'});
+            }
+        });
+
+        it('uses an image linked to the same image at another size', async function () {
+            assert.deepEqual(
+                await featured(
+                    '<div class="separator"><a href="https://x.com/a-s1600.jpg"><img src="https://x.com/a-s320.jpg"></a></div><p>Text</p>'
+                ),
+                {html: '<p>Text</p>', feature_image: 'https://x.com/a-s320.jpg'}
+            );
+        });
+
+        it('keeps an image linked elsewhere', async function () {
+            assert.deepEqual(
+                await featured(
+                    '<div class="separator"><a href="https://x.com/b.jpg"><img src="https://x.com/a.jpg"></a></div><p>Text</p>'
+                ),
+                {html: '<div><a href="https://x.com/b.jpg"><img src="https://x.com/a.jpg"></a></div>\n<p>Text</p>'}
+            );
+        });
+
+        it('keeps a leading embed that has no image', async function () {
+            assert.deepEqual(
+                await featured('<p><iframe src="https://www.youtube.com/embed/abc"></iframe></p><p>Text</p>'),
+                {
+                    html: '<p><iframe height="90" width="160" src="https://www.youtube.com/embed/abc"></iframe></p>\n<p>Text</p>'
+                }
+            );
+        });
     });
 });
