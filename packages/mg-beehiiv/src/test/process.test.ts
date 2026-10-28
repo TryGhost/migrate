@@ -804,6 +804,18 @@ describe('beehiiv Processor', () => {
             );
         });
 
+        it('Keeps escaped markup in button and pull quote text as text', () => {
+            const button = `<a href="https://other.example.com/?q=&quot;1&quot;" style="color:#FFFFFF;font-size:18px;padding:0px 14px;text-decoration:none;">&lt;b&gt;Upgrade&lt;/b&gt;</a>`;
+            const quote = `<table><tr><td align="center"><table align="center" class="d3"><tr><td><p>&lt;img src=x onerror=alert(1)&gt;</p></td></tr></table></td></tr></table>`;
+            const htmlContent = `<body><table><tr id="content-blocks"><td>${button}${quote}</td></tr></table></body>`;
+            const processed = processHTML({html: htmlContent, title});
+
+            assert.equal(
+                processed,
+                '<div class="kg-card kg-button-card kg-align-center"><a href="https://other.example.com/?q=&quot;1&quot;" class="kg-btn kg-btn-accent">&lt;b&gt;Upgrade&lt;/b&gt;</a></div><div class="kg-card kg-quote-card kg-align-center"><blockquote class="kg-blockquote"><p>&lt;img src=x onerror=alert(1)&gt;</p></blockquote></div>'
+            );
+        });
+
         it('Removes UTM params from internal URLs', () => {
             const htmlContent = `<body><table><tr id="content-blocks"><a href="https://www.example.com/p/post-slug?utm_source=www.example.com&utm_medium=newsletter&utm_campaign=lorem-ipsum-dolor-simet-1234&last_resource_guid=Post%3Aabcd1234-c74e-427a-83f3-3f8c0bad81e6">Article</a></tr></table></body>`;
             const processed = processHTML({
