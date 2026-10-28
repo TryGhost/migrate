@@ -42,7 +42,7 @@ Ingestion diagnostics survive remapping. Mapping diagnostics do not. Explicit `g
 
 All incompatible existing databases must be rebuilt. Rejection leaves their contents untouched; an operator or runner must explicitly replace the database. Downloaded assets are managed separately and need not be deleted.
 
-The WordPress XML, WordPress API, Ghost API, Substack, beehiiv CSV, beehiiv API, Squarespace, Medium, Blogger, Buttondown, Curated, Chorus, Jekyll and Letterdrop runners use completed source records for reuse and rebuild mapped content on every run. `mg-webscraper.scrapePost()` accepts the URL chosen by its caller, while retaining support for older duck-typed targets. Adapters remain independent packages; source-specific parsing and mapping do not belong in core.
+The WordPress XML, WordPress API, Ghost API, Substack, beehiiv CSV, beehiiv API, Squarespace, Medium, Blogger, Buttondown, Curated, Chorus, Jekyll, Letterdrop and Libsyn runners use completed source records for reuse and rebuild mapped content on every run. `mg-webscraper.scrapePost()` accepts the URL chosen by its caller, while retaining support for older duck-typed targets. Adapters remain independent packages; source-specific parsing and mapping do not belong in core.
 
 Core's streaming export/report APIs produce local files and descriptors only. ZIP creation, remote upload streams, report placement, CLI flags, and orchestration belong to runners.
 

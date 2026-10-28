@@ -30,7 +30,6 @@ catalog:
   "log-update": "8.0.0"
   "markdown-it": "15.0.3"
   "nock": "15.0.5"
-  "node-fetch": "3.3.2"
   "sanitize-html": "2.18.1"
   "sharp": "0.35.5"
   "simple-dom": "1.4.0"
