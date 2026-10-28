@@ -875,9 +875,12 @@ importers:
 
   packages/mg-squarespace-xml:
     dependencies:
-      '@tryghost/errors':
-        specifier: 'catalog:'
-        version: 3.4.4
+      '@tryghost/mg-context':
+        specifier: workspace:*
+        version: link:../mg-context
+      '@tryghost/mg-ghost-authors':
+        specifier: workspace:*
+        version: link:../mg-ghost-authors
       '@tryghost/mg-utils':
         specifier: workspace:*
         version: link:../mg-utils
@@ -891,9 +894,15 @@ importers:
         specifier: 'catalog:'
         version: 1.4.0
     devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
       c8:
         specifier: 'catalog:'
         version: 12.0.0
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   packages/mg-stripe:
     dependencies:

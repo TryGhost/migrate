@@ -1,4 +1,3 @@
-import {inspect} from 'node:util';
 import {ui} from '@tryghost/pretty-cli';
 import squarespace from '../sources/squarespace.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
@@ -43,6 +42,12 @@ const options = [
         desc: 'Create a zip file (set to false to skip)'
     },
     {
+        type: 'boolean',
+        flags: '--report',
+        defaultValue: false,
+        desc: 'Write a .report.json migration report beside the import, or a .failed-report.json if the run fails'
+    },
+    {
         type: 'array',
         flags: '-s --scrape',
         choices: ['all', 'web', 'assets', 'none', 'img', 'media', 'files'],
@@ -71,7 +76,7 @@ const options = [
         type: 'boolean',
         flags: '--tags',
         defaultValue: true,
-        desc: "Set to false if you don't want to import WordPress tags, only categories"
+        desc: "Set to false if you don't want to import Squarespace tags, only categories"
     },
     {
         type: 'string',
@@ -80,10 +85,22 @@ const options = [
         desc: 'Provide a tag name which should be added to every post in this migration'
     },
     {
+        type: 'string',
+        flags: '--removeSelectors',
+        defaultValue: null,
+        desc: 'Pass in a string of CSS selectors for elements that will be removed, e.g. \'.ads, script[src*="adnetwork.com"]\''
+    },
+    {
         type: 'boolean',
-        flags: '--fallBackHTMLCard',
-        defaultValue: true,
-        desc: 'Fall back to convert to HTMLCard, if standard Mobiledoc convert fails'
+        flags: '--rereadSource',
+        defaultValue: false,
+        desc: 'Replace the stored XML source snapshot while preserving downloaded assets'
+    },
+    {
+        type: 'number',
+        flags: '--postsPerFile',
+        defaultValue: 2000,
+        desc: 'Maximum posts written per Ghost import JSON file'
     },
     {
         type: 'boolean',
@@ -107,7 +124,7 @@ const options = [
         type: 'string',
         flags: '--cacheName',
         defaultValue: null,
-        desc: 'Provide a unique name for the cache directory (defaults to a UUID)'
+        desc: "Provide a unique name for the cache directory (defaults to one based on the export's full path)"
     },
     ...ghostAuthOptions
 ];
@@ -140,23 +157,16 @@ const run = async argv => {
         // Run the migration
         await migrate.run(context);
 
-        if (argv.verbose && context.result) {
-            ui.log.info('Done');
-        }
-
-        if (argv.veryVerbose && context.result) {
-            ui.log.info(inspect(context.result.data, false, 2));
-        }
+        ui.log.info(
+            `${context.summary.imported} imported, ${context.summary.skipped} skipped, ${context.warningCount} warnings.${context.reportFile ? ` Report: ${context.reportFile.path}` : ''}`
+        );
     } catch (error) {
         ui.log.error(error);
+        process.exitCode = 1;
     }
 
-    if (argv.verbose) {
+    if (argv.verbose && context.fileCache) {
         ui.log.info(`Cached files can be found at ${context.fileCache.cacheDir}`);
-    }
-
-    if (context.warnings.length > 0) {
-        ui.log.warn(context.warnings);
     }
 };
 
