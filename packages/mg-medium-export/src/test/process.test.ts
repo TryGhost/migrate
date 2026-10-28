@@ -2,24 +2,29 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {RecordDataError} from '@tryghost/mg-context';
 import {domUtils} from '@tryghost/mg-utils';
-import processPost from '../lib/process-post.js';
-import processContent from '../lib/process-content.js';
+import {mediumHandle, postUrl, processContent, processPost as convertPost} from '../index.js';
+import type {MediumOptions} from '../index.js';
 
-const __dirname = new URL('.', import.meta.url).pathname;
+const fixtures = fileURLToPath(new URL('../../src/test/fixtures/export/posts/', import.meta.url));
+const DATE = new Date('2024-02-03T04:05:06.000Z');
 
-const readSync = name => {
-    let fixtureFileName = join(__dirname, './', 'fixtures', 'export', 'posts', name);
-    return readFileSync(fixtureFileName, {encoding: 'utf8'});
+const readSync = (name: string) => {
+    return readFileSync(join(fixtures, name), {encoding: 'utf8'});
 };
 
-const extractEContent = html => {
+const processPost = ({name, html, options}: {name: string; html: string; options?: MediumOptions}) =>
+    convertPost({name, html, options, date: DATE});
+
+const extractEContent = (html: string) => {
     const parsed = domUtils.parseFragment(html);
     const eContent = parsed.$('.e-content')[0];
     return eContent ? domUtils.serializeChildren(eContent) : '';
 };
 
-const assertMediumMetaObject = value => {
+const assertMediumMetaObject = (value: any) => {
     assert.equal(typeof value, 'object');
     assert.ok(value !== null);
     assert.ok('url' in value);
@@ -52,20 +57,20 @@ describe('Process', function () {
         assert.equal(post.data.custom_excerpt, 'This is a subtitle of some sort');
         assert.equal(post.data.status, 'published');
 
-        assert.equal(post.data.created_at, '2018-08-11T11:23:34.123Z');
-        assert.equal(post.data.published_at, '2018-08-11T11:23:34.123Z');
-        assert.equal(post.data.updated_at, '2018-08-11T11:23:34.123Z');
+        assert.equal(post.data.created_at.toISOString(), '2018-08-11T11:23:34.123Z');
+        assert.equal(post.data.published_at!.toISOString(), '2018-08-11T11:23:34.123Z');
+        assert.equal(post.data.updated_at.toISOString(), '2018-08-11T11:23:34.123Z');
+        assert.equal(post.data.comment_id, 'efefef12121212');
 
         assert.match(post.data.html, /^<section name="007"/);
         assert.match(post.data.html, /<\/section>$/);
 
         assertMediumMetaObject(post.data.author);
 
-        assert.equal(post.data.author.url, 'https://medium.com/@JoeBloggs');
-        assert.equal(post.data.author.data.name, 'Joe Bloggs');
-        assert.equal(post.data.author.data.slug, 'joebloggs');
-        assert.equal(post.data.author.data.slug, 'joebloggs');
-        assert.equal(post.data.author.data.roles[0], 'Contributor');
+        assert.equal(post.data.author!.url, 'https://medium.com/@JoeBloggs');
+        assert.equal(post.data.author!.data.name, 'Joe Bloggs');
+        assert.equal(post.data.author!.data.slug, 'joebloggs');
+        assert.equal(post.data.author!.data.roles[0], 'Contributor');
 
         assert.equal(post.data.tags.length, 3);
 
@@ -99,15 +104,18 @@ describe('Process', function () {
         assert.equal(post.data.slug, 'blog-post-title');
         assert.equal(post.data.custom_excerpt, 'This is a subtitle of some sort');
         assert.equal(post.data.status, 'draft');
+        assert.equal(post.data.comment_id, 'ababab121212');
         assert.match(post.data.html, /^<section name="007"/);
         assert.match(post.data.html, /<\/section>$/);
 
         assert.equal(post.data.tags.length, 1);
         assert.equal(post.data.tags[0].data.name, '#medium');
 
-        // Drafts don't have these
+        // Drafts don't have these, and are dated when the export was read
         assert.equal(post.data.published_at, undefined);
         assert.equal(post.data.author, undefined);
+        assert.equal(post.data.created_at, DATE);
+        assert.equal(post.data.updated_at, DATE);
     });
 
     it('Can do advanced content processing on medium posts', function () {
@@ -131,9 +139,9 @@ describe('Process', function () {
         assert.match(html, firstDivRegex);
 
         // the first div should not be a section divider anymore (what's in the fixture)
-        assert.notEqual(html.match(firstDivRegex)[1], 'section-divider');
+        assert.notEqual(html.match(firstDivRegex)![1], 'section-divider');
         // this is what we expect instead
-        assert.equal(html.match(firstDivRegex)[1], 'section-content');
+        assert.equal(html.match(firstDivRegex)![1], 'section-content');
 
         // should not contain a header with the post title
         assert.doesNotMatch(html, /<h3[^>]*>Blog Post Title/);
@@ -269,31 +277,15 @@ describe('Process', function () {
         assert.equal(post.data.status, 'published');
     });
 
-    it('Can use globalUser when post has no author', function () {
-        const fixture = readSync('draft-post.html');
-        const fakeName = 'draft_blog-post-title-ababab121212.html';
-        const globalUser = {
-            url: 'https://medium.com/@globaluser',
-            data: {
-                name: 'Global User',
-                slug: 'globaluser',
-                roles: ['Contributor']
-            }
-        };
-        const post = processPost({name: fakeName, html: fixture, globalUser, options: {}});
-
-        assert.equal(post.data.author.data.name, 'Global User');
-    });
-
     it('Can handle published post with no datetime', function () {
         const fixture = readSync('no-date-post.html');
         const fakeName = '2018-08-11_no-date-post-efefef121212.html';
         const post = processPost({name: fakeName, html: fixture, options: {}});
 
         assert.equal(post.data.status, 'published');
-        assert.ok(post.data.created_at instanceof Date);
-        assert.ok(post.data.published_at instanceof Date);
-        assert.ok(post.data.updated_at instanceof Date);
+        assert.equal(post.data.created_at, DATE);
+        assert.equal(post.data.published_at, DATE);
+        assert.equal(post.data.updated_at, DATE);
     });
 
     it('Can handle post with no e-content or title', function () {
@@ -367,7 +359,7 @@ describe('Process Content', function () {
                     title: 'Blog Post Title'
                 }
             }
-        });
+        }) as any;
 
         assert.equal(
             post.data.html,
@@ -386,7 +378,7 @@ describe('Process Content', function () {
                     title: 'Blog Post Title'
                 }
             }
-        });
+        }) as any;
 
         assert.ok(!post.data.html.includes('<pre name="4a0a" id="4a0a" class="graf graf--pre graf-after--p">'));
         assert.ok(
@@ -415,7 +407,7 @@ describe('Process Content', function () {
                     title: 'Blog Post Title'
                 }
             }
-        });
+        }) as any;
 
         assert.ok(!post.data.html.includes('<pre name="9a1f" id="9a1f" class="graf graf--pre graf-after--pre">'));
         assert.ok(
@@ -441,7 +433,7 @@ describe('Process Content', function () {
                     title: 'Blog Post Title'
                 }
             }
-        });
+        }) as any;
 
         assert.ok(
             !post.data.html.includes(
@@ -478,7 +470,7 @@ describe('Process Content', function () {
                     title: 'Blog Post Title'
                 }
             }
-        });
+        }) as any;
 
         assert.ok(
             !post.data.html.includes('<div class="section-inner sectionLayout--outsetRow" data-paragraph-count="3">')
@@ -513,7 +505,7 @@ describe('Process Content', function () {
                     title: 'Blog Post Title'
                 }
             }
-        });
+        }) as any;
 
         assert.ok(
             !post.data.html.includes(
@@ -546,7 +538,7 @@ describe('Process Content', function () {
                     title: 'Blog Post Title'
                 }
             }
-        });
+        }) as any;
 
         assert.ok(
             !post.data.html.includes('<div name="c123" id="c123" class="graf graf--mixtapeEmbed graf-after--p">')
@@ -571,7 +563,7 @@ describe('Process Content', function () {
                     title: 'Test'
                 }
             }
-        });
+        }) as any;
 
         assert.ok(post.data.html.includes('kg-card-begin'));
         assert.ok(!post.data.html.includes('graf--mixtapeEmbed'));
@@ -591,7 +583,7 @@ describe('Process Content', function () {
                     title: 'Blog Post Title'
                 }
             }
-        });
+        }) as any;
 
         assert.ok(
             !post.data.html.includes(
@@ -610,5 +602,84 @@ describe('Process Content', function () {
                 '<blockquote><p>"Main quote."<br><br>\u2014 <a href="https://example.com/source" data-href="https://example.com/source" class="markup--anchor markup--pullquote-anchor" rel="noopener" target="_blank">Person Name</a></p></blockquote>'
             )
         );
+    });
+});
+
+describe('Post identity, dates and authors', function () {
+    const page = (footer: string, header = '<h1 class="p-name">Title</h1>') =>
+        `<html><body><article class="h-entry"><header>${header}</header><section class="e-content"><p>One.</p><p>Two.</p></section><footer>${footer}</footer></article></body></html>`;
+
+    it('reads the post ID from the file name when there is no canonical link', function () {
+        const post = processPost({
+            name: 'posts/2020-01-01_From-The-Name-abc123.html',
+            html: page('<p>By someone</p>'),
+            options: {mediumAsCanonical: true}
+        });
+
+        assert.equal(post.url, undefined);
+        assert.equal(post.data.slug, 'from-the-name');
+        assert.equal(post.data.comment_id, 'abc123');
+        assert.equal(post.data.canonical_url, undefined);
+    });
+
+    it('rejects posts without a Medium post ID', function () {
+        assert.throws(
+            () => processPost({name: 'posts/no-id.html', html: page('<p>By someone</p>')}),
+            (error: Error) =>
+                error instanceof RecordDataError && /No Medium post ID in the canonical URL/.test(error.message)
+        );
+        assert.throws(() => processPost({name: 'posts/draft_no-id.html', html: page('')}), RecordDataError);
+    });
+
+    it('rejects an invalid publish date', function () {
+        const html = page(
+            '<time class="dt-published" datetime="not a date">Never</time><a class="p-canonical" href="https://medium.com/@a/post-abc123">Link</a>'
+        );
+
+        assert.throws(
+            () => processPost({name: 'posts/2020-01-01_post-abc123.html', html}),
+            (error: Error) => error instanceof RecordDataError && error.message === 'Invalid Medium publish date'
+        );
+    });
+
+    it('keeps an author link without a Medium handle unslugged', function () {
+        const html = page(
+            '<a class="p-author h-card" href="https://example.com/writer"> Jo Writer </a><a class="p-canonical" href="https://medium.com/@a/post-abc123">Link</a>'
+        );
+        const post = processPost({name: 'posts/2020-01-01_post-abc123.html', html});
+
+        assert.deepEqual(post.data.author, {
+            url: 'https://example.com/writer',
+            data: {name: 'Jo Writer', slug: undefined, roles: ['Contributor']}
+        });
+        assert.equal(post.data.title, 'Title');
+
+        const bare = processPost({
+            name: 'posts/2020-01-01_post-abc123.html',
+            html: page(
+                '<p class="p-tags"><a class="p-tag">Untagged</a></p><a class="p-author h-card">Nobody</a><a class="p-canonical" href="https://medium.com/@a/post-abc123">Link</a>'
+            )
+        });
+        assert.deepEqual(bare.data.author, {
+            url: undefined,
+            data: {name: 'Nobody', slug: undefined, roles: ['Contributor']}
+        });
+        assert.deepEqual(bare.data.tags, [{url: '', data: {name: 'Untagged', slug: ''}}]);
+    });
+
+    it('gives a draft without a footer link no URL', function () {
+        const post = processPost({name: 'posts/draft_A-Draft-abc123.html', html: page('<p>Nothing</p>')});
+
+        assert.equal(post.url, undefined);
+        assert.equal(post.data.slug, 'a-draft');
+    });
+
+    it('finds Medium handles and canonical URLs', function () {
+        assert.equal(mediumHandle('https://medium.com/@JoeBloggs'), 'joebloggs');
+        assert.equal(mediumHandle('https://medium.com/@Joe.Bloggs/post-abc?source=x'), 'joe.bloggs');
+        assert.equal(mediumHandle('https://example.com/writer'), undefined);
+        assert.equal(mediumHandle(undefined), undefined);
+        assert.equal(postUrl(readSync('basic-post.html')), 'https://medium.com/@JoeBloggs/testpost-efefef12121212');
+        assert.equal(postUrl(readSync('draft-post.html')), undefined);
     });
 });

@@ -1,4 +1,6 @@
 import {domUtils} from '@tryghost/mg-utils';
+import type {MediumRelation} from './types.js';
+
 const {processFragment} = domUtils;
 
 // Keys we've seen so far
@@ -15,27 +17,28 @@ const {processFragment} = domUtils;
 // Google display name
 // Google account ID
 
-const mediumToGhost = {
+const mediumToGhost: Record<string, string> = {
     'email address': 'email',
     'created at': 'created_at',
     image: 'profile_image',
     twitter: 'twitter'
 };
 
-export default ({html}) => {
+/** Read the export owner from a Medium export's `profile/profile.html`. */
+export default ({html}: {html: string}): MediumRelation => {
     return processFragment(html, parsed => {
-        let profile = {
-            url: parsed.$('.u-url')[0]?.getAttribute('href'),
+        const profile: MediumRelation = {
+            url: parsed.$('.u-url')[0]?.getAttribute('href') ?? undefined,
             data: {
                 name: parsed.$('.p-name')[0]?.textContent || '',
-                profile_image: parsed.$('.u-photo')[0]?.getAttribute('src'),
+                profile_image: parsed.$('.u-photo')[0]?.getAttribute('src') ?? undefined,
                 roles: ['Contributor']
             }
         };
 
         parsed.$('ul li').forEach(el => {
-            let [item, value] = el.textContent.split(': ');
-            let key = mediumToGhost[item.toLowerCase()] || null;
+            const [item, value] = el.textContent!.split(': ');
+            const key = mediumToGhost[item.toLowerCase()] || null;
 
             if (key) {
                 profile.data[key] = value;

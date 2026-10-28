@@ -1,11 +1,26 @@
 import {domUtils, cardUtils} from '@tryghost/mg-utils';
 import SimpleDom from 'simple-dom';
+import type {MediumRelation} from './types.js';
+
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
+const serialize = (node: unknown): string => serializer.serialize(node as any);
 const galleryCard = cardUtils.getCard('gallery');
 const bookmarkCard = cardUtils.getCard('bookmark');
 
-const doReplace = str => {
-    const replaceParts = [
+/** The fields of a post that converting its content reads and updates. */
+export interface ContentPost {
+    data: {
+        title: string;
+        custom_excerpt?: string;
+        status?: string;
+        tags?: MediumRelation[];
+        html?: string;
+        [key: string]: any;
+    };
+}
+
+const doReplace = (str: string): string => {
+    const replaceParts: [RegExp, string][] = [
         [/[\s\n]/g, ''], // Remove spaces
         [/\.$/, ''], // Trim trailing full stop
         [/\u2018/, "'"], // Convert single opening curly quote to straight quote
@@ -21,7 +36,7 @@ const doReplace = str => {
     return str;
 };
 
-const equivalentTitles = (title1, title2) => {
+const equivalentTitles = (title1: string, title2: string): boolean => {
     title1 = doReplace(title1);
     title2 = doReplace(title2);
 
@@ -34,10 +49,10 @@ const equivalentTitles = (title1, title2) => {
 // DOM text as HTML via innerHTML. U+00A0 (non-breaking space) is excluded so the
 // result matches the old String.trim(): serializeChildren escaped a nbsp to
 // `&nbsp;`, which trim() never stripped.
-const trimEdgeWhitespace = el => {
+const trimEdgeWhitespace = (el: Element): void => {
     let node = el.firstChild;
     while (node && node.nodeType === 3) {
-        const trimmed = node.nodeValue.replace(/^[^\S\u00a0]+/, '');
+        const trimmed = node.nodeValue!.replace(/^[^\S\u00a0]+/, '');
         node.nodeValue = trimmed;
         if (trimmed !== '') {
             break;
@@ -47,7 +62,7 @@ const trimEdgeWhitespace = el => {
 
     node = el.lastChild;
     while (node && node.nodeType === 3) {
-        const trimmed = node.nodeValue.replace(/[^\S\u00a0]+$/, '');
+        const trimmed = node.nodeValue!.replace(/[^\S\u00a0]+$/, '');
         node.nodeValue = trimmed;
         if (trimmed !== '') {
             break;
@@ -56,7 +71,11 @@ const trimEdgeWhitespace = el => {
     }
 };
 
-export default ({html, post}) => {
+/**
+ * Convert a Medium post's body HTML to Ghost-friendly HTML, setting `post.data.html`. A short published post with
+ * one paragraph and no images is probably a comment, so it becomes a draft tagged `#Medium Possible Comment`.
+ */
+export default <T extends ContentPost>({html, post}: {html: string; post: T}): T => {
     const parsed = domUtils.parseFragment(html);
 
     // Detect if post is likely to be a comment. If so, set as draft and add tag
@@ -67,7 +86,7 @@ export default ({html, post}) => {
 
     if (post.data.status === 'published' && childrenCount <= 1 && pCount <= 1 && imgCount === 0) {
         post.data.status = 'draft';
-        post.data.tags.push({
+        post.data.tags!.push({
             url: 'migrator-added-medium-possible-comment',
             data: {
                 name: '#Medium Possible Comment',
@@ -89,13 +108,13 @@ export default ({html, post}) => {
     // Sometimes Medium has a duplicate header at the beginning of the content
     // Don't need this either so remove it
     let firstTitle = parsed.$('h1, h2, h3, h4, blockquote')[0];
-    if (firstTitle && equivalentTitles(firstTitle.textContent, post.data.title)) {
+    if (firstTitle && equivalentTitles(firstTitle.textContent!, post.data.title)) {
         firstTitle.remove();
     }
 
     // Remove the subtitle if it's the same as the excerpt
     parsed.$('.graf--subtitle').forEach(el => {
-        if (equivalentTitles(el.textContent, post.data.custom_excerpt)) {
+        if (equivalentTitles(el.textContent!, post.data.custom_excerpt!)) {
             el.remove();
         }
     });
@@ -114,14 +133,13 @@ export default ({html, post}) => {
             let cardOpts = {
                 env: {dom: new SimpleDom.Document()},
                 payload: {
-                    images: [],
+                    images: [] as Record<string, unknown>[],
                     caption: caption
                 }
             };
 
             el.querySelectorAll('figure').forEach(figure => {
-                // eslint-disable-line no-shadow
-                let img = figure.querySelector('img');
+                let img = figure.querySelector('img')!;
                 cardOpts.payload.images.push({
                     row: 0,
                     fileName: img.getAttribute('data-image-id'),
@@ -131,7 +149,7 @@ export default ({html, post}) => {
                 });
             });
 
-            const galleryHtml = serializer.serialize(galleryCard.render(cardOpts));
+            const galleryHtml = serialize(galleryCard.render(cardOpts));
 
             domUtils.replaceWith(el, galleryHtml);
         }
@@ -141,7 +159,7 @@ export default ({html, post}) => {
     parsed.$('.graf--mixtapeEmbed').forEach(el => {
         let cardOpts = {
             env: {dom: new SimpleDom.Document()},
-            payload: {}
+            payload: {} as Record<string, any>
         };
 
         let href = el.querySelector('.markup--anchor')?.getAttribute('href');
@@ -153,14 +171,14 @@ export default ({html, post}) => {
             description: el.querySelector('.markup--em')?.textContent || ''
         };
 
-        const mixtapeImage = el.querySelector('.js-mixtapeImage');
+        const mixtapeImage = el.querySelector('.js-mixtapeImage') as HTMLElement | null;
         const bngImage = mixtapeImage ? mixtapeImage.style.backgroundImage : null;
         if (bngImage) {
-            let src = bngImage.replace(/url\(["']?(.*?)["']?\)/, (m, p) => p);
+            let src = bngImage.replace(/url\(["']?(.*?)["']?\)/, (m: string, p: string) => p);
             cardOpts.payload.metadata.thumbnail = src;
         }
 
-        const bookmarkHtml = serializer.serialize(bookmarkCard.render(cardOpts));
+        const bookmarkHtml = serialize(bookmarkCard.render(cardOpts));
 
         domUtils.replaceWith(el, `<!--kg-card-begin: html-->\n${bookmarkHtml}\n<!--kg-card-end: html-->`);
     });
@@ -176,7 +194,7 @@ export default ({html, post}) => {
             a.removeAttribute('class');
         });
 
-        let textElements = [];
+        let textElements: string[] = [];
         textElements.push(domUtils.serializeChildren(bq).trim());
 
         const nextElem = bq.nextElementSibling;
@@ -205,7 +223,7 @@ export default ({html, post}) => {
         pre.querySelectorAll('span.pre--content').forEach(span => {
             const code = parsed.document.createElement('code');
             code.innerHTML = span.innerHTML;
-            span.parentNode.replaceChild(code, span);
+            span.parentNode!.replaceChild(code, span);
         });
 
         pre.querySelectorAll('code').forEach(code => {
