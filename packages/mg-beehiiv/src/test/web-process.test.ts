@@ -114,6 +114,15 @@ describe('beehiiv web HTML processor', () => {
             assert.equal(result, '<blockquote><p>Quote text here.</p></blockquote>');
         });
 
+        it('keeps escaped markup in citation and button text as text', () => {
+            const html = `<div id="content-blocks"><div style="padding-left:19px;"><div style="padding-left:40px;"><div><p>Quote</p></div><div><small>&lt;b&gt;Author&lt;/b&gt;</small></div></div></div><a href="https://other.example.com/?q=&quot;1&quot;"><button>&lt;img src=x onerror=alert(1)&gt;</button></a></div>`;
+            const result = processWebHTML({html, url: 'test'});
+            assert.equal(
+                result,
+                '<blockquote><p>Quote</p><cite>&lt;b&gt;Author&lt;/b&gt;</cite></blockquote><div class="kg-card kg-button-card kg-align-center"><a href="https://other.example.com/?q=&quot;1&quot;" class="kg-btn kg-btn-accent">&lt;img src=x onerror=alert(1)&gt;</a></div>'
+            );
+        });
+
         it('does not convert nested padding-left divs without paragraphs', () => {
             const html =
                 '<div id="content-blocks"><div style="padding-left: 20px"><div style="padding-left: 10px">plain text</div></div></div>';

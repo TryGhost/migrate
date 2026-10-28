@@ -4,7 +4,7 @@ import {domUtils, youtubeUtils, stringUtils, cardUtils} from '@tryghost/mg-utils
 import type {ContentOptions} from './types.js';
 
 const {parseFragment, serializeChildren, serializeNode, replaceWith, insertAfter, attr, parents} = domUtils;
-const {unescapeHTML} = stringUtils;
+const {escapeHTML, unescapeHTML} = stringUtils;
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 const {getYouTubeID} = youtubeUtils;
 const imageCard = cardUtils.getCard('image');
@@ -118,7 +118,7 @@ const processHTML = ({html, title, options}: {html: string; title?: string; opti
             .trim();
         replaceWith(
             parent,
-            `<div class="kg-card kg-quote-card kg-align-center"><blockquote class="kg-blockquote"><p>${text}</p></blockquote></div>`
+            `<div class="kg-card kg-quote-card kg-align-center"><blockquote class="kg-blockquote"><p>${escapeHTML(text)}</p></blockquote></div>`
         );
     });
 
@@ -321,10 +321,10 @@ const processHTML = ({html, title, options}: {html: string; title?: string; opti
     // Convert buttons to Ghost buttons
     parsed.$('a[style="color:#FFFFFF;font-size:18px;padding:0px 14px;text-decoration:none;"]').forEach(el => {
         const buttonText = el.textContent!;
-        const buttonHref = attr(el, 'href');
+        const buttonHref = attr(el, 'href')!;
         replaceWith(
             el,
-            `<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`
+            `<div class="kg-card kg-button-card kg-align-center"><a href="${escapeHTML(buttonHref)}" class="kg-btn kg-btn-accent">${escapeHTML(buttonText)}</a></div>`
         );
     });
 
@@ -540,7 +540,7 @@ const processWebHTML = ({
                 .map(s => s.textContent!.trim())
                 .filter(Boolean)
                 .join('');
-            const cite = citation ? `<cite>${citation}</cite>` : '';
+            const cite = citation ? `<cite>${escapeHTML(citation)}</cite>` : '';
             replaceWith(outerDiv, `<blockquote>${content}${cite}</blockquote>`);
         }
     });
@@ -550,12 +550,12 @@ const processWebHTML = ({
         const link = el.parentElement!; // guaranteed by 'a > button' selector
         const wrapper = link.parentElement;
         const buttonText = el.textContent!.trim();
-        const buttonHref = attr(link, 'href');
+        const buttonHref = attr(link, 'href')!;
         const target = wrapper && wrapper.tagName === 'DIV' ? wrapper : link;
 
         replaceWith(
             target,
-            `<div class="kg-card kg-button-card kg-align-center"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`
+            `<div class="kg-card kg-button-card kg-align-center"><a href="${escapeHTML(buttonHref)}" class="kg-btn kg-btn-accent">${escapeHTML(buttonText)}</a></div>`
         );
     });
 
