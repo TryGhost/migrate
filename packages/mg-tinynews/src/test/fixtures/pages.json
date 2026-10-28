@@ -1,0 +1,62 @@
+[
+    {
+        "id": 12,
+        "slug": "about",
+        "live_url": "https://demo-site.example.com/about",
+        "author": [],
+        "translations": [
+            {
+                "published": true,
+                "first_published_at": "2022-01-05T10:00:00+00:00",
+                "last_published_at": "2022-02-01T12:30:00+00:00",
+                "locale_code": "en-US",
+                "headline": "About us",
+                "created_by_email": "editor@demo-site.example.com",
+                "content": [
+                    {
+                        "type": "mainImage",
+                        "link": null,
+                        "children": [
+                            {
+                                "imageAlt": "The team",
+                                "imageUrl": "https://assets.example.com/demo-site/about/team.jpg"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "text",
+                        "style": "HEADING_2",
+                        "children": [{"style": {}, "content": "Who we are"}]
+                    },
+                    {
+                        "type": "text",
+                        "style": "NORMAL_TEXT",
+                        "children": [{"style": {}, "content": "A small newsroom."}]
+                    }
+                ],
+                "search_title": "About",
+                "search_description": "About the newsroom"
+            }
+        ]
+    },
+    {
+        "id": 13,
+        "slug": "contact",
+        "translations": [
+            {
+                "published": false,
+                "first_published_at": null,
+                "last_published_at": null,
+                "locale_code": "en-US",
+                "headline": "Contact",
+                "content": [
+                    {
+                        "type": "text",
+                        "style": "NORMAL_TEXT",
+                        "children": [{"style": {"bold": true}, "content": "Email us."}]
+                    }
+                ]
+            }
+        ]
+    }
+]

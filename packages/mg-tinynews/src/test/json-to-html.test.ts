@@ -17,8 +17,11 @@ import {
     EntryApplePodcastsEmbed,
     EntryInstagramPostEmbed,
     EntryInstagramReelEmbed,
-    EntryGoogleDocsEmbed
+    EntryGoogleDocsEmbed,
+    EntrySpotifyEmbed
 } from '../lib/json-to-html.js';
+import {TextNode} from '../lib/text.js';
+import type {TinyNewsBlock} from '../index.js';
 
 describe('JSON to HTML', function () {
     it('Returns HTML if given HTML', function () {
@@ -653,5 +656,190 @@ describe('Embeds', function () {
             formatted,
             '<iframe class="googledocs-embed" src="https://docs.google.com/forms/d/e/12345678abcdefghyQHFRldkioVOLrwqofXDjTJFMgH5nnZN93xt0oA/viewform?embedded=true" allowtransparency="true" allowfullscreen="true" frameborder="0" style="width: 100%; height: 500px;"></iframe>'
         );
+    });
+});
+
+describe('Embeds without the parts they need', function () {
+    it('Link TikTok and Vimeo embeds without a video', function () {
+        assert.equal(
+            EntryTikTokEmbed({link: 'https://www.tiktok.com/discover'}),
+            '<p><a href="https://www.tiktok.com/discover">https://www.tiktok.com/discover</a></p>'
+        );
+        assert.equal(
+            EntryVimeoEmbed({link: 'https://vimeo.com/channels'}),
+            '<p><a href="https://vimeo.com/channels">https://vimeo.com/channels</a></p>'
+        );
+    });
+
+    it('Embeds YouTube links without a video ID as they are', function () {
+        assert.match(
+            EntryYoutubeEmbed({link: 'https://www.youtube.com/live'}),
+            /src="https:\/\/www\.youtube\.com\/embed\/https:\/\/www\.youtube\.com\/live"/
+        );
+    });
+
+    it('Spotify episodes and shows', function () {
+        assert.equal(
+            EntrySpotifyEmbed({link: 'https://open.spotify.com/episode/abc'}),
+            '<iframe src="https://open.spotify.com/embed/episode/abc" width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>'
+        );
+        assert.match(
+            EntrySpotifyEmbed({link: 'https://open.spotify.com/show/def'}),
+            /src="https:\/\/open\.spotify\.com\/embed\/show\/def"/
+        );
+    });
+});
+
+describe('Blocks with missing parts', function () {
+    it('Formats children without styles or content', function () {
+        assert.equal(formatChildStyles({}), '');
+        assert.equal(
+            formatChildStyles({content: 'Plain', link: 'https://example.com'}),
+            '<a href="https://example.com">Plain</a>'
+        );
+    });
+
+    it('Converts lists, images and quotes without children to nothing', function () {
+        assert.equal(EntryList({listType: 'NUMBER'}), '<ol></ol>');
+        assert.equal(EntryList({items: [{}, {children: [{content: 'One'}]}]}), '<ul><li>One</li></ul>');
+        assert.equal(EntryImage({}), '');
+        assert.equal(EntryImage({children: []}), '');
+        assert.equal(EntryBlockquote({}), '');
+        assert.equal(EntryBlockquote({children: [{content: ' '}, {}]}), '');
+        assert.equal(
+            EntryBlockquote({children: [{content: ' '}, {content: 'Quote', style: {italic: true}}]}),
+            '<blockquote><p><em>Quote</em></p></blockquote>'
+        );
+    });
+
+    it('Converts text blocks by style', function () {
+        const children = [{content: 'Text', style: {}}];
+        assert.equal(TextNode({node: {style: 'HEADING_4', children}}), '<h4>Text </h4>');
+        assert.equal(TextNode({node: {style: 'FORMATTED_TEXT', children}}), '<pre>Text </pre>');
+        assert.equal(TextNode({node: {children}}), 'Text ');
+        assert.equal(TextNode({node: {style: 'NORMAL_TEXT'}}), null);
+        assert.equal(
+            TextNode({node: {style: 'NORMAL_TEXT', children: [{content: 'FORMAT START'}, {content: ''}]}}),
+            null
+        );
+    });
+
+    it('Breaks lines for blank children and doubles spaces after children without styles', function () {
+        assert.equal(
+            TextNode({
+                node: {
+                    style: 'NORMAL_TEXT',
+                    children: [
+                        {content: ' ', style: {}},
+                        {content: 'After', style: {}}
+                    ]
+                }
+            }),
+            '<p><br />After </p>'
+        );
+        assert.equal(
+            TextNode({
+                node: {
+                    style: 'NORMAL_TEXT',
+                    children: [
+                        {content: ' ', style: {}},
+                        {content: ' ', style: {}}
+                    ]
+                }
+            }),
+            '<p>    </p>'
+        );
+        assert.equal(TextNode({node: {style: 'NORMAL_TEXT', children: [{content: ' ', style: {}}]}}), '<p>  </p>');
+        assert.equal(TextNode({node: {style: 'NORMAL_TEXT', children: [{content: 'Unstyled'}]}}), '<p>Unstyled  </p>');
+        assert.equal(
+            TextNode({node: {style: 'NORMAL_TEXT', children: [{content: 'Link', link: 'https://example.com'}]}}),
+            '<p> <a href="https://example.com">Link</a> </p>'
+        );
+    });
+});
+
+describe('jsonToHtml', function () {
+    it('Converts every supported block and embed, skipping main images', function () {
+        const embed = (link: string): TinyNewsBlock => ({type: 'embed', link});
+        const blocks: TinyNewsBlock[] = [
+            {type: 'mainImage', children: [{imageUrl: 'https://example.com/main.jpg'}]},
+            {type: 'text', style: 'TITLE', children: [{content: 'Title', style: {}}]},
+            {type: 'text', style: 'NORMAL_TEXT', children: [{content: 'Text', style: {}}]},
+            {type: 'blockquote', children: [{content: 'Quote', style: {}}]},
+            {type: 'hr'},
+            {type: 'list', items: [{children: [{content: 'Item', style: {}}]}]},
+            {type: 'image', children: [{imageUrl: 'https://example.com/image.jpg', imageAlt: 'Alt'}]},
+            embed('https://twitter.com/example/status/1'),
+            embed('https://www.tiktok.com/@example/video/1234567890123'),
+            embed('https://www.facebook.com/example/posts/1'),
+            embed('https://vimeo.com/123456'),
+            embed('https://www.youtube.com/watch?v=abc123'),
+            embed('https://youtu.be/def456'),
+            embed('https://podcasts.apple.com/us/podcast/example/id1'),
+            embed('https://open.spotify.com/episode/abc'),
+            embed('https://open.spotify.com/show/def'),
+            embed('https://www.instagram.com/p/abc/'),
+            embed('https://www.instagram.com/reel/def/'),
+            embed('https://docs.google.com/forms/d/e/abc/viewform')
+        ];
+        const reasons: string[] = [];
+        const html = jsonToHtml(blocks, {onUnhandled: reason => reasons.push(reason)});
+
+        assert.deepEqual(reasons, []);
+        assert.ok(!html.includes('main.jpg'));
+        for (const expected of [
+            '<h1>Title </h1><p>Text </p><blockquote><p>Quote</p></blockquote><hr><ul><li>Item</li></ul>',
+            'src="https://example.com/image.jpg"',
+            'class="twitter-tweet"',
+            'class="tiktok-embed"',
+            '<p><a href="https://www.facebook.com/example/posts/1">',
+            'https://player.vimeo.com/video/123456',
+            'https://www.youtube.com/embed/abc123',
+            'https://www.youtube.com/embed/def456',
+            'https://embed.podcasts.apple.com/us/podcast/example/id1',
+            'https://open.spotify.com/embed/episode/abc',
+            'https://open.spotify.com/embed/show/def',
+            'src="https://www.instagram.com/p/abc/embed/captioned/" class="instagram-media"',
+            'class="instagram-media" src="https://www.instagram.com/reel/def/embed/captioned/"',
+            'class="googledocs-embed"'
+        ]) {
+            assert.ok(html.includes(expected), expected);
+        }
+    });
+
+    it('Leaves out blocks it cannot convert, passing them to onUnhandled', function () {
+        const blocks: TinyNewsBlock[] = [
+            {type: 'text', style: 'FORMATTED_TEXT', children: [{content: 'Code'}]},
+            {type: 'text', children: [{content: 'No style'}]},
+            {type: 'embed', link: 'https://open.spotify.com/track/abc'},
+            {type: 'embed', link: 'https://www.instagram.com/stories/abc/'},
+            {type: 'embed', link: 'https://example.com/embed'},
+            {type: 'embed', link: 'not a url'},
+            {type: 'embed', link: null},
+            {type: 'table'},
+            {children: []},
+            {type: 'text', style: 'NORMAL_TEXT', children: [{content: 'Kept', style: {}}]}
+        ];
+        const unhandled: [string, TinyNewsBlock][] = [];
+        const html = jsonToHtml(blocks, {onUnhandled: (reason, block) => unhandled.push([reason, block])});
+
+        assert.equal(html, '<p>Kept </p>');
+        assert.deepEqual(
+            unhandled.map(([reason]) => reason),
+            [
+                'Unhandled text style: FORMATTED_TEXT',
+                'Unhandled text style: null',
+                'Unhandled embed: https://open.spotify.com/track/abc',
+                'Unhandled embed: https://www.instagram.com/stories/abc/',
+                'Unhandled embed: https://example.com/embed',
+                'Unhandled embed: not a url',
+                'Unhandled embed: null',
+                'Unhandled block type: table',
+                'Unhandled block type: null'
+            ]
+        );
+        assert.equal(unhandled[7][1], blocks[7]);
+        assert.equal(jsonToHtml(blocks), '<p>Kept </p>');
+        assert.equal(jsonToHtml(null), '');
     });
 });
