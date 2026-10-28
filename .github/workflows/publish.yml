@@ -63,7 +63,7 @@ jobs:
       # First setup-node: used for building (keeps the monorepo on its expected Node version)
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
-          node-version: 24
+          node-version: 26
           cache: pnpm
         env:
           NODE_AUTH_TOKEN: ""
@@ -80,7 +80,7 @@ jobs:
       # registry-url is required for npm to authenticate via the OIDC token.
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
-          node-version: 24.x
+          node-version: 26.x
           registry-url: https://registry.npmjs.org
         env:
           NODE_AUTH_TOKEN: ""
