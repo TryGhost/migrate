@@ -11,7 +11,7 @@ import type {MappingSummary} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, stringUtils} from '@tryghost/mg-utils';
 import {decode} from 'html-entities';
 import processContent from './process-content.js';
 import type {CuratedIssue, CuratedOptions} from './types.js';
@@ -34,14 +34,6 @@ export function ghostId(kind: string, key: string): string {
 /** A trimmed string option, or `undefined` when it is unset or blank. */
 function option(value: unknown): string | undefined {
     return (typeof value === 'string' && value.trim()) || undefined;
-}
-
-/** Curated writes `2021-02-02T21:08:42+00:00`; a zoneless timestamp is read as UTC. */
-function parseDate(value: unknown): Date | null {
-    const text = typeof value === 'string' ? value.trim().replace(/^(\d{4}-\d\d-\d\d) (?=\d)/, '$1T') : '';
-    const zoneless = /^\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d(?:\.\d+)?)?$/.test(text);
-    const date = new Date(zoneless ? `${text}Z` : text);
-    return text && Number.isFinite(date.getTime()) ? date : null;
 }
 
 /** The single author of every post, from `--name` and `--email`, or the Ghost user with that email. */
@@ -142,7 +134,7 @@ export async function map(
         return context.mapRecords(context.sources.records({kind: 'issue'}), async record => {
             const issue: CuratedIssue = JSON.parse(record.content);
             const url = issueUrl(issue);
-            const published = parseDate(issue.published_at);
+            const published = dateUtils.parseDate(issue.published_at);
             if (!published) {
                 throw new RecordDataError('Invalid Curated published_at');
             }
@@ -175,7 +167,7 @@ export async function map(
             post.set('type', 'post');
             post.set('created_at', published);
             post.set('published_at', published);
-            post.set('updated_at', parseDate(issue.updated_at) ?? published);
+            post.set('updated_at', dateUtils.parseDate(issue.updated_at) ?? published);
             post.set('html', html);
 
             const author = authorEntity(state, options);

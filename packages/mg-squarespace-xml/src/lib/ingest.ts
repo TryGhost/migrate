@@ -1,7 +1,7 @@
 import {basename} from 'node:path';
 import type {JsonObject, MigrateContext, SourceRecordInput} from '@tryghost/mg-context';
-import {xmlUtils} from '@tryghost/mg-utils';
-import {getText, wxrDate} from './process.js';
+import {dateUtils, xmlUtils} from '@tryghost/mg-utils';
+import {getText} from './process.js';
 import type {SquarespaceRecord} from './types.js';
 
 /** The host and path that scope stable Ghost IDs to one site. */
@@ -32,7 +32,7 @@ export async function sourceSite(context: MigrateContext): Promise<{url: string;
 
 function revision(item: SquarespaceRecord): number | undefined {
     for (const field of ['wp:post_modified_gmt', 'wp:post_modified']) {
-        const date = wxrDate(getText(item[field]));
+        const date = dateUtils.parseDate(getText(item[field]));
         if (date) {
             return date.getTime();
         }

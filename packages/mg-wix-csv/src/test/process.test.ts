@@ -7,7 +7,6 @@ import {
     createSlug,
     parse,
     parseBoolean,
-    parseDate,
     parseIdArray,
     processRow,
     rowTags,
@@ -53,19 +52,6 @@ describe('Wix CSV row processing', () => {
         assert.equal(second.author, 'Author');
         assert.equal(second.fields.feature_image, null);
         assert.match(second.fields.html, /Draft plain/);
-    });
-
-    it('reads Wix dates, treating zoneless timestamps as UTC', () => {
-        assert.equal(parseDate('2025-10-01T10:00:00Z')?.toISOString(), '2025-10-01T10:00:00.000Z');
-        assert.equal(parseDate('2025-10-01T10:00:00')?.toISOString(), '2025-10-01T10:00:00.000Z');
-        assert.equal(parseDate(' 2025-10-01 10:00:00.5 ')?.toISOString(), '2025-10-01T10:00:00.500Z');
-        assert.equal(parseDate('2025-10-01T10:00')?.toISOString(), '2025-10-01T10:00:00.000Z');
-        assert.equal(parseDate('2025-10-01T10:00:00+02:00')?.toISOString(), '2025-10-01T08:00:00.000Z');
-        assert.equal(parseDate('2025-10-01')?.toISOString(), '2025-10-01T00:00:00.000Z');
-        assert.equal(parseDate('nope'), null);
-        assert.equal(parseDate('  '), null);
-        assert.equal(parseDate(null), null);
-        assert.equal(parseDate(), null);
     });
 
     it('maps helper edge cases', () => {

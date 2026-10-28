@@ -6,7 +6,6 @@ import {
     authorName,
     emailAuthor,
     newsletterUrl,
-    parseDate,
     personAuthor,
     processArticle,
     processNewsletter,
@@ -344,16 +343,6 @@ describe('Authors', function () {
 });
 
 describe('Helpers', function () {
-    it('Parses dates explicitly', function () {
-        assert.equal(parseDate('2023-03-24T19:45:24.257025+00:00')!.toISOString(), '2023-03-24T19:45:24.257Z');
-        assert.equal(parseDate('2023-03-24T19:45')!.toISOString(), '2023-03-24T19:45:00.000Z');
-        assert.equal(parseDate('2023-03-24 19:45:24')!.toISOString(), '2023-03-24T19:45:24.000Z');
-        assert.equal(parseDate('2023-03-24T19:45:24-05:00')!.toISOString(), '2023-03-25T00:45:24.000Z');
-        assert.equal(parseDate('yesterday'), null);
-        assert.equal(parseDate(''), null);
-        assert.equal(parseDate(1679687124257), null);
-    });
-
     it('Reads text and URLs', function () {
         assert.equal(text('  a  '), 'a');
         assert.equal(text(' '), undefined);

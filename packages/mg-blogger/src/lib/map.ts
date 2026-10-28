@@ -11,7 +11,7 @@ import type {MappingSummary} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, stringUtils} from '@tryghost/mg-utils';
 import {decode} from 'html-entities';
 import {processHTMLContent, slugFromURL} from './process.js';
 import {sourceBlogs} from './ingest.js';
@@ -35,16 +35,6 @@ const MAX_RELATIONS = 500;
  */
 export function ghostId(site: string, kind: string, key: string): string {
     return coreGhostId('mg-blogger:1', site, kind, key);
-}
-
-/** An RFC 3339 date, read as UTC when it has no offset, or `null` when it is missing or invalid. */
-function parseDate(value: unknown): Date | null {
-    if (typeof value !== 'string' || !value.trim()) {
-        return null;
-    }
-    const zoned = /(?:Z|[+-]\d\d:?\d\d)$/i.test(value.trim()) ? value : `${value}Z`;
-    const date = new Date(zoned);
-    return Number.isNaN(date.getTime()) ? null : date;
 }
 
 /**
@@ -157,7 +147,7 @@ export async function map(
             if (!record.key) {
                 throw new RecordDataError('Post has no ID');
             }
-            const published = parseDate(item.published) ?? parseDate(item.updated);
+            const published = dateUtils.parseDate(item.published) ?? dateUtils.parseDate(item.updated);
             if (!published) {
                 throw new RecordDataError('Invalid Blogger post dates');
             }
@@ -188,7 +178,7 @@ export async function map(
             post.set('type', 'post');
             post.set('created_at', published);
             post.set('published_at', published);
-            post.set('updated_at', parseDate(item.updated) ?? published);
+            post.set('updated_at', dateUtils.parseDate(item.updated) ?? published);
             post.set('html', html);
             if (featureImage) {
                 post.set('feature_image', featureImage);

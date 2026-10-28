@@ -5,7 +5,6 @@ export {
     authorName,
     emailAuthor,
     newsletterUrl,
-    parseDate,
     personAuthor,
     processArticle,
     processNewsletter,

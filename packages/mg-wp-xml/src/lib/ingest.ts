@@ -1,8 +1,8 @@
 import type {MigrateContext, SourceRecordInput} from '@tryghost/mg-context';
-import {xmlUtils} from '@tryghost/mg-utils';
+import {dateUtils, xmlUtils} from '@tryghost/mg-utils';
 import type {WordPressInput} from './input.js';
 import {inspectSource} from './input.js';
-import {getText, wordpressDate} from './process.js';
+import {getText} from './process.js';
 
 export function canonicalSite(value: string): string {
     const url = new URL(value);
@@ -26,7 +26,7 @@ export function sourceUrl(value: string, base: string): string | undefined {
 
 function revision(item: Record<string, any>): number | undefined {
     for (const field of ['wp:post_modified_gmt', 'wp:post_modified']) {
-        const date = wordpressDate(getText(item[field]));
+        const date = dateUtils.parseDate(getText(item[field]));
         if (date) {
             return date.getTime();
         }

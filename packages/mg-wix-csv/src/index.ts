@@ -6,7 +6,6 @@ export {
     buildPostUrl,
     createSlug,
     parseBoolean,
-    parseDate,
     parseIdArray,
     processRow,
     rowTags,

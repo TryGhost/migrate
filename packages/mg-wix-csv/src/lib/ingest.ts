@@ -1,7 +1,7 @@
 import {basename} from 'node:path';
 import fsUtils from '@tryghost/mg-fs-utils';
 import type {MigrateContext, SourceRecord, SourceRecordInput} from '@tryghost/mg-context';
-import {parseDate} from './process.js';
+import {dateUtils} from '@tryghost/mg-utils';
 import type {WixRow} from './types.js';
 
 /** A row's key: `id:<ID>`, else `url:<Post Page URL>`, else `slug:<Slug>`, else `null`. */
@@ -37,7 +37,8 @@ export async function* parse(pathToCsv: string): AsyncGenerator<SourceRecordInpu
 /** When a row was last published, or NaN when it has no valid date. */
 const published = (content: string) => {
     const row: WixRow = JSON.parse(content);
-    return (parseDate(row['Last Published Date']) ?? parseDate(row['Published Date']))?.getTime() ?? NaN;
+    const date = dateUtils.parseDate(row['Last Published Date']) ?? dateUtils.parseDate(row['Published Date']);
+    return date?.getTime() ?? NaN;
 };
 
 /** The more recently published version of a post wins; a tie or an undated row keeps the earlier one. */

@@ -8,8 +8,7 @@ import {
     postDates,
     postSlug,
     processTags,
-    processUser,
-    wxrDate
+    processUser
 } from '../lib/process.js';
 
 describe('processContent', function () {
@@ -219,13 +218,6 @@ describe('Field helpers', function () {
         assert.equal(getText({'@_domain': 'category'}), '');
         assert.equal(getText(undefined), '');
         assert.equal(getText(null), '');
-    });
-
-    it('wxrDate reads zoneless timestamps as UTC and rejects zeroed ones', function () {
-        assert.equal(wxrDate('2013-11-02 23:02:32')!.toISOString(), '2013-11-02T23:02:32.000Z');
-        assert.equal(wxrDate('2013-11-02T23:02:32+01:00')!.toISOString(), '2013-11-02T22:02:32.000Z');
-        assert.equal(wxrDate('0000-00-00 00:00:00'), undefined);
-        assert.equal(wxrDate(''), undefined);
     });
 
     it('postDates prefers post_date_gmt, then pubDate, then post_date, and uses the modified date', function () {

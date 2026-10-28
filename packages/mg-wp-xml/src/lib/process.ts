@@ -10,7 +10,7 @@ import {
 import {slugify} from '@tryghost/string';
 import MarkdownIt from 'markdown-it';
 import {processShortcodes, processContent, processExcerpt} from '@tryghost/mg-wp-api';
-import {domUtils, youtubeUtils, stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, domUtils, youtubeUtils, stringUtils} from '@tryghost/mg-utils';
 import {isSerialized, unserialize} from 'php-serialize';
 
 /**
@@ -50,25 +50,17 @@ const getText = (node: any): string => {
     return String(node);
 };
 
-const validDate = (date: Date): Date | undefined => (Number.isFinite(date.getTime()) ? date : undefined);
-
-// WordPress `Y-m-d H:i:s` fields carry no zone; read them as UTC, never as the machine's local time.
-// Never-published drafts use `0000-00-00 00:00:00`, which is invalid.
-const wordpressDate = (value: string): Date | undefined => {
-    const iso = value.trim().replace(' ', 'T');
-    return validDate(new Date(/Z$|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`));
-};
-
 /**
- * Never-published drafts have an empty (or `-0001`) pubDate and a zeroed post_date_gmt. They fall back to
- * post_date, which is site-local time read as UTC because exports don't record the site's timezone.
+ * WordPress `Y-m-d H:i:s` fields carry no zone and are read as UTC. Never-published drafts have an empty (or `-0001`)
+ * pubDate and a zeroed post_date_gmt (`0000-00-00 00:00:00`, which is invalid). They fall back to post_date, which is
+ * site-local time read as UTC because exports don't record the site's timezone.
  */
 const postDates = (item: WordPressRecord): {published?: Date; modified?: Date} => {
     const published =
-        wordpressDate(getText(item['wp:post_date_gmt'])) ??
-        validDate(new Date(getText(item.pubdate || item.pubDate))) ??
-        wordpressDate(getText(item['wp:post_date']));
-    return {published, modified: wordpressDate(getText(item['wp:post_modified_gmt'])) ?? published};
+        dateUtils.parseDate(getText(item['wp:post_date_gmt'])) ??
+        dateUtils.parseDate(getText(item.pubdate || item.pubDate)) ??
+        dateUtils.parseDate(getText(item['wp:post_date']));
+    return {published, modified: dateUtils.parseDate(getText(item['wp:post_modified_gmt'])) ?? published};
 };
 
 const processUser = (user: WordPressRecord): LegacyAuthor => {
@@ -508,7 +500,6 @@ const processAttachment = async (post: WordPressRecord) => {
 export {
     ensureArray,
     getText,
-    wordpressDate,
     postDates,
     processUser,
     processPost,

@@ -11,7 +11,7 @@ import type {MappingSummary} from '@tryghost/mg-context';
 import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
-import {stringUtils} from '@tryghost/mg-utils';
+import {dateUtils, stringUtils} from '@tryghost/mg-utils';
 import jsonToHtml from './json-to-html.js';
 import type {ChorusEntry, ChorusOptions} from './types.js';
 
@@ -52,14 +52,6 @@ function urlSlug(url: string): string {
     } catch {
         return slugify(segment);
     }
-}
-
-/** Chorus writes `2019-09-27T00:40:19.000Z`; a zoneless timestamp is read as UTC. */
-function parseDate(value: unknown): Date | null {
-    const text = typeof value === 'string' ? value.trim().replace(/^(\d{4}-\d\d-\d\d) (?=\d)/, '$1T') : '';
-    const zoneless = /^\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d(?:\.\d+)?)?$/.test(text);
-    const date = new Date(zoneless ? `${text}Z` : text);
-    return text && Number.isFinite(date.getTime()) ? date : null;
 }
 
 /** A trimmed name, or `undefined` when it is not a string or is blank. */
@@ -172,7 +164,7 @@ export async function map(
             if (!url) {
                 throw new RecordDataError('Entry has no valid URL');
             }
-            const created = parseDate(entry.createdAt);
+            const created = dateUtils.parseDate(entry.createdAt);
             if (!created) {
                 throw new RecordDataError('Invalid Chorus createdAt');
             }
@@ -188,7 +180,7 @@ export async function map(
             post.set('type', 'post');
             post.set('created_at', created);
             post.set('published_at', created);
-            post.set('updated_at', parseDate(entry.updatedAt) ?? created);
+            post.set('updated_at', dateUtils.parseDate(entry.updatedAt) ?? created);
             post.set('html', jsonToHtml(entry.body?.components));
 
             const authorNames = [

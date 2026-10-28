@@ -1,6 +1,6 @@
 import sanitizeHtml from 'sanitize-html';
 import {RecordDataError} from '@tryghost/mg-context';
-import {domUtils} from '@tryghost/mg-utils';
+import {dateUtils, domUtils} from '@tryghost/mg-utils';
 import {slugify} from '@tryghost/string';
 import {jsonToHtml, type JsonToHtmlOptions} from './json-to-html.js';
 import type {TinyNewsArticle, TinyNewsAuthor, TinyNewsNewsletter, TinyNewsTag} from './types.js';
@@ -73,17 +73,6 @@ export function text(value: unknown): string | undefined {
 /** The text of an HTML string, trimmed. */
 export function textOnly(html: string): string {
     return sanitizeHtml(html, {allowedTags: [], allowedAttributes: {}}).trim();
-}
-
-/** Tiny News writes `2023-03-24T19:45:24.257025+00:00`; a zoneless timestamp is read as UTC. */
-export function parseDate(value: unknown): Date | null {
-    const date = text(value)?.replace(/^(\d{4}-\d\d-\d\d) (?=\d)/, '$1T');
-    if (!date) {
-        return null;
-    }
-    const zoneless = /^\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d(?:\.\d+)?)?$/.test(date);
-    const parsed = new Date(zoneless ? `${date}Z` : date);
-    return Number.isFinite(parsed.getTime()) ? parsed : null;
 }
 
 /** An HTTP or HTTPS URL, or `null`. */
@@ -178,12 +167,15 @@ export function processArticle(
         }
     }
 
-    const published = parseDate(translation.first_published_at) ?? parseDate(translation.last_published_at);
+    const published =
+        dateUtils.parseDate(translation.first_published_at) ??
+        dateUtils.parseDate(translation.last_published_at) ??
+        null;
     return {
         fields,
         url: httpUrl(item.live_url),
         published,
-        updated: parseDate(translation.last_published_at) ?? published,
+        updated: dateUtils.parseDate(translation.last_published_at) ?? published,
         created: published,
         tags: articleTags(item)
     };
@@ -258,7 +250,8 @@ export function newsletterUrl(site: string, item: TinyNewsNewsletter): string | 
 export function processNewsletter(item: TinyNewsNewsletter, site: string): ProcessedPost {
     const title = text(item.headline) ?? '(Untitled)';
     const content = text(item.content);
-    const published = parseDate(item.newsletter_published_at) ?? parseDate(item.newsletter_created_at);
+    const published =
+        dateUtils.parseDate(item.newsletter_published_at) ?? dateUtils.parseDate(item.newsletter_created_at) ?? null;
     return {
         fields: {
             title,
@@ -272,7 +265,7 @@ export function processNewsletter(item: TinyNewsNewsletter, site: string): Proce
         url: newsletterUrl(site, item),
         published,
         updated: published,
-        created: parseDate(item.newsletter_created_at) ?? published,
+        created: dateUtils.parseDate(item.newsletter_created_at) ?? published,
         tags: [NEWSLETTER_TAG, TINYNEWS_TAG]
     };
 }
