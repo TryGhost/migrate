@@ -1202,15 +1202,21 @@ importers:
 
   packages/mg-wix-csv:
     dependencies:
-      '@tryghost/errors':
-        specifier: 'catalog:'
-        version: 3.4.4
       '@tryghost/kg-default-cards':
         specifier: 'catalog:'
         version: 10.3.9
+      '@tryghost/mg-context':
+        specifier: workspace:*
+        version: link:../mg-context
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
+      '@tryghost/mg-ghost-authors':
+        specifier: workspace:*
+        version: link:../mg-ghost-authors
+      '@tryghost/mg-utils':
+        specifier: workspace:*
+        version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
         version: 0.3.8
