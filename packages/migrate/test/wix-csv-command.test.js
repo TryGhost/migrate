@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
+import {mkdtemp, rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import wixCSVCommand from '../commands/wix-csv.js';
 import wixCSVSource from '../sources/wix-csv.js';
 
@@ -28,24 +31,22 @@ describe('Wix CSV command', function () {
             tasks.map(task => task.title),
             [
                 'Initializing Workspace',
-                'Read Wix CSV content',
-                'Fetch existing Ghost users',
-                'Build Link Map',
-                'Format data as Ghost JSON',
+                'Fetching content',
+                'Map Wix content',
                 'Fetch images via AssetScraper',
-                'Update links in content via LinkFixer',
-                'Convert HTML -> Lexical',
-                'Write Ghost import JSON File',
-                'Write Ghost import zip',
-                'Clearing cached files'
+                'Update links in HTML via LinkFixer',
+                'Write Ghost import JSON files',
+                'Write Ghost import ZIP'
             ]
         );
     });
 
-    it('uses escaped Wix static media domains for asset matching', async function () {
+    it('uses Wix static media domains for asset matching', async function () {
         const calls = [];
+        const directory = await mkdtemp(join(tmpdir(), 'wix-csv-test-'));
         const ctx = {
             options: {
+                posts: 'posts.csv',
                 scrape: ['assets'],
                 url: 'https://example.com',
                 tmpPath: null
@@ -67,6 +68,10 @@ describe('Wix CSV command', function () {
             get cacheDir() {
                 return '/tmp/wix-csv-test';
             }
+
+            get tmpDir() {
+                return directory;
+            }
         };
         wixCSVSource.dependencies.AssetScraper = class {
             constructor(fileCache, options) {
@@ -83,11 +88,11 @@ describe('Wix CSV command', function () {
             wixCSVSource.dependencies.FileCache = OriginalFileCache;
             wixCSVSource.dependencies.AssetScraper = OriginalAssetScraper;
             wixCSVSource.dependencies.LinkFixer = OriginalLinkFixer;
+            await ctx.migrateContext?.close();
+            await rm(directory, {recursive: true, force: true});
         }
 
-        assert.deepEqual(calls[0].options.domains, [
-            'http://static\\.wixstatic\\.com',
-            'https://static\\.wixstatic\\.com'
-        ]);
+        // AssetScraper escapes domains itself, so they are given as plain URLs.
+        assert.deepEqual(calls[0].options.domains, ['http://static.wixstatic.com', 'https://static.wixstatic.com']);
     });
 });
