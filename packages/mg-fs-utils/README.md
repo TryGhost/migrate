@@ -41,6 +41,18 @@ for await (const entry of fsUtils.zip.entries('/path/to/export.zip', {filter: en
 - `csv.streamRows(pathOrStream, options)` is an async generator of parsed rows from a file path or a readable stream. Options go to `csv-parse` and default to those of `csv.parseCSV()`. The input stream is destroyed if the caller stops early.
 
 
+### Input files
+
+`listInputFiles(path, globPattern)` resolves a source's input path to the files to read, for sources that accept either one file or a directory of them.
+
+```js
+const files = await fsUtils.listInputFiles('/path/to/exports', '*.zip');
+// [{path: '/path/to/exports/a.zip', name: 'a.zip'}, {path: '/path/to/exports/b.zip', name: 'b.zip'}]
+```
+
+A file gives itself, named by its base name. A directory gives the files matching the [fast-glob](https://github.com/mrmlnc/fast-glob) pattern, sorted by path, named by their path relative to the directory with `/` separators. Hidden files are left out, a directory with no matches gives an empty list, and a missing path rejects with `ENOENT`.
+
+
 ## Develop
 
 This is a mono repository, managed with [Nx](https://nx.dev/) and pnpm workspaces.
