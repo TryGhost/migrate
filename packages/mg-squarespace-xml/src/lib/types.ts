@@ -6,6 +6,8 @@ export type SquarespaceRecord = Record<string, any>;
 export interface ContentOptions {
     /** CSS selectors for elements to remove, such as `'.ads, script[src*="adnetwork.com"]'`. */
     removeSelectors?: string | null;
+    /** The site's URL, which relative lazy-loaded image URLs resolve against. */
+    url?: string;
 }
 
 export interface SquarespaceOptions extends ContentOptions {

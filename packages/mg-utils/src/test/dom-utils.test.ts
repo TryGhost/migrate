@@ -87,6 +87,15 @@ describe('serializeNode', function () {
         assert.equal(serializeNode(textNode), 'Hello World');
     });
 
+    it('skips attribute names that would break out of the tag', function () {
+        const parsed = parseFragment('<p>x</p>');
+        const p = parsed.$('p')[0];
+        p.setAttribute('onclick x="1"', 'y');
+        p.setAttribute('data-ok', '1');
+
+        assert.equal(serializeNode(p), '<p data-ok="1">x</p>');
+    });
+
     it('escapes ampersands in text nodes', function () {
         const parsed = parseFragment('<p>Tom &amp; Jerry</p>');
         const p = parsed.$('p')[0];

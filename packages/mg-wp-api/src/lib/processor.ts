@@ -4,11 +4,11 @@ import Shortcodes from '@tryghost/mg-shortcodes';
 import {slugify} from '@tryghost/string';
 import {htmlToText} from 'html-to-text';
 import SimpleDom from 'simple-dom';
-import {domUtils, youtubeUtils, stringUtils, cardUtils} from '@tryghost/mg-utils';
+import {domUtils, youtubeUtils, stringUtils, cardUtils, urlUtils} from '@tryghost/mg-utils';
 import {matchEmbedUrl, buildEmbedHtml} from './embed-utils.js';
 import type {LegacyAuthor, LegacyTag, MappedPost, WpApiOptions, WpApiRecord} from './types.js';
 
-const {unescapeHTML, stripHtml} = stringUtils;
+const {escapeHTML, unescapeHTML, stripHtml} = stringUtils;
 
 const {
     parseFragment,
@@ -836,17 +836,23 @@ const processContent = async ({
 
     // (Some) WordPress renders gifs a different way. They use an `img` tag with a `src` for a still image,
     // and a `data-gif` attribute to reference the actual gif. We need `src` to be the actual gif.
+    // Only HTTP(S) URLs are copied, resolved against the site URL, so a `javascript:` or `data:` value never becomes
+    // the image's source.
     for (const gif of parsed.$('img[data-gif]')) {
-        let gifSrc = gif.getAttribute('data-gif');
+        const gifSrc = urlUtils.httpUrl(gif.getAttribute('data-gif'), options.url);
         gif.removeAttribute('data-gif');
-        gif.setAttribute('src', gifSrc!);
+        if (gifSrc) {
+            gif.setAttribute('src', gifSrc.href);
+        }
     }
 
     // Likewise some images are lazy-loaded using JavaScript & `data-src` attributes
     for (const img of parsed.$('img[data-src]')) {
-        let dataSrc = img.getAttribute('data-src');
+        const dataSrc = urlUtils.httpUrl(img.getAttribute('data-src'), options.url);
         img.removeAttribute('data-src');
-        img.setAttribute('src', dataSrc!);
+        if (dataSrc) {
+            img.setAttribute('src', dataSrc.href);
+        }
     }
 
     if (options?.convertLibsynEmbed) {
@@ -918,7 +924,7 @@ const processContent = async ({
             continue;
         }
 
-        let embedHTML = `<!--kg-card-begin: html--><iframe src="${configUrl}" style="width:100%;height:200px;" frameborder="0" scrolling="no"></iframe><!--kg-card-end: html-->`;
+        let embedHTML = `<!--kg-card-begin: html--><iframe src="${escapeHTML(configUrl)}" style="width:100%;height:200px;" frameborder="0" scrolling="no"></iframe><!--kg-card-end: html-->`;
 
         replaceWith(el, embedHTML);
     }
@@ -933,7 +939,7 @@ const processContent = async ({
         }
 
         const replaceWithLink = () => {
-            replaceWith(el, `<p><a href="${bookmarkHref}">${bookmarkTitle}</a></p>`);
+            replaceWith(el, `<p><a href="${escapeHTML(bookmarkHref)}">${escapeHTML(bookmarkTitle)}</a></p>`);
         };
 
         if (!allowRemoteScraping) {
@@ -1017,7 +1023,7 @@ const processContent = async ({
     }
 
     for (const el of parsed.$('figure.wp-block-embed.is-provider-twitter')) {
-        replaceWith(el, `<blockquote class="twitter-tweet"><a href="${el.textContent}"></a></blockquote>`);
+        replaceWith(el, `<blockquote class="twitter-tweet"><a href="${escapeHTML(el.textContent)}"></a></blockquote>`);
     }
 
     for (const el of parsed.$('blockquote.twitter-tweet')) {
@@ -1180,7 +1186,7 @@ const processContent = async ({
             let buttonText = button.textContent;
 
             buttons.push(
-                `<div class="kg-card kg-button-card ${positionClass}"><a href="${buttonHref}" class="kg-btn kg-btn-accent">${buttonText}</a></div>`
+                `<div class="kg-card kg-button-card ${positionClass}"><a href="${escapeHTML(buttonHref ?? '')}" class="kg-btn kg-btn-accent">${escapeHTML(buttonText)}</a></div>`
             );
         }
 
@@ -1204,9 +1210,9 @@ const processContent = async ({
             replaceWith(
                 el,
                 `<figure class="kg-card kg-embed-card"><iframe width="160" height="90"
-            src="https://www.youtube.com/embed/${videoID}?feature=oembed" frameborder="0"
+            src="https://www.youtube.com/embed/${escapeHTML(videoID)}?feature=oembed" frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen=""></iframe>${videoCaption ? `<figcaption>${videoCaption}</figcaption>` : ''}</figure>`
+            allowfullscreen=""></iframe>${videoCaption ? `<figcaption>${escapeHTML(videoCaption)}</figcaption>` : ''}</figure>`
             );
         }
     }

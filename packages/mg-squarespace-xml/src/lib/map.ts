@@ -222,7 +222,7 @@ export async function map(
             }
             const link = getText(item.link);
             const url = sourceUrl(link, siteUrl);
-            const html = processContent(getText(item['content:encoded']), resolved);
+            const html = processContent(getText(item['content:encoded']), {...resolved, url: siteUrl});
             const rawTitle = getText(item.title);
 
             const tags: {name: string; slug: string; url?: string}[] = [];
