@@ -178,7 +178,11 @@ const tasks = async (url: string, ctx: TaskContext): Promise<FetchTask[]> => {
     const limit = options.limit ?? 100;
     const isAuthRequest = hasAuth(apiUser);
 
+    // `--trustSelfSignedCert` is a deliberately insecure opt-in for sites with self-signed certificates, such as local
+    // installs. It turns off certificate checks for every request this process makes, so it is only ever set when the
+    // user asks for it.
     if (options.trustSelfSignedCert) {
+        // codeql[js/disabling-certificate-validation] User-requested via `--trustSelfSignedCert`; see above.
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     }
 
