@@ -880,6 +880,21 @@ describe('Convert HTML from Substack to Ghost-compatible HTML', function () {
         );
     });
 
+    it('Escapes mention names', async function () {
+        const post = {
+            data: {
+                html: '<p><span class="mention-wrap" data-attrs="{&quot;name&quot;:&quot;&lt;b&gt;Bold&lt;/b&gt;&quot;,&quot;id&quot;:1}"></span></p>'
+            }
+        };
+
+        const processed = await processContent(post, 'https://example.com', {useFirstImage: false});
+
+        assert.equal(
+            processed.data.html,
+            '<p><a href="https://open.substack.com/users/1">&lt;b&gt;Bold&lt;/b&gt;</a></p>'
+        );
+    });
+
     it('Can convert mention spans to links', async function () {
         const post = {
             data: {

@@ -122,10 +122,16 @@ export function serializeNode(node: Node | null): string {
         let attrs = '';
 
         for (const attribute of element.attributes) {
+            const name = attribute.name;
+            // linkedom's `setAttribute()` accepts any name, so skip one that would break out of the tag, such as
+            // `onclick x="1"`. The HTML parser never produces these characters in a name it keeps.
+            if (/[\s"'<>&/=]/.test(name)) {
+                continue;
+            }
             if (attribute.value === '') {
-                attrs += ` ${attribute.name}`;
+                attrs += ` ${name}`;
             } else {
-                attrs += ` ${attribute.name}="${escapeAttr(attribute.value)}"`;
+                attrs += ` ${name}="${escapeAttr(attribute.value)}"`;
             }
         }
 

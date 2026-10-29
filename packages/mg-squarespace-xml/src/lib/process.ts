@@ -1,5 +1,5 @@
 import {extname} from 'node:path';
-import {dateUtils, domUtils, cardUtils, stringUtils, xmlUtils} from '@tryghost/mg-utils';
+import {dateUtils, domUtils, cardUtils, stringUtils, urlUtils, xmlUtils} from '@tryghost/mg-utils';
 import {slugify} from '@tryghost/string';
 import SimpleDom from 'simple-dom';
 import {decode} from 'html-entities';
@@ -132,7 +132,11 @@ export const processContent = (html: string | null | undefined, options: Content
                     sibling = sibling.previousElementSibling;
                 }
             } else {
-                img.setAttribute('src', src);
+                // Only an HTTP(S) URL becomes the image's source, so a `javascript:` or `data:` value never does.
+                const url = urlUtils.httpUrl(src, options.url);
+                if (url) {
+                    img.setAttribute('src', url.href);
+                }
             }
         });
 

@@ -767,6 +767,30 @@ describe('Process WordPress HTML', function () {
         assert.equal(processed, '<img src="https://example.com/wp-content/uploads/2022/08/3.jpg">');
     });
 
+    it('Only copies HTTP(S) lazy-load URLs, resolved against the site URL', async function () {
+        const html =
+            '<img src="placeholder.gif" data-src="javascript:alert(1)"><img data-gif="/uploads/a.gif"><img data-src="//cdn.example.com/b.jpg">';
+
+        const processed = await processor.processContent({html, options: {url: 'https://example.com/blog/'}});
+
+        assert.equal(
+            processed,
+            '<img src="placeholder.gif"><img src="https://example.com/uploads/a.gif"><img src="https://cdn.example.com/b.jpg">'
+        );
+    });
+
+    it('Escapes page text when rebuilding buttons and embed links', async function () {
+        const html =
+            '<div class="wp-block-buttons"><div class="wp-block-button"><a class="wp-block-button__link">&lt;b&gt;Go&lt;/b&gt;</a></div></div><figure class="wp-block-embed is-type-wp-embed"><div class="wp-block-embed__wrapper"><blockquote class="wp-embedded-content"><a href="https://example.com/?a=&quot;1&quot;">&lt;i&gt;Title&lt;/i&gt;</a></blockquote></div></figure>';
+
+        const processed = await processor.processContent({html, options: {scrape: ['none']}});
+
+        assert.equal(
+            processed,
+            '<div class="kg-card kg-button-card kg-align-left"><a href class="kg-btn kg-btn-accent">&lt;b&gt;Go&lt;/b&gt;</a></div><p><a href="https://example.com/?a=&quot;1&quot;">&lt;i&gt;Title&lt;/i&gt;</a></p>'
+        );
+    });
+
     it('Can remove duplicate <noscript> images', async function () {
         const html = `<div class="elementor-image"><img decoding="async" width="700" height="624" src="https://www.example.com.com/wp-content/uploads/2023/02/sample.png" class="attachment-medium_large size-medium_large wp-image-1234 lazyload" alt="" data-srcset="https://www.example.com.com/wp-content/uploads/2023/02/sample.png 700w, https://www.restlesscommunications.com/wp-content/uploads/2023/02/sample-300x267.png 300w" sizes="(max-width: 700px) 100vw, 700px" /><noscript><img decoding="async" width="700" height="624" src="https://www.example.com.com/wp-content/uploads/2023/02/sample.png" class="attachment-medium_large size-medium_large wp-image-1234 lazyload" alt="" srcset="https://www.example.com.com/wp-content/uploads/2023/02/sample.png 700w, https://www.restlesscommunications.com/wp-content/uploads/2023/02/sample-300x267.png 300w" sizes="(max-width: 700px) 100vw, 700px" /></noscript></div>`;
 

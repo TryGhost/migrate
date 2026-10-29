@@ -1,6 +1,6 @@
 import {basename} from 'node:path';
 import url from 'node:url';
-import {domUtils, cardUtils} from '@tryghost/mg-utils';
+import {domUtils, cardUtils, stringUtils} from '@tryghost/mg-utils';
 import SimpleDom from 'simple-dom';
 import {decode} from 'html-entities';
 import {parseSrcset} from 'srcset';
@@ -9,6 +9,7 @@ import escapeStringRegexp from 'escape-string-regexp';
 import type {ContentOptions, ContentPost} from './types.js';
 
 const {parseFragment, serializeChildren, replaceWith, insertBefore, insertAfter, attr, parents} = domUtils;
+const {escapeHTML} = stringUtils;
 
 const serializer = new SimpleDom.HTMLSerializer(SimpleDom.voidMap);
 const serialize = (node: unknown): string => serializer.serialize(node as any);
@@ -456,7 +457,10 @@ const processContent = (post: ContentPost, siteUrl: string, options: ContentOpti
         const id = attrs.id;
 
         if (name && id) {
-            replaceWith(el, `<a href="https://open.substack.com/users/${id}">${name}</a>`);
+            replaceWith(
+                el,
+                `<a href="https://open.substack.com/users/${escapeHTML(String(id))}">${escapeHTML(String(name))}</a>`
+            );
         }
     });
 
@@ -662,11 +666,13 @@ const processContent = (post: ContentPost, siteUrl: string, options: ContentOpti
         // CASE: Some embedded posts are double-encoded, so we need to decode twice
         let bookmarkJSON = JSON.parse(decode(decode(attrs)));
 
-        let bookmarkLink = bookmarkJSON.url;
-        let bookmarkPubName = bookmarkJSON.publication_name;
-        let bookmarkPubIcon = bookmarkJSON.publication_logo_url;
-        let bookmarkTitle = bookmarkJSON.title;
-        let bookmarkContent = bookmarkJSON.truncated_body_text;
+        // The fields are decoded text, so they are escaped before they go back into HTML.
+        const field = (name: string) => escapeHTML(String(bookmarkJSON[name]));
+        let bookmarkLink = field('url');
+        let bookmarkPubName = field('publication_name');
+        let bookmarkPubIcon = field('publication_logo_url');
+        let bookmarkTitle = field('title');
+        let bookmarkContent = field('truncated_body_text');
 
         const embeddedHtml = `<figure class="kg-card kg-bookmark-card"><a class="kg-bookmark-container" href="${bookmarkLink}"><div class="kg-bookmark-content"><div class="kg-bookmark-title">${bookmarkTitle}</div><div class="kg-bookmark-description">${bookmarkContent}</div><div class="kg-bookmark-metadata"><img class="kg-bookmark-icon" src="${bookmarkPubIcon}"><span class="kg-bookmark-author">${bookmarkPubName}</span></div></div></a></figure>`;
 

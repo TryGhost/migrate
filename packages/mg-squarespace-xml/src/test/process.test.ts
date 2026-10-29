@@ -83,6 +83,15 @@ describe('processContent', function () {
         assert.ok(processContent(html).includes('sqs-video-wrapper'));
     });
 
+    it('Only sets src from HTTP(S) data-src URLs, resolved against the site URL', function () {
+        assert.equal(
+            processContent('<img data-src="javascript:alert(1)"><img data-src="/s/photo.jpg">', {
+                url: 'https://example.com'
+            }),
+            '<img data-src="javascript:alert(1)"><img src="https://example.com/s/photo.jpg" data-src="/s/photo.jpg">'
+        );
+    });
+
     it('Can set src from data-src on non-thumb images', function () {
         assert.ok(
             processContent('<img data-src="https://example.com/photo.jpg">').includes(
