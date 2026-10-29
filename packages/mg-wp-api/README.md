@@ -122,7 +122,7 @@ It's possible to pass more options, in order to achieve a better migration file 
     - bool - default: `false`
     - Convert Libsyn iframe embeds to audio cards
 - **`--trustSelfSignedCert`** 
-    - Trust self-signed certificates (such as for local installs)
+    - Trust self-signed certificates (such as for local installs). Insecure: this turns off certificate checks for every request the migration makes, including asset downloads, so only use it for sites you trust
     - bool - default: `false`
 - **`--rereadSource`**
     - Fetch the WordPress API again, replacing the stored source while preserving downloaded assets

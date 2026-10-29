@@ -202,7 +202,7 @@ const options = [
         type: 'boolean',
         flags: '--trustSelfSignedCert',
         defaultValue: false,
-        desc: 'Trust self-signed certificates (such as for local installs)'
+        desc: 'Trust self-signed certificates (such as for local installs). Insecure: turns off certificate checks for every request'
     },
     {
         type: 'boolean',
