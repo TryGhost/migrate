@@ -48,7 +48,7 @@
   "dependencies": {
     "@inquirer/input": "5.1.8",
     "@inquirer/prompts": "8.7.4",
-    "@inquirer/select": "5.2.7",
+    "@inquirer/select": "5.2.8",
     "@tryghost/pretty-cli": "catalog:",
     "chalk": "catalog:",
     "ora": "9.4.1",
