@@ -46,7 +46,7 @@
     "typescript": "catalog:"
   },
   "dependencies": {
-    "@inquirer/input": "5.1.8",
+    "@inquirer/input": "5.1.9",
     "@inquirer/prompts": "8.7.5",
     "@inquirer/select": "5.2.8",
     "@tryghost/pretty-cli": "catalog:",
