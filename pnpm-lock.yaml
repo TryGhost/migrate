@@ -254,8 +254,8 @@ importers:
         specifier: 'catalog:'
         version: 24.19.2
       knip:
-        specifier: 6.43.0
-        version: 6.43.0
+        specifier: 6.44.0
+        version: 6.44.0
       nx:
         specifier: 24.0.2
         version: 24.0.2
@@ -5396,8 +5396,8 @@ packages:
     resolution: {integrity: sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==}
     engines: {node: '>=0.10.0'}
 
-  knip@6.43.0:
-    resolution: {integrity: sha512-8l3cCOg/EXoILO0qcSoMra49yQM91+lEIR4fu5Ko8rrArGX8xKdKZiGI9psPiY6rhLmfLERcMfFEByF0wli5CA==}
+  knip@6.44.0:
+    resolution: {integrity: sha512-mT0fl71Mqrko91azUO2Jw/uhYKwldORKT4liRq6yV0ZAtt6G2eYusdnvx8eBSQJDjvhRGKkpKUUx+vUG6syV4w==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
@@ -10526,7 +10526,7 @@ snapshots:
 
   kind-of@6.0.3: {}
 
-  knip@6.43.0:
+  knip@6.44.0:
     dependencies:
       formatly: 0.11.4
       get-tsconfig: 4.14.3
