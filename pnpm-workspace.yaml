@@ -4,6 +4,10 @@ packages:
 savePrefix: ""
 autoInstallPeers: true
 
+# Match Renovate's release-age exemption for trusted first-party packages.
+minimumReleaseAgeExclude:
+  - "@tryghost/*"
+
 overrides:
   trim: "^1.0.1"
   parse-link-header: "^2.0.0"
