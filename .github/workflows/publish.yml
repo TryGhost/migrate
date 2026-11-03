@@ -69,7 +69,7 @@ jobs:
           NODE_AUTH_TOKEN: ""
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       # Build is required because published packages ship compiled output (build/)
       - name: Build all packages

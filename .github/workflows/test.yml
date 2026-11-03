@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: '26.12.1'
           cache: pnpm
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm lint
 
   build:
@@ -36,7 +36,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: pnpm
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm test:ci
         env:
           NODE_OPTIONS: '--test-reporter=dot'
