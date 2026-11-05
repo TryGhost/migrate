@@ -16,11 +16,11 @@ overrides:
 
 catalog:
   "@tryghost/admin-api": "1.14.14"
-  "@tryghost/debug": "2.3.18"
-  "@tryghost/errors": "3.4.4"
+  "@tryghost/debug": "2.3.19"
+  "@tryghost/errors": "3.4.5"
   "@tryghost/kg-default-cards": "10.3.10"
   "@tryghost/kg-html-to-lexical": "1.4.4"
-  "@tryghost/pretty-cli": "3.4.0"
+  "@tryghost/pretty-cli": "3.4.1"
   "@tryghost/string": "0.3.8"
   "@types/node": "24.19.2"
   "c8": "12.0.0"
