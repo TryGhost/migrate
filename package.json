@@ -31,10 +31,10 @@
     "knip": "knip"
   },
   "devDependencies": {
-    "@nx/js": "24.0.4",
+    "@nx/js": "24.0.5",
     "@types/node": "catalog:",
     "knip": "6.44.1",
-    "nx": "24.0.4",
+    "nx": "24.0.5",
     "oxfmt": "0.76.0",
     "oxlint": "1.91.0",
     "tsx": "4.23.15",
