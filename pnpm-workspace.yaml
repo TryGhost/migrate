@@ -33,7 +33,7 @@ catalog:
   "listr2": "11.4.0"
   "log-update": "8.0.0"
   "markdown-it": "15.0.3"
-  "nock": "15.0.5"
+  "nock": "15.0.6"
   "sanitize-html": "2.18.1"
   "sharp": "0.35.5"
   "simple-dom": "1.4.0"
