@@ -514,7 +514,7 @@ describe('hydrate', function () {
         const tasks = webScraper.hydrate(ctx);
         await assert.rejects(() => tasks[0].task(ctx));
         assert.equal(ctx.errors.length, 1);
-        assert.ok(ctx.errors[0].message.includes('https://example.com/post/'));
+        assert.equal(ctx.errors[0].message, 'Error hydrating metadata for https://example.com/post/');
     });
 });
 
