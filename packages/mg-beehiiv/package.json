@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-beehiiv",
-  "version": "0.13.8-0",
+  "version": "0.14.0-0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TryGhost/migrate.git",

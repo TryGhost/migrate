@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-jekyll-export",
-  "version": "0.13.8-0",
+  "version": "0.14.0-0",
   "description": "Migrate content from a Jekyll site export to Ghost",
   "repository": {
     "type": "git",

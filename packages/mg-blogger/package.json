@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-blogger",
-  "version": "0.11.8-0",
+  "version": "0.12.0-0",
   "description": "Migrate content from the Blogger API to Ghost",
   "repository": {
     "type": "git",

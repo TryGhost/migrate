@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-libsyn",
-  "version": "0.11.8-0",
+  "version": "0.12.0-0",
   "description": "Migrate content from a Libsyn podcast RSS feed to Ghost",
   "repository": {
     "type": "git",
