@@ -7,7 +7,8 @@ const styleToObject = _styleToObject as unknown as (style: string) => Record<str
 import escapeStringRegexp from 'escape-string-regexp';
 
 const {serializeChildren, replaceWith, parents, isComment, getCommentData, insertBefore, insertAfter} = domUtils;
-const htmlCardPattern = /<!--kg-card-begin: html-->[\s\S]*?<!--kg-card-end: html-->/g;
+const htmlCardBegin = '<!--kg-card-begin: html-->';
+const htmlCardEnd = '<!--kg-card-end: html-->';
 
 interface CleanHTMLArgs {
     html?: string;
@@ -51,11 +52,22 @@ const cleanHTML = (args?: CleanHTMLArgs): string => {
     // cards with comment placeholders so neither DOM parsing nor the cleanup steps can alter
     // their contents, then restore them after the rest of the document has been processed.
     const protectedHTMLCards = new Map<string, string>();
-    html = html.replace(htmlCardPattern, card => {
+    const htmlParts: string[] = [];
+    let cursor = 0;
+    for (let start = html.indexOf(htmlCardBegin); start !== -1; start = html.indexOf(htmlCardBegin, cursor)) {
+        const end = html.indexOf(htmlCardEnd, start + htmlCardBegin.length);
+        if (end === -1) {
+            break;
+        }
+
         const placeholder = `<!--mg-clean-html-protected-card: ${randomUUID()}-->`;
-        protectedHTMLCards.set(placeholder, card);
-        return placeholder;
-    });
+        const cardEnd = end + htmlCardEnd.length;
+        protectedHTMLCards.set(placeholder, html.slice(start, cardEnd));
+        htmlParts.push(html.slice(cursor, start), placeholder);
+        cursor = cardEnd;
+    }
+    htmlParts.push(html.slice(cursor));
+    html = htmlParts.join('');
 
     return domUtils.processFragment(html, parsed => {
         // Remove left, center & right text alignment
