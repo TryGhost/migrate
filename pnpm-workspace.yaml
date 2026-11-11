@@ -4,9 +4,10 @@ packages:
 savePrefix: ""
 autoInstallPeers: true
 
-# Match Renovate's release-age exemption for trusted first-party packages.
-minimumReleaseAgeExclude:
-  - "@tryghost/*"
+minimumReleaseAge: 4320
+strictDepBuilds: true
+blockExoticSubdeps: true
+pnpmfile: []
 
 overrides:
   trim: "^1.0.1"
@@ -40,7 +41,9 @@ catalog:
   "transliteration": "2.7.0"
   "typescript": "7.0.2"
 
+# These packages use their prebuilt optional platform packages. Their install
+# scripts are unnecessary for the tested build and migration paths.
 allowBuilds:
-  esbuild: true
-  nx: true
-  sharp: true
+  esbuild: false
+  nx: false
+  sharp: false
