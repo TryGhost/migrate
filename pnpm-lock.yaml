@@ -245,13 +245,16 @@ overrides:
   form-data: ^4.0.6
   js-yaml@3: 5.5.0
 
+patchedDependencies:
+  nx@24.0.5: 38689c2ee7a1dba632ae2853ca24b8241c51aa4fe44ca00c09e60ecdc54f282a
+
 importers:
 
   .:
     devDependencies:
       '@nx/js':
         specifier: 24.0.5
-        version: 24.0.5(@babel/traverse@7.29.13(supports-color@7.2.0))(nx@24.0.5)(supports-color@7.2.0)
+        version: 24.0.5(@babel/traverse@7.29.13(supports-color@7.2.0))(nx@24.0.5(patch_hash=38689c2ee7a1dba632ae2853ca24b8241c51aa4fe44ca00c09e60ecdc54f282a))(supports-color@7.2.0)
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
@@ -260,7 +263,7 @@ importers:
         version: 6.44.2
       nx:
         specifier: 24.0.5
-        version: 24.0.5
+        version: 24.0.5(patch_hash=38689c2ee7a1dba632ae2853ca24b8241c51aa4fe44ca00c09e60ecdc54f282a)
       oxfmt:
         specifier: 0.76.0
         version: 0.76.0
@@ -7844,16 +7847,16 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.3
 
-  '@nx/devkit@24.0.5(nx@24.0.5)':
+  '@nx/devkit@24.0.5(nx@24.0.5(patch_hash=38689c2ee7a1dba632ae2853ca24b8241c51aa4fe44ca00c09e60ecdc54f282a))':
     dependencies:
       ejs: 5.0.1
       minimatch: 11.0.1
-      nx: 24.0.5
+      nx: 24.0.5(patch_hash=38689c2ee7a1dba632ae2853ca24b8241c51aa4fe44ca00c09e60ecdc54f282a)
       semver: 7.8.6
       tslib: 2.9.1
       yargs-parser: 21.1.1
 
-  '@nx/js@24.0.5(@babel/traverse@7.29.13(supports-color@7.2.0))(nx@24.0.5)(supports-color@7.2.0)':
+  '@nx/js@24.0.5(@babel/traverse@7.29.13(supports-color@7.2.0))(nx@24.0.5(patch_hash=38689c2ee7a1dba632ae2853ca24b8241c51aa4fe44ca00c09e60ecdc54f282a))(supports-color@7.2.0)':
     dependencies:
       '@babel/core': 7.29.13(supports-color@7.2.0)
       '@babel/plugin-proposal-decorators': 7.29.7(@babel/core@7.29.13(supports-color@7.2.0))(supports-color@7.2.0)
@@ -7865,7 +7868,7 @@ snapshots:
       '@babel/preset-env': 7.29.7(@babel/core@7.29.13(supports-color@7.2.0))(supports-color@7.2.0)
       '@babel/preset-typescript': 7.29.7(@babel/core@7.29.13(supports-color@7.2.0))(supports-color@7.2.0)
       '@babel/runtime': 7.29.13
-      '@nx/devkit': 24.0.5(nx@24.0.5)
+      '@nx/devkit': 24.0.5(nx@24.0.5(patch_hash=38689c2ee7a1dba632ae2853ca24b8241c51aa4fe44ca00c09e60ecdc54f282a))
       '@nx/workspace': 24.0.5
       '@zkochan/js-yaml': 0.0.7
       babel-plugin-const-enum: 1.2.0(@babel/core@7.29.13(supports-color@7.2.0))(supports-color@7.2.0)
@@ -7923,10 +7926,10 @@ snapshots:
 
   '@nx/workspace@24.0.5':
     dependencies:
-      '@nx/devkit': 24.0.5(nx@24.0.5)
+      '@nx/devkit': 24.0.5(nx@24.0.5(patch_hash=38689c2ee7a1dba632ae2853ca24b8241c51aa4fe44ca00c09e60ecdc54f282a))
       '@zkochan/js-yaml': 0.0.7
       chalk: 4.1.2
-      nx: 24.0.5
+      nx: 24.0.5(patch_hash=38689c2ee7a1dba632ae2853ca24b8241c51aa4fe44ca00c09e60ecdc54f282a)
       picomatch: 4.0.7
       semver: 7.8.6
       tslib: 2.9.1
@@ -10768,7 +10771,7 @@ snapshots:
     dependencies:
       boolbase: 2.0.0
 
-  nx@24.0.5:
+  nx@24.0.5(patch_hash=38689c2ee7a1dba632ae2853ca24b8241c51aa4fe44ca00c09e60ecdc54f282a):
     dependencies:
       '@clack/core': 1.4.3
       '@clack/prompts': 1.7.0
