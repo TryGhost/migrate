@@ -46,3 +46,5 @@ allowBuilds:
   esbuild: true
   nx: true
   sharp: true
+patchedDependencies:
+  nx@24.0.5: patches/nx@24.0.5.patch

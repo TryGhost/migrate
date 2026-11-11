@@ -1,0 +1,77 @@
+diff --git a/dist/src/command-line/release/utils/repository-git-tags.js b/dist/src/command-line/release/utils/repository-git-tags.js
+index f0b60f36fbffc315b25589d0afff6a4335245245..3d2459fe34cd296b922fc51316cb5e52a4a51e85 100644
+--- a/dist/src/command-line/release/utils/repository-git-tags.js
++++ b/dist/src/command-line/release/utils/repository-git-tags.js
+@@ -109,13 +109,7 @@ async function _RepoGitTags_alwaysCheckAllBranches(checkAllBranchesWhen) {
+             alwaysCheckAllBranches = checkAllBranchesWhen.includes(currentBranch);
+             // Check if any glob pattern matches next
+             if (!alwaysCheckAllBranches) {
+-                alwaysCheckAllBranches = checkAllBranchesWhen.some((pattern) => {
+-                    const r = minimatch_1.minimatch.makeRe(pattern, { dot: true });
+-                    if (!r) {
+-                        return false;
+-                    }
+-                    return r.test(currentBranch);
+-                });
++                alwaysCheckAllBranches = checkAllBranchesWhen.some((pattern) => (0, minimatch_1.minimatch)(currentBranch, pattern, { dot: true }));
+             }
+         }
+     }
+diff --git a/dist/src/generators/utils/glob.js b/dist/src/generators/utils/glob.js
+index af0e4c3a456ca9e650f0796ed378ae3eb8535ca7..24afe1bd3a92a31e4baff277e8320039689ecc13 100644
+--- a/dist/src/generators/utils/glob.js
++++ b/dist/src/generators/utils/glob.js
+@@ -33,12 +33,9 @@ async function globAsync(tree, patterns) {
+ function combineGlobResultsWithTree(tree, patterns, results) {
+     const matches = new Set(results);
+     const combinedGlob = (0, globs_1.combineGlobPatterns)(patterns);
+-    const matcher = minimatch_1.minimatch.makeRe(combinedGlob);
+-    if (!matcher) {
+-        throw new Error('Invalid glob pattern: ' + combinedGlob);
+-    }
++    const matcher = new minimatch_1.Minimatch(combinedGlob);
+     for (const change of tree.listChanges()) {
+-        if (change.type !== 'UPDATE' && matcher.test(change.path)) {
++        if (change.type !== 'UPDATE' && matcher.match(change.path)) {
+             if (change.type === 'CREATE') {
+                 matches.add(change.path);
+             }
+diff --git a/dist/src/utils/find-matching-projects.js b/dist/src/utils/find-matching-projects.js
+index cadad9dca44f733fbe9f97e6fd96da40ce68157a..18631fc55b239adcd0a1fc38b308a1b7e63e026c 100644
+--- a/dist/src/utils/find-matching-projects.js
++++ b/dist/src/utils/find-matching-projects.js
+@@ -197,26 +197,20 @@ function isValidPatternType(type) {
+ exports.getMatchingStringsWithCache = (() => {
+     // Map< Pattern, Map< Item, Result >>
+     const minimatchCache = new Map();
+-    const regexCache = new Map();
++    const matcherCache = new Map();
+     return (pattern, items) => {
+         if (!minimatchCache.has(pattern)) {
+             minimatchCache.set(pattern, new Map());
+         }
+         const patternCache = minimatchCache.get(pattern);
+-        if (!regexCache.has(pattern)) {
+-            const regex = minimatch_1.minimatch.makeRe(pattern, { dot: true });
+-            if (regex) {
+-                regexCache.set(pattern, regex);
+-            }
+-            else {
+-                throw new Error('Invalid glob pattern ' + pattern);
+-            }
++        if (!matcherCache.has(pattern)) {
++            matcherCache.set(pattern, new minimatch_1.Minimatch(pattern, { dot: true }));
+         }
+-        const matcher = regexCache.get(pattern);
++        const matcher = matcherCache.get(pattern);
+         return items.filter((item) => {
+             let entry = patternCache.get(item);
+             if (entry === undefined || entry === null) {
+-                entry = item === pattern ? true : matcher.test(item);
++                entry = item === pattern ? true : matcher.match(item);
+                 patternCache.set(item, entry);
+             }
+             return entry;
+diff --git a/readme-template.md b/readme-template.md
+deleted file mode 100644
+index 8ecc43fa4f383931d0e995d9c16998906aaa5da1..0000000000000000000000000000000000000000
