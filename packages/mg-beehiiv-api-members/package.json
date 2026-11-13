@@ -40,6 +40,6 @@
   },
   "dependencies": {
     "@tryghost/errors": "catalog:",
-    "@tryghost/string": "0.3.8"
+    "@tryghost/string": "0.3.10"
   }
 }
