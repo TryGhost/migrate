@@ -165,14 +165,14 @@ settings:
 catalogs:
   default:
     '@tryghost/admin-api':
-      specifier: 1.14.14
-      version: 1.14.14
+      specifier: 1.14.16
+      version: 1.14.16
     '@tryghost/debug':
-      specifier: 2.3.21
-      version: 2.3.21
+      specifier: 2.3.22
+      version: 2.3.22
     '@tryghost/errors':
-      specifier: 3.4.7
-      version: 3.4.7
+      specifier: 3.4.8
+      version: 3.4.8
     '@tryghost/kg-default-cards':
       specifier: 10.3.10
       version: 10.3.10
@@ -180,11 +180,11 @@ catalogs:
       specifier: 1.4.4
       version: 1.4.4
     '@tryghost/pretty-cli':
-      specifier: 3.4.3
-      version: 3.4.3
+      specifier: 3.4.4
+      version: 3.4.4
     '@tryghost/string':
-      specifier: 0.3.8
-      version: 0.3.8
+      specifier: 0.3.10
+      version: 0.3.10
     '@types/node':
       specifier: 24.19.2
       version: 24.19.2
@@ -308,7 +308,7 @@ importers:
     dependencies:
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
       '@tryghost/listr-smart-renderer':
         specifier: workspace:*
         version: link:../listr-smart-renderer
@@ -317,7 +317,7 @@ importers:
         version: link:../mg-fs-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       escape-string-regexp:
         specifier: 'catalog:'
         version: 5.0.0
@@ -366,7 +366,7 @@ importers:
         version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       sanitize-html:
         specifier: 'catalog:'
         version: 2.18.1
@@ -388,7 +388,7 @@ importers:
     dependencies:
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
       '@tryghost/mg-beehiiv':
         specifier: workspace:*
         version: link:../mg-beehiiv
@@ -403,7 +403,7 @@ importers:
         version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -422,10 +422,10 @@ importers:
     dependencies:
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
       '@tryghost/string':
-        specifier: 0.3.8
-        version: 0.3.8
+        specifier: 0.3.10
+        version: 0.3.10
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -444,7 +444,7 @@ importers:
         version: link:../mg-fs-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -460,7 +460,7 @@ importers:
     dependencies:
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
       '@tryghost/mg-context':
         specifier: workspace:*
         version: link:../mg-context
@@ -472,7 +472,7 @@ importers:
         version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       autop:
         specifier: 1.0.1
         version: 1.0.1
@@ -543,7 +543,7 @@ importers:
         version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -581,13 +581,13 @@ importers:
     dependencies:
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       '@tryghost/validator':
-        specifier: 3.2.22
-        version: 3.2.22
+        specifier: 3.2.23
+        version: 3.2.23
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -624,7 +624,7 @@ importers:
         version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       html-entities:
         specifier: 'catalog:'
         version: 2.6.0
@@ -649,16 +649,16 @@ importers:
     dependencies:
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
       '@tryghost/image-transform':
         specifier: 1.4.19
         version: 1.4.19(@types/node@24.19.2)(supports-color@7.2.0)
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       '@tryghost/zip':
-        specifier: 4.0.2
-        version: 4.0.2(bare-buffer@3.7.1)
+        specifier: 4.0.3
+        version: 4.0.3(bare-buffer@3.7.1)
       adm-zip:
         specifier: 0.6.1
         version: 0.6.1
@@ -692,10 +692,10 @@ importers:
     dependencies:
       '@tryghost/admin-api':
         specifier: 'catalog:'
-        version: 1.14.14(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
+        version: 1.14.16(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
       '@tryghost/mg-context':
         specifier: workspace:*
         version: link:../mg-context
@@ -717,10 +717,10 @@ importers:
     dependencies:
       '@tryghost/admin-api':
         specifier: 'catalog:'
-        version: 1.14.14(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
+        version: 1.14.16(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -739,7 +739,7 @@ importers:
     dependencies:
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
       '@tryghost/kg-html-to-lexical':
         specifier: 'catalog:'
         version: 1.4.4(@lexical/selection@0.13.1(lexical@0.13.1))(@lexical/utils@0.13.1(lexical@0.13.1))
@@ -773,7 +773,7 @@ importers:
         version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       js-yaml:
         specifier: 5.5.0
         version: 5.5.0
@@ -798,7 +798,7 @@ importers:
         version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       bson-objectid:
         specifier: 2.0.4
         version: 2.0.4
@@ -813,7 +813,7 @@ importers:
     dependencies:
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
       '@tryghost/mg-context':
         specifier: workspace:*
         version: link:../mg-context
@@ -825,7 +825,7 @@ importers:
         version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       escape-string-regexp:
         specifier: 'catalog:'
         version: 5.0.0
@@ -847,7 +847,7 @@ importers:
     dependencies:
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
       '@tryghost/mg-context':
         specifier: workspace:*
         version: link:../mg-context
@@ -859,7 +859,7 @@ importers:
         version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       simple-dom:
         specifier: 'catalog:'
         version: 1.4.0
@@ -925,7 +925,7 @@ importers:
         version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       simple-dom:
         specifier: 'catalog:'
         version: 1.4.0
@@ -944,7 +944,7 @@ importers:
     dependencies:
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -993,7 +993,7 @@ importers:
         version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       html-entities:
         specifier: 'catalog:'
         version: 2.6.0
@@ -1024,7 +1024,7 @@ importers:
         version: 5.2.8(@types/node@24.19.2)
       '@tryghost/pretty-cli':
         specifier: 'catalog:'
-        version: 3.4.3
+        version: 3.4.4
       chalk:
         specifier: 'catalog:'
         version: 6.0.1
@@ -1058,7 +1058,7 @@ importers:
     dependencies:
       '@tryghost/debug':
         specifier: 'catalog:'
-        version: 2.3.21(supports-color@7.2.0)
+        version: 2.3.22(supports-color@7.2.0)
       '@tryghost/mg-context':
         specifier: workspace:*
         version: link:../mg-context
@@ -1073,7 +1073,7 @@ importers:
         version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       escape-string-regexp:
         specifier: 'catalog:'
         version: 5.0.0
@@ -1104,7 +1104,7 @@ importers:
     dependencies:
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
       '@tryghost/mg-fs-utils':
         specifier: workspace:*
         version: link:../mg-fs-utils
@@ -1125,7 +1125,7 @@ importers:
         version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       sanitize-html:
         specifier: 'catalog:'
         version: 2.18.1
@@ -1166,7 +1166,7 @@ importers:
     devDependencies:
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
@@ -1181,10 +1181,10 @@ importers:
     dependencies:
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       omit-empty:
         specifier: 1.0.0
         version: 1.0.0
@@ -1224,7 +1224,7 @@ importers:
         version: link:../mg-utils
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       simple-dom:
         specifier: 'catalog:'
         version: 1.4.0
@@ -1243,7 +1243,7 @@ importers:
     dependencies:
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
       '@tryghost/mg-context':
         specifier: workspace:*
         version: link:../mg-context
@@ -1264,7 +1264,7 @@ importers:
         version: link:../mg-webscraper
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       html-to-text:
         specifier: 10.0.1
         version: 10.0.1
@@ -1295,7 +1295,7 @@ importers:
     dependencies:
       '@tryghost/errors':
         specifier: 'catalog:'
-        version: 3.4.7
+        version: 3.4.8
       '@tryghost/mg-context':
         specifier: workspace:*
         version: link:../mg-context
@@ -1313,7 +1313,7 @@ importers:
         version: link:../mg-wp-api
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       html-entities:
         specifier: 'catalog:'
         version: 2.6.0
@@ -1443,10 +1443,10 @@ importers:
         version: link:../mg-wp-xml
       '@tryghost/pretty-cli':
         specifier: 'catalog:'
-        version: 3.4.3
+        version: 3.4.4
       '@tryghost/string':
         specifier: 'catalog:'
-        version: 0.3.8
+        version: 0.3.10
       chalk:
         specifier: 'catalog:'
         version: 6.0.1
@@ -4029,20 +4029,20 @@ packages:
   '@tokenizer/token@0.3.0':
     resolution: {integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==}
 
-  '@tryghost/admin-api@1.14.14':
-    resolution: {integrity: sha512-w1kWh9MCd3ghOIyHkm5yKT6y+c7r/sO/qRTd5Ghpudyc7OnHnRu2xCN7SQwr7R2+Rrt31ix4CJCgsxmuLvx7Vg==}
+  '@tryghost/admin-api@1.14.16':
+    resolution: {integrity: sha512-VUZDJgVEquXrKm3SpXKACUq9DqsOUNN7aZG9F4G6k/2D9bNI8/KSZGaVUXxXMEFbLh4PfeamxgLJ6ozvVyyfPQ==}
 
   '@tryghost/color-utils@0.2.23':
     resolution: {integrity: sha512-ZGccAqroYjIdMcmx6nPHCOwp4QwQYTmU5+srynfGjuo3cxak/r/2mAm2xiQDranCB9uUFB6yhjH0PTzL1x0c2A==}
 
-  '@tryghost/debug@2.3.21':
-    resolution: {integrity: sha512-rR38BEYnuMLeOjkgN0WD3wSDG0g8g7dBIMaeoAY+pEx7DVHmwk54P6/6o8FiIattx2xTTcSPUpMsO4hFBUCN9A==}
+  '@tryghost/debug@2.3.22':
+    resolution: {integrity: sha512-P1UhE2cMjXtAmraqZL8ogEXiAbk4nScTy6Qk+siqMmgGZ4PEbPBw+PIDnHymJmvwXr55bfXQ+iD9J66IKfXe3g==}
 
   '@tryghost/errors@2.2.1':
     resolution: {integrity: sha512-7zR5Wu9UMalFZbWZs3nN3MzJg6mKek11W51AP8UGz5sN4fQofoeLwXHLI/AuT7nDuWiJZHsJcI1EGJg0iQHV3g==}
 
-  '@tryghost/errors@3.4.7':
-    resolution: {integrity: sha512-z8s9WXE/aun0arvza/Sl7MpZItxFOgaoDqSdEgiJW+rWidqEELmBp4+K0x6ZB7Gw9/7uGl/TQi0vGeB2Ub2jgg==}
+  '@tryghost/errors@3.4.8':
+    resolution: {integrity: sha512-wRQPjb0TuTW6ROexYKEevbePGHQTY443pTJO3/3EDZlxzWLizdP64EkL0pVh+9Y9E/wfRdyqIjzECc5+rxhTDQ==}
 
   '@tryghost/image-transform@1.4.19':
     resolution: {integrity: sha512-5n14MnrfviTZ0TV9mVQbNZquT+cgvMKJ+iW8o0BxOXMITy6FjJH7vbCvYZGlkaV0S6XaHeI4lU6SkrDXKWHiCQ==}
@@ -4073,26 +4073,29 @@ packages:
   '@tryghost/kg-utils@1.1.9':
     resolution: {integrity: sha512-mEvAKKyYRDBDZKllVfW6Sna8YY2KGg0N/mz8iw9dXoTWBq6BsZgRzvy8I6GK7eW/3NaYwoLWQqzumFlotBUlqQ==}
 
-  '@tryghost/pretty-cli@3.4.3':
-    resolution: {integrity: sha512-UfYbgaiNrZnmYIGWY/XFF0LiiCb3Jx1qRdzu3HU2QYS+JzG2ZHBwj5lpsycKEJPu37tSpQwC4tBoRprsandKag==}
+  '@tryghost/pretty-cli@3.4.4':
+    resolution: {integrity: sha512-COVOD//rFUpwDqZEeToDZzKrtvT8nTI96Ai8OMN0Tow8qoHDlSia93pYaMDMrWFMg65hWKlBKf8v0K9YQAq0fw==}
 
-  '@tryghost/root-utils@2.3.21':
-    resolution: {integrity: sha512-U6NCurcith8tYnU3DQZWGaJstl4zt2wU7A9RlAx/kuxZdqoeoqrT91MacVKwdURiTH/JgIxeHEsQAxzNZC+TfQ==}
+  '@tryghost/root-utils@2.3.22':
+    resolution: {integrity: sha512-jjqwssYifWOa/iy3RacLo7m5TVIIAjV2h9K+7vegP5UVGIiZ+JEfGQ1KdLer0KOX0XwAmml3NkqD4yUaCRuIKQ==}
+
+  '@tryghost/string@0.3.10':
+    resolution: {integrity: sha512-bXf8EWBujR0Vvz3DwWK61VfDG7XcIq0j4++mTLnKjS05HgojeqYyM3g7iF3YvFjkytPaVVfNS7jmdpZL3LTn0Q==}
 
   '@tryghost/string@0.3.8':
     resolution: {integrity: sha512-Q73QaW9mTgfeuL3554SnUvu9gM1ISowKb683knajTamy1zZsuk3AjDSiEiEGi9BfzjW2RxBQ4rKnlFD9S2oqLg==}
 
-  '@tryghost/tpl@2.3.21':
-    resolution: {integrity: sha512-WZ1LLIwIVYqqGiogxdviBEe24FPSiYbwnne4/nf8MhcxDETRZWY1rYTM69oLiNGy8q3d/eLJlaSIhMrKAq80jg==}
+  '@tryghost/tpl@2.3.22':
+    resolution: {integrity: sha512-d+Hd1UBfuSC/3KfQ9xWE/Tx0mqc+4BpMfpD4dILppbPMFn65qehAofdferOX3vwK6PYHAd3ZBXu5nWQCJmTmoA==}
 
   '@tryghost/url-utils@5.4.1':
     resolution: {integrity: sha512-njtdXgfJt4iMawUZG6vgaqNSUL+g/pVRpFb+3ZVWCzHENDnjXnYeoz1FgGmSXWNi8hzSjjZ/dhr11Gxwy8D2og==}
 
-  '@tryghost/validator@3.2.22':
-    resolution: {integrity: sha512-CWKLcEdUGsqrwHR8YNiQYNjCg381LO2DRJQgzd5o6td+HTS6zA2pft4Hj8g5r70NBWVaBcgqAd+HcgHQdNh15g==}
+  '@tryghost/validator@3.2.23':
+    resolution: {integrity: sha512-F/LnvOuVHghP4CpFPW3dZLLscGhfBKB039tDrphCKC3L8GTXjBr7OfrUthNLJin5rV1M3xZcNhhQlyfXDm24sw==}
 
-  '@tryghost/zip@4.0.2':
-    resolution: {integrity: sha512-VZX+4sSagaabMSnKuZSr8VcaL01Qzar+pTIae1rkvihPAOD9dtnE07rRJruXbUT/FQxUyvSa1ETxK2YRwD0rLA==}
+  '@tryghost/zip@4.0.3':
+    resolution: {integrity: sha512-BeDDlOgG+XJmHC2NzxBE8cNnVT2fCE0z5WLaXS8zJspIsHlO6iW35NU5vViBFmoUrZPftRPLmL0RamYRxVGHbQ==}
 
   '@tybys/wasm-util@0.10.4':
     resolution: {integrity: sha512-W3c4gRigFS0T/Ma4qIYF3GDAc5AQdHb1yL5znJT1Zv1YaD9Kitx656wBjvr19qbiosmZT8lWDM5BEMynUqX65A==}
@@ -4332,11 +4335,11 @@ packages:
   autop@1.0.1:
     resolution: {integrity: sha512-3NMIIe6mZtFs6m3Mqyh3iDjfBI8g4sJvFL6RgXcLxUSNLfNqud53mvFeUhMmXgdGcHSCQKTsY+3eOiy0gVD1PQ==}
 
-  axios@1.20.0:
-    resolution: {integrity: sha512-r8aOh8j9cGKpgQAqpzrUHnSIc6a59Y3Xf/cv8sy1DrHCkZHzQGEuoq1tARk6qSyDdtQGSDgpb9kFlruzPvrgwg==}
-
   axios@1.21.0:
     resolution: {integrity: sha512-YCzXMB53Q9PZBsh7yN7wtapit4WepwcHS2fP8QhGsBxSz5YtgYobV7GGlWlAJi+RxfU77GQTQi2DSLUma42EYA==}
+
+  axios@1.21.1:
+    resolution: {integrity: sha512-6eI5Q/Y4u/Um9dDlsRoq5pY2rxnUTv+L4PpLitnbk/i4jb3MxLZ5CsN5Ih3IysbeRYK4pR+P7qfMsOQl9fwwFQ==}
 
   b4a@1.9.0:
     resolution: {integrity: sha512-dpfcF9fDNR6++cthXR67iyhgqWy9CBouAvIWhIntzBG6cvK/cnIPiZQjBwi/ZqjjBEDGfoNDtmB0kTjroOJ3pQ==}
@@ -9082,9 +9085,9 @@ snapshots:
 
   '@tokenizer/token@0.3.0': {}
 
-  '@tryghost/admin-api@1.14.14(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)':
+  '@tryghost/admin-api@1.14.16(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)':
     dependencies:
-      axios: 1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
+      axios: 1.21.1(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       form-data: 4.0.6
       jsonwebtoken: 9.0.3
     transitivePeerDependencies:
@@ -9096,9 +9099,9 @@ snapshots:
       '@types/color': 4.2.1
       color: 3.2.1
 
-  '@tryghost/debug@2.3.21(supports-color@7.2.0)':
+  '@tryghost/debug@2.3.22(supports-color@7.2.0)':
     dependencies:
-      '@tryghost/root-utils': 2.3.21
+      '@tryghost/root-utils': 2.3.22
       debug: 4.4.3(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
@@ -9110,7 +9113,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@tryghost/errors@3.4.7': {}
+  '@tryghost/errors@3.4.8': {}
 
   '@tryghost/image-transform@1.4.19(@types/node@24.19.2)(supports-color@7.2.0)':
     dependencies:
@@ -9194,21 +9197,25 @@ snapshots:
     dependencies:
       semver: 7.8.5
 
-  '@tryghost/pretty-cli@3.4.3':
+  '@tryghost/pretty-cli@3.4.4':
     dependencies:
       chalk: 6.0.1
       sywac: 1.3.0
 
-  '@tryghost/root-utils@2.3.21':
+  '@tryghost/root-utils@2.3.22':
     dependencies:
       caller: 1.1.0
       find-root: 1.1.0
+
+  '@tryghost/string@0.3.10':
+    dependencies:
+      unidecode: 1.1.0
 
   '@tryghost/string@0.3.8':
     dependencies:
       unidecode: 1.1.0
 
-  '@tryghost/tpl@2.3.21': {}
+  '@tryghost/tpl@2.3.22': {}
 
   '@tryghost/url-utils@5.4.1':
     dependencies:
@@ -9221,17 +9228,17 @@ snapshots:
       remark-footnotes: 1.0.0
       unist-util-visit: 2.0.3
 
-  '@tryghost/validator@3.2.22':
+  '@tryghost/validator@3.2.23':
     dependencies:
-      '@tryghost/errors': 3.4.7
-      '@tryghost/tpl': 2.3.21
+      '@tryghost/errors': 3.4.8
+      '@tryghost/tpl': 2.3.22
       lodash: 4.18.1
       moment-timezone: 0.5.48
       validator: 13.15.35
 
-  '@tryghost/zip@4.0.2(bare-buffer@3.7.1)':
+  '@tryghost/zip@4.0.3(bare-buffer@3.7.1)':
     dependencies:
-      '@tryghost/errors': 3.4.7
+      '@tryghost/errors': 3.4.8
       archiver: 8.0.0(bare-buffer@3.7.1)
       yauzl: 3.4.0
     transitivePeerDependencies:
@@ -9418,7 +9425,7 @@ snapshots:
 
   autop@1.0.1: {}
 
-  axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0):
+  axios@1.21.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0):
     dependencies:
       follow-redirects: 1.16.2(debug@4.4.3(supports-color@7.2.0))
       form-data: 4.0.6
@@ -9428,7 +9435,7 @@ snapshots:
       - debug
       - supports-color
 
-  axios@1.21.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0):
+  axios@1.21.1(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0):
     dependencies:
       follow-redirects: 1.16.2(debug@4.4.3(supports-color@7.2.0))
       form-data: 4.0.6
