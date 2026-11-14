@@ -1272,8 +1272,8 @@ importers:
         specifier: 'catalog:'
         version: 1.4.0
       tldts:
-        specifier: 7.4.19
-        version: 7.4.19
+        specifier: 7.4.21
+        version: 7.4.21
       wpapi:
         specifier: 1.2.2
         version: 1.2.2(supports-color@7.2.0)
@@ -6248,12 +6248,11 @@ packages:
     resolution: {integrity: sha512-jBrmx4lYmaC9k/mgPbylxs7kBUxHtD8256up+HjLaDFfXScKJQyil+SWXSvhAtT7XHo+yTVlpB81PGmHP8oLSQ==}
     engines: {node: ^20.0.0 || >=22.0.0}
 
-  tldts-core@7.4.20:
-    resolution: {integrity: sha512-C630TWXZCZmLq0F2bW4QqwnaaxCQ/svpAqvJwnC4JvgEM5ohhBnGsEzTLSOXcN+xjz+kEaHS5uoWIw2klnqd0A==}
-    deprecated: Partial release, see https://github.com/remusao/tldts/issues/2735. Use >=7.4.22.
+  tldts-core@7.5.1:
+    resolution: {integrity: sha512-GGSowIH9Pp52ym/x0OxBBNqS2DuqlLL91YNnlnj+k+ZWjJQ+ilNxpwP7/RT+iX1gzuafhj1l7j46CNVqm+xAeQ==}
 
-  tldts@7.4.19:
-    resolution: {integrity: sha512-48dH6aSpQnpbzDUc4vIQZ1VjB8tkK+e8c1yx05/SZK+rkssgjEOlxDd/yU8/a4vGYQ9vRgJr9dwMq9TJ0b3X2Q==}
+  tldts@7.4.21:
+    resolution: {integrity: sha512-SomReMX1GpjzK4KzAMr8SKtn628eakKLlPWEEPOLnC2lfKXt5UZ5gh/y2I8cgRI2zWidULCx2p7vfYyjGSwnaw==}
     hasBin: true
 
   tmp@0.2.7:
@@ -11611,11 +11610,11 @@ snapshots:
 
   tinypool@2.2.0: {}
 
-  tldts-core@7.4.20: {}
+  tldts-core@7.5.1: {}
 
-  tldts@7.4.19:
+  tldts@7.4.21:
     dependencies:
-      tldts-core: 7.4.20
+      tldts-core: 7.5.1
 
   tmp@0.2.7: {}
 
@@ -11631,7 +11630,7 @@ snapshots:
 
   tough-cookie@6.1.0:
     dependencies:
-      tldts: 7.4.19
+      tldts: 7.4.21
 
   tr46@6.0.0:
     dependencies:
