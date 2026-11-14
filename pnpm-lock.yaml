@@ -210,8 +210,8 @@ catalogs:
       specifier: 2.6.0
       version: 2.6.0
     listr2:
-      specifier: 11.4.0
-      version: 11.4.0
+      specifier: 11.4.1
+      version: 11.4.1
     log-update:
       specifier: 8.0.0
       version: 8.0.0
@@ -293,7 +293,7 @@ importers:
         version: 5.0.0
       listr2:
         specifier: 'catalog:'
-        version: 11.4.0
+        version: 11.4.1
       log-symbols:
         specifier: 7.0.1
         version: 7.0.1
@@ -342,7 +342,7 @@ importers:
         version: 12.0.0
       listr2:
         specifier: 'catalog:'
-        version: 11.4.0
+        version: 11.4.1
       nock:
         specifier: 'catalog:'
         version: 15.0.6(supports-color@7.2.0)
@@ -5460,8 +5460,8 @@ packages:
   linkify-it@6.1.0:
     resolution: {integrity: sha512-wJ/TwpSDTLepCrQoYWYIExIKg5Zchex2Nn5yk2mFnB+6PtdkHtyLx742md9csRjjOnGkKIS/RrbY7l8D6gT9Vw==}
 
-  listr2@11.4.0:
-    resolution: {integrity: sha512-N6jpS9lEmqGcWqJqryuOfjPUTn7mcDvG5ndsTlZk4Aohwfywc7deqjscI9lm7K+FHS6anZmazE8/IQxQfVTHZg==}
+  listr2@11.4.1:
+    resolution: {integrity: sha512-Mc8GEdPxl6b7bxFNwUJPOuGlrLSbnudPqF6F2EkgNr9dZQWezIrCfwywoGhy4eIdQvfJgbT7/rITN9S7uX89gQ==}
     engines: {node: '>=22.13.0'}
 
   locate-path@6.0.0:
@@ -10590,7 +10590,7 @@ snapshots:
     dependencies:
       uc.micro: 3.0.0
 
-  listr2@11.4.0:
+  listr2@11.4.1:
     dependencies:
       cli-truncate: 6.2.0
       log-update: 8.0.0
