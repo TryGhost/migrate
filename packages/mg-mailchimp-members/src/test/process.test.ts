@@ -201,4 +201,17 @@ describe('Mailchimp Members ZIP', () => {
 
         assert.equal(cleanedProcessed.length, 10);
     });
+
+    it('Applies addLabel and includeUnsubscribed to a ZIP import', async () => {
+        const cleanedProcessed = await processCsv({
+            pathToZip: join(fixturesPath, 'export.zip'),
+            addLabel: 'Migrated, Newsletter',
+            includeUnsubscribed: true
+        });
+
+        assert.equal(cleanedProcessed.length, 15);
+        assert.ok(cleanedProcessed.every(member => member.labels.includes('Migrated')));
+        assert.ok(cleanedProcessed.every(member => member.labels.includes('Newsletter')));
+        assert.equal(cleanedProcessed.filter(member => !member.subscribed_to_emails).length, 5);
+    });
 });
