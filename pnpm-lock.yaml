@@ -168,8 +168,8 @@ catalogs:
       specifier: 1.14.16
       version: 1.14.16
     '@tryghost/debug':
-      specifier: 2.3.22
-      version: 2.3.22
+      specifier: 2.3.23
+      version: 2.3.23
     '@tryghost/errors':
       specifier: 3.4.8
       version: 3.4.8
@@ -1059,7 +1059,7 @@ importers:
     dependencies:
       '@tryghost/debug':
         specifier: 'catalog:'
-        version: 2.3.22(supports-color@7.2.0)
+        version: 2.3.23(supports-color@7.2.0)
       '@tryghost/mg-context':
         specifier: workspace:*
         version: link:../mg-context
@@ -4036,8 +4036,8 @@ packages:
   '@tryghost/color-utils@0.2.23':
     resolution: {integrity: sha512-ZGccAqroYjIdMcmx6nPHCOwp4QwQYTmU5+srynfGjuo3cxak/r/2mAm2xiQDranCB9uUFB6yhjH0PTzL1x0c2A==}
 
-  '@tryghost/debug@2.3.22':
-    resolution: {integrity: sha512-P1UhE2cMjXtAmraqZL8ogEXiAbk4nScTy6Qk+siqMmgGZ4PEbPBw+PIDnHymJmvwXr55bfXQ+iD9J66IKfXe3g==}
+  '@tryghost/debug@2.3.23':
+    resolution: {integrity: sha512-/fYNYoSUpX8iTr4i2VmJljfehqkljLYbLN5kU5EenvwHue6SHOycGel1r7GsdKKEuDTB2Ckk8/ji+D6D06A6Ng==}
 
   '@tryghost/errors@2.2.1':
     resolution: {integrity: sha512-7zR5Wu9UMalFZbWZs3nN3MzJg6mKek11W51AP8UGz5sN4fQofoeLwXHLI/AuT7nDuWiJZHsJcI1EGJg0iQHV3g==}
@@ -4077,8 +4077,8 @@ packages:
   '@tryghost/pretty-cli@3.4.4':
     resolution: {integrity: sha512-COVOD//rFUpwDqZEeToDZzKrtvT8nTI96Ai8OMN0Tow8qoHDlSia93pYaMDMrWFMg65hWKlBKf8v0K9YQAq0fw==}
 
-  '@tryghost/root-utils@2.3.22':
-    resolution: {integrity: sha512-jjqwssYifWOa/iy3RacLo7m5TVIIAjV2h9K+7vegP5UVGIiZ+JEfGQ1KdLer0KOX0XwAmml3NkqD4yUaCRuIKQ==}
+  '@tryghost/root-utils@2.4.0':
+    resolution: {integrity: sha512-Mil+TJ6eolD8lXgSiWScDgaDRA7ANbjfgHjEioP5CrebZJLM4PAfV94hzHl/Em7KA3fvDMWM5IhMku2JFBkNjw==}
 
   '@tryghost/string@0.3.10':
     resolution: {integrity: sha512-bXf8EWBujR0Vvz3DwWK61VfDG7XcIq0j4++mTLnKjS05HgojeqYyM3g7iF3YvFjkytPaVVfNS7jmdpZL3LTn0Q==}
@@ -9095,9 +9095,9 @@ snapshots:
       '@types/color': 4.2.1
       color: 3.2.1
 
-  '@tryghost/debug@2.3.22(supports-color@7.2.0)':
+  '@tryghost/debug@2.3.23(supports-color@7.2.0)':
     dependencies:
-      '@tryghost/root-utils': 2.3.22
+      '@tryghost/root-utils': 2.4.0
       debug: 4.4.3(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
@@ -9198,7 +9198,7 @@ snapshots:
       chalk: 6.0.1
       sywac: 1.3.0
 
-  '@tryghost/root-utils@2.3.22':
+  '@tryghost/root-utils@2.4.0':
     dependencies:
       caller: 1.1.0
       find-root: 1.1.0
