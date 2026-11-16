@@ -324,6 +324,25 @@ describe('Format JSON to CSV', function () {
         assert.ok(Array.isArray(resultArray));
         assert.equal(resultArray.length, 22);
     });
+
+    it('quotes and escapes fields so the CSV parses back to the same values', function () {
+        const jsonInput = [
+            {email: 'quoted@example.com', note: 'Said "hello", then left'},
+            {email: 'newline@example.com', note: 'Line one\nLine two'},
+            {email: 'carriage@example.com', note: 'Line one\rLine two'}
+        ];
+
+        const result = csv.jsonToCSV(jsonInput, ['email', 'note']);
+
+        assert.equal(
+            result,
+            'email,note\r\n' +
+                'quoted@example.com,"Said ""hello"", then left"\r\n' +
+                'newline@example.com,"Line one\nLine two"\r\n' +
+                'carriage@example.com,"Line one\rLine two"\r\n'
+        );
+        assert.deepEqual(csv.parseString(result), jsonInput);
+    });
 });
 
 describe('writeCSV', function () {
