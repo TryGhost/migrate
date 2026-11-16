@@ -112,7 +112,7 @@ The [Release and Publish workflow](.github/workflows/publish.yml) runs every Mon
 4. Create the `Published new versions [skip ci]` commit and package tags, check npm OIDC authentication, and push the commit and tags together. If `main` has moved or branch rules reject the push, publishing stops.
 5. Pack with pnpm to resolve `workspace:*` and catalog references, then publish the packages to npm with provenance and the `latest` dist-tag. Versions already on npm are skipped.
 
-The publishing step runs in the same workflow because pushes made with `GITHUB_TOKEN` do not trigger the usual Test → Publish chain. The release commit also includes `[skip ci]` to avoid a duplicate chain when a separate release token is used. Release/publish jobs are serialized and an in-progress release is not cancelled by a newer run.
+The publishing step runs in the same workflow because pushes made with `GITHUB_TOKEN` do not trigger the usual Test → Publish chain. The release commit also includes `[skip ci]` to avoid a duplicate chain when a separate release token is used. Release/publish jobs are serialized and an in-progress release is not cancelled by a newer run. Up to 100 pending jobs are retained, so a later authentication check or dry-run does not replace a queued publication.
 
 The workflow file remains `publish.yml` so existing npm trusted-publisher registrations keep working.
 
@@ -146,7 +146,7 @@ The release commit is pushed **before** npm publication. If npm fails partway th
 `pnpm ship` still works for interactive releases, including major bumps and custom versions:
 
 1. Run `pnpm ship` locally to version, tag, and push. Nx prompts per package and updates dependent packages.
-2. The push to `main` runs the Test workflow. When it succeeds on the `Published new versions` commit, the publish workflow checks out that exact tested commit and publishes its unpublished versions.
+2. The push to `main` runs the Test workflow. When it succeeds on the `Published new versions` commit, the publish workflow checks out that exact tested commit. Immediately before publishing, it verifies that the tested commit is still the current remote `main` HEAD. If `main` has advanced, it skips publishing and records the reason in the run summary, preventing a delayed older release from moving npm's `latest` tag backwards. This also skips runs when only an unrelated commit has landed since the release; use manual `publish` mode on `main` if publication is still needed.
 
 ### Releasing a single package
 

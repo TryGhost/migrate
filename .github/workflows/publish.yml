@@ -53,6 +53,7 @@ jobs:
 
     concurrency:
       group: publish-${{ github.repository }}
+      queue: max
       cancel-in-progress: false
 
     # Only run when:
@@ -219,9 +220,21 @@ jobs:
           NODE_AUTH_TOKEN: ""
           PUBLISH_MODE: ${{ steps.plan.outputs.mode }}
           TAG: ${{ steps.plan.outputs.tag }}
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha || '' }}
         run: |
           set -euo pipefail
           unset NODE_AUTH_TOKEN
+
+          # A delayed Test completion must not publish an older release as latest.
+          # Check the remote now, since main may have advanced during this job.
+          if [ -n "$TESTED_SHA" ] && [ "$TAG" = "latest" ]; then
+            current_main_sha=$(git ls-remote --exit-code origin refs/heads/main | cut -f1)
+            if [ "$TESTED_SHA" != "$current_main_sha" ]; then
+              echo "::notice::Skipping publishing: tested commit $TESTED_SHA is no longer the main HEAD ($current_main_sha)."
+              echo "Publishing skipped because main advanced beyond the tested release. Run publish mode on main if publication is still needed." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+          fi
 
           DRY_RUN_FLAG=""
           if [ "$PUBLISH_MODE" = "dry-run" ]; then
