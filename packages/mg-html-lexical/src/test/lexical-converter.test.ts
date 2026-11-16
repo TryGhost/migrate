@@ -56,8 +56,13 @@ describe('lexicalConverter', function () {
             process.stdout.write(JSON.stringify({nodeEnv: process.env.NODE_ENV, rootType: lexical.root.type}));
         `;
 
+        const env: NodeJS.ProcessEnv = {...process.env, NODE_ENV: 'development'};
+        // Avoid Node colour-setting warnings inherited from the test runner.
+        delete env.FORCE_COLOR;
+        delete env.NO_COLOR;
+
         const {stdout, stderr} = await execFileAsync(process.execPath, ['--input-type=module', '--eval', script], {
-            env: {...process.env, NODE_ENV: 'development'}
+            env
         });
 
         assert.equal(stderr, '');

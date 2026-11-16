@@ -115,7 +115,7 @@ describe('Substack E2E Migration', function () {
             postsBefore: null,
             postsAfter: null,
             email: null,
-            tmpPath: null,
+            tmpPath: join(fixtureDir, 'cache'),
             outputPath: outputDir
         };
 
