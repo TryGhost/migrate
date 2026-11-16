@@ -19,7 +19,7 @@ overrides:
 
 catalog:
   "@tryghost/admin-api": "1.14.16"
-  "@tryghost/debug": "2.3.22"
+  "@tryghost/debug": "2.3.23"
   "@tryghost/errors": "3.4.8"
   "@tryghost/kg-default-cards": "10.3.10"
   "@tryghost/kg-html-to-lexical": "1.4.4"
