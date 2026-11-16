@@ -48,5 +48,5 @@ allowBuilds:
   nx: true
   sharp: true
 patchedDependencies:
-  nx@24.0.5: patches/nx@24.0.5.patch
+  nx@24.0.6: patches/nx@24.0.6.patch
   remark-parse@7.0.2: patches/remark-parse@7.0.2.patch
