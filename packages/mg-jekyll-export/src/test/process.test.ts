@@ -496,6 +496,7 @@ describe('Process', function () {
             processHtml('<ul><li><p>Parent</p><ul><li>Child</li></ul></li></ul>'),
             '<ul><li>Parent<ul><li>Child</li></ul></li></ul>'
         );
+        assert.equal(processHtml('<ul><li>Before<p>Body</p>After</li></ul>'), '<ul><li>BeforeBodyAfter</li></ul>');
     });
 
     it('Builds dated live URLs', function () {
