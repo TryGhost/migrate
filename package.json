@@ -35,8 +35,8 @@
     "@types/node": "catalog:",
     "knip": "6.45.1",
     "nx": "24.0.5",
-    "oxfmt": "0.76.0",
-    "oxlint": "1.91.0",
+    "oxfmt": "0.78.0",
+    "oxlint": "1.93.0",
     "tsx": "4.23.15",
     "typescript": "catalog:"
   }
