@@ -30,9 +30,17 @@ export default function processHtml(rawHtml: string, url?: string | null): strin
         }
 
         for (const li of parsed.$('li')) {
-            const p = li.querySelector('p');
-            if (p) {
-                li.replaceChildren(...p.childNodes);
+            const paragraphs = Array.from(li.children).filter(child => child.tagName === 'P');
+
+            // An item holding nothing but one paragraph keeps the compact tight-list shape.
+            if (paragraphs.length === 1 && li.children.length === 1) {
+                li.replaceChildren(...Array.from(paragraphs[0].childNodes));
+                continue;
+            }
+
+            // Otherwise unwrap each paragraph in place, so the item keeps its other paragraphs and its nested lists.
+            for (const paragraph of paragraphs) {
+                paragraph.replaceWith(...Array.from(paragraph.childNodes));
             }
         }
 

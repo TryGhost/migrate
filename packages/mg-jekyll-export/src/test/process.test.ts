@@ -487,6 +487,17 @@ describe('Process', function () {
         assert.equal(html, '<p><code>a=""</code> <a>none</a> <img alt="x"> <a href="#top">top</a></p>');
     });
 
+    it('Keeps every child of a list item when unwrapping its paragraphs', function () {
+        assert.equal(
+            processHtml('<ul><li><p>First</p><p><strong>Second</strong></p></li></ul>'),
+            '<ul><li>First<strong>Second</strong></li></ul>'
+        );
+        assert.equal(
+            processHtml('<ul><li><p>Parent</p><ul><li>Child</li></ul></li></ul>'),
+            '<ul><li>Parent<ul><li>Child</li></ul></li></ul>'
+        );
+    });
+
     it('Builds dated live URLs', function () {
         const post = {sourceSlug: 'my-post', date: new Date('2021-08-23T10:00:00Z')};
 
