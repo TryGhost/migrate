@@ -240,13 +240,14 @@ catalogs:
 overrides:
   glob@>=9.0.0 <=14.0.1: 14.0.6
   minimatch@>=7.0.0 <11.0.1: 11.0.8
-  trim: ^1.0.1
+  remark-parse@7.0.2>trim: '-'
   parse-link-header: ^2.0.0
   form-data: ^4.0.6
   js-yaml@3: 5.5.0
 
 patchedDependencies:
   nx@24.0.5: 38689c2ee7a1dba632ae2853ca24b8241c51aa4fe44ca00c09e60ecdc54f282a
+  remark-parse@7.0.2: 12c4741a9375b4f4c08e1e809c868d75298f1fab3f12731d51f45751c10cc88a
 
 importers:
 
@@ -6287,10 +6288,6 @@ packages:
   trim-trailing-lines@1.1.4:
     resolution: {integrity: sha512-rjUWSqnfTNrjbB9NQWfPMH/xRK1deHeGsHoVfpxJ++XeYXE0d6B1En37AHfw3jtfTU7dzMzZL2jjpe8Qb5gLIQ==}
 
-  trim@1.0.1:
-    resolution: {integrity: sha512-3JVP2YVqITUisXblCDq/Bi4P9457G/sdEamInkyvCsjbTcXLXIiG7XCb4kGMFWh6JGXesS3TKxOPtrncN/xe8w==}
-    deprecated: Use String.prototype.trim() instead
-
   trough@1.0.5:
     resolution: {integrity: sha512-rvuRbTarPXmMb79SmzEp8aqXNKcK+y0XaB298IXueQ8I2PsrATcPBCSPyK/dDNa2iWOhKlfNnOjdAOTBU/nkFA==}
 
@@ -11211,7 +11208,7 @@ snapshots:
 
   remark-footnotes@1.0.0: {}
 
-  remark-parse@7.0.2:
+  remark-parse@7.0.2(patch_hash=12c4741a9375b4f4c08e1e809c868d75298f1fab3f12731d51f45751c10cc88a):
     dependencies:
       collapse-white-space: 1.0.6
       is-alphabetical: 1.0.4
@@ -11222,7 +11219,6 @@ snapshots:
       parse-entities: 1.2.2
       repeat-string: 1.6.1
       state-toggle: 1.0.3
-      trim: 1.0.1
       trim-trailing-lines: 1.1.4
       unherit: 1.1.3
       unist-util-remove-position: 1.1.4
@@ -11248,7 +11244,7 @@ snapshots:
 
   remark@11.0.2:
     dependencies:
-      remark-parse: 7.0.2
+      remark-parse: 7.0.2(patch_hash=12c4741a9375b4f4c08e1e809c868d75298f1fab3f12731d51f45751c10cc88a)
       remark-stringify: 7.0.4
       unified: 8.4.2
 
@@ -11642,8 +11638,6 @@ snapshots:
   transliteration@2.7.0: {}
 
   trim-trailing-lines@1.1.4: {}
-
-  trim@1.0.1: {}
 
   trough@1.0.5: {}
 
