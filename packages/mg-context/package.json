@@ -43,13 +43,13 @@
   "devDependencies": {
     "@tryghost/listr-smart-renderer": "workspace:*",
     "@tryghost/mg-queue": "workspace:*",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "c8": "catalog:"
   },
   "dependencies": {
     "@tryghost/errors": "catalog:",
     "@tryghost/string": "catalog:",
     "@tryghost/validator": "3.2.23",
-    "c8": "catalog:",
     "typescript": "catalog:",
     "zod": "4.6.7"
   }

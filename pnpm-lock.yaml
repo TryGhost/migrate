@@ -589,9 +589,6 @@ importers:
       '@tryghost/validator':
         specifier: 3.2.23
         version: 3.2.23
-      c8:
-        specifier: 'catalog:'
-        version: 12.0.0
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -608,6 +605,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
+      c8:
+        specifier: 'catalog:'
+        version: 12.0.0
 
   packages/mg-curated-export:
     dependencies:
