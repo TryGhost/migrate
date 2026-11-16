@@ -1,6 +1,9 @@
-name: Publish
+name: Release and Publish
 
 on:
+  # Match ghst's weekly release schedule (UTC).
+  schedule:
+    - cron: "0 15 * * 1"
   # Trigger after the Test workflow completes on main.
   # This ensures tests pass before publishing.
   workflow_run:
@@ -11,39 +14,63 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: How this run should exercise npm publishing
+        description: Create a release, or work with the existing package versions
         required: true
         type: choice
         options:
+          - release     # Version, validate, tag, push, and publish
           - oidc-check   # Only test the OIDC token exchange — no publish
           - dry-run       # Preview what would be published
           - publish       # Actually publish to npm
-        default: oidc-check
+        default: release
+      bump:
+        description: Version bump for release mode (auto = patch for Renovate-only changes, otherwise minor)
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+        default: auto
+      force:
+        description: In release mode, bump even with no commits since the last release
+        type: boolean
+        default: false
       npm_tag:
         # npm dist-tags control what users get when they run `npm install @tryghost/<pkg>`.
         # "latest" is the default tag — it's what `npm install` resolves to.
         # Use other tags (e.g. "beta", "next") to publish pre-release versions
         # that users must opt into with `npm install @tryghost/<pkg>@beta`.
-        description: Dist-tag to use for manual runs (e.g. latest, beta)
+        description: Dist-tag for publish/dry-run modes (release mode always uses latest)
         required: true
         type: string
         default: latest
 
 jobs:
   publish:
-    name: Publish to npm
+    name: Release and publish to npm
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    concurrency:
+      group: publish-${{ github.repository }}
+      cancel-in-progress: false
 
     # Only run when:
-    # - Manual dispatch (oidc-check, dry-run, publish), OR
+    # - Scheduled or manual release from main, OR
+    # - Manual dispatch (oidc-check, dry-run, publish) from main, OR
     # - Test workflow completed successfully on a version commit (created by `pnpm ship`)
     if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       startsWith(github.event.workflow_run.head_commit.message, 'Published new versions'))
+      github.repository == 'TryGhost/migrate' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'schedule' ||
+       github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_repository.full_name == github.repository &&
+        startsWith(github.event.workflow_run.head_commit.message, 'Published new versions')))
 
     permissions:
-      contents: read
+      contents: write   # Commit and push the versions and package tags in release mode
       id-token: write    # Required for OIDC token exchange with npm trusted publishers
 
     env:
@@ -53,75 +80,77 @@ jobs:
       NPM_CONFIG_PROVENANCE: true
       # Prevent classic token auth from interfering with OIDC (some orgs inject NODE_AUTH_TOKEN)
       NODE_AUTH_TOKEN: ""
+      NX_DAEMON: false
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # Publish exactly the tested commit for pnpm ship; release the current main otherwise.
+          ref: ${{ github.event.workflow_run.head_sha || 'main' }}
+          fetch-depth: 0
+          # Don't leave saved Git credentials while install, build, and
+          # tests run third-party code. The push step supplies it explicitly.
+          persist-credentials: false
 
       # Install pnpm (reads version from packageManager field in package.json)
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
 
-      # First setup-node: used for building (keeps the monorepo on its expected Node version)
+      # Node 26 includes an npm version with OIDC trusted publishing support.
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 26
-          cache: pnpm
+          package-manager-cache: false
         env:
           NODE_AUTH_TOKEN: ""
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      - name: Determine release plan
+        id: plan
+        env:
+          RELEASE_MODE: ${{ github.event_name == 'schedule' && 'release' || inputs.mode || 'publish' }}
+          RELEASE_BUMP: ${{ inputs.bump || 'auto' }}
+          RELEASE_FORCE: ${{ inputs.force || false }}
+          NPM_TAG: ${{ inputs.npm_tag || 'latest' }}
+        run: pnpm exec node .github/scripts/release-plan.js
+
+      - name: Skip unchanged release
+        if: steps.plan.outputs.publish != 'true'
+        run: echo "No commits since the last stable CLI release; skipping." >> "$GITHUB_STEP_SUMMARY"
+
+      # Nx's preVersionCommand runs pnpm build and pnpm test (including lint)
+      # before changing versions. Each package keeps its independent version.
+      - name: Validate and version all packages
+        if: steps.plan.outputs.release == 'true'
+        env:
+          BUMP: ${{ steps.plan.outputs.bump }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          pnpm exec nx release version "$BUMP" --git-push=false --git-commit-message="Published new versions [skip ci]" --verbose
 
       # Build is required because published packages ship compiled output (build/)
       - name: Build all packages
+        if: steps.plan.outputs.publish == 'true' && steps.plan.outputs.release != 'true'
         run: pnpm build
 
-      # Second setup-node: used for publishing only.
-      # Node 24 has better OIDC trusted publisher support in its bundled npm.
-      # registry-url is required for npm to authenticate via the OIDC token.
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
-        with:
-          node-version: 26.x
-          registry-url: https://registry.npmjs.org
-        env:
-          NODE_AUTH_TOKEN: ""
-
-      # Determine what this run should do based on trigger type
-      - name: Resolve publish mode
-        id: publish_mode
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "mode=${{ inputs.mode }}" >> "$GITHUB_OUTPUT"
-            echo "tag=${{ inputs.npm_tag }}" >> "$GITHUB_OUTPUT"
-          else
-            # workflow_run-triggered runs always publish with the "latest" tag
-            echo "mode=publish" >> "$GITHUB_OUTPUT"
-            echo "tag=latest" >> "$GITHUB_OUTPUT"
-          fi
-
-      # Ensure we have the latest npm for trusted publishing support
-      - name: Upgrade npm
-        run: npm install -g npm@latest
+      - name: Validate manual publishing
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'
+        run: pnpm test
 
       - name: Print runtime versions
+        if: steps.plan.outputs.publish == 'true'
         run: |
           node --version
           npm --version
           pnpm --version
 
-      # actions/setup-node writes _authToken to .npmrc which can conflict with OIDC auth.
-      # Strip it so npm falls through to OIDC token exchange.
-      - name: Strip npm auth token from npmrc (OIDC only)
-        run: |
-          set -euo pipefail
-          npmrc="$(npm config get userconfig)"
-          echo "using npmrc=$npmrc"
-          sed -i.bak '/_authToken/d' "$npmrc" || true
-          echo "auth token lines remaining? $(grep -c _authToken "$npmrc" || true)"
-
       # Manually test the OIDC token exchange with npm's API.
       # This pinpoints whether GitHub is issuing the token and whether npm accepts it,
       # so we get a clear error instead of a cryptic 404 on publish.
       - name: Check npm OIDC exchange (probe)
+        if: steps.plan.outputs.publish == 'true'
         run: |
           set -euo pipefail
 
@@ -149,31 +178,55 @@ jobs:
             exit 1
           fi
 
-          node -p "const response=require('./oidc-exchange.json'); 'npm OIDC exchange succeeded; token expires at ' + response.expires"
+          node --input-type=module -e "import {readFileSync} from 'node:fs'; const response = JSON.parse(readFileSync('oidc-exchange.json')); process.stdout.write('npm OIDC exchange succeeded; token expires at ' + response.expires + '\n');"
           rm oidc-exchange.json
 
       # In oidc-check mode, stop here — we only wanted to verify the token exchange
       - name: Stop after OIDC check
-        if: steps.publish_mode.outputs.mode == 'oidc-check'
+        if: steps.plan.outputs.mode == 'oidc-check'
         run: echo "OIDC check complete; stopping (mode=oidc-check)."
+
+      # Push before publishing so a rejected/stale main cannot release packages.
+      # Atomic push keeps the version commit and tags together. [skip ci] avoids
+      # triggering another Test → Publish chain when RELEASE_TOKEN is used.
+      # The token is supplied only to this step. Use an identity allowed to
+      # bypass main's rules when required.
+      - name: Push release commit and tags
+        if: steps.plan.outputs.release == 'true'
+        env:
+          PUSH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+
+          auth=$(printf 'x-access-token:%s' "$PUSH_TOKEN" | base64 | tr -d '\n')
+          echo "::add-mask::$auth"
+
+          export GIT_AUTH_HEADER="AUTHORIZATION: basic $auth"
+          unset PUSH_TOKEN auth
+
+          git --config-env=http.https://github.com/.extraheader=GIT_AUTH_HEADER \
+            push --atomic --follow-tags \
+            "https://github.com/${GITHUB_REPOSITORY}.git" HEAD:main
 
       # Iterate over all packages, skip already-published versions, and publish new ones.
       # Uses pnpm pack to resolve workspace:* references to real versions in the tarball,
       # then npm publish for OIDC trusted publisher support.
       - name: Publish to npm
-        if: steps.publish_mode.outputs.mode != 'oidc-check'
+        if: steps.plan.outputs.publish == 'true' && steps.plan.outputs.mode != 'oidc-check'
         env:
           NODE_AUTH_TOKEN: ""
+          PUBLISH_MODE: ${{ steps.plan.outputs.mode }}
+          TAG: ${{ steps.plan.outputs.tag }}
         run: |
           set -euo pipefail
           unset NODE_AUTH_TOKEN
 
           DRY_RUN_FLAG=""
-          if [ "${{ steps.publish_mode.outputs.mode }}" = "dry-run" ]; then
+          if [ "$PUBLISH_MODE" = "dry-run" ]; then
             DRY_RUN_FLAG="--dry-run"
           fi
-
-          TAG="${{ steps.publish_mode.outputs.tag }}"
 
           failed=0
           for pkg in packages/*/; do
@@ -181,9 +234,9 @@ jobs:
             [ -f "$pkg/package.json" ] || continue
 
             # Read package metadata from package.json
-            name=$(node -p "require('./$pkg/package.json').name")
-            version=$(node -p "require('./$pkg/package.json').version")
-            private=$(node -p "require('./$pkg/package.json').private || false")
+            name=$(node --input-type=module -e "import {readFileSync} from 'node:fs'; process.stdout.write(JSON.parse(readFileSync(process.argv[1])).name)" "$pkg/package.json")
+            version=$(node --input-type=module -e "import {readFileSync} from 'node:fs'; process.stdout.write(JSON.parse(readFileSync(process.argv[1])).version)" "$pkg/package.json")
+            private=$(node --input-type=module -e "import {readFileSync} from 'node:fs'; process.stdout.write(String(JSON.parse(readFileSync(process.argv[1])).private || false))" "$pkg/package.json")
 
             # Skip private packages
             if [ "$private" = "true" ]; then
