@@ -102,14 +102,51 @@ Some dependencies are intentionally kept despite not being directly imported (e.
 
 Packages are published to npm automatically via GitHub Actions using OIDC trusted publishers — no npm token is needed.
 
-### How to release
+### Automatic releases
 
-1. Run `pnpm ship` locally to interactively version bump, tag, and push to git
-    - Uses `nx release` under the hood — prompts per-package for the bump level
-    - Also updates any packages which depend on changed packages
-2. The push to `main` triggers the [publish workflow](.github/workflows/publish.yml), which builds and publishes all bumped packages to npm
+The [Release and Publish workflow](.github/workflows/publish.yml) runs every Monday at **15:00 UTC** (15:00 UK winter time / 16:00 UK summer time), and can also be started from the [Actions tab](https://github.com/TryGhost/migrate/actions/workflows/publish.yml). It only runs in `TryGhost/migrate` on `main`.
 
-You can also trigger a dry-run from the [Actions tab](https://github.com/TryGhost/migrate/actions/workflows/publish.yml) to preview what would be published without actually publishing.
+1. Check commits since the nearest stable `@tryghost/migrate@x.y.z` tag reachable from `main`. Prerelease tags and tags on unmerged branches are ignored. If there are no new commits, skip the release unless `force` is enabled.
+2. Choose a **patch** bump when every commit author contains `renovate` (case-insensitive), or a **minor** bump when there are any other authors. A forced release with no new commits defaults to patch. This matches ghst's author-based policy; it does not inspect Conventional Commit prefixes or infer breaking changes.
+3. Run `nx release version` with that bump for **all packages**. Packages keep their independent version numbers, and Nx updates workspace dependencies and the lockfile as needed. The pre-version command in `nx.json` runs the build, lint, formatting checks, release-planning tests, and package tests before changing any versions.
+4. Create the `Published new versions [skip ci]` commit and package tags, check npm OIDC authentication, and push the commit and tags together. If `main` has moved or branch rules reject the push, publishing stops.
+5. Pack with pnpm to resolve `workspace:*` and catalog references, then publish the packages to npm with provenance and the `latest` dist-tag. Versions already on npm are skipped.
+
+The publishing step runs in the same workflow because pushes made with `GITHUB_TOKEN` do not trigger the usual Test → Publish chain. The release commit also includes `[skip ci]` to avoid a duplicate chain when a separate release token is used. Release/publish jobs are serialized and an in-progress release is not cancelled by a newer run. Up to 100 pending jobs are retained, so a later authentication check or dry-run does not replace a queued publication.
+
+The workflow file remains `publish.yml` so existing npm trusted-publisher registrations keep working.
+
+#### GitHub setup
+
+The repository's [Ghost default branch ruleset](https://github.com/TryGhost/migrate/rules/18914630) requires a pull request and the `Required checks pass` status. Automated releases need an identity that can push the already-validated version commit directly:
+
+1. Use an automation identity allowed to **always bypass** that ruleset (a pull-request-only bypass is insufficient).
+2. Add a repository Actions secret named `RELEASE_TOKEN` containing a token for that identity with **Contents: read and write** access to this repository. Do not put the token in the workflow file. The workflow supplies `RELEASE_TOKEN` only to the release push step through an environment variable. Checkout does not persist credentials, and the push reads its authentication header from the environment without saving it in Git configuration or including it in command-line arguments. This reduces credential exposure during installation, builds, and tests; steps still share the same runner and are not security-isolated. npm publishing continues using OIDC.
+3. If the default GitHub Actions identity already has the necessary bypass, omit `RELEASE_TOKEN`; the workflow falls back to `GITHUB_TOKEN` with `contents: write`. That permission alone does not bypass branch rules.
+
+No branch rules or secrets are changed by this code. A release whose push is rejected stops before publishing anything to npm.
+
+### Manual runs and recovery
+
+Choose a mode when using **Run workflow** on `main`:
+
+| Mode | Behaviour |
+| --- | --- |
+| `release` (default) | Run the automatic release process now. Use `bump` to choose `auto`, `patch`, or `minor`; use `force` to release even without new commits. Always publishes to `latest`. |
+| `oidc-check` | Build and verify npm trusted publishing without versioning or publishing. |
+| `dry-run` | Build and preview publishing the existing package versions, without bumping, committing, tagging, pushing, or publishing. Also checks OIDC. |
+| `publish` | Build, validate, and publish existing package versions without another version bump. Use this to finish a partially failed release. |
+
+`npm_tag` applies to `publish` and `dry-run` modes. `bump` and `force` only apply to `release` mode. The dry-run previews existing versions, not a future automatic version bump.
+
+The release commit is pushed **before** npm publication. If npm fails partway through, run `publish` to retry the recorded versions; it skips packages that succeeded. Do not force a new release just to retry publishing.
+
+### Releasing locally
+
+`pnpm ship` still works for interactive releases, including major bumps and custom versions:
+
+1. Run `pnpm ship` locally to version, tag, and push. Nx prompts per package and updates dependent packages.
+2. The push to `main` runs the Test workflow. When it succeeds on the `Published new versions` commit, the publish workflow checks out that exact tested commit. Immediately before publishing, it verifies that the tested commit is still the current remote `main` HEAD. If `main` has advanced, it skips publishing and records the reason in the run summary, preventing a delayed older release from moving npm's `latest` tag backwards. This also skips runs when only an unrelated commit has landed since the release; use manual `publish` mode on `main` if publication is still needed.
 
 ### Releasing a single package
 
