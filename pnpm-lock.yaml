@@ -587,8 +587,8 @@ importers:
         specifier: 'catalog:'
         version: 0.3.10
       '@tryghost/validator':
-        specifier: 3.2.23
-        version: 3.2.23
+        specifier: 3.3.0
+        version: 3.3.0
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -658,8 +658,8 @@ importers:
         specifier: 'catalog:'
         version: 0.3.10
       '@tryghost/zip':
-        specifier: 4.0.3
-        version: 4.0.3(bare-buffer@3.7.1)
+        specifier: 4.1.0
+        version: 4.1.0(bare-buffer@3.7.1)
       adm-zip:
         specifier: 0.6.1
         version: 0.6.1
@@ -4092,11 +4092,11 @@ packages:
   '@tryghost/url-utils@5.4.1':
     resolution: {integrity: sha512-njtdXgfJt4iMawUZG6vgaqNSUL+g/pVRpFb+3ZVWCzHENDnjXnYeoz1FgGmSXWNi8hzSjjZ/dhr11Gxwy8D2og==}
 
-  '@tryghost/validator@3.2.23':
-    resolution: {integrity: sha512-F/LnvOuVHghP4CpFPW3dZLLscGhfBKB039tDrphCKC3L8GTXjBr7OfrUthNLJin5rV1M3xZcNhhQlyfXDm24sw==}
+  '@tryghost/validator@3.3.0':
+    resolution: {integrity: sha512-FUlMB5TWue0ykPlHQ8KUFX+2HTHmt7eXSu0sXSMI7atDKWpMbc0mZ6AS0TMmBTS0aYBsEMFyhZ+OsZffPXwvCw==}
 
-  '@tryghost/zip@4.0.3':
-    resolution: {integrity: sha512-BeDDlOgG+XJmHC2NzxBE8cNnVT2fCE0z5WLaXS8zJspIsHlO6iW35NU5vViBFmoUrZPftRPLmL0RamYRxVGHbQ==}
+  '@tryghost/zip@4.1.0':
+    resolution: {integrity: sha512-i+Vhe4Ay2LSziyZxx8Pj4X/J55XBzCU2A17/y5Vcq6jp2j+34ug/8VBitpsdndVI6Rd8cjfwwMv7owFqhGXhXw==}
 
   '@tybys/wasm-util@0.10.4':
     resolution: {integrity: sha512-W3c4gRigFS0T/Ma4qIYF3GDAc5AQdHb1yL5znJT1Zv1YaD9Kitx656wBjvr19qbiosmZT8lWDM5BEMynUqX65A==}
@@ -9224,7 +9224,7 @@ snapshots:
       remark-footnotes: 1.0.0
       unist-util-visit: 2.0.3
 
-  '@tryghost/validator@3.2.23':
+  '@tryghost/validator@3.3.0':
     dependencies:
       '@tryghost/errors': 3.4.8
       '@tryghost/tpl': 2.3.22
@@ -9232,7 +9232,7 @@ snapshots:
       moment-timezone: 0.5.48
       validator: 13.15.35
 
-  '@tryghost/zip@4.0.3(bare-buffer@3.7.1)':
+  '@tryghost/zip@4.1.0(bare-buffer@3.7.1)':
     dependencies:
       '@tryghost/errors': 3.4.8
       archiver: 8.0.0(bare-buffer@3.7.1)
