@@ -145,6 +145,17 @@ describe('Content edge cases', function () {
         assert.equal(await processContent({html: ''}), '');
     });
 
+    it('removes non-Koenig comments but keeps Koenig card comments', async function () {
+        const html = await processContent({
+            html: '<!-- wp:paragraph --><p>Body</p><!-- /wp:paragraph --><!-- wp:html --><!--kg-card-begin: html--><div>Card</div><!--kg-card-end: html--><!-- /wp:html -->'
+        });
+        assert.equal(html, '<p>Body</p><!--kg-card-begin: html--><div>Card</div><!--kg-card-end: html-->');
+    });
+
+    it('returns empty content for bodies that are only comments', async function () {
+        assert.equal(await processContent({html: '<!-- wp:paragraph -->\n<!-- /wp:paragraph -->'}), '');
+    });
+
     it('removes a leading feature image even when it is the first element', async function () {
         const html = await processContent({
             html: '<img src="https://example.com/image-300x200.jpg"><p>Body</p>',

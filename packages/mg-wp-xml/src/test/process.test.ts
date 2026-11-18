@@ -988,4 +988,20 @@ Lorem Ipsum`;
         assert.ok(processed.includes('Body text.'));
         assert.ok(!processed.includes('https://example.com/feature.jpg'));
     });
+
+    it('Removes non-Koenig comments but keeps Koenig card comments', async function () {
+        const html =
+            '<!-- wp:paragraph --><p>Body text.</p><!-- /wp:paragraph --><!--kg-card-begin: html--><div>Card</div><!--kg-card-end: html-->';
+
+        const processed = await process.processHTMLContent({html, options: {}});
+        assert.equal(processed, '<p>Body text.</p><!--kg-card-begin: html--><div>Card</div><!--kg-card-end: html-->');
+    });
+
+    it('Returns empty content for posts that are only comments', async function () {
+        const processed = await process.processHTMLContent({
+            html: '<!-- wp:paragraph -->\n<!-- /wp:paragraph -->',
+            options: {}
+        });
+        assert.equal(processed, '');
+    });
 });

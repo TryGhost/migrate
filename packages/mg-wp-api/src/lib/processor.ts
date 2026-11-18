@@ -1,6 +1,7 @@
 import {basename} from 'node:path';
 import MgWebScraper from '@tryghost/mg-webscraper';
 import Shortcodes from '@tryghost/mg-shortcodes';
+import {removeNonKoenigComments} from '@tryghost/mg-clean-html';
 import {slugify} from '@tryghost/string';
 import {htmlToText} from 'html-to-text';
 import SimpleDom from 'simple-dom';
@@ -1371,7 +1372,9 @@ const processContent = async ({
     // convert HTML back to a string
     html = parsed.html();
 
-    return html;
+    // Remove non-Koenig comments (e.g. Gutenberg's `<!-- wp:paragraph -->`). Content that is only
+    // comments converts to an empty Lexical root, which Ghost rejects, but an empty string imports fine.
+    return removeNonKoenigComments(html);
 };
 
 /**

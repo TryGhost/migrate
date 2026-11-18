@@ -1240,6 +1240,9 @@ importers:
       '@tryghost/errors':
         specifier: 'catalog:'
         version: 3.4.8
+      '@tryghost/mg-clean-html':
+        specifier: workspace:*
+        version: link:../mg-clean-html
       '@tryghost/mg-context':
         specifier: workspace:*
         version: link:../mg-context
