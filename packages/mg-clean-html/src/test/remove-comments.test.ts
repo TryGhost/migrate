@@ -7,6 +7,7 @@ describe('removeNonKoenigComments', function () {
         assert.equal(removeNonKoenigComments(), '');
         assert.equal(removeNonKoenigComments(null), '');
         assert.equal(removeNonKoenigComments(''), '');
+        assert.equal(removeNonKoenigComments(' \n\t '), '');
     });
 
     it('Returns HTML without comments unchanged', function () {

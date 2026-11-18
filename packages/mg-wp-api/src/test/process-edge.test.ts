@@ -143,6 +143,7 @@ describe('Shortcode edge cases', function () {
 describe('Content edge cases', function () {
     it('returns empty content for empty bodies', async function () {
         assert.equal(await processContent({html: ''}), '');
+        assert.equal(await processContent({html: '\n\n'}), '');
     });
 
     it('removes non-Koenig comments but keeps Koenig card comments', async function () {

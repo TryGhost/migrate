@@ -21,8 +21,13 @@ const removeCommentNodes = (node: Node): void => {
  * an empty string imports fine. If nothing but whitespace remains, an empty string is returned.
  */
 const removeNonKoenigComments = (html?: string | null): string => {
-    if (!html || !html.includes('<!--')) {
-        return html ?? '';
+    // Whitespace-only content also converts to an empty Lexical root
+    if (!html || html.trim() === '') {
+        return '';
+    }
+
+    if (!html.includes('<!--')) {
+        return html;
     }
 
     const cleaned = domUtils.processFragment(html, parsed => {
