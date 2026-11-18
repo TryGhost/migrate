@@ -19,8 +19,18 @@ const listInputFiles = async (input, globPattern) => {
     }
     const paths = [];
     for await (const entry of glob(globPattern, {cwd: path, withFileTypes: true})) {
-        if (entry.isFile()) {
-            paths.push(resolve(entry.parentPath, entry.name));
+        const file = resolve(entry.parentPath, entry.name);
+        let target = entry;
+        if (entry.isSymbolicLink()) {
+            try {
+                target = await stat(file);
+            } catch {
+                // Skip links whose targets cannot be resolved.
+                continue;
+            }
+        }
+        if (target.isFile()) {
+            paths.push(file);
         }
     }
     paths.sort();
