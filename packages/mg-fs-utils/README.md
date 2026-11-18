@@ -58,7 +58,7 @@ const files = await fsUtils.listInputFiles('/path/to/exports', '*.zip');
 // [{path: '/path/to/exports/a.zip', name: 'a.zip'}, {path: '/path/to/exports/b.zip', name: 'b.zip'}]
 ```
 
-A file gives itself, named by its base name. A directory gives the files matching the [fast-glob](https://github.com/mrmlnc/fast-glob) pattern, sorted by path, named by their path relative to the directory with `/` separators. Hidden files are left out, a directory with no matches gives an empty list, and a missing path rejects with `ENOENT`.
+A file gives itself, named by its base name. A directory gives the files matching the glob pattern, sorted by path, named by their path relative to the directory with `/` separators. Directory scans use Node’s built-in globbing and include symlinks to regular files under the link’s own name. Broken links are skipped. Recursive patterns can omit files beneath symlinked directories. Hidden files are skipped by default. A directory with no matches gives an empty list, and a missing path rejects with `ENOENT`.
 
 
 ## Develop
