@@ -11,8 +11,6 @@ minimumReleaseAgeExclude:
 overrides:
   "glob@>=9.0.0 <=14.0.1": "14.0.6"
   "minimatch@>=7.0.0 <11.0.1": "11.0.8"
-  # The patch below replaces trim with native string methods.
-  "remark-parse@7.0.2>trim": "-"
   parse-link-header: "^2.0.0"
   form-data: "^4.0.6"
   "js-yaml@3": "5.5.0"
@@ -21,8 +19,8 @@ catalog:
   "@tryghost/admin-api": "1.14.16"
   "@tryghost/debug": "2.3.23"
   "@tryghost/errors": "3.4.8"
-  "@tryghost/kg-default-cards": "10.3.10"
-  "@tryghost/kg-html-to-lexical": "1.4.4"
+  "@tryghost/kg-default-cards": "10.3.11"
+  "@tryghost/kg-html-to-lexical": "1.4.5"
   "@tryghost/pretty-cli": "3.4.4"
   "@tryghost/string": "0.3.10"
   "@types/node": "24.19.2"
@@ -49,4 +47,3 @@ allowBuilds:
   sharp: true
 patchedDependencies:
   nx@24.0.6: patches/nx@24.0.6.patch
-  remark-parse@7.0.2: patches/remark-parse@7.0.2.patch
