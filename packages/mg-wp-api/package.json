@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@tryghost/errors": "catalog:",
+    "@tryghost/mg-clean-html": "workspace:*",
     "@tryghost/mg-context": "workspace:*",
     "@tryghost/mg-fs-utils": "workspace:*",
     "@tryghost/mg-ghost-authors": "workspace:*",
