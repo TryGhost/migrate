@@ -12,6 +12,7 @@ describe('listInputFiles', function () {
         directory = await mkdtemp(join(tmpdir(), 'list-input-files-test-'));
         await mkdir(join(directory, 'nested'));
         await mkdir(join(directory, 'empty'));
+        await mkdir(join(directory, 'directory.zip'));
         for (const name of ['b.zip', 'a.zip', 'nested/c.zip', 'notes.txt', '.hidden.zip']) {
             await writeFile(join(directory, name), name);
         }
@@ -28,7 +29,7 @@ describe('listInputFiles', function () {
         ]);
     });
 
-    it('returns the files in a directory matching the pattern, sorted, without hidden files', async function () {
+    it('returns the files in a directory matching the pattern, sorted, without hidden files or matching directories', async function () {
         assert.deepEqual(await listInputFiles(directory, '*.zip'), [
             {path: join(directory, 'a.zip'), name: 'a.zip'},
             {path: join(directory, 'b.zip'), name: 'b.zip'}
