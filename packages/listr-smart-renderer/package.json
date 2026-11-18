@@ -31,7 +31,7 @@
     "chalk": "catalog:",
     "cli-truncate": "6.2.0",
     "elegant-spinner": "3.0.0",
-    "indent-string": "5.0.0",
+    "indent-string": "6.0.0",
     "listr2": "catalog:",
     "log-symbols": "7.0.1",
     "log-update": "catalog:",

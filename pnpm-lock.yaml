@@ -288,8 +288,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       indent-string:
-        specifier: 5.0.0
-        version: 5.0.0
+        specifier: 6.0.0
+        version: 6.0.0
       listr2:
         specifier: 'catalog:'
         version: 11.4.1
@@ -5165,9 +5165,9 @@ packages:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
     engines: {node: '>=6'}
 
-  indent-string@5.0.0:
-    resolution: {integrity: sha512-m6FAo/spmsW2Ab2fU35JTYwtOKa2yAwXSwgjSv1TJzh4Mh7mC3lzAOVLBprb72XsTrgkEIsl7YrFNAiDiRhIGg==}
-    engines: {node: '>=12'}
+  indent-string@6.0.0:
+    resolution: {integrity: sha512-ZMCYzmA/BncvpLUiwm2fWEpw885/IVMse/dB+VfxiRNmRWjO2Oj0BJYFhcT9ov5xbpYZwynBu3tl6RT5CJP2Ag==}
+    engines: {node: '>=22'}
 
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
@@ -10317,7 +10317,7 @@ snapshots:
       parent-module: 1.0.1
       resolve-from: 4.0.0
 
-  indent-string@5.0.0: {}
+  indent-string@6.0.0: {}
 
   inherits@2.0.4: {}
 
