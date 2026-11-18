@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-medium-export",
-  "version": "0.28.2",
+  "version": "0.28.3",
   "description": "Migrate content from a Medium export to Ghost",
   "repository": {
     "type": "git",
