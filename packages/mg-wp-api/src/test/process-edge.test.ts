@@ -157,6 +157,44 @@ describe('Content edge cases', function () {
         assert.equal(await processContent({html: '<!-- wp:paragraph -->\n<!-- /wp:paragraph -->'}), '');
     });
 
+    it('adds a fallback paragraph when the HTML contains no visible content or Ghost card', async function () {
+        for (const html of [
+            '<!--kg-card-end: html-->',
+            '<!--kg-card-begin: embed--><!--kg-card-end: embed-->',
+            '<div><span> \n</span></div>',
+            '<div><br></div>',
+            '<script type="application/json">{"label":"Pay now"}</script>',
+            '<section hidden><img src="https://example.com/hidden.jpg">Hidden text</section>',
+            '<section style="display:none">Hidden text</section>',
+            '<input type="hidden" value="9707">',
+            '<iframe></iframe>'
+        ]) {
+            assert.equal(await processContent({html}), html + '<p></p>');
+        }
+        assert.equal(await processContent({html: '<div><!-- wp:jetpack/donations /--></div>'}), '<div></div><p></p>');
+    });
+
+    it('keeps text, media and Ghost cards without adding a fallback paragraph', async function () {
+        const block = '<div><!-- wp:jetpack/button /--></div>';
+        for (const content of [
+            'Opening sentence.',
+            '<p></p>',
+            '<img src="https://example.com/photo.jpg">',
+            '<iframe src="https://example.com/widget"></iframe>',
+            '<hr>',
+            '<div><br><br></div>',
+            '<div>&nbsp;</div>',
+            '<ul></ul>',
+            '<div class="kg-card kg-button-card"><a class="kg-btn" href="/go"></a></div>',
+            '<!--kg-card-begin: html--><div></div><!--kg-card-end: html-->',
+            '<section><!-- kg-card-begin: html --><div></div><!-- kg-card-end: html --></section>',
+            '<!--members-only-->'
+        ]) {
+            const html = block + content;
+            assert.equal(await processContent({html}), '<div></div>' + content);
+        }
+    });
+
     it('removes a leading feature image even when it is the first element', async function () {
         const html = await processContent({
             html: '<img src="https://example.com/image-300x200.jpg"><p>Body</p>',

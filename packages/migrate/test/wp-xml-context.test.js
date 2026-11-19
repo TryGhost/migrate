@@ -6,6 +6,7 @@ import {join} from 'node:path';
 import {Readable} from 'node:stream';
 import nock from 'nock';
 import fsUtils from '@tryghost/mg-fs-utils';
+import {htmlToLexical} from '@tryghost/mg-html-lexical';
 import source from '../sources/wp-xml.js';
 import {MigrateContext, PostContext} from '@tryghost/mg-context';
 import AssetScraper from '@tryghost/mg-assetscraper-db';
@@ -43,6 +44,22 @@ describe('WordPress context pipeline', () => {
         assert.equal(command.defaults.rereadSource, false);
         assert.equal(command.defaults.report, false);
         assert.equal('fallBackHTMLCard' in command.defaults, false);
+    });
+
+    it('exports empty Jetpack blocks as HTML that converts to one empty Lexical paragraph', async t => {
+        const fx = await setup(await readFile(new URL('./fixtures/wp-empty-jetpack-blocks.xml', import.meta.url)));
+        t.after(() => rm(fx.directory, {recursive: true, force: true}));
+
+        const context = {};
+        await source.getTaskRunner({...fx.options, zip: false}).run(context);
+        const {data} = JSON.parse(await readFile(join(context.importDirectory, 'ghost-import.json'), 'utf8'));
+        const [{html}] = data.posts;
+        assert.doesNotMatch(html, /<!--/);
+        assert.match(html, /<p><\/p>\s*$/);
+        const {children} = htmlToLexical(html).root;
+        assert.equal(children.length, 1);
+        assert.equal(children[0].type, 'paragraph');
+        assert.deepEqual(children[0].children, []);
     });
 
     it('writes no report or failed report unless asked, and uploads only the ZIP', async () => {

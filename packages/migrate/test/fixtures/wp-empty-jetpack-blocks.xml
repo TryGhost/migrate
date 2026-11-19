@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:wp="http://wordpress.org/export/1.2/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <link>https://example.com</link>
+    <item>
+      <title>(Untitled)</title>
+      <link>https://example.com/?page_id=9707</link>
+      <wp:post_id>9707</wp:post_id>
+      <wp:post_type>page</wp:post_type>
+      <wp:status>draft</wp:status>
+      <wp:post_date_gmt>2024-10-14 18:25:17</wp:post_date_gmt>
+      <content:encoded><![CDATA[<!-- wp:jetpack/payment-buttons -->
+<div class="wp-block-jetpack-payment-buttons"><!-- wp:jetpack/recurring-payments {"url":"https://example.com/?page_id=9707\u0026recurring_payments=undefined","uniqueId":"recurring-payments-undefined"} -->
+<div class="wp-block-jetpack-recurring-payments"><!-- wp:jetpack/button {"element":"a","uniqueId":"recurring-payments-undefined","passthroughAttributes":{"uniqueId":"uniqueId","url":"url"},"url":"https://example.com/?page_id=9707\u0026recurring_payments=undefined"} /--></div>
+<!-- /wp:jetpack/recurring-payments --></div>
+<!-- /wp:jetpack/payment-buttons -->
+
+<!-- wp:jetpack/donations {"fallbackLinkUrl":"https://example.com/?page_id=9707"} /-->]]></content:encoded>
+    </item>
+  </channel>
+</rss>

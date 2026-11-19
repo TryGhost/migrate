@@ -5,7 +5,8 @@ const {isComment, getCommentData} = domUtils;
 const removeCommentNodes = (node: Node): void => {
     for (const child of Array.from(node.childNodes)) {
         if (isComment(child)) {
-            if (!getCommentData(child).trim().startsWith('kg-')) {
+            const marker = getCommentData(child).trim();
+            if (!marker.startsWith('kg-') && marker !== 'members-only') {
                 child.remove();
             }
         } else {
@@ -14,14 +15,20 @@ const removeCommentNodes = (node: Node): void => {
     }
 };
 
+const cleanFragment = (parsed: domUtils.ParsedFragment): string => {
+    removeCommentNodes(parsed.body);
+    const cleaned = parsed.html();
+    return cleaned.trim() === '' ? '' : cleaned;
+};
+
 /**
- * Remove every HTML comment except Koenig card markers (comments starting with `kg-`, such as
- * `<!--kg-card-begin: html-->`). Content made of only comments (e.g. WordPress block comments
- * like `<!-- wp:paragraph -->`) converts to an empty Lexical root, which Ghost rejects, whereas
- * an empty string imports fine. If nothing but whitespace remains, an empty string is returned.
+ * Strip ordinary comments, preserving Koenig markers and the members-only paywall.
+ * A supplied fragment is cleaned in place. Return an empty string for a blank body.
  */
-const removeNonKoenigComments = (html?: string | null): string => {
-    // Whitespace-only content also converts to an empty Lexical root
+const removeNonKoenigComments = (html?: string | domUtils.ParsedFragment | null): string => {
+    if (html && typeof html !== 'string') {
+        return cleanFragment(html);
+    }
     if (!html || html.trim() === '') {
         return '';
     }
@@ -30,12 +37,7 @@ const removeNonKoenigComments = (html?: string | null): string => {
         return html;
     }
 
-    const cleaned = domUtils.processFragment(html, parsed => {
-        removeCommentNodes(parsed.body);
-        return parsed.html();
-    });
-
-    return cleaned.trim() === '' ? '' : cleaned;
+    return domUtils.processFragment(html, cleanFragment);
 };
 
 export {removeNonKoenigComments};

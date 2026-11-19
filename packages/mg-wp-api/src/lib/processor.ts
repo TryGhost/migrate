@@ -653,6 +653,31 @@ export interface ProcessContentArgs {
     options?: WpApiOptions;
 }
 
+const hasGhostContent = (node: Node): boolean => {
+    if (node.nodeType === 3) {
+        // HTML collapses ASCII whitespace, but a non-breaking space occupies space.
+        return /[^\t\n\f\r ]/.test((node as Text).data);
+    }
+    if (node.nodeType !== 1) {
+        // HTML-card openers and paywall markers create nodes on their own.
+        const marker = getCommentData(node).trim();
+        return marker === 'members-only' || /^kg-card-begin:\s?html$/.test(marker);
+    }
+
+    const el = node as HTMLElement;
+    if (el.matches('script, style, template, head, title, [hidden]') || el.style.display === 'none') {
+        return false;
+    }
+    if (el.tagName === 'IFRAME') {
+        return /^(?:https?:)?\/\//i.test(el.getAttribute('src') || '');
+    }
+    // These elements already produce editor content even without text.
+    return (
+        el.matches('p, img, hr, br + br, table, ul, ol, li, blockquote, h1, h2, h3, h4, h5, h6, div.kg-button-card') ||
+        Array.from(el.childNodes).some(hasGhostContent)
+    );
+};
+
 const processContent = async ({
     html,
     excerptSelector,
@@ -1369,12 +1394,8 @@ const processContent = async ({
         }
     }
 
-    // convert HTML back to a string
-    html = parsed.html();
-
-    // Remove non-Koenig comments (e.g. Gutenberg's `<!-- wp:paragraph -->`). Content that is only
-    // comments converts to an empty Lexical root, which Ghost rejects, but an empty string imports fine.
-    return removeNonKoenigComments(html);
+    const cleaned = removeNonKoenigComments(parsed);
+    return cleaned && !hasGhostContent(parsed.body) ? cleaned + '<p></p>' : cleaned;
 };
 
 /**

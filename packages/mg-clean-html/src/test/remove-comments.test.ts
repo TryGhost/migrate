@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
+import {domUtils} from '@tryghost/mg-utils';
 import {removeNonKoenigComments} from '../index.js';
 
 describe('removeNonKoenigComments', function () {
@@ -27,6 +28,13 @@ describe('removeNonKoenigComments', function () {
             removeNonKoenigComments(html),
             '<!--kg-card-begin: html--><div>Card</div><!--kg-card-end: html-->'
         );
+    });
+
+    it('Preserves the paywall when cleaning an existing fragment in place', function () {
+        domUtils.processFragment('<!-- wp:more --><!--members-only--><!-- /wp:more -->', parsed => {
+            assert.equal(removeNonKoenigComments(parsed), '<!--members-only-->');
+            assert.equal(parsed.html(), '<!--members-only-->');
+        });
     });
 
     it('Returns an empty string when only comments and whitespace remain', function () {
