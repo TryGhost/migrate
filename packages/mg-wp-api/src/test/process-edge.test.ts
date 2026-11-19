@@ -208,6 +208,23 @@ describe('Content edge cases', function () {
         assert.ok(kept.includes('alt="no source"'));
     });
 
+    it('keeps a matching feature image alongside opening text or other images', async function () {
+        const featureImageSrc = 'https://example.com/feature.jpg';
+        const image = `<img src="${featureImageSrc}">`;
+        for (const html of [
+            `<p>${image}Opening sentence.</p><p>Next paragraph.</p>`,
+            `<p>${image}<img src="https://example.com/second.jpg"></p>`
+        ]) {
+            assert.equal(await processContent({html, featureImageSrc}), html);
+        }
+    });
+
+    it('removes a standalone feature image inside nested wrappers with whitespace', async function () {
+        const featureImageSrc = 'https://example.com/feature.jpg';
+        const html = `<figure>\n<a href="/original"><img src="${featureImageSrc}"></a>\n</figure><p>Body</p>`;
+        assert.equal(await processContent({html, featureImageSrc}), '<p>Body</p>');
+    });
+
     it('removes unwanted embeds, tables of contents, styles and inline weights', async function () {
         const html = await processContent({
             html: '<p>Tweet<script src="https://platform.twitter.com/widgets.js"></script></p><div id="toc_container">TOC</div><style>p{}</style><p style="font-weight: 400;">Text</p><script src="//platform.instagram.com/en_US/embeds.js"></script><script>a</script><div id="fb-root"></div><script>b</script>'

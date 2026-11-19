@@ -705,31 +705,19 @@ const processContent = async ({
 
     const parsed = parseFragment(html);
 
-    // If the first content element is (or contains) an image that matches the feature image, remove it
-    if (featureImageSrc) {
-        let firstElement = parsed.body.firstElementChild;
-
-        if (firstElement) {
-            let isImg = firstElement.tagName.toLowerCase() === 'img';
-            let hasImg = firstElement.querySelector('img');
-
-            if (isImg || hasImg) {
-                let theElementItself = isImg ? firstElement : hasImg!;
-                let imgSrc = theElementItself.getAttribute('src');
-
-                if (imgSrc) {
-                    // Match largerSrc: strip WordPress size suffix (e.g. -100x100 or -10000x5000) and normalise protocol
-                    let imgSrcNoSize = imgSrc
-                        .replace('http://', 'https://')
-                        .replace(/(?:-\d{2,}x\d{2,})(\.\w+)$/gi, '$1');
-                    let featureImageSrcNoSize = featureImageSrc
-                        .replace('http://', 'https://')
-                        .replace(/(?:-\d{2,}x\d{2,})(\.\w+)$/gi, '$1');
-
-                    if (featureImageSrcNoSize === imgSrcNoSize) {
-                        firstElement.remove();
-                    }
-                }
+    // Only deduplicate a leading block whose sole content is the feature image.
+    const firstElement = parsed.body.firstElementChild;
+    if (featureImageSrc && firstElement) {
+        let element = firstElement;
+        while (element.children.length === 1) {
+            element = element.children[0];
+        }
+        if (element.matches('img') && !firstElement.textContent.trim()) {
+            const src = element.getAttribute('src');
+            const normalizeSrc = (url: string) =>
+                url.replace('http://', 'https://').replace(/(?:-\d{2,}x\d{2,})(\.\w+)$/gi, '$1');
+            if (src && normalizeSrc(src) === normalizeSrc(featureImageSrc)) {
+                firstElement.remove();
             }
         }
     }
