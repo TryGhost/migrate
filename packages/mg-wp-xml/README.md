@@ -52,6 +52,7 @@ HTML replaces the old Lexical output stage. `--fallBackHTMLCard` has been remove
 | `--excerpt` | `true` | Use WordPress excerpts |
 | `--excerptSelector` | unset | Extract an excerpt from matching content |
 | `--featureImageCaption` | `true` | Include attachment captions |
+| `--removeDuplicateFeatureImage` | `true` | Set to `false` to keep a standalone opening image that matches the featured image |
 | `--rawHtml` | `false` | Wrap content in an HTML card |
 | `--removeSelectors` | unset | Remove matching HTML elements |
 | `--convertLibsynEmbed` | `false` | Convert Libsyn embeds to audio cards |

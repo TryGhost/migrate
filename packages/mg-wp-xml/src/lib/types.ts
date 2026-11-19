@@ -12,6 +12,7 @@ export interface WordPressOptions {
     postsAfter?: string | null;
     rawHtml?: boolean;
     featureImageCaption?: boolean;
+    removeDuplicateFeatureImage?: boolean;
     excerpt?: boolean;
     excerptSelector?: string | null;
     url?: string;

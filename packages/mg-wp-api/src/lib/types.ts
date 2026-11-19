@@ -27,6 +27,7 @@ export interface WpApiOptions {
     excerptSelector?: string | false | null;
     featureImage?: string;
     featureImageCaption?: boolean;
+    removeDuplicateFeatureImage?: boolean;
     customTaxonomies?: string[] | null;
     cpt?: string[] | null;
     rawHtml?: boolean;

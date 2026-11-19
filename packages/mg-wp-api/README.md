@@ -98,6 +98,8 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--featureImageCaption`**
     - bool - default: `true`
     - Include featured image captions
+- **`--removeDuplicateFeatureImage`**
+    - Defaults to `true`. Pass `--removeDuplicateFeatureImage false` to keep a standalone opening image that matches the featured image.
 - **`--datedPermalinks`** 
     - Set the dated permalink structure. `/*/` matches any prefix, such as `/articles/2018/05/` or `/blog-posts/2018/05/`
     - string - default: `none` 

@@ -7,6 +7,7 @@ import {Readable} from 'node:stream';
 import nock from 'nock';
 import fsUtils from '@tryghost/mg-fs-utils';
 import {htmlToLexical} from '@tryghost/mg-html-lexical';
+import {domUtils} from '@tryghost/mg-utils';
 import source from '../sources/wp-xml.js';
 import {MigrateContext, PostContext} from '@tryghost/mg-context';
 import AssetScraper from '@tryghost/mg-assetscraper-db';
@@ -43,6 +44,7 @@ describe('WordPress context pipeline', () => {
         assert.equal(command.defaults.postsPerFile, 2000);
         assert.equal(command.defaults.rereadSource, false);
         assert.equal(command.defaults.report, false);
+        assert.equal(command.defaults.removeDuplicateFeatureImage, true);
         assert.equal('fallBackHTMLCard' in command.defaults, false);
     });
 
@@ -60,6 +62,42 @@ describe('WordPress context pipeline', () => {
         assert.equal(children.length, 1);
         assert.equal(children[0].type, 'paragraph');
         assert.deepEqual(children[0].children, []);
+    });
+
+    it('exports the inline image and opening paragraph when replaying XML with feature image removal on or off', async t => {
+        const fx = await setup(await readFile(new URL('./fixtures/wp-leading-feature-images.xml', import.meta.url)));
+        t.after(() => rm(fx.directory, {recursive: true, force: true}));
+        const image = 'https://example.com/NewIPSO.jpg';
+
+        for (const options of [{}, {removeDuplicateFeatureImage: false}, {removeDuplicateFeatureImage: true}]) {
+            const context = {};
+            await source.getTaskRunner({...fx.options, zip: false, ...options}).run(context);
+            const {data} = JSON.parse(await readFile(join(context.importDirectory, 'ghost-import.json'), 'utf8'));
+            const inline = data.posts.find(post => post.title === 'Inline image');
+            const standalone = data.posts.find(post => post.title === 'Standalone image');
+            assert.equal(inline.feature_image, image);
+            assert.equal(standalone.feature_image, image);
+
+            domUtils.processFragment(inline.html, doc => {
+                const paragraphs = doc.$('p');
+                assert.deepEqual(
+                    paragraphs.map(p => p.textContent),
+                    [
+                        'A city news website has been ordered to publish a correction.',
+                        'As previously reported, another title was censured.'
+                    ]
+                );
+                assert.equal(paragraphs[0].firstChild.getAttribute('src'), image);
+                assert.equal(paragraphs[1].querySelector('a').getAttribute('href'), 'https://example.org/report/');
+            });
+            domUtils.processFragment(standalone.html, doc => {
+                assert.equal(doc.text().trim(), 'Opening paragraph.');
+                assert.deepEqual(
+                    doc.$('img').map(img => img.getAttribute('src')),
+                    options.removeDuplicateFeatureImage === false ? [image] : []
+                );
+            });
+        }
     });
 
     it('writes no report or failed report unless asked, and uploads only the ZIP', async () => {

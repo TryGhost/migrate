@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:wp="http://wordpress.org/export/1.2/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <link>https://example.com</link>
+    <item>
+      <title>Inline image</title>
+      <link>https://example.com/inline-image/</link>
+      <wp:post_id>1</wp:post_id>
+      <wp:post_type>post</wp:post_type>
+      <wp:status>publish</wp:status>
+      <wp:post_date_gmt>2026-01-01 10:00:00</wp:post_date_gmt>
+      <wp:postmeta><wp:meta_key>_thumbnail_id</wp:meta_key><wp:meta_value>1718839</wp:meta_value></wp:postmeta>
+      <content:encoded><![CDATA[<img class=" size-full wp-image-1718839 alignleft" src="https://example.com/NewIPSO.jpg" alt="NewIPSO" width="200" height="200" />A city news website has been ordered to publish a correction.
+
+<a href="https://example.org/report/">As previously reported,</a> another title was censured.]]></content:encoded>
+    </item>
+    <item>
+      <title>Standalone image</title>
+      <link>https://example.com/standalone-image/</link>
+      <wp:post_id>2</wp:post_id>
+      <wp:post_type>post</wp:post_type>
+      <wp:status>publish</wp:status>
+      <wp:post_date_gmt>2026-01-02 10:00:00</wp:post_date_gmt>
+      <wp:postmeta><wp:meta_key>_thumbnail_id</wp:meta_key><wp:meta_value>1718839</wp:meta_value></wp:postmeta>
+      <content:encoded><![CDATA[<img src="https://example.com/NewIPSO.jpg" />
+
+Opening paragraph.]]></content:encoded>
+    </item>
+    <item>
+      <wp:post_id>1718839</wp:post_id>
+      <wp:post_type>attachment</wp:post_type>
+      <wp:attachment_url>https://example.com/NewIPSO.jpg</wp:attachment_url>
+    </item>
+  </channel>
+</rss>

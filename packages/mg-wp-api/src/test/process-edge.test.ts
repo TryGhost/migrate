@@ -219,10 +219,36 @@ describe('Content edge cases', function () {
         }
     });
 
-    it('removes a standalone feature image inside nested wrappers with whitespace', async function () {
+    it('keeps a linked feature image with text outside the link and a figure with a caption', async function () {
+        const featureImageSrc = 'https://example.com/feature.jpg';
+        const linked = `<a href="/original"><img src="${featureImageSrc}"></a>`;
+        for (const html of [
+            `<p>Opening sentence. ${linked}</p>`,
+            `<div><p>${linked} More text.</p></div>`,
+            `<figure>${linked}<figcaption>Photo credit</figcaption></figure>`
+        ]) {
+            assert.equal(await processContent({html, featureImageSrc}), html);
+        }
+    });
+
+    it('removes only the leading match and keeps a different opening image', async function () {
+        const featureImageSrc = 'https://example.com/feature.jpg';
+        const duplicate = `<img src="${featureImageSrc}">`;
+        const body = `<p>Body</p>${duplicate}`;
+        assert.equal(await processContent({html: duplicate + body, featureImageSrc}), body);
+        const different = `<img src="https://example.com/other.jpg">${body}`;
+        assert.equal(await processContent({html: different, featureImageSrc}), different);
+        assert.equal(await processContent({html: duplicate + body}), duplicate + body);
+    });
+
+    it('removes a standalone feature image inside nested wrappers by default and keeps it when disabled', async function () {
         const featureImageSrc = 'https://example.com/feature.jpg';
         const html = `<figure>\n<a href="/original"><img src="${featureImageSrc}"></a>\n</figure><p>Body</p>`;
         assert.equal(await processContent({html, featureImageSrc}), '<p>Body</p>');
+        assert.equal(
+            await processContent({html, featureImageSrc, options: {removeDuplicateFeatureImage: false}}),
+            html
+        );
     });
 
     it('removes unwanted embeds, tables of contents, styles and inline weights', async function () {

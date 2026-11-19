@@ -140,6 +140,12 @@ const options = [
         desc: 'Include featured image captions'
     },
     {
+        type: 'boolean',
+        flags: '--removeDuplicateFeatureImage',
+        defaultValue: true,
+        desc: 'Remove a standalone opening image that matches the featured image'
+    },
+    {
         type: 'string',
         flags: '--removeSelectors',
         defaultValue: null,

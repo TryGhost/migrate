@@ -707,7 +707,7 @@ const processContent = async ({
 
     // Only deduplicate a leading block whose sole content is the feature image.
     const firstElement = parsed.body.firstElementChild;
-    if (featureImageSrc && firstElement) {
+    if (options.removeDuplicateFeatureImage !== false && featureImageSrc && firstElement) {
         let element = firstElement;
         while (element.children.length === 1) {
             element = element.children[0];

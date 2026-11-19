@@ -95,7 +95,39 @@ describe('WordPress API context pipeline', () => {
         assert.equal(command.defaults.postsPerFile, 2000);
         assert.equal(command.defaults.cacheName, null);
         assert.equal(command.defaults.report, false);
+        assert.equal(command.defaults.removeDuplicateFeatureImage, true);
         assert.equal('fallBackHTMLCard' in command.defaults, false);
+    });
+
+    it('keeps both copies of featured media in the exported body when removal is disabled', async t => {
+        const fx = await setup();
+        t.after(() => rm(fx.directory, {recursive: true, force: true}));
+        const image = `${SITE}/photo.jpg`;
+        const standalone = `<p><img src="${image}"></p>`;
+        const inline = `<p><img src="${image}">Opening sentence.</p>`;
+        wordpress({
+            posts: [
+                post(1, {
+                    content: {rendered: standalone + inline},
+                    featured_media: 10,
+                    _embedded: {'wp:featuredmedia': [{source_url: image}]}
+                })
+            ],
+            users: [user]
+        });
+
+        for (const [removeDuplicateFeatureImage, expected] of [
+            [true, inline],
+            [false, standalone + inline]
+        ]) {
+            const context = {};
+            await source
+                .getTaskRunner({...fx.options, featureImage: 'featuredmedia', removeDuplicateFeatureImage, zip: false})
+                .run(context);
+            const {data} = JSON.parse(await readFile(join(context.importDirectory, 'ghost-import.json'), 'utf8'));
+            assert.equal(data.posts[0].html, expected);
+            assert.equal(data.posts[0].feature_image, image);
+        }
     });
 
     it('writes no report or failed report unless asked', async () => {
