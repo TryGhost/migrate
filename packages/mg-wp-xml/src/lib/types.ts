@@ -10,6 +10,7 @@ export interface WordPressOptions {
     addTag?: string | null;
     postsBefore?: string | null;
     postsAfter?: string | null;
+    updatedAfter?: string | null;
     rawHtml?: boolean;
     featureImageCaption?: boolean;
     removeDuplicateFeatureImage?: boolean;

@@ -62,6 +62,33 @@ it('replays original records with new filters/options, stable IDs, fresh associa
         assert.deepEqual(await map({postsBefore: '2020-01-01'}, fx.context), {selected: 0, imported: 0, skipped: 0});
         await assert.rejects(map({postsBefore: 'bad'}, fx.context), /Invalid postsBefore/);
         await assert.rejects(map({postsAfter: 'bad'}, fx.context), /Invalid postsAfter/);
+        await assert.rejects(map({updatedAfter: 'bad'}, fx.context), /Invalid updatedAfter/);
+    } finally {
+        await fx.close();
+    }
+});
+
+it('filters by last modified date regardless of publish date', async () => {
+    const fx = await setup({
+        'source.xml': wrap(
+            // Published long ago, updated after the cutoff
+            item('1', '<wp:post_modified_gmt>2026-06-01 00:00:00</wp:post_modified_gmt>') +
+                // Published and last updated before the cutoff
+                item('2', '<wp:post_modified_gmt>2026-05-14 23:59:59</wp:post_modified_gmt>') +
+                // Updated exactly at the cutoff
+                item('3', '<wp:post_modified_gmt>2026-05-15 00:00:00</wp:post_modified_gmt>') +
+                // No modified date falls back to the publish date (2024-01-02)
+                item('4')
+        )
+    });
+    try {
+        await fx.ingest();
+        assert.equal((await map({updatedAfter: '2026-05-15'}, fx.context)).imported, 2);
+        assert.deepEqual(
+            (await fx.context.getAllPosts()).map(post => post.data.updated_at),
+            [new Date('2026-06-01T00:00:00Z'), new Date('2026-05-15T00:00:00Z')]
+        );
+        assert.equal((await map({updatedAfter: '2024-01-01'}, fx.context)).imported, 4);
     } finally {
         await fx.close();
     }

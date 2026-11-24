@@ -141,7 +141,7 @@ export async function map(
         throw new Error('Ingest complete WordPress source data before mapping.');
     }
     const {url: siteUrl, site} = await sourceSite(context);
-    for (const name of ['postsBefore', 'postsAfter']) {
+    for (const name of ['postsBefore', 'postsAfter', 'updatedAfter']) {
         if (options[name] && !Number.isFinite(Date.parse(options[name]))) {
             throw new Error(`Invalid ${name} date: ${options[name]}`);
         }
@@ -163,11 +163,14 @@ export async function map(
             if (!selected(item, options)) {
                 return false;
             }
-            const date = postDates(item).published;
+            const {published: date, modified} = postDates(item);
             if (!date) {
                 throw new RecordDataError('Invalid WordPress publication date');
             }
             if (options.postsAfter && date <= new Date(options.postsAfter)) {
+                return false;
+            }
+            if (options.updatedAfter && modified! < new Date(options.updatedAfter)) {
                 return false;
             }
             if (options.postsBefore) {

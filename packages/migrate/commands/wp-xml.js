@@ -104,6 +104,12 @@ const options = [
         desc: "Only migrate posts after and including a given date e.g. 'August 16 2021'"
     },
     {
+        type: 'string',
+        flags: '--updatedAfter',
+        defaultValue: null,
+        desc: 'Only migrate posts last updated on or after a given date, regardless of publish date, e.g. 2026-05-15'
+    },
+    {
         type: 'boolean',
         flags: '--rawHtml',
         defaultValue: false,

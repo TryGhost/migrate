@@ -111,6 +111,9 @@ It's possible to pass more options, in order to achieve a better migration file 
 - **`--postsAfter`** 
     - Only migrate posts after and including a given date e.g. 'August 16 2023'
     - string - default: `null`
+- **`--updatedAfter`** 
+    - Only migrate posts last updated on or after a given date, regardless of publish date, e.g. `2026-05-15`. Uses the REST API's `modified_after` filter (WordPress 5.7+)
+    - string - default: `null`
 - **`--cpt`** 
     - A comma-separated list of custom post type REST routes e.g. `resources,newsletters`
     - array - default: `null`
@@ -182,7 +185,7 @@ The API responses are stored as JSON source records in an `mg-context` SQLite da
 
 What is fetched and what is mapped are separate:
 
-- **The fetch** always requests posts, pages and users, plus the `--cpt` routes. `--postsBefore` and `--postsAfter` are sent to the API, and `--maxPosts` and `--batch` fetch only the pages they need. With `--batch`, each posts, pages or custom post type page is one batch, and every user page is always fetched so authors stay complete.
+- **The fetch** always requests posts, pages and users, plus the `--cpt` routes. `--postsBefore`, `--postsAfter` and `--updatedAfter` are sent to the API, and `--maxPosts` and `--batch` fetch only the pages they need. With `--batch`, each posts, pages or custom post type page is one batch, and every user page is always fetched so authors stay complete.
 - **The map** applies `--posts`, `--pages`, `--cpt`, `--maxPosts`, `--onlyURLs`, `--addTag` and every content option to the stored records, so changing them needs no new fetch. Narrowing works on stored data; widening a fetch option (a later `--postsAfter`, a larger `--maxPosts`, another `--cpt` route) needs the source fetched again.
 
 Ghost IDs derive from the site, entity kind and source key, so they stay the same across remapping. Tags are identified by their WordPress taxonomy and term ID; distinct terms that want the same slug get deterministic suffixes. Authors are identified by WordPress user ID, or by co-author term slug or Parse.ly name when no user exists. Authors whose email matches an existing Ghost user keep that user's Ghost ID.
@@ -217,7 +220,7 @@ try {
 }
 ```
 
-- `ingest(url, context, options)` fetches the API one page at a time inside `context.sources.ingest()`. Options are `replace`, `batch`, `limit`, `cpt`, `postsBefore`, `postsAfter`, `maxPosts`, `apiUser` (`{username, password}`), `usersJSON`, `trustSelfSignedCert` and `onProgress(title)`. Explicit `replace: true` is required when completed source data exists.
+- `ingest(url, context, options)` fetches the API one page at a time inside `context.sources.ingest()`. Options are `replace`, `batch`, `limit`, `cpt`, `postsBefore`, `postsAfter`, `updatedAfter`, `maxPosts`, `apiUser` (`{username, password}`), `usersJSON`, `trustSelfSignedCert` and `onProgress(title)`. Explicit `replace: true` is required when completed source data exists.
 - `parse(url, options)` yields the same records as `SourceRecordInput` values, page by page, without storing them.
 - `map(options, context, {fileCache?, ghostUsers?})` rebuilds mapped content and returns `{selected, imported, skipped}`. `ghostUsers` may be an iterable or async iterable of existing Ghost users to match by email. Records with invalid dates or URLs, or more than 500 tags or authors, are skipped with a `record:skipped` diagnostic.
 - `sourceSite(context)` returns the stored site URL.

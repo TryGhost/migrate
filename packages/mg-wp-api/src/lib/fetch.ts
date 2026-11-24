@@ -16,6 +16,7 @@ export interface DiscoverOptions {
     cpt?: string[] | null;
     postsBefore?: string | null;
     postsAfter?: string | null;
+    updatedAfter?: string | null;
 }
 
 export interface DiscoverResult {
@@ -30,6 +31,7 @@ export interface FetchOptions {
     cpt?: string[] | null;
     postsBefore?: string | null;
     postsAfter?: string | null;
+    updatedAfter?: string | null;
     maxPosts?: number;
     trustSelfSignedCert?: boolean;
 }
@@ -54,19 +56,23 @@ export interface FetchTask {
 const hasAuth = (apiUser?: ApiUser | null): apiUser is Required<ApiUser> =>
     Boolean(apiUser?.username && apiUser?.password);
 
-const dated = (request: any, {postsBefore, postsAfter}: FetchOptions): any => {
+const dated = (request: any, {postsBefore, postsAfter, updatedAfter}: FetchOptions): any => {
     if (postsBefore) {
         request = request.before(new Date(postsBefore));
     }
     if (postsAfter) {
         request = request.after(new Date(postsAfter));
     }
+    if (updatedAfter) {
+        // `modified_after` is a native REST API filter (WordPress 5.7+).
+        request = request.param('modified_after', new Date(updatedAfter).toISOString());
+    }
     return request;
 };
 
 const discover = async (
     url: string,
-    {apiUser, usersJSON, posts, pages, limit, cpt, postsBefore, postsAfter}: DiscoverOptions
+    {apiUser, usersJSON, posts, pages, limit, cpt, postsBefore, postsAfter, updatedAfter}: DiscoverOptions
 ): Promise<DiscoverResult> => {
     const requestOptions: Record<string, string | boolean> = {endpoint: `${url}/wp-json`};
 
@@ -90,7 +96,7 @@ const discover = async (
         await count(cptSlug, site[cptSlug]());
     }
     if (posts) {
-        await count('posts', dated(site.posts(), {postsBefore, postsAfter}));
+        await count('posts', dated(site.posts(), {postsBefore, postsAfter, updatedAfter}));
     }
     if (pages) {
         await count('pages', site.pages());

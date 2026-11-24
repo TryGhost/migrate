@@ -57,6 +57,7 @@ describe('WordPress API ingestion', function () {
                 cpt: ['books'],
                 postsBefore: null,
                 postsAfter: null,
+                updatedAfter: null,
                 maxPosts: 0,
                 batch: 0,
                 usersFile: false
@@ -155,14 +156,20 @@ describe('WordPress API ingestion', function () {
                 limit: 2,
                 maxPosts: 3,
                 postsBefore: '2025-01-01',
-                postsAfter: '2023-01-01'
+                postsAfter: '2023-01-01',
+                updatedAfter: '2024-05-15'
             });
             assert.equal(context.sources.count('content'), 4);
             const postRequests = requests.filter(request => request.pathname.endsWith('/posts'));
             for (const request of postRequests) {
                 assert.equal(request.searchParams.get('before'), new Date('2025-01-01').toISOString());
                 assert.equal(request.searchParams.get('after'), new Date('2023-01-01').toISOString());
+                assert.equal(request.searchParams.get('modified_after'), new Date('2024-05-15').toISOString());
             }
+            for (const request of requests.filter(request => !request.pathname.endsWith('/posts'))) {
+                assert.equal(request.searchParams.get('modified_after'), null);
+            }
+            assert.equal(context.sources.currentIngestion!.metadata.updatedAfter, '2024-05-15');
             assert.equal(context.sources.currentIngestion!.metadata.maxPosts, 3);
         } finally {
             await context.close();

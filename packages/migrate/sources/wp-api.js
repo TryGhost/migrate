@@ -205,6 +205,7 @@ const getFullTaskRunner = suppliedOptions => {
                             cpt: options.cpt,
                             postsBefore: options.postsBefore,
                             postsAfter: options.postsAfter,
+                            updatedAfter: options.updatedAfter,
                             maxPosts: options.maxPosts,
                             trustSelfSignedCert: options.trustSelfSignedCert,
                             apiUser: ctx.apiUser,

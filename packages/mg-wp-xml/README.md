@@ -48,6 +48,7 @@ HTML replaces the old Lexical output stage. `--fallBackHTMLCard` has been remove
 | `--customTaxonomies` | unset | Additional taxonomies to import as tags |
 | `--addTag` | unset | Add a tag to every imported post |
 | `--postsBefore`, `--postsAfter` | unset | Publication-date filters |
+| `--updatedAfter` | unset | Only migrate items last modified on or after a date, regardless of publish date |
 | `--datedPermalinks` | `none` | Retain the chosen date structure when rewriting links |
 | `--excerpt` | `true` | Use WordPress excerpts |
 | `--excerptSelector` | unset | Extract an excerpt from matching content |

@@ -51,6 +51,7 @@ export async function ingest(
         cpt: options.cpt ?? [],
         postsBefore: options.postsBefore ?? null,
         postsAfter: options.postsAfter ?? null,
+        updatedAfter: options.updatedAfter ?? null,
         maxPosts: options.maxPosts ?? 0,
         batch,
         usersFile: Boolean(usersJSON)
