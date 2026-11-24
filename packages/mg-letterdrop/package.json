@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-letterdrop",
-  "version": "0.13.5",
+  "version": "0.13.6",
   "description": "Migrate content from the Letterdrop API to Ghost",
   "repository": {
     "type": "git",

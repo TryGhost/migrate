@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-tinynews",
-  "version": "0.11.5",
+  "version": "0.11.6",
   "description": "Migrate content from a Tiny News export to Ghost",
   "repository": {
     "type": "git",

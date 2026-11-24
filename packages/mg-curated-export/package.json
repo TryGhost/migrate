@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-curated-export",
-  "version": "0.14.5",
+  "version": "0.14.6",
   "description": "Migrate content from a Curated export to Ghost",
   "repository": {
     "type": "git",

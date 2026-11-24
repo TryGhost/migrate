@@ -1,6 +1,6 @@
 {
   "name": "@tryghost/mg-chorus",
-  "version": "0.12.5",
+  "version": "0.12.6",
   "description": "Migrate content from a Chorus export to Ghost",
   "repository": {
     "type": "git",
