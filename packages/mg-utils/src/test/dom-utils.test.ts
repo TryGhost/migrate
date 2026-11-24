@@ -3,6 +3,7 @@ import {describe, it} from 'node:test';
 import errors from '@tryghost/errors';
 import {
     parseFragment,
+    ensureLexicalContent,
     serializeNode,
     serializeChildren,
     replaceWith,
@@ -21,6 +22,42 @@ import {
     processFragment,
     processFragmentAsync
 } from '../lib/dom-utils.js';
+
+describe('ensureLexicalContent', function () {
+    it('keeps blank input empty', function () {
+        assert.equal(ensureLexicalContent(''), '');
+        assert.equal(ensureLexicalContent(' \r\n\t'), '');
+    });
+
+    it('adds one paragraph to markup that produces no editor content', function () {
+        for (const html of [
+            '<div><span> </span></div>',
+            '<!-- ordinary comment -->',
+            '<script>invisible</script>',
+            '<div style="display:none">hidden</div>',
+            '<iframe></iframe>'
+        ]) {
+            const result = ensureLexicalContent(html);
+            assert.equal(result, html + '<p></p>');
+            assert.equal(ensureLexicalContent(result), result);
+        }
+    });
+
+    it('preserves text, paragraphs, media, and Ghost card markers', function () {
+        for (const html of [
+            'Text',
+            '&nbsp;',
+            '<p></p>',
+            '<img src="x.jpg">',
+            '<iframe src="//example.com"></iframe>',
+            '<!--members-only-->',
+            '<!--kg-card-begin: html--><div></div><!--kg-card-end: html-->',
+            '<div class="kg-audio-card"><div class="kg-audio-player-container"><audio src="x.mp3"></audio></div></div>'
+        ]) {
+            assert.equal(ensureLexicalContent(html, parseFragment(html).body), html);
+        }
+    });
+});
 
 describe('parseFragment', function () {
     it('parses basic HTML', function () {

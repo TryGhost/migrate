@@ -359,3 +359,41 @@ export function getCommentData(node: Node | null): string {
     }
     return '';
 }
+
+// HTML collapses ASCII whitespace, but a non-breaking space occupies space.
+const nonCollapsibleContent = /[^\t\n\f\r ]/;
+
+// These elements and Koenig cards can produce a Lexical node without any text.
+const ghostContentElements = [
+    'p, img, hr, br + br, table, ul, ol, li, blockquote, h1, h2, h3, h4, h5, h6',
+    'div:is(.kg-button-card, .kg-audio-card, .kg-file-card, .kg-callout-card, .kg-toggle-card, .kg-header-card)',
+    'figure:is(.kg-bookmark-card, .kg-gallery-card)',
+    'figure.kg-video-card .kg-video-container video[src]:not([src=""])'
+].join(', ');
+
+function hasGhostContent(node: Node): boolean {
+    if (node.nodeType === 3) {
+        return nonCollapsibleContent.test((node as Text).data);
+    }
+    if (node.nodeType !== 1) {
+        const marker = getCommentData(node).trim();
+        return marker === 'members-only' || /^kg-card-begin:\s?html$/.test(marker);
+    }
+
+    const el = node as HTMLElement;
+    if (el.matches('script, style, template, head, title, [hidden]') || el.style.display === 'none') {
+        return false;
+    }
+    if (el.tagName === 'IFRAME') {
+        return /^(?:https?:)?\/\//i.test(el.getAttribute('src') || '');
+    }
+    return el.matches(ghostContentElements) || Array.from(el.childNodes).some(hasGhostContent);
+}
+
+/** Append an empty paragraph if Ghost would otherwise import the remaining markup as an empty Lexical root. */
+export function ensureLexicalContent(html: string, body?: Element): string {
+    if (!nonCollapsibleContent.test(html)) {
+        return '';
+    }
+    return hasGhostContent(body ?? parseFragment(html).body) ? html : html + '<p></p>';
+}

@@ -408,7 +408,7 @@ const processHTML = ({html, title, options}: {html: string; title?: string; opti
         }
     });
 
-    return sanitizedHtml.trim();
+    return domUtils.ensureLexicalContent(sanitizedHtml.trim());
 };
 
 /**
@@ -686,10 +686,7 @@ const processWebHTML = ({
         });
     });
 
-    // Get the cleaned HTML
-    let bodyHtml = parsed.html();
-
-    return bodyHtml;
+    return domUtils.ensureLexicalContent(parsed.html(), parsed.body);
 };
 
 /**
@@ -711,6 +708,7 @@ const removeDuplicateFeatureImage = ({html, featureSrc}: {html: string; featureS
 
         if ((imageAsset !== undefined && imageAsset === featureAsset) || (featureSrc && featureSrc === normalizedSrc)) {
             firstElement.remove();
+            return domUtils.ensureLexicalContent(parsed.html(), parsed.body);
         }
     }
 

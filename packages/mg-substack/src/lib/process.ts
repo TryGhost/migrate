@@ -720,7 +720,7 @@ const processContent = (post: ContentPost, siteUrl: string, options: ContentOpti
     html = html.replace(/=""/g, '');
 
     // Apply our new HTML back to the post object
-    post.data.html = html.trim();
+    post.data.html = domUtils.ensureLexicalContent(html.trim(), wrapper);
 
     return post;
 };

@@ -159,7 +159,7 @@ const processFeatureImage = ({html, post, options}: {html: string; post: MediumP
             }
         }
 
-        return parsed.html().trim();
+        return domUtils.ensureLexicalContent(parsed.html().trim(), parsed.body);
     });
 };
 
