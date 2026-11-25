@@ -1022,8 +1022,8 @@ importers:
         specifier: 5.2.1
         version: 5.2.1(@types/node@24.19.2)
       '@inquirer/prompts':
-        specifier: 8.8.0
-        version: 8.8.0(@types/node@24.19.2)
+        specifier: 8.8.1
+        version: 8.8.1(@types/node@24.19.2)
       '@inquirer/select':
         specifier: 5.3.1
         version: 5.3.1(@types/node@24.19.2)
@@ -2517,9 +2517,9 @@ packages:
       '@types/node':
         optional: true
 
-  '@inquirer/prompts@8.8.0':
-    resolution: {integrity: sha512-yYVT2Eo3mafb9tnU2Mr3+wh5wLCWyspExqVoPSMCIfBIn3ZUTE4IDfbCMbMgXaOH0tH+JZEhOtfczQhDzOjIGg==}
-    engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
+  '@inquirer/prompts@8.8.1':
+    resolution: {integrity: sha512-8zlCcD72QWvFAKnrT2TFckcgKOMXjPAaeBjp0IXXMpPLo8v41OZ8hS6MDUI5mw/Ow8NfOnSXguONheAxwdzrNw==}
+    engines: {node: '>=23.5.0 || ^22.13.0 || ^20.17.0'}
     peerDependencies:
       '@types/node': '>=18'
     peerDependenciesMeta:
@@ -7701,7 +7701,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 24.19.2
 
-  '@inquirer/prompts@8.8.0(@types/node@24.19.2)':
+  '@inquirer/prompts@8.8.1(@types/node@24.19.2)':
     dependencies:
       '@inquirer/checkbox': 5.3.1(@types/node@24.19.2)
       '@inquirer/confirm': 6.4.1(@types/node@24.19.2)
