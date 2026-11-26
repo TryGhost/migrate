@@ -34,7 +34,7 @@
   "devDependencies": {
     "@nx/js": "24.0.6",
     "@types/node": "catalog:",
-    "knip": "6.47.0",
+    "knip": "6.48.0",
     "nx": "24.0.6",
     "oxfmt": "0.79.0",
     "oxlint": "1.94.0",
