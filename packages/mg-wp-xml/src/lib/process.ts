@@ -293,8 +293,16 @@ const processPost = async (
 
                 // Try to find matching user from the XML's wp:author list
                 const matchedUser = users?.find(u => u.data.slug === authorSlug);
+                // Co-Authors Plus guest authors (`cap-` slugs) take their profile from the supplied export
+                const guestAuthor = options.coAuthorProfiles?.get(authorSlug);
                 if (matchedUser) {
                     coAuthors.push(matchedUser);
+                } else if (guestAuthor) {
+                    coAuthors.push({
+                        url: authorSlug,
+                        sourceKey: `login:${authorSlug}`,
+                        data: {...guestAuthor.data}
+                    });
                 } else {
                     // Create author entry from the category data
                     coAuthors.push({

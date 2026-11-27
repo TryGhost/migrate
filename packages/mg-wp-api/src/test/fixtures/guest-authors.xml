@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0"
+	xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:wp="http://wordpress.org/export/1.2/"
+>
+<channel>
+	<title>Example Site</title>
+	<link>https://example.com</link>
+	<wp:author><wp:author_id>1</wp:author_id><wp:author_login><![CDATA[admin]]></wp:author_login></wp:author>
+	<item>
+		<title><![CDATA[Jane Doe]]></title>
+		<wp:post_id>100</wp:post_id>
+		<wp:post_name><![CDATA[cap-janedoe]]></wp:post_name>
+		<wp:post_type><![CDATA[guest-author]]></wp:post_type>
+		<wp:postmeta><wp:meta_key><![CDATA[_thumbnail_id]]></wp:meta_key><wp:meta_value><![CDATA[200]]></wp:meta_value></wp:postmeta>
+		<wp:postmeta><wp:meta_key><![CDATA[cap-display_name]]></wp:meta_key><wp:meta_value><![CDATA[JaneDoe]]></wp:meta_value></wp:postmeta>
+		<wp:postmeta><wp:meta_key><![CDATA[cap-user_login]]></wp:meta_key><wp:meta_value><![CDATA[janedoe]]></wp:meta_value></wp:postmeta>
+		<wp:postmeta><wp:meta_key><![CDATA[cap-user_email]]></wp:meta_key><wp:meta_value><![CDATA[jane@example.com]]></wp:meta_value></wp:postmeta>
+		<wp:postmeta><wp:meta_key><![CDATA[cap-website]]></wp:meta_key><wp:meta_value><![CDATA[https://jane.example.com]]></wp:meta_value></wp:postmeta>
+		<wp:postmeta><wp:meta_key><![CDATA[cap-description]]></wp:meta_key><wp:meta_value><![CDATA[Jane writes about Ærø & København.]]></wp:meta_value></wp:postmeta>
+	</item>
+	<item>
+		<title><![CDATA[]]></title>
+		<wp:post_id>101</wp:post_id>
+		<wp:post_name><![CDATA[cap-wire-service]]></wp:post_name>
+		<wp:post_type><![CDATA[guest-author]]></wp:post_type>
+		<wp:postmeta><wp:meta_key><![CDATA[_thumbnail_id]]></wp:meta_key><wp:meta_value><![CDATA[999]]></wp:meta_value></wp:postmeta>
+		<wp:postmeta><wp:meta_key><![CDATA[cap-display_name]]></wp:meta_key><wp:meta_value><![CDATA[Wire Service]]></wp:meta_value></wp:postmeta>
+		<wp:postmeta><wp:meta_key><![CDATA[cap-user_email]]></wp:meta_key><wp:meta_value><![CDATA[]]></wp:meta_value></wp:postmeta>
+		<wp:postmeta><wp:meta_key><![CDATA[cap-website]]></wp:meta_key><wp:meta_value><![CDATA[not a url]]></wp:meta_value></wp:postmeta>
+	</item>
+	<item>
+		<title><![CDATA[]]></title>
+		<wp:post_id>102</wp:post_id>
+		<wp:post_name><![CDATA[cap-nameless]]></wp:post_name>
+		<wp:post_type><![CDATA[guest-author]]></wp:post_type>
+	</item>
+	<item>
+		<title><![CDATA[No slug]]></title>
+		<wp:post_id>103</wp:post_id>
+		<wp:post_name><![CDATA[]]></wp:post_name>
+		<wp:post_type><![CDATA[guest-author]]></wp:post_type>
+	</item>
+	<item>
+		<title><![CDATA[Photo: Jane Doe]]></title>
+		<wp:post_id>200</wp:post_id>
+		<wp:post_name><![CDATA[jane]]></wp:post_name>
+		<wp:post_type><![CDATA[attachment]]></wp:post_type>
+		<wp:attachment_url><![CDATA[https://example.com/wp-content/uploads/2024/01/jane.jpg]]></wp:attachment_url>
+	</item>
+	<item>
+		<title><![CDATA[A regular post]]></title>
+		<wp:post_id>300</wp:post_id>
+		<wp:post_name><![CDATA[cap-not-an-author]]></wp:post_name>
+		<wp:post_type><![CDATA[post]]></wp:post_type>
+	</item>
+</channel>
+</rss>

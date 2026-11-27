@@ -11,6 +11,7 @@ import {mergeUsersWithGhost} from '@tryghost/mg-ghost-authors';
 import type {GhostUser} from '@tryghost/mg-ghost-authors';
 import {slugify} from '@tryghost/string';
 import {stringUtils, xmlUtils} from '@tryghost/mg-utils';
+import {readGuestAuthors} from '@tryghost/mg-wp-api';
 import {postDates, processUser, processAttachment, processPost} from './process.js';
 import {sourceUrl} from './ingest.js';
 import {MappingState, sourceSite, indexSources} from './mapping-state.js';
@@ -157,7 +158,8 @@ export async function map(
                 }
             }
         }
-        options = {...options, url: siteUrl};
+        const coAuthorProfiles = options.coAuthors ? await readGuestAuthors(options.coAuthors) : null;
+        options = {...options, url: siteUrl, coAuthorProfiles};
         return context.mapRecords(context.sources.records({kind: 'item'}), async record => {
             const item = JSON.parse(record.content);
             if (!selected(item, options)) {
@@ -196,7 +198,12 @@ export async function map(
                     .map(category => category['@_nicename'])
             ];
             for (const login of new Set<string>(logins)) {
-                const raw = state.author(login);
+                // Co-Authors Plus gives each WordPress user a term, slugged `cap-<user slug>`
+                const raw =
+                    state.author(login) ??
+                    (login.startsWith('cap-') && !options.coAuthorProfiles?.has(login)
+                        ? state.author(login.slice(4))
+                        : undefined);
                 if (raw) {
                     const profile = processUser(JSON.parse(raw.content));
                     users.push({

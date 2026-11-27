@@ -15,6 +15,7 @@ import {slugify} from '@tryghost/string';
 import {dateUtils, stringUtils} from '@tryghost/mg-utils';
 import {processAuthor, processPost} from './processor.js';
 import {sourceSite} from './ingest.js';
+import {readGuestAuthors} from './guest-authors.js';
 import type {LegacyAuthor, LegacyTag, WpApiOptions, WpApiRecord} from './types.js';
 
 export type {MappingSummary};
@@ -139,6 +140,9 @@ function postUsers(state: MappingState, wpPost: WpApiRecord, firstUser: SourceRe
     for (const term of (wpPost._embedded?.['wp:term'] ?? []).flat()) {
         if (term.taxonomy === 'author' && term.slug) {
             records.push(...state.find('user-slug', term.slug));
+            if (term.slug.startsWith('cap-')) {
+                records.push(...state.find('user-slug', term.slug.slice(4)));
+            }
         }
     }
     const seen = new Set<number>();
@@ -186,7 +190,8 @@ export async function map(
                 state.set('ghost-user', user.email.toLowerCase(), user);
             }
         }
-        options = {...options, url: siteUrl};
+        const coAuthorProfiles = options.coAuthors ? await readGuestAuthors(options.coAuthors) : null;
+        options = {...options, url: siteUrl, coAuthorProfiles};
         let posts = 0;
         return context.mapRecords(context.sources.records({kind: 'content'}), async record => {
             const wpPost = JSON.parse(record.content);

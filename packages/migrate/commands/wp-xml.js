@@ -1,3 +1,4 @@
+import {existsSync} from 'node:fs';
 import {ui} from '@tryghost/pretty-cli';
 import wpXml from '../sources/wp-xml.js';
 import {convertOptionsToSywac, convertOptionsToDefaults} from '../lib/utilties/options-to-sywac.js';
@@ -77,6 +78,12 @@ const options = [
         flags: '--tags',
         defaultValue: true,
         desc: 'Import WordPress tags (set to false to only import categories)'
+    },
+    {
+        type: 'string',
+        flags: '--coAuthors',
+        defaultValue: null,
+        desc: 'Path to a WordPress XML export of Co-Authors Plus guest authors, used for the real name and profile of `cap-` authors'
     },
     {
         type: 'string',
@@ -217,6 +224,12 @@ const run = async argv => {
 
     if (argv.veryVerbose) {
         argv.verbose = true;
+    }
+
+    if (argv.coAuthors && !existsSync(argv.coAuthors)) {
+        ui.log.error(`Co-authors file not found: ${argv.coAuthors}`);
+        process.exitCode = 1;
+        return;
     }
 
     if (argv.verbose) {

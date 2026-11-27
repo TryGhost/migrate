@@ -1,3 +1,5 @@
+import type {GuestAuthors} from '@tryghost/mg-wp-api';
+
 export type WordPressRecord = Record<string, any>;
 
 export interface WordPressOptions {
@@ -19,6 +21,10 @@ export interface WordPressOptions {
     url?: string;
     attachments?: any[];
     onWarning?: (details: {key: string; reason: string}) => void;
+    /** Path to a WordPress XML export of Co-Authors Plus guest authors. */
+    coAuthors?: string | null;
+    /** Guest author profiles read from `coAuthors`, keyed by their `cap-` slug. */
+    coAuthorProfiles?: GuestAuthors | null;
     [key: string]: any;
 }
 

@@ -27,6 +27,8 @@ export {
 export type {ProcessContentArgs} from './lib/processor.js';
 export type {LegacyAuthor, LegacyTag, MappedPost, WpApiOptions, WpApiRecord} from './lib/types.js';
 export {ingest, parse, sourceSite} from './lib/ingest.js';
+export {parseGuestAuthors, readGuestAuthors} from './lib/guest-authors.js';
+export type {GuestAuthors} from './lib/guest-authors.js';
 export {map, ghostId} from './lib/map.js';
 export {discover, tasks} from './lib/fetch.js';
 export type {IngestOptions} from './lib/ingest.js';

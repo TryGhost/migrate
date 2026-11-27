@@ -1,5 +1,5 @@
 import {extname} from 'node:path';
-import {readFileSync} from 'node:fs';
+import {existsSync, readFileSync} from 'node:fs';
 import {readJSON} from 'fs-extra/esm';
 import {ui} from '@tryghost/pretty-cli';
 import {xmlUtils} from '@tryghost/mg-utils';
@@ -99,6 +99,12 @@ const options = [
         flags: '-u --users',
         defaultValue: null,
         desc: 'Provide a JSON file with users'
+    },
+    {
+        type: 'string',
+        flags: '--coAuthors',
+        defaultValue: null,
+        desc: 'Path to a WordPress XML export of Co-Authors Plus guest authors, used for the real name and profile of `cap-` authors'
     },
     {
         type: 'boolean',
@@ -283,6 +289,12 @@ const run = async argv => {
             ui.log.info('Using authentication for WordPress API');
             context.apiUser = {username: auth[0], password: auth[1]};
         }
+    }
+
+    if (argv.coAuthors && !existsSync(argv.coAuthors)) {
+        ui.log.error(`Co-authors file not found: ${argv.coAuthors}`);
+        process.exitCode = 1;
+        return;
     }
 
     if (argv.users) {

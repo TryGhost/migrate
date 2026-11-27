@@ -42,6 +42,10 @@ export interface WpApiOptions {
     maxPosts?: number;
     onlyURLs?: string | null;
     datedPermalinks?: string;
+    /** Path to a WordPress XML export of Co-Authors Plus guest authors. */
+    coAuthors?: string | null;
+    /** Guest author profiles read from `coAuthors`, keyed by their `cap-` slug. */
+    coAuthorProfiles?: Map<string, LegacyAuthor> | null;
     [key: string]: any;
 }
 /* c8 ignore stop */

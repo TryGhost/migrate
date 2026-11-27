@@ -8,6 +8,7 @@ import SimpleDom from 'simple-dom';
 import {domUtils, youtubeUtils, stringUtils, cardUtils, urlUtils} from '@tryghost/mg-utils';
 import {matchEmbedUrl, buildEmbedHtml} from './embed-utils.js';
 import type {LegacyAuthor, LegacyTag, MappedPost, WpApiOptions, WpApiRecord} from './types.js';
+import type {GuestAuthors} from './guest-authors.js';
 
 const {escapeHTML, unescapeHTML, stripHtml} = stringUtils;
 
@@ -161,7 +162,11 @@ const processTerms = (
 
 // Extract co-authors from wp:term data (used by Co-Authors Plus and PublishPress Authors plugins)
 // These plugins store authors as a custom taxonomy with taxonomy === 'author'
-const processCoAuthors = (wpTerms: any, users?: LegacyAuthor[] | null): LegacyAuthor[] => {
+const processCoAuthors = (
+    wpTerms: any,
+    users?: LegacyAuthor[] | null,
+    guestAuthors?: GuestAuthors | null
+): LegacyAuthor[] => {
     const coAuthors: LegacyAuthor[] = [];
     const seenSlugs = new Set<string>();
 
@@ -181,8 +186,18 @@ const processCoAuthors = (wpTerms: any, users?: LegacyAuthor[] | null): LegacyAu
 
                 // Try to find matching user from the users list (for full user data)
                 const matchedUser = users?.find(u => u.data.slug === term.slug);
+                // Co-Authors Plus guest authors (`cap-` slugs) take their profile from the supplied export
+                const guestAuthor = guestAuthors?.get(term.slug);
+                // Co-Authors Plus also gives each WordPress user a term, slugged `cap-<user slug>`
+                const linkedUser = term.slug.startsWith('cap-')
+                    ? users?.find(u => u.data.slug === term.slug.slice(4))
+                    : undefined;
                 if (matchedUser) {
                     coAuthors.push(matchedUser);
+                } else if (guestAuthor) {
+                    coAuthors.push({url: term.link, data: {...guestAuthor.data}});
+                } else if (linkedUser) {
+                    coAuthors.push(linkedUser);
                 } else {
                     // Create author entry from the term data
                     coAuthors.push({
@@ -1422,7 +1437,9 @@ const processPost = async (
     // Check for co-authors from Co-Authors Plus or PublishPress Authors plugins
     // These store authors as terms in wp:term with taxonomy === 'author'
     const coAuthors =
-        wpPost._embedded && wpPost._embedded['wp:term'] ? processCoAuthors(wpPost._embedded['wp:term'], users) : [];
+        wpPost._embedded && wpPost._embedded['wp:term']
+            ? processCoAuthors(wpPost._embedded['wp:term'], users, options.coAuthorProfiles)
+            : [];
 
     // Handle author assignment based on co-authors
     if (wpPost?.parsely?.meta?.author && wpPost.parsely.meta.author.length > 0) {
