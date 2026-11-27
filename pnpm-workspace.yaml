@@ -20,7 +20,7 @@ catalog:
   "@tryghost/debug": "2.3.23"
   "@tryghost/errors": "3.4.8"
   "@tryghost/kg-default-cards": "10.3.11"
-  "@tryghost/kg-html-to-lexical": "1.4.5"
+  "@tryghost/kg-html-to-lexical": "1.4.6"
   "@tryghost/pretty-cli": "3.4.4"
   "@tryghost/string": "0.3.10"
   "@types/node": "24.19.2"
