@@ -1280,8 +1280,8 @@ importers:
         specifier: 'catalog:'
         version: 1.4.0
       tldts:
-        specifier: 7.5.5
-        version: 7.5.5
+        specifier: 7.5.6
+        version: 7.5.6
       wpapi:
         specifier: 1.2.2
         version: 1.2.2(supports-color@7.2.0)
@@ -6271,11 +6271,11 @@ packages:
     resolution: {integrity: sha512-jBrmx4lYmaC9k/mgPbylxs7kBUxHtD8256up+HjLaDFfXScKJQyil+SWXSvhAtT7XHo+yTVlpB81PGmHP8oLSQ==}
     engines: {node: ^20.0.0 || >=22.0.0}
 
-  tldts-core@7.5.5:
-    resolution: {integrity: sha512-rEJz/8cJFY/bdF354gl14yxavbrIbvM+FcbkYVQ6CSCMQTJdUFUIm39TTWSiGPvcpQh7/F6qHrD3SkwwdgtDCw==}
+  tldts-core@7.6.2:
+    resolution: {integrity: sha512-/ZG+gignPzfgtpWNnbS7AKcU1ptt9jDqhIlr7vHOaw/Psz6HjXyB2CeFS3RrUGYwER/Q4F6IS8+9rZuYfRUz+Q==}
 
-  tldts@7.5.5:
-    resolution: {integrity: sha512-Hy6IImaWALzJOgCIss4gIFi4G0M9lqk95pFKCUVxQPZw+biZ1Pv6f28JpYgahpJB+BufA0HYsIU/aP/WIx3KRg==}
+  tldts@7.5.6:
+    resolution: {integrity: sha512-78a/2zOOpMAgcd+GhQMx8tQSGYojszqzAKhXzd5/t7lgyglt1INshF2tiVfWBw9NNYaMuMVCz1RAcggt383LTg==}
     hasBin: true
 
   tmp@0.2.7:
@@ -11812,11 +11812,11 @@ snapshots:
 
   tinypool@2.2.0: {}
 
-  tldts-core@7.5.5: {}
+  tldts-core@7.6.2: {}
 
-  tldts@7.5.5:
+  tldts@7.5.6:
     dependencies:
-      tldts-core: 7.5.5
+      tldts-core: 7.6.2
 
   tmp@0.2.7: {}
 
@@ -11828,7 +11828,7 @@ snapshots:
 
   tough-cookie@6.1.0:
     dependencies:
-      tldts: 7.5.5
+      tldts: 7.5.6
 
   tr46@6.0.0:
     dependencies:
