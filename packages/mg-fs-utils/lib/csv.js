@@ -90,20 +90,15 @@ const jsonToCSV = (data, fields = data && data[0] && typeof data[0] === 'object'
 
             let fieldToAdd;
 
-            if (entry[field] !== null) {
-                if (entry[field] instanceof Date) {
-                    fieldToAdd = entry[field].toISOString();
-                } else if (entry[field] && entry[field].toString().indexOf(',') !== -1) {
-                    // If the field contains a comma, wrap it in quotes
-                    fieldToAdd = `"${entry[field]}"`;
-                } else {
-                    fieldToAdd = entry[field];
-                }
+            if (entry[field] !== null && entry[field] !== undefined) {
+                const value = entry[field] instanceof Date ? entry[field].toISOString() : entry[field].toString();
+                // RFC 4180: quote a field holding a delimiter, a quote or a line break, and double its quotes
+                fieldToAdd = /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
             } else {
                 fieldToAdd = '';
             }
 
-            csv += fieldToAdd !== undefined ? fieldToAdd : '';
+            csv += fieldToAdd;
             if (i !== fields.length - 1) {
                 csv += ',';
             }
