@@ -138,7 +138,8 @@ const process = async ({pathToCsv, pathToZip, addLabel, includeUnsubscribed = fa
         for (const entry of zipEntries) {
             let pro = await processData({
                 csvContent: entry.data,
-                includeUnsubscribed: false
+                addLabel,
+                includeUnsubscribed
             });
 
             newObj.push(...pro);
