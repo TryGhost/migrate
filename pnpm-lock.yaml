@@ -195,8 +195,8 @@ catalogs:
       specifier: 0.3.10
       version: 0.3.10
     '@types/node':
-      specifier: 24.19.2
-      version: 24.19.2
+      specifier: 24.19.3
+      version: 24.19.3
     c8:
       specifier: 12.0.0
       version: 12.0.0
@@ -265,7 +265,7 @@ importers:
         version: 24.0.6(@babel/traverse@7.29.15(supports-color@7.2.0))(nx@24.0.6(patch_hash=38689c2ee7a1dba632ae2853ca24b8241c51aa4fe44ca00c09e60ecdc54f282a))(supports-color@7.2.0)
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       knip:
         specifier: 6.48.0
         version: 6.48.0
@@ -337,14 +337,14 @@ importers:
         version: 2.1.0
       sharp:
         specifier: 'catalog:'
-        version: 0.35.5(@types/node@24.19.2)
+        version: 0.35.5(@types/node@24.19.3)
       transliteration:
         specifier: 'catalog:'
         version: 2.7.0
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -384,7 +384,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -415,7 +415,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -437,7 +437,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -456,7 +456,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -496,7 +496,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -527,7 +527,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -555,7 +555,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -577,7 +577,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -611,7 +611,7 @@ importers:
         version: link:../mg-queue
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -639,7 +639,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -660,7 +660,7 @@ importers:
         version: 3.4.8
       '@tryghost/image-transform':
         specifier: 1.4.19
-        version: 1.4.19(@types/node@24.19.2)(supports-color@7.2.0)
+        version: 1.4.19(@types/node@24.19.3)(supports-color@7.2.0)
       '@tryghost/string':
         specifier: 'catalog:'
         version: 0.3.10
@@ -681,7 +681,7 @@ importers:
         version: 11.4.1
       sharp:
         specifier: 'catalog:'
-        version: 0.35.5(@types/node@24.19.2)
+        version: 0.35.5(@types/node@24.19.3)
       transliteration:
         specifier: 'catalog:'
         version: 2.7.0
@@ -707,7 +707,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -729,7 +729,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -754,7 +754,7 @@ importers:
         version: link:../listr-smart-renderer
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -788,7 +788,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -837,7 +837,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -871,7 +871,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -906,7 +906,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -937,7 +937,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -953,7 +953,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -975,7 +975,7 @@ importers:
         version: link:../mg-context
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -1008,7 +1008,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -1020,13 +1020,13 @@ importers:
     dependencies:
       '@inquirer/input':
         specifier: 5.2.1
-        version: 5.2.1(@types/node@24.19.2)
+        version: 5.2.1(@types/node@24.19.3)
       '@inquirer/prompts':
         specifier: 8.8.1
-        version: 8.8.1(@types/node@24.19.2)
+        version: 8.8.1(@types/node@24.19.3)
       '@inquirer/select':
         specifier: 5.3.1
-        version: 5.3.1(@types/node@24.19.2)
+        version: 5.3.1(@types/node@24.19.3)
       '@tryghost/pretty-cli':
         specifier: 'catalog:'
         version: 3.4.4
@@ -1038,11 +1038,11 @@ importers:
         version: 10.0.0
       stripe:
         specifier: 23.1.0
-        version: 23.1.0(@types/node@24.19.2)
+        version: 23.1.0(@types/node@24.19.3)
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       '@types/sinon':
         specifier: 22.0.2
         version: 22.0.2
@@ -1097,7 +1097,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -1140,7 +1140,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -1174,7 +1174,7 @@ importers:
         version: 3.4.8
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -1199,7 +1199,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -1236,7 +1236,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -1288,7 +1288,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -1334,7 +1334,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
-        version: 24.19.2
+        version: 24.19.3
       c8:
         specifier: 'catalog:'
         version: 12.0.0
@@ -4120,8 +4120,8 @@ packages:
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
 
-  '@types/node@24.19.2':
-    resolution: {integrity: sha512-93d49wCWJkCyN87MxLpNN6KXPCwFw7bVUg79mGUV1OS40JGWwVCr8n61DXCSqz7CV6/VfPkb7xec7uP2M+QHWQ==}
+  '@types/node@24.19.3':
+    resolution: {integrity: sha512-oGTg5CEII0QAZVprxcT2xjcfKtZWOVSCk8nM5r3GwR1urRibeo2pj4pbYox9A326cJe6AzaV9DiC1uxiRSno2A==}
 
   '@types/parse-json@4.0.2':
     resolution: {integrity: sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==}
@@ -7626,123 +7626,123 @@ snapshots:
 
   '@inquirer/ansi@2.1.1': {}
 
-  '@inquirer/checkbox@5.3.1(@types/node@24.19.2)':
+  '@inquirer/checkbox@5.3.1(@types/node@24.19.3)':
     dependencies:
       '@inquirer/ansi': 2.1.1
-      '@inquirer/core': 12.1.1(@types/node@24.19.2)
+      '@inquirer/core': 12.1.1(@types/node@24.19.3)
       '@inquirer/figures': 2.1.1
-      '@inquirer/type': 4.3.1(@types/node@24.19.2)
+      '@inquirer/type': 4.3.1(@types/node@24.19.3)
     optionalDependencies:
-      '@types/node': 24.19.2
+      '@types/node': 24.19.3
 
-  '@inquirer/confirm@6.4.1(@types/node@24.19.2)':
+  '@inquirer/confirm@6.4.1(@types/node@24.19.3)':
     dependencies:
-      '@inquirer/core': 12.1.1(@types/node@24.19.2)
-      '@inquirer/type': 4.3.1(@types/node@24.19.2)
+      '@inquirer/core': 12.1.1(@types/node@24.19.3)
+      '@inquirer/type': 4.3.1(@types/node@24.19.3)
     optionalDependencies:
-      '@types/node': 24.19.2
+      '@types/node': 24.19.3
 
-  '@inquirer/core@12.1.1(@types/node@24.19.2)':
+  '@inquirer/core@12.1.1(@types/node@24.19.3)':
     dependencies:
       '@inquirer/ansi': 2.1.1
       '@inquirer/figures': 2.1.1
-      '@inquirer/type': 4.3.1(@types/node@24.19.2)
+      '@inquirer/type': 4.3.1(@types/node@24.19.3)
       cli-width: 4.1.0
       fast-string-width: 3.0.2
       fast-wrap-ansi: 0.2.2
       mute-stream: 3.0.0
       signal-exit: 4.1.0
     optionalDependencies:
-      '@types/node': 24.19.2
+      '@types/node': 24.19.3
 
-  '@inquirer/editor@5.5.0(@types/node@24.19.2)':
+  '@inquirer/editor@5.5.0(@types/node@24.19.3)':
     dependencies:
-      '@inquirer/core': 12.1.1(@types/node@24.19.2)
-      '@inquirer/external-editor': 3.1.1(@types/node@24.19.2)
-      '@inquirer/type': 4.3.1(@types/node@24.19.2)
+      '@inquirer/core': 12.1.1(@types/node@24.19.3)
+      '@inquirer/external-editor': 3.1.1(@types/node@24.19.3)
+      '@inquirer/type': 4.3.1(@types/node@24.19.3)
     optionalDependencies:
-      '@types/node': 24.19.2
+      '@types/node': 24.19.3
 
-  '@inquirer/expand@5.2.1(@types/node@24.19.2)':
+  '@inquirer/expand@5.2.1(@types/node@24.19.3)':
     dependencies:
-      '@inquirer/core': 12.1.1(@types/node@24.19.2)
-      '@inquirer/type': 4.3.1(@types/node@24.19.2)
+      '@inquirer/core': 12.1.1(@types/node@24.19.3)
+      '@inquirer/type': 4.3.1(@types/node@24.19.3)
     optionalDependencies:
-      '@types/node': 24.19.2
+      '@types/node': 24.19.3
 
-  '@inquirer/external-editor@3.1.1(@types/node@24.19.2)':
+  '@inquirer/external-editor@3.1.1(@types/node@24.19.3)':
     dependencies:
       chardet: 2.2.0
       iconv-lite: 0.7.3
     optionalDependencies:
-      '@types/node': 24.19.2
+      '@types/node': 24.19.3
 
   '@inquirer/figures@2.1.1': {}
 
-  '@inquirer/input@5.2.1(@types/node@24.19.2)':
+  '@inquirer/input@5.2.1(@types/node@24.19.3)':
     dependencies:
-      '@inquirer/core': 12.1.1(@types/node@24.19.2)
-      '@inquirer/type': 4.3.1(@types/node@24.19.2)
+      '@inquirer/core': 12.1.1(@types/node@24.19.3)
+      '@inquirer/type': 4.3.1(@types/node@24.19.3)
     optionalDependencies:
-      '@types/node': 24.19.2
+      '@types/node': 24.19.3
 
-  '@inquirer/number@4.3.1(@types/node@24.19.2)':
+  '@inquirer/number@4.3.1(@types/node@24.19.3)':
     dependencies:
-      '@inquirer/core': 12.1.1(@types/node@24.19.2)
-      '@inquirer/type': 4.3.1(@types/node@24.19.2)
+      '@inquirer/core': 12.1.1(@types/node@24.19.3)
+      '@inquirer/type': 4.3.1(@types/node@24.19.3)
     optionalDependencies:
-      '@types/node': 24.19.2
+      '@types/node': 24.19.3
 
-  '@inquirer/password@5.3.1(@types/node@24.19.2)':
-    dependencies:
-      '@inquirer/ansi': 2.1.1
-      '@inquirer/core': 12.1.1(@types/node@24.19.2)
-      '@inquirer/type': 4.3.1(@types/node@24.19.2)
-    optionalDependencies:
-      '@types/node': 24.19.2
-
-  '@inquirer/prompts@8.8.1(@types/node@24.19.2)':
-    dependencies:
-      '@inquirer/checkbox': 5.3.1(@types/node@24.19.2)
-      '@inquirer/confirm': 6.4.1(@types/node@24.19.2)
-      '@inquirer/editor': 5.5.0(@types/node@24.19.2)
-      '@inquirer/expand': 5.2.1(@types/node@24.19.2)
-      '@inquirer/input': 5.2.1(@types/node@24.19.2)
-      '@inquirer/number': 4.3.1(@types/node@24.19.2)
-      '@inquirer/password': 5.3.1(@types/node@24.19.2)
-      '@inquirer/rawlist': 5.4.1(@types/node@24.19.2)
-      '@inquirer/search': 4.4.1(@types/node@24.19.2)
-      '@inquirer/select': 5.3.1(@types/node@24.19.2)
-    optionalDependencies:
-      '@types/node': 24.19.2
-
-  '@inquirer/rawlist@5.4.1(@types/node@24.19.2)':
-    dependencies:
-      '@inquirer/core': 12.1.1(@types/node@24.19.2)
-      '@inquirer/type': 4.3.1(@types/node@24.19.2)
-    optionalDependencies:
-      '@types/node': 24.19.2
-
-  '@inquirer/search@4.4.1(@types/node@24.19.2)':
-    dependencies:
-      '@inquirer/core': 12.1.1(@types/node@24.19.2)
-      '@inquirer/figures': 2.1.1
-      '@inquirer/type': 4.3.1(@types/node@24.19.2)
-    optionalDependencies:
-      '@types/node': 24.19.2
-
-  '@inquirer/select@5.3.1(@types/node@24.19.2)':
+  '@inquirer/password@5.3.1(@types/node@24.19.3)':
     dependencies:
       '@inquirer/ansi': 2.1.1
-      '@inquirer/core': 12.1.1(@types/node@24.19.2)
-      '@inquirer/figures': 2.1.1
-      '@inquirer/type': 4.3.1(@types/node@24.19.2)
+      '@inquirer/core': 12.1.1(@types/node@24.19.3)
+      '@inquirer/type': 4.3.1(@types/node@24.19.3)
     optionalDependencies:
-      '@types/node': 24.19.2
+      '@types/node': 24.19.3
 
-  '@inquirer/type@4.3.1(@types/node@24.19.2)':
+  '@inquirer/prompts@8.8.1(@types/node@24.19.3)':
+    dependencies:
+      '@inquirer/checkbox': 5.3.1(@types/node@24.19.3)
+      '@inquirer/confirm': 6.4.1(@types/node@24.19.3)
+      '@inquirer/editor': 5.5.0(@types/node@24.19.3)
+      '@inquirer/expand': 5.2.1(@types/node@24.19.3)
+      '@inquirer/input': 5.2.1(@types/node@24.19.3)
+      '@inquirer/number': 4.3.1(@types/node@24.19.3)
+      '@inquirer/password': 5.3.1(@types/node@24.19.3)
+      '@inquirer/rawlist': 5.4.1(@types/node@24.19.3)
+      '@inquirer/search': 4.4.1(@types/node@24.19.3)
+      '@inquirer/select': 5.3.1(@types/node@24.19.3)
     optionalDependencies:
-      '@types/node': 24.19.2
+      '@types/node': 24.19.3
+
+  '@inquirer/rawlist@5.4.1(@types/node@24.19.3)':
+    dependencies:
+      '@inquirer/core': 12.1.1(@types/node@24.19.3)
+      '@inquirer/type': 4.3.1(@types/node@24.19.3)
+    optionalDependencies:
+      '@types/node': 24.19.3
+
+  '@inquirer/search@4.4.1(@types/node@24.19.3)':
+    dependencies:
+      '@inquirer/core': 12.1.1(@types/node@24.19.3)
+      '@inquirer/figures': 2.1.1
+      '@inquirer/type': 4.3.1(@types/node@24.19.3)
+    optionalDependencies:
+      '@types/node': 24.19.3
+
+  '@inquirer/select@5.3.1(@types/node@24.19.3)':
+    dependencies:
+      '@inquirer/ansi': 2.1.1
+      '@inquirer/core': 12.1.1(@types/node@24.19.3)
+      '@inquirer/figures': 2.1.1
+      '@inquirer/type': 4.3.1(@types/node@24.19.3)
+    optionalDependencies:
+      '@types/node': 24.19.3
+
+  '@inquirer/type@4.3.1(@types/node@24.19.3)':
+    optionalDependencies:
+      '@types/node': 24.19.3
 
   '@isaacs/nonrecursive-glob-match@1.1.0': {}
 
@@ -9110,12 +9110,12 @@ snapshots:
 
   '@tryghost/errors@3.4.8': {}
 
-  '@tryghost/image-transform@1.4.19(@types/node@24.19.2)(supports-color@7.2.0)':
+  '@tryghost/image-transform@1.4.19(@types/node@24.19.3)(supports-color@7.2.0)':
     dependencies:
       '@tryghost/errors': 2.2.1(supports-color@7.2.0)
       fs-extra: 11.4.0
     optionalDependencies:
-      sharp: 0.35.5(@types/node@24.19.2)
+      sharp: 0.35.5(@types/node@24.19.3)
     transitivePeerDependencies:
       - '@types/node'
       - supports-color
@@ -9276,7 +9276,7 @@ snapshots:
 
   '@types/ms@2.1.0': {}
 
-  '@types/node@24.19.2':
+  '@types/node@24.19.3':
     dependencies:
       undici-types: 7.24.6
 
@@ -11550,7 +11550,7 @@ snapshots:
 
   semver@7.8.6: {}
 
-  sharp@0.35.5(@types/node@24.19.2):
+  sharp@0.35.5(@types/node@24.19.3):
     dependencies:
       '@img/colour': 1.1.0
       detect-libc: 2.1.2
@@ -11581,7 +11581,7 @@ snapshots:
       '@img/sharp-win32-arm64': 0.35.5
       '@img/sharp-win32-ia32': 0.35.5
       '@img/sharp-win32-x64': 0.35.5
-      '@types/node': 24.19.2
+      '@types/node': 24.19.3
 
   shebang-command@2.0.0:
     dependencies:
@@ -11721,9 +11721,9 @@ snapshots:
 
   strip-json-comments@5.0.3: {}
 
-  stripe@23.1.0(@types/node@24.19.2):
+  stripe@23.1.0(@types/node@24.19.3):
     optionalDependencies:
-      '@types/node': 24.19.2
+      '@types/node': 24.19.3
 
   strnum@2.5.1:
     dependencies:
